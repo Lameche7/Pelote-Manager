@@ -98,7 +98,7 @@ function SeriesPoolsTab({ tournamentId, series, existingPools }: SeriesPoolsTabP
   const validatePools = useValidatePools(tournamentId)
   const deletePools = useDeletePools(tournamentId)
 
-  const [preview, setPreview] = useState<Team[][]| null>(null)
+  const [preview, setPreview] = useState<Team[][] | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const validated = existingPools.some((p) => p.validated)
