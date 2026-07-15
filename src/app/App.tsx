@@ -1,8 +1,6 @@
-import "./App.css";
 import { supabase } from "@/lib/supabase";
 
 function App() {
-  // Vérifie simplement que le client Supabase est bien initialisé.
   const isSupabaseReady = !!supabase;
 
   return (
@@ -18,22 +16,26 @@ function App() {
         style={{
           textAlign: "center",
           padding: "2rem",
+          maxWidth: "640px",
         }}
       >
         <h1>🏓 Pelote Manager V2</h1>
 
-        <p>Version 2.0.0-alpha.1</p>
+        <p>Application Shell</p>
 
         <hr style={{ margin: "2rem 0" }} />
 
-        <h2>
-          {isSupabaseReady
-            ? "✅ Client Supabase initialisé"
-            : "❌ Client Supabase indisponible"}
-        </h2>
+        <p>
+          <strong>Version :</strong> 2.0.0-alpha.2
+        </p>
 
         <p>
-          Les fondations de l'application sont opérationnelles.
+          <strong>Architecture :</strong> DSFT v2.0
+        </p>
+
+        <p>
+          <strong>Supabase :</strong>{" "}
+          {isSupabaseReady ? "✅ Initialisé" : "❌ Indisponible"}
         </p>
       </section>
     </main>
