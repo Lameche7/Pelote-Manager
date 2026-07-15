@@ -79,3 +79,6 @@ On ne développe jamais deux applications distinctes (Admin/Public).
 
 Le shell est unique.
 DR-006 — Toute l'application est initialisée depuis src/app/.
+ADR-007
+
+Toutes les routes de l'application sont déclarées dans un seul fichier : src/app/router.tsx
