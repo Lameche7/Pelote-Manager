@@ -82,3 +82,41 @@ DR-006 — Toute l'application est initialisée depuis src/app/.
 ADR-007
 
 Toutes les routes de l'application sont déclarées dans un seul fichier : src/app/router.tsx
+---
+
+# Décisions d'architecture V2.1
+
+Statut : Acceptées
+Version : 2.1
+Date : 2026-07-27
+
+## ADR-008 — Calendar utilise Occupation
+Le Calendrier manipule des Occupations génériques et non les objets métier Réservation, Match ou Entraînement.
+
+## ADR-009 — Huit domaines officiels
+La Domain Map fixe les huit domaines métier officiels.
+
+## ADR-010 — Administration n'est pas un domaine métier
+L'administration est une interface et un ensemble de cas d'usage transverses soumis aux autorisations.
+
+## ADR-011 — Personne distincte du compte
+Personne, compte utilisateur, adhésion et rôle de joueur ont des cycles de vie distincts.
+
+## ADR-012 — Série activée explicitement
+Une série utilise un booléen ou état explicite et jamais `capacity = 0` comme activation.
+
+## ADR-013 — Publication atomique du planning
+La publication crée toutes les Occupations du planning ou aucune.
+
+## ADR-014 — Classements dérivés
+
+Les résultats validés sont persistés ; les classements sont recalculables.
+
+## ADR-015 — Une seule navigation applicative
+Une seule application et un seul shell sont adaptés selon les droits. Cette décision confirme ADR-005.
+
+## ADR-016 — Domaine dans `src/domain`
+Le domaine pur est placé dans `src/domain`.
+
+## ADR-017 — Routes dans les features
+Les écrans routables appartiennent à leurs features ; la composition du routeur reste centralisée dans `src/app`.

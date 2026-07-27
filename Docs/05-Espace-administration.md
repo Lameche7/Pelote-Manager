@@ -1,5 +1,6 @@
 # 05 - Espace administration
 
+
 Version : 2.0
 
 Ce document définit l'ensemble des fonctionnalités accessibles aux administrateurs.
@@ -143,7 +144,7 @@ L'administrateur définit :
 - l'ordre ;
 - la capacité maximale.
 
-Une capacité égale à zéro désactive complètement la série.
+Une série désactivée possède `enabled = false` ; une série active possède une capacité strictement positive.
 
 Elle n'apparaît plus dans les inscriptions.
 
@@ -416,3 +417,18 @@ Le logiciel doit devenir un véritable assistant d'organisation.
 Il guide, vérifie, alerte et sécurise chaque étape.
 
 L'administrateur garde toujours la décision finale.
+
+---
+
+# Précisions V2.1
+
+Le tableau de bord présente les prochaines activités et Occupations publiables.
+
+Le moteur de planification contrôle les contraintes sportives. Le domaine Calendrier contrôle uniquement les conflits d'occupation des ressources.
+
+## Calendrier
+Le calendrier d'administration affiche les Occupations provenant des réservations, matchs publiés, entraînements, fermetures, maintenances, animations et usages privés. Il permet de créer une Occupation administrative, la déplacer, modifier sa période ou sa ressource, l'annuler et consulter son origine et son historique. Une Occupation issue d'un autre domaine ne peut être modifiée que par un cas d'usage respectant les règles de son domaine d'origine.
+
+Un résultat validé devient publiable selon la politique de publication. Un contenu de communication est visible dès sa publication.
+
+L'audit trace l'utilisateur, la date et l'heure, l'action, l'objet, les anciennes et nouvelles valeurs, l'origine et la justification éventuelle.

@@ -112,7 +112,7 @@ avec un bouton :
 Le formulaire permet :
 
 - de choisir une série ;
-- de renseigner les deux joueurs ;
+- de renseigner les membres exigés par le format de compétition configuré ;
 - de saisir leurs coordonnées ;
 - de définir leurs disponibilités.
 
@@ -168,7 +168,7 @@ Sont automatiquement exclus :
 - les créneaux bloqués ;
 - les réservations existantes.
 
-Le calendrier est mis à jour en temps réel.
+Le calendrier est mis à jour automatiquement.
 
 ---
 
@@ -304,3 +304,23 @@ Il ne doit jamais donner l'impression d'être uniquement une application de tour
 Le tournoi est une fonctionnalité importante.
 
 Le club reste au centre du logiciel.
+
+---
+
+# Règles V2.1
+
+## Inscriptions
+Les membres exigés sont ceux du format de compétition configuré. La confirmation finale exige une authentification.
+
+## Calendrier public
+Le calendrier public est une projection des Occupations publiables. Il n'expose jamais les données privées, les commentaires internes, les identifiants techniques ou les motifs non publics.
+
+## Réservation d'un terrain
+Le portail affiche les créneaux disponibles au moment de la consultation. La disponibilité est obligatoirement revalidée au moment de la confirmation.
+
+## Sécurité et confidentialité
+- seules les données publiées sont exposées ;
+- aucune donnée privée n'est envoyée inutilement au navigateur ;
+- les autorisations sont contrôlées côté serveur ;
+- le formulaire de contact est protégé contre les abus ;
+- aucune information sensible n'est déduite du seul affichage.
