@@ -69,8 +69,8 @@ consulter les actualités
 consulter les résultats
 consulter les tournois
 consulter les disponibilités
-demander une réservation
-s'inscrire au tournoi
+commencer une demande de réservation ou d'inscription
+se connecter ou créer un compte avant confirmation
 Utilisateur
 
 Compte simple.
@@ -181,15 +181,17 @@ Le calendrier est unique.
 
 Toutes les activités utilisent ce calendrier.
 
-Une réservation est un évènement.
+Toute utilisation d'une ressource est représentée dans le calendrier par une Occupation.
 
-Un match est un évènement.
+Une réservation crée une Occupation.
 
-Une fermeture est un évènement.
+Un match publié crée une Occupation.
 
-Un entraînement est un évènement.
+Une fermeture crée une Occupation.
 
-Le moteur décide uniquement si deux évènements peuvent coexister.
+Un entraînement crée une Occupation.
+
+Le domaine Calendrier décide uniquement si des Occupations peuvent coexister sur une même ressource et une même période.
 
 0.7 Le fonctionnement annuel
 
@@ -246,4 +248,8 @@ Logique métier hors des composants
 Services testables indépendamment
 Migrations versionnées
 Documentation continue
+
+Le logiciel est structuré en domaines métier clairement séparés.
+Chaque domaine possède ses responsabilités, son vocabulaire et ses règles.
+La cartographie officielle des domaines est définie dans `Docs/Architecture/01-Domain-Map.md`.
 📘 Fin du chapitre 0 — Vision du projet

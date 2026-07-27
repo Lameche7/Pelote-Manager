@@ -151,6 +151,7 @@ Le Mode TV utilise les informations déjà présentes dans le logiciel.
 
 L'administrateur peut choisir :
 
+
 - les écrans à afficher ;
 - leur ordre ;
 - leur durée d'affichage.
@@ -190,7 +191,7 @@ Il est affiché automatiquement.
 
 # Classements
 
-Le Mode TV présente les classements mis à jour en temps réel.
+Le Mode TV présente les classements actualisé automatiquement après publication ou validation.
 
 Ils sont recalculés automatiquement par le Ranking Engine.
 
@@ -251,3 +252,7 @@ Il diffuse automatiquement toutes les informations utiles.
 L'administrateur ne saisit jamais deux fois la même information.
 
 Toute donnée affichée provient directement de Pelote Manager.
+
+---
+
+Le Mode TV consomme exclusivement des projections publiques. Il n'accède jamais aux modèles métier internes ni aux données privées.

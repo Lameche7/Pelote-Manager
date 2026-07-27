@@ -282,3 +282,26 @@ La lisibilité est une exigence.
 La simplicité est une priorité.
 
 La cohérence est une obligation.
+
+---
+
+# Conventions DDD V2.1
+
+## Nommage DDD
+Entités et Value Objects au singulier ; événements de domaine au passé ; Policies sous forme de capacité ou question ; Use Cases sous forme de verbe ; repositories abstraits `XRepository` ; implémentations `SupabaseXRepository`.
+
+## Interdictions
+- aucun type Supabase ni import React dans `src/domain` ;
+- aucun appel réseau dans un moteur ;
+- aucune règle métier dans un composant ou dupliquée client/serveur ;
+- aucun `Date` brut pour une période métier sans encapsulation ;
+- aucun statut métier sous forme de chaîne libre.
+
+## Taille du code
+Les limites de 300 lignes par composant et 50 lignes par fonction sont des alertes de conception, pas des interdictions absolues. Toute exception reste lisible et justifiée.
+
+## Tests
+Pour chaque Policy ou moteur : cas nominal, limites, refus, incohérences, déterminisme et absence d'effet de bord.
+
+## ADR
+Toute modification de frontière de domaine, dépendance entre domaines, structure de couches, technologie structurante ou invariant global est documentée dans `Docs/DECISIONS.md`.

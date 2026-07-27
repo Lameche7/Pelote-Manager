@@ -122,79 +122,20 @@ Jamais l'inverse.
 
 # 3. Les domaines métier
 
-Le logiciel est organisé autour de quatre domaines.
+Les huit domaines métier officiels sont :
 
-Ils représentent la structure fonctionnelle du club.
+1. Club et ressources
+2. Personnes et adhésions
+3. Calendrier
+4. Réservations
+5. Tournois
+6. Planification sportive
+7. Résultats et classements
+8. Communication et publication
 
----
+Les capacités transverses sont : Identité et contrôle d'accès, Notifications, Audit, Fichiers, Recherche et Paiement.
 
-## Domaine Club
-
-Le domaine Club regroupe tout ce qui existe toute l'année.
-
-Il contient notamment :
-
-- informations générales
-- horaires
-- terrains
-- réservations
-- actualités
-- restauration
-- évènements
-- utilisateurs
-- licenciés
-
----
-
-## Domaine Tournoi
-
-Le domaine Tournoi gère toutes les compétitions.
-
-Il contient :
-
-- éditions
-- inscriptions
-- équipes
-- disponibilités
-- séries
-- poules
-- planning
-- matchs
-- résultats
-- classements
-
-Chaque tournoi est indépendant.
-
-Le logiciel peut gérer plusieurs tournois simultanément ou successivement.
-
----
-
-## Domaine Communication
-
-Le domaine Communication diffuse les informations.
-
-Il comprend :
-
-- affichage TV
-- site public
-- actualités
-- résultats publics
-- calendrier public
-- galerie photos
-
----
-
-## Domaine Administration
-
-Le domaine Administration permet de configurer le logiciel.
-
-Il comprend :
-
-- paramètres
-- sécurité
-- rôles
-- utilisateurs
-- configuration générale
+Administration n'est pas un domaine métier autonome. Elle constitue un ensemble de cas d'usage permettant d'agir sur les domaines selon les droits accordés.
 
 ---
 
@@ -257,6 +198,7 @@ Elle contient :
 
 - moteurs
 - modèles métier
+
 - validations
 - règles métier
 
@@ -281,94 +223,66 @@ Cette couche peut être remplacée sans modifier le domaine.
 
 # 5. Architecture Feature First
 
-Le projet est organisé par domaine fonctionnel.
+Structure officielle :
 
-Chaque fonctionnalité possède son propre espace.
-
-Structure cible :
-
-```
+```text
 src/
-
-app/
-
-routes/
-
-features/
-
-shared/
-
-core/
-
-infrastructure/
-
-assets/
-
-styles/
-
-types/
+├── app/
+├── application/
+├── domain/
+├── features/
+├── infrastructure/
+├── shared/
+├── assets/
+├── styles/
+└── types/
 ```
 
 ---
 
 # 6. Structure interne d'une fonctionnalité
 
-Chaque fonctionnalité possède sa propre organisation.
-
-Exemple :
-
-```
+```text
 features/
-
-reservation/
-
-components/
-
-routes/
-
-hooks/
-
-services/
-
-repositories/
-
-engine/
-
-types/
-
-validators/
-
-constants/
+└── tournaments/
+├── components/
+├── hooks/
+├── routes/
+└── view-models/
 ```
 
-Chaque fonctionnalité est autonome.
+Les règles métier, repositories abstraits et moteurs ne sont pas placés dans `features/`.
 
 ---
 
 # 7. Le noyau métier
 
-Le dossier core contient les moteurs.
-
-Ils représentent le cœur du logiciel.
-
-```
-core/
-
-calendar/
-
-planning/
-
-pool/
-
-ranking/
-
-availability/
-
+```text
+domain/
+├── club/
+├── people/
+├── calendar/
+├── reservations/
+├── tournaments/
+├── planning/
+├── ranking/
+└── communication/
 ```
 
-Ces moteurs ne connaissent jamais React.
+Chaque domaine peut contenir `entities/`, `value-objects/`, `policies/`, `services/`, `events/`, `errors/` et `repositories/`.
 
-Ils manipulent uniquement des objets métier.
+## Building Blocks officiels
+
+- Entity
+- Aggregate Root
+- Value Object
+- Policy
+- Domain Service
+- Domain Event
+- Repository interface
+- Factory
+- Specification
+- DTO applicatif
 
 ---
 
@@ -442,21 +356,17 @@ Le calcul est toujours effectué par un moteur.
 
 # 11. Le calendrier
 
-Le calendrier constitue le cœur du logiciel.
+Le domaine Calendrier ne connaît pas les réservations, les matchs ou les entraînements comme objets métier complets.
+Il manipule uniquement :
 
-Tout est représenté sous forme d'évènement.
+- Resource
+- TimeRange
+- Occupation
+- OccupationStatus
+- Visibility
+- Conflict
 
-Exemples :
-
-- réservation
-- match
-- entraînement
-- fermeture
-- animation
-- restauration
-- maintenance
-
-Le moteur calendrier est l'unique responsable de la gestion des conflits.
+Les autres domaines demandent la création, la modification, le déplacement ou l'annulation d'une Occupation.
 
 ---
 
@@ -593,3 +503,11 @@ L'architecture doit permettre, sans réécriture majeure :
 Cette architecture constitue la référence officielle de Pelote Manager.
 
 Aucune fonctionnalité ne doit être développée en contradiction avec ces principes.
+
+---
+
+# Références et décisions
+
+Les documents de référence sont la [Domain Map](Architecture/01-Domain-Map.md), l'[architecture officielle](Architecture/02-Architecture-officielle.md), l'[Ubiquitous Language](Architecture/03-Ubiquitous-Language.md) et le [modèle Calendrier](Architecture/Calendar/01-Calendar-Model.md).
+
+Toute décision d'architecture structurante doit être consignée dans `Docs/DECISIONS.md`.

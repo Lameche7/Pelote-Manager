@@ -22,7 +22,7 @@ Le logiciel accompagne l'administrateur à chaque étape.
 
 # Cycle de vie d'un tournoi
 
-Un tournoi passe obligatoirement par les états suivants.
+Un tournoi suit le cycle officiel :
 
 Préparation
 
@@ -44,21 +44,30 @@ Poules générées
 
 ↓
 
+Poules validées
+
+↓
+
+Planning généré
+
+↓
+
 Planning publié
 
 ↓
 
-Tournoi en cours
+En cours
 
 ↓
 
-Tournoi terminé
+Terminé
 
 ↓
 
 Archivé
 
-Le logiciel interdit tout passage dans un état incohérent.
+
+`Annulé` est un état terminal distinct.
 
 ---
 
@@ -137,7 +146,7 @@ Les équipes peuvent alors s'inscrire.
 Une équipe choisit :
 
 - une série
-- ses deux joueurs
+- les membres exigés par le format de compétition configuré
 - ses coordonnées
 - ses disponibilités
 
@@ -360,3 +369,21 @@ Il empêche les erreurs.
 Il vérifie les prérequis.
 
 Il accompagne chaque étape jusqu'à la fin du tournoi.
+
+---
+
+# Règles consolidées V2.1
+
+Cycle : Préparation → Configuration → Inscriptions ouvertes → Inscriptions fermées → Poules générées → Poules validées → Planning généré → Planning publié → En cours → Terminé → Archivé. `Annulé` est un état terminal parallèle.
+
+## Transitions contrôlées
+CanConfigureTournamentPolicy, CanOpenRegistrationsPolicy, CanCloseRegistrationsPolicy, CanGeneratePoolsPolicy, CanValidatePoolsPolicy, CanGeneratePlanningPolicy, CanPublishPlanningPolicy, CanStartTournamentPolicy, CanFinishTournamentPolicy, CanArchiveTournamentPolicy et CanCancelTournamentPolicy.
+
+## Séries
+Une série possède `enabled` et `capacity`. `enabled = false` signifie indisponible ; avec `enabled = true`, la capacité est strictement positive et ne peut être inférieure au nombre d'équipes déjà acceptées.
+
+## Génération des poules
+Le moteur distingue contraintes obligatoires, préférences, diagnostics et score de qualité.
+
+## Annulation
+L'annulation du tournoi annule les Occupations futures créées par le tournoi. Elle ne supprime ni les inscriptions, ni les poules, ni les résultats conservés à titre historique.

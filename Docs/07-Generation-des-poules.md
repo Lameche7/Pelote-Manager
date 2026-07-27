@@ -1,168 +1,31 @@
-# Analyse de qualité
+# 07 - Génération des poules
 
-Une fois la génération terminée.
+Version : 2.1
 
-Le moteur calcule automatiquement un indice global de qualité.
+Statut : Référence métier
 
-Cet indice permet à l'administrateur d'évaluer rapidement la pertinence de la répartition.
+## Entrées du Pool Engine
 
-Il est exprimé sous la forme d'un pourcentage compris entre 0 et 100.
+Le moteur reçoit les équipes, séries, paramètres de poules, contraintes obligatoires et préférences configurées.
 
-Une note élevée indique une répartition facile à planifier.
+## Contraintes obligatoires et préférences
 
-Une note faible signale qu'une intervention humaine peut être souhaitable.
+Les contraintes obligatoires invalident une proposition lorsqu'elles ne sont pas respectées. Les préférences orientent l'optimisation sans rendre une proposition impossible.
 
----
+## Propositions et qualité
 
-# Critères d'évaluation
+Le moteur génère plusieurs solutions. Chaque proposition comporte un score de qualité et des diagnostics expliquant ses compromis et ses violations éventuelles.
 
-Le score est calculé à partir de plusieurs indicateurs.
+## Validation
 
-Notamment :
+La validation est une décision explicite. Une répartition validée devient immuable. Toute régénération produit une nouvelle proposition et exige une nouvelle validation ; elle ne modifie jamais silencieusement la version validée.
 
-- équilibre des tailles de poules ;
-- nombre moyen de créneaux communs ;
-- équipes difficiles à placer ;
-- dispersion des disponibilités ;
-- nombre de contraintes respectées ;
-- nombre de conflits évités.
+## Frontières
 
-Chaque indicateur contribue au score final.
+Le Pool Engine :
 
-Le calcul précis pourra évoluer sans modifier le principe général.
-
----
-
-# Restitution
-
-Le logiciel présente les résultats sous une forme compréhensible.
-
-Exemple :
-
-Qualité globale
-
-96 %
-
-Excellent
-
-Créneaux communs
-
-87 %
-
-Très bon
-
-Équilibre
-
-100 %
-
-Parfait
-
-Conflits détectés
-
-0
-
----
-
-# Recommandations
-
-Le moteur ne se contente pas d'afficher un score.
-
-Il explique les éventuels problèmes rencontrés.
-
-Exemples :
-
-"La série Mixte possède plusieurs équipes avec très peu de disponibilités."
-
-"Deux équipes ne partagent aucun créneau commun."
-
-"La génération est correcte mais un échange entre deux équipes améliorerait la planification."
-
-"Une disponibilité supplémentaire le mercredi permettrait d'améliorer fortement la qualité."
-
-Le logiciel accompagne ainsi l'administrateur dans sa décision.
-
----
-
-# Comparaison des solutions
-
-Lorsque plusieurs répartitions présentent une qualité proche.
-
-Le moteur peut proposer plusieurs solutions classées.
-
-Exemple :
-
-Solution 1
-
-Qualité : 97 %
-
-Créneaux communs : 91 %
-
----
-
-Solution 2
-
-Qualité : 95 %
-
-Créneaux communs : 89 %
-
----
-
-Solution 3
-
-Qualité : 93 %
-
-Créneaux communs : 86 %
-
-L'administrateur choisit la solution qu'il souhaite conserver.
-
----
-
-# Validation finale
-
-Avant l'enregistrement.
-
-Le logiciel affiche un résumé.
-
-Exemple :
-
-Série
-
-1ère Série
-
-Équipes
-
-10
-
-Poules
-
-2
-
-Répartition
-
-5 + 5
-
-Qualité
-
-97 %
-
-Anomalies
-
-Aucune
-
-L'administrateur confirme ensuite la génération.
-
----
-
-# Principe fondamental
-
-Le moteur ne génère jamais une répartition sans fournir d'explication.
-
-Chaque décision doit être compréhensible.
-
-Chaque diagnostic doit être justifié.
-
-Le logiciel aide l'organisateur à prendre une décision éclairée.
-
-L'objectif n'est pas seulement de créer des poules.
-
-L'objectif est de produire la meilleure organisation possible du tournoi.
+- ne planifie aucun match ;
+- ne crée aucune Occupation ;
+- ne lit pas Supabase ;
+- ne modifie aucune équipe ;
+- retourne des propositions sans les enregistrer.

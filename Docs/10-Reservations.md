@@ -225,3 +225,17 @@ Le logiciel ne distingue pas un match d'une réservation.
 Il gère uniquement des occupations du calendrier.
 
 Cette approche garantit une cohérence parfaite entre les tournois, les réservations et les autres événements organisés par le club.
+
+---
+
+# Modèle consolidé V2.1
+
+Une réservation est un agrégat métier autonome. Une réservation confirmée crée une Occupation dans le Calendrier. Le Calendrier ne connaît ni le client, ni le tarif, ni le statut de paiement.
+
+États : Brouillon → En attente → Confirmée → Terminée. États alternatifs : Annulée, Refusée, Expirée, Absence.
+
+Policies : CanCreateReservationPolicy, CanConfirmReservationPolicy, CanModifyReservationPolicy, CanCancelReservationPolicy, CanOccupyTimeRangePolicy, CanMoveOccupationPolicy, ReservationAdvanceWindowPolicy, ReservationQuotaPolicy et LicenseePriorityPolicy.
+
+Une modification de métadonnées ne déplace pas l'Occupation. Une modification de date, heure, durée ou terrain déplace l'Occupation avec revalidation complète.
+
+L'annulation métier de la réservation annule l'Occupation associée. Aucun des deux objets n'est supprimé physiquement.

@@ -281,6 +281,7 @@ Le portail public affiche automatiquement :
 - les classements actualisés ;
 - les statistiques du tournoi.
 
+
 Aucune publication supplémentaire n'est nécessaire.
 
 ---
@@ -371,3 +372,15 @@ Le Ranking Engine garantit en permanence la cohérence sportive de la compétiti
 Le logiciel explique toujours les classements.
 
 Il ne demande jamais à l'organisateur d'effectuer un recalcul manuel.
+
+---
+
+# Règles consolidées V2.1
+
+Les règles de points, de classement et de départage proviennent du règlement configuré pour le tournoi. Le moteur représente notamment un match en deux manches gagnantes, des manches principales en 20 points, une manche décisive en 10 points, un barème, un goal-average et un ordre de départage configurables.
+
+Match : À programmer → Programmé → En cours → Terminé → Validé → Archivé. États alternatifs : Annulé, Forfait, Reporté.
+
+Policies : CanStartMatchPolicy, CanEnterResultPolicy, IsScoreValidPolicy, CanValidateResultPolicy et CanCorrectValidatedResultPolicy.
+
+Un résultat validé devient publiable. Une correction conserve l'ancien résultat dans l'audit et déclenche un recalcul intégral.

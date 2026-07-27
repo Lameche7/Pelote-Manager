@@ -30,7 +30,7 @@ Le multi-club pourra être ajouté ultérieurement sans modifier les règles mé
 
 # Tournoi
 
-Un tournoi possède un cycle de vie.
+Un tournoi suit le cycle officiel :
 
 Préparation
 
@@ -48,7 +48,15 @@ Inscriptions fermées
 
 ↓
 
+Poules générées
+
+↓
+
 Poules validées
+
+↓
+
+Planning généré
 
 ↓
 
@@ -56,17 +64,17 @@ Planning publié
 
 ↓
 
-Tournoi en cours
+En cours
 
 ↓
 
-Tournoi terminé
+Terminé
 
 ↓
 
 Archivé
 
-Le logiciel interdit tout changement d'état incohérent.
+`Annulé` est un état terminal distinct.
 
 ---
 
@@ -80,7 +88,7 @@ Une série possède :
 - un ordre ;
 - une capacité maximale.
 
-Une capacité égale à zéro désactive la série.
+Une série désactivée possède `enabled = false` ; une série active possède une capacité strictement positive.
 
 ---
 
@@ -92,7 +100,7 @@ Une équipe ne peut jamais appartenir à plusieurs séries d'un même tournoi.
 
 ---
 
-Une équipe est composée de deux joueurs.
+Une équipe respecte le nombre et les rôles de joueurs définis par le format de compétition.
 
 Les informations des joueurs doivent être complètes avant validation.
 
@@ -269,3 +277,30 @@ Il contrôle la cohérence des données.
 Il explique ses décisions.
 
 L'organisateur reste toujours maître du tournoi.
+
+---
+
+# Règles de référence V2.1
+
+Cycle du tournoi : Préparation → Configuration → Inscriptions ouvertes → Inscriptions fermées → Poules générées → Poules validées → Planning généré → Planning publié → En cours → Terminé → Archivé ; `Annulé` est terminal.
+
+Une série désactivée possède `enabled = false` ; une série active possède une capacité strictement positive. Une équipe respecte le nombre et les rôles définis par le format. Les disponibilités distinguent indisponibilité obligatoire, disponibilité préférée et disponibilité possible.
+
+Une réservation confirmée possède une Occupation associée. Seul le domaine Calendrier décide de l'existence d'un conflit de ressource et de période. Seul le domaine Réservations décide si l'utilisateur a le droit de réserver.
+
+## Invariants essentiels
+- un `TimeRange` possède un début strictement antérieur à sa fin ;
+- une Occupation concerne exactement une ressource ;
+- une Occupation active ne chevauche aucune Occupation incompatible ;
+- un résultat validé est la seule source du classement ;
+- une rencontre ne peut être programmée qu'une fois ;
+- une publication de planning est atomique ;
+- aucune capacité transverse ne prend de décision métier ;
+- un objet archivé n'est plus modifiable hors procédure explicite.
+
+## Autorité documentaire
+1. les ADR acceptés fixent les décisions d'architecture ;
+2. la Domain Map fixe les frontières ;
+3. le Glossaire fixe le vocabulaire ;
+4. les règles métier fixent les invariants ;
+5. les documents fonctionnels fixent les parcours.

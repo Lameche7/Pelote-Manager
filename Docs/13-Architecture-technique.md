@@ -85,6 +85,7 @@ Il fournit notamment :
 - les fonctions SQL ;
 - les politiques de sécurité.
 
+
 Le frontend ne dialogue jamais directement avec PostgreSQL.
 
 Toutes les opérations passent par Supabase.
@@ -277,3 +278,52 @@ Le code doit rester simple, lisible et évolutif.
 La priorité n'est jamais la technologie.
 
 La priorité est la pérennité du logiciel.
+
+---
+
+# Architecture cible V2.1
+
+```text
+Presentation / Features
+↓
+Application
+↓
+Domain
+↑
+Infrastructure
+```
+
+L'Application dépend du Domain. L'Infrastructure implémente les interfaces définies par le Domain ou l'Application. Le Domain ne dépend d'aucune couche. Les Features ne dialoguent pas directement avec Supabase.
+
+```text
+src/
+├── app/
+├── application/
+│ ├── club/
+│ ├── reservations/
+│ ├── tournaments/
+│ └── shared/
+├── domain/
+│ ├── club/
+│ ├── people/
+│ ├── calendar/
+│ ├── reservations/
+│ ├── tournaments/
+│ ├── planning/
+│ ├── ranking/
+│ └── communication/
+├── features/
+├── infrastructure/
+│ ├── supabase/
+│ ├── repositories/
+│ ├── auth/
+│ ├── storage/
+│ └── logger/
+└── shared/
+```
+
+Application Services / Use Cases orchestrent ; Domain Services portent la logique sans entité naturelle ; Infrastructure Services portent les détails techniques. Les entrées et sorties des cas d'usage sont des DTO, ni entités ni lignes SQL.
+
+Les cas d'usage créant plusieurs objets cohérents sont atomiques, notamment la publication du planning et de toutes ses Occupations.
+
+Événements de domaine : TournamentRegistrationsOpened, PoolsValidated, PlanningPublished, ReservationConfirmed, ReservationCancelled et MatchResultValidated. Ils expriment un fait passé sans dépendance technique.
