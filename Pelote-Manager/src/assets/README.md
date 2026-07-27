@@ -1,1 +1,0 @@
-# Le dossier `assets` est destiné à contenir les ressources statiques telles que les images, les polices et les fichiers de style.

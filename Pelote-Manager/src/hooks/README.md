@@ -1,1 +1,0 @@
-# Ce dossier `hooks` contient des hooks personnalisés pour gérer l'état et les effets dans l'application.
