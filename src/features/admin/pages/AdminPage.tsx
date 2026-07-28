@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 
 export function AdminPage() {
@@ -10,6 +12,9 @@ export function AdminPage() {
       {user && <p>Adresse e-mail : {user.email}</p>}
       {profile?.displayName && <p>Nom d’affichage : {profile.displayName}</p>}
       {profile && <p>Rôle applicatif : {profile.role}</p>}
+      <p>
+        <Link to={ROUTES.adminUsers}>Gérer les utilisateurs et leurs rôles</Link>
+      </p>
     </section>
   );
 }
