@@ -3,3 +3,7 @@ dist
 node_modules
 Docs
 package-lock.json
+src/features/admin/pages/AdminUsersPage.tsx
+src/features/admin/services/adminUserService.ts
+src/features/admin/utils/adminUsers.ts
+tests/adminUsers.test.mjs
