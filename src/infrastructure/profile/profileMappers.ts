@@ -1,5 +1,6 @@
 import type { UserProfile } from "@/shared/types/profile";
 import type { Database } from "@/infrastructure/supabase/database";
+import { parseUserRole } from "@/shared/config";
 
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -12,6 +13,7 @@ export function mapProfileRow(row: ProfileRow): UserProfile {
     ...(row.first_name !== null ? { firstName: row.first_name } : {}),
     ...(row.last_name !== null ? { lastName: row.last_name } : {}),
     ...(row.display_name !== null ? { displayName: row.display_name } : {}),
+    role: parseUserRole(row.role),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

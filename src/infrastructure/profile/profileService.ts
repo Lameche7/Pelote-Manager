@@ -28,7 +28,7 @@ export const profileService: ProfileService = {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id,email,first_name,last_name,display_name,created_at,updated_at",
+        "id,email,first_name,last_name,display_name,role,created_at,updated_at",
       )
       .eq("id", userId)
       .maybeSingle();
@@ -45,7 +45,7 @@ export const profileService: ProfileService = {
       .from("profiles")
       .insert(mapProfileInsert(input))
       .select(
-        "id,email,first_name,last_name,display_name,created_at,updated_at",
+        "id,email,first_name,last_name,display_name,role,created_at,updated_at",
       )
       .single();
 
@@ -67,7 +67,6 @@ export const profileService: ProfileService = {
       return await this.createProfile({
         id: authUser.id,
         email: authUser.email,
-        ...(authUser.displayName ? { displayName: authUser.displayName } : {}),
       });
     } catch (error: unknown) {
       // A simultaneous auth event may have created the same one-to-one profile.

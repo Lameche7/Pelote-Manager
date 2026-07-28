@@ -10,6 +10,7 @@
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

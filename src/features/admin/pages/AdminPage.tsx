@@ -9,6 +9,7 @@ export function AdminPage() {
       <p>Cet espace d’administration est réservé aux administrateurs.</p>
       {user && <p>Adresse e-mail : {user.email}</p>}
       {profile?.displayName && <p>Nom d’affichage : {profile.displayName}</p>}
+      {profile && <p>Rôle applicatif : {profile.role}</p>}
     </section>
   );
 }
