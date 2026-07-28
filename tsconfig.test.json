@@ -22,6 +22,8 @@
   },
   "include": [
     "src/app/router/protectedRouteAccess.ts",
-    "src/shared/config/roles.ts"
+    "src/features/admin/utils/adminUsers.ts",
+    "src/shared/config/roles.ts",
+    "src/shared/types/profile.ts"
   ]
 }
