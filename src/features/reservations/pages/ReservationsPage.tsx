@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  formatPrice,
+  getBookingErrorMessage,
+  validateGuestContact,
+  type BookingFormErrors,
+  type GuestContact,
+  type ReservationTerms,
+} from "@/features/reservations/domain/booking";
+import {
   addDays,
   buildWeekDays,
   formatTime,
@@ -9,7 +17,9 @@ import {
   type CalendarSlot,
   type ReservableResource,
 } from "@/features/reservations/domain/calendar";
+import { reservationBookingService } from "@/features/reservations/services/reservationBookingService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
+import { useAuth } from "@/shared/hooks/useAuth";
 import "./ReservationsPage.css";
 
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -18,11 +28,20 @@ const dayFormatter = new Intl.DateTimeFormat("fr-FR", {
   month: "short",
 });
 
+const fullDateFormatter = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
 const rangeFormatter = new Intl.DateTimeFormat("fr-FR", {
   day: "numeric",
   month: "long",
   year: "numeric",
 });
+
+const emptyGuestContact: GuestContact = { name: "", email: "", phone: "" };
 
 function CalendarSkeleton() {
   return (
@@ -34,27 +53,251 @@ function CalendarSkeleton() {
   );
 }
 
-function SlotCard({ slot, timezone }: { slot: CalendarSlot; timezone: string }) {
+function SlotCard({
+  slot,
+  timezone,
+  onBook,
+}: {
+  slot: CalendarSlot;
+  timezone: string;
+  onBook: (slot: CalendarSlot) => void;
+}) {
   const isAvailable = slot.status === "available";
 
+  if (!isAvailable) {
+    return (
+      <div
+        className="reservation-slot reservation-slot--occupied"
+        aria-label={`${formatTime(slot.startsAt, timezone)} : occupé`}
+      >
+        <strong>{formatTime(slot.startsAt, timezone)}</strong>
+        <span>Occupé</span>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`reservation-slot reservation-slot--${slot.status}`}
-      aria-label={`${formatTime(slot.startsAt, timezone)} : ${
-        isAvailable ? "libre" : "occupé"
-      }`}
+    <button
+      type="button"
+      className="reservation-slot reservation-slot--available"
+      aria-label={`Réserver le créneau de ${formatTime(slot.startsAt, timezone)}`}
+      onClick={() => onBook(slot)}
     >
       <strong>{formatTime(slot.startsAt, timezone)}</strong>
-      <span>{isAvailable ? "Libre" : "Occupé"}</span>
+      <span>Réserver</span>
+    </button>
+  );
+}
+
+function BookingModal({
+  slot,
+  resource,
+  isAuthenticated,
+  onClose,
+  onSuccess,
+}: {
+  slot: CalendarSlot;
+  resource: ReservableResource;
+  isAuthenticated: boolean;
+  onClose: () => void;
+  onSuccess: () => Promise<void>;
+}) {
+  const [terms, setTerms] = useState<ReservationTerms | null>(null);
+  const [guestContact, setGuestContact] = useState<GuestContact>(emptyGuestContact);
+  const [formErrors, setFormErrors] = useState<BookingFormErrors>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    void reservationBookingService
+      .getTerms(slot.startsAt)
+      .then((reservationTerms) => {
+        if (isCurrent) setTerms(reservationTerms);
+      })
+      .catch((error: unknown) => {
+        if (isCurrent) setErrorMessage(getBookingErrorMessage(error));
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [slot.startsAt]);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    if (!isAuthenticated) {
+      const errors = validateGuestContact(guestContact);
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await reservationBookingService.create(
+        resource.id,
+        slot.startsAt,
+        isAuthenticated ? undefined : guestContact,
+      );
+      setIsConfirmed(true);
+      await onSuccess();
+    } catch (error) {
+      setErrorMessage(getBookingErrorMessage(error));
+      await onSuccess();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="booking-modal" role="presentation" onMouseDown={onClose}>
+      <section
+        className="booking-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="booking-modal__close"
+          aria-label="Fermer"
+          onClick={onClose}
+        >
+          ×
+        </button>
+
+        {isConfirmed ? (
+          <div className="booking-modal__success" role="status">
+            <span aria-hidden="true">✓</span>
+            <h2 id="booking-modal-title">Réservation confirmée</h2>
+            <p>
+              Votre créneau au {resource.name} est enregistré pour le{" "}
+              {fullDateFormatter.format(new Date(slot.startsAt))} à{" "}
+              {formatTime(slot.startsAt, resource.timezone)}.
+            </p>
+            <button type="button" onClick={onClose}>
+              Retour au calendrier
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={(event) => void handleSubmit(event)}>
+            <p className="booking-modal__eyebrow">Confirmation du créneau</p>
+            <h2 id="booking-modal-title">Réserver {resource.name}</h2>
+
+            <dl className="booking-modal__summary">
+              <div>
+                <dt>Date</dt>
+                <dd>{fullDateFormatter.format(new Date(slot.startsAt))}</dd>
+              </div>
+              <div>
+                <dt>Horaire</dt>
+                <dd>
+                  {formatTime(slot.startsAt, resource.timezone)} –{" "}
+                  {formatTime(slot.endsAt, resource.timezone)}
+                </dd>
+              </div>
+              <div>
+                <dt>Tarif</dt>
+                <dd>{terms ? formatPrice(terms.priceCents) : "Calcul en cours…"}</dd>
+              </div>
+            </dl>
+
+            {terms && (
+              <p className="booking-modal__terms">
+                {terms.customerType === "licensee"
+                  ? "Tarif licencié actif validé."
+                  : "Tarif public applicable."}
+              </p>
+            )}
+
+            {!isAuthenticated && (
+              <fieldset className="booking-modal__fields">
+                <legend>Vos coordonnées</legend>
+                <label>
+                  Nom complet
+                  <input
+                    value={guestContact.name}
+                    onChange={(event) =>
+                      setGuestContact((current) => ({ ...current, name: event.target.value }))
+                    }
+                    autoComplete="name"
+                    aria-invalid={Boolean(formErrors.name)}
+                  />
+                  {formErrors.name && <small>{formErrors.name}</small>}
+                </label>
+                <label>
+                  Adresse électronique
+                  <input
+                    type="email"
+                    value={guestContact.email}
+                    onChange={(event) =>
+                      setGuestContact((current) => ({ ...current, email: event.target.value }))
+                    }
+                    autoComplete="email"
+                    aria-invalid={Boolean(formErrors.email)}
+                  />
+                  {formErrors.email && <small>{formErrors.email}</small>}
+                </label>
+                <label>
+                  Téléphone
+                  <input
+                    type="tel"
+                    value={guestContact.phone}
+                    onChange={(event) =>
+                      setGuestContact((current) => ({ ...current, phone: event.target.value }))
+                    }
+                    autoComplete="tel"
+                    aria-invalid={Boolean(formErrors.phone)}
+                  />
+                  {formErrors.phone && <small>{formErrors.phone}</small>}
+                </label>
+              </fieldset>
+            )}
+
+            {isAuthenticated && (
+              <p className="booking-modal__account">
+                La réservation sera rattachée à votre compte connecté.
+              </p>
+            )}
+
+            {errorMessage && (
+              <div className="booking-modal__error" role="alert">
+                {errorMessage}
+              </div>
+            )}
+
+            <div className="booking-modal__actions">
+              <button type="button" className="booking-modal__secondary" onClick={onClose}>
+                Annuler
+              </button>
+              <button type="submit" disabled={isSubmitting || !terms}>
+                {isSubmitting
+                  ? "Réservation en cours…"
+                  : terms
+                    ? `Confirmer à ${formatPrice(terms.priceCents)}`
+                    : "Chargement…"}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
     </div>
   );
 }
 
 export function ReservationsPage() {
+  const { isAuthenticated } = useAuth();
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
   const [anchorDate, setAnchorDate] = useState(() => startOfIsoWeek(new Date()));
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -92,28 +335,29 @@ export function ReservationsPage() {
     };
   }, []);
 
-  useEffect(() => {
+  async function loadSlots(): Promise<void> {
     if (!resourceId) return;
 
-    let isCurrent = true;
     setIsLoading(true);
     setErrorMessage(null);
 
-    void reservationCalendarService
-      .listSlots(resourceId, weekStartValue, weekEndValue)
-      .then((availableSlots) => {
-        if (isCurrent) setSlots(availableSlots);
-      })
-      .catch(() => {
-        if (isCurrent) setErrorMessage("Impossible de charger les disponibilités.");
-      })
-      .finally(() => {
-        if (isCurrent) setIsLoading(false);
-      });
+    try {
+      setSlots(
+        await reservationCalendarService.listSlots(
+          resourceId,
+          weekStartValue,
+          weekEndValue,
+        ),
+      );
+    } catch {
+      setErrorMessage("Impossible de charger les disponibilités.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
-    return () => {
-      isCurrent = false;
-    };
+  useEffect(() => {
+    void loadSlots();
   }, [resourceId, weekEndValue, weekStartValue]);
 
   return (
@@ -122,7 +366,7 @@ export function ReservationsPage() {
         <div>
           <p className="reservation-calendar__eyebrow">Réservations du trinquet</p>
           <h1>Calendrier des disponibilités</h1>
-          <p>Consultez les créneaux libres avant de réserver.</p>
+          <p>Cliquez sur un créneau libre pour le réserver immédiatement.</p>
         </div>
 
         {resources.length > 1 && (
@@ -182,6 +426,7 @@ export function ReservationsPage() {
                         key={`${slot.startsAt}-${slot.endsAt}`}
                         slot={slot}
                         timezone={selectedResource?.timezone ?? "Europe/Paris"}
+                        onBook={setSelectedSlot}
                       />
                     ))}
                   </div>
@@ -205,6 +450,16 @@ export function ReservationsPage() {
           <i className="reservation-calendar__dot reservation-calendar__dot--closed" /> Fermé
         </span>
       </div>
+
+      {selectedSlot && selectedResource && (
+        <BookingModal
+          slot={selectedSlot}
+          resource={selectedResource}
+          isAuthenticated={isAuthenticated}
+          onClose={() => setSelectedSlot(null)}
+          onSuccess={loadSlots}
+        />
+      )}
     </section>
   );
 }
