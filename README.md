@@ -7,10 +7,10 @@ stade.
 
 ## Attribution du premier rôle administrateur
 
-La migration des rôles attribue le rôle non privilégié `visitor` aux profils
-existants. Après son application, un administrateur du projet Supabase doit
-promouvoir explicitement le premier compte depuis le SQL Editor, en remplaçant
-l'adresse générique ci-dessous par celle du compte concerné :
+La migration des rôles attribue le rôle non privilégié `visitor` aux profils existants.
+Après son application, un administrateur du projet Supabase doit promouvoir
+explicitement le premier compte depuis le SQL Editor, en remplaçant l'adresse
+générique ci-dessous par celle du compte concerné :
 
 ```sql
 update public.profiles
@@ -18,9 +18,9 @@ set role = 'admin'
 where email = 'admin@example.com';
 ```
 
-Vérifiez que la commande a mis à jour exactement une ligne avant d'ouvrir
-`/admin`. Cette opération doit être réalisée avec les droits d'administration
-Supabase et ne doit pas être exposée aux utilisateurs de l'application.
+Vérifiez que la commande a mis à jour exactement une ligne avant d'ouvrir `/admin`.
+Cette opération doit être réalisée avec les droits d'administration Supabase et ne
+doit pas être exposée aux utilisateurs de l'application.
 
 ## Socle technique
 
