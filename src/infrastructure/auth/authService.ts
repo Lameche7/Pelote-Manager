@@ -1,34 +1,72 @@
-import { USER_ROLES } from "@/shared/config";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/infrastructure/supabase/client";
+import { USER_ROLES, type UserRole } from "@/shared/config";
 import type { AuthUser } from "@/shared/types/auth";
+
+type AuthStateListener = (user: AuthUser | null) => void;
 
 export interface AuthService {
   getCurrentUser(): Promise<AuthUser | null>;
-  login(): Promise<AuthUser>;
+  login(email: string, password: string): Promise<AuthUser>;
   logout(): Promise<void>;
+  onAuthStateChange(listener: AuthStateListener): () => void;
 }
 
-const DEMO_ADMIN: AuthUser = {
-  id: "demo-admin",
-  email: "admin@pelote-manager.local",
-  displayName: "Administrateur",
-  role: USER_ROLES.admin,
-};
+function isUserRole(value: unknown): value is UserRole {
+  return Object.values(USER_ROLES).some((role) => role === value);
+}
 
-export function createInMemoryAuthService(): AuthService {
-  let currentUser: AuthUser | null = null;
+/** Keeps Supabase-specific user data out of the React application. */
+export function mapSupabaseUser(user: User): AuthUser {
+  const metadata = user.user_metadata as Record<string, unknown>;
+  const displayName = metadata.display_name;
+  const role = metadata.role;
 
   return {
-    async getCurrentUser() {
-      return currentUser;
-    },
-    async login() {
-      currentUser = DEMO_ADMIN;
-      return currentUser;
-    },
-    async logout() {
-      currentUser = null;
-    },
+    id: user.id,
+    email: user.email ?? "",
+    ...(typeof displayName === "string" ? { displayName } : {}),
+    role: isUserRole(role) ? role : USER_ROLES.visitor,
   };
 }
 
-export const authService = createInMemoryAuthService();
+export const authService: AuthService = {
+  async getCurrentUser() {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      throw error;
+    }
+
+    return data.session ? mapSupabaseUser(data.session.user) : null;
+  },
+
+  async login(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return mapSupabaseUser(data.user);
+  },
+
+  async logout() {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      throw error;
+    }
+  },
+
+  onAuthStateChange(listener) {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      listener(session ? mapSupabaseUser(session.user) : null);
+    });
+
+    return () => data.subscription.unsubscribe();
+  },
+};

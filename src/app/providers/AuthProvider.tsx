@@ -25,6 +25,12 @@ export function AuthProvider({
 
   useEffect(() => {
     let isActive = true;
+    const unsubscribe = service.onAuthStateChange((currentUser) => {
+      if (isActive) {
+        setUser(currentUser);
+        setIsLoading(false);
+      }
+    });
 
     void service
       .getCurrentUser()
@@ -46,12 +52,16 @@ export function AuthProvider({
 
     return () => {
       isActive = false;
+      unsubscribe();
     };
   }, [service]);
 
-  const login = useCallback(async () => {
-    setUser(await service.login());
-  }, [service]);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setUser(await service.login(email, password));
+    },
+    [service],
+  );
 
   const logout = useCallback(async () => {
     await service.logout();
