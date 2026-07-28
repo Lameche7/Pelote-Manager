@@ -7,6 +7,7 @@ export const ROUTES = {
   admin: "/admin",
   adminUsers: "/admin/utilisateurs",
   adminReservations: "/admin/reservations",
+  adminReservationOperations: "/admin/reservations/suivi",
   forbidden: "/acces-refuse",
   notFound: "*",
 } as const;
