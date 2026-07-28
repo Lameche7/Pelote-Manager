@@ -24,7 +24,8 @@
   color: #4b5563;
 }
 
-.reservation-calendar__eyebrow {
+.reservation-calendar__eyebrow,
+.booking-modal__eyebrow {
   color: #1d4ed8 !important;
   font-size: 0.8rem;
   font-weight: 750;
@@ -88,11 +89,23 @@
 
 .reservation-slot {
   display: flex;
+  width: 100%;
   justify-content: space-between;
   gap: 0.5rem;
   border-radius: 0.55rem;
   padding: 0.65rem;
   font-size: 0.9rem;
+}
+
+button.reservation-slot {
+  cursor: pointer;
+  text-align: left;
+}
+
+button.reservation-slot:hover,
+button.reservation-slot:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
 }
 
 .reservation-slot--available {
@@ -123,8 +136,10 @@
   text-align: center;
 }
 
-.reservation-calendar__message--error {
+.reservation-calendar__message--error,
+.booking-modal__error {
   border: 1px solid #fecaca;
+  background: #fef2f2;
   color: #991b1b;
 }
 
@@ -163,6 +178,160 @@
   animation: reservation-calendar-loading 1.4s infinite;
 }
 
+.booking-modal {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 1rem;
+  background: rgb(17 24 39 / 64%);
+}
+
+.booking-modal__panel {
+  position: relative;
+  width: min(100%, 34rem);
+  border-radius: 1rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background: #fff;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 30%);
+}
+
+.booking-modal__panel h2 {
+  margin: 0.25rem 2.5rem 1rem 0;
+}
+
+.booking-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.booking-modal__summary {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0;
+}
+
+.booking-modal__summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.55rem;
+}
+
+.booking-modal__summary dt {
+  color: #6b7280;
+}
+
+.booking-modal__summary dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+.booking-modal__terms,
+.booking-modal__account {
+  border-radius: 0.65rem;
+  padding: 0.75rem;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.booking-modal__fields {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1rem 0;
+  border: 0;
+  padding: 0;
+}
+
+.booking-modal__fields legend {
+  margin-bottom: 0.75rem;
+  font-weight: 750;
+}
+
+.booking-modal__fields label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+}
+
+.booking-modal__fields input {
+  border: 1px solid #d1d5db;
+  border-radius: 0.55rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.booking-modal__fields input[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.booking-modal__fields small {
+  color: #b91c1c;
+  font-weight: 500;
+}
+
+.booking-modal__error {
+  margin-top: 1rem;
+  border-radius: 0.65rem;
+  padding: 0.75rem;
+}
+
+.booking-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.booking-modal__actions button,
+.booking-modal__success button {
+  border: 0;
+  border-radius: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: #1d4ed8;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.booking-modal__actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.booking-modal__actions .booking-modal__secondary {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.booking-modal__success {
+  text-align: center;
+}
+
+.booking-modal__success > span {
+  display: inline-grid;
+  width: 4rem;
+  height: 4rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
 @keyframes reservation-calendar-loading {
   from {
     background-position: 200% 0;
@@ -181,5 +350,25 @@
 
   .reservation-calendar__toolbar button {
     flex: 1;
+  }
+
+  .booking-modal {
+    align-items: end;
+    padding: 0;
+  }
+
+  .booking-modal__panel {
+    width: 100%;
+    max-height: 94vh;
+    overflow-y: auto;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .booking-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .booking-modal__actions button {
+    width: 100%;
   }
 }
