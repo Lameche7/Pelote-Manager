@@ -1,4 +1,7 @@
 export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.4";
+  };
   public: {
     Tables: {
       profiles: {
