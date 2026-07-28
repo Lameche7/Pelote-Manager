@@ -1,7 +1,11 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MainLayout } from "@/app/layouts/MainLayout";
+import { ProtectedRoute } from "@/app/router/ProtectedRoute";
+import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { HomePage } from "@/features/home/pages/HomePage";
-import { ROUTES } from "@/shared/config";
+import { ROUTES, USER_ROLES } from "@/shared/config";
+import { Forbidden } from "@/shared/pages/Forbidden";
 import { NotFound } from "@/shared/pages/NotFound";
 
 export const routes = [
@@ -10,6 +14,16 @@ export const routes = [
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: ROUTES.login, element: <LoginPage /> },
+      { path: ROUTES.forbidden, element: <Forbidden /> },
+      {
+        path: ROUTES.admin,
+        element: (
+          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
+            <AdminPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: ROUTES.notFound, element: <NotFound /> },
     ],
   },

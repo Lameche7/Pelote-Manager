@@ -47,6 +47,39 @@ body {
 
 .app-header {
   border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.app-navigation {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-navigation a,
+.simple-page a {
+  color: #1d4ed8;
+  font-weight: 650;
+}
+
+.app-navigation button,
+.simple-page button {
+  border: 0;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.85rem;
+  color: #fff;
+  background: #1d4ed8;
+  cursor: pointer;
+}
+
+.app-navigation button:disabled,
+.simple-page button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .app-header__name {
@@ -81,6 +114,20 @@ select {
   align-self: center;
   padding: clamp(1.5rem, 5vw, 4rem);
   text-align: center;
+}
+
+.simple-page {
+  align-self: center;
+  width: min(100%, 42rem);
+  margin-inline: auto;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  text-align: center;
+}
+
+.simple-page__code {
+  color: #6b7280;
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 
 .not-found__code {
