@@ -30,6 +30,12 @@ jobs:
       - name: Format package
         run: npx prettier --check package.json
         continue-on-error: true
+      - name: Format ignore files
+        run: npx prettier --check .gitignore .prettierignore
+        continue-on-error: true
+      - name: Format migration
+        run: npx prettier --check supabase/migrations/20260728000100_add_profile_role.sql
+        continue-on-error: true
       - name: Format routes
         run: npx prettier --check src/app/router/ProtectedRoute.tsx src/app/router/protectedRouteAccess.ts
         continue-on-error: true
