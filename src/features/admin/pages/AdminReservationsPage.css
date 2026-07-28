@@ -1,0 +1,108 @@
+.admin-reservations {
+  width: min(100%, 78rem);
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.admin-reservations header h1 {
+  margin: 0.25rem 0;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+}
+
+.admin-reservations header p {
+  color: #4b5563;
+}
+
+.admin-reservations__eyebrow {
+  color: #1d4ed8 !important;
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-reservations__panel {
+  margin-top: 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.9rem;
+  padding: 1rem;
+  background: #fff;
+}
+
+.admin-reservations__form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.admin-reservations label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+}
+
+.admin-reservations input,
+.admin-reservations select,
+.admin-reservations button {
+  border: 1px solid #d1d5db;
+  border-radius: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  background: #fff;
+}
+
+.admin-reservations button {
+  cursor: pointer;
+}
+
+.admin-reservations button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.admin-reservations__resource {
+  max-width: 20rem;
+}
+
+.admin-reservations__inline-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.65rem;
+}
+
+.admin-reservations__list {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-reservations__list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-block: 0.6rem;
+}
+
+.admin-reservations__alert {
+  border: 1px solid #bbf7d0;
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.admin-reservations__alert--error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+@media (max-width: 40rem) {
+  .admin-reservations__list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
