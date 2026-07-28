@@ -29,6 +29,41 @@ body {
   min-height: 100vh;
 }
 
+#root {
+  min-height: 100vh;
+}
+
+.app-layout {
+  display: grid;
+  min-height: 100vh;
+  grid-template-rows: auto 1fr auto;
+}
+
+.app-header,
+.app-footer {
+  padding: 1rem clamp(1.5rem, 5vw, 4rem);
+  background: #fff;
+}
+
+.app-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.app-header__name {
+  color: #111827;
+  font-weight: 750;
+}
+
+.app-main {
+  display: grid;
+}
+
+.app-footer {
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280;
+  text-align: center;
+}
+
 button,
 input,
 textarea,
@@ -38,9 +73,33 @@ select {
 
 .page-shell {
   display: grid;
-  min-height: 100vh;
   place-items: center;
   padding: clamp(1.5rem, 5vw, 4rem);
+}
+
+.not-found {
+  align-self: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  text-align: center;
+}
+
+.not-found__code {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.not-found h1 {
+  margin: 0.5rem 0;
+}
+
+.not-found a {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #1d4ed8;
+  font-weight: 650;
 }
 
 .home {
