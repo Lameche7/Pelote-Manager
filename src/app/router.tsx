@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MainLayout } from "@/app/layouts/MainLayout";
 import { ProtectedRoute } from "@/app/router/ProtectedRoute";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { HomePage } from "@/features/home/pages/HomePage";
 import { ROUTES, USER_ROLES } from "@/shared/config";
@@ -21,6 +22,14 @@ export const routes = [
         element: (
           <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
             <AdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.adminUsers,
+        element: (
+          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
+            <AdminUsersPage />
           </ProtectedRoute>
         ),
       },
