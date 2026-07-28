@@ -9,5 +9,7 @@ src/features/admin/pages/AdminPage.tsx
 src/features/admin/pages/AdminUsersPage.tsx
 src/features/admin/services/adminUserService.ts
 src/features/admin/utils/adminUsers.ts
+src/features/reservations/domain/reservationBenefits.ts
 tests/adminUsers.test.mjs
+tests/reservationBenefits.test.mjs
 tsconfig.test.json
