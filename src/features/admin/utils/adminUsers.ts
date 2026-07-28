@@ -1,5 +1,8 @@
-import { USER_ROLES, type UserRole } from "@/shared/config";
-import type { UserProfile } from "@/shared/types/profile";
+import {
+  USER_ROLES,
+  type UserRole,
+} from "../../../shared/config/roles.js";
+import type { UserProfile } from "../../../shared/types/profile.js";
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   [USER_ROLES.visitor]: "Visiteur",
