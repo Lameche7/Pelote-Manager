@@ -1,0 +1,131 @@
+.admin-payments {
+  width: min(100%, 92rem);
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.admin-payments h1 {
+  margin: 0.25rem 0;
+}
+
+.admin-payments__eyebrow {
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-payments__alert {
+  margin-block: 1rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.admin-payments__alert--error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.admin-payments__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin-block: 1.5rem;
+}
+
+.admin-payments__summary article {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.8rem;
+  padding: 1rem;
+  background: #fff;
+}
+
+.admin-payments__summary span,
+.admin-payments small {
+  display: block;
+  color: #6b7280;
+}
+
+.admin-payments__filters {
+  display: flex;
+  align-items: end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  border-radius: 0.8rem;
+  padding: 1rem;
+  background: #fff;
+}
+
+.admin-payments__filters label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 650;
+}
+
+.admin-payments__filters input,
+.admin-payments__filters select,
+.admin-payments__filters button {
+  border: 1px solid #d1d5db;
+  border-radius: 0.55rem;
+  padding: 0.6rem 0.75rem;
+  background: #fff;
+}
+
+.admin-payments__filters button {
+  cursor: pointer;
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.admin-payments__table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.admin-payments table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-payments th,
+.admin-payments td {
+  padding: 0.8rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.admin-payments__status {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-payments__status--paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-payments__status--failed,
+.admin-payments__status--cancelled,
+.admin-payments__status--expired {
+  background: #fee2e2;
+  color: #991b1b;
+}

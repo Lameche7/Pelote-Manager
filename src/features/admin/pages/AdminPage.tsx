@@ -25,6 +25,9 @@ export function AdminPage() {
           Suivre les réservations, statuts et statistiques
         </Link>
       </p>
+      <p>
+        <Link to={ROUTES.adminPayments}>Suivre les paiements HelloAsso</Link>
+      </p>
     </section>
   );
 }
