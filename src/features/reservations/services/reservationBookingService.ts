@@ -89,4 +89,14 @@ export const reservationBookingService = {
       redirectUrl: checkout.redirectUrl,
     };
   },
+
+  async create(
+    resourceId: string,
+    startsAt: string,
+    guestContact?: GuestContact,
+  ): Promise<never> {
+    const payment = await this.startPayment(resourceId, startsAt, guestContact);
+    window.location.assign(payment.redirectUrl);
+    return new Promise<never>(() => undefined);
+  },
 };
