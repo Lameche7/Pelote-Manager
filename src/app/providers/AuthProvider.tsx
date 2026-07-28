@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -30,14 +31,11 @@ export function AuthProvider({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const synchronizationRevision = useRef(0);
 
-  useEffect(() => {
-    let isActive = true;
-    let authRevision = 0;
-    let profileRevision = 0;
-
-    const synchronize = async (currentUser: AuthUser | null) => {
-      const currentProfileRevision = ++profileRevision;
+  const synchronize = useCallback(
+    async (currentUser: AuthUser | null) => {
+      const currentRevision = ++synchronizationRevision.current;
       setUser(currentUser);
 
       if (!currentUser) {
@@ -51,19 +49,25 @@ export function AuthProvider({
       try {
         const currentProfile =
           await profileService.getOrCreateProfile(currentUser);
-        if (isActive && currentProfileRevision === profileRevision) {
+        if (currentRevision === synchronizationRevision.current) {
           setProfile(currentProfile);
         }
       } catch {
-        if (isActive && currentProfileRevision === profileRevision) {
+        if (currentRevision === synchronizationRevision.current) {
           setProfile(null);
         }
       } finally {
-        if (isActive && currentProfileRevision === profileRevision) {
+        if (currentRevision === synchronizationRevision.current) {
           setIsLoading(false);
         }
       }
-    };
+    },
+    [profileService],
+  );
+
+  useEffect(() => {
+    let isActive = true;
+    let authRevision = 0;
 
     const initialAuthRevision = authRevision;
     const unsubscribe = service.onAuthStateChange((currentUser) => {
@@ -90,24 +94,23 @@ export function AuthProvider({
 
     return () => {
       isActive = false;
+      synchronizationRevision.current += 1;
       unsubscribe();
     };
-  }, [profileService, service]);
+  }, [service, synchronize]);
 
   const login = useCallback(
     async (email: string, password: string) => {
       const authenticatedUser = await service.login(email, password);
-      setUser(authenticatedUser);
-      setProfile(await profileService.getOrCreateProfile(authenticatedUser));
+      await synchronize(authenticatedUser);
     },
-    [profileService, service],
+    [service, synchronize],
   );
 
   const logout = useCallback(async () => {
     await service.logout();
-    setUser(null);
-    setProfile(null);
-  }, [service]);
+    await synchronize(null);
+  }, [service, synchronize]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

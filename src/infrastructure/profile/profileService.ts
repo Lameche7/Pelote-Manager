@@ -18,7 +18,7 @@ class ProfileServiceError extends Error {
   constructor(
     operation: string,
     message: string,
-    readonly code?: string,
+    readonly code: string | undefined,
   ) {
     super(`Impossible de ${operation} le profil : ${message}`);
     this.name = "ProfileServiceError";

@@ -1,6 +1,6 @@
 import type { UserProfile } from "@/shared/types/profile";
 
-export type ProfileRow = {
+export type ProfileRow = Record<string, unknown> & {
   id: string;
   email: string;
   first_name: string | null;
