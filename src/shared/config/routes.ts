@@ -3,6 +3,7 @@ export const ROUTES = {
   login: "/connexion",
   register: "/inscription",
   reservations: "/reservations",
+  myReservations: "/mes-reservations",
   reservationPaymentReturn: "/reservations/paiement",
   tournaments: "/tournois",
   admin: "/admin",

@@ -8,6 +8,7 @@ import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsP
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { HomePage } from "@/features/home/pages/HomePage";
+import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
 import { ROUTES, USER_ROLES } from "@/shared/config";
@@ -22,6 +23,21 @@ export const routes = [
       { index: true, element: <HomePage /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.reservations, element: <ReservationsPage /> },
+      {
+        path: ROUTES.myReservations,
+        element: (
+          <ProtectedRoute
+            allowedRoles={[
+              USER_ROLES.visitor,
+              USER_ROLES.user,
+              USER_ROLES.member,
+              USER_ROLES.admin,
+            ]}
+          >
+            <MyReservationsPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: ROUTES.reservationPaymentReturn, element: <PaymentReturnPage /> },
       { path: ROUTES.forbidden, element: <Forbidden /> },
       {

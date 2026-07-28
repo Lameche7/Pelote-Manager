@@ -12,6 +12,7 @@ export function MainLayout() {
         <nav className="app-navigation" aria-label="Navigation principale">
           <Link to={ROUTES.home}>Accueil</Link>
           <Link to={ROUTES.reservations}>Réservations</Link>
+          {!isLoading && isAuthenticated && <Link to={ROUTES.myReservations}>Mes réservations</Link>}
           <Link to={ROUTES.admin}>Administration</Link>
           {!isLoading &&
             (isAuthenticated ? (

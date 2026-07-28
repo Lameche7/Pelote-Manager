@@ -3,6 +3,7 @@ dist
 node_modules
 Docs
 package-lock.json
+src/app/layouts/MainLayout.tsx
 src/app/router.tsx
 src/shared/config/routes.ts
 src/features/admin/pages/AdminPage.tsx
@@ -21,10 +22,13 @@ src/features/admin/utils/adminUsers.ts
 src/features/reservations/domain/booking.ts
 src/features/reservations/domain/calendar.ts
 src/features/reservations/domain/reservationBenefits.ts
+src/features/reservations/pages/MyReservationsPage.css
+src/features/reservations/pages/MyReservationsPage.tsx
 src/features/reservations/pages/PaymentReturnPage.css
 src/features/reservations/pages/PaymentReturnPage.tsx
 src/features/reservations/pages/ReservationsPage.css
 src/features/reservations/pages/ReservationsPage.tsx
+src/features/reservations/services/myReservationsService.ts
 src/features/reservations/services/reservationBookingService.ts
 src/features/reservations/services/reservationCalendarService.ts
 src/features/reservations/services/reservationPaymentService.ts
@@ -38,6 +42,7 @@ supabase/migrations/20260728000900_add_reservation_operations.sql
 supabase/migrations/20260728000900_fix_admin_weekday_mapping.sql
 supabase/migrations/20260728001000_add_helloasso_payments.sql
 supabase/migrations/20260728001100_complete_helloasso_payment_flow.sql
+supabase/migrations/20260728001200_add_my_reservations.sql
 tests/adminUsers.test.mjs
 tests/reservationBenefits.test.mjs
 tests/reservationBooking.test.mjs
