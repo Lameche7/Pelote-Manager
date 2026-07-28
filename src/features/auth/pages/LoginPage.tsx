@@ -7,6 +7,7 @@ export function LoginPage() {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (isAuthenticated) {
     return <Navigate to={ROUTES.home} replace />;
@@ -14,8 +15,16 @@ export function LoginPage() {
 
   async function handleLogin() {
     setIsSubmitting(true);
-    await login();
-    navigate(ROUTES.home, { replace: true });
+    setError(null);
+
+    try {
+      await login();
+      navigate(ROUTES.home, { replace: true });
+    } catch {
+      setError("La connexion a échoué. Veuillez réessayer.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -34,6 +43,7 @@ export function LoginPage() {
           ? "Connexion…"
           : "Se connecter avec le compte de démonstration"}
       </button>
+      {error && <p role="alert">{error}</p>}
     </section>
   );
 }
