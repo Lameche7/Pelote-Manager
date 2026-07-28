@@ -5,6 +5,7 @@ export const ROUTES = {
   reservations: "/reservations",
   tournaments: "/tournois",
   admin: "/admin",
+  adminUsers: "/admin/utilisateurs",
   forbidden: "/acces-refuse",
   notFound: "*",
 } as const;
