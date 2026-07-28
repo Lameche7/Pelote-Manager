@@ -1,22 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-
-function HomePage() {
-  return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        fontFamily: "system-ui",
-      }}
-    >
-      <section style={{ textAlign: "center" }}>
-        <h1>🏓 Pelote Manager V2</h1>
-        <p>Accueil</p>
-      </section>
-    </main>
-  );
-}
+import { HomePage } from "@/features/home/pages/HomePage";
 
 const router = createBrowserRouter([
   {
