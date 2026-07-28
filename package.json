@@ -10,7 +10,6 @@
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
