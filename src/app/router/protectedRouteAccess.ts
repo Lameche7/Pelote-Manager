@@ -1,5 +1,6 @@
 import type { UserRole } from "@/shared/config";
 
+// prettier-ignore
 export type ProtectedRouteAccess = "loading" | "login" | "forbidden" | "allowed";
 
 type ProtectedRouteAccessInput = {
