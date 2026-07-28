@@ -22,11 +22,15 @@ src/features/reservations/pages/ReservationsPage.css
 src/features/reservations/pages/ReservationsPage.tsx
 src/features/reservations/services/reservationBookingService.ts
 src/features/reservations/services/reservationCalendarService.ts
+supabase/functions/_shared/helloasso.ts
+supabase/functions/create-helloasso-checkout/index.ts
+supabase/functions/helloasso-webhook/index.ts
 supabase/migrations/20260728000600_add_public_reservation_calendar.sql
 supabase/migrations/20260728000700_add_booking_terms_preview.sql
 supabase/migrations/20260728000800_add_reservation_administration.sql
 supabase/migrations/20260728000900_add_reservation_operations.sql
 supabase/migrations/20260728000900_fix_admin_weekday_mapping.sql
+supabase/migrations/20260728001000_add_helloasso_payments.sql
 tests/adminUsers.test.mjs
 tests/reservationBenefits.test.mjs
 tests/reservationBooking.test.mjs
