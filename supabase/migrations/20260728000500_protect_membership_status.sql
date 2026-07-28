@@ -8,10 +8,24 @@ begin
   if (select auth.role()) = 'authenticated'
     and not public.is_profile_admin()
     and (
-      new.membership_status is distinct from old.membership_status
-      or new.membership_valid_until is distinct from old.membership_valid_until
-      or new.membership_validated_at is distinct from old.membership_validated_at
-      or new.membership_validated_by is distinct from old.membership_validated_by
+      (
+        tg_op = 'INSERT'
+        and (
+          new.membership_status <> 'pending'::public.membership_status
+          or new.membership_valid_until is not null
+          or new.membership_validated_at is not null
+          or new.membership_validated_by is not null
+        )
+      )
+      or (
+        tg_op = 'UPDATE'
+        and (
+          new.membership_status is distinct from old.membership_status
+          or new.membership_valid_until is distinct from old.membership_valid_until
+          or new.membership_validated_at is distinct from old.membership_validated_at
+          or new.membership_validated_by is distinct from old.membership_validated_by
+        )
+      )
     ) then
     raise exception 'Seul un administrateur peut modifier le statut de licence'
       using errcode = '42501';
@@ -22,7 +36,7 @@ end;
 $$;
 
 create trigger protect_profile_membership
-before update of
+before insert or update of
   membership_status,
   membership_valid_until,
   membership_validated_at,
