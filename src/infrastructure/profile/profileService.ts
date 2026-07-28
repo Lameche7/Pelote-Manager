@@ -14,13 +14,12 @@ export interface ProfileService {
 }
 
 class ProfileServiceError extends Error {
-  constructor(
-    operation: string,
-    message: string,
-    readonly code: string | undefined,
-  ) {
+  readonly code: string | undefined;
+
+  constructor(operation: string, message: string, code: string | undefined) {
     super(`Impossible de ${operation} le profil : ${message}`);
     this.name = "ProfileServiceError";
+    this.code = code;
   }
 }
 
