@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { getProtectedRouteAccess } from "@/app/router/protectedRouteAccess";
 import { ROUTES, type UserRole } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 
@@ -11,18 +12,24 @@ export function ProtectedRoute({
   children,
   allowedRoles,
 }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { profile, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const access = getProtectedRouteAccess({
+    isLoading,
+    isAuthenticated,
+    role: profile?.role ?? null,
+    ...(allowedRoles ? { allowedRoles } : {}),
+  });
 
-  if (isLoading) {
+  if (access === "loading") {
     return <p role="status">Chargement de votre session…</p>;
   }
 
-  if (!isAuthenticated) {
+  if (access === "login") {
     return <Navigate to={ROUTES.login} replace state={{ from: location }} />;
   }
 
-  if (allowedRoles && (!user || !allowedRoles.includes(user.role))) {
+  if (access === "forbidden") {
     return <Navigate to={ROUTES.forbidden} replace />;
   }
 
