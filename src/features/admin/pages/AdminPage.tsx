@@ -20,6 +20,11 @@ export function AdminPage() {
           Configurer les réservations, horaires et fermetures
         </Link>
       </p>
+      <p>
+        <Link to={ROUTES.adminReservationOperations}>
+          Suivre les réservations, statuts et statistiques
+        </Link>
+      </p>
     </section>
   );
 }
