@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MainLayout } from "@/app/layouts/MainLayout";
 import { ProtectedRoute } from "@/app/router/ProtectedRoute";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { HomePage } from "@/features/home/pages/HomePage";
@@ -32,6 +33,14 @@ export const routes = [
         element: (
           <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
             <AdminUsersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.adminReservations,
+        element: (
+          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
+            <AdminReservationsPage />
           </ProtectedRoute>
         ),
       },

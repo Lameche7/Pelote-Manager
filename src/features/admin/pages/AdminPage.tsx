@@ -15,6 +15,11 @@ export function AdminPage() {
       <p>
         <Link to={ROUTES.adminUsers}>Gérer les utilisateurs et leurs rôles</Link>
       </p>
+      <p>
+        <Link to={ROUTES.adminReservations}>
+          Configurer les réservations, horaires et fermetures
+        </Link>
+      </p>
     </section>
   );
 }

@@ -6,7 +6,10 @@ package-lock.json
 src/app/router.tsx
 src/shared/config/routes.ts
 src/features/admin/pages/AdminPage.tsx
+src/features/admin/pages/AdminReservationsPage.css
+src/features/admin/pages/AdminReservationsPage.tsx
 src/features/admin/pages/AdminUsersPage.tsx
+src/features/admin/services/adminReservationService.ts
 src/features/admin/services/adminUserService.ts
 src/features/admin/utils/adminUsers.ts
 src/features/reservations/domain/booking.ts
@@ -18,6 +21,8 @@ src/features/reservations/services/reservationBookingService.ts
 src/features/reservations/services/reservationCalendarService.ts
 supabase/migrations/20260728000600_add_public_reservation_calendar.sql
 supabase/migrations/20260728000700_add_booking_terms_preview.sql
+supabase/migrations/20260728000800_add_reservation_administration.sql
+supabase/migrations/20260728000900_fix_admin_weekday_mapping.sql
 tests/adminUsers.test.mjs
 tests/reservationBenefits.test.mjs
 tests/reservationBooking.test.mjs
