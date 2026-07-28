@@ -24,13 +24,14 @@ export function PaymentReturnPage() {
       return;
     }
 
+    const currentPaymentId = paymentId;
     let active = true;
     let attempts = 0;
     let timer: number | undefined;
 
     async function refresh() {
       try {
-        const current = await reservationPaymentService.getReturnStatus(paymentId);
+        const current = await reservationPaymentService.getReturnStatus(currentPaymentId);
         if (!active) return;
         setPayment(current);
         setError(null);
