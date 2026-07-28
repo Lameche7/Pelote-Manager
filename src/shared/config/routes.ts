@@ -5,5 +5,6 @@ export const ROUTES = {
   reservations: "/reservations",
   tournaments: "/tournois",
   admin: "/admin",
+  forbidden: "/acces-refuse",
   notFound: "*",
 } as const;
