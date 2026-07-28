@@ -1,0 +1,203 @@
+.my-reservations {
+  width: min(100%, 72rem);
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.my-reservations header h1 {
+  margin: 0.25rem 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.my-reservations__eyebrow,
+.my-reservations__resource {
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.my-reservations__tabs {
+  display: inline-flex;
+  gap: 0.4rem;
+  margin-block: 1.5rem;
+  border-radius: 0.8rem;
+  padding: 0.3rem;
+  background: #e5e7eb;
+}
+
+.my-reservations__tabs button {
+  border: 0;
+  border-radius: 0.6rem;
+  padding: 0.7rem 1rem;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.my-reservations__tabs button[aria-selected="true"] {
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
+}
+
+.my-reservations__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.my-reservations__card {
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+.my-reservations__card-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.my-reservations__card-header h2 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+}
+
+.my-reservations__card-header > strong {
+  white-space: nowrap;
+  font-size: 1.25rem;
+}
+
+.my-reservations__badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-block: 1rem;
+}
+
+.my-reservations__badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.my-reservations__badge--confirmed,
+.my-reservations__badge--completed,
+.my-reservations__badge--payment-paid,
+.my-reservations__badge--payment-refunded {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.my-reservations__badge--pending,
+.my-reservations__badge--payment-pending,
+.my-reservations__badge--payment-authorized {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.my-reservations__badge--cancelled,
+.my-reservations__badge--expired,
+.my-reservations__badge--refused,
+.my-reservations__badge--no_show,
+.my-reservations__badge--payment-failed,
+.my-reservations__badge--payment-cancelled,
+.my-reservations__badge--payment-expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.my-reservations__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.my-reservations__details div {
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  background: #f8fafc;
+}
+
+.my-reservations__details dt {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.my-reservations__details dd {
+  margin: 0.25rem 0 0;
+  font-weight: 700;
+}
+
+.my-reservations__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.my-reservations__actions button,
+.my-reservations__empty a {
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.75rem 1rem;
+  background: #1d4ed8;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.my-reservations__actions .my-reservations__danger {
+  background: #b91c1c;
+}
+
+.my-reservations__actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.my-reservations__notice,
+.my-reservations__alert {
+  border: 1px solid #fde68a;
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.my-reservations__alert--error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.my-reservations__empty {
+  border: 1px dashed #cbd5e1;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .my-reservations__card-header {
+    flex-direction: column;
+  }
+
+  .my-reservations__actions {
+    flex-direction: column;
+  }
+
+  .my-reservations__actions button {
+    width: 100%;
+  }
+}
