@@ -3,11 +3,13 @@ export const ROUTES = {
   login: "/connexion",
   register: "/inscription",
   reservations: "/reservations",
+  reservationPaymentReturn: "/reservations/paiement",
   tournaments: "/tournois",
   admin: "/admin",
   adminUsers: "/admin/utilisateurs",
   adminReservations: "/admin/reservations",
   adminReservationOperations: "/admin/reservations/suivi",
+  adminPayments: "/admin/paiements",
   forbidden: "/acces-refuse",
   notFound: "*",
 } as const;
