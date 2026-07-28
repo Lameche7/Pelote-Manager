@@ -59,6 +59,7 @@ Deno.serve(async (request) => {
       clientSecret,
     });
 
+    const returnBase = `${applicationUrl}/reservations/paiement?paymentId=${encodeURIComponent(payment.payment_id)}`;
     const checkout = await createHelloAssoCheckout({
       environment,
       accessToken,
@@ -72,9 +73,9 @@ Deno.serve(async (request) => {
         payment_id: payment.payment_id,
         reservation_id: payment.reservation_id,
       },
-      backUrl: `${applicationUrl}/reservations?payment=back`,
-      errorUrl: `${applicationUrl}/reservations?payment=error`,
-      returnUrl: `${applicationUrl}/reservations?payment=return`,
+      backUrl: `${returnBase}&result=back`,
+      errorUrl: `${returnBase}&result=error`,
+      returnUrl: `${returnBase}&result=return`,
     });
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
