@@ -5,6 +5,7 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { HomePage } from "@/features/home/pages/HomePage";
+import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
 import { ROUTES, USER_ROLES } from "@/shared/config";
 import { Forbidden } from "@/shared/pages/Forbidden";
 import { NotFound } from "@/shared/pages/NotFound";
@@ -16,6 +17,7 @@ export const routes = [
     children: [
       { index: true, element: <HomePage /> },
       { path: ROUTES.login, element: <LoginPage /> },
+      { path: ROUTES.reservations, element: <ReservationsPage /> },
       { path: ROUTES.forbidden, element: <Forbidden /> },
       {
         path: ROUTES.admin,
