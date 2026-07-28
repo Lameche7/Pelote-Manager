@@ -6,6 +6,8 @@ import { useAuth } from "@/shared/hooks/useAuth";
 export function LoginPage() {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,15 +15,20 @@ export function LoginPage() {
     return <Navigate to={ROUTES.home} replace />;
   }
 
-  async function handleLogin() {
+  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
     try {
-      await login();
+      await login(email, password);
       navigate(ROUTES.home, { replace: true });
-    } catch {
-      setError("La connexion a échoué. Veuillez réessayer.");
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "La connexion a échoué. Veuillez réessayer.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -30,20 +37,32 @@ export function LoginPage() {
   return (
     <section className="simple-page" aria-labelledby="login-title">
       <h1 id="login-title">Connexion</h1>
-      <p>
-        Cette connexion de démonstration utilise un compte administrateur
-        simulé. Aucun mot de passe n’est demandé ni enregistré.
-      </p>
-      <button
-        type="button"
-        onClick={() => void handleLogin()}
-        disabled={isSubmitting}
-      >
-        {isSubmitting
-          ? "Connexion…"
-          : "Se connecter avec le compte de démonstration"}
-      </button>
-      {error && <p role="alert">{error}</p>}
+      <form onSubmit={(event) => void handleLogin(event)}>
+        <label htmlFor="email">Adresse e-mail</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+        <label htmlFor="password">Mot de passe</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Connexion…" : "Se connecter"}
+        </button>
+        {error && <p role="alert">{error}</p>}
+      </form>
     </section>
   );
 }
