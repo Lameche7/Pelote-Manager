@@ -1,10 +1,6 @@
 import type { UserRole } from "@/shared/config";
 
-export type ProtectedRouteAccess =
-  | "loading"
-  | "login"
-  | "forbidden"
-  | "allowed";
+export type ProtectedRouteAccess = "loading" | "login" | "forbidden" | "allowed";
 
 type ProtectedRouteAccessInput = {
   isLoading: boolean;
