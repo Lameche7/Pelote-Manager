@@ -1,20 +1,9 @@
 import type { UserProfile } from "@/shared/types/profile";
+import type { Database } from "@/infrastructure/supabase/database";
 
-export type ProfileRow = Record<string, unknown> & {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  display_name: string | null;
-  created_at: string;
-  updated_at: string;
-};
+export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 
-export type ProfileInsert = {
-  id: string;
-  email: string;
-  display_name?: string;
-};
+export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 
 export function mapProfileRow(row: ProfileRow): UserProfile {
   return {

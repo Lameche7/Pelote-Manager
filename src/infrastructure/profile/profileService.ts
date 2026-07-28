@@ -3,7 +3,6 @@ import {
   mapProfileInsert,
   mapProfileRow,
   type CreateProfileInput,
-  type ProfileRow,
 } from "@/infrastructure/profile/profileMappers";
 import type { AuthUser } from "@/shared/types/auth";
 import type { UserProfile } from "@/shared/types/profile";
@@ -33,7 +32,7 @@ export const profileService: ProfileService = {
         "id,email,first_name,last_name,display_name,created_at,updated_at",
       )
       .eq("id", userId)
-      .maybeSingle<ProfileRow>();
+      .maybeSingle();
 
     if (error) {
       throw new ProfileServiceError("charger", error.message, error.code);
@@ -49,7 +48,7 @@ export const profileService: ProfileService = {
       .select(
         "id,email,first_name,last_name,display_name,created_at,updated_at",
       )
-      .single<ProfileRow>();
+      .single();
 
     if (error) {
       throw new ProfileServiceError("créer", error.message, error.code);
