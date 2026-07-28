@@ -11,6 +11,7 @@ export function MainLayout() {
         <span className="app-header__name">{APP_CONFIG.name}</span>
         <nav className="app-navigation" aria-label="Navigation principale">
           <Link to={ROUTES.home}>Accueil</Link>
+          <Link to={ROUTES.reservations}>Réservations</Link>
           <Link to={ROUTES.admin}>Administration</Link>
           {!isLoading &&
             (isAuthenticated ? (
