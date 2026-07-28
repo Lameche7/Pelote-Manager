@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getProtectedRouteAccess } from "../src/app/router/protectedRouteAccess.ts";
-import { USER_ROLES } from "../src/shared/config/roles.ts";
+import { getProtectedRouteAccess } from "../.test-dist/src/app/router/protectedRouteAccess.js";
+import { USER_ROLES } from "../.test-dist/src/shared/config/roles.js";
 
 const adminOnly = [USER_ROLES.admin];
 

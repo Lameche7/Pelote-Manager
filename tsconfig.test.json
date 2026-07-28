@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "rootDir": ".",
+    "outDir": ".test-dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/shared/config": ["src/shared/config/roles.ts"],
+      "@/*": ["src/*"]
+    }
+  },
+  "include": [
+    "src/app/router/protectedRouteAccess.ts",
+    "src/shared/config/roles.ts"
+  ]
+}

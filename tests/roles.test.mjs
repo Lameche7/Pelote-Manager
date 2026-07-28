@@ -4,7 +4,7 @@ import {
   isUserRole,
   parseUserRole,
   USER_ROLES,
-} from "../src/shared/config/roles.ts";
+} from "../.test-dist/src/shared/config/roles.js";
 
 test("reconnaît tous les rôles applicatifs", () => {
   for (const role of Object.values(USER_ROLES)) {
