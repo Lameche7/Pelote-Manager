@@ -10,6 +10,7 @@ import {
   type ReservableResource,
 } from "@/features/reservations/domain/calendar";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
+import "./ReservationsPage.css";
 
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", {
   weekday: "short",
@@ -61,6 +62,8 @@ export function ReservationsPage() {
   const weekDays = useMemo(() => buildWeekDays(anchorDate), [anchorDate]);
   const weekStart = weekDays[0];
   const weekEnd = weekDays[6];
+  const weekStartValue = toDateInputValue(weekStart);
+  const weekEndValue = toDateInputValue(weekEnd);
   const slotsByDay = useMemo(
     () =>
       groupSlotsByLocalDate(slots, selectedResource?.timezone ?? "Europe/Paris"),
@@ -97,11 +100,7 @@ export function ReservationsPage() {
     setErrorMessage(null);
 
     void reservationCalendarService
-      .listSlots(
-        resourceId,
-        toDateInputValue(weekStart),
-        toDateInputValue(weekEnd),
-      )
+      .listSlots(resourceId, weekStartValue, weekEndValue)
       .then((availableSlots) => {
         if (isCurrent) setSlots(availableSlots);
       })
@@ -115,7 +114,7 @@ export function ReservationsPage() {
     return () => {
       isCurrent = false;
     };
-  }, [resourceId, weekStart.getTime(), weekEnd.getTime()]);
+  }, [resourceId, weekEndValue, weekStartValue]);
 
   return (
     <section className="reservation-calendar">
@@ -196,9 +195,15 @@ export function ReservationsPage() {
       )}
 
       <div className="reservation-calendar__legend" aria-label="Légende">
-        <span><i className="reservation-calendar__dot reservation-calendar__dot--available" /> Libre</span>
-        <span><i className="reservation-calendar__dot reservation-calendar__dot--occupied" /> Occupé</span>
-        <span><i className="reservation-calendar__dot reservation-calendar__dot--closed" /> Fermé</span>
+        <span>
+          <i className="reservation-calendar__dot reservation-calendar__dot--available" /> Libre
+        </span>
+        <span>
+          <i className="reservation-calendar__dot reservation-calendar__dot--occupied" /> Occupé
+        </span>
+        <span>
+          <i className="reservation-calendar__dot reservation-calendar__dot--closed" /> Fermé
+        </span>
       </div>
     </section>
   );
