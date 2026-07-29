@@ -28,7 +28,8 @@ export type StartedPayment = {
   amountCents: number;
   currency: "EUR";
   expiresAt: string;
-  redirectUrl: string;
+  redirectUrl?: string;
+  mode: "test" | "helloasso";
 };
 
 async function releasePendingReservation(
@@ -50,7 +51,6 @@ export const reservationBookingService = {
     const { data, error } = await supabase.rpc("get_current_reservation_terms", {
       target_starts_at: startsAt,
     });
-
     if (error) throw error;
 
     const row = (data as TermsRow[] | null)?.[0];
@@ -64,11 +64,18 @@ export const reservationBookingService = {
     };
   },
 
+  async getPaymentMode(): Promise<"test" | "helloasso"> {
+    const { data, error } = await supabase.rpc("get_payment_mode");
+    if (error) throw error;
+    return data === "helloasso" ? "helloasso" : "test";
+  },
+
   async startPayment(
     resourceId: string,
     startsAt: string,
     guestContact?: GuestContact,
   ): Promise<StartedPayment> {
+    const mode = await this.getPaymentMode();
     const { data, error } = await supabase.rpc("reserve_for_payment", {
       target_resource_id: resourceId,
       target_starts_at: startsAt,
@@ -76,18 +83,27 @@ export const reservationBookingService = {
       guest_email: guestContact?.email ?? null,
       guest_phone: guestContact?.phone ?? null,
     });
-
     if (error) throw error;
 
     const payment = (data as PaymentReservationRow[] | null)?.[0];
     if (!payment) throw new Error("La réservation en attente de paiement n’a pas été créée.");
+
+    if (mode === "test") {
+      return {
+        reservationId: payment.reservation_id,
+        paymentId: payment.payment_id,
+        amountCents: payment.amount_cents,
+        currency: payment.currency,
+        expiresAt: payment.expires_at,
+        mode,
+      };
+    }
 
     try {
       const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
         "create-helloasso-checkout",
         { body: { paymentId: payment.payment_id } },
       );
-
       if (checkoutError) throw checkoutError;
 
       const checkout = checkoutData as CheckoutResponse | null;
@@ -102,30 +118,61 @@ export const reservationBookingService = {
         currency: payment.currency,
         expiresAt: payment.expires_at,
         redirectUrl: checkout.redirectUrl,
+        mode,
       };
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : "Erreur inconnue lors du paiement";
+    } catch (checkoutError) {
+      const reason = checkoutError instanceof Error ? checkoutError.message : "Erreur inconnue";
       const released = await releasePendingReservation(payment, reason);
-
       if (released) {
         throw new Error(
           "Le paiement n’a pas pu démarrer. Le créneau a été libéré : vous pouvez réessayer.",
         );
       }
-
       throw new Error(
         "Le paiement n’a pas pu démarrer et le créneau reste temporairement bloqué. Réessayez dans quelques minutes.",
       );
     }
   },
 
+  async simulate(paymentId: string, outcome: "paid" | "failed" | "cancelled"): Promise<void> {
+    const { error } = await supabase.rpc("simulate_payment", {
+      target_payment_id: paymentId,
+      simulated_outcome: outcome,
+    });
+    if (error) throw error;
+  },
+
   async create(
     resourceId: string,
     startsAt: string,
     guestContact?: GuestContact,
-  ): Promise<never> {
+  ): Promise<StartedPayment> {
     const payment = await this.startPayment(resourceId, startsAt, guestContact);
-    window.location.assign(payment.redirectUrl);
-    return new Promise<never>(() => undefined);
+
+    if (payment.mode === "helloasso" && payment.redirectUrl) {
+      window.location.assign(payment.redirectUrl);
+      return new Promise<StartedPayment>(() => undefined);
+    }
+
+    const accepted = window.confirm(
+      "MODE TEST — Aucun paiement réel ne sera effectué.\n\nOK : simuler un paiement accepté\nAnnuler : choisir un refus ou une annulation",
+    );
+
+    if (accepted) {
+      await this.simulate(payment.paymentId, "paid");
+      return payment;
+    }
+
+    const refused = window.confirm(
+      "Simuler un paiement refusé ?\n\nOK : paiement refusé\nAnnuler : paiement abandonné",
+    );
+    const outcome = refused ? "failed" : "cancelled";
+    await this.simulate(payment.paymentId, outcome);
+
+    throw new Error(
+      refused
+        ? "Paiement refusé en mode test. Le créneau a été libéré."
+        : "Paiement annulé en mode test. Le créneau a été libéré.",
+    );
   },
 };
