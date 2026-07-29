@@ -31,6 +31,20 @@ export type StartedPayment = {
   redirectUrl: string;
 };
 
+async function releasePendingReservation(
+  payment: PaymentReservationRow,
+  reason: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc("cancel_unstarted_payment", {
+    target_payment_id: payment.payment_id,
+    target_reservation_id: payment.reservation_id,
+    cancellation_reason: reason,
+  });
+
+  if (error) return false;
+  return data === true;
+}
+
 export const reservationBookingService = {
   async getTerms(startsAt: string): Promise<ReservationTerms> {
     const { data, error } = await supabase.rpc("get_current_reservation_terms", {
@@ -68,26 +82,41 @@ export const reservationBookingService = {
     const payment = (data as PaymentReservationRow[] | null)?.[0];
     if (!payment) throw new Error("La réservation en attente de paiement n’a pas été créée.");
 
-    const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
-      "create-helloasso-checkout",
-      { body: { paymentId: payment.payment_id } },
-    );
+    try {
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
+        "create-helloasso-checkout",
+        { body: { paymentId: payment.payment_id } },
+      );
 
-    if (checkoutError) throw checkoutError;
+      if (checkoutError) throw checkoutError;
 
-    const checkout = checkoutData as CheckoutResponse | null;
-    if (!checkout?.redirectUrl) {
-      throw new Error(checkout?.error ?? "HelloAsso n’a pas retourné de lien de paiement.");
+      const checkout = checkoutData as CheckoutResponse | null;
+      if (!checkout?.redirectUrl) {
+        throw new Error(checkout?.error ?? "HelloAsso n’a pas retourné de lien de paiement.");
+      }
+
+      return {
+        reservationId: payment.reservation_id,
+        paymentId: payment.payment_id,
+        amountCents: payment.amount_cents,
+        currency: payment.currency,
+        expiresAt: payment.expires_at,
+        redirectUrl: checkout.redirectUrl,
+      };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Erreur inconnue lors du paiement";
+      const released = await releasePendingReservation(payment, reason);
+
+      if (released) {
+        throw new Error(
+          "Le paiement n’a pas pu démarrer. Le créneau a été libéré : vous pouvez réessayer.",
+        );
+      }
+
+      throw new Error(
+        "Le paiement n’a pas pu démarrer et le créneau reste temporairement bloqué. Réessayez dans quelques minutes.",
+      );
     }
-
-    return {
-      reservationId: payment.reservation_id,
-      paymentId: payment.payment_id,
-      amountCents: payment.amount_cents,
-      currency: payment.currency,
-      expiresAt: payment.expires_at,
-      redirectUrl: checkout.redirectUrl,
-    };
   },
 
   async create(
