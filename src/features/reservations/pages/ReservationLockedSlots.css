@@ -1,19 +1,35 @@
 .reservation-slot--locked {
-  border: 1px solid #c9cfd8;
-  color: #4c5664;
-  background: linear-gradient(135deg, #f8f9fb, #eceff3);
+  border: 1px solid #a9bdd1;
+  color: #26384b;
+  background: linear-gradient(135deg, #f4f8fc, #e8f0f7);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 55%);
 }
 
 .reservation-slot--locked::before {
-  background: #6b7280;
+  background: #3f6688;
+}
+
+.reservation-slot--locked strong {
+  color: #18364f;
 }
 
 .reservation-slot--locked span {
-  font-size: 0.72rem;
-  line-height: 1.25;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.32rem;
+  color: #3c5267;
+  font-size: 0.76rem;
+  line-height: 1.3;
+}
+
+.reservation-slot--locked span::before {
+  content: "🔒";
+  font-size: 0.82rem;
+  line-height: 1.15;
 }
 
 .reservation-calendar__dot--locked {
-  background: #6b7280;
-  box-shadow: 0 0 0 0.22rem rgb(107 114 128 / 12%);
+  background: #3f6688;
+  box-shadow: 0 0 0 0.22rem rgb(63 102 136 / 14%);
 }
