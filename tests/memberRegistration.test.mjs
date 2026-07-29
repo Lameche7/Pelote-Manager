@@ -7,6 +7,7 @@ import {
   VerificationAttemptLimiter,
   mapRegistrationError,
 } from "../.test-dist/src/features/members/domain/memberRegistration.js";
+import { canCleanupMemberRegistration } from "../.test-dist/supabase/functions/_shared/memberRegistrationCleanup.js";
 
 const profileMigration = await readFile(
   new URL(
@@ -121,4 +122,55 @@ test("le nettoyage Auth supprime le profil et sa liaison par cascade", () => {
     /references auth\.users \(id\) on delete cascade/i,
   );
   assert.match(cleanupFunction, /auth\.admin\.deleteUser\(\s*data\.user\.id/);
+});
+
+const pendingMetadata = {
+  registration_pending: true,
+  registration_token: "registration-123",
+  pending_member_identity: {
+    licenceNumber: "LIC-1",
+    lastName: "Dupont",
+    firstName: "Marie",
+    birthDate: "1990-01-01",
+  },
+};
+
+test("autorise le cleanup uniquement pendant l'inscription", () => {
+  assert.equal(
+    canCleanupMemberRegistration(pendingMetadata, "registration-123", null),
+    true,
+  );
+});
+
+test("refuse le cleanup sans token valide", () => {
+  assert.equal(
+    canCleanupMemberRegistration(pendingMetadata, "incorrect", null),
+    false,
+  );
+});
+
+test("refuse le cleanup sans registration_pending", () => {
+  assert.equal(
+    canCleanupMemberRegistration(
+      { ...pendingMetadata, registration_pending: null },
+      "registration-123",
+      null,
+    ),
+    false,
+  );
+});
+
+test("refuse toujours de supprimer un compte déjà finalisé", () => {
+  assert.equal(
+    canCleanupMemberRegistration(
+      pendingMetadata,
+      "registration-123",
+      "member-id",
+    ),
+    false,
+  );
+  assert.equal(
+    canCleanupMemberRegistration({}, "registration-123", null),
+    false,
+  );
 });

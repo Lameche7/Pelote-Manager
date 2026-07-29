@@ -53,6 +53,8 @@ function hasCompleteIdentity(identity: MemberIdentity): boolean {
 }
 
 const PENDING_IDENTITY_KEY = "pending_member_identity";
+const REGISTRATION_PENDING_KEY = "registration_pending";
+const REGISTRATION_TOKEN_KEY = "registration_token";
 const VERIFICATION_LIMIT_KEY = "member_verification_attempts";
 
 function createVerificationLimiter() {
@@ -91,6 +93,21 @@ function readPendingIdentity(
     ? (identity as MemberIdentity)
     : null;
 }
+
+function readRegistrationToken(
+  metadata: Record<string, unknown>,
+): string | null {
+  return metadata[REGISTRATION_PENDING_KEY] === true &&
+    typeof metadata[REGISTRATION_TOKEN_KEY] === "string"
+    ? metadata[REGISTRATION_TOKEN_KEY]
+    : null;
+}
+
+const clearedRegistrationMetadata = {
+  [REGISTRATION_PENDING_KEY]: null,
+  [PENDING_IDENTITY_KEY]: null,
+  [REGISTRATION_TOKEN_KEY]: null,
+};
 
 export const memberService = {
   async matchesLicence(identity: MemberIdentity): Promise<boolean> {
@@ -133,15 +150,19 @@ export const memberService = {
     return data as string;
   },
 
-  async cleanupCurrentRegistration(): Promise<void> {
+  async cleanupCurrentRegistration(registrationToken: string): Promise<void> {
     const { error } = await supabase.functions.invoke(
       "cleanup-member-registration",
+      { body: { registrationToken } },
     );
     await supabase.auth.signOut();
     if (error) throw error;
   },
 
-  async completeCurrentRegistration(identity: MemberIdentity): Promise<void> {
+  async completeCurrentRegistration(
+    identity: MemberIdentity,
+    registrationToken: string,
+  ): Promise<void> {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user)
       throw error ?? new MemberRegistrationError("unknown");
@@ -154,7 +175,7 @@ export const memberService = {
         await this.linkCurrentProfile(identity);
       },
       async () => {
-        await this.cleanupCurrentRegistration();
+        await this.cleanupCurrentRegistration(registrationToken);
       },
     );
   },
@@ -163,25 +184,33 @@ export const memberService = {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) return false;
     const identity = readPendingIdentity(data.user.user_metadata);
-    if (!identity) return false;
-    await this.completeCurrentRegistration(identity);
-    await supabase.auth.updateUser({ data: { [PENDING_IDENTITY_KEY]: null } });
+    const registrationToken = readRegistrationToken(data.user.user_metadata);
+    if (!identity || !registrationToken) return false;
+    await this.completeCurrentRegistration(identity, registrationToken);
+    await supabase.auth.updateUser({ data: clearedRegistrationMetadata });
     return true;
   },
 
   async register(input: MemberRegistration): Promise<RegistrationOutcome> {
+    const registrationToken = crypto.randomUUID();
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
-      options: { data: { [PENDING_IDENTITY_KEY]: input.identity } },
+      options: {
+        data: {
+          [REGISTRATION_PENDING_KEY]: true,
+          [PENDING_IDENTITY_KEY]: input.identity,
+          [REGISTRATION_TOKEN_KEY]: registrationToken,
+        },
+      },
     });
 
     if (error) throw mapRegistrationError(error);
     if (!data.user) throw new MemberRegistrationError("unknown");
     const outcome = getRegistrationOutcome(data.session !== null);
     if (outcome === "confirmation_required") return outcome;
-    await this.completeCurrentRegistration(input.identity);
-    await supabase.auth.updateUser({ data: { [PENDING_IDENTITY_KEY]: null } });
+    await this.completeCurrentRegistration(input.identity, registrationToken);
+    await supabase.auth.updateUser({ data: clearedRegistrationMetadata });
     await supabase.auth.signOut();
     return outcome;
   },
