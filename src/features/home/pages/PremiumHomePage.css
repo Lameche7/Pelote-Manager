@@ -1,0 +1,228 @@
+.premium-home {
+  background: var(--brand-paper);
+}
+
+.premium-home__hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: clamp(34rem, 74vh, 48rem);
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(3rem, 8vw, 6rem) 1.25rem;
+  color: #fff;
+  background-color: #102a22;
+  background-image:
+    linear-gradient(180deg, rgb(3 18 14 / 18%), rgb(3 18 14 / 74%)),
+    url('/branding/trinquet-hero.jpg');
+  background-position: center;
+  background-size: cover;
+}
+
+.premium-home__hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, rgb(3 18 14 / 44%), transparent 32%, transparent 68%, rgb(3 18 14 / 34%));
+}
+
+.premium-home__veil {
+  position: absolute;
+  z-index: -1;
+  inset: auto 0 0;
+  height: 1.1rem;
+  background: linear-gradient(90deg, var(--brand-blue) 0 34%, #fff 34% 66%, var(--brand-red) 66% 100%);
+  opacity: .92;
+}
+
+.premium-home__content {
+  display: grid;
+  width: min(100%, 62rem);
+  place-items: center;
+  text-align: center;
+  text-shadow: 0 .3rem 1.2rem rgb(0 0 0 / 48%);
+}
+
+.premium-home__logo {
+  width: clamp(8.5rem, 17vw, 12.5rem);
+  margin-bottom: .7rem;
+}
+
+.premium-home__eyebrow {
+  margin: 0;
+  color: rgb(255 255 255 / 80%);
+  font-size: .86rem;
+  font-weight: 850;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+}
+
+.premium-home h1 {
+  margin: .45rem 0 .55rem;
+  font-size: clamp(3.2rem, 8vw, 6.4rem);
+  line-height: .94;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.premium-home__signature {
+  margin: .6rem 0 0;
+  color: rgb(255 255 255 / 94%);
+  font-size: clamp(1.05rem, 2.2vw, 1.5rem);
+}
+
+.premium-home__signature strong {
+  color: #ff4b4b;
+}
+
+.premium-home__actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.premium-home__benefits {
+  color: #fff;
+  background: linear-gradient(105deg, #07291f, var(--brand-green) 52%, #092f27);
+}
+
+.premium-home__benefit-grid {
+  display: grid;
+  width: min(100%, var(--content-width));
+  margin: 0 auto;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.premium-benefit {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 8.5rem;
+  padding: 1.4rem;
+  border-right: 1px solid rgb(255 255 255 / 14%);
+}
+
+.premium-benefit:last-child {
+  border-right: 0;
+}
+
+.premium-benefit__icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 2px solid rgb(53 201 133 / 72%);
+  border-radius: 50%;
+  font-size: 1.25rem;
+}
+
+.premium-benefit h2 {
+  margin: 0;
+  font-size: .9rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.premium-benefit p {
+  margin: .35rem 0 0;
+  color: rgb(255 255 255 / 72%);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.premium-home__club {
+  padding: clamp(3.5rem, 7vw, 6rem) 1.5rem;
+  background: linear-gradient(135deg, #fff 0 62%, #f0f3f2 62% 100%);
+}
+
+.premium-home__club-card {
+  display: grid;
+  width: min(100%, 68rem);
+  margin: 0 auto;
+  align-items: center;
+  gap: clamp(2rem, 6vw, 5rem);
+  grid-template-columns: minmax(10rem, 16rem) 1fr;
+}
+
+.premium-home__club-logo {
+  width: 100%;
+  max-width: 15rem;
+  justify-self: center;
+}
+
+.premium-home__club h2 {
+  margin: .55rem 0 1rem;
+  color: var(--brand-green);
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  line-height: 1;
+}
+
+.premium-home__club p:not(.section-kicker) {
+  max-width: 46rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.club-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 62rem) {
+  .premium-home__benefit-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .premium-benefit:nth-child(2) {
+    border-right: 0;
+  }
+
+  .premium-benefit:nth-child(-n + 2) {
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
+  }
+}
+
+@media (max-width: 42rem) {
+  .premium-home__hero {
+    min-height: 39rem;
+    background-position: 56% center;
+  }
+
+  .premium-home__actions {
+    width: 100%;
+  }
+
+  .premium-home__actions .button {
+    width: min(100%, 22rem);
+  }
+
+  .premium-home__benefit-grid,
+  .premium-home__club-card {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-benefit {
+    border-right: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
+  }
+
+  .premium-benefit:last-child {
+    border-bottom: 0;
+  }
+
+  .premium-home__club {
+    text-align: center;
+  }
+
+  .premium-home__club p:not(.section-kicker) {
+    margin-inline: auto;
+  }
+}
