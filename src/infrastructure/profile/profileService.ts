@@ -28,7 +28,7 @@ export const profileService: ProfileService = {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id,email,first_name,last_name,display_name,role,created_at,updated_at",
+        "id,email,first_name,last_name,display_name,role,member_id,created_at,updated_at",
       )
       .eq("id", userId)
       .maybeSingle();
@@ -45,7 +45,7 @@ export const profileService: ProfileService = {
       .from("profiles")
       .insert(mapProfileInsert(input))
       .select(
-        "id,email,first_name,last_name,display_name,role,created_at,updated_at",
+        "id,email,first_name,last_name,display_name,role,member_id,created_at,updated_at",
       )
       .single();
 

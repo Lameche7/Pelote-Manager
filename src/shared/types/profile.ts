@@ -7,6 +7,7 @@ export type UserProfile = {
   lastName?: string;
   displayName?: string;
   role: UserRole;
+  memberId?: string;
   createdAt: string;
   updatedAt: string;
 };
