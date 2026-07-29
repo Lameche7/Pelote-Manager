@@ -1,0 +1,133 @@
+.register-page {
+  align-self: center;
+  width: min(calc(100% - 2rem), 42rem);
+  margin: 2.5rem auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.register-page > header {
+  padding: 2rem 2rem 1.5rem;
+  color: #fff;
+  background: linear-gradient(120deg, #082b21, var(--brand-green));
+}
+.register-page h1 {
+  margin: 0.35rem 0 1.5rem;
+  font-size: clamp(2rem, 6vw, 3rem);
+}
+.register-steps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  list-style: none;
+  color: rgb(255 255 255 / 55%);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+.register-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-top: 2px solid rgb(255 255 255 / 20%);
+  padding-top: 0.7rem;
+}
+.register-steps li.is-active {
+  color: #fff;
+  border-color: #ffd166;
+}
+.register-steps span {
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.register-page form {
+  display: grid;
+  gap: 0.7rem;
+  padding: 2rem;
+}
+.register-page form h2 {
+  margin: 0;
+  color: var(--brand-blue);
+}
+.register-page form p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.register-page label {
+  margin-top: 0.25rem;
+  font-weight: 750;
+}
+.register-page input {
+  width: 100%;
+  border: 1px solid #cbd5da;
+  border-radius: 0.7rem;
+  padding: 0.8rem 0.9rem;
+}
+.register-page input:focus {
+  border-color: var(--brand-blue-light);
+  outline: 3px solid rgb(23 74 156 / 14%);
+}
+.register-page form > button,
+.register-actions button {
+  min-height: 3rem;
+  margin-top: 0.7rem;
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  background: var(--brand-red);
+  font-weight: 800;
+  cursor: pointer;
+}
+.register-page button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.register-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.75rem;
+}
+.register-actions .button-back {
+  color: var(--brand-blue);
+  background: #edf2f7;
+}
+.register-success {
+  border-radius: 0.65rem;
+  padding: 0.8rem;
+  color: #14532d !important;
+  background: #ecfdf3;
+}
+.register-error {
+  margin: 0 2rem;
+  border-radius: 0.65rem;
+  padding: 0.8rem;
+  color: #991b1b;
+  background: #fef2f2;
+  font-weight: 700;
+}
+.register-login {
+  margin: 1.5rem 2rem 2rem;
+  text-align: center;
+}
+.register-login a {
+  color: var(--brand-blue);
+  font-weight: 800;
+}
+@media (max-width: 34rem) {
+  .register-page > header,
+  .register-page form {
+    padding: 1.35rem;
+  }
+  .register-steps {
+    grid-template-columns: 1fr;
+  }
+}

@@ -40,3 +40,20 @@ export function useLinkProfileToMember() {
     },
   });
 }
+
+export function useVerifyMemberIdentity() {
+  return useMutation({
+    mutationFn: (identity: MemberIdentity) =>
+      memberService.matchesLicence(identity),
+  });
+}
+
+export function useRegisterMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: memberService.register.bind(memberService),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: memberKeys.all });
+    },
+  });
+}

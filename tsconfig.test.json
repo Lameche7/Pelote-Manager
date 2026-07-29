@@ -23,6 +23,7 @@
   "include": [
     "src/app/router/protectedRouteAccess.ts",
     "src/features/admin/utils/adminUsers.ts",
+    "src/features/members/domain/memberRegistration.ts",
     "src/features/reservations/domain/booking.ts",
     "src/features/reservations/domain/calendar.ts",
     "src/features/reservations/domain/reservationBenefits.ts",

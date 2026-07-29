@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 
 export function LoginPage() {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,6 +39,11 @@ export function LoginPage() {
   return (
     <section className="simple-page" aria-labelledby="login-title">
       <h1 id="login-title">Connexion</h1>
+      {location.state?.accountCreated && (
+        <p role="status">
+          Votre compte a bien été créé. Vous pouvez maintenant vous connecter.
+        </p>
+      )}
       <form onSubmit={(event) => void handleLogin(event)}>
         <label htmlFor="email">Adresse e-mail</label>
         <input
@@ -63,6 +70,10 @@ export function LoginPage() {
         </button>
         {error && <p role="alert">{error}</p>}
       </form>
+      <p>
+        Pas encore de compte ?{" "}
+        <Link to={ROUTES.register}>Créer un compte licencié</Link>
+      </p>
     </section>
   );
 }
