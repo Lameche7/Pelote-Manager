@@ -10,6 +10,7 @@ import {
 import {
   addDays,
   buildWeekDays,
+  formatBookingOpening,
   formatTime,
   groupSlotsByLocalDate,
   startOfIsoWeek,
@@ -21,6 +22,7 @@ import { reservationBookingService } from "@/features/reservations/services/rese
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./ReservationsPage.css";
+import "./ReservationLockedSlots.css";
 
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", {
   weekday: "short",
@@ -62,16 +64,32 @@ function SlotCard({
   timezone: string;
   onBook: (slot: CalendarSlot) => void;
 }) {
-  const isAvailable = slot.status === "available";
+  const slotTime = formatTime(slot.startsAt, timezone);
 
-  if (!isAvailable) {
+  if (slot.status === "occupied") {
     return (
       <div
         className="reservation-slot reservation-slot--occupied"
-        aria-label={`${formatTime(slot.startsAt, timezone)} : occupé`}
+        aria-label={`${slotTime} : occupé`}
       >
-        <strong>{formatTime(slot.startsAt, timezone)}</strong>
+        <strong>{slotTime}</strong>
         <span>Occupé</span>
+      </div>
+    );
+  }
+
+  if (slot.status === "locked") {
+    const openingLabel = slot.bookingOpensAt
+      ? formatBookingOpening(slot.bookingOpensAt, timezone)
+      : "prochainement";
+
+    return (
+      <div
+        className="reservation-slot reservation-slot--locked"
+        aria-label={`${slotTime} : réservable à partir du ${openingLabel}`}
+      >
+        <strong>{slotTime}</strong>
+        <span>Réservable dès le {openingLabel}</span>
       </div>
     );
   }
@@ -80,10 +98,10 @@ function SlotCard({
     <button
       type="button"
       className="reservation-slot reservation-slot--available"
-      aria-label={`Réserver le créneau de ${formatTime(slot.startsAt, timezone)}`}
+      aria-label={`Réserver le créneau de ${slotTime}`}
       onClick={() => onBook(slot)}
     >
-      <strong>{formatTime(slot.startsAt, timezone)}</strong>
+      <strong>{slotTime}</strong>
       <span>Réserver</span>
     </button>
   );
@@ -366,7 +384,7 @@ export function ReservationsPage() {
         <div>
           <p className="reservation-calendar__eyebrow">Réservations du trinquet</p>
           <h1>Calendrier des disponibilités</h1>
-          <p>Cliquez sur un créneau libre pour le réserver immédiatement.</p>
+          <p>Les créneaux s’ouvrent à 8 h, 48 h avant pour le public et 72 h avant pour les licenciés.</p>
         </div>
 
         {resources.length > 1 && (
@@ -442,6 +460,9 @@ export function ReservationsPage() {
       <div className="reservation-calendar__legend" aria-label="Légende">
         <span>
           <i className="reservation-calendar__dot reservation-calendar__dot--available" /> Libre
+        </span>
+        <span>
+          <i className="reservation-calendar__dot reservation-calendar__dot--locked" /> Pas encore ouvert
         </span>
         <span>
           <i className="reservation-calendar__dot reservation-calendar__dot--occupied" /> Occupé
