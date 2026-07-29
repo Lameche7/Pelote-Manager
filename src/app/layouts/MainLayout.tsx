@@ -1,6 +1,10 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
+import { ClubLogo } from "@/shared/components/ClubLogo";
 import { APP_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
+
+const navClassName = ({ isActive }: { isActive: boolean }) =>
+  `app-navigation__link${isActive ? " app-navigation__link--active" : ""}`;
 
 export function MainLayout() {
   const { isAuthenticated, isLoading, logout } = useAuth();
@@ -8,19 +12,28 @@ export function MainLayout() {
   return (
     <div className="app-layout">
       <header className="app-header">
-        <span className="app-header__name">{APP_CONFIG.name}</span>
+        <Link className="app-brand" to={ROUTES.home} aria-label="Pelote Manager - Accueil">
+          <ClubLogo compact className="app-brand__logo" />
+          <span>
+            <strong>{APP_CONFIG.name}</strong>
+            <small>Pelotaris Club Lourdais</small>
+          </span>
+        </Link>
+
         <nav className="app-navigation" aria-label="Navigation principale">
-          <Link to={ROUTES.home}>Accueil</Link>
-          <Link to={ROUTES.reservations}>Réservations</Link>
-          {!isLoading && isAuthenticated && <Link to={ROUTES.myReservations}>Mes réservations</Link>}
-          <Link to={ROUTES.admin}>Administration</Link>
+          <NavLink className={navClassName} to={ROUTES.home}>Accueil</NavLink>
+          <NavLink className={navClassName} to={ROUTES.reservations}>Réservations</NavLink>
+          {!isLoading && isAuthenticated && (
+            <NavLink className={navClassName} to={ROUTES.myReservations}>Mes réservations</NavLink>
+          )}
+          <NavLink className={navClassName} to={ROUTES.admin}>Administration</NavLink>
           {!isLoading &&
             (isAuthenticated ? (
-              <button type="button" onClick={() => void logout()}>
+              <button className="button button--small button--ghost" type="button" onClick={() => void logout()}>
                 Se déconnecter
               </button>
             ) : (
-              <Link to={ROUTES.login}>Connexion</Link>
+              <Link className="button button--small button--primary" to={ROUTES.login}>Connexion</Link>
             ))}
         </nav>
       </header>
@@ -30,9 +43,14 @@ export function MainLayout() {
       </main>
 
       <footer className="app-footer">
-        <small>
-          © {new Date().getFullYear()} {APP_CONFIG.name}
-        </small>
+        <div className="app-footer__brand">
+          <ClubLogo compact />
+          <div>
+            <strong>Pelotaris Club Lourdais</strong>
+            <span>Depuis 1957 – Plus qu’un Club, une Histoire.</span>
+          </div>
+        </div>
+        <small>© {new Date().getFullYear()} {APP_CONFIG.name}</small>
       </footer>
     </div>
   );
