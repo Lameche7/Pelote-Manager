@@ -16,7 +16,8 @@ type SlotRow = {
   resource_id: string;
   starts_at: string;
   ends_at: string;
-  status: "available" | "occupied";
+  status: "available" | "occupied" | "locked";
+  booking_opens_at: string | null;
 };
 
 type OccupationRow = {
@@ -63,6 +64,7 @@ export const reservationCalendarService = {
       startsAt: slot.starts_at,
       endsAt: slot.ends_at,
       status: slot.status,
+      bookingOpensAt: slot.booking_opens_at,
     }));
   },
 

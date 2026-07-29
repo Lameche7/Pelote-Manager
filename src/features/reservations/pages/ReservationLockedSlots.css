@@ -1,0 +1,19 @@
+.reservation-slot--locked {
+  border: 1px solid #c9cfd8;
+  color: #4c5664;
+  background: linear-gradient(135deg, #f8f9fb, #eceff3);
+}
+
+.reservation-slot--locked::before {
+  background: #6b7280;
+}
+
+.reservation-slot--locked span {
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.reservation-calendar__dot--locked {
+  background: #6b7280;
+  box-shadow: 0 0 0 0.22rem rgb(107 114 128 / 12%);
+}
