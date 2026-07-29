@@ -51,7 +51,6 @@ export const reservationBookingService = {
     const { data, error } = await supabase.rpc("get_current_reservation_terms", {
       target_starts_at: startsAt,
     });
-
     if (error) throw error;
 
     const row = (data as TermsRow[] | null)?.[0];
@@ -84,7 +83,6 @@ export const reservationBookingService = {
       guest_email: guestContact?.email ?? null,
       guest_phone: guestContact?.phone ?? null,
     });
-
     if (error) throw error;
 
     const payment = (data as PaymentReservationRow[] | null)?.[0];
@@ -106,7 +104,6 @@ export const reservationBookingService = {
         "create-helloasso-checkout",
         { body: { paymentId: payment.payment_id } },
       );
-
       if (checkoutError) throw checkoutError;
 
       const checkout = checkoutData as CheckoutResponse | null;
@@ -151,10 +148,31 @@ export const reservationBookingService = {
     guestContact?: GuestContact,
   ): Promise<StartedPayment> {
     const payment = await this.startPayment(resourceId, startsAt, guestContact);
+
     if (payment.mode === "helloasso" && payment.redirectUrl) {
       window.location.assign(payment.redirectUrl);
       return new Promise<StartedPayment>(() => undefined);
     }
-    return payment;
+
+    const accepted = window.confirm(
+      "MODE TEST — Aucun paiement réel ne sera effectué.\n\nOK : simuler un paiement accepté\nAnnuler : choisir un refus ou une annulation",
+    );
+
+    if (accepted) {
+      await this.simulate(payment.paymentId, "paid");
+      return payment;
+    }
+
+    const refused = window.confirm(
+      "Simuler un paiement refusé ?\n\nOK : paiement refusé\nAnnuler : paiement abandonné",
+    );
+    const outcome = refused ? "failed" : "cancelled";
+    await this.simulate(payment.paymentId, outcome);
+
+    throw new Error(
+      refused
+        ? "Paiement refusé en mode test. Le créneau a été libéré."
+        : "Paiement annulé en mode test. Le créneau a été libéré.",
+    );
   },
 };
