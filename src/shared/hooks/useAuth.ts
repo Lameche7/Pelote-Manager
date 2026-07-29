@@ -8,6 +8,7 @@ export type AuthContextValue = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  refreshProfile: () => Promise<void>;
   logout: () => Promise<void>;
 };
 

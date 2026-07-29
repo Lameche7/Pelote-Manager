@@ -57,3 +57,9 @@ export function useRegisterMember() {
     },
   });
 }
+
+export function useFinalizeMemberRegistration() {
+  return useMutation({
+    mutationFn: () => memberService.finalizePendingRegistration(),
+  });
+}

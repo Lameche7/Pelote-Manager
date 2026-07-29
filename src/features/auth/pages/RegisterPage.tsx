@@ -27,6 +27,8 @@ const ERROR_MESSAGES = {
   weak_password: "Le mot de passe ne respecte pas les critères de sécurité.",
   cleanup_failed:
     "Une erreur est survenue. Aucun compte utilisable n’a été créé.",
+  verification_rate_limited:
+    "Trop de tentatives. Patientez quelques instants avant de réessayer.",
   unknown: "Une erreur est survenue. Veuillez réessayer.",
 } as const;
 
@@ -58,8 +60,12 @@ export function RegisterPage() {
         return;
       }
       setStep(2);
-    } catch {
-      setError(ERROR_MESSAGES.unknown);
+    } catch (caught) {
+      setError(
+        caught instanceof MemberRegistrationError
+          ? ERROR_MESSAGES[caught.registrationCode]
+          : ERROR_MESSAGES.unknown,
+      );
     }
   }
 
@@ -75,10 +81,14 @@ export function RegisterPage() {
       return;
     }
     try {
-      await registration.mutateAsync({ identity, email, password });
+      const outcome = await registration.mutateAsync({
+        identity,
+        email,
+        password,
+      });
       navigate(ROUTES.login, {
         replace: true,
-        state: { accountCreated: true },
+        state: { accountCreated: outcome },
       });
     } catch (caught) {
       const code =

@@ -112,6 +112,10 @@ export function AuthProvider({
     await synchronize(null);
   }, [service, synchronize]);
 
+  const refreshProfile = useCallback(async () => {
+    await synchronize(await service.getCurrentUser());
+  }, [service, synchronize]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -119,9 +123,10 @@ export function AuthProvider({
       isAuthenticated: user !== null,
       isLoading,
       login,
+      refreshProfile,
       logout,
     }),
-    [isLoading, login, logout, profile, user],
+    [isLoading, login, logout, profile, refreshProfile, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
