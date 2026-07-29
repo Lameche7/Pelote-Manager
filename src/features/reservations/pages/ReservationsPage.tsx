@@ -67,13 +67,15 @@ function SlotCard({
   const slotTime = formatTime(slot.startsAt, timezone);
 
   if (slot.status === "occupied") {
+    const bookedBy = slot.bookedByName ?? "Réservation";
     return (
       <div
         className="reservation-slot reservation-slot--occupied"
-        aria-label={`${slotTime} : occupé`}
+        aria-label={`${slotTime} : occupé par ${bookedBy}`}
       >
         <strong>{slotTime}</strong>
         <span>Occupé</span>
+        <small>{bookedBy}</small>
       </div>
     );
   }
