@@ -60,7 +60,7 @@ update public.reservation_settings
 set default_duration_minutes = 60,
     booking_step_minutes = 60,
     minimum_notice_minutes = 60,
-    licensee_advance_hours = 168,
-    public_advance_hours = 72,
+    licensee_advance_hours = 72,
+    public_advance_hours = 48,
     updated_at = now()
 where id;
