@@ -1,10 +1,11 @@
-export type CalendarSlotStatus = "available" | "occupied" | "closed";
+export type CalendarSlotStatus = "available" | "occupied" | "closed" | "locked";
 
 export type CalendarSlot = {
   resourceId: string;
   startsAt: string;
   endsAt: string;
   status: CalendarSlotStatus;
+  bookingOpensAt: string | null;
 };
 
 export type CalendarOccupation = {
@@ -80,6 +81,17 @@ export function groupSlotsByLocalDate(
 export function formatTime(isoDate: string, timezone: string): string {
   return new Intl.DateTimeFormat("fr-FR", {
     timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(isoDate));
+}
+
+export function formatBookingOpening(isoDate: string, timezone: string): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    timeZone: timezone,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(isoDate));
