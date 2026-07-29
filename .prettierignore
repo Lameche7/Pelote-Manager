@@ -4,6 +4,7 @@ node_modules
 Docs
 package-lock.json
 index.html
+.github/workflows/build-supabase-sql-bundle.yml
 src/index.css
 src/app/layouts/MainLayout.tsx
 src/app/router.tsx
