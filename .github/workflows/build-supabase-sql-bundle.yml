@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'supabase/migrations/*.sql'
-      - '.github/workflows/build-supabase-sql-bundle.yml'
+      - "supabase/migrations/*.sql"
+      - ".github/workflows/build-supabase-sql-bundle.yml"
   workflow_dispatch:
 
 permissions:
