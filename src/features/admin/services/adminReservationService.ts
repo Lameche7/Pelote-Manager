@@ -10,6 +10,7 @@ export type ReservationAdminSettings = {
   minimumNoticeMinutes: number;
   licenseeMaxActiveReservations: number;
   publicMaxActiveReservations: number;
+  paymentMode: "test" | "helloasso";
 };
 
 export type OpeningHour = {
@@ -39,6 +40,7 @@ type SettingsRow = {
   minimum_notice_minutes: number;
   licensee_max_active_reservations: number;
   public_max_active_reservations: number;
+  payment_mode: "test" | "helloasso";
 };
 
 export const adminReservationService = {
@@ -59,6 +61,7 @@ export const adminReservationService = {
       minimumNoticeMinutes: row.minimum_notice_minutes,
       licenseeMaxActiveReservations: row.licensee_max_active_reservations,
       publicMaxActiveReservations: row.public_max_active_reservations,
+      paymentMode: row.payment_mode,
     };
   },
 
@@ -73,6 +76,7 @@ export const adminReservationService = {
       new_minimum_notice_minutes: settings.minimumNoticeMinutes,
       new_licensee_max_active_reservations: settings.licenseeMaxActiveReservations,
       new_public_max_active_reservations: settings.publicMaxActiveReservations,
+      new_payment_mode: settings.paymentMode,
     });
     if (error) throw error;
   },
