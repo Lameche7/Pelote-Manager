@@ -143,7 +143,13 @@ export function AdminReservationsPage() {
 
       <div className="admin-reservations__panel">
         <h2>Règles générales</h2>
+        {settings.paymentMode === "test" && (
+          <p className="admin-reservations__alert" role="status">
+            MODE TEST — aucun paiement réel n’est effectué.
+          </p>
+        )}
         <div className="admin-reservations__form-grid">
+          <label>Mode de paiement<select value={settings.paymentMode} onChange={(event) => setSettings({ ...settings, paymentMode: event.target.value as "test" | "helloasso" })}><option value="test">Test — paiement simulé</option><option value="helloasso">Production — HelloAsso</option></select></label>
           <label>Anticipation licencié (heures)<input type="number" min="0" value={settings.licenseeAdvanceHours} onChange={(event) => setSettings({ ...settings, licenseeAdvanceHours: Number(event.target.value) })} /></label>
           <label>Anticipation public (heures)<input type="number" min="0" value={settings.publicAdvanceHours} onChange={(event) => setSettings({ ...settings, publicAdvanceHours: Number(event.target.value) })} /></label>
           <label>Tarif licencié (€)<input inputMode="decimal" value={centsToEuros(settings.licenseePriceCents)} onChange={(event) => setSettings({ ...settings, licenseePriceCents: eurosToCents(event.target.value) })} /></label>
