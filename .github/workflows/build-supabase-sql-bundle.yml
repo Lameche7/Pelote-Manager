@@ -7,6 +7,7 @@ on:
     paths:
       - 'supabase/migrations/*.sql'
       - '.github/workflows/build-supabase-sql-bundle.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -30,6 +31,13 @@ jobs:
             cat "$file" >> "$output"
             printf '\n' >> "$output"
           done
+
+      - name: Upload SQL bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ALL_MIGRATIONS
+          path: supabase/ALL_MIGRATIONS.sql
+          if-no-files-found: error
 
       - name: Commit generated bundle
         shell: bash
