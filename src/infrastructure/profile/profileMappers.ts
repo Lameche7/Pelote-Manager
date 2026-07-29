@@ -14,6 +14,7 @@ export function mapProfileRow(row: ProfileRow): UserProfile {
     ...(row.last_name !== null ? { lastName: row.last_name } : {}),
     ...(row.display_name !== null ? { displayName: row.display_name } : {}),
     role: parseUserRole(row.role),
+    ...(row.member_id !== null ? { memberId: row.member_id } : {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
