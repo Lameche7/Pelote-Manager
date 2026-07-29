@@ -18,6 +18,7 @@ type SlotRow = {
   ends_at: string;
   status: "available" | "occupied" | "locked";
   booking_opens_at: string | null;
+  booked_by_name: string | null;
 };
 
 type OccupationRow = {
@@ -65,6 +66,7 @@ export const reservationCalendarService = {
       endsAt: slot.ends_at,
       status: slot.status,
       bookingOpensAt: slot.booking_opens_at,
+      bookedByName: slot.booked_by_name,
     }));
   },
 
