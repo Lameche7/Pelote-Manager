@@ -88,18 +88,21 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       find_member_by_licence: {
-        Args: { licence_number: string };
-        Returns: Array<{
-          id: string;
+        Args: {
+          licence_number: string;
           last_name: string;
           first_name: string;
-          birth_date: string | null;
-          season: string;
-          is_active: boolean;
-        }>;
+          birth_date: string;
+        };
+        Returns: boolean;
       };
       link_profile_to_member: {
-        Args: { licence_number: string };
+        Args: {
+          licence_number: string;
+          last_name: string;
+          first_name: string;
+          birth_date: string;
+        };
         Returns: string;
       };
     };

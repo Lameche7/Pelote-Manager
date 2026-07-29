@@ -51,15 +51,19 @@ to authenticated
 using (public.is_profile_admin())
 with check (public.is_profile_admin());
 
-create function public.find_member_by_licence(licence_number text)
-returns table (
-  id uuid,
+comment on table public.club_members is
+  'Current club licence registry. Annual imports update existing rows; season history will use a dedicated table.';
+
+comment on column public.club_members.is_active is
+  'Source of truth for linked profiles. Legacy profile membership fields apply only while member_id is null.';
+
+create function public.find_member_by_licence(
+  licence_number text,
   last_name text,
   first_name text,
-  birth_date date,
-  season text,
-  is_active boolean
+  birth_date date
 )
+returns boolean
 language plpgsql
 stable
 security definer
@@ -70,27 +74,34 @@ begin
     raise exception 'Authentication required' using errcode = '42501';
   end if;
 
-  if licence_number is null or btrim(licence_number) = '' then
-    raise exception 'Licence number is required' using errcode = '22023';
+  if licence_number is null or licence_number = ''
+    or last_name is null or last_name = ''
+    or first_name is null or first_name = ''
+    or birth_date is null
+  then
+    raise exception 'Complete member identity is required' using errcode = '22023';
   end if;
 
-  return query
-  select
-    members.id,
-    members.last_name,
-    members.first_name,
-    members.birth_date,
-    members.season,
-    members.is_active
-  from public.club_members as members
-  where members.licence_number = btrim(find_member_by_licence.licence_number);
+  return exists (
+    select 1
+    from public.club_members as members
+    where members.licence_number = find_member_by_licence.licence_number
+      and members.last_name = find_member_by_licence.last_name
+      and members.first_name = find_member_by_licence.first_name
+      and members.birth_date = find_member_by_licence.birth_date
+  );
 end;
 $$;
 
-revoke all on function public.find_member_by_licence(text) from public;
-grant execute on function public.find_member_by_licence(text) to authenticated;
+revoke all on function public.find_member_by_licence(text, text, text, date) from public;
+grant execute on function public.find_member_by_licence(text, text, text, date) to authenticated;
 
-create function public.link_profile_to_member(licence_number text)
+create function public.link_profile_to_member(
+  licence_number text,
+  last_name text,
+  first_name text,
+  birth_date date
+)
 returns uuid
 language plpgsql
 security definer
@@ -105,18 +116,26 @@ begin
     raise exception 'Authentication required' using errcode = '42501';
   end if;
 
-  if licence_number is null or btrim(licence_number) = '' then
-    raise exception 'Licence number is required' using errcode = '22023';
+  if licence_number is null or licence_number = ''
+    or last_name is null or last_name = ''
+    or first_name is null or first_name = ''
+    or birth_date is null
+  then
+    raise exception 'Complete member identity is required' using errcode = '22023';
   end if;
 
   select members.id
   into target_member_id
   from public.club_members as members
-  where members.licence_number = btrim(link_profile_to_member.licence_number)
+  where members.licence_number = link_profile_to_member.licence_number
+    and members.last_name = link_profile_to_member.last_name
+    and members.first_name = link_profile_to_member.first_name
+    and members.birth_date = link_profile_to_member.birth_date
   for update;
 
   if target_member_id is null then
-    raise exception 'Licence not found' using errcode = 'P0002';
+    raise exception 'Member identity does not match the club licence registry'
+      using errcode = 'P0002';
   end if;
 
   select profiles.id
@@ -144,8 +163,8 @@ begin
 end;
 $$;
 
-revoke all on function public.link_profile_to_member(text) from public;
-grant execute on function public.link_profile_to_member(text) to authenticated;
+revoke all on function public.link_profile_to_member(text, text, text, date) from public;
+grant execute on function public.link_profile_to_member(text, text, text, date) to authenticated;
 
 create function public.protect_profile_member_link()
 returns trigger
@@ -183,6 +202,8 @@ stable
 security definer
 set search_path = ''
 as $$
+  -- A linked club member is authoritative. The profile fields are retained only
+  -- as a compatibility path for accounts created before club_members existed.
   select exists (
     select 1
     from public.profiles

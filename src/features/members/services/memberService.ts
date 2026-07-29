@@ -1,21 +1,10 @@
 import { supabase } from "@/infrastructure/supabase/client";
 
-export type MemberLookup = {
-  id: string;
+export type MemberIdentity = {
+  licenceNumber: string;
   lastName: string;
   firstName: string;
-  birthDate: string | null;
-  season: string;
-  isActive: boolean;
-};
-
-type MemberLookupRow = {
-  id: string;
-  last_name: string;
-  first_name: string;
-  birth_date: string | null;
-  season: string;
-  is_active: boolean;
+  birthDate: string;
 };
 
 export class MemberServiceError extends Error {
@@ -28,45 +17,52 @@ export class MemberServiceError extends Error {
   }
 }
 
-function normalizeLicenceNumber(licenceNumber: string): string {
-  return licenceNumber.trim();
+function toRpcIdentity(identity: MemberIdentity) {
+  return {
+    licence_number: identity.licenceNumber,
+    last_name: identity.lastName,
+    first_name: identity.firstName,
+    birth_date: identity.birthDate,
+  };
+}
+
+function hasCompleteIdentity(identity: MemberIdentity): boolean {
+  return (
+    identity.licenceNumber.length > 0 &&
+    identity.lastName.length > 0 &&
+    identity.firstName.length > 0 &&
+    identity.birthDate.length > 0
+  );
 }
 
 export const memberService = {
-  async findByLicence(licenceNumber: string): Promise<MemberLookup | null> {
-    const normalizedLicenceNumber = normalizeLicenceNumber(licenceNumber);
-    if (!normalizedLicenceNumber) return null;
+  async matchesLicence(identity: MemberIdentity): Promise<boolean> {
+    if (!hasCompleteIdentity(identity)) return false;
 
-    const { data, error } = await supabase.rpc("find_member_by_licence", {
-      licence_number: normalizedLicenceNumber,
-    });
+    const { data, error } = await supabase.rpc(
+      "find_member_by_licence",
+      toRpcIdentity(identity),
+    );
 
     if (error) {
-      throw new MemberServiceError("rechercher", error.message, error.code);
+      throw new MemberServiceError("vérifier", error.message, error.code);
     }
 
-    const row = (data as MemberLookupRow[] | null)?.[0];
-    return row
-      ? {
-          id: row.id,
-          lastName: row.last_name,
-          firstName: row.first_name,
-          birthDate: row.birth_date,
-          season: row.season,
-          isActive: row.is_active,
-        }
-      : null;
+    return data === true;
   },
 
-  async linkCurrentProfile(licenceNumber: string): Promise<string> {
-    const normalizedLicenceNumber = normalizeLicenceNumber(licenceNumber);
-    if (!normalizedLicenceNumber) {
-      throw new MemberServiceError("lier", "le numéro de licence est requis");
+  async linkCurrentProfile(identity: MemberIdentity): Promise<string> {
+    if (!hasCompleteIdentity(identity)) {
+      throw new MemberServiceError(
+        "lier",
+        "l’identité complète du licencié est requise",
+      );
     }
 
-    const { data, error } = await supabase.rpc("link_profile_to_member", {
-      licence_number: normalizedLicenceNumber,
-    });
+    const { data, error } = await supabase.rpc(
+      "link_profile_to_member",
+      toRpcIdentity(identity),
+    );
 
     if (error) {
       throw new MemberServiceError("lier", error.message, error.code);
