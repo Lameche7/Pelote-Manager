@@ -34,8 +34,11 @@ begin
     where id = trinquet_id;
   end if;
 
-  -- Horaires initiaux : tous les jours de 08 h 00 à 23 h 00.
-  -- Ils pourront ensuite être ajustés depuis l'administration.
+  -- Horaires d’ouverture : du lundi au samedi, de 09 h 30 à 22 h 30.
+  -- Le dimanche reste fermé.
+  delete from public.resource_opening_hours
+  where resource_id = trinquet_id;
+
   insert into public.resource_opening_hours (
     resource_id,
     weekday,
@@ -46,14 +49,10 @@ begin
   select
     trinquet_id,
     weekday,
-    time '08:00',
-    time '23:00',
+    time '09:30',
+    time '22:30',
     true
-  from generate_series(0, 6) as weekday
-  on conflict (resource_id, weekday, opens_at, closes_at)
-  do update set
-    is_open = excluded.is_open,
-    updated_at = now();
+  from generate_series(1, 6) as weekday;
 end;
 $$;
 
