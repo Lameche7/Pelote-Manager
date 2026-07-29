@@ -3,9 +3,13 @@ dist
 node_modules
 Docs
 package-lock.json
+index.html
+src/index.css
 src/app/layouts/MainLayout.tsx
 src/app/router.tsx
+src/shared/components/ClubLogo.tsx
 src/shared/config/routes.ts
+src/features/home/pages/HomePage.tsx
 src/features/admin/pages/AdminPage.tsx
 src/features/admin/pages/AdminPaymentsPage.css
 src/features/admin/pages/AdminPaymentsPage.tsx
