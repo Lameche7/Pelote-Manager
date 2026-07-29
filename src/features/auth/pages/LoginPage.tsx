@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { useFinalizeMemberRegistration } from "@/features/members/hooks/useMemberLookup";
 
 export function LoginPage() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const finalization = useFinalizeMemberRegistration();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,6 +26,8 @@ export function LoginPage() {
 
     try {
       await login(email, password);
+      const finalized = await finalization.mutateAsync();
+      if (finalized) await refreshProfile();
       navigate(ROUTES.home, { replace: true });
     } catch (caughtError) {
       setError(
@@ -37,6 +43,17 @@ export function LoginPage() {
   return (
     <section className="simple-page" aria-labelledby="login-title">
       <h1 id="login-title">Connexion</h1>
+      {location.state?.accountCreated === "completed" && (
+        <p role="status">
+          Votre compte a bien été créé. Vous pouvez maintenant vous connecter.
+        </p>
+      )}
+      {location.state?.accountCreated === "confirmation_required" && (
+        <p role="status">
+          Votre compte a été créé. Un email de confirmation vient de vous être
+          envoyé. Cliquez sur le lien reçu avant de vous connecter.
+        </p>
+      )}
       <form onSubmit={(event) => void handleLogin(event)}>
         <label htmlFor="email">Adresse e-mail</label>
         <input
@@ -63,6 +80,10 @@ export function LoginPage() {
         </button>
         {error && <p role="alert">{error}</p>}
       </form>
+      <p>
+        Pas encore de compte ?{" "}
+        <Link to={ROUTES.register}>Créer un compte licencié</Link>
+      </p>
     </section>
   );
 }

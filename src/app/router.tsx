@@ -7,6 +7,7 @@ import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminRese
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
+import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
@@ -22,6 +23,7 @@ export const routes = [
     children: [
       { index: true, element: <HomePage /> },
       { path: ROUTES.login, element: <LoginPage /> },
+      { path: ROUTES.register, element: <RegisterPage /> },
       { path: ROUTES.reservations, element: <ReservationsPage /> },
       {
         path: ROUTES.myReservations,
