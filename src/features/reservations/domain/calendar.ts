@@ -6,6 +6,7 @@ export type CalendarSlot = {
   endsAt: string;
   status: CalendarSlotStatus;
   bookingOpensAt: string | null;
+  bookedByName: string | null;
 };
 
 export type CalendarOccupation = {
