@@ -9,6 +9,9 @@ export const ADMIN_PERMISSIONS = {
   tournaments: "tournaments.manage",
   communication: "communication.manage",
   statistics: "statistics.read",
+  paymentsRead: "payments.read",
+  paymentsManage: "payments.manage",
+  pricing: "pricing.manage",
   settings: "settings.manage",
 } as const;
 
@@ -32,6 +35,9 @@ export const ADMIN_ROLE_TEMPLATES = {
   treasurer: [
     ADMIN_PERMISSIONS.dashboard,
     ADMIN_PERMISSIONS.statistics,
+    ADMIN_PERMISSIONS.paymentsRead,
+    ADMIN_PERMISSIONS.paymentsManage,
+    ADMIN_PERMISSIONS.pricing,
     ADMIN_PERMISSIONS.settings,
   ],
 } satisfies Record<string, AdminPermission[]>;
@@ -44,14 +50,34 @@ export const adminNavigation = [
   },
   {
     label: "Club",
-    permission: ADMIN_PERMISSIONS.club,
     children: [
-      { label: "Informations", to: ROUTES.adminClubInformation },
-      { label: "Horaires", to: ROUTES.adminClubHours },
-      { label: "Fermetures", to: ROUTES.adminClubClosures },
-      { label: "Saisons", to: ROUTES.adminClubSeasons },
-      { label: "Tarifs", to: ROUTES.adminClubPricing },
+      {
+        label: "Informations",
+        to: ROUTES.adminClubInformation,
+        permission: ADMIN_PERMISSIONS.club,
+      },
+      {
+        label: "Horaires",
+        to: ROUTES.adminClubHours,
+        permission: ADMIN_PERMISSIONS.reservations,
+      },
+      {
+        label: "Fermetures",
+        to: ROUTES.adminClubClosures,
+        permission: ADMIN_PERMISSIONS.reservations,
+      },
+      {
+        label: "Saisons",
+        to: ROUTES.adminClubSeasons,
+        permission: ADMIN_PERMISSIONS.club,
+      },
+      {
+        label: "Tarifs",
+        to: ROUTES.adminClubPricing,
+        permission: ADMIN_PERMISSIONS.pricing,
+      },
     ],
+    permission: ADMIN_PERMISSIONS.pricing,
   },
   {
     label: "Réservations",
@@ -82,6 +108,11 @@ export const adminNavigation = [
     label: "Statistiques",
     to: ROUTES.adminStatistics,
     permission: ADMIN_PERMISSIONS.statistics,
+  },
+  {
+    label: "Paiements",
+    to: ROUTES.adminPayments,
+    permission: ADMIN_PERMISSIONS.paymentsRead,
   },
   {
     label: "Paramètres",

@@ -5,7 +5,11 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { AdminShell } from "@/features/admin/components/AdminShell";
 import { ClubInformationPage } from "@/features/admin/club/pages/ClubInformationPage";
 import { ClubPricingPage, ClubSeasonsPage } from "@/features/admin/club/pages/ClubCollectionsPage";
+import { ClubHoursPage } from "@/features/admin/club/pages/ClubHoursPage";
+import { ClubClosuresPage } from "@/features/admin/club/pages/ClubClosuresPage";
 import { AdminComingSoonPage } from "@/features/admin/pages/AdminComingSoonPage";
+import { PermissionRoute } from "@/features/admin/access/PermissionRoute";
+import { ADMIN_PERMISSIONS, type AdminPermission } from "@/features/admin/config/adminPermissions";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
@@ -22,6 +26,10 @@ import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage
 import { ROUTES, USER_ROLES } from "@/shared/config";
 import { Forbidden } from "@/shared/pages/Forbidden";
 import { NotFound } from "@/shared/pages/NotFound";
+
+const permitted = (permission: AdminPermission, page: React.ReactNode) => (
+  <PermissionRoute permission={permission}>{page}</PermissionRoute>
+);
 
 export const routes = [
   {
@@ -68,28 +76,28 @@ export const routes = [
       {
         path: ROUTES.admin,
         element: (
-          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
+          <ProtectedRoute>
             <AdminShell />
           </ProtectedRoute>
         ),
         children: [
-          { index: true, element: <AdminPage /> },
-          { path: "club/informations", element: <ClubInformationPage /> },
-          { path: "club/horaires", element: <AdminReservationsPage /> },
-          { path: "club/fermetures", element: <AdminReservationsPage /> },
-          { path: "club/saisons", element: <ClubSeasonsPage /> },
-          { path: "club/tarifs", element: <ClubPricingPage /> },
-          { path: "reservations", element: <AdminReservationsManagementPage /> },
-          { path: "reservations/parametres", element: <AdminReservationsPage /> },
-          { path: "reservations/suivi", element: <AdminReservationOperationsPage /> },
-          { path: "utilisateurs", element: <AdminUsersPage /> },
-          { path: "paiements", element: <AdminPaymentsPage /> },
-          { path: "membres", element: <AdminComingSoonPage title="Membres" /> },
-          { path: "evenements", element: <AdminComingSoonPage title="Évènements" /> },
-          { path: "tournois", element: <AdminComingSoonPage title="Tournois" /> },
-          { path: "communication", element: <AdminComingSoonPage title="Communication" /> },
-          { path: "statistiques", element: <AdminComingSoonPage title="Statistiques" /> },
-          { path: "parametres", element: <AdminComingSoonPage title="Paramètres" /> },
+          { index: true, element: permitted(ADMIN_PERMISSIONS.dashboard, <AdminPage />) },
+          { path: "club/informations", element: permitted(ADMIN_PERMISSIONS.club, <ClubInformationPage />) },
+          { path: "club/horaires", element: permitted(ADMIN_PERMISSIONS.reservations, <ClubHoursPage />) },
+          { path: "club/fermetures", element: permitted(ADMIN_PERMISSIONS.reservations, <ClubClosuresPage />) },
+          { path: "club/saisons", element: permitted(ADMIN_PERMISSIONS.club, <ClubSeasonsPage />) },
+          { path: "club/tarifs", element: permitted(ADMIN_PERMISSIONS.pricing, <ClubPricingPage />) },
+          { path: "reservations", element: permitted(ADMIN_PERMISSIONS.reservations, <AdminReservationsManagementPage />) },
+          { path: "reservations/parametres", element: permitted(ADMIN_PERMISSIONS.reservations, <AdminReservationsPage />) },
+          { path: "reservations/suivi", element: permitted(ADMIN_PERMISSIONS.reservations, <AdminReservationOperationsPage />) },
+          { path: "utilisateurs", element: permitted(ADMIN_PERMISSIONS.settings, <AdminUsersPage />) },
+          { path: "paiements", element: permitted(ADMIN_PERMISSIONS.paymentsRead, <AdminPaymentsPage />) },
+          { path: "membres", element: permitted(ADMIN_PERMISSIONS.members, <AdminComingSoonPage title="Membres" />) },
+          { path: "evenements", element: permitted(ADMIN_PERMISSIONS.events, <AdminComingSoonPage title="Évènements" />) },
+          { path: "tournois", element: permitted(ADMIN_PERMISSIONS.tournaments, <AdminComingSoonPage title="Tournois" />) },
+          { path: "communication", element: permitted(ADMIN_PERMISSIONS.communication, <AdminComingSoonPage title="Communication" />) },
+          { path: "statistiques", element: permitted(ADMIN_PERMISSIONS.statistics, <AdminComingSoonPage title="Statistiques" />) },
+          { path: "parametres", element: permitted(ADMIN_PERMISSIONS.settings, <AdminComingSoonPage title="Paramètres" />) },
         ],
       },
       { path: ROUTES.notFound, element: <NotFound /> },

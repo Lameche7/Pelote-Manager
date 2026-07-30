@@ -75,6 +75,39 @@
   color: #9f2525;
   background: #fbeaea;
 }
+.club-stack {
+  display: grid;
+  gap: 1rem;
+}
+.club-stack > label {
+  display: grid;
+  gap: 0.4rem;
+  max-width: 24rem;
+  font-weight: 750;
+}
+.club-stack select {
+  padding: 0.7rem;
+  border: 1px solid #ccd6d2;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+.club-stack h2 {
+  margin: 0.5rem 0 0;
+}
+.club-list li > div {
+  display: flex;
+  gap: 0.5rem;
+}
+.club-alert {
+  padding: 0.8rem 1rem;
+  border-radius: 0.7rem;
+  color: #155d45;
+  background: #e5f6ef;
+}
+.club-alert--error {
+  color: #8f2020;
+  background: #fdeaea;
+}
 @media (max-width: 45rem) {
   .club-form,
   .club-inline {

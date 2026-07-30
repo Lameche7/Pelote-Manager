@@ -5,6 +5,7 @@ import "./ClubPages.css";
 export function ClubInformationPage() {
   const [club, setClub] = useState<Club | null>(null);
   const [status, setStatus] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   useEffect(() => {
     clubAdminService
       .getClub()
@@ -43,10 +44,18 @@ export function ClubInformationPage() {
         onSubmit={(e) => {
           e.preventDefault();
           setStatus("");
+          setIsSaving(true);
           clubAdminService
             .updateClub(club)
             .then(() => setStatus("Informations enregistrées."))
-            .catch(() => setStatus("Enregistrement impossible."));
+            .catch((error: unknown) =>
+              setStatus(
+                error instanceof Error
+                  ? error.message
+                  : "Enregistrement impossible.",
+              ),
+            )
+            .finally(() => setIsSaving(false));
         }}
       >
         {field("name", "Nom du club")}
@@ -71,7 +80,9 @@ export function ClubInformationPage() {
           />
         </label>
         <div className="club-form__actions">
-          <button type="submit">Enregistrer</button>
+          <button type="submit" disabled={isSaving}>
+            {isSaving ? "Enregistrement…" : "Enregistrer"}
+          </button>
           <span role="status">{status}</span>
         </div>
       </form>
