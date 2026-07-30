@@ -6,7 +6,7 @@ export type AdminMember = {
   licence_number: string;
   last_name: string;
   first_name: string;
-  birth_date: string;
+  birth_date: string | null;
   gender: MemberGender;
   email: string | null;
   phone: string | null;
@@ -27,6 +27,7 @@ export type MemberForm = {
   email?: string;
   phone?: string;
   ranking?: string;
+  confirmedSensitive?: boolean;
 };
 export type MemberSeason = {
   id: string;
@@ -57,6 +58,10 @@ export type MemberImport = {
   error_count: number;
   warning_count: number;
   global_error: string | null;
+  author_name: string;
+  club_name: string;
+  season_name: string;
+  total_count: number;
 };
 export type MemberImportDetail = {
   import: MemberImport;
@@ -67,7 +72,17 @@ export type MemberImportDetail = {
     executed_action: string | null;
     errors: string[];
     warnings: string[];
+    admin_decision: unknown;
     before_values: unknown;
     after_values: unknown;
   }>;
+};
+export type ImportExecutionResult = {
+  status: "completed" | "failed";
+  error?: string;
+  created: number;
+  updated: number;
+  reactivated: number;
+  unchanged: number;
+  ignored: number;
 };

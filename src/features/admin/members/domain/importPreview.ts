@@ -45,6 +45,11 @@ export function buildImportPreview(
     const found = existing.find(
       (member) => member.licenceNumber === data.licenceNumber,
     );
+    const identityMatch = existing.find(
+      (member) =>
+        member.licenceNumber !== data.licenceNumber &&
+        sameIdentity(data, member),
+    );
     if (!data.licenceNumber)
       errors.push("Le numéro de licence est obligatoire.");
     if (!data.lastName || !data.firstName)
@@ -55,6 +60,11 @@ export function buildImportPreview(
     if (duplicates.has(index)) {
       errors.push("Cette licence apparaît plusieurs fois dans le fichier.");
       action = "duplicate";
+    } else if (!found && identityMatch) {
+      errors.push(
+        "Cette identité existe déjà sous un autre numéro de licence.",
+      );
+      action = "identity_conflict";
     } else if (found?.clubId !== undefined && found.clubId !== clubId) {
       errors.push("Cette licence appartient à un autre club.");
       action = "other_club";
@@ -76,18 +86,17 @@ export function buildImportPreview(
         );
         action = "sensitive_warning";
       } else if (!found.isActive) action = "inactive";
-      else
-        action =
-          JSON.stringify(data) ===
-          JSON.stringify({
-            ...found,
-            id: undefined,
-            clubId: undefined,
-            isActive: undefined,
-            updatedAt: undefined,
-          })
-            ? "unchanged"
-            : "update";
+      else {
+        const unchanged =
+          data.lastName === found.lastName &&
+          data.firstName === found.firstName &&
+          data.birthDate === found.birthDate &&
+          data.gender === found.gender &&
+          (!data.email || data.email === found.email) &&
+          (!data.phone || data.phone === found.phone) &&
+          (!data.ranking || data.ranking === found.ranking);
+        action = unchanged ? "unchanged" : "update";
+      }
     }
     return {
       lineNumber: index + 2,

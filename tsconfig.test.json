@@ -29,6 +29,7 @@
     "src/features/admin/members/domain/memberRules.ts",
     "src/features/admin/members/domain/csvImport.ts",
     "src/features/admin/members/domain/importPreview.ts",
+    "src/features/admin/members/domain/importWorkflow.ts",
     "src/features/auth/domain/accountProfileFinalization.ts",
     "src/features/members/domain/memberRegistration.ts",
     "supabase/functions/_shared/memberRegistrationCleanup.ts",

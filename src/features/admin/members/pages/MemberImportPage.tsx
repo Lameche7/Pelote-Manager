@@ -16,9 +16,14 @@ import {
   buildImportPreview,
   summarizePreview,
   type ImportPreviewRow,
+  type ExistingMember,
 } from "../domain/importPreview";
 import { memberAdminService } from "../services/memberAdminService";
+import { useMemberImportMutations } from "../hooks/useAdminMembers";
 import type { Json } from "@/infrastructure/supabase/database";
+import type { ImportExecutionResult } from "../types";
+import { useAdminAccess } from "@/features/admin/access/AdminAccessProvider";
+import { buildImportValidationPayload } from "../domain/importWorkflow";
 const fields: Array<[MemberColumn, string, boolean]> = [
   ["licence_number", "Numéro de licence", true],
   ["last_name", "Nom", true],
@@ -31,6 +36,8 @@ const fields: Array<[MemberColumn, string, boolean]> = [
 ];
 export function MemberImportPage() {
   const navigate = useNavigate();
+  const { access } = useAdminAccess();
+  const importMutations = useMemberImportMutations();
   const [file, setFile] = useState<File>();
   const [table, setTable] = useState<string[][]>([]);
   const [encoding, setEncoding] = useState<CsvEncoding>("utf-8");
@@ -41,16 +48,8 @@ export function MemberImportPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [importId, setImportId] = useState<string>();
-  const [result, setResult] = useState<Json>();
+  const [result, setResult] = useState<ImportExecutionResult>();
   const summary = useMemo(() => summarizePreview(rows), [rows]);
-  const rebuild = (nextMapping = mapping) =>
-    setRows(
-      buildImportPreview(
-        table.slice(1).map((row) => mapMemberRow(row, nextMapping)),
-        [],
-        "current",
-      ),
-    );
   const load = async (next: File) => {
     setError("");
     if (next.size > MEMBER_IMPORT_LIMITS.maxBytes) {
@@ -70,14 +69,45 @@ export function MemberImportPage() {
     setSeparator(detected);
     setTable(parsed);
     setMapping(mapped);
-    setRows(
-      buildImportPreview(
-        parsed.slice(1).map((row) => mapMemberRow(row, mapped)),
-        [],
-        "current",
-      ),
-    );
+    setRows([]);
     setStep(2);
+  };
+  const reanalyse = async () => {
+    if (!file) return;
+    const decoded = decodeCsv(await file.arrayBuffer(), encoding);
+    const parsed = parseCsv(decoded.text, separator);
+    if (parsed.length < 2 || parsed.length - 1 > MEMBER_IMPORT_LIMITS.maxRows) {
+      setError(
+        "Les paramètres choisis ne produisent aucune ligne exploitable.",
+      );
+      return;
+    }
+    const mapped = autoMapColumns(parsed[0]);
+    setTable(parsed);
+    setMapping(mapped);
+    setRows([]);
+    setError("");
+    setStep(3);
+  };
+  const previewWithExistingMembers = async () => {
+    const parsedRows = table.slice(1).map((row) => mapMemberRow(row, mapping));
+    try {
+      const matches = await importMutations.findMatches.mutateAsync(
+        parsedRows as unknown as Json,
+      );
+      setRows(
+        buildImportPreview(
+          parsedRows,
+          matches as unknown as ExistingMember[],
+          access?.clubId ?? "",
+        ),
+      );
+      setStep(4);
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Comparaison impossible.",
+      );
+    }
   };
   const setDecision = (index: number, patch: Partial<ImportPreviewRow>) =>
     setRows((current) =>
@@ -97,7 +127,7 @@ export function MemberImportPage() {
         .join("");
       const id =
         importId ??
-        (await memberAdminService.createImport({
+        (await importMutations.create.mutateAsync({
           file_name: file.name,
           file_size: file.size,
           file_hash: hash,
@@ -107,20 +137,10 @@ export function MemberImportPage() {
           options: { header: true },
         }));
       if (!importId) setImportId(id);
-      await memberAdminService.validateImport(
+      await importMutations.validate.mutateAsync({
         id,
-        rows.map((row) => ({
-          lineNumber: row.lineNumber,
-          original: table[row.lineNumber - 1] as Json,
-          data: row.data as unknown as Json,
-          decision: {
-            ignored: row.ignored,
-            confirmedSensitive: row.confirmedSensitive,
-            reactivate: row.reactivate,
-            confirmDistinctIdentity: row.confirmedSensitive,
-          },
-        })),
-      );
+        rows: buildImportValidationPayload(rows, table),
+      });
       const detail = await memberAdminService.getImport(id);
       const blocking = detail.rows.filter(
         (row) => row.errors.length && row.planned_action !== "ignored",
@@ -161,8 +181,10 @@ export function MemberImportPage() {
     if (!importId) return;
     setBusy(true);
     try {
-      const response = await memberAdminService.executeImport(importId);
+      const response = await importMutations.execute.mutateAsync(importId);
       setResult(response);
+      if (response.status === "failed")
+        setError(response.error ?? "L’import a échoué.");
       setStep(8);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Import impossible.");
@@ -244,7 +266,7 @@ export function MemberImportPage() {
               </select>
             </label>
           </div>
-          <button onClick={() => setStep(3)}>Confirmer la détection</button>
+          <button onClick={() => void reanalyse()}>Relancer l’analyse</button>
         </div>
       )}
       {step === 3 && (
@@ -266,7 +288,6 @@ export function MemberImportPage() {
                           : Number(e.target.value),
                     };
                     setMapping(next);
-                    rebuild(next);
                   }}
                 >
                   <option value="">Non associée</option>
@@ -283,7 +304,7 @@ export function MemberImportPage() {
             disabled={fields.some(
               ([key, , required]) => required && mapping[key] === undefined,
             )}
-            onClick={() => setStep(4)}
+            onClick={() => void previewWithExistingMembers()}
           >
             Prévisualiser
           </button>
@@ -402,7 +423,12 @@ export function MemberImportPage() {
       )}
       {step === 8 && (
         <div className="import-card">
-          <h2>Résultat</h2>
+          <h2>
+            {result?.status === "completed"
+              ? "Import terminé"
+              : "Import échoué"}
+          </h2>
+          {result?.status === "failed" && <p role="alert">{result.error}</p>}
           <pre>{JSON.stringify(result, null, 2)}</pre>
           <button onClick={() => navigate("/admin/membres/imports")}>
             Consulter l’historique

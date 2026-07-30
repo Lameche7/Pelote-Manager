@@ -6,6 +6,7 @@ import type {
   MemberForm,
   MemberImport,
   MemberImportDetail,
+  ImportExecutionResult,
 } from "../types";
 const value = <T>(data: T | null, error: { message: string } | null): T => {
   if (error) throw new Error(error.message);
@@ -24,6 +25,12 @@ export const memberAdminService = {
   searchGlobal: async (filters: Record<string, Json> = {}) => {
     const r = await supabase.rpc("admin_search_members_global", { filters });
     return value(r.data, r.error) as AdminMember[];
+  },
+  findImportMatches: async (payload: Json) => {
+    const r = await supabase.rpc("admin_find_member_import_matches", {
+      payload,
+    });
+    return value(r.data, r.error);
   },
   get: async (id: string) => {
     const r = await supabase.rpc("admin_get_member", { target_member_id: id });
@@ -88,8 +95,8 @@ export const memberAdminService = {
         reason,
       }),
     ),
-  imports: async () => {
-    const r = await supabase.rpc("admin_list_member_imports", {});
+  imports: async (filters: Record<string, Json> = {}) => {
+    const r = await supabase.rpc("admin_list_member_imports", { filters });
     return value(r.data, r.error) as MemberImport[];
   },
   getImport: async (id: string) => {
@@ -113,6 +120,6 @@ export const memberAdminService = {
     const r = await supabase.rpc("admin_execute_member_import", {
       target_import_id: id,
     });
-    return value(r.data, r.error);
+    return value(r.data, r.error) as ImportExecutionResult;
   },
 };

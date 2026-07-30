@@ -20,6 +20,11 @@ import {
   mergeNonEmpty,
   summarizePreview,
 } from "../.test-dist/src/features/admin/members/domain/importPreview.js";
+import {
+  buildImportValidationPayload,
+  importSucceeded,
+  canGoToNextPage,
+} from "../.test-dist/src/features/admin/members/domain/importWorkflow.js";
 test("normalise les licences sans perdre les zéros", () =>
   assert.equal(normalizeLicenceNumber(" ab 00123 "), "AB00123"));
 test("normalise les identités", () =>
@@ -95,3 +100,182 @@ test("les cellules vides conservent les valeurs", () =>
     mergeNonEmpty({ email: "a@b.fr", phone: "1" }, { email: "", phone: "2" }),
     { email: "a@b.fr", phone: "2" },
   ));
+
+test("permet de forcer séparateur et encodage", () => {
+  const csv = "Licence,Nom\n001,Durand";
+  assert.equal(parseCsv(csv, ",")[1][1], "Durand");
+  const cp = new Uint8Array([0x4a, 0x6f, 0x73, 0xe9]).buffer;
+  assert.equal(decodeCsv(cp, "windows-1252").text, "José");
+});
+test("applique un mapping manuel et révèle les colonnes obligatoires absentes", () => {
+  const mapped = mapMemberRow(["Durand", "001"], {
+    last_name: 0,
+    licence_number: 1,
+  });
+  assert.equal(mapped.licenceNumber, "001");
+  assert.equal(mapped.birthDate, null);
+  assert.equal(mapped.gender, null);
+});
+test("classe les membres existants, externes, inactifs et sensibles", () => {
+  const base = {
+    licenceNumber: "001",
+    firstName: "Alice",
+    lastName: "Durand",
+    birthDate: "2000-01-01",
+    gender: "female",
+    email: "",
+    phone: "",
+    ranking: "",
+  };
+  const existing = {
+    ...base,
+    id: "member",
+    clubId: "club",
+    isActive: true,
+    updatedAt: "v1",
+  };
+  assert.equal(
+    buildImportPreview([base], [existing], "club")[0].action,
+    "unchanged",
+  );
+  assert.equal(
+    buildImportPreview([base], [{ ...existing, clubId: "other" }], "club")[0]
+      .action,
+    "other_club",
+  );
+  assert.equal(
+    buildImportPreview([base], [{ ...existing, isActive: false }], "club")[0]
+      .action,
+    "inactive",
+  );
+  assert.equal(
+    buildImportPreview(
+      [{ ...base, birthDate: "2001-01-01" }],
+      [existing],
+      "club",
+    )[0].action,
+    "sensitive_warning",
+  );
+});
+test("bloque une identité connue sous une autre licence", () => {
+  const row = {
+    licenceNumber: "002",
+    firstName: "Alice",
+    lastName: "Durand",
+    birthDate: "2000-01-01",
+    gender: "female",
+    email: "",
+    phone: "",
+    ranking: "",
+  };
+  const existing = {
+    ...row,
+    licenceNumber: "001",
+    id: "member",
+    clubId: "club",
+    isActive: true,
+    updatedAt: "v1",
+  };
+  assert.equal(
+    buildImportPreview([row], [existing], "club")[0].action,
+    "identity_conflict",
+  );
+});
+
+test("construit les décisions Supabase et interprète succès, échec et pagination", () => {
+  const row = {
+    lineNumber: 2,
+    data: {
+      licenceNumber: "001",
+      firstName: "A",
+      lastName: "B",
+      birthDate: "2000-01-01",
+      gender: "male",
+      email: "",
+      phone: "",
+      ranking: "",
+    },
+    action: "inactive",
+    errors: [],
+    warnings: [],
+    ignored: false,
+    confirmedSensitive: true,
+    reactivate: true,
+  };
+  const payload = buildImportValidationPayload([row], [[], ["001"]]);
+  assert.deepEqual(payload[0].decision, {
+    ignored: false,
+    confirmedSensitive: true,
+    reactivate: true,
+    confirmDistinctIdentity: true,
+  });
+  assert.equal(
+    importSucceeded({
+      status: "completed",
+      created: 1,
+      updated: 0,
+      reactivated: 0,
+      unchanged: 0,
+      ignored: 0,
+    }),
+    true,
+  );
+  assert.equal(
+    importSucceeded({
+      status: "failed",
+      error: "boom",
+      created: 0,
+      updated: 0,
+      reactivated: 0,
+      unchanged: 0,
+      ignored: 0,
+    }),
+    false,
+  );
+  assert.equal(canGoToNextPage(2, 25, 51), true);
+  assert.equal(canGoToNextPage(3, 25, 51), false);
+});
+
+test("les appels RPC membres sont déclarés et sans contournement de types", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const service = await readFile(
+    new URL(
+      "../src/features/admin/members/services/memberAdminService.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const database = await readFile(
+    new URL("../src/infrastructure/supabase/database.ts", import.meta.url),
+    "utf8",
+  );
+  for (const rpc of [
+    "admin_get_member",
+    "admin_update_member",
+    "admin_correct_member_licence",
+    "admin_find_member_import_matches",
+    "admin_create_member_import",
+    "admin_validate_member_import",
+    "admin_execute_member_import",
+    "admin_get_member_import",
+  ]) {
+    assert.match(service, new RegExp(`supabase\\.rpc\\("${rpc}"`));
+    assert.match(database, new RegExp(rpc));
+  }
+  assert.doesNotMatch(service, /as never|as any/);
+});
+test("tournaments.manage ouvre seulement la recherche et le détail", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const router = await readFile(
+    new URL("../src/app/router.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    router,
+    /membres\/recherche-globale[\s\S]*ADMIN_PERMISSIONS\.members,[\s\S]*ADMIN_PERMISSIONS\.tournaments/,
+  );
+  assert.match(
+    router,
+    /membres\/importer[^\n]*permitted\(ADMIN_PERMISSIONS\.members/,
+  );
+});

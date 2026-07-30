@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { memberAdminService } from "../services/memberAdminService";
 import type { MemberGender } from "../domain/memberRules";
+import { SensitiveActionDialog } from "../components/SensitiveActionDialog";
 export function MemberDetailPage() {
   const { memberId = "" } = useParams();
   const client = useQueryClient();
@@ -12,6 +13,7 @@ export function MemberDetailPage() {
     enabled: Boolean(memberId),
   });
   const [reason, setReason] = useState("");
+  const [correctingLicence, setCorrectingLicence] = useState<string>();
   const mutation = useMutation({
     mutationFn: async (form: FormData) => {
       if (!query.data) return;
@@ -31,6 +33,8 @@ export function MemberDetailPage() {
           gender: String(form.get("gender")) as MemberGender,
           email: String(form.get("email")),
           phone: String(form.get("phone")),
+          ranking: String(form.get("ranking")),
+          confirmedSensitive: form.get("confirmedSensitive") === "on",
         },
         query.data.updated_at,
         reason,
@@ -39,14 +43,19 @@ export function MemberDetailPage() {
     onSuccess: () => client.invalidateQueries({ queryKey: ["admin-members"] }),
   });
   const correct = useMutation({
-    mutationFn: (licence: string) => {
-      if (!query.data || !reason.trim())
-        throw new Error("Le motif est obligatoire.");
+    mutationFn: ({
+      licence,
+      correctionReason,
+    }: {
+      licence: string;
+      correctionReason: string;
+    }) => {
+      if (!query.data) throw new Error("Fiche indisponible.");
       return memberAdminService.correctLicence(
         memberId,
         licence,
         query.data.updated_at,
-        reason,
+        correctionReason,
       );
     },
     onSuccess: () => client.invalidateQueries({ queryKey: ["admin-members"] }),
@@ -87,6 +96,14 @@ export function MemberDetailPage() {
             />
           </label>
           <label>
+            Classement de la saison active
+            <input
+              name="ranking"
+              defaultValue={member.ranking ?? ""}
+              disabled={!member.canEdit}
+            />
+          </label>
+          <label>
             Prénom
             <input
               name="firstName"
@@ -99,7 +116,7 @@ export function MemberDetailPage() {
             <input
               name="birthDate"
               type="date"
-              defaultValue={member.birth_date}
+              defaultValue={member.birth_date ?? ""}
               disabled={!member.canEdit}
             />
           </label>
@@ -141,6 +158,10 @@ export function MemberDetailPage() {
                 onChange={(e) => setReason(e.target.value)}
               />
             </label>
+            <label>
+              <input name="confirmedSensitive" type="checkbox" /> Je confirme
+              les changements sensibles éventuels.
+            </label>
             <button disabled={mutation.isPending}>Enregistrer</button>
           </>
         )}
@@ -152,21 +173,37 @@ export function MemberDetailPage() {
           <p>Cette opération conserve la fiche et le compte lié.</p>
           <button
             onClick={() => {
-              const licence = window.prompt(
-                "Nouveau numéro de licence",
-                member.licence_number,
-              );
-              if (
-                licence &&
-                window.confirm("Confirmer cette correction sensible ?")
-              )
-                correct.mutate(licence);
+              setCorrectingLicence(member.licence_number);
             }}
           >
             Corriger la licence
           </button>
           {correct.error && <p role="alert">{correct.error.message}</p>}
         </div>
+      )}
+      {correctingLicence !== undefined && (
+        <SensitiveActionDialog
+          title="Confirmer la correction de licence"
+          summary={`La licence ${member.licence_number} sera remplacée. La fiche et le compte lié seront conservés.`}
+          confirmLabel="Corriger la licence"
+          pending={correct.isPending}
+          error={correct.error?.message}
+          onCancel={() => setCorrectingLicence(undefined)}
+          onConfirm={(correctionReason) =>
+            correct.mutate(
+              { licence: correctingLicence, correctionReason },
+              { onSuccess: () => setCorrectingLicence(undefined) },
+            )
+          }
+        >
+          <label>
+            Numéro corrigé
+            <input
+              value={correctingLicence}
+              onChange={(event) => setCorrectingLicence(event.target.value)}
+            />
+          </label>
+        </SensitiveActionDialog>
       )}
       <div className="member-table">
         <table>

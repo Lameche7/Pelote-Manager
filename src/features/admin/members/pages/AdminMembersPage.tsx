@@ -5,15 +5,20 @@ import {
   useSetMemberActive,
 } from "../hooks/useAdminMembers";
 import type { MemberGender } from "../domain/memberRules";
+import type { AdminMember } from "../types";
+import { SensitiveActionDialog } from "../components/SensitiveActionDialog";
 import "./AdminMembersPage.css";
 export function AdminMembersPage() {
   const [search, setSearch] = useState("");
   const [active, setActive] = useState("all");
   const [licensed, setLicensed] = useState("all");
   const [showForm, setShowForm] = useState(false);
+  const [activeAction, setActiveAction] = useState<AdminMember>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const filters = useMemo(
-    () => ({ search, active, licensed, page: 1, page_size: 50 }),
-    [search, active, licensed],
+    () => ({ search, active, licensed, page, page_size: pageSize }),
+    [search, active, licensed, page, pageSize],
   );
   const query = useAdminMembers(filters);
   const create = useCreateMember();
@@ -119,7 +124,9 @@ export function AdminMembersPage() {
                     {member.first_name} {member.last_name}
                   </td>
                   <td>
-                    {new Date(member.birth_date).toLocaleDateString("fr-FR")}
+                    {member.birth_date
+                      ? new Date(member.birth_date).toLocaleDateString("fr-FR")
+                      : "—"}
                   </td>
                   <td>{member.gender === "male" ? "Masculin" : "Féminin"}</td>
                   <td>{member.email ?? member.phone ?? "—"}</td>
@@ -141,20 +148,7 @@ export function AdminMembersPage() {
                     <a href={`/admin/membres/${member.id}`}>Consulter</a>{" "}
                     <button
                       className="link-button"
-                      onClick={() => {
-                        const reason = window.prompt(
-                          member.is_active
-                            ? "Motif de la désactivation"
-                            : "Motif de la réactivation",
-                        );
-                        if (reason)
-                          activation.mutate({
-                            id: member.id,
-                            active: !member.is_active,
-                            updatedAt: member.updated_at,
-                            reason,
-                          });
-                      }}
+                      onClick={() => setActiveAction(member)}
                     >
                       {member.is_active ? "Désactiver" : "Réactiver"}
                     </button>
@@ -166,6 +160,37 @@ export function AdminMembersPage() {
           {query.data?.length === 0 && (
             <p className="empty">Aucun licencié ne correspond aux filtres.</p>
           )}
+          <div className="members-actions">
+            <button
+              className="secondary"
+              disabled={page === 1}
+              onClick={() => setPage((value) => value - 1)}
+            >
+              Précédent
+            </button>
+            <span>
+              Page {page} · {query.data?.[0]?.total_count ?? 0} résultat(s)
+            </span>
+            <select
+              aria-label="Taille de page"
+              value={pageSize}
+              onChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(1);
+              }}
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <button
+              className="secondary"
+              disabled={page * pageSize >= (query.data?.[0]?.total_count ?? 0)}
+              onClick={() => setPage((value) => value + 1)}
+            >
+              Suivant
+            </button>
+          </div>
         </div>
       )}
       {showForm && (
@@ -228,6 +253,31 @@ export function AdminMembersPage() {
             </footer>
           </form>
         </div>
+      )}
+      {activeAction && (
+        <SensitiveActionDialog
+          title={
+            activeAction.is_active
+              ? "Désactiver le licencié"
+              : "Réactiver le licencié"
+          }
+          summary={`${activeAction.first_name} ${activeAction.last_name} · licence ${activeAction.licence_number}. Les saisons et le compte lié seront conservés.`}
+          confirmLabel={activeAction.is_active ? "Désactiver" : "Réactiver"}
+          pending={activation.isPending}
+          error={activation.error?.message}
+          onCancel={() => setActiveAction(undefined)}
+          onConfirm={(reason) =>
+            activation.mutate(
+              {
+                id: activeAction.id,
+                active: !activeAction.is_active,
+                updatedAt: activeAction.updated_at,
+                reason,
+              },
+              { onSuccess: () => setActiveAction(undefined) },
+            )
+          }
+        />
       )}
     </section>
   );

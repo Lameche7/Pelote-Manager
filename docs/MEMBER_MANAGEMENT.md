@@ -24,6 +24,8 @@ La prévisualisation ne réalise aucune écriture. Elle expose doublons internes
 
 L’assistant va réellement jusqu’à l’exécution : sélection, détection modifiable, mapping modifiable, prévisualisation, décisions par ligne, validation PostgreSQL, bilan, confirmation, exécution et résultat. Une validation serveur en erreur réinjecte ses diagnostics dans le tableau afin que chaque ligne soit corrigée ou explicitement ignorée. L’historique donne ensuite accès aux décisions, erreurs, avertissements et valeurs avant/après.
 
+La prévisualisation charge en une seule RPC les licences et identités concernées ; aucune requête par ligne n’est effectuée. Cette comparaison navigateur reste indicative : validation et exécution recalculent les actions à partir des données verrouillées en PostgreSQL. Le résultat d’exécution distingue explicitement `completed` et `failed`, et un échec conserve uniquement le statut et le diagnostic après rollback des écritures métier.
+
 ## RPC et écrans
 
 - `admin_list_club_members` fournit la liste paginée du club et son total ;
@@ -31,8 +33,11 @@ L’assistant va réellement jusqu’à l’exécution : sélection, détection 
 - `admin_get_member` renvoie la fiche et les saisons et journalise uniquement l’ouverture détaillée interclubs ;
 - `admin_create_member`, `admin_update_member`, `admin_set_member_active`, `admin_correct_member_licence` et `admin_update_member_season` verrouillent, valident et auditent les écritures ;
 - les RPC d’import persistent, valident de nouveau, exécutent atomiquement et restituent le détail complet.
+- `admin_find_member_import_matches` fournit en une requête le contexte de prévisualisation sans accorder de droit d’écriture.
 
 Les routes `/admin/membres/:memberId`, `/admin/membres/recherche-globale`, `/admin/membres/importer`, `/admin/membres/imports` et `/admin/membres/imports/:importId` couvrent respectivement consultation/modification, recherche globale, assistant et historique détaillé. Les types de ces RPC sont déclarés dans le schéma Supabase TypeScript ; le service n’utilise aucun contournement `as never`.
+
+La recherche globale refuse une requête interclubs entièrement vide, ne renvoie ni naissance ni coordonnées dans la liste synthétique, sélectionne au plus une saison par licencié et réserve les données complètes à l’ouverture auditée du détail. Les listes du club, la recherche et les imports possèdent une pagination serveur et un total fiable.
 
 ## Migration et limites
 

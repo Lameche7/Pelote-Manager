@@ -13,10 +13,10 @@ export const useAdminMembers = (filters: Record<string, Json>) =>
     queryKey: memberKeys.list(filters),
     queryFn: () => memberAdminService.list(filters),
   });
-export const useMemberImports = () =>
+export const useMemberImports = (filters: Record<string, Json>) =>
   useQuery({
-    queryKey: memberKeys.imports,
-    queryFn: memberAdminService.imports,
+    queryKey: [...memberKeys.imports, filters],
+    queryFn: () => memberAdminService.imports(filters),
   });
 export const useCreateMember = () => {
   const client = useQueryClient();
@@ -43,3 +43,14 @@ export const useSetMemberActive = () => {
     onSuccess: () => client.invalidateQueries({ queryKey: memberKeys.all }),
   });
 };
+export const useMemberImportMutations = () => ({
+  findMatches: useMutation({
+    mutationFn: memberAdminService.findImportMatches,
+  }),
+  create: useMutation({ mutationFn: memberAdminService.createImport }),
+  validate: useMutation({
+    mutationFn: ({ id, rows }: { id: string; rows: Json[] }) =>
+      memberAdminService.validateImport(id, rows),
+  }),
+  execute: useMutation({ mutationFn: memberAdminService.executeImport }),
+});

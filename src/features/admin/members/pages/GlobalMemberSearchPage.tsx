@@ -17,6 +17,7 @@ export function GlobalMemberSearchPage() {
         ...(active ? { active } : {}),
         ...(licensed ? { licensed } : {}),
       }),
+    enabled: search.trim().length > 0,
   });
   const total = query.data?.[0]?.total_count ?? 0;
   return (
@@ -105,6 +106,12 @@ export function GlobalMemberSearchPage() {
             </tbody>
           </table>
         </div>
+      )}
+      {!search.trim() && (
+        <p className="empty">
+          Saisissez une licence, un nom ou un prénom pour lancer la recherche
+          interclubs.
+        </p>
       )}
       <div className="members-actions">
         <button

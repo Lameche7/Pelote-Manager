@@ -39,6 +39,7 @@ export function MemberImportDetailPage() {
               <th>Exécution</th>
               <th>Erreurs</th>
               <th>Avertissements</th>
+              <th>Décision</th>
               <th>Avant / après</th>
             </tr>
           </thead>
@@ -50,6 +51,9 @@ export function MemberImportDetailPage() {
                 <td>{row.executed_action ?? "—"}</td>
                 <td>{row.errors.join(" ") || "—"}</td>
                 <td>{row.warnings.join(" ") || "—"}</td>
+                <td>
+                  <pre>{JSON.stringify(row.admin_decision, null, 2)}</pre>
+                </td>
                 <td>
                   <details>
                     <summary>Valeurs</summary>
