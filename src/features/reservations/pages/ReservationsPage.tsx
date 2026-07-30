@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   formatPrice,
   getBookingErrorMessage,
-  validateGuestContact,
-  type BookingFormErrors,
-  type GuestContact,
   type ReservationTerms,
 } from "@/features/reservations/domain/booking";
 import {
@@ -20,6 +18,7 @@ import {
 } from "@/features/reservations/domain/calendar";
 import { reservationBookingService } from "@/features/reservations/services/reservationBookingService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
+import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./ReservationsPage.css";
 import "./ReservationLockedSlots.css";
@@ -42,8 +41,6 @@ const rangeFormatter = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
   year: "numeric",
 });
-
-const emptyGuestContact: GuestContact = { name: "", email: "", phone: "" };
 
 function CalendarSkeleton() {
   return (
@@ -109,6 +106,23 @@ function SlotCard({
   );
 }
 
+function AccountRequiredModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="booking-modal" role="presentation" onMouseDown={onClose}>
+      <section className="booking-modal__panel booking-modal__account-required" role="dialog" aria-modal="true" aria-labelledby="account-required-title" onMouseDown={(event) => event.stopPropagation()}>
+        <button type="button" className="booking-modal__close" aria-label="Fermer" onClick={onClose}>×</button>
+        <p className="booking-modal__eyebrow">Compte utilisateur</p>
+        <h2 id="account-required-title">Réserver un terrain</h2>
+        <p>Pour réserver un terrain, vous devez disposer d’un compte.</p>
+        <div className="booking-modal__actions">
+          <Link className="booking-modal__secondary" to={ROUTES.login}>Se connecter</Link>
+          <Link to={ROUTES.register}>Créer un compte</Link>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function BookingModal({
   slot,
   resource,
@@ -123,8 +137,6 @@ function BookingModal({
   onSuccess: () => Promise<void>;
 }) {
   const [terms, setTerms] = useState<ReservationTerms | null>(null);
-  const [guestContact, setGuestContact] = useState<GuestContact>(emptyGuestContact);
-  const [formErrors, setFormErrors] = useState<BookingFormErrors>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -150,20 +162,10 @@ function BookingModal({
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!isAuthenticated) {
-      const errors = validateGuestContact(guestContact);
-      setFormErrors(errors);
-      if (Object.keys(errors).length > 0) return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      await reservationBookingService.create(
-        resource.id,
-        slot.startsAt,
-        isAuthenticated ? undefined : guestContact,
-      );
+      await reservationBookingService.create(resource.id, slot.startsAt);
       setIsConfirmed(true);
       await onSuccess();
     } catch (error) {
@@ -234,50 +236,6 @@ function BookingModal({
                   ? "Tarif licencié actif validé."
                   : "Tarif public applicable."}
               </p>
-            )}
-
-            {!isAuthenticated && (
-              <fieldset className="booking-modal__fields">
-                <legend>Vos coordonnées</legend>
-                <label>
-                  Nom complet
-                  <input
-                    value={guestContact.name}
-                    onChange={(event) =>
-                      setGuestContact((current) => ({ ...current, name: event.target.value }))
-                    }
-                    autoComplete="name"
-                    aria-invalid={Boolean(formErrors.name)}
-                  />
-                  {formErrors.name && <small>{formErrors.name}</small>}
-                </label>
-                <label>
-                  Adresse électronique
-                  <input
-                    type="email"
-                    value={guestContact.email}
-                    onChange={(event) =>
-                      setGuestContact((current) => ({ ...current, email: event.target.value }))
-                    }
-                    autoComplete="email"
-                    aria-invalid={Boolean(formErrors.email)}
-                  />
-                  {formErrors.email && <small>{formErrors.email}</small>}
-                </label>
-                <label>
-                  Téléphone
-                  <input
-                    type="tel"
-                    value={guestContact.phone}
-                    onChange={(event) =>
-                      setGuestContact((current) => ({ ...current, phone: event.target.value }))
-                    }
-                    autoComplete="tel"
-                    aria-invalid={Boolean(formErrors.phone)}
-                  />
-                  {formErrors.phone && <small>{formErrors.phone}</small>}
-                </label>
-              </fieldset>
             )}
 
             {isAuthenticated && (
@@ -475,13 +433,11 @@ export function ReservationsPage() {
       </div>
 
       {selectedSlot && selectedResource && (
-        <BookingModal
-          slot={selectedSlot}
-          resource={selectedResource}
-          isAuthenticated={isAuthenticated}
-          onClose={() => setSelectedSlot(null)}
-          onSuccess={loadSlots}
-        />
+        isAuthenticated ? (
+          <BookingModal slot={selectedSlot} resource={selectedResource} isAuthenticated onClose={() => setSelectedSlot(null)} onSuccess={loadSlots} />
+        ) : (
+          <AccountRequiredModal onClose={() => setSelectedSlot(null)} />
+        )
       )}
     </section>
   );

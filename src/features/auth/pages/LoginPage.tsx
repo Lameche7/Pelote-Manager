@@ -81,8 +81,7 @@ export function LoginPage() {
         {error && <p role="alert">{error}</p>}
       </form>
       <p>
-        Pas encore de compte ?{" "}
-        <Link to={ROUTES.register}>Créer un compte licencié</Link>
+        Pas encore de compte ? <Link to={ROUTES.register}>Créer un compte</Link>
       </p>
     </section>
   );

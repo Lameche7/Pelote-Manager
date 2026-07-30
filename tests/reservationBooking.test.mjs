@@ -3,35 +3,11 @@ import test from "node:test";
 import {
   formatPrice,
   getBookingErrorMessage,
-  validateGuestContact,
 } from "../.test-dist/src/features/reservations/domain/booking.js";
 
 test("formate les tarifs en euros pour la France", () => {
   assert.match(formatPrice(1200), /12,00\s?€/);
   assert.match(formatPrice(1800), /18,00\s?€/);
-});
-
-test("valide les coordonnées d'un visiteur", () => {
-  assert.deepEqual(
-    validateGuestContact({
-      name: "Alain Guemeche",
-      email: "alain@example.fr",
-      phone: "06 12 34 56 78",
-    }),
-    {},
-  );
-});
-
-test("signale les coordonnées visiteur invalides", () => {
-  const errors = validateGuestContact({
-    name: "A",
-    email: "adresse-invalide",
-    phone: "123",
-  });
-
-  assert.ok(errors.name);
-  assert.ok(errors.email);
-  assert.ok(errors.phone);
 });
 
 test("traduit les conflits de réservation en message utilisateur", () => {

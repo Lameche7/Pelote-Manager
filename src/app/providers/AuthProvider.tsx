@@ -17,6 +17,7 @@ import {
 import { AuthContext, type AuthContextValue } from "@/shared/hooks/useAuth";
 import type { AuthUser } from "@/shared/types/auth";
 import type { UserProfile } from "@/shared/types/profile";
+import { finalizeAccountProfile } from "@/features/auth/domain/accountProfileFinalization";
 
 type AuthProviderProps = PropsWithChildren<{
   service?: AuthService;
@@ -34,7 +35,7 @@ export function AuthProvider({
   const synchronizationRevision = useRef(0);
 
   const synchronize = useCallback(
-    async (currentUser: AuthUser | null) => {
+    async (currentUser: AuthUser | null, requireProfile = false) => {
       const currentRevision = ++synchronizationRevision.current;
       setUser(currentUser);
 
@@ -47,15 +48,18 @@ export function AuthProvider({
       setIsLoading(true);
 
       try {
-        const currentProfile =
-          await profileService.getOrCreateProfile(currentUser);
+        const currentProfile = await finalizeAccountProfile(
+          currentUser,
+          profileService.getOrCreateProfile.bind(profileService),
+        );
         if (currentRevision === synchronizationRevision.current) {
           setProfile(currentProfile);
         }
-      } catch {
+      } catch (error) {
         if (currentRevision === synchronizationRevision.current) {
           setProfile(null);
         }
+        if (requireProfile) throw error;
       } finally {
         if (currentRevision === synchronizationRevision.current) {
           setIsLoading(false);
@@ -102,7 +106,9 @@ export function AuthProvider({
   const login = useCallback(
     async (email: string, password: string) => {
       const authenticatedUser = await service.login(email, password);
-      await synchronize(authenticatedUser);
+      // An explicit login must not complete until the account has its profile.
+      // This is especially important after an email-confirmed visitor signup.
+      await synchronize(authenticatedUser, true);
     },
     [service, synchronize],
   );
