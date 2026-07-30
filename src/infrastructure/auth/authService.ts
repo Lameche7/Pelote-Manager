@@ -59,3 +59,37 @@ export const authService: AuthService = {
     return () => data.subscription.unsubscribe();
   },
 };
+
+export async function registerVisitor(input: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}): Promise<"completed" | "confirmation_required"> {
+  const { data, error } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: {
+      data: {
+        first_name: input.firstName.trim(),
+        last_name: input.lastName.trim(),
+      },
+    },
+  });
+  if (error) throw error;
+  if (!data.user) throw new Error("Le compte n’a pas pu être créé.");
+
+  if (data.session) {
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: data.user.id,
+      email: input.email.trim().toLowerCase(),
+      first_name: input.firstName.trim(),
+      last_name: input.lastName.trim(),
+      display_name: `${input.firstName.trim()} ${input.lastName.trim()}`,
+    });
+    if (profileError) throw profileError;
+    await supabase.auth.signOut();
+    return "completed";
+  }
+  return "confirmation_required";
+}

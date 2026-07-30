@@ -128,6 +128,7 @@ export function MyReservationsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [pendingCancellation, setPendingCancellation] = useState<MyReservation | null>(null);
 
   async function load() {
     setIsLoading(true);
@@ -151,11 +152,6 @@ export function MyReservationsPage() {
   );
 
   async function cancelReservation(reservation: MyReservation) {
-    const confirmed = window.confirm(
-      `Annuler la réservation au ${reservation.resourceName} du ${dateTime.format(new Date(reservation.startsAt))} ?`,
-    );
-    if (!confirmed) return;
-
     setBusyId(reservation.id);
     setError(null);
     setMessage(null);
@@ -219,10 +215,21 @@ export function MyReservationsPage() {
               key={reservation.id}
               reservation={reservation}
               busyId={busyId}
-              onCancel={cancelReservation}
+              onCancel={async (reservation) => setPendingCancellation(reservation)}
               onResumePayment={resumePayment}
             />
           ))}
+        </div>
+      )}
+
+      {pendingCancellation && (
+        <div className="cancellation-dialog" role="presentation" onMouseDown={() => setPendingCancellation(null)}>
+          <section role="alertdialog" aria-modal="true" aria-labelledby="cancellation-title" onMouseDown={(event) => event.stopPropagation()}>
+            <p className="my-reservations__eyebrow">Annulation</p>
+            <h2 id="cancellation-title">Voulez-vous vraiment annuler cette réservation ?</h2>
+            <p>{pendingCancellation.resourceName} · {dateTime.format(new Date(pendingCancellation.startsAt))}</p>
+            <div><button type="button" onClick={() => setPendingCancellation(null)}>Retour</button><button type="button" className="my-reservations__danger" onClick={() => { const reservation = pendingCancellation; setPendingCancellation(null); void cancelReservation(reservation); }}>Confirmer</button></div>
+          </section>
         </div>
       )}
     </section>

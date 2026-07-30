@@ -622,3 +622,27 @@ button.reservation-slot:focus-visible {
     animation-iteration-count: 1 !important;
   }
 }
+
+.booking-modal__account-required {
+  text-align: center;
+}
+.booking-modal__account-required > p:not(.booking-modal__eyebrow) {
+  color: #5d6970;
+  font-size: 1.05rem;
+}
+.booking-modal__account-required .booking-modal__actions a {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: .75rem;
+  padding: .75rem 1.2rem;
+  color: #fff;
+  background: var(--brand-red);
+  font-weight: 800;
+  text-decoration: none;
+}
+.booking-modal__account-required .booking-modal__actions .booking-modal__secondary {
+  color: var(--brand-green);
+  background: #eef6f2;
+}

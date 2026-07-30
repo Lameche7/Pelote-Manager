@@ -1,5 +1,5 @@
 import { supabase } from "@/infrastructure/supabase/client";
-import type { GuestContact, ReservationTerms } from "@/features/reservations/domain/booking";
+import type { ReservationTerms } from "@/features/reservations/domain/booking";
 
 type TermsRow = {
   customer_type: ReservationTerms["customerType"];
@@ -73,15 +73,14 @@ export const reservationBookingService = {
   async startPayment(
     resourceId: string,
     startsAt: string,
-    guestContact?: GuestContact,
   ): Promise<StartedPayment> {
     const mode = await this.getPaymentMode();
     const { data, error } = await supabase.rpc("reserve_for_payment", {
       target_resource_id: resourceId,
       target_starts_at: startsAt,
-      guest_name: guestContact?.name ?? null,
-      guest_email: guestContact?.email ?? null,
-      guest_phone: guestContact?.phone ?? null,
+      guest_name: null,
+      guest_email: null,
+      guest_phone: null,
     });
     if (error) throw error;
 
@@ -145,9 +144,8 @@ export const reservationBookingService = {
   async create(
     resourceId: string,
     startsAt: string,
-    guestContact?: GuestContact,
   ): Promise<StartedPayment> {
-    const payment = await this.startPayment(resourceId, startsAt, guestContact);
+    const payment = await this.startPayment(resourceId, startsAt);
 
     if (payment.mode === "helloasso" && payment.redirectUrl) {
       window.location.assign(payment.redirectUrl);

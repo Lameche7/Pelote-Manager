@@ -5,12 +5,6 @@ export type ReservationTerms = {
   maxActiveReservations: number;
 };
 
-export type GuestContact = {
-  name: string;
-  email: string;
-  phone: string;
-};
-
 export type CreatedReservation = {
   id: string;
   resourceId: string;
@@ -22,32 +16,11 @@ export type CreatedReservation = {
   currency: "EUR";
 };
 
-export type BookingFormErrors = Partial<Record<keyof GuestContact, string>>;
-
 export function formatPrice(priceCents: number): string {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
   }).format(priceCents / 100);
-}
-
-export function validateGuestContact(contact: GuestContact): BookingFormErrors {
-  const errors: BookingFormErrors = {};
-
-  if (contact.name.trim().length < 2) {
-    errors.name = "Indiquez votre nom complet.";
-  }
-
-  if (!/^\S+@\S+\.\S+$/.test(contact.email.trim())) {
-    errors.email = "Indiquez une adresse électronique valide.";
-  }
-
-  const digits = contact.phone.replace(/\D/g, "");
-  if (digits.length < 10) {
-    errors.phone = "Indiquez un numéro de téléphone valide.";
-  }
-
-  return errors;
 }
 
 export function getBookingErrorMessage(error: unknown): string {
