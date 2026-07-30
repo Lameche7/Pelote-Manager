@@ -2,9 +2,11 @@ import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 import type {
   CalendarOccupation,
+  CalendarOccupationRow,
   CalendarSlot,
   ReservableResource,
 } from "@/features/reservations/domain/calendar";
+import { mapCalendarOccupation } from "@/features/reservations/domain/calendar";
 
 type ResourceRow = {
   id: string;
@@ -20,14 +22,6 @@ type SlotRow = {
   status: "available" | "occupied" | "locked";
   booking_opens_at: string | null;
   booked_by_name: string | null;
-};
-
-type OccupationRow = {
-  id: string;
-  occupation_type: CalendarOccupation["occupationType"];
-  title: string;
-  starts_at: string;
-  ends_at: string;
 };
 
 export const reservationCalendarService = {
@@ -84,12 +78,8 @@ export const reservationCalendarService = {
 
     if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les occupations."));
 
-    return ((data ?? []) as OccupationRow[]).map((occupation) => ({
-      id: occupation.id,
-      occupationType: occupation.occupation_type,
-      title: occupation.title,
-      startsAt: occupation.starts_at,
-      endsAt: occupation.ends_at,
-    }));
+    return ((data ?? []) as CalendarOccupationRow[]).map(
+      mapCalendarOccupation,
+    );
   },
 };
