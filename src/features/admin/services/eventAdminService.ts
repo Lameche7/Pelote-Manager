@@ -156,9 +156,22 @@ export const eventAdminService = {
     if (error) fail(error, "Impossible d’enregistrer l’évènement.");
     return String(data);
   },
-  async duplicateEvent(id: string): Promise<string> {
+  async duplicateEvent(id: string, event: EventDraft): Promise<string> {
     const { data, error } = await supabase.rpc("admin_duplicate_event", {
       target_id: id,
+      payload: {
+        name: event.name,
+        event_type_id: event.eventTypeId,
+        description: event.description,
+        responsible_profile_id: event.responsibleProfileId,
+        color: event.color,
+        starts_at: event.startsAt,
+        ends_at: event.endsAt,
+        resource_ids: event.resourceIds,
+        visibility: event.visibility,
+        maximum_capacity: event.maximumCapacity,
+        registration_required: event.registrationRequired,
+      },
     });
     if (error) fail(error, "Duplication impossible.");
     return String(data);

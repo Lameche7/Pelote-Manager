@@ -61,10 +61,22 @@ create table public.event_documents (
   created_at timestamptz not null default now()
 );
 
+create table public.event_audit_log (
+  id bigint generated always as identity primary key,
+  club_id uuid not null references public.clubs(id) on delete cascade,
+  event_id uuid not null,
+  action text not null check (action in ('created', 'updated', 'archived', 'deleted')),
+  actor_id uuid references public.profiles(id) on delete set null,
+  previous_data jsonb,
+  new_data jsonb,
+  created_at timestamptz not null default now()
+);
+
 create index events_club_period_idx on public.events(club_id, starts_at, ends_at);
 create index events_club_status_idx on public.events(club_id, publication_status);
 create index event_resources_resource_idx on public.event_resources(resource_id);
 create index event_documents_event_idx on public.event_documents(event_id);
+create index event_audit_log_event_idx on public.event_audit_log(club_id,event_id,created_at);
 
 insert into public.event_types (club_id, name, color, icon, display_order)
 select clubs.id, seed.name, seed.color, seed.icon, seed.ord
@@ -167,6 +179,11 @@ $$;
 create function public.admin_save_event(payload jsonb) returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare club uuid := public.admin_current_club_id(); saved_id uuid; resource uuid; responsible uuid;
+ previous_event public.events; saved_event public.events; resource_ids uuid[]; previous_resource_ids uuid[];
+ target_starts_at timestamptz := (payload->>'starts_at')::timestamptz;
+ target_ends_at timestamptz := (payload->>'ends_at')::timestamptz;
+ target_is_blocking boolean := coalesce((payload->>'is_blocking')::boolean,false);
+ target_status public.event_publication_status := coalesce((payload->>'publication_status')::public.event_publication_status,'draft');
 begin
  if not public.has_club_permission(club,'events.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
  if jsonb_array_length(coalesce(payload->'resource_ids','[]'))=0 then raise exception 'Au moins un terrain est requis' using errcode='22023'; end if;
@@ -177,48 +194,95 @@ begin
    where p.id=responsible and m.club_id=club and m.is_active
  ) then raise exception 'Le responsable doit être un membre actif du club' using errcode='22023'; end if;
  saved_id := nullif(payload->>'id','')::uuid;
+ select array_agg(value::uuid order by value::uuid) into resource_ids
+ from jsonb_array_elements_text(payload->'resource_ids') values_list(value);
+ if cardinality(resource_ids) <> (select count(distinct id) from unnest(resource_ids) ids(id))
+ then raise exception 'Un terrain ne peut être sélectionné qu’une fois' using errcode='22023'; end if;
+ if exists(select 1 from unnest(resource_ids) ids(id) where not exists(
+   select 1 from public.reservable_resources r where r.id=ids.id and r.club_id=club and r.is_active
+ )) then raise exception 'Invalid resource' using errcode='22023'; end if;
+
+ -- Lock in a deterministic order so two event transactions cannot interleave
+ -- validation and projection for the same set of resources.
+ perform 1 from public.reservable_resources r
+ where r.id=any(resource_ids) and r.club_id=club order by r.id for update;
+ if saved_id is not null then
+   select * into previous_event from public.events where id=saved_id and club_id=club for update;
+   if previous_event.id is null then raise exception 'Event not found' using errcode='P0002'; end if;
+   select array_agg(er.resource_id order by er.resource_id) into previous_resource_ids
+   from public.event_resources er where er.event_id=saved_id;
+ end if;
+ if target_ends_at <= target_starts_at then raise exception 'La fin doit suivre le début' using errcode='22023'; end if;
+ if target_is_blocking and target_status='published' and exists(
+   select 1 from public.calendar_occupations occupation
+   where occupation.resource_id=any(resource_ids) and occupation.cancelled_at is null
+     and occupation.starts_at<target_ends_at and occupation.ends_at>target_starts_at
+     and (saved_id is null or occupation.id not in (
+       select er.calendar_occupation_id from public.event_resources er
+       where er.event_id=saved_id and er.calendar_occupation_id is not null
+     ))
+ ) then raise exception 'Un terrain est déjà occupé pendant cette période' using errcode='23P01'; end if;
  if saved_id is null then
   insert into public.events(club_id,event_type_id,name,description,responsible_profile_id,color,starts_at,ends_at,is_blocking,visibility,publication_status,maximum_capacity,registration_required,archived_at,created_by,updated_by)
-  values(club,(payload->>'event_type_id')::uuid,btrim(payload->>'name'),nullif(payload->>'description',''),responsible,nullif(payload->>'color',''),(payload->>'starts_at')::timestamptz,(payload->>'ends_at')::timestamptz,coalesce((payload->>'is_blocking')::boolean,false),coalesce((payload->>'visibility')::public.event_visibility,'private'),coalesce((payload->>'publication_status')::public.event_publication_status,'draft'),nullif(payload->>'maximum_capacity','')::integer,coalesce((payload->>'registration_required')::boolean,false),case when payload->>'publication_status'='archived' then now() end,auth.uid(),auth.uid()) returning id into saved_id;
+  values(club,(payload->>'event_type_id')::uuid,btrim(payload->>'name'),nullif(payload->>'description',''),responsible,nullif(payload->>'color',''),target_starts_at,target_ends_at,target_is_blocking,coalesce((payload->>'visibility')::public.event_visibility,'private'),target_status,nullif(payload->>'maximum_capacity','')::integer,coalesce((payload->>'registration_required')::boolean,false),case when target_status='archived' then now() end,auth.uid(),auth.uid()) returning id into saved_id;
  else
-  update public.events set event_type_id=(payload->>'event_type_id')::uuid,name=btrim(payload->>'name'),description=nullif(payload->>'description',''),responsible_profile_id=responsible,color=nullif(payload->>'color',''),starts_at=(payload->>'starts_at')::timestamptz,ends_at=(payload->>'ends_at')::timestamptz,is_blocking=coalesce((payload->>'is_blocking')::boolean,false),visibility=(payload->>'visibility')::public.event_visibility,publication_status=(payload->>'publication_status')::public.event_publication_status,maximum_capacity=nullif(payload->>'maximum_capacity','')::integer,registration_required=coalesce((payload->>'registration_required')::boolean,false),archived_at=case when payload->>'publication_status'='archived' then coalesce(archived_at,now()) end,updated_at=now(),updated_by=auth.uid()
+  update public.events set event_type_id=(payload->>'event_type_id')::uuid,name=btrim(payload->>'name'),description=nullif(payload->>'description',''),responsible_profile_id=responsible,color=nullif(payload->>'color',''),starts_at=target_starts_at,ends_at=target_ends_at,is_blocking=target_is_blocking,visibility=(payload->>'visibility')::public.event_visibility,publication_status=target_status,maximum_capacity=nullif(payload->>'maximum_capacity','')::integer,registration_required=coalesce((payload->>'registration_required')::boolean,false),archived_at=case when target_status='archived' then coalesce(archived_at,now()) end,updated_at=now(),updated_by=auth.uid()
   where id=saved_id and club_id=club;
-  if not found then raise exception 'Event not found' using errcode='P0002'; end if;
   delete from public.calendar_occupations where id in (
    select calendar_occupation_id from public.event_resources where event_id=saved_id and calendar_occupation_id is not null
   );
   delete from public.event_resources where event_id=saved_id;
  end if;
- for resource in select jsonb_array_elements_text(payload->'resource_ids')::uuid loop
-  if not exists(select 1 from public.reservable_resources r where r.id=resource and r.club_id=club) then raise exception 'Invalid resource' using errcode='22023'; end if;
+ foreach resource in array resource_ids loop
   insert into public.event_resources(event_id,resource_id) values(saved_id,resource);
  end loop;
- perform public.sync_event_occupations(saved_id); return saved_id;
+ perform public.sync_event_occupations(saved_id);
+ select * into saved_event from public.events where id=saved_id;
+ insert into public.event_audit_log(club_id,event_id,action,actor_id,previous_data,new_data)
+ values(club,saved_id,case when previous_event.id is null then 'created' when previous_event.publication_status<>'archived' and saved_event.publication_status='archived' then 'archived' else 'updated' end,
+ auth.uid(),case when previous_event.id is null then null else to_jsonb(previous_event)||jsonb_build_object('resource_ids',previous_resource_ids) end,to_jsonb(saved_event)||jsonb_build_object('resource_ids',resource_ids));
+ return saved_id;
 end; $$;
 
-create function public.admin_duplicate_event(target_id uuid) returns uuid
+create function public.admin_duplicate_event(target_id uuid,payload jsonb) returns uuid
 language plpgsql security definer set search_path='' as $$
-declare source public.events; copy_id uuid; club uuid:=public.admin_current_club_id(); begin
+declare source public.events; club uuid:=public.admin_current_club_id(); begin
  if not public.has_club_permission(club,'events.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
  select * into source from public.events where id=target_id and club_id=club;
- insert into public.events(club_id,event_type_id,name,description,responsible_profile_id,color,starts_at,ends_at,is_blocking,visibility,publication_status,maximum_capacity,registration_required,created_by,updated_by)
- values(club,source.event_type_id,source.name||' (copie)',source.description,source.responsible_profile_id,source.color,source.starts_at,source.ends_at,false,source.visibility,'draft',source.maximum_capacity,source.registration_required,auth.uid(),auth.uid()) returning id into copy_id;
- insert into public.event_resources(event_id,resource_id) select copy_id,resource_id from public.event_resources where event_id=target_id;
- return copy_id; end; $$;
-create function public.admin_archive_event(target_id uuid) returns void language plpgsql security definer set search_path='' as $$ begin
- if not public.has_club_permission(public.admin_current_club_id(),'events.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
- update public.events set publication_status='archived',archived_at=now(),updated_at=now(),updated_by=auth.uid() where id=target_id and club_id=public.admin_current_club_id(); perform public.sync_event_occupations(target_id); end; $$;
-create function public.admin_delete_event(target_id uuid) returns void language plpgsql security definer set search_path='' as $$ begin
- if not public.has_club_permission(public.admin_current_club_id(),'events.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
- update public.events set is_blocking=false where id=target_id and club_id=public.admin_current_club_id();
- perform public.sync_event_occupations(target_id); delete from public.events where id=target_id and club_id=public.admin_current_club_id(); end; $$;
+ if source.id is null then raise exception 'Event not found' using errcode='P0002'; end if;
+ if nullif(payload->>'id','') is not null then raise exception 'Une duplication doit créer un nouvel évènement' using errcode='22023'; end if;
+ return public.admin_save_event(payload||jsonb_build_object('id',null,'publication_status','draft','is_blocking',false));
+end; $$;
+create function public.admin_archive_event(target_id uuid) returns void language plpgsql security definer set search_path='' as $$
+declare club uuid:=public.admin_current_club_id(); previous_event public.events; saved_event public.events; previous_resource_ids uuid[]; begin
+ if not public.has_club_permission(club,'events.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
+ select * into previous_event from public.events where id=target_id and club_id=club for update;
+ if previous_event.id is null then raise exception 'Event not found' using errcode='P0002'; end if;
+ select array_agg(resource_id order by resource_id) into previous_resource_ids from public.event_resources where event_id=target_id;
+ update public.events set publication_status='archived',archived_at=now(),updated_at=now(),updated_by=auth.uid() where id=target_id returning * into saved_event;
+ perform public.sync_event_occupations(target_id);
+ insert into public.event_audit_log(club_id,event_id,action,actor_id,previous_data,new_data) values(club,target_id,'archived',auth.uid(),to_jsonb(previous_event)||jsonb_build_object('resource_ids',previous_resource_ids),to_jsonb(saved_event)||jsonb_build_object('resource_ids',previous_resource_ids));
+end; $$;
+create function public.admin_delete_event(target_id uuid) returns void language plpgsql security definer set search_path='' as $$
+declare club uuid:=public.admin_current_club_id(); previous_event public.events; previous_resource_ids uuid[]; begin
+ if not public.has_club_permission(club,'events.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
+ select * into previous_event from public.events where id=target_id and club_id=club for update;
+ if previous_event.id is null then raise exception 'Event not found' using errcode='P0002'; end if;
+ select array_agg(resource_id order by resource_id) into previous_resource_ids from public.event_resources where event_id=target_id;
+ update public.events set is_blocking=false where id=target_id; perform public.sync_event_occupations(target_id);
+ delete from public.events where id=target_id;
+ insert into public.event_audit_log(club_id,event_id,action,actor_id,previous_data) values(club,target_id,'deleted',auth.uid(),to_jsonb(previous_event)||jsonb_build_object('resource_ids',previous_resource_ids));
+end; $$;
 
 alter table public.event_types enable row level security; alter table public.events enable row level security;
-alter table public.event_resources enable row level security; alter table public.event_documents enable row level security;
+alter table public.event_resources enable row level security; alter table public.event_documents enable row level security; alter table public.event_audit_log enable row level security;
 create policy event_types_club_read on public.event_types for select to authenticated using (public.has_club_permission(club_id,'events.manage'));
 create policy events_public_read on public.events for select to anon,authenticated using (publication_status='published' and visibility='public');
+create policy event_audit_log_manager_read on public.event_audit_log for select to authenticated using (public.has_club_permission(club_id,'events.manage'));
+revoke all on table public.event_audit_log from public,anon,authenticated;
+grant select on table public.event_audit_log to authenticated;
 revoke all on function public.sync_event_occupations(uuid) from public;
-grant execute on function public.admin_list_event_types(),public.admin_list_event_resources(),public.admin_list_event_responsibles(),public.admin_save_event_type(text,text,text),public.admin_list_events(),public.admin_get_event(uuid),public.admin_save_event(jsonb),public.admin_duplicate_event(uuid),public.admin_archive_event(uuid),public.admin_delete_event(uuid) to authenticated;
+grant execute on function public.admin_list_event_types(),public.admin_list_event_resources(),public.admin_list_event_responsibles(),public.admin_save_event_type(text,text,text),public.admin_list_events(),public.admin_get_event(uuid),public.admin_save_event(jsonb),public.admin_duplicate_event(uuid,jsonb),public.admin_archive_event(uuid),public.admin_delete_event(uuid) to authenticated;
 
 -- Manual closure administration must never mutate event-owned occupations.
 create or replace function public.admin_list_calendar_blocks()

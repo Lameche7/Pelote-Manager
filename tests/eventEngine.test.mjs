@@ -38,6 +38,22 @@ test("legacy block RPCs accept manual closures only", () => {
   assert.match(migration, /Blocage manuel introuvable/);
 });
 
+test("event writes lock resources, preflight conflicts and audit lifecycle changes", () => {
+  assert.match(migration, /order by r\.id for update/);
+  assert.match(migration, /Un terrain est déjà occupé pendant cette période/);
+  assert.match(migration, /create table public\.event_audit_log/);
+  for (const action of ["created", "updated", "archived", "deleted"])
+    assert.match(migration, new RegExp(`'${action}'`));
+});
+
+test("duplication requires an explicit payload and always creates a safe draft", () => {
+  assert.match(
+    migration,
+    /admin_duplicate_event\(target_id uuid,payload jsonb\)/,
+  );
+  assert.match(migration, /'publication_status','draft','is_blocking',false/);
+});
+
 test("administration service exposes the complete event lifecycle", () => {
   for (const method of [
     "listEvents",

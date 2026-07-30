@@ -38,6 +38,7 @@ export function AdminEventsPage() {
     [resources, setResources] = useState<EventResource[]>([]),
     [responsibles, setResponsibles] = useState<EventResponsible[]>([]);
   const [draft, setDraft] = useState<EventDraft | null>(null),
+    [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null),
     [search, setSearch] = useState(""),
     [status, setStatus] = useState("all"),
     [sort, setSort] = useState("start-desc");
@@ -118,7 +119,10 @@ export function AdminEventsPage() {
         </div>
         <button
           className="events-primary"
-          onClick={() => setDraft(blank(types.find((t) => t.isActive)?.id))}
+          onClick={() => {
+            setDuplicateSourceId(null);
+            setDraft(blank(types.find((t) => t.isActive)?.id));
+          }}
         >
           Créer un évènement
         </button>
@@ -212,15 +216,16 @@ export function AdminEventsPage() {
                       onClick={() =>
                         eventAdminService
                           .getEvent(event.id)
-                          .then((value) =>
+                          .then((value) => {
+                            setDuplicateSourceId(null);
                             setDraft({
                               ...value,
                               startsAt: storedDateTimeToLocalInput(
                                 value.startsAt,
                               ),
                               endsAt: storedDateTimeToLocalInput(value.endsAt),
-                            }),
-                          )
+                            });
+                          })
                           .catch((e: unknown) =>
                             setError(
                               e instanceof Error
@@ -235,10 +240,29 @@ export function AdminEventsPage() {
                     <button
                       disabled={saving}
                       onClick={() =>
-                        void act(
-                          () => eventAdminService.duplicateEvent(event.id),
-                          "Évènement dupliqué en brouillon.",
-                        )
+                        eventAdminService
+                          .getEvent(event.id)
+                          .then((value) => {
+                            setDuplicateSourceId(event.id);
+                            setDraft({
+                              ...value,
+                              id: undefined,
+                              name: `${value.name} (copie)`,
+                              startsAt: storedDateTimeToLocalInput(
+                                value.startsAt,
+                              ),
+                              endsAt: storedDateTimeToLocalInput(value.endsAt),
+                              isBlocking: false,
+                              publicationStatus: "draft",
+                            });
+                          })
+                          .catch((e: unknown) =>
+                            setError(
+                              e instanceof Error
+                                ? e.message
+                                : "Préparation de la copie impossible.",
+                            ),
+                          )
                       }
                     >
                       Dupliquer
@@ -290,17 +314,30 @@ export function AdminEventsPage() {
           responsibles={responsibles}
           saving={saving}
           error={error}
-          onCancel={() => setDraft(null)}
+          onCancel={() => {
+            setDraft(null);
+            setDuplicateSourceId(null);
+          }}
           onSave={async (value) => {
             setSaving(true);
             setError("");
             const result = await submitEventDraft(
               value,
-              eventAdminService.updateEvent.bind(eventAdminService),
+              duplicateSourceId
+                ? (copy) =>
+                    eventAdminService.duplicateEvent(duplicateSourceId, copy)
+                : eventAdminService.updateEvent.bind(eventAdminService),
             );
             if (result.ok) {
-              setMessage(value.id ? "Évènement modifié." : "Évènement créé.");
+              setMessage(
+                duplicateSourceId
+                  ? "Évènement dupliqué en brouillon."
+                  : value.id
+                    ? "Évènement modifié."
+                    : "Évènement créé.",
+              );
               setDraft(null);
+              setDuplicateSourceId(null);
               try {
                 await load();
               } catch (loadError) {

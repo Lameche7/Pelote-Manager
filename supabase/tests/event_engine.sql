@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(29);
 
 insert into auth.users(id,email,aud,role) values
  ('10000000-0000-0000-0000-000000000001','event-admin@example.test','authenticated','authenticated'),
@@ -64,13 +64,25 @@ select lives_ok(format($sql$select public.admin_save_event(jsonb_build_object('i
 select is((select title from public.calendar_occupations where occupation_type='club_event'),'Réunion publique','un évènement public expose son titre');
 select lives_ok(format($sql$select public.admin_save_event(jsonb_build_object('id',%L,'event_type_id','60000000-0000-0000-0000-000000000001','name','Réunion publique','starts_at','2026-07-15T08:00:00.000Z','ends_at','2026-07-15T10:00:00.000Z','resource_ids',jsonb_build_array('50000000-0000-0000-0000-000000000001'),'responsible_profile_id','10000000-0000-0000-0000-000000000002','is_blocking',true,'visibility','public','publication_status','draft'))$sql$,(select id from event_test_state)),'dépublie l’évènement');
 select is((select count(*)::integer from public.calendar_occupations where occupation_type='club_event'),0,'dépublier supprime l’occupation');
+insert into public.calendar_occupations(resource_id,occupation_type,title,starts_at,ends_at)
+values('50000000-0000-0000-0000-000000000001','closure','Fermeture existante','2026-07-20T08:00:00Z','2026-07-20T10:00:00Z');
+select throws_ok($sql$select public.admin_save_event(jsonb_build_object('event_type_id','60000000-0000-0000-0000-000000000001','name','Conflit','starts_at','2026-07-20T09:00:00Z','ends_at','2026-07-20T11:00:00Z','resource_ids',jsonb_build_array('50000000-0000-0000-0000-000000000001'),'is_blocking',true,'visibility','public','publication_status','published'))$sql$,'23P01','Un terrain est déjà occupé pendant cette période','détecte le conflit avant la projection');
+delete from public.calendar_occupations where title='Fermeture existante';
 select throws_ok($sql$select public.admin_save_event(jsonb_build_object('event_type_id','60000000-0000-0000-0000-000000000001','name','Responsable externe','starts_at','2026-07-16T08:00:00Z','ends_at','2026-07-16T10:00:00Z','resource_ids',jsonb_build_array('50000000-0000-0000-0000-000000000001'),'responsible_profile_id','10000000-0000-0000-0000-000000000003'))$sql$,'22023','Le responsable doit être un membre actif du club','refuse le responsable d’un autre club');
 select throws_ok($sql$select public.admin_save_event(jsonb_build_object('event_type_id','60000000-0000-0000-0000-000000000002','name','Type externe','starts_at','2026-07-16T08:00:00Z','ends_at','2026-07-16T10:00:00Z','resource_ids',jsonb_build_array('50000000-0000-0000-0000-000000000001')))$sql$,'22023','Invalid event type','refuse le type d’un autre club');
+create temporary table duplicate_test_state(id uuid);
+insert into duplicate_test_state select public.admin_duplicate_event((select id from event_test_state),jsonb_build_object('name','Copie confirmée','event_type_id','60000000-0000-0000-0000-000000000001','starts_at','2026-07-25T08:00:00Z','ends_at','2026-07-25T10:00:00Z','resource_ids',jsonb_build_array('50000000-0000-0000-0000-000000000001'),'visibility','private'));
+select is((select publication_status::text from public.events where id=(select id from duplicate_test_state)),'draft','la duplication explicite crée toujours un brouillon');
+select is((select is_blocking from public.events where id=(select id from duplicate_test_state)),false,'la copie ne bloque jamais accidentellement un terrain');
 select lives_ok(format('select public.admin_archive_event(%L)',(select id from event_test_state)),'archive l’évènement');
 select is((select publication_status::text from public.events where id=(select id from event_test_state)),'archived','l’archive reste conservée');
 select is((select count(*)::integer from public.calendar_occupations where occupation_type='club_event'),0,'archiver ne recrée pas d’occupation');
 select lives_ok(format('select public.admin_delete_event(%L)',(select id from event_test_state)),'supprime un évènement archivé');
 select is((select count(*)::integer from public.events where id=(select id from event_test_state)),0,'la suppression nettoie l’évènement et ses relations');
+select ok(exists(select 1 from public.event_audit_log where event_id=(select id from event_test_state) and action='created'),'audite la création');
+select ok(exists(select 1 from public.event_audit_log where event_id=(select id from event_test_state) and action='updated'),'audite la modification');
+select ok(exists(select 1 from public.event_audit_log where event_id=(select id from event_test_state) and action='archived'),'audite l’archivage');
+select ok(exists(select 1 from public.event_audit_log where event_id=(select id from event_test_state) and action='deleted'),'conserve l’audit après suppression');
 
 select * from finish();
 rollback;
