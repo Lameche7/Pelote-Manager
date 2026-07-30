@@ -4,6 +4,7 @@ import {
   type AdminReservationFilters,
   type AccountType,
 } from "../domain/adminReservations";
+import type { CalendarSlot } from "@/features/reservations/domain/calendar";
 
 export type ManagedReservation = {
   id: string;
@@ -25,6 +26,14 @@ export type ReservationUser = {
   name: string;
   email: string;
   licenseNumber: string;
+};
+export type CalendarBlock = {
+  id: string;
+  resourceId: string;
+  resourceName: string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
 };
 
 export const adminReservationsService = {
@@ -77,6 +86,45 @@ export const adminReservationsService = {
     });
     if (error) throw error;
   },
+  async listAvailableSlots(
+    resourceId: string,
+    date: string,
+    excludedReservationId?: string,
+  ): Promise<CalendarSlot[]> {
+    const { data, error } = await supabase.rpc(
+      "admin_list_available_reservation_slots",
+      {
+        target_resource_id: resourceId,
+        target_date: date,
+        excluded_reservation_id: excludedReservationId ?? null,
+      },
+    );
+    if (error) throw error;
+    return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+      resourceId,
+      startsAt: String(row.starts_at),
+      endsAt: String(row.ends_at),
+      status: "available",
+      bookingOpensAt: null,
+      bookedByName: null,
+    }));
+  },
+  async previewPrice(
+    userId: string,
+    resourceId: string,
+    startsAt: string,
+  ): Promise<number> {
+    if (!userId) throw new Error("Un utilisateur existant est obligatoire.");
+    const { data, error } = await supabase.rpc("admin_preview_reservation", {
+      target_user_id: userId,
+      target_resource_id: resourceId,
+      target_starts_at: startsAt,
+    });
+    if (error) throw error;
+    return Number(
+      (data as { price_cents?: number }[] | null)?.[0]?.price_cents ?? 0,
+    );
+  },
   async cancel(id: string, reason: string) {
     const { error } = await supabase.rpc("cancel_reservation", {
       target_reservation_id: id,
@@ -89,6 +137,40 @@ export const adminReservationsService = {
       target_reservation_id: id,
       target_resource_id: resourceId,
       target_starts_at: startsAt,
+    });
+    if (error) throw error;
+  },
+  async listBlocks(): Promise<CalendarBlock[]> {
+    const { data, error } = await supabase.rpc("admin_list_calendar_blocks");
+    if (error) throw error;
+    return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+      id: String(row.id),
+      resourceId: String(row.resource_id),
+      resourceName: String(row.resource_name),
+      title: String(row.title),
+      startsAt: String(row.starts_at),
+      endsAt: String(row.ends_at),
+    }));
+  },
+  async createBlock(block: Omit<CalendarBlock, "id" | "resourceName">) {
+    const { error } = await supabase.rpc("admin_create_calendar_block", {
+      target_resource_id: block.resourceId,
+      target_title: block.title,
+      target_starts_at: block.startsAt,
+      target_ends_at: block.endsAt,
+    });
+    if (error) throw error;
+  },
+  async updateBlock(id: string, title: string) {
+    const { error } = await supabase.rpc("admin_update_calendar_block", {
+      target_id: id,
+      target_title: title,
+    });
+    if (error) throw error;
+  },
+  async deleteBlock(id: string) {
+    const { error } = await supabase.rpc("admin_delete_calendar_block", {
+      target_id: id,
     });
     if (error) throw error;
   },

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { CalendarPlus, ExternalLink, Move, XCircle } from "lucide-react";
+import type {
+  CalendarSlot,
+  ReservableResource,
+} from "@/features/reservations/domain/calendar";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
-import type { ReservableResource } from "@/features/reservations/domain/calendar";
 import {
   EMPTY_ADMIN_RESERVATION_FILTERS,
   canManageReservation,
@@ -12,7 +15,10 @@ import {
   type ManagedReservation,
   type ReservationUser,
 } from "../services/adminReservationsService";
+import { AdminDialog } from "../components/AdminDialog";
+import { BlockManager } from "../components/BlockManager";
 import { ReservationFilters } from "../components/ReservationFilters";
+import { SlotPicker } from "../components/SlotPicker";
 import "../../pages/AdminReservationOperationsPage.css";
 
 const labels: Record<string, string> = {
@@ -34,6 +40,11 @@ const dateTime = (value: string) =>
     dateStyle: "short",
     timeStyle: "short",
   });
+const today = () => new Date().toISOString().slice(0, 10);
+type Dialog =
+  | { kind: "detail" | "cancel" | "move"; item: ManagedReservation }
+  | { kind: "create" }
+  | null;
 
 export function AdminReservationsManagementPage() {
   const [filters, setFilters] = useState<AdminReservationFilters>(
@@ -44,12 +55,18 @@ export function AdminReservationsManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
+  const [dialog, setDialog] = useState<Dialog>(null);
+  const [busy, setBusy] = useState(false);
   const [userQuery, setUserQuery] = useState("");
   const [users, setUsers] = useState<ReservationUser[]>([]);
+  const [slots, setSlots] = useState<CalendarSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [price, setPrice] = useState<number | null>(null);
+  const [reason, setReason] = useState("Annulation administrateur");
   const [form, setForm] = useState({
     userId: "",
     resourceId: "",
+    date: today(),
     startsAt: "",
   });
   const load = useCallback(async () => {
@@ -73,7 +90,34 @@ export function AdminReservationsManagementPage() {
     });
   }, []);
   useEffect(() => {
-    if (userQuery.trim().length < 2) {
+    if (
+      !dialog ||
+      (dialog.kind !== "create" && dialog.kind !== "move") ||
+      !form.resourceId ||
+      !form.date
+    )
+      return;
+    let active = true;
+    setSlotsLoading(true);
+    const excluded = dialog.kind === "move" ? dialog.item.id : undefined;
+    void adminReservationsService
+      .listAvailableSlots(form.resourceId, form.date, excluded)
+      .then((value) => {
+        if (active) setSlots(value);
+      })
+      .catch((e: unknown) => {
+        if (active)
+          setError(e instanceof Error ? e.message : "Créneaux indisponibles.");
+      })
+      .finally(() => {
+        if (active) setSlotsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [dialog, form.date, form.resourceId]);
+  useEffect(() => {
+    if (dialog?.kind !== "create" || userQuery.trim().length < 2) {
       setUsers([]);
       return;
     }
@@ -86,59 +130,72 @@ export function AdminReservationsManagementPage() {
       250,
     );
     return () => window.clearTimeout(timer);
-  }, [userQuery]);
-  async function cancel(item: ManagedReservation) {
-    if (
-      !window.confirm(
-        `Annuler la réservation de ${item.customerName} — ${item.resourceName}, le ${dateTime(item.startsAt)} ?`,
-      )
-    )
+  }, [dialog, userQuery]);
+  useEffect(() => {
+    if (dialog?.kind !== "create" || !form.userId || !form.startsAt) {
+      setPrice(null);
       return;
-    const reason =
-      window.prompt(
-        "Motif de l’annulation (facultatif)",
-        "Annulation administrateur",
-      ) ?? "";
-    try {
-      await adminReservationsService.cancel(item.id, reason);
-      setMessage("La réservation a été annulée et le créneau libéré.");
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Annulation impossible.");
     }
+    void adminReservationsService
+      .previewPrice(form.userId, form.resourceId, form.startsAt)
+      .then(setPrice)
+      .catch(() => setPrice(null));
+  }, [dialog, form.resourceId, form.startsAt, form.userId]);
+  function openCreate() {
+    setForm({
+      userId: "",
+      resourceId: resources[0]?.id ?? "",
+      date: today(),
+      startsAt: "",
+    });
+    setUserQuery("");
+    setPrice(null);
+    setDialog({ kind: "create" });
   }
-  async function move(item: ManagedReservation) {
-    const startsAt = window.prompt(
-      "Nouveau début (date ISO)",
-      item.startsAt.slice(0, 16),
-    );
-    if (!startsAt) return;
+  function openMove(item: ManagedReservation) {
+    setForm({
+      userId: "",
+      resourceId: item.resourceId,
+      date: item.startsAt.slice(0, 10),
+      startsAt: "",
+    });
+    setDialog({ kind: "move", item });
+  }
+  async function submit() {
+    if (!dialog) return;
+    setBusy(true);
+    setError("");
     try {
-      await adminReservationsService.move(
-        item.id,
-        item.resourceId,
-        new Date(startsAt).toISOString(),
-      );
-      setMessage("La réservation a été déplacée.");
+      if (dialog.kind === "create") {
+        await adminReservationsService.create(
+          form.userId,
+          form.resourceId,
+          form.startsAt,
+        );
+        setMessage("La réservation a été créée pour le compte sélectionné.");
+      } else if (dialog.kind === "move") {
+        await adminReservationsService.move(
+          dialog.item.id,
+          form.resourceId,
+          form.startsAt,
+        );
+        setMessage(
+          "La réservation a été déplacée. Son propriétaire est conservé.",
+        );
+      } else if (dialog.kind === "cancel") {
+        await adminReservationsService.cancel(dialog.item.id, reason);
+        setMessage("La réservation a été annulée et le créneau libéré.");
+      }
+      setDialog(null);
       await load();
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Ce créneau n’est plus disponible.",
+        e instanceof Error
+          ? e.message
+          : "Ce créneau n’est plus disponible. Actualisez les créneaux et réessayez.",
       );
-    }
-  }
-  async function create() {
-    try {
-      await adminReservationsService.create(
-        form.userId,
-        form.resourceId,
-        new Date(form.startsAt).toISOString(),
-      );
-      setCreateOpen(false);
-      setMessage("La réservation a été créée pour le compte sélectionné.");
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Création impossible.");
+    } finally {
+      setBusy(false);
     }
   }
   return (
@@ -152,7 +209,7 @@ export function AdminReservationsManagementPage() {
         <p>
           Consultez et gérez les réservations et les occupations des terrains.
         </p>
-        <button type="button" onClick={() => setCreateOpen(!createOpen)}>
+        <button type="button" onClick={openCreate}>
           <CalendarPlus size={18} /> Créer une réservation
         </button>
       </header>
@@ -168,63 +225,6 @@ export function AdminReservationsManagementPage() {
         <p role="status" className="reservation-operations__alert">
           {message}
         </p>
-      )}
-      {createOpen && (
-        <div className="reservation-operations__editor">
-          <h2>Nouvelle réservation</h2>
-          <label>
-            Utilisateur existant
-            <input
-              value={userQuery}
-              onChange={(e) => setUserQuery(e.target.value)}
-              placeholder="Nom, prénom, email ou licence"
-            />
-          </label>
-          <select
-            aria-label="Compte sélectionné"
-            value={form.userId}
-            onChange={(e) => setForm({ ...form, userId: e.target.value })}
-          >
-            <option value="">Sélectionnez un compte</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name} — {u.email}
-                {u.licenseNumber ? ` — ${u.licenseNumber}` : ""}
-              </option>
-            ))}
-          </select>
-          <label>
-            Terrain
-            <select
-              value={form.resourceId}
-              onChange={(e) => setForm({ ...form, resourceId: e.target.value })}
-            >
-              {resources.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Créneau
-            <input
-              type="datetime-local"
-              value={form.startsAt}
-              onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
-            />
-          </label>
-          <p>
-            Le tarif est calculé et validé côté serveur selon le compte
-            sélectionné.
-          </p>
-          <button
-            disabled={!form.userId || !form.resourceId || !form.startsAt}
-            onClick={() => void create()}
-          >
-            Confirmer la création
-          </button>
-        </div>
       )}
       <ReservationFilters
         value={filters}
@@ -281,25 +281,18 @@ export function AdminReservationsManagementPage() {
                   <td>
                     <button
                       title="Consulter le détail"
-                      onClick={() =>
-                        window.alert(
-                          `${item.customerName}\n${item.resourceName}\n${dateTime(item.startsAt)}`,
-                        )
-                      }
+                      onClick={() => setDialog({ kind: "detail", item })}
                     >
                       <ExternalLink size={16} />
                     </button>
                     {canManageReservation(item.status, item.customerType) && (
                       <>
-                        <button
-                          title="Déplacer"
-                          onClick={() => void move(item)}
-                        >
+                        <button title="Déplacer" onClick={() => openMove(item)}>
                           <Move size={16} />
                         </button>
                         <button
                           title="Annuler"
-                          onClick={() => void cancel(item)}
+                          onClick={() => setDialog({ kind: "cancel", item })}
                         >
                           <XCircle size={16} />
                         </button>
@@ -316,6 +309,140 @@ export function AdminReservationsManagementPage() {
             </p>
           )}
         </div>
+      )}
+      <BlockManager resources={resources} onChanged={setMessage} />
+      {dialog?.kind === "detail" && (
+        <AdminDialog
+          title="Détail de la réservation"
+          onClose={() => setDialog(null)}
+        >
+          <dl className="reservation-detail">
+            <dt>Réservant</dt>
+            <dd>{dialog.item.customerName}</dd>
+            <dt>Email</dt>
+            <dd>{dialog.item.customerEmail || "Indisponible"}</dd>
+            <dt>Terrain</dt>
+            <dd>{dialog.item.resourceName}</dd>
+            <dt>Créneau</dt>
+            <dd>
+              {dateTime(dialog.item.startsAt)} au {dateTime(dialog.item.endsAt)}
+            </dd>
+            <dt>Statut</dt>
+            <dd>{labels[dialog.item.status]}</dd>
+            <dt>Paiement</dt>
+            <dd>
+              {dialog.item.paymentStatus} — {euros(dialog.item.priceCents)}
+            </dd>
+          </dl>
+        </AdminDialog>
+      )}
+      {dialog?.kind === "cancel" && (
+        <AdminDialog
+          title="Annuler la réservation"
+          onClose={() => setDialog(null)}
+        >
+          <p>
+            Confirmez l’annulation de{" "}
+            <strong>{dialog.item.customerName}</strong>, sur{" "}
+            <strong>{dialog.item.resourceName}</strong>, le{" "}
+            {dateTime(dialog.item.startsAt)}.
+          </p>
+          <label className="admin-dialog__field">
+            Motif
+            <input value={reason} onChange={(e) => setReason(e.target.value)} />
+          </label>
+          <div className="admin-dialog__actions">
+            <button className="secondary" onClick={() => setDialog(null)}>
+              Conserver
+            </button>
+            <button disabled={busy} onClick={() => void submit()}>
+              Confirmer l’annulation
+            </button>
+          </div>
+        </AdminDialog>
+      )}
+      {(dialog?.kind === "create" || dialog?.kind === "move") && (
+        <AdminDialog
+          title={
+            dialog.kind === "create"
+              ? "Créer une réservation"
+              : `Déplacer la réservation de ${dialog.item.customerName}`
+          }
+          onClose={() => setDialog(null)}
+        >
+          <div className="admin-dialog__form">
+            {dialog.kind === "create" && (
+              <>
+                <label>
+                  Rechercher un utilisateur
+                  <input
+                    type="search"
+                    value={userQuery}
+                    onChange={(e) => setUserQuery(e.target.value)}
+                    placeholder="Nom, prénom, email ou licence"
+                  />
+                </label>
+                <label>
+                  Compte
+                  <select
+                    value={form.userId}
+                    onChange={(e) =>
+                      setForm({ ...form, userId: e.target.value })
+                    }
+                  >
+                    <option value="">Sélectionnez un compte existant</option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} — {u.email}
+                        {u.licenseNumber ? ` — ${u.licenseNumber}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
+            <SlotPicker
+              resources={resources}
+              resourceId={form.resourceId}
+              date={form.date}
+              slots={slots}
+              loading={slotsLoading}
+              selected={form.startsAt}
+              onResource={(resourceId) =>
+                setForm({ ...form, resourceId, startsAt: "" })
+              }
+              onDate={(date) => setForm({ ...form, date, startsAt: "" })}
+              onSelect={(startsAt) => setForm({ ...form, startsAt })}
+            />
+            {dialog.kind === "create" && (
+              <p className="price-preview">
+                Tarif calculé :{" "}
+                <strong>
+                  {price === null
+                    ? "Sélectionnez un compte et un créneau"
+                    : euros(price)}
+                </strong>
+              </p>
+            )}
+            <div className="admin-dialog__actions">
+              <button className="secondary" onClick={() => setDialog(null)}>
+                Annuler
+              </button>
+              <button
+                disabled={
+                  busy ||
+                  !form.startsAt ||
+                  (dialog.kind === "create" && (!form.userId || price === null))
+                }
+                onClick={() => void submit()}
+              >
+                {dialog.kind === "create"
+                  ? "Confirmer la création"
+                  : "Confirmer le déplacement"}
+              </button>
+            </div>
+          </div>
+        </AdminDialog>
       )}
     </section>
   );

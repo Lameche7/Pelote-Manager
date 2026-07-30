@@ -36,3 +36,14 @@ export function canManageReservation(status: string, accountType: AccountType) {
     accountType !== "guest" && (status === "pending" || status === "confirmed")
   );
 }
+
+export function validateCalendarBlock(
+  startsAt: string,
+  endsAt: string,
+  title: string,
+) {
+  if (!title.trim()) return "Un motif est obligatoire.";
+  if (!startsAt || !endsAt || new Date(endsAt) <= new Date(startsAt))
+    return "La fin doit être postérieure au début.";
+  return null;
+}
