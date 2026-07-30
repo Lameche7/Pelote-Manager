@@ -22,6 +22,18 @@ La prévisualisation ne réalise aucune écriture. Elle expose doublons internes
 
 `admin_execute_member_import` verrouille l’import et chaque fiche, revérifie permissions, saison, doublons, unicité et concurrence, puis applique toutes les lignes dans une sous-transaction. Une erreur annule toutes les mutations métier et conserve un statut `failed` exploitable. Les absents ne sont jamais désactivés et un import terminé n’est pas annulable automatiquement.
 
+L’assistant va réellement jusqu’à l’exécution : sélection, détection modifiable, mapping modifiable, prévisualisation, décisions par ligne, validation PostgreSQL, bilan, confirmation, exécution et résultat. Une validation serveur en erreur réinjecte ses diagnostics dans le tableau afin que chaque ligne soit corrigée ou explicitement ignorée. L’historique donne ensuite accès aux décisions, erreurs, avertissements et valeurs avant/après.
+
+## RPC et écrans
+
+- `admin_list_club_members` fournit la liste paginée du club et son total ;
+- `admin_search_members_global` applique les filtres interclubs et reste accessible en lecture seule à `members.manage` ou `tournaments.manage` ;
+- `admin_get_member` renvoie la fiche et les saisons et journalise uniquement l’ouverture détaillée interclubs ;
+- `admin_create_member`, `admin_update_member`, `admin_set_member_active`, `admin_correct_member_licence` et `admin_update_member_season` verrouillent, valident et auditent les écritures ;
+- les RPC d’import persistent, valident de nouveau, exécutent atomiquement et restituent le détail complet.
+
+Les routes `/admin/membres/:memberId`, `/admin/membres/recherche-globale`, `/admin/membres/importer`, `/admin/membres/imports` et `/admin/membres/imports/:importId` couvrent respectivement consultation/modification, recherche globale, assistant et historique détaillé. Les types de ces RPC sont déclarés dans le schéma Supabase TypeScript ; le service n’utilise aucun contournement `as never`.
+
 ## Migration et limites
 
 La migration crée au besoin les saisons historiques aux formats `AAAA-AAAA` ou `AAAA/AAAA`, effectue le backfill et refuse explicitement de supprimer les anciennes colonnes si une ligne ne peut être migrée. Les inscriptions aux tournois, la mutation de club, l’invitation, les paiements et un rollback métier sont hors périmètre.

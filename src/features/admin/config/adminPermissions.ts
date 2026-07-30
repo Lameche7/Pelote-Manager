@@ -99,6 +99,11 @@ export const adminNavigation = [
     permission: ADMIN_PERMISSIONS.tournaments,
   },
   {
+    label: "Recherche licenciés",
+    to: "/admin/membres/recherche-globale",
+    permission: ADMIN_PERMISSIONS.tournaments,
+  },
+  {
     label: "Communication",
     to: ROUTES.adminCommunication,
     permission: ADMIN_PERMISSIONS.communication,

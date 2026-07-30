@@ -18,7 +18,10 @@ import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { AdminEventsPage } from "@/features/admin/events/pages/AdminEventsPage";
 import { AdminMembersPage } from "@/features/admin/members/pages/AdminMembersPage";
 import { MemberImportPage } from "@/features/admin/members/pages/MemberImportPage";
+import { MemberImportDetailPage } from "@/features/admin/members/pages/MemberImportDetailPage";
 import { MemberImportsPage } from "@/features/admin/members/pages/MemberImportsPage";
+import { MemberDetailPage } from "@/features/admin/members/pages/MemberDetailPage";
+import { GlobalMemberSearchPage } from "@/features/admin/members/pages/GlobalMemberSearchPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
@@ -33,6 +36,9 @@ import { NotFound } from "@/shared/pages/NotFound";
 
 const permitted = (permission: AdminPermission, page: React.ReactNode) => (
   <PermissionRoute permission={permission}>{page}</PermissionRoute>
+);
+const permittedAny = (permissions: AdminPermission[], page: React.ReactNode) => (
+  <PermissionRoute anyOf={permissions}>{page}</PermissionRoute>
 );
 
 export const routes = [
@@ -98,7 +104,10 @@ export const routes = [
           { path: "paiements", element: permitted(ADMIN_PERMISSIONS.paymentsRead, <AdminPaymentsPage />) },
           { path: "membres", element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />) },
           { path: "membres/importer", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportPage />) },
+          { path: "membres/imports/:importId", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportDetailPage />) },
           { path: "membres/imports", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportsPage />) },
+          { path: "membres/recherche-globale", element: permittedAny([ADMIN_PERMISSIONS.members, ADMIN_PERMISSIONS.tournaments], <GlobalMemberSearchPage />) },
+          { path: "membres/:memberId", element: permittedAny([ADMIN_PERMISSIONS.members, ADMIN_PERMISSIONS.tournaments], <MemberDetailPage />) },
           { path: "evenements", element: permitted(ADMIN_PERMISSIONS.events, <AdminEventsPage />) },
           { path: "tournois", element: permitted(ADMIN_PERMISSIONS.tournaments, <AdminComingSoonPage title="Tournois" />) },
           { path: "communication", element: permitted(ADMIN_PERMISSIONS.communication, <AdminComingSoonPage title="Communication" />) },

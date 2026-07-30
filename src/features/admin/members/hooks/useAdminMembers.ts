@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { memberAdminService } from "../services/memberAdminService";
+import type { Json } from "@/infrastructure/supabase/database";
 const allMemberKeys = ["admin-members"] as const;
 export const memberKeys = {
   all: allMemberKeys,
-  list: (filters: Record<string, unknown>) =>
+  list: (filters: Record<string, Json>) =>
     [...allMemberKeys, "list", filters] as const,
   imports: [...allMemberKeys, "imports"] as const,
 };
-export const useAdminMembers = (filters: Record<string, unknown>) =>
+export const useAdminMembers = (filters: Record<string, Json>) =>
   useQuery({
     queryKey: memberKeys.list(filters),
     queryFn: () => memberAdminService.list(filters),

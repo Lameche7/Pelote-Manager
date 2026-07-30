@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useMemberImports } from "../hooks/useAdminMembers";
 export function MemberImportsPage() {
   const query = useMemberImports();
@@ -31,7 +32,11 @@ export function MemberImportsPage() {
               {query.data?.map((item) => (
                 <tr key={item.id}>
                   <td>{new Date(item.created_at).toLocaleString("fr-FR")}</td>
-                  <td>{item.file_name}</td>
+                  <td>
+                    <Link to={`/admin/membres/imports/${item.id}`}>
+                      {item.file_name}
+                    </Link>
+                  </td>
                   <td>{item.status}</td>
                   <td>{item.created_count}</td>
                   <td>{item.updated_count}</td>

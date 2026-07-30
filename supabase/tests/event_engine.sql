@@ -22,9 +22,9 @@ insert into public.club_role_permissions(role_id,permission_key) values
  ('30000000-0000-0000-0000-000000000001','reservations.manage');
 insert into public.club_memberships(club_id,profile_id,role_id) values
  ('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
-insert into public.club_members(id,club_id,licence_number,last_name,first_name,season,is_active) values
- ('40000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','EVENT-A','Durand','Alice','2026',true),
- ('40000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000002','EVENT-B','Martin','Bob','2026',true);
+insert into public.club_members(id,club_id,licence_number,last_name,first_name,birth_date,gender,is_active) values
+ ('40000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','EVENT-A','Durand','Alice','1990-01-01','female',true),
+ ('40000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000002','EVENT-B','Martin','Bob','1990-01-01','male',true);
 update public.profiles set member_id='40000000-0000-0000-0000-000000000001' where id='10000000-0000-0000-0000-000000000002';
 update public.profiles set member_id='40000000-0000-0000-0000-000000000002' where id='10000000-0000-0000-0000-000000000003';
 insert into public.reservable_resources(id,club_id,name,timezone,is_active) values

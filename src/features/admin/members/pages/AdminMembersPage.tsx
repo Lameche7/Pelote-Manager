@@ -44,6 +44,12 @@ export function AdminMembersPage() {
           <p>Identité durable, licence de la saison active et compte lié.</p>
         </div>
         <div className="members-actions">
+          <a
+            className="button secondary"
+            href="/admin/membres/recherche-globale"
+          >
+            Recherche interclubs
+          </a>
           <a className="button secondary" href="/admin/membres/imports">
             Historique des imports
           </a>
@@ -132,6 +138,7 @@ export function AdminMembersPage() {
                   </td>
                   <td>{member.linked_account ? "Lié" : "Non lié"}</td>
                   <td>
+                    <a href={`/admin/membres/${member.id}`}>Consulter</a>{" "}
                     <button
                       className="link-button"
                       onClick={() => {

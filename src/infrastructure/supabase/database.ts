@@ -82,6 +82,38 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["club_members"]["Insert"]>;
         Relationships: [];
       };
+      club_member_seasons: {
+        Row: {
+          id: string;
+          club_member_id: string;
+          club_id: string;
+          club_season_id: string;
+          ranking: string | null;
+          category: string;
+          is_licensed: boolean;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          club_member_id: string;
+          club_id: string;
+          club_season_id: string;
+          ranking?: string | null;
+          category: string;
+          is_licensed?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["club_member_seasons"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -103,10 +135,116 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_list_club_members: {
+        Args: { filters?: Json };
+        Returns: AdminMemberRpcRow[];
+      };
+      admin_search_members_global: {
+        Args: { filters?: Json };
+        Returns: AdminMemberRpcRow[];
+      };
+      admin_get_member: { Args: { target_member_id: string }; Returns: Json };
+      admin_create_member: { Args: { payload: Json }; Returns: string };
+      admin_update_member: {
+        Args: {
+          target_member_id: string;
+          payload: Json;
+          expected_updated_at: string;
+          reason?: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_set_member_active: {
+        Args: {
+          target_member_id: string;
+          target_active: boolean;
+          expected_updated_at: string;
+          reason: string;
+        };
+        Returns: undefined;
+      };
+      admin_correct_member_licence: {
+        Args: {
+          target_member_id: string;
+          target_licence_number: string;
+          expected_updated_at: string;
+          reason: string;
+        };
+        Returns: undefined;
+      };
+      admin_update_member_season: {
+        Args: {
+          target_member_id: string;
+          target_season_id: string;
+          target_ranking: string | null;
+          target_is_licensed: boolean;
+          expected_updated_at: string;
+          reason: string;
+        };
+        Returns: undefined;
+      };
+      admin_create_member_import: { Args: { payload: Json }; Returns: string };
+      admin_validate_member_import: {
+        Args: { target_import_id: string; rows: Json };
+        Returns: undefined;
+      };
+      admin_execute_member_import: {
+        Args: { target_import_id: string };
+        Returns: Json;
+      };
+      admin_list_member_imports: {
+        Args: Record<never, never>;
+        Returns: MemberImportRpcRow[];
+      };
+      admin_get_member_import: {
+        Args: { target_import_id: string };
+        Returns: Json;
+      };
     };
     Enums: {
       user_role: UserRole;
     };
     CompositeTypes: Record<string, never>;
   };
+};
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+export type AdminMemberRpcRow = {
+  id: string;
+  club_id: string;
+  club_name: string;
+  licence_number: string;
+  last_name: string;
+  first_name: string;
+  birth_date: string;
+  gender: string;
+  email: string | null;
+  phone: string | null;
+  is_active: boolean;
+  ranking: string | null;
+  category: string | null;
+  is_licensed: boolean;
+  linked_account: boolean;
+  updated_at: string;
+  total_count: number;
+};
+export type MemberImportRpcRow = {
+  id: string;
+  file_name: string;
+  status: string;
+  created_at: string;
+  created_count: number;
+  updated_count: number;
+  reactivated_count: number;
+  unchanged_count: number;
+  ignored_count: number;
+  error_count: number;
+  warning_count: number;
+  global_error: string | null;
 };
