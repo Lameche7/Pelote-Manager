@@ -2,6 +2,10 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MainLayout } from "@/app/layouts/MainLayout";
 import { ProtectedRoute } from "@/app/router/ProtectedRoute";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { AdminShell } from "@/features/admin/components/AdminShell";
+import { ClubInformationPage } from "@/features/admin/club/pages/ClubInformationPage";
+import { ClubPricingPage, ClubSeasonsPage } from "@/features/admin/club/pages/ClubCollectionsPage";
+import { AdminComingSoonPage } from "@/features/admin/pages/AdminComingSoonPage";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
@@ -65,42 +69,28 @@ export const routes = [
         path: ROUTES.admin,
         element: (
           <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
-            <AdminPage />
+            <AdminShell />
           </ProtectedRoute>
         ),
-      },
-      {
-        path: ROUTES.adminUsers,
-        element: (
-          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
-            <AdminUsersPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: ROUTES.adminReservations,
-        element: (
-          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
-            <AdminReservationsManagementPage />
-          </ProtectedRoute>
-        ),
-      },
-      { path: ROUTES.adminReservationSettings, element: <ProtectedRoute allowedRoles={[USER_ROLES.admin]}><AdminReservationsPage /></ProtectedRoute> },
-      {
-        path: ROUTES.adminReservationOperations,
-        element: (
-          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
-            <AdminReservationOperationsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: ROUTES.adminPayments,
-        element: (
-          <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
-            <AdminPaymentsPage />
-          </ProtectedRoute>
-        ),
+        children: [
+          { index: true, element: <AdminPage /> },
+          { path: "club/informations", element: <ClubInformationPage /> },
+          { path: "club/horaires", element: <AdminReservationsPage /> },
+          { path: "club/fermetures", element: <AdminReservationsPage /> },
+          { path: "club/saisons", element: <ClubSeasonsPage /> },
+          { path: "club/tarifs", element: <ClubPricingPage /> },
+          { path: "reservations", element: <AdminReservationsManagementPage /> },
+          { path: "reservations/parametres", element: <AdminReservationsPage /> },
+          { path: "reservations/suivi", element: <AdminReservationOperationsPage /> },
+          { path: "utilisateurs", element: <AdminUsersPage /> },
+          { path: "paiements", element: <AdminPaymentsPage /> },
+          { path: "membres", element: <AdminComingSoonPage title="Membres" /> },
+          { path: "evenements", element: <AdminComingSoonPage title="Évènements" /> },
+          { path: "tournois", element: <AdminComingSoonPage title="Tournois" /> },
+          { path: "communication", element: <AdminComingSoonPage title="Communication" /> },
+          { path: "statistiques", element: <AdminComingSoonPage title="Statistiques" /> },
+          { path: "parametres", element: <AdminComingSoonPage title="Paramètres" /> },
+        ],
       },
       { path: ROUTES.notFound, element: <NotFound /> },
     ],

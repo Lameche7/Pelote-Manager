@@ -1,0 +1,48 @@
+.admin-dashboard__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+.admin-dashboard__metrics article {
+  display: grid;
+  gap: 0.35rem;
+}
+.admin-dashboard__metrics svg {
+  color: #b22525;
+}
+.admin-dashboard__metrics span {
+  color: #65717c;
+  font-weight: 700;
+}
+.admin-dashboard__metrics strong {
+  color: #15372e;
+  font-size: 2rem;
+}
+.admin-dashboard__metrics small {
+  color: #889198;
+}
+.admin-dashboard__columns {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.admin-dashboard__columns h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+.admin-dashboard__columns p,
+.admin-dashboard__columns li {
+  color: #65717c;
+}
+@media (max-width: 65rem) {
+  .admin-dashboard__metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 35rem) {
+  .admin-dashboard__metrics,
+  .admin-dashboard__columns {
+    grid-template-columns: 1fr;
+  }
+}
