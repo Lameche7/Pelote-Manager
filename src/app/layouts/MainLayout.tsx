@@ -24,7 +24,7 @@ export function MainLayout() {
           <NavLink className={navClassName} to={ROUTES.home}>Accueil</NavLink>
           <NavLink className={navClassName} to={ROUTES.reservations}>Réservations</NavLink>
           {!isLoading && isAuthenticated && (
-            <NavLink className={navClassName} to={ROUTES.myReservations}>Mes réservations</NavLink>
+            <NavLink className={navClassName} to={ROUTES.userSpace}>Mon espace</NavLink>
           )}
           <NavLink className={navClassName} to={ROUTES.admin}>Administration</NavLink>
           {!isLoading &&

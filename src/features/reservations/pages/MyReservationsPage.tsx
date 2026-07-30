@@ -7,6 +7,7 @@ import {
   type ReservationStatus,
 } from "@/features/reservations/services/myReservationsService";
 import { ROUTES } from "@/shared/config";
+import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import "./MyReservationsPage.css";
 
 const reservationLabels: Record<ReservationStatus, string> = {
@@ -39,6 +40,8 @@ const dateTime = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
   minute: "2-digit",
 });
+const reservationDate = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const reservationTime = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
 function isUpcoming(reservation: MyReservation) {
   return new Date(reservation.endsAt).getTime() >= Date.now();
@@ -65,7 +68,7 @@ function ReservationCard({
       <div className="my-reservations__card-header">
         <div>
           <p className="my-reservations__resource">{reservation.resourceName}</p>
-          <h2>{dateTime.format(new Date(reservation.startsAt))}</h2>
+          <h2>{reservation.resourceName}</h2>
         </div>
         <strong>{money.format(reservation.amountCents / 100)}</strong>
       </div>
@@ -80,6 +83,11 @@ function ReservationCard({
       </div>
 
       <dl className="my-reservations__details">
+        <div><dt>Date</dt><dd>{reservationDate.format(new Date(reservation.startsAt))}</dd></div>
+        <div><dt>Heure</dt><dd>{reservationTime.format(new Date(reservation.startsAt))}</dd></div>
+        <div><dt>Terrain</dt><dd>{reservation.resourceName}</dd></div>
+        <div><dt>Montant</dt><dd>{money.format(reservation.amountCents / 100)}</dd></div>
+        <div><dt>Statut</dt><dd>{reservationLabels[reservation.reservationStatus]}</dd></div>
         <div>
           <dt>Fin du créneau</dt>
           <dd>{new Date(reservation.endsAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</dd>
@@ -182,7 +190,7 @@ export function MyReservationsPage() {
   }
 
   return (
-    <section className="my-reservations" aria-labelledby="my-reservations-title">
+    <UserSpaceShell><section className="my-reservations" aria-labelledby="my-reservations-title">
       <header>
         <p className="my-reservations__eyebrow">Espace personnel</p>
         <h1 id="my-reservations-title">Mes réservations</h1>
@@ -232,6 +240,6 @@ export function MyReservationsPage() {
           </section>
         </div>
       )}
-    </section>
+    </section></UserSpaceShell>
   );
 }

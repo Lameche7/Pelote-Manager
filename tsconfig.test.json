@@ -29,6 +29,7 @@
     "src/features/reservations/domain/booking.ts",
     "src/features/reservations/domain/calendar.ts",
     "src/features/reservations/domain/reservationBenefits.ts",
+    "src/features/user-space/domain/userSpace.ts",
     "src/shared/config/roles.ts",
     "src/shared/types/profile.ts"
   ]

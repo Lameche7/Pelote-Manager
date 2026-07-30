@@ -1,7 +1,5 @@
 .my-reservations {
-  width: min(100%, 72rem);
-  margin-inline: auto;
-  padding: clamp(1rem, 4vw, 3rem);
+  width: 100%;
 }
 
 .my-reservations header h1 {
@@ -12,7 +10,7 @@
 .my-reservations__eyebrow,
 .my-reservations__resource {
   margin: 0;
-  color: #1d4ed8;
+  color: var(--brand-red);
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.08em;

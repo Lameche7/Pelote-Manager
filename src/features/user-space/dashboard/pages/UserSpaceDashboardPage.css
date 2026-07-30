@@ -1,0 +1,96 @@
+.user-dashboard header {
+  padding: clamp(1rem, 3vw, 2rem) 0;
+}
+.user-dashboard header h1 {
+  margin: 0.3rem 0;
+  color: var(--brand-green);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+}
+.user-dashboard header > p:last-child {
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+.user-dashboard__eyebrow {
+  margin: 0;
+  color: var(--brand-red);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.user-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.user-dashboard__card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  min-height: 10rem;
+  padding: 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  color: inherit;
+  background: #fff;
+  box-shadow: 0 0.7rem 2rem rgb(15 61 46 / 7%);
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+a.user-dashboard__card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+.user-dashboard__icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 0.85rem;
+  color: #fff;
+  background: var(--brand-green);
+}
+.user-dashboard__icon svg {
+  width: 1.45rem;
+}
+.user-dashboard__card h2 {
+  margin: 0.15rem 0 0.5rem;
+  color: var(--brand-blue);
+  font-size: 1.15rem;
+}
+.user-dashboard__card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.user-dashboard__soon {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  color: #66717a;
+  background: #eef1f2;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.user-dashboard__card--disabled {
+  background: #fafbfb;
+}
+.user-dashboard__card--disabled .user-dashboard__icon {
+  color: #778189;
+  background: #e6eaec;
+}
+.user-dashboard__arrow {
+  margin-left: auto;
+  color: var(--brand-red);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+@media (max-width: 42rem) {
+  .user-dashboard__grid {
+    grid-template-columns: 1fr;
+  }
+}
