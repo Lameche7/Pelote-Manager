@@ -9,6 +9,8 @@ import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
+import { UserSpaceDashboardPage } from "@/features/user-space/dashboard/pages/UserSpaceDashboardPage";
+import { MyProfilePage } from "@/features/user-space/profile/pages/MyProfilePage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
@@ -25,6 +27,22 @@ export const routes = [
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage /> },
       { path: ROUTES.reservations, element: <ReservationsPage /> },
+      {
+        path: ROUTES.userSpace,
+        element: (
+          <ProtectedRoute allowedRoles={[USER_ROLES.visitor, USER_ROLES.user, USER_ROLES.member, USER_ROLES.admin]}>
+            <UserSpaceDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.myProfile,
+        element: (
+          <ProtectedRoute allowedRoles={[USER_ROLES.visitor, USER_ROLES.user, USER_ROLES.member, USER_ROLES.admin]}>
+            <MyProfilePage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: ROUTES.myReservations,
         element: (

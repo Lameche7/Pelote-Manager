@@ -1,0 +1,99 @@
+.my-profile header {
+  margin-bottom: 1.5rem;
+}
+.my-profile header p {
+  margin: 0;
+  color: var(--brand-red);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.my-profile header h1 {
+  margin: 0.3rem 0;
+  color: var(--brand-green);
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+.my-profile header span {
+  color: var(--muted);
+}
+.my-profile__panel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.2rem;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.my-profile__identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  color: #fff;
+  background: linear-gradient(110deg, #082b21, var(--brand-green-light));
+}
+.my-profile__identity > span {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 50%;
+}
+.my-profile__identity div {
+  display: grid;
+  gap: 0.25rem;
+}
+.my-profile__identity strong {
+  font-size: 1.25rem;
+}
+.my-profile__identity small {
+  color: rgb(255 255 255 / 72%);
+}
+.my-profile__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+.my-profile__details div {
+  min-width: 0;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.my-profile__details div:nth-child(odd) {
+  padding-right: 1rem;
+}
+.my-profile__details dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+.my-profile__details dt svg {
+  width: 1rem;
+  height: 1rem;
+}
+.my-profile__details dd {
+  overflow-wrap: anywhere;
+  margin: 0.35rem 0 0;
+  font-weight: 800;
+}
+.my-profile__account-type {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  color: #fff;
+  background: var(--brand-green);
+  font-size: 0.82rem;
+}
+@media (max-width: 38rem) {
+  .my-profile__details {
+    grid-template-columns: 1fr;
+  }
+  .my-profile__details div:nth-child(odd) {
+    padding-right: 0;
+  }
+}
