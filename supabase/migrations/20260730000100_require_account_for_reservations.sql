@@ -50,6 +50,10 @@ begin
   insert into public.reservation_audit_log (reservation_id, action, actor_id, new_data)
   values (created_reservation.id, 'created', actor_id, to_jsonb(created_reservation));
   return created_reservation;
+exception
+  when exclusion_violation then
+    raise exception 'Ce créneau vient d''être réservé par une autre personne'
+      using errcode = '23P01';
 end;
 $$;
 

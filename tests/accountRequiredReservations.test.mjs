@@ -29,3 +29,10 @@ test("retire aux visiteurs anonymes les commandes de réservation", () => {
     /revoke all on function public\.reserve_for_payment[\s\S]*from anon/,
   );
 });
+
+test("conserve la traduction du conflit de concurrence", () => {
+  assert.match(
+    migration,
+    /exception\s+when exclusion_violation then\s+raise exception 'Ce créneau vient d''être réservé par une autre personne'\s+using errcode = '23P01'/,
+  );
+});
