@@ -1,4 +1,5 @@
 import { supabase } from "@/infrastructure/supabase/client";
+import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 import type {
   CalendarOccupation,
   CalendarSlot,
@@ -37,7 +38,7 @@ export const reservationCalendarService = {
       .eq("is_active", true)
       .order("name");
 
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les terrains."));
 
     return ((data ?? []) as ResourceRow[]).map((resource) => ({
       id: resource.id,
@@ -58,7 +59,7 @@ export const reservationCalendarService = {
       range_end: toDate,
     });
 
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger le calendrier."));
 
     return ((data ?? []) as SlotRow[]).map((slot) => ({
       resourceId: slot.resource_id,
@@ -81,7 +82,7 @@ export const reservationCalendarService = {
       range_end: rangeEnd,
     });
 
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les occupations."));
 
     return ((data ?? []) as OccupationRow[]).map((occupation) => ({
       id: occupation.id,

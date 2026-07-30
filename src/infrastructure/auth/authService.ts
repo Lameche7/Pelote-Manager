@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/infrastructure/supabase/client";
 import type { AuthUser } from "@/shared/types/auth";
+import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
 type AuthStateListener = (user: AuthUser | null) => void;
 
@@ -24,7 +25,9 @@ export const authService: AuthService = {
     const { data, error } = await supabase.auth.getSession();
 
     if (error) {
-      throw error;
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger votre session."),
+      );
     }
 
     return data.session ? mapSupabaseUser(data.session.user) : null;
@@ -37,7 +40,12 @@ export const authService: AuthService = {
     });
 
     if (error) {
-      throw error;
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Connexion impossible. Merci de réessayer.",
+        ),
+      );
     }
 
     return mapSupabaseUser(data.user);
@@ -47,7 +55,12 @@ export const authService: AuthService = {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      throw error;
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Déconnexion impossible. Merci de réessayer.",
+        ),
+      );
     }
   },
 
@@ -76,7 +89,7 @@ export async function registerVisitor(input: {
       },
     },
   });
-  if (error) throw error;
+  if (error) throw new Error(getSupabaseErrorMessage(error));
   if (!data.user) throw new Error("Le compte n’a pas pu être créé.");
 
   if (data.session) {
@@ -87,7 +100,13 @@ export async function registerVisitor(input: {
       last_name: input.lastName.trim(),
       display_name: `${input.firstName.trim()} ${input.lastName.trim()}`,
     });
-    if (profileError) throw profileError;
+    if (profileError)
+      throw new Error(
+        getSupabaseErrorMessage(
+          profileError,
+          "Le profil n’a pas pu être enregistré.",
+        ),
+      );
     await supabase.auth.signOut();
     return "completed";
   }
