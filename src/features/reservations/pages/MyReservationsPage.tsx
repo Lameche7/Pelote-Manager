@@ -67,7 +67,7 @@ function ReservationCard({
     <article className="my-reservations__card">
       <div className="my-reservations__card-header">
         <div>
-          <p className="my-reservations__resource">{reservation.resourceName}</p>
+          <p className="my-reservations__resource">Réservation</p>
           <h2>{reservation.resourceName}</h2>
         </div>
         <strong>{money.format(reservation.amountCents / 100)}</strong>
