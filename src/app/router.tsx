@@ -5,6 +5,7 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
+import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
@@ -80,10 +81,11 @@ export const routes = [
         path: ROUTES.adminReservations,
         element: (
           <ProtectedRoute allowedRoles={[USER_ROLES.admin]}>
-            <AdminReservationsPage />
+            <AdminReservationsManagementPage />
           </ProtectedRoute>
         ),
       },
+      { path: ROUTES.adminReservationSettings, element: <ProtectedRoute allowedRoles={[USER_ROLES.admin]}><AdminReservationsPage /></ProtectedRoute> },
       {
         path: ROUTES.adminReservationOperations,
         element: (

@@ -154,3 +154,37 @@
     flex: 1 1 100%;
   }
 }
+
+.reservation-operations header button,
+.reservation-operations__editor button {
+  display: inline-flex; align-items: center; gap: .45rem; border: 0; border-radius: .6rem;
+  padding: .7rem 1rem; color: white; background: #1d4ed8; cursor: pointer;
+}
+.reservation-operations__secondary { display: inline-flex; align-items: center; gap: .35rem; }
+.reservation-operations__editor { display: grid; grid-template-columns: repeat(auto-fit,minmax(13rem,1fr)); gap: .8rem; margin-block: 1rem; padding: 1rem; border: 1px solid #dbeafe; border-radius: .8rem; background: #eff6ff; }
+.reservation-operations__editor h2,.reservation-operations__editor p { grid-column: 1/-1; }
+.reservation-operations__editor label { display: grid; gap: .3rem; font-weight: 650; }
+.reservation-operations__editor input,.reservation-operations__editor select { border: 1px solid #d1d5db; border-radius: .55rem; padding: .65rem; background: white; }
+.reservation-operations td:last-child button { margin-right: .3rem; border: 1px solid #d1d5db; border-radius: .45rem; padding: .4rem; background: white; cursor: pointer; }
+.reservation-operations td:nth-child(4) small { display: block; color: #6b7280; }
+.reservation-operations__empty { padding: 1rem; text-align: center; }
+
+.admin-dialog__backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .55); }
+.admin-dialog { width: min(100%, 42rem); max-height: 90vh; overflow: auto; border-radius: 1rem; padding: 1.25rem; background: #fff; box-shadow: 0 24px 60px rgb(15 23 42 / .25); }
+.admin-dialog > header,.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.admin-dialog > header button { padding: .4rem; color: #334155; background: transparent; }
+.admin-dialog__form,.admin-dialog__field { display: grid; gap: .8rem; }
+.admin-dialog__form label,.admin-dialog__field { font-weight: 650; }
+.admin-dialog input,.admin-dialog select { width: 100%; margin-top: .3rem; border: 1px solid #cbd5e1; border-radius: .55rem; padding: .7rem; background: #fff; }
+.admin-dialog__actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }
+.admin-dialog__actions button { border: 0; border-radius: .55rem; padding: .7rem 1rem; color: white; background: #1d4ed8; }
+.admin-dialog__actions .secondary { border: 1px solid #cbd5e1; color: #334155; background: white; }
+.slot-picker { border: 1px solid #dbeafe; border-radius: .75rem; padding: 1rem; }
+.slot-picker__controls { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.slot-picker__slots { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.slot-picker__slots button { border: 1px solid #93c5fd; border-radius: .55rem; padding: .55rem; color: #1e40af; background: #eff6ff; }
+.slot-picker__slots button.is-selected { color: white; background: #1d4ed8; }
+.price-preview { border-radius: .6rem; padding: .8rem; background: #f0fdf4; color: #166534; }
+.reservation-detail { display: grid; grid-template-columns: max-content 1fr; gap: .6rem 1rem; }.reservation-detail dt { font-weight: 700; }.reservation-detail dd { margin: 0; }
+.reservation-operations__blocks { margin-top: 2rem; }.block-list { display: grid; gap: .6rem; }.block-list article { display: flex; align-items: center; gap: .5rem; border: 1px solid #e2e8f0; border-radius: .7rem; padding: .8rem; background: white; }.block-list article div { display: grid; flex: 1; }.block-list article span { color: #64748b; font-size: .9rem; }
+@media(max-width: 40rem) { .slot-picker__controls { grid-template-columns: 1fr; }.section-heading { align-items: start; flex-direction: column; }.admin-dialog__actions { flex-direction: column-reverse; }.admin-dialog__actions button { width: 100%; } }

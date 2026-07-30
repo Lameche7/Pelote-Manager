@@ -12,6 +12,7 @@ export const ROUTES = {
   adminUsers: "/admin/utilisateurs",
   adminReservations: "/admin/reservations",
   adminReservationOperations: "/admin/reservations/suivi",
+  adminReservationSettings: "/admin/reservations/parametres",
   adminPayments: "/admin/paiements",
   forbidden: "/acces-refuse",
   notFound: "*",
