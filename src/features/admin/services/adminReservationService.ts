@@ -154,6 +154,16 @@ export const adminReservationService = {
     if (error) throw error;
   },
 
+  async updateClosure(closure: CalendarClosure): Promise<void> {
+    const { error } = await supabase.rpc("admin_update_calendar_closure", {
+      target_id: closure.id,
+      target_title: closure.title,
+      target_starts_at: closure.startsAt,
+      target_ends_at: closure.endsAt,
+    });
+    if (error) throw error;
+  },
+
   async deleteClosure(id: string): Promise<void> {
     const { error } = await supabase.rpc("admin_delete_calendar_closure", {
       target_id: id,
