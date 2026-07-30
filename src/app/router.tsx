@@ -15,6 +15,7 @@ import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminRese
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
+import { AdminEventsPage } from "@/features/admin/events/pages/AdminEventsPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
@@ -93,7 +94,7 @@ export const routes = [
           { path: "utilisateurs", element: permitted(ADMIN_PERMISSIONS.settings, <AdminUsersPage />) },
           { path: "paiements", element: permitted(ADMIN_PERMISSIONS.paymentsRead, <AdminPaymentsPage />) },
           { path: "membres", element: permitted(ADMIN_PERMISSIONS.members, <AdminComingSoonPage title="Membres" />) },
-          { path: "evenements", element: permitted(ADMIN_PERMISSIONS.events, <AdminComingSoonPage title="Évènements" />) },
+          { path: "evenements", element: permitted(ADMIN_PERMISSIONS.events, <AdminEventsPage />) },
           { path: "tournois", element: permitted(ADMIN_PERMISSIONS.tournaments, <AdminComingSoonPage title="Tournois" />) },
           { path: "communication", element: permitted(ADMIN_PERMISSIONS.communication, <AdminComingSoonPage title="Communication" />) },
           { path: "statistiques", element: permitted(ADMIN_PERMISSIONS.statistics, <AdminComingSoonPage title="Statistiques" />) },
