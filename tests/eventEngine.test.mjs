@@ -30,6 +30,12 @@ test("blocking published events use the shared occupation calendar", () => {
   );
   assert.match(migration, /insert into public\.calendar_occupations/);
   assert.match(migration, /'club_event'/);
+  assert.match(migration, /then current_event\.name else 'Indisponible'/);
+});
+
+test("legacy block RPCs accept manual closures only", () => {
+  assert.match(migration, /occupation\.occupation_type='closure'/);
+  assert.match(migration, /Blocage manuel introuvable/);
 });
 
 test("administration service exposes the complete event lifecycle", () => {

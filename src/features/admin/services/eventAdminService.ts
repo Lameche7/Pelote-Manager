@@ -12,6 +12,7 @@ export type EventType = {
   isActive: boolean;
 };
 export type EventResource = { id: string; name: string };
+export type EventResponsible = { profileId: string; name: string };
 export type AdminEvent = {
   id: string;
   name: string;
@@ -81,6 +82,14 @@ export const eventAdminService = {
     if (error) fail(error, "Impossible de charger les terrains.");
     return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
       id: String(row.id),
+      name: String(row.name),
+    }));
+  },
+  async listResponsibles(): Promise<EventResponsible[]> {
+    const { data, error } = await supabase.rpc("admin_list_event_responsibles");
+    if (error) fail(error, "Impossible de charger les responsables.");
+    return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+      profileId: String(row.profile_id),
       name: String(row.name),
     }));
   },

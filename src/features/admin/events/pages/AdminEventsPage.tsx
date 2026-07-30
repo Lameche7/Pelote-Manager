@@ -4,12 +4,13 @@ import {
   type AdminEvent,
   type EventDraft,
   type EventResource,
+  type EventResponsible,
   type EventType,
 } from "@/features/admin/services/eventAdminService";
+import { storedDateTimeToLocalInput } from "@/features/admin/events/domain/eventDateTime";
+import { submitEventDraft } from "@/features/admin/events/domain/eventFormSubmission";
 import "./AdminEventsPage.css";
 
-const local = (value: string) =>
-  value ? new Date(value).toISOString().slice(0, 16) : "";
 const blank = (typeId = ""): EventDraft => ({
   name: "",
   eventTypeId: typeId,
@@ -34,7 +35,8 @@ const statusLabel = {
 export function AdminEventsPage() {
   const [events, setEvents] = useState<AdminEvent[]>([]),
     [types, setTypes] = useState<EventType[]>([]),
-    [resources, setResources] = useState<EventResource[]>([]);
+    [resources, setResources] = useState<EventResource[]>([]),
+    [responsibles, setResponsibles] = useState<EventResponsible[]>([]);
   const [draft, setDraft] = useState<EventDraft | null>(null),
     [search, setSearch] = useState(""),
     [status, setStatus] = useState("all"),
@@ -49,11 +51,13 @@ export function AdminEventsPage() {
       eventAdminService.listEvents(),
       eventAdminService.listEventTypes(),
       eventAdminService.listResources(),
+      eventAdminService.listResponsibles(),
     ])
-      .then(([e, t, r]) => {
+      .then(([e, t, r, responsibleList]) => {
         setEvents(e);
         setTypes(t);
         setResources(r);
+        setResponsibles(responsibleList);
       })
       .catch((e: unknown) =>
         setError(e instanceof Error ? e.message : "Chargement impossible."),
@@ -78,15 +82,20 @@ export function AdminEventsPage() {
         ),
     [events, search, status, sort],
   );
-  const act = async (job: () => Promise<unknown>, success: string) => {
+  const act = async (
+    job: () => Promise<unknown>,
+    success: string,
+  ): Promise<boolean> => {
     setSaving(true);
     setError("");
     try {
       await job();
       await load();
       setMessage(success);
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Opération impossible.");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -206,8 +215,10 @@ export function AdminEventsPage() {
                           .then((value) =>
                             setDraft({
                               ...value,
-                              startsAt: local(value.startsAt),
-                              endsAt: local(value.endsAt),
+                              startsAt: storedDateTimeToLocalInput(
+                                value.startsAt,
+                              ),
+                              endsAt: storedDateTimeToLocalInput(value.endsAt),
                             }),
                           )
                           .catch((e: unknown) =>
@@ -276,19 +287,34 @@ export function AdminEventsPage() {
           draft={draft}
           types={types}
           resources={resources}
+          responsibles={responsibles}
           saving={saving}
+          error={error}
           onCancel={() => setDraft(null)}
-          onSave={(value) =>
-            void act(
-              () =>
-                eventAdminService.updateEvent({
-                  ...value,
-                  startsAt: new Date(value.startsAt).toISOString(),
-                  endsAt: new Date(value.endsAt).toISOString(),
-                }),
-              value.id ? "Évènement modifié." : "Évènement créé.",
-            ).then(() => setDraft(null))
-          }
+          onSave={async (value) => {
+            setSaving(true);
+            setError("");
+            const result = await submitEventDraft(
+              value,
+              eventAdminService.updateEvent.bind(eventAdminService),
+            );
+            if (result.ok) {
+              setMessage(value.id ? "Évènement modifié." : "Évènement créé.");
+              setDraft(null);
+              try {
+                await load();
+              } catch (loadError) {
+                setError(
+                  loadError instanceof Error
+                    ? loadError.message
+                    : "Actualisation impossible.",
+                );
+              }
+            } else {
+              setError(result.message);
+            }
+            setSaving(false);
+          }}
         />
       )}
     </section>
@@ -299,16 +325,20 @@ function EventForm({
   draft: initial,
   types,
   resources,
+  responsibles,
   saving,
+  error,
   onCancel,
   onSave,
 }: {
   draft: EventDraft;
   types: EventType[];
   resources: EventResource[];
+  responsibles: EventResponsible[];
   saving: boolean;
+  error: string;
   onCancel: () => void;
-  onSave: (draft: EventDraft) => void;
+  onSave: (draft: EventDraft) => Promise<void>;
 }) {
   const [value, setValue] = useState(initial);
   const update = <K extends keyof EventDraft>(key: K, next: EventDraft[K]) =>
@@ -325,7 +355,7 @@ function EventForm({
         className="events-form"
         onSubmit={(e) => {
           e.preventDefault();
-          onSave(value);
+          void onSave(value);
         }}
       >
         <header>
@@ -339,6 +369,11 @@ function EventForm({
             ×
           </button>
         </header>
+        {error && (
+          <p className="events-alert events-alert--error" role="alert">
+            {error}
+          </p>
+        )}
         <fieldset>
           <legend>Informations générales</legend>
           <div className="events-grid">
@@ -379,14 +414,23 @@ function EventForm({
               />
             </label>
             <label>
-              Responsable (identifiant)
-              <input
+              Responsable
+              <select
                 value={value.responsibleProfileId ?? ""}
                 onChange={(e) =>
                   update("responsibleProfileId", e.target.value || null)
                 }
-                placeholder="Optionnel"
-              />
+              >
+                <option value="">Aucun responsable</option>
+                {responsibles.map((responsible) => (
+                  <option
+                    key={responsible.profileId}
+                    value={responsible.profileId}
+                  >
+                    {responsible.name}
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
               Début

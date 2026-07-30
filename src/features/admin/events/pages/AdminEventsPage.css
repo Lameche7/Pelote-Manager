@@ -25,6 +25,9 @@
   background: #fee2e2;
   color: #991b1b;
 }
+.events-form > .events-alert {
+  margin: 1rem 1.25rem 0;
+}
 .events-toolbar {
   margin-bottom: 1rem;
   justify-content: flex-start;

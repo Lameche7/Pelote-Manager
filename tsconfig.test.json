@@ -24,6 +24,8 @@
     "src/app/router/protectedRouteAccess.ts",
     "src/features/admin/utils/adminUsers.ts",
     "src/features/admin/reservations/domain/adminReservations.ts",
+    "src/features/admin/events/domain/eventDateTime.ts",
+    "src/features/admin/events/domain/eventFormSubmission.ts",
     "src/features/auth/domain/accountProfileFinalization.ts",
     "src/features/members/domain/memberRegistration.ts",
     "supabase/functions/_shared/memberRegistrationCleanup.ts",

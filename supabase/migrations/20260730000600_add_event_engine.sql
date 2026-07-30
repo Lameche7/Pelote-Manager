@@ -91,7 +91,9 @@ begin
     with occupations as (
       insert into public.calendar_occupations
         (resource_id, occupation_type, title, starts_at, ends_at, created_by, updated_by)
-      select resource_id, 'club_event'::public.occupation_type, current_event.name, current_event.starts_at,
+      select resource_id, 'club_event'::public.occupation_type,
+             case when current_event.visibility = 'public' then current_event.name else 'Indisponible' end,
+             current_event.starts_at,
              current_event.ends_at, current_event.updated_by, current_event.updated_by
       from public.event_resources where event_id = target_event_id
       returning id, resource_id
@@ -114,6 +116,17 @@ language sql stable security definer set search_path = '' as $$
  where r.club_id=public.admin_current_club_id() and r.is_active
    and public.has_club_permission(r.club_id,'events.manage') order by r.name;
 $$;
+create function public.admin_list_event_responsibles() returns table (profile_id uuid, name text)
+language sql stable security definer set search_path = '' as $$
+ select profiles.id,
+   coalesce(nullif(btrim(concat_ws(' ',members.first_name,members.last_name)),''),
+            nullif(btrim(profiles.display_name),''),profiles.email)
+ from public.club_members members
+ join public.profiles profiles on profiles.member_id=members.id
+ where members.club_id=public.admin_current_club_id() and members.is_active
+   and public.has_club_permission(members.club_id,'events.manage')
+ order by members.last_name,members.first_name;
+$$;
 create function public.admin_save_event_type(target_name text,target_color text,target_icon text default null) returns uuid
 language plpgsql security definer set search_path='' as $$
 declare club uuid:=public.admin_current_club_id(); saved uuid; begin
@@ -128,13 +141,16 @@ create function public.admin_list_events() returns table
   visibility public.event_visibility,is_blocking boolean)
 language sql stable security definer set search_path = '' as $$
  select e.id,e.name,t.name,coalesce(e.color,t.color),e.starts_at,e.ends_at,
-   array_agg(r.name order by r.name),nullif(btrim(concat(p.first_name,' ',p.last_name)),''),
+   array_agg(r.name order by r.name),
+   coalesce(nullif(btrim(concat_ws(' ',responsible_member.first_name,responsible_member.last_name)),''),
+            nullif(btrim(p.display_name),''),p.email),
    e.publication_status,e.visibility,e.is_blocking
  from public.events e join public.event_types t on t.id=e.event_type_id
  join public.event_resources er on er.event_id=e.id join public.reservable_resources r on r.id=er.resource_id
  left join public.profiles p on p.id=e.responsible_profile_id
+ left join public.club_members responsible_member on responsible_member.id=p.member_id
  where e.club_id=public.admin_current_club_id()
-   and public.has_club_permission(e.club_id,'events.manage') group by e.id,t.id,p.id order by e.starts_at desc;
+   and public.has_club_permission(e.club_id,'events.manage') group by e.id,t.id,p.id,responsible_member.id order by e.starts_at desc;
 $$;
 create function public.admin_get_event(target_id uuid) returns jsonb
 language sql stable security definer set search_path = '' as $$
@@ -150,17 +166,22 @@ $$;
 
 create function public.admin_save_event(payload jsonb) returns uuid
 language plpgsql security definer set search_path = '' as $$
-declare club uuid := public.admin_current_club_id(); saved_id uuid; resource uuid;
+declare club uuid := public.admin_current_club_id(); saved_id uuid; resource uuid; responsible uuid;
 begin
  if not public.has_club_permission(club,'events.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
  if jsonb_array_length(coalesce(payload->'resource_ids','[]'))=0 then raise exception 'Au moins un terrain est requis' using errcode='22023'; end if;
  if not exists(select 1 from public.event_types t where t.id=(payload->>'event_type_id')::uuid and t.club_id=club) then raise exception 'Invalid event type' using errcode='22023'; end if;
+ responsible := nullif(payload->>'responsible_profile_id','')::uuid;
+ if responsible is not null and not exists(
+   select 1 from public.profiles p join public.club_members m on m.id=p.member_id
+   where p.id=responsible and m.club_id=club and m.is_active
+ ) then raise exception 'Le responsable doit être un membre actif du club' using errcode='22023'; end if;
  saved_id := nullif(payload->>'id','')::uuid;
  if saved_id is null then
   insert into public.events(club_id,event_type_id,name,description,responsible_profile_id,color,starts_at,ends_at,is_blocking,visibility,publication_status,maximum_capacity,registration_required,archived_at,created_by,updated_by)
-  values(club,(payload->>'event_type_id')::uuid,btrim(payload->>'name'),nullif(payload->>'description',''),nullif(payload->>'responsible_profile_id','')::uuid,nullif(payload->>'color',''),(payload->>'starts_at')::timestamptz,(payload->>'ends_at')::timestamptz,coalesce((payload->>'is_blocking')::boolean,false),coalesce((payload->>'visibility')::public.event_visibility,'private'),coalesce((payload->>'publication_status')::public.event_publication_status,'draft'),nullif(payload->>'maximum_capacity','')::integer,coalesce((payload->>'registration_required')::boolean,false),case when payload->>'publication_status'='archived' then now() end,auth.uid(),auth.uid()) returning id into saved_id;
+  values(club,(payload->>'event_type_id')::uuid,btrim(payload->>'name'),nullif(payload->>'description',''),responsible,nullif(payload->>'color',''),(payload->>'starts_at')::timestamptz,(payload->>'ends_at')::timestamptz,coalesce((payload->>'is_blocking')::boolean,false),coalesce((payload->>'visibility')::public.event_visibility,'private'),coalesce((payload->>'publication_status')::public.event_publication_status,'draft'),nullif(payload->>'maximum_capacity','')::integer,coalesce((payload->>'registration_required')::boolean,false),case when payload->>'publication_status'='archived' then now() end,auth.uid(),auth.uid()) returning id into saved_id;
  else
-  update public.events set event_type_id=(payload->>'event_type_id')::uuid,name=btrim(payload->>'name'),description=nullif(payload->>'description',''),responsible_profile_id=nullif(payload->>'responsible_profile_id','')::uuid,color=nullif(payload->>'color',''),starts_at=(payload->>'starts_at')::timestamptz,ends_at=(payload->>'ends_at')::timestamptz,is_blocking=coalesce((payload->>'is_blocking')::boolean,false),visibility=(payload->>'visibility')::public.event_visibility,publication_status=(payload->>'publication_status')::public.event_publication_status,maximum_capacity=nullif(payload->>'maximum_capacity','')::integer,registration_required=coalesce((payload->>'registration_required')::boolean,false),archived_at=case when payload->>'publication_status'='archived' then coalesce(archived_at,now()) end,updated_at=now(),updated_by=auth.uid()
+  update public.events set event_type_id=(payload->>'event_type_id')::uuid,name=btrim(payload->>'name'),description=nullif(payload->>'description',''),responsible_profile_id=responsible,color=nullif(payload->>'color',''),starts_at=(payload->>'starts_at')::timestamptz,ends_at=(payload->>'ends_at')::timestamptz,is_blocking=coalesce((payload->>'is_blocking')::boolean,false),visibility=(payload->>'visibility')::public.event_visibility,publication_status=(payload->>'publication_status')::public.event_publication_status,maximum_capacity=nullif(payload->>'maximum_capacity','')::integer,registration_required=coalesce((payload->>'registration_required')::boolean,false),archived_at=case when payload->>'publication_status'='archived' then coalesce(archived_at,now()) end,updated_at=now(),updated_by=auth.uid()
   where id=saved_id and club_id=club;
   if not found then raise exception 'Event not found' using errcode='P0002'; end if;
   delete from public.calendar_occupations where id in (
@@ -197,4 +218,64 @@ alter table public.event_resources enable row level security; alter table public
 create policy event_types_club_read on public.event_types for select to authenticated using (public.has_club_permission(club_id,'events.manage'));
 create policy events_public_read on public.events for select to anon,authenticated using (publication_status='published' and visibility='public');
 revoke all on function public.sync_event_occupations(uuid) from public;
-grant execute on function public.admin_list_event_types(),public.admin_list_event_resources(),public.admin_save_event_type(text,text,text),public.admin_list_events(),public.admin_get_event(uuid),public.admin_save_event(jsonb),public.admin_duplicate_event(uuid),public.admin_archive_event(uuid),public.admin_delete_event(uuid) to authenticated;
+grant execute on function public.admin_list_event_types(),public.admin_list_event_resources(),public.admin_list_event_responsibles(),public.admin_save_event_type(text,text,text),public.admin_list_events(),public.admin_get_event(uuid),public.admin_save_event(jsonb),public.admin_duplicate_event(uuid),public.admin_archive_event(uuid),public.admin_delete_event(uuid) to authenticated;
+
+-- Manual closure administration must never mutate event-owned occupations.
+create or replace function public.admin_list_calendar_blocks()
+returns table(id uuid, resource_id uuid, resource_name text, title text, starts_at timestamptz, ends_at timestamptz)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.is_profile_admin() then raise exception 'Accès administrateur requis' using errcode = '42501'; end if;
+  return query select occupation.id,occupation.resource_id,resource.name,occupation.title,occupation.starts_at,occupation.ends_at
+  from public.calendar_occupations occupation join public.reservable_resources resource on resource.id=occupation.resource_id
+  where occupation.occupation_type='closure' and occupation.cancelled_at is null and occupation.ends_at>=now()
+    and resource.club_id=public.admin_current_club_id()
+  order by occupation.starts_at;
+end $$;
+create or replace function public.admin_update_calendar_block(target_id uuid,target_title text)
+returns void language plpgsql security definer set search_path='' as $$
+declare actor uuid:=auth.uid(); previous public.calendar_occupations; changed public.calendar_occupations; begin
+ if not public.is_profile_admin() then raise exception 'Accès administrateur requis' using errcode='42501'; end if;
+ if nullif(btrim(target_title),'') is null then raise exception 'Un motif est obligatoire' using errcode='22023'; end if;
+ select occupation.* into previous from public.calendar_occupations occupation
+ join public.reservable_resources resource on resource.id=occupation.resource_id
+ where occupation.id=target_id and occupation.occupation_type='closure' and occupation.cancelled_at is null
+ and resource.club_id=public.admin_current_club_id() for update of occupation;
+ if previous.id is null then raise exception 'Blocage manuel introuvable' using errcode='P0002'; end if;
+ update public.calendar_occupations set title=btrim(target_title),updated_at=now(),updated_by=actor where id=target_id returning * into changed;
+ insert into public.calendar_occupation_audit_log(occupation_id,action,actor_id,previous_data,new_data) values(target_id,'updated',actor,to_jsonb(previous),to_jsonb(changed));
+end $$;
+create or replace function public.admin_create_calendar_block(target_resource_id uuid,target_title text,target_starts_at timestamptz,target_ends_at timestamptz)
+returns uuid language plpgsql security definer set search_path='' as $$
+declare actor uuid:=auth.uid(); created public.calendar_occupations; club uuid:=public.admin_current_club_id(); begin
+ if not public.has_club_permission(club,'reservations.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
+ if not exists(select 1 from public.reservable_resources where id=target_resource_id and club_id=club) then raise exception 'Terrain invalide' using errcode='22023'; end if;
+ if nullif(btrim(target_title),'') is null or target_ends_at<=target_starts_at then raise exception 'Blocage invalide' using errcode='22023'; end if;
+ insert into public.calendar_occupations(resource_id,occupation_type,title,starts_at,ends_at,created_by,updated_by)
+ values(target_resource_id,'closure',btrim(target_title),target_starts_at,target_ends_at,actor,actor) returning * into created;
+ insert into public.calendar_occupation_audit_log(occupation_id,action,actor_id,new_data) values(created.id,'created',actor,to_jsonb(created)); return created.id;
+exception when exclusion_violation then raise exception 'Ce créneau est déjà occupé' using errcode='23P01';
+end $$;
+create or replace function public.admin_delete_calendar_block(target_id uuid)
+returns void language plpgsql security definer set search_path='' as $$
+declare actor uuid:=auth.uid(); previous public.calendar_occupations; changed public.calendar_occupations; begin
+ if not public.is_profile_admin() then raise exception 'Accès administrateur requis' using errcode='42501'; end if;
+ select occupation.* into previous from public.calendar_occupations occupation
+ join public.reservable_resources resource on resource.id=occupation.resource_id
+ where occupation.id=target_id and occupation.occupation_type='closure' and occupation.cancelled_at is null
+ and resource.club_id=public.admin_current_club_id() for update of occupation;
+ if previous.id is null then raise exception 'Blocage manuel introuvable' using errcode='P0002'; end if;
+ update public.calendar_occupations set cancelled_at=now(),updated_at=now(),updated_by=actor where id=target_id returning * into changed;
+ insert into public.calendar_occupation_audit_log(occupation_id,action,actor_id,previous_data,new_data) values(target_id,'cancelled',actor,to_jsonb(previous),to_jsonb(changed));
+end $$;
+
+create or replace function public.admin_update_calendar_closure(target_id uuid,target_title text,target_starts_at timestamptz,target_ends_at timestamptz)
+returns void language plpgsql security definer set search_path='' as $$
+declare target_club_id uuid; begin
+ select resources.club_id into target_club_id from public.calendar_occupations occupations
+ join public.reservable_resources resources on resources.id=occupations.resource_id
+ where occupations.id=target_id and occupations.occupation_type='closure' and occupations.cancelled_at is null;
+ if target_club_id is null or not public.has_club_permission(target_club_id,'reservations.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
+ if btrim(target_title)='' or target_ends_at<=target_starts_at then raise exception 'Invalid closure' using errcode='22023'; end if;
+ update public.calendar_occupations set title=btrim(target_title),starts_at=target_starts_at,ends_at=target_ends_at,updated_at=now(),updated_by=auth.uid() where id=target_id;
+end $$;
