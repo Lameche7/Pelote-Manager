@@ -17,14 +17,15 @@ export function AdminPage() {
       </p>
       <p>
         <Link to={ROUTES.adminReservations}>
-          Configurer les réservations, horaires et fermetures
+          Réservations
         </Link>
       </p>
       <p>
         <Link to={ROUTES.adminReservationOperations}>
-          Suivre les réservations, statuts et statistiques
+          Suivre les réservations, statuts et statistiques (ancien écran)
         </Link>
       </p>
+      <p><Link to={ROUTES.adminReservationSettings}>Configurer les tarifs, horaires et fermetures</Link></p>
       <p>
         <Link to={ROUTES.adminPayments}>Suivre les paiements HelloAsso</Link>
       </p>

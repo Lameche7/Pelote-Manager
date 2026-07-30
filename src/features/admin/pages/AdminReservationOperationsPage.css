@@ -154,3 +154,17 @@
     flex: 1 1 100%;
   }
 }
+
+.reservation-operations header button,
+.reservation-operations__editor button {
+  display: inline-flex; align-items: center; gap: .45rem; border: 0; border-radius: .6rem;
+  padding: .7rem 1rem; color: white; background: #1d4ed8; cursor: pointer;
+}
+.reservation-operations__secondary { display: inline-flex; align-items: center; gap: .35rem; }
+.reservation-operations__editor { display: grid; grid-template-columns: repeat(auto-fit,minmax(13rem,1fr)); gap: .8rem; margin-block: 1rem; padding: 1rem; border: 1px solid #dbeafe; border-radius: .8rem; background: #eff6ff; }
+.reservation-operations__editor h2,.reservation-operations__editor p { grid-column: 1/-1; }
+.reservation-operations__editor label { display: grid; gap: .3rem; font-weight: 650; }
+.reservation-operations__editor input,.reservation-operations__editor select { border: 1px solid #d1d5db; border-radius: .55rem; padding: .65rem; background: white; }
+.reservation-operations td:last-child button { margin-right: .3rem; border: 1px solid #d1d5db; border-radius: .45rem; padding: .4rem; background: white; cursor: pointer; }
+.reservation-operations td:nth-child(4) small { display: block; color: #6b7280; }
+.reservation-operations__empty { padding: 1rem; text-align: center; }
