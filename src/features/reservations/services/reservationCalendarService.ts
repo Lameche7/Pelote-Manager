@@ -1,9 +1,12 @@
 import { supabase } from "@/infrastructure/supabase/client";
+import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 import type {
   CalendarOccupation,
+  CalendarOccupationRow,
   CalendarSlot,
   ReservableResource,
 } from "@/features/reservations/domain/calendar";
+import { mapCalendarOccupation } from "@/features/reservations/domain/calendar";
 
 type ResourceRow = {
   id: string;
@@ -21,14 +24,6 @@ type SlotRow = {
   booked_by_name: string | null;
 };
 
-type OccupationRow = {
-  id: string;
-  occupation_type: CalendarOccupation["occupationType"];
-  title: string;
-  starts_at: string;
-  ends_at: string;
-};
-
 export const reservationCalendarService = {
   async listResources(): Promise<ReservableResource[]> {
     const { data, error } = await supabase
@@ -37,7 +32,7 @@ export const reservationCalendarService = {
       .eq("is_active", true)
       .order("name");
 
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les terrains."));
 
     return ((data ?? []) as ResourceRow[]).map((resource) => ({
       id: resource.id,
@@ -58,7 +53,7 @@ export const reservationCalendarService = {
       range_end: toDate,
     });
 
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger le calendrier."));
 
     return ((data ?? []) as SlotRow[]).map((slot) => ({
       resourceId: slot.resource_id,
@@ -81,14 +76,10 @@ export const reservationCalendarService = {
       range_end: rangeEnd,
     });
 
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les occupations."));
 
-    return ((data ?? []) as OccupationRow[]).map((occupation) => ({
-      id: occupation.id,
-      occupationType: occupation.occupation_type,
-      title: occupation.title,
-      startsAt: occupation.starts_at,
-      endsAt: occupation.ends_at,
-    }));
+    return ((data ?? []) as CalendarOccupationRow[]).map(
+      mapCalendarOccupation,
+    );
   },
 };

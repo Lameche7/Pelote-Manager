@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { BadgeCheck, Building2, Mail, UserRound } from "lucide-react";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
-import { accountTypeLabels } from "@/features/user-space/domain/userSpace";
 import {
   memberProfileService,
   type MemberProfileDetails,
@@ -31,7 +30,13 @@ export function MyProfilePage() {
   }, [profile?.memberId]);
 
   if (!profile) return null;
-  const isMember = profile.role === USER_ROLES.member;
+  const isMember =
+    Boolean(profile.memberId) || profile.role === USER_ROLES.member;
+  const firstName = member?.firstName || profile.firstName;
+  const lastName = member?.lastName || profile.lastName;
+  const displayName =
+    [firstName, lastName].filter(Boolean).join(" ") || profile.displayName;
+  const accountType = isMember ? "Licencié" : "Visiteur";
   return (
     <UserSpaceShell>
       <section className="my-profile" aria-labelledby="my-profile-title">
@@ -46,24 +51,18 @@ export function MyProfilePage() {
               <UserRound aria-hidden="true" />
             </span>
             <div>
-              <strong>
-                {profile.displayName ||
-                  [profile.firstName, profile.lastName]
-                    .filter(Boolean)
-                    .join(" ") ||
-                  "Utilisateur"}
-              </strong>
-              <small>{accountTypeLabels[profile.role]}</small>
+              <strong>{displayName || profile.email}</strong>
+              <small>{accountType}</small>
             </div>
           </div>
           <dl className="my-profile__details">
             <div>
               <dt>Nom</dt>
-              <dd>{profile.lastName || "Non renseigné"}</dd>
+              <dd>{lastName || "—"}</dd>
             </div>
             <div>
               <dt>Prénom</dt>
-              <dd>{profile.firstName || "Non renseigné"}</dd>
+              <dd>{firstName || "—"}</dd>
             </div>
             <div>
               <dt>
@@ -76,9 +75,7 @@ export function MyProfilePage() {
                 <BadgeCheck aria-hidden="true" /> Type de compte
               </dt>
               <dd>
-                <span className="my-profile__account-type">
-                  {accountTypeLabels[profile.role]}
-                </span>
+                <span className="my-profile__account-type">{accountType}</span>
               </dd>
             </div>
             {isMember && member && (

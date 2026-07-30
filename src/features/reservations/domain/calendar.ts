@@ -11,6 +11,7 @@ export type CalendarSlot = {
 
 export type CalendarOccupation = {
   id: string;
+  resourceId: string;
   occupationType:
     | "reservation"
     | "match"
@@ -22,6 +23,28 @@ export type CalendarOccupation = {
   startsAt: string;
   endsAt: string;
 };
+
+export type CalendarOccupationRow = {
+  id: string;
+  resource_id: string;
+  occupation_type: CalendarOccupation["occupationType"];
+  title: string;
+  starts_at: string;
+  ends_at: string;
+};
+
+export function mapCalendarOccupation(
+  row: CalendarOccupationRow,
+): CalendarOccupation {
+  return {
+    id: row.id,
+    resourceId: row.resource_id,
+    occupationType: row.occupation_type,
+    title: row.title,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+  };
+}
 
 export type ReservableResource = {
   id: string;

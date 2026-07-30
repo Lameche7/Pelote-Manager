@@ -1,4 +1,5 @@
 import { supabase } from "@/infrastructure/supabase/client";
+import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
 export type ReservationStatus =
   | "draft"
@@ -60,7 +61,7 @@ export type CancellationResult = {
 export const myReservationsService = {
   async list(): Promise<MyReservation[]> {
     const { data, error } = await supabase.rpc("list_my_reservations");
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger vos réservations."));
 
     return ((data ?? []) as MyReservationRow[]).map((row) => ({
       id: row.id,
@@ -84,7 +85,7 @@ export const myReservationsService = {
     const { data, error } = await supabase.rpc("cancel_my_reservation", {
       target_reservation_id: reservationId,
     });
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Cette réservation n’a pas pu être annulée."));
 
     const row = (data as Array<{ refund_required: boolean }> | null)?.[0];
     return { refundRequired: Boolean(row?.refund_required) };
@@ -100,7 +101,7 @@ export const myReservationsService = {
     const { data, error } = await supabase.functions.invoke("create-helloasso-checkout", {
       body: { paymentId: reservation.paymentId },
     });
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Le paiement ne peut pas être repris pour le moment."));
 
     const checkout = data as { redirectUrl?: string; error?: string } | null;
     if (!checkout?.redirectUrl) {
