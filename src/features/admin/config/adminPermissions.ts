@@ -38,7 +38,6 @@ export const ADMIN_ROLE_TEMPLATES = {
     ADMIN_PERMISSIONS.paymentsRead,
     ADMIN_PERMISSIONS.paymentsManage,
     ADMIN_PERMISSIONS.pricing,
-    ADMIN_PERMISSIONS.settings,
   ],
 } satisfies Record<string, AdminPermission[]>;
 
