@@ -84,7 +84,7 @@ export const adminNavigation = [
     permission: ADMIN_PERMISSIONS.reservations,
   },
   {
-    label: "Membres",
+    label: "Licenciés",
     to: ROUTES.adminMembers,
     permission: ADMIN_PERMISSIONS.members,
   },

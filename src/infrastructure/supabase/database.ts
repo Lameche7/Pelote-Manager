@@ -52,15 +52,14 @@ export type Database = {
         Row: {
           id: string;
           licence_number: string;
+          licence_number_normalized: string;
           last_name: string;
           first_name: string;
-          birth_date: string | null;
+          birth_date: string;
           email: string | null;
           phone: string | null;
-          gender: string | null;
-          ranking: string | null;
-          category: string | null;
-          season: string;
+          gender: "male" | "female";
+          club_id: string;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -68,15 +67,14 @@ export type Database = {
         Insert: {
           id?: string;
           licence_number: string;
+          licence_number_normalized?: string;
           last_name: string;
           first_name: string;
-          birth_date?: string | null;
+          birth_date: string;
           email?: string | null;
           phone?: string | null;
-          gender?: string | null;
-          ranking?: string | null;
-          category?: string | null;
-          season: string;
+          gender: "male" | "female";
+          club_id: string;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;

@@ -16,6 +16,9 @@ import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsP
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { AdminEventsPage } from "@/features/admin/events/pages/AdminEventsPage";
+import { AdminMembersPage } from "@/features/admin/members/pages/AdminMembersPage";
+import { MemberImportPage } from "@/features/admin/members/pages/MemberImportPage";
+import { MemberImportsPage } from "@/features/admin/members/pages/MemberImportsPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
@@ -93,7 +96,9 @@ export const routes = [
           { path: "reservations/suivi", element: permitted(ADMIN_PERMISSIONS.reservations, <AdminReservationOperationsPage />) },
           { path: "utilisateurs", element: permitted(ADMIN_PERMISSIONS.settings, <AdminUsersPage />) },
           { path: "paiements", element: permitted(ADMIN_PERMISSIONS.paymentsRead, <AdminPaymentsPage />) },
-          { path: "membres", element: permitted(ADMIN_PERMISSIONS.members, <AdminComingSoonPage title="Membres" />) },
+          { path: "membres", element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />) },
+          { path: "membres/importer", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportPage />) },
+          { path: "membres/imports", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportsPage />) },
           { path: "evenements", element: permitted(ADMIN_PERMISSIONS.events, <AdminEventsPage />) },
           { path: "tournois", element: permitted(ADMIN_PERMISSIONS.tournaments, <AdminComingSoonPage title="Tournois" />) },
           { path: "communication", element: permitted(ADMIN_PERMISSIONS.communication, <AdminComingSoonPage title="Communication" />) },

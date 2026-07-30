@@ -1,0 +1,17 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(12);
+select is(public.normalize_member_licence(' ab 00123 '),'AB00123','normalise sans perdre les zéros');
+select is(public.normalize_member_identity('D’Ár-cy'),'DARCY','normalise accents et séparateurs');
+select is(public.member_category('2017-01-01','2026-06-30'),'M10','limite M10');
+select is(public.member_category('2016-01-01','2026-06-30'),'M12','limite M12');
+select is(public.member_category('1981-01-01','2026-06-30'),'Vétéran A/B','limite vétéran A/B');
+select is(public.member_category('1971-01-01','2026-06-30'),'Vétéran Senior','limite vétéran senior');
+select has_table('public','club_member_seasons','historique saisonnier créé');
+select col_is_pk('public','club_member_seasons','id','identifiant saisonnier');
+select has_table('public','club_member_imports','imports persistés');
+select has_table('public','club_member_import_rows','lignes de prévisualisation persistées');
+select has_table('public','club_member_audit_log','audit dédié créé');
+select ok((select relrowsecurity from pg_class where oid='public.club_member_imports'::regclass),'RLS active sur les imports');
+select * from finish();
+rollback;

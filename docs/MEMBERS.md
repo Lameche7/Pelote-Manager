@@ -68,3 +68,7 @@ Le service `src/features/members/services/memberService.ts` encapsule les RPC,
 normalise les entrées et transforme les lignes SQL en objets TypeScript. Les hooks
 TanStack Query de `src/features/members/hooks/useMemberLookup.ts` constituent les
 fondations du Sprint 2 sans introduire de logique SQL ou métier dans React.
+
+## PR38 — identité globale et saisons
+
+Depuis PR38, la licence normalisée est unique dans toute l’instance et `club_members` ne porte plus que l’identité durable et le club actuel. L’historique annuel, le classement, la catégorie calculée et `is_licensed` sont dans `club_member_seasons`. Un joueur participant ailleurs n’est jamais dupliqué. Un import CSV est non destructif, transactionnel, audité, limité à la saison active et ne rattache aucun compte. Voir [Gestion complète des licenciés](./MEMBER_MANAGEMENT.md).
