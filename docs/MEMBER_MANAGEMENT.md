@@ -46,3 +46,4 @@ La recherche globale refuse une requête interclubs entièrement vide, ne renvoi
 ## Migration et limites
 
 La migration crée au besoin les saisons historiques aux formats `AAAA-AAAA` ou `AAAA/AAAA`, effectue le backfill et refuse explicitement de supprimer les anciennes colonnes si une ligne ne peut être migrée. Les inscriptions aux tournois, la mutation de club, l’invitation, les paiements et un rollback métier sont hors périmètre.
+Déploiement de validation de PR38 sur un projet Supabase de test.
