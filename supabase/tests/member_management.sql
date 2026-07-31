@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(63);
+select plan(86);
 
 insert into auth.users(id,email,aud,role) values
  ('81000000-0000-0000-0000-000000000001','members-manager@example.test','authenticated','authenticated'),
@@ -128,6 +128,41 @@ update public.club_members set phone='concurrent' where licence_number_normalize
 select is((public.admin_execute_member_import((select id from rollback_import)))->>'status','failed','échec transactionnel retourné au client');
 select is((select status::text from public.club_member_imports where id=(select id from rollback_import)),'failed','statut failed conservé');
 select is((select count(*)::integer from public.club_members where licence_number_normalized='ROLLBACK-NEW'),0,'rollback supprime toute création partielle');
+
+-- Distinct-person decision is independent and audited.
+select lives_ok(format($q$select public.admin_validate_member_import(%L,'[{"lineNumber":2,"data":{"licenceNumber":"OTHER-NUMBER","lastName":"Martin","firstName":"Bob","birthDate":"1999-01-01","gender":"male"},"decision":{"confirmDistinctIdentity":true,"confirmedSensitive":false}}]'::jsonb)$q$,(select id from identity_import)),'identité distincte explicitement confirmée');
+select is((select status::text from public.club_member_imports where id=(select id from identity_import)),'validated','confirmation distincte autorise la validation');
+select is((select (admin_decision->>'confirmDistinctIdentity')::boolean from public.club_member_import_rows where import_id=(select id from identity_import)),true,'décision distincte conservée');
+select is((public.admin_execute_member_import((select id from identity_import)))->>'status','completed','personne distincte créée');
+select ok(exists(select 1 from public.club_member_audit_log where import_id=(select id from identity_import) and (metadata->>'confirm_distinct_identity')::boolean),'confirmation distincte auditée');
+-- Historical season editing, licensing and optimistic concurrency.
+insert into public.club_seasons(id,club_id,name,starts_on,ends_on,is_active) values('84000000-0000-0000-0000-000000000010','82000000-0000-0000-0000-000000000001','2025-2026','2025-07-01','2026-06-30',false);
+insert into public.club_member_seasons(club_member_id,club_id,club_season_id,ranking,category,is_licensed) values((select id from member_state),'82000000-0000-0000-0000-000000000001','84000000-0000-0000-0000-000000000010','H1','Senior',true);
+select throws_ok(format('select public.admin_update_member_season(%L,%L,%L,false,%L,%L)',(select id from member_state),'84000000-0000-0000-0000-000000000010','H2',(select updated_at from public.club_member_seasons where club_season_id='84000000-0000-0000-0000-000000000010'),''),'22023','Motif obligatoire pour une ancienne saison','saison historique refuse un motif vide');
+create temporary table historical_version(value timestamptz);insert into historical_version select updated_at from public.club_member_seasons where club_season_id='84000000-0000-0000-0000-000000000010';
+select lives_ok(format('select public.admin_update_member_season(%L,%L,%L,false,%L,%L)',(select id from member_state),'84000000-0000-0000-0000-000000000010','H2',(select value from historical_version),'correction historique'),'saison historique modifiée avec motif');
+select is((select ranking from public.club_member_seasons where club_season_id='84000000-0000-0000-0000-000000000010'),'H2','classement historique modifié');
+select is((select is_licensed from public.club_member_seasons where club_season_id='84000000-0000-0000-0000-000000000010'),false,'validité historique modifiée');
+select throws_ok(format('select public.admin_update_member_season(%L,%L,%L,true,%L,%L)',(select id from member_state),'84000000-0000-0000-0000-000000000010','H3',(select value from historical_version),'version périmée'),'40001','La saison a changé','concurrence saisonnière contrôlée');
+-- Pure season creation does not update or audit the stable member.
+insert into public.club_members(club_id,licence_number,last_name,first_name,birth_date,gender) values('82000000-0000-0000-0000-000000000001','SEASON-ONLY','Saison','Seule','2000-01-01','female');
+create temporary table stable_version(value timestamptz);insert into stable_version select updated_at from public.club_members where licence_number_normalized='SEASON-ONLY';
+create temporary table season_only_import(id uuid);insert into season_only_import select public.admin_create_member_import(jsonb_build_object('file_name','saison-seule.csv','file_size',100,'file_hash','season-only-hash','encoding','utf-8','separator',';','mapping','{}'));
+select lives_ok(format($q$select public.admin_validate_member_import(%L,'[{"lineNumber":2,"data":{"licenceNumber":"SEASON-ONLY","lastName":"Saison","firstName":"Seule","birthDate":"2000-01-01","gender":"female","ranking":"S1"},"decision":{}}]'::jsonb)$q$,(select id from season_only_import)),'création saisonnière validée');
+select is((public.admin_execute_member_import((select id from season_only_import)))->>'status','completed','création saisonnière exécutée');
+select is((select updated_count from public.club_member_imports where id=(select id from season_only_import)),0,'aucune fiche stable comptée comme modifiée');
+select is((select executed_action from public.club_member_import_rows where import_id=(select id from season_only_import)),'season_created','action saison créée exacte');
+select is((select updated_at from public.club_members where licence_number_normalized='SEASON-ONLY'),(select value from stable_version),'fiche stable non touchée');
+select ok(not exists(select 1 from public.club_member_audit_log where import_id=(select id from season_only_import) and action='import_updated'),'aucun faux audit import_updated');
+select ok(exists(select 1 from public.club_member_audit_log where import_id=(select id from season_only_import) and action='season_created'),'audit season_created présent');
+-- Pure ranking update remains seasonal.
+create temporary table season_update_import(id uuid);insert into season_update_import select public.admin_create_member_import(jsonb_build_object('file_name','saison-update.csv','file_size',100,'file_hash','season-update-hash','encoding','utf-8','separator',';','mapping','{}'));
+select lives_ok(format($q$select public.admin_validate_member_import(%L,'[{"lineNumber":2,"data":{"licenceNumber":"SEASON-ONLY","lastName":"Saison","firstName":"Seule","birthDate":"2000-01-01","gender":"female","ranking":"S2"},"decision":{}}]'::jsonb)$q$,(select id from season_update_import)),'mise à jour saisonnière validée');
+select is((public.admin_execute_member_import((select id from season_update_import)))->>'status','completed','mise à jour saisonnière exécutée');
+select is((select updated_count from public.club_member_imports where id=(select id from season_update_import)),0,'classement seul ne compte pas une fiche modifiée');
+select is((select executed_action from public.club_member_import_rows where import_id=(select id from season_update_import)),'season_updated','action saison modifiée exacte');
+select ok(exists(select 1 from public.club_member_audit_log where import_id=(select id from season_update_import) and action='season_updated'),'audit season_updated présent');
+select ok(not exists(select 1 from public.club_member_audit_log where import_id=(select id from season_update_import) and action='import_updated'),'classement seul sans audit membre');
 select set_config('app.allow_profile_member_link','off',true);
 set local role authenticated;
 select throws_ok($q$update public.club_member_audit_log set reason='altéré'$q$,'42501',null,'audit non modifiable depuis le navigateur');

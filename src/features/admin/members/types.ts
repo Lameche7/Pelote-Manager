@@ -33,6 +33,7 @@ export type MemberSeason = {
   id: string;
   clubSeasonId: string;
   seasonName: string;
+  isActive: boolean;
   clubId: string;
   clubName: string;
   ranking: string | null;
@@ -69,7 +70,15 @@ export type MemberImportDetail = {
     id: string;
     line_number: number;
     planned_action: string;
-    executed_action: string | null;
+    executed_action:
+      | "created"
+      | "updated"
+      | "reactivated"
+      | "unchanged"
+      | "season_created"
+      | "season_updated"
+      | "ignored"
+      | null;
     errors: string[];
     warnings: string[];
     admin_decision: unknown;

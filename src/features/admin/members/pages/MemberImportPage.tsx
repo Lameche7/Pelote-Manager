@@ -368,6 +368,21 @@ export function MemberImportPage() {
                           Confirmer
                         </label>
                       )}{" "}
+                      {row.action === "identity_conflict" &&
+                        row.distinctIdentityConflict && (
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={row.confirmDistinctIdentity}
+                              onChange={(e) =>
+                                setDecision(index, {
+                                  confirmDistinctIdentity: e.target.checked,
+                                })
+                              }
+                            />{" "}
+                            Je confirme qu’il s’agit d’une autre personne
+                          </label>
+                        )}{" "}
                       {row.action === "inactive" && (
                         <label>
                           <input
@@ -390,7 +405,15 @@ export function MemberImportPage() {
           </div>
           <button
             disabled={
-              busy || rows.some((row) => row.errors.length && !row.ignored)
+              busy ||
+              rows.some(
+                (row) =>
+                  row.errors.length &&
+                  !row.ignored &&
+                  !(
+                    row.distinctIdentityConflict && row.confirmDistinctIdentity
+                  ),
+              )
             }
             onClick={() => void persist()}
           >

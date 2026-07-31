@@ -26,6 +26,8 @@ L’assistant va réellement jusqu’à l’exécution : sélection, détection 
 
 La prévisualisation charge en une seule RPC les licences et identités concernées ; aucune requête par ligne n’est effectuée. Cette comparaison navigateur reste indicative : validation et exécution recalculent les actions à partir des données verrouillées en PostgreSQL. Le résultat d’exécution distingue explicitement `completed` et `failed`, et un échec conserve uniquement le statut et le diagnostic après rollback des écritures métier.
 
+Une identité connue sous un nouveau numéro reste bloquante jusqu’à la décision dédiée « autre personne ». Cette décision est indépendante d’une confirmation sensible, d’une réactivation ou d’une exclusion, puis elle est revérifiée et auditée côté PostgreSQL. Les actions exécutées distinguent `season_created` et `season_updated` : un changement uniquement saisonnier ne modifie pas la fiche stable, ne crée pas d’audit `import_updated` et n’incrémente pas `updated_count`.
+
 ## RPC et écrans
 
 - `admin_list_club_members` fournit la liste paginée du club et son total ;
@@ -36,6 +38,8 @@ La prévisualisation charge en une seule RPC les licences et identités concern�
 - `admin_find_member_import_matches` fournit en une requête le contexte de prévisualisation sans accorder de droit d’écriture.
 
 Les routes `/admin/membres/:memberId`, `/admin/membres/recherche-globale`, `/admin/membres/importer`, `/admin/membres/imports` et `/admin/membres/imports/:importId` couvrent respectivement consultation/modification, recherche globale, assistant et historique détaillé. Les types de ces RPC sont déclarés dans le schéma Supabase TypeScript ; le service n’utilise aucun contournement `as never`.
+
+La fiche permet également de modifier chaque saison. Le classement et `is_licensed` sont contrôlés par concurrence optimiste ; une ancienne saison impose un motif et une confirmation explicite dans l’interface, tandis qu’un changement de validité de la saison active demande une confirmation claire.
 
 La recherche globale refuse une requête interclubs entièrement vide, ne renvoie ni naissance ni coordonnées dans la liste synthétique, sélectionne au plus une saison par licencié et réserve les données complètes à l’ouverture auditée du détail. Les listes du club, la recherche et les imports possèdent une pagination serveur et un total fiable.
 

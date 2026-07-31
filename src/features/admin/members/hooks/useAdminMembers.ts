@@ -54,3 +54,28 @@ export const useMemberImportMutations = () => ({
   }),
   execute: useMutation({ mutationFn: memberAdminService.executeImport }),
 });
+export const useUpdateMemberSeason = (memberId: string) => {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      seasonId: string;
+      ranking: string | null;
+      isLicensed: boolean;
+      expectedUpdatedAt: string;
+      reason: string;
+    }) =>
+      memberAdminService.updateSeason(
+        memberId,
+        input.seasonId,
+        input.ranking,
+        input.isLicensed,
+        input.expectedUpdatedAt,
+        input.reason,
+      ),
+    onSuccess: async () => {
+      await client.invalidateQueries({
+        queryKey: [...memberKeys.all, "detail", memberId],
+      });
+    },
+  });
+};

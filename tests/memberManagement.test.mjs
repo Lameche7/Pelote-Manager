@@ -200,6 +200,8 @@ test("construit les décisions Supabase et interprète succès, échec et pagina
     warnings: [],
     ignored: false,
     confirmedSensitive: true,
+    confirmDistinctIdentity: false,
+    distinctIdentityConflict: false,
     reactivate: true,
   };
   const payload = buildImportValidationPayload([row], [[], ["001"]]);
@@ -207,7 +209,7 @@ test("construit les décisions Supabase et interprète succès, échec et pagina
     ignored: false,
     confirmedSensitive: true,
     reactivate: true,
-    confirmDistinctIdentity: true,
+    confirmDistinctIdentity: false,
   });
   assert.equal(
     importSucceeded({
@@ -278,4 +280,101 @@ test("tournaments.manage ouvre seulement la recherche et le détail", async () =
     router,
     /membres\/importer[^\n]*permitted\(ADMIN_PERMISSIONS\.members/,
   );
+});
+
+test("initialise et transmet une confirmation d’identité distincte indépendante", () => {
+  const data = {
+    licenceNumber: "NEW",
+    firstName: "Alice",
+    lastName: "Durand",
+    birthDate: "2000-01-01",
+    gender: "female",
+    email: "",
+    phone: "",
+    ranking: "",
+  };
+  const existing = {
+    ...data,
+    licenceNumber: "OLD",
+    id: "member",
+    clubId: "club",
+    isActive: true,
+    updatedAt: "v1",
+  };
+  const preview = buildImportPreview([data], [existing], "club")[0];
+  assert.equal(preview.confirmDistinctIdentity, false);
+  assert.equal(preview.distinctIdentityConflict, true);
+  const decided = {
+    ...preview,
+    confirmDistinctIdentity: true,
+    confirmedSensitive: false,
+    reactivate: false,
+    ignored: false,
+  };
+  const decision = buildImportValidationPayload([decided], [[], ["NEW"]])[0]
+    .decision;
+  assert.deepEqual(decision, {
+    ignored: false,
+    confirmedSensitive: false,
+    reactivate: false,
+    confirmDistinctIdentity: true,
+  });
+});
+test("la mutation saisonnière appelle la RPC et invalide la fiche", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const hooks = await readFile(
+    new URL(
+      "../src/features/admin/members/hooks/useAdminMembers.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const detail = await readFile(
+    new URL(
+      "../src/features/admin/members/pages/MemberDetailPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(
+    hooks,
+    /useUpdateMemberSeason[\s\S]*updateSeason[\s\S]*invalidateQueries/,
+  );
+  assert.match(detail, /Modifier la saison/);
+  assert.match(detail, /MemberSeasonDialog/);
+});
+test("le détail d’import accepte les actions saisonnières réelles", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const types = await readFile(
+    new URL("../src/features/admin/members/types.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(types, /"season_created"/);
+  assert.match(types, /"season_updated"/);
+});
+
+test("affiche la confirmation d’identité distincte sans la confondre avec les autres décisions", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const page = await readFile(
+    new URL(
+      "../src/features/admin/members/pages/MemberImportPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(page, /Je confirme qu’il s’agit d’une autre personne/);
+  assert.match(page, /confirmDistinctIdentity: e\.target\.checked/);
+});
+test("la boîte de saison affiche les erreurs PostgreSQL et les confirmations requises", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const dialog = await readFile(
+    new URL(
+      "../src/features/admin/members/components/MemberSeasonDialog.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(dialog, /Motif/);
+  assert.match(dialog, /role="alert"/);
+  assert.match(dialog, /isLicensed !== season\.isLicensed/);
 });

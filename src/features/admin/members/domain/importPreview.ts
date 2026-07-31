@@ -30,6 +30,8 @@ export type ImportPreviewRow = {
   existing?: ExistingMember;
   ignored: boolean;
   confirmedSensitive: boolean;
+  confirmDistinctIdentity: boolean;
+  distinctIdentityConflict: boolean;
   reactivate: boolean;
 };
 
@@ -50,6 +52,7 @@ export function buildImportPreview(
         member.licenceNumber !== data.licenceNumber &&
         sameIdentity(data, member),
     );
+    let distinctIdentityConflict = false;
     if (!data.licenceNumber)
       errors.push("Le numéro de licence est obligatoire.");
     if (!data.lastName || !data.firstName)
@@ -61,6 +64,7 @@ export function buildImportPreview(
       errors.push("Cette licence apparaît plusieurs fois dans le fichier.");
       action = "duplicate";
     } else if (!found && identityMatch) {
+      distinctIdentityConflict = true;
       errors.push(
         "Cette identité existe déjà sous un autre numéro de licence.",
       );
@@ -107,6 +111,8 @@ export function buildImportPreview(
       existing: found,
       ignored: false,
       confirmedSensitive: false,
+      confirmDistinctIdentity: false,
+      distinctIdentityConflict,
       reactivate: false,
     };
   });

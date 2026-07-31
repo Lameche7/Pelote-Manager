@@ -128,7 +128,7 @@ language plpgsql stable security definer set search_path='' as $$ declare reques
 
 create function public.admin_get_member(target_member_id uuid) returns jsonb language plpgsql security definer set search_path='' as $$ declare requester uuid:=public.admin_current_club_id();member public.club_members%rowtype;result jsonb;begin
  if not(public.has_club_permission(requester,'members.manage') or public.has_club_permission(requester,'tournaments.manage')) then raise exception 'Forbidden' using errcode='42501';end if;select * into member from public.club_members where id=target_member_id;if member.id is null then raise exception 'Licencié introuvable' using errcode='P0002';end if;if member.club_id<>requester then insert into public.club_member_access_log(club_member_id,requesting_club_id,member_club_id,accessed_by) values(member.id,requester,member.club_id,auth.uid());end if;
- select to_jsonb(member)||jsonb_build_object('club_name',c.name,'linked_account',exists(select 1 from public.profiles p where p.member_id=member.id),'canEdit',public.has_club_permission(member.club_id,'members.manage'),'seasons',coalesce((select jsonb_agg(jsonb_build_object('id',ms.id,'clubSeasonId',s.id,'seasonName',s.name,'clubId',ms.club_id,'clubName',hc.name,'ranking',ms.ranking,'category',ms.category,'isLicensed',ms.is_licensed,'updatedAt',ms.updated_at) order by s.ends_on desc) from public.club_member_seasons ms join public.club_seasons s on s.id=ms.club_season_id join public.clubs hc on hc.id=ms.club_id where ms.club_member_id=member.id),'[]')) into result from public.clubs c where c.id=member.club_id;return result;end $$;
+ select to_jsonb(member)||jsonb_build_object('club_name',c.name,'linked_account',exists(select 1 from public.profiles p where p.member_id=member.id),'canEdit',public.has_club_permission(member.club_id,'members.manage'),'seasons',coalesce((select jsonb_agg(jsonb_build_object('id',ms.id,'clubSeasonId',s.id,'seasonName',s.name,'isActive',s.is_active,'clubId',ms.club_id,'clubName',hc.name,'ranking',ms.ranking,'category',ms.category,'isLicensed',ms.is_licensed,'updatedAt',ms.updated_at) order by s.ends_on desc) from public.club_member_seasons ms join public.club_seasons s on s.id=ms.club_season_id join public.clubs hc on hc.id=ms.club_id where ms.club_member_id=member.id),'[]')) into result from public.clubs c where c.id=member.club_id;return result;end $$;
 
 create function public.admin_update_member(target_member_id uuid,payload jsonb,expected_updated_at timestamptz,reason text default null) returns void language plpgsql security definer set search_path='' as $$ declare old public.club_members%rowtype;changed_sensitive boolean;active_season uuid;season_before jsonb;begin
  select * into old from public.club_members where id=target_member_id for update;if old.id is null or not public.has_club_permission(old.club_id,'members.manage') then raise exception 'Forbidden' using errcode='42501';end if;if old.updated_at<>expected_updated_at then raise exception 'La fiche a changé depuis son ouverture' using errcode='40001';end if;if payload?'club_id' or payload?'licenceNumber' then raise exception 'Club et licence utilisent des commandes dédiées' using errcode='22023';end if;
@@ -143,8 +143,8 @@ create or replace function public.admin_validate_member_import(target_import_id 
  for r in select * from jsonb_array_elements(rows) loop normalized=jsonb_build_object('licenceNumber',public.normalize_member_licence(r#>>'{data,licenceNumber}'),'lastName',btrim(r#>>'{data,lastName}'),'firstName',btrim(r#>>'{data,firstName}'),'birthDate',r#>>'{data,birthDate}','gender',r#>>'{data,gender}','email',coalesce(r#>>'{data,email}',''),'phone',coalesce(r#>>'{data,phone}',''),'ranking',coalesce(r#>>'{data,ranking}',''));errors='[]';warnings='[]';action='create';
   if normalized->>'licenceNumber'='' or normalized->>'lastName'='' or normalized->>'firstName'='' or normalized->>'birthDate' is null or normalized->>'gender' not in ('male','female') then errors=errors||'"Données obligatoires invalides"'::jsonb;action='error';elsif (normalized->>'birthDate')::date>current_date then errors=errors||'"Date de naissance future"'::jsonb;action='error';end if;
   select count(*) into duplicate_count from jsonb_array_elements(rows) x where public.normalize_member_licence(x#>>'{data,licenceNumber}')=normalized->>'licenceNumber';if duplicate_count>1 then errors=errors||'"Licence dupliquée dans le fichier"'::jsonb;action='duplicate';end if;
-  select * into member from public.club_members where licence_number_normalized=normalized->>'licenceNumber';if member.id is not null and member.club_id<>target.club_id then errors=errors||'"Licence appartenant à un autre club"'::jsonb;action='other_club';elsif member.id is not null then if public.normalize_member_identity(normalized->>'lastName')<>member.last_name_normalized and public.normalize_member_identity(normalized->>'firstName')<>member.first_name_normalized and (normalized->>'birthDate')::date<>member.birth_date then errors=errors||'"Conflit d’identité complet"'::jsonb;action='identity_conflict';elsif (normalized->>'birthDate')::date<>member.birth_date or normalized->>'gender'<>member.gender then warnings=warnings||'"Naissance ou sexe modifié : confirmation requise"'::jsonb;action='sensitive_warning';elsif not member.is_active then action='inactive';elsif public.normalize_member_identity(normalized->>'lastName')=member.last_name_normalized and public.normalize_member_identity(normalized->>'firstName')=member.first_name_normalized and (normalized->>'birthDate')::date=member.birth_date and normalized->>'gender'=member.gender and (normalized->>'email'='' or normalized->>'email'=coalesce(member.email,'')) and (normalized->>'phone'='' or normalized->>'phone'=coalesce(member.phone,'')) and exists(select 1 from public.club_member_seasons current_ms where current_ms.club_member_id=member.id and current_ms.club_season_id=target.club_season_id and current_ms.is_licensed and (normalized->>'ranking'='' or normalized->>'ranking'=coalesce(current_ms.ranking,''))) then action='unchanged';else action='update';end if;elsif exists(select 1 from public.club_members m where m.last_name_normalized=public.normalize_member_identity(normalized->>'lastName') and m.first_name_normalized=public.normalize_member_identity(normalized->>'firstName') and m.birth_date=(normalized->>'birthDate')::date) and not coalesce((r#>>'{decision,confirmDistinctIdentity}')::boolean,false) then errors=errors||'"Identité déjà connue sous une autre licence"'::jsonb;action='identity_conflict';end if;
-  if jsonb_array_length(errors)>0 and coalesce((r#>>'{decision,ignored}')::boolean,false) then action='ignored';end if;if jsonb_array_length(warnings)>0 and not coalesce((r#>>'{decision,confirmedSensitive}')::boolean,false) and not coalesce((r#>>'{decision,ignored}')::boolean,false) then errors=errors||'"Confirmation sensible manquante"'::jsonb;end if;
+  select * into member from public.club_members where licence_number_normalized=normalized->>'licenceNumber';if member.id is not null and member.club_id<>target.club_id then errors=errors||'"Licence appartenant à un autre club"'::jsonb;action='other_club';elsif member.id is not null then if public.normalize_member_identity(normalized->>'lastName')<>member.last_name_normalized and public.normalize_member_identity(normalized->>'firstName')<>member.first_name_normalized and (normalized->>'birthDate')::date<>member.birth_date then errors=errors||'"Conflit d’identité complet"'::jsonb;action='identity_conflict';elsif (normalized->>'birthDate')::date<>member.birth_date or normalized->>'gender'<>member.gender then warnings=warnings||'"Naissance ou sexe modifié : confirmation requise"'::jsonb;action='sensitive_warning';elsif not member.is_active then action='inactive';elsif public.normalize_member_identity(normalized->>'lastName')=member.last_name_normalized and public.normalize_member_identity(normalized->>'firstName')=member.first_name_normalized and (normalized->>'birthDate')::date=member.birth_date and normalized->>'gender'=member.gender and (normalized->>'email'='' or normalized->>'email'=coalesce(member.email,'')) and (normalized->>'phone'='' or normalized->>'phone'=coalesce(member.phone,'')) and exists(select 1 from public.club_member_seasons current_ms where current_ms.club_member_id=member.id and current_ms.club_season_id=target.club_season_id and current_ms.is_licensed and (normalized->>'ranking'='' or normalized->>'ranking'=coalesce(current_ms.ranking,''))) then action='unchanged';else action='update';end if;elsif exists(select 1 from public.club_members m where m.last_name_normalized=public.normalize_member_identity(normalized->>'lastName') and m.first_name_normalized=public.normalize_member_identity(normalized->>'firstName') and m.birth_date=(normalized->>'birthDate')::date) then if coalesce((r#>>'{decision,confirmDistinctIdentity}')::boolean,false) then warnings=warnings||'"Identité connue : création distincte confirmée"'::jsonb;action='create';else errors=errors||'"Identité déjà connue sous une autre licence"'::jsonb;action='identity_conflict';end if;end if;
+  if jsonb_array_length(errors)>0 and coalesce((r#>>'{decision,ignored}')::boolean,false) then action='ignored';end if;if action='sensitive_warning' and not coalesce((r#>>'{decision,confirmedSensitive}')::boolean,false) and not coalesce((r#>>'{decision,ignored}')::boolean,false) then errors=errors||'"Confirmation sensible manquante"'::jsonb;end if;
   insert into public.club_member_import_rows(import_id,line_number,original_data,normalized_data,planned_action,admin_decision,errors,warnings,detected_member_id,observed_updated_at) values(target.id,(r->>'lineNumber')::int,coalesce(r->'original',r->'data'),normalized,action,coalesce(r->'decision','{}'),errors,warnings,member.id,member.updated_at);
  end loop;update public.club_member_imports i set status=case when exists(select 1 from public.club_member_import_rows ir where ir.import_id=i.id and jsonb_array_length(ir.errors)>0 and ir.planned_action<>'ignored') then 'draft'::public.club_member_import_status else 'validated'::public.club_member_import_status end,validated_at=case when not exists(select 1 from public.club_member_import_rows ir where ir.import_id=i.id and jsonb_array_length(ir.errors)>0 and ir.planned_action<>'ignored') then now() end,error_count=(select count(*) from public.club_member_import_rows ir where ir.import_id=i.id and jsonb_array_length(ir.errors)>0),warning_count=(select count(*) from public.club_member_import_rows ir where ir.import_id=i.id and jsonb_array_length(ir.warnings)>0) where i.id=target.id;end $$;
 drop function public.admin_execute_member_import(uuid);
@@ -266,3 +266,85 @@ grant execute on function public.admin_list_member_imports(jsonb) to authenticat
 
 -- Browser roles have read-only policy access where explicitly granted; every write is RPC-only.
 revoke insert, update, delete, truncate, references, trigger on public.club_members, public.club_member_seasons, public.club_member_imports, public.club_member_import_rows, public.club_member_audit_log, public.club_member_access_log from anon, authenticated;
+
+-- Final import executor: stable-member and seasonal changes are deliberately independent.
+create or replace function public.admin_execute_member_import(target_import_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  target public.club_member_imports%rowtype;
+  season public.club_seasons%rowtype;
+  r public.club_member_import_rows%rowtype;
+  m public.club_members%rowtype;
+  before_member jsonb;
+  before_season jsonb;
+  was_active boolean;
+  stable_changed boolean;
+  season_existed boolean;
+  season_changed boolean;
+  actual_action text;
+  created_n integer := 0;
+  updated_n integer := 0;
+  reactivated_n integer := 0;
+  unchanged_n integer := 0;
+  ignored_n integer := 0;
+  processing_started boolean := false;
+begin
+  select * into target from public.club_member_imports where id=target_import_id for update;
+  if target.status <> 'validated' then raise exception 'Import déjà exécuté ou non validé' using errcode='55000'; end if;
+  if not public.has_club_permission(target.club_id,'members.manage') then raise exception 'Forbidden' using errcode='42501'; end if;
+  select * into season from public.club_seasons where id=target.club_season_id and club_id=target.club_id and is_active for share;
+  if season.id is null then raise exception 'La saison ciblée n’est plus active' using errcode='40001'; end if;
+  if exists(select 1 from public.club_member_import_rows ir where ir.import_id=target.id and not coalesce((ir.admin_decision->>'ignored')::boolean,false) group by ir.normalized_data->>'licenceNumber' having count(*)>1) then raise exception 'Doublons de licence' using errcode='23505'; end if;
+  update public.club_member_imports set status='processing',global_error=null where id=target.id;
+  processing_started := true;
+  for r in select * from public.club_member_import_rows where import_id=target.id order by line_number loop
+    if coalesce((r.admin_decision->>'ignored')::boolean,false) then
+      update public.club_member_import_rows set executed_action='ignored' where id=r.id;
+      ignored_n := ignored_n+1; continue;
+    end if;
+    select * into m from public.club_members where licence_number_normalized=public.normalize_member_licence(r.normalized_data->>'licenceNumber') for update;
+    if m.id is not null and m.club_id<>target.club_id then raise exception 'Licence d’un autre club ligne %',r.line_number using errcode='42501'; end if;
+    if m.id is not null and (r.detected_member_id is distinct from m.id or r.observed_updated_at is distinct from m.updated_at) then raise exception 'Conflit de concurrence ligne %',r.line_number using errcode='40001'; end if;
+    if m.id is null and exists(select 1 from public.club_members x where x.last_name_normalized=public.normalize_member_identity(r.normalized_data->>'lastName') and x.first_name_normalized=public.normalize_member_identity(r.normalized_data->>'firstName') and x.birth_date=(r.normalized_data->>'birthDate')::date) and not coalesce((r.admin_decision->>'confirmDistinctIdentity')::boolean,false) then raise exception 'Identité connue ligne %',r.line_number using errcode='23505'; end if;
+    before_member := case when m.id is null then null else to_jsonb(m) end;
+    was_active := coalesce(m.is_active,false);
+    stable_changed := m.id is not null and (
+      public.normalize_member_identity(r.normalized_data->>'lastName')<>m.last_name_normalized or
+      public.normalize_member_identity(r.normalized_data->>'firstName')<>m.first_name_normalized or
+      (r.normalized_data->>'birthDate')::date<>m.birth_date or r.normalized_data->>'gender'<>m.gender or
+      (r.normalized_data->>'email'<>'' and r.normalized_data->>'email' is distinct from m.email) or
+      (r.normalized_data->>'phone'<>'' and r.normalized_data->>'phone' is distinct from m.phone) or
+      (not m.is_active and coalesce((r.admin_decision->>'reactivate')::boolean,false))
+    );
+    if m.id is not null and ((r.normalized_data->>'birthDate')::date<>m.birth_date or r.normalized_data->>'gender'<>m.gender) and not coalesce((r.admin_decision->>'confirmedSensitive')::boolean,false) then raise exception 'Confirmation sensible manquante ligne %',r.line_number using errcode='22023'; end if;
+    if m.id is null then
+      insert into public.club_members(club_id,licence_number,last_name,first_name,birth_date,gender,email,phone) values(target.club_id,r.normalized_data->>'licenceNumber',r.normalized_data->>'lastName',r.normalized_data->>'firstName',(r.normalized_data->>'birthDate')::date,r.normalized_data->>'gender',nullif(r.normalized_data->>'email',''),nullif(r.normalized_data->>'phone','')) returning * into m;
+      created_n:=created_n+1; actual_action:='created';
+    elsif stable_changed then
+      update public.club_members set last_name=coalesce(nullif(r.normalized_data->>'lastName',''),last_name),first_name=coalesce(nullif(r.normalized_data->>'firstName',''),first_name),birth_date=coalesce(nullif(r.normalized_data->>'birthDate','')::date,birth_date),gender=coalesce(nullif(r.normalized_data->>'gender',''),gender),email=coalesce(nullif(r.normalized_data->>'email',''),email),phone=coalesce(nullif(r.normalized_data->>'phone',''),phone),is_active=case when coalesce((r.admin_decision->>'reactivate')::boolean,false) then true else is_active end where id=m.id returning * into m;
+      if not was_active and m.is_active then reactivated_n:=reactivated_n+1; actual_action:='reactivated'; else updated_n:=updated_n+1; actual_action:='updated'; end if;
+    else actual_action:='unchanged'; end if;
+    select to_jsonb(ms),true,(ms.ranking is distinct from coalesce(nullif(r.normalized_data->>'ranking',''),ms.ranking) or not ms.is_licensed or ms.category is distinct from public.member_category(m.birth_date,season.ends_on)) into before_season,season_existed,season_changed from public.club_member_seasons ms where ms.club_member_id=m.id and ms.club_season_id=season.id for update;
+    season_existed:=coalesce(season_existed,false); season_changed:=coalesce(season_changed,false);
+    if not season_existed then
+      insert into public.club_member_seasons(club_member_id,club_id,club_season_id,ranking,category,is_licensed,created_by,updated_by) values(m.id,target.club_id,season.id,nullif(r.normalized_data->>'ranking',''),public.member_category(m.birth_date,season.ends_on),true,auth.uid(),auth.uid());
+    elsif season_changed then
+      update public.club_member_seasons set ranking=coalesce(nullif(r.normalized_data->>'ranking',''),ranking),category=public.member_category(m.birth_date,season.ends_on),is_licensed=true,updated_at=now(),updated_by=auth.uid() where club_member_id=m.id and club_season_id=season.id;
+    end if;
+    if before_member is null or stable_changed then
+      insert into public.club_member_audit_log(club_member_id,club_id,club_season_id,author_id,action,before_values,after_values,import_id,metadata) values(m.id,target.club_id,season.id,auth.uid(),case when before_member is null then 'import_created' when actual_action='reactivated' then 'import_reactivated' when actual_action='unchanged' then 'import_unchanged' else 'import_updated' end,before_member,to_jsonb(m),target.id,jsonb_build_object('line_number',r.line_number,'confirmed_sensitive',coalesce((r.admin_decision->>'confirmedSensitive')::boolean,false),'confirm_distinct_identity',coalesce((r.admin_decision->>'confirmDistinctIdentity')::boolean,false),'reactivate',coalesce((r.admin_decision->>'reactivate')::boolean,false)));
+    end if;
+    if not season_existed or season_changed then
+      insert into public.club_member_audit_log(club_member_id,club_id,club_season_id,author_id,action,before_values,after_values,import_id,metadata) select m.id,target.club_id,season.id,auth.uid(),case when season_existed then 'season_updated' else 'season_created' end,before_season,to_jsonb(ms),target.id,jsonb_build_object('line_number',r.line_number,'confirm_distinct_identity',coalesce((r.admin_decision->>'confirmDistinctIdentity')::boolean,false)) from public.club_member_seasons ms where ms.club_member_id=m.id and ms.club_season_id=season.id;
+      if not stable_changed and before_member is not null then actual_action:=case when season_existed then 'season_updated' else 'season_created' end; end if;
+    elsif not stable_changed and before_member is not null then unchanged_n:=unchanged_n+1; actual_action:='unchanged'; end if;
+    update public.club_member_import_rows set executed_action=actual_action,before_values=before_member,after_values=to_jsonb(m) where id=r.id;
+  end loop;
+  update public.club_member_imports set status='completed',executed_at=now(),created_count=created_n,updated_count=updated_n,reactivated_count=reactivated_n,unchanged_count=unchanged_n,ignored_count=ignored_n where id=target.id;
+  return jsonb_build_object('status','completed','created',created_n,'updated',updated_n,'reactivated',reactivated_n,'unchanged',unchanged_n,'ignored',ignored_n);
+exception when others then
+  if target.id is not null and processing_started then update public.club_member_imports set status='failed',executed_at=now(),global_error=sqlerrm,created_count=0,updated_count=0,reactivated_count=0,unchanged_count=0 where id=target.id; return jsonb_build_object('status','failed','error',sqlerrm,'created',0,'updated',0,'reactivated',0,'unchanged',0,'ignored',ignored_n); end if;
+  raise;
+end $$;
+revoke all on function public.admin_execute_member_import(uuid) from public;
+grant execute on function public.admin_execute_member_import(uuid) to authenticated;

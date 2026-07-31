@@ -19,7 +19,7 @@ export function buildImportValidationPayload(
       ignored: row.ignored,
       confirmedSensitive: row.confirmedSensitive,
       reactivate: row.reactivate,
-      confirmDistinctIdentity: row.confirmedSensitive,
+      confirmDistinctIdentity: row.confirmDistinctIdentity,
     },
   }));
 }

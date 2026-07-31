@@ -4,6 +4,9 @@ import { useParams } from "react-router-dom";
 import { memberAdminService } from "../services/memberAdminService";
 import type { MemberGender } from "../domain/memberRules";
 import { SensitiveActionDialog } from "../components/SensitiveActionDialog";
+import { MemberSeasonDialog } from "../components/MemberSeasonDialog";
+import { useUpdateMemberSeason } from "../hooks/useAdminMembers";
+import type { MemberSeason } from "../types";
 export function MemberDetailPage() {
   const { memberId = "" } = useParams();
   const client = useQueryClient();
@@ -14,6 +17,8 @@ export function MemberDetailPage() {
   });
   const [reason, setReason] = useState("");
   const [correctingLicence, setCorrectingLicence] = useState<string>();
+  const [editingSeason, setEditingSeason] = useState<MemberSeason>();
+  const seasonMutation = useUpdateMemberSeason(memberId);
   const mutation = useMutation({
     mutationFn: async (form: FormData) => {
       if (!query.data) return;
@@ -214,6 +219,7 @@ export function MemberDetailPage() {
               <th>Classement</th>
               <th>Catégorie</th>
               <th>Licence</th>
+              {member.canEdit && <th>Action</th>}
             </tr>
           </thead>
           <tbody>
@@ -224,11 +230,41 @@ export function MemberDetailPage() {
                 <td>{season.ranking ?? "—"}</td>
                 <td>{season.category}</td>
                 <td>{season.isLicensed ? "Valide" : "Non valide"}</td>
+                {member.canEdit && (
+                  <td>
+                    <button
+                      className="link-button"
+                      onClick={() => setEditingSeason(season)}
+                    >
+                      Modifier la saison
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {editingSeason && (
+        <MemberSeasonDialog
+          season={editingSeason}
+          pending={seasonMutation.isPending}
+          error={seasonMutation.error?.message}
+          onCancel={() => setEditingSeason(undefined)}
+          onConfirm={(input) =>
+            seasonMutation.mutate(
+              {
+                seasonId: editingSeason.clubSeasonId,
+                ranking: input.ranking,
+                isLicensed: input.isLicensed,
+                expectedUpdatedAt: editingSeason.updatedAt,
+                reason: input.reason,
+              },
+              { onSuccess: () => setEditingSeason(undefined) },
+            )
+          }
+        />
+      )}
     </section>
   );
 }
