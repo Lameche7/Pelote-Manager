@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    "lib": ["ES2023", "DOM"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -26,6 +26,10 @@
     "src/features/admin/reservations/domain/adminReservations.ts",
     "src/features/admin/events/domain/eventDateTime.ts",
     "src/features/admin/events/domain/eventFormSubmission.ts",
+    "src/features/admin/members/domain/memberRules.ts",
+    "src/features/admin/members/domain/csvImport.ts",
+    "src/features/admin/members/domain/importPreview.ts",
+    "src/features/admin/members/domain/importWorkflow.ts",
     "src/features/auth/domain/accountProfileFinalization.ts",
     "src/features/members/domain/memberRegistration.ts",
     "supabase/functions/_shared/memberRegistrationCleanup.ts",

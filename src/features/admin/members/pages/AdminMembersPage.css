@@ -1,0 +1,168 @@
+.members-page {
+  display: grid;
+  gap: 1.5rem;
+}
+.members-page > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.members-page h1 {
+  font-size: 2rem;
+  margin: 0.2rem 0;
+}
+.eyebrow {
+  color: #2563eb;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+.members-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.members-page button,
+.button {
+  background: #1d4ed8;
+  color: #fff;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1rem;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+.members-page .secondary {
+  background: #fff;
+  color: #1e3a8a;
+  border: 1px solid #cbd5e1;
+}
+.member-filters,
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+.member-filters label,
+.form-grid label,
+.import-card label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+.members-page input,
+.members-page select {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  padding: 0.65rem;
+  background: #fff;
+}
+.member-table {
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+}
+.member-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+.member-table th,
+.member-table td {
+  text-align: left;
+  padding: 0.8rem;
+  border-bottom: 1px solid #edf2f7;
+}
+.member-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #475569;
+}
+.pill {
+  display: inline-block;
+  padding: 0.25rem 0.55rem;
+  border-radius: 1rem;
+  background: #dcfce7;
+  color: #166534;
+}
+.pill.muted {
+  background: #f1f5f9;
+  color: #475569;
+}
+.members-page .link-button {
+  background: none;
+  color: #1d4ed8;
+  padding: 0;
+}
+.empty {
+  padding: 2rem;
+  text-align: center;
+}
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #0f172a99;
+  display: grid;
+  place-items: center;
+  z-index: 10;
+}
+.member-dialog {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 0.8rem;
+  width: min(700px, calc(100vw - 2rem));
+}
+.member-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+}
+.import-steps {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  overflow: auto;
+  gap: 0.4rem;
+}
+.import-steps li {
+  padding: 0.5rem 0.7rem;
+  border-radius: 1rem;
+  background: #e2e8f0;
+  white-space: nowrap;
+}
+.import-steps .active {
+  background: #1d4ed8;
+  color: white;
+}
+.import-card,
+.preview-summary {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+.preview-summary {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+@media (max-width: 800px) {
+  .members-page > header {
+    display: grid;
+  }
+  .members-actions {
+    display: grid;
+  }
+  .member-filters {
+    grid-template-columns: 1fr;
+  }
+}

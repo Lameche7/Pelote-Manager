@@ -6,11 +6,17 @@ import { useAdminAccess } from "./AdminAccessProvider";
 
 export function PermissionRoute({
   permission,
+  anyOf,
   children,
-}: PropsWithChildren<{ permission: AdminPermission }>) {
+}: PropsWithChildren<{
+  permission?: AdminPermission;
+  anyOf?: AdminPermission[];
+}>) {
   const { error, hasPermission, isLoading } = useAdminAccess();
   if (isLoading) return <p role="status">Chargement de vos habilitations…</p>;
-  if (error || !hasPermission(permission))
-    return <Navigate to={ROUTES.forbidden} replace />;
+  const allowed =
+    anyOf?.some(hasPermission) ??
+    (permission ? hasPermission(permission) : false);
+  if (error || !allowed) return <Navigate to={ROUTES.forbidden} replace />;
   return children;
 }

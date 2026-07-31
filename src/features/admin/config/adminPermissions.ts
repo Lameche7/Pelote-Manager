@@ -84,7 +84,7 @@ export const adminNavigation = [
     permission: ADMIN_PERMISSIONS.reservations,
   },
   {
-    label: "Membres",
+    label: "Licenciés",
     to: ROUTES.adminMembers,
     permission: ADMIN_PERMISSIONS.members,
   },
@@ -96,6 +96,11 @@ export const adminNavigation = [
   {
     label: "Tournois",
     to: ROUTES.adminTournaments,
+    permission: ADMIN_PERMISSIONS.tournaments,
+  },
+  {
+    label: "Recherche licenciés",
+    to: "/admin/membres/recherche-globale",
     permission: ADMIN_PERMISSIONS.tournaments,
   },
   {
