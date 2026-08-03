@@ -33,15 +33,12 @@ test("les horaires sont enregistrés séparément pour chaque terrain", () => {
   assert.match(page, /listOpeningHours\(id\)/);
 });
 
-test(
-  "deux plages actives d'un même terrain ne peuvent pas se chevaucher",
-  () => {
-    const sql = functionBody("admin_save_opening_hour");
-    assert.match(sql, /hours\.opens_at < target_closes_at/);
-    assert.match(sql, /hours\.closes_at > target_opens_at/);
-    assert.match(sql, /Cette plage chevauche un horaire existant/);
-  },
-);
+test("deux plages actives d'un même terrain ne peuvent pas se chevaucher", () => {
+  const sql = functionBody("admin_save_opening_hour");
+  assert.match(sql, /hours\.opens_at < target_closes_at/);
+  assert.match(sql, /hours\.closes_at > target_opens_at/);
+  assert.match(sql, /Cette plage chevauche un horaire existant/);
+});
 
 test("le serveur refuse une réservation hors des horaires du terrain", () => {
   const sql = functionBody("assert_reservation_slot_allowed");
