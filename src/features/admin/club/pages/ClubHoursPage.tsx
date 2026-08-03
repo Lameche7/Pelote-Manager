@@ -162,8 +162,9 @@ export function ClubHoursPage() {
           <strong>Réglage appliqué</strong>
           <span>1 réservation = 1 heure · départs toutes les heures</span>
           <small>
-            Les changements concernent {selectedResource?.name ?? "le terrain sélectionné"}
-            et apparaissent directement dans le calendrier utilisateur.
+            Les changements concernent{" "}
+            {selectedResource?.name ?? "le terrain sélectionné"} et apparaissent
+            directement dans le calendrier utilisateur.
           </small>
         </div>
 
@@ -216,13 +217,17 @@ export function ClubHoursPage() {
 
         <div className="club-hours-week" aria-label="Planning hebdomadaire">
           {DAYS.map((day, index) => {
-            const dayHours = hours.filter((hour) => hour.weekday === index + 1);
+            const dayHours = hours.filter(
+              (hour) => hour.weekday === index + 1,
+            );
             return (
               <article className="club-hours-day" key={day}>
                 <header>
                   <h3>{day}</h3>
                   <span>
-                    {dayHours.some((hour) => hour.isActive) ? "Ouvert" : "Fermé"}
+                    {dayHours.some((hour) => hour.isActive)
+                      ? "Ouvert"
+                      : "Fermé"}
                   </span>
                 </header>
 
@@ -234,10 +239,13 @@ export function ClubHoursPage() {
                       <li key={hour.id}>
                         <span>
                           <strong>
-                            {hour.opensAt.slice(0, 5)} – {hour.closesAt.slice(0, 5)}
+                            {hour.opensAt.slice(0, 5)} –{" "}
+                            {hour.closesAt.slice(0, 5)}
                           </strong>
                           <small>
-                            {hour.isActive ? "Visible dans le calendrier" : "Désactivée"}
+                            {hour.isActive
+                              ? "Visible dans le calendrier"
+                              : "Désactivée"}
                           </small>
                         </span>
                         <div>
@@ -264,7 +272,9 @@ export function ClubHoursPage() {
                               if (confirm("Supprimer cette plage horaire ?"))
                                 void run(
                                   () =>
-                                    adminReservationService.deleteOpeningHour(hour.id),
+                                    adminReservationService.deleteOpeningHour(
+                                      hour.id,
+                                    ),
                                   "La plage horaire a été supprimée.",
                                 );
                             }}
