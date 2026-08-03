@@ -35,7 +35,9 @@
 }
 .club-form button,
 .club-inline button,
-.club-list button {
+.club-list button,
+.club-hours-form button,
+.club-hours-day button {
   padding: 0.7rem 1rem;
   border: 0;
   border-radius: 0.6rem;
@@ -43,6 +45,14 @@
   font-weight: 750;
   background: #174a3a;
   cursor: pointer;
+}
+.club-form button:disabled,
+.club-inline button:disabled,
+.club-list button:disabled,
+.club-hours-form button:disabled,
+.club-hours-day button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 .club-inline {
   display: grid;
@@ -108,13 +118,123 @@
   color: #8f2020;
   background: #fdeaea;
 }
+.club-hours-summary {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px solid #cfe2da;
+  border-radius: 0.8rem;
+  background: #f2f8f5;
+}
+.club-hours-summary span {
+  font-weight: 750;
+}
+.club-hours-summary small {
+  color: #52635d;
+}
+.club-hours-form {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 0.75rem;
+}
+.club-hours-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: #394b45;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+.club-hours-form input,
+.club-hours-form select {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid #ccd6d2;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+.club-hours-week {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.club-hours-day {
+  overflow: hidden;
+  border: 1px solid #dce5e1;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.club-hours-day > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: #f5f8f7;
+}
+.club-hours-day h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.club-hours-day > header span {
+  color: #174a3a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.club-hours-day > p {
+  margin: 0;
+  padding: 1rem;
+  color: #65717c;
+}
+.club-hours-day ul {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.club-hours-day li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid #edf1ef;
+}
+.club-hours-day li > span {
+  display: grid;
+  gap: 0.2rem;
+}
+.club-hours-day li small {
+  color: #65717c;
+}
+.club-hours-day li > div {
+  display: flex;
+  gap: 0.4rem;
+}
+.club-hours-day li button:last-child {
+  color: #9f2525;
+  background: #fbeaea;
+}
+@media (max-width: 60rem) {
+  .club-hours-week {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 45rem) {
   .club-form,
-  .club-inline {
+  .club-inline,
+  .club-hours-form {
     grid-template-columns: 1fr;
   }
   .club-form__wide,
   .club-form__actions {
     grid-column: auto;
+  }
+  .club-hours-day li {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
