@@ -217,9 +217,7 @@ export function ClubHoursPage() {
 
         <div className="club-hours-week" aria-label="Planning hebdomadaire">
           {DAYS.map((day, index) => {
-            const dayHours = hours.filter(
-              (hour) => hour.weekday === index + 1,
-            );
+            const dayHours = hours.filter((hour) => hour.weekday === index + 1);
             return (
               <article className="club-hours-day" key={day}>
                 <header>
