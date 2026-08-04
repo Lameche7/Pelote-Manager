@@ -21,6 +21,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic formatage provisionnement PR43
+        run: |
+          npx prettier --write src/features/platform/pages/PlatformDashboardPage.tsx src/features/platform/services/platformRegistryService.ts tests/platformRegistry.test.mjs
+          git diff -- src/features/platform/pages/PlatformDashboardPage.tsx src/features/platform/services/platformRegistryService.ts tests/platformRegistry.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
