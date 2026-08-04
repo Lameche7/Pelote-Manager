@@ -7,6 +7,8 @@ const envSchema = z.object({
   VITE_SUPABASE_ANON_KEY: z
     .string()
     .min(1, "VITE_SUPABASE_ANON_KEY est obligatoire."),
+  VITE_PLATFORM_SUPABASE_URL: optionalText,
+  VITE_PLATFORM_SUPABASE_ANON_KEY: optionalText,
   VITE_CLUB_NAME: optionalText,
   VITE_CLUB_SHORT_NAME: optionalText,
   VITE_CLUB_LOCATION: optionalText,
