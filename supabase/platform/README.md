@@ -45,16 +45,26 @@ Il ne peut pas créer directement les projets Supabase ou Vercel.
 
 La fonction `platform_request_provisioning` crée une demande idempotente. Une seule demande ouverte est autorisée par club.
 
-La fonction `platform_worker_update_provisioning` est réservée au rôle serveur `service_role`. Elle permettra au futur service sécurisé d’enregistrer l’avancement et les références publiques obtenues :
+Le worker serveur utilise trois commandes réservées au rôle `service_role` :
 
-- référence et URL Supabase ;
-- nom du projet Vercel ;
-- URL du déploiement ;
-- version installée.
+- `platform_worker_claim_next_provisioning` revendique une demande avec un bail temporaire ;
+- `platform_worker_heartbeat_provisioning` prolonge le bail du worker actif ;
+- `platform_worker_update_provisioning` enregistre l’étape suivante et les références publiques obtenues.
 
-Elle ne reçoit et ne stocke aucun mot de passe, jeton d’accès ou secret fournisseur.
+Les verrous PostgreSQL empêchent deux workers de prendre la même demande. Une tâche interrompue redevient disponible après expiration de son bail. Toute réponse utilisant un jeton de bail expiré ou remplacé est refusée.
+
+Le worker peut enregistrer uniquement :
+
+- la référence et l’URL Supabase ;
+- le nom du projet Vercel ;
+- l’URL du déploiement ;
+- la version installée.
+
+Il ne reçoit et ne stocke aucun mot de passe, jeton d’accès ou secret fournisseur. Les erreurs sont nettoyées avant journalisation.
 
 La fin du provisionnement place automatiquement le club en période d’essai. Le passage au statut actif reste une décision explicite du super administrateur.
+
+L’implémentation serveur se trouve dans `workers/platform-provisioner`. Le fournisseur actuel est volontairement manuel et s’arrête en `waiting_external` avant tout appel réel à Supabase ou Vercel.
 
 ## Secrets
 
