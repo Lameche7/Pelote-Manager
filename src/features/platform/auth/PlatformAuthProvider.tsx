@@ -78,9 +78,8 @@ export function PlatformAuthProvider({ children }: PropsWithChildren) {
 
     if (error) throw error;
 
-    const { data: access, error: accessError } = await platformSupabase.rpc(
-      "platform_is_admin",
-    );
+    const { data: access, error: accessError } =
+      await platformSupabase.rpc("platform_is_admin");
 
     if (accessError || access !== true) {
       await platformSupabase.auth.signOut();
