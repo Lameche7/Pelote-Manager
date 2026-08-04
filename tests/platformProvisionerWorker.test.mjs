@@ -226,6 +226,7 @@ test("seul le service serveur peut revendiquer, prolonger ou terminer un travail
 test("le worker utilise des variables serveur et n’est pas intégré au navigateur", () => {
   assert.match(registryClient, /PLATFORM_SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(runOnce, /PLATFORM_PROVISIONER_WORKER_ID/);
+  assert.match(runOnce, /sanitizeErrorMessage/);
   assert.doesNotMatch(registryClient, /VITE_/);
   assert.doesNotMatch(runOnce, /VITE_/);
   assert.match(
