@@ -109,7 +109,11 @@ test("la simulation complète le parcours avec des références réservées et d
   const registry = createMutableRegistry(job);
   const provider = createProvisioningProvider({ env: createSimulationEnv() });
 
-  for (let attempt = 1; attempt <= 12 && job.current_step !== "completed"; attempt += 1) {
+  for (
+    let attempt = 1;
+    attempt <= 12 && job.current_step !== "completed";
+    attempt += 1
+  ) {
     job.lease_token = `lease-${attempt}`;
     await processProvisioningJob({ job, registry, provider });
   }
