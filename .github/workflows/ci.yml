@@ -21,11 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic formatage simulation PR43
-        run: |
-          npx prettier --write tests/platformProvisionerSimulation.test.mjs
-          git diff -- tests/platformProvisionerSimulation.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
