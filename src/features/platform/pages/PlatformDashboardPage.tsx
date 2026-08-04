@@ -223,7 +223,9 @@ export function PlatformDashboardPage() {
         </article>
         <article>
           <strong>{openProvisioningCount}</strong>
-          <span>provisionnement{openProvisioningCount > 1 ? "s" : ""} en attente</span>
+          <span>
+            provisionnement{openProvisioningCount > 1 ? "s" : ""} en attente
+          </span>
         </article>
       </section>
 
@@ -328,8 +330,8 @@ export function PlatformDashboardPage() {
                   club.status !== "cancelled";
                 const canActivate = Boolean(
                   club.supabaseProjectRef &&
-                    club.deploymentUrl &&
-                    club.currentVersion,
+                  club.deploymentUrl &&
+                  club.currentVersion,
                 );
 
                 return (
