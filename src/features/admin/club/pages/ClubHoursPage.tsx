@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   adminReservationService,
   type OpeningHour,
-  type ReservationAdminSettings,
 } from "@/features/admin/services/adminReservationService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import type { ReservableResource } from "@/features/reservations/domain/calendar";
@@ -18,16 +17,25 @@ const DAYS = [
   "Dimanche",
 ];
 
+function messageOf(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  )
+    return error.message;
+  return fallback;
+}
+
 export function ClubHoursPage() {
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
   const [hours, setHours] = useState<OpeningHour[]>([]);
-  const [settings, setSettings] = useState<ReservationAdminSettings | null>(
-    null,
-  );
   const [draft, setDraft] = useState({
     weekday: 1,
-    opensAt: "08:00",
+    opensAt: "09:00",
     closesAt: "22:00",
   });
   const [loading, setLoading] = useState(true);
@@ -35,26 +43,44 @@ export function ClubHoursPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  const selectedResource = useMemo(
+    () => resources.find((resource) => resource.id === resourceId),
+    [resourceId, resources],
+  );
+
   async function loadHours(id: string) {
+    if (!id) {
+      setHours([]);
+      return;
+    }
     setHours(await adminReservationService.listOpeningHours(id));
   }
+
   useEffect(() => {
-    Promise.all([
-      reservationCalendarService.listResources(),
-      adminReservationService.getSettings(),
-    ])
-      .then(async ([list, value]) => {
+    reservationCalendarService
+      .listResources()
+      .then(async (list) => {
         setResources(list);
-        setSettings(value);
         const id = list[0]?.id ?? "";
         setResourceId(id);
-        if (id) await loadHours(id);
+        await loadHours(id);
       })
-      .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : "Chargement impossible."),
+      .catch((loadError: unknown) =>
+        setError(messageOf(loadError, "Chargement des horaires impossible.")),
       )
       .finally(() => setLoading(false));
   }, []);
+
+  async function selectResource(id: string) {
+    setResourceId(id);
+    setError("");
+    setMessage("");
+    try {
+      await loadHours(id);
+    } catch (loadError) {
+      setError(messageOf(loadError, "Chargement des horaires impossible."));
+    }
+  }
 
   async function run(action: () => Promise<void>, success: string) {
     setSaving(true);
@@ -64,28 +90,48 @@ export function ClubHoursPage() {
       await action();
       await loadHours(resourceId);
       setMessage(success);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Opération impossible.");
+    } catch (actionError) {
+      setError(messageOf(actionError, "Opération impossible."));
     } finally {
       setSaving(false);
     }
   }
+
+  async function addHour() {
+    if (draft.closesAt <= draft.opensAt) {
+      setError("L’heure de fin doit être postérieure à l’heure de début.");
+      return;
+    }
+
+    await run(
+      () =>
+        adminReservationService.saveOpeningHour({
+          resourceId,
+          ...draft,
+          isActive: true,
+        }),
+      "La plage horaire a été ajoutée au calendrier des réservations.",
+    );
+  }
+
   if (loading)
     return (
       <section className="admin-page">
         <p role="status">Chargement des horaires…</p>
       </section>
     );
+
   return (
     <section className="admin-page">
       <header className="admin-page__header">
         <p className="admin-page__eyebrow">Club</p>
         <h1>Horaires de réservation</h1>
         <p className="admin-page__lead">
-          Définissez les plages d’ouverture, la durée des créneaux et le pas de
-          réservation.
+          Chaque terrain possède son propre planning hebdomadaire. Les créneaux
+          proposés aux utilisateurs durent toujours 60 minutes.
         </p>
       </header>
+
       {error && (
         <p className="club-alert club-alert--error" role="alert">
           {error}
@@ -96,151 +142,152 @@ export function ClubHoursPage() {
           {message}
         </p>
       )}
+
       <div className="admin-card club-stack">
         <label>
           Terrain
           <select
             value={resourceId}
-            onChange={(e) => {
-              setResourceId(e.target.value);
-              void loadHours(e.target.value);
-            }}
+            onChange={(event) => void selectResource(event.target.value)}
           >
-            {resources.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
+            {resources.map((resource) => (
+              <option key={resource.id} value={resource.id}>
+                {resource.name}
               </option>
             ))}
           </select>
         </label>
-        {settings && (
-          <div className="club-inline">
+
+        <div className="club-hours-summary">
+          <strong>Réglage appliqué</strong>
+          <span>1 réservation = 1 heure · départs toutes les heures</span>
+          <small>
+            Les changements concernent{" "}
+            {selectedResource?.name ?? "le terrain sélectionné"} et apparaissent
+            directement dans le calendrier utilisateur.
+          </small>
+        </div>
+
+        <div>
+          <h2>Ajouter une plage</h2>
+          <div className="club-hours-form">
             <label>
-              Durée du créneau
+              Jour
+              <select
+                value={draft.weekday}
+                onChange={(event) =>
+                  setDraft({ ...draft, weekday: Number(event.target.value) })
+                }
+              >
+                {DAYS.map((day, index) => (
+                  <option key={day} value={index + 1}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Ouverture
               <input
-                type="number"
-                min="1"
-                value={settings.defaultDurationMinutes}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    defaultDurationMinutes: Number(e.target.value),
-                  })
+                type="time"
+                value={draft.opensAt}
+                onChange={(event) =>
+                  setDraft({ ...draft, opensAt: event.target.value })
                 }
               />
             </label>
             <label>
-              Pas de réservation
+              Fermeture
               <input
-                type="number"
-                min="1"
-                value={settings.bookingStepMinutes}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    bookingStepMinutes: Number(e.target.value),
-                  })
+                type="time"
+                value={draft.closesAt}
+                onChange={(event) =>
+                  setDraft({ ...draft, closesAt: event.target.value })
                 }
               />
             </label>
             <button
-              disabled={saving}
-              onClick={() =>
-                void run(
-                  () => adminReservationService.updateSettings(settings),
-                  "Configuration enregistrée.",
-                )
-              }
+              disabled={saving || !resourceId}
+              onClick={() => void addHour()}
             >
-              Enregistrer
+              Ajouter la plage
             </button>
           </div>
-        )}
-        <h2>Plages hebdomadaires</h2>
-        <div className="club-inline">
-          <select
-            value={draft.weekday}
-            onChange={(e) =>
-              setDraft({ ...draft, weekday: Number(e.target.value) })
-            }
-          >
-            {DAYS.map((d, i) => (
-              <option key={d} value={i + 1}>
-                {d}
-              </option>
-            ))}
-          </select>
-          <input
-            type="time"
-            aria-label="Ouverture"
-            value={draft.opensAt}
-            onChange={(e) => setDraft({ ...draft, opensAt: e.target.value })}
-          />
-          <input
-            type="time"
-            aria-label="Fermeture"
-            value={draft.closesAt}
-            onChange={(e) => setDraft({ ...draft, closesAt: e.target.value })}
-          />
-          <button
-            disabled={saving || !resourceId}
-            onClick={() =>
-              void run(
-                () =>
-                  adminReservationService.saveOpeningHour({
-                    resourceId,
-                    ...draft,
-                    isActive: true,
-                  }),
-                "Horaire ajouté.",
-              )
-            }
-          >
-            Ajouter
-          </button>
         </div>
-        <ul className="club-list">
-          {hours.map((h) => (
-            <li key={h.id}>
-              <span>
-                <strong>{DAYS[h.weekday - 1]}</strong>
-                <small>
-                  {h.opensAt.slice(0, 5)}–{h.closesAt.slice(0, 5)} ·{" "}
-                  {h.isActive ? "Réservations activées" : "Désactivées"}
-                </small>
-              </span>
-              <div>
-                <button
-                  onClick={() =>
-                    void run(
-                      () =>
-                        adminReservationService.saveOpeningHour({
-                          ...h,
-                          isActive: !h.isActive,
-                        }),
-                      h.isActive
-                        ? "Réservations désactivées."
-                        : "Réservations activées.",
-                    )
-                  }
-                >
-                  {h.isActive ? "Désactiver" : "Activer"}
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("Supprimer cette plage horaire ?"))
-                      void run(
-                        () => adminReservationService.deleteOpeningHour(h.id),
-                        "Horaire supprimé.",
-                      );
-                  }}
-                >
-                  Supprimer
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+
+        <div className="club-hours-week" aria-label="Planning hebdomadaire">
+          {DAYS.map((day, index) => {
+            const dayHours = hours.filter((hour) => hour.weekday === index + 1);
+            return (
+              <article className="club-hours-day" key={day}>
+                <header>
+                  <h3>{day}</h3>
+                  <span>
+                    {dayHours.some((hour) => hour.isActive)
+                      ? "Ouvert"
+                      : "Fermé"}
+                  </span>
+                </header>
+
+                {dayHours.length === 0 ? (
+                  <p>Aucune plage de réservation.</p>
+                ) : (
+                  <ul>
+                    {dayHours.map((hour) => (
+                      <li key={hour.id}>
+                        <span>
+                          <strong>
+                            {hour.opensAt.slice(0, 5)} –{" "}
+                            {hour.closesAt.slice(0, 5)}
+                          </strong>
+                          <small>
+                            {hour.isActive
+                              ? "Visible dans le calendrier"
+                              : "Désactivée"}
+                          </small>
+                        </span>
+                        <div>
+                          <button
+                            disabled={saving}
+                            onClick={() =>
+                              void run(
+                                () =>
+                                  adminReservationService.saveOpeningHour({
+                                    ...hour,
+                                    isActive: !hour.isActive,
+                                  }),
+                                hour.isActive
+                                  ? "La plage a été désactivée."
+                                  : "La plage a été réactivée.",
+                              )
+                            }
+                          >
+                            {hour.isActive ? "Désactiver" : "Activer"}
+                          </button>
+                          <button
+                            disabled={saving}
+                            onClick={() => {
+                              if (confirm("Supprimer cette plage horaire ?"))
+                                void run(
+                                  () =>
+                                    adminReservationService.deleteOpeningHour(
+                                      hour.id,
+                                    ),
+                                  "La plage horaire a été supprimée.",
+                                );
+                            }}
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
