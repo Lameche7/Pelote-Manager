@@ -144,7 +144,7 @@ test("le navigateur prépare et suit le provisionnement sans exécuter les secre
   assert.match(registryService, /platform_list_provisioning_jobs/);
   assert.match(registryService, /platform_request_provisioning/);
   assert.match(dashboard, /Préparer l’instance/);
-  assert.match(dashboard, /future service sécurisé/);
+  assert.match(dashboard, /futur service sécurisé/);
   assert.doesNotMatch(registryService, /service_role/i);
   assert.doesNotMatch(dashboard, /service_role/i);
   assert.doesNotMatch(dashboard, /access_token|personal_access_token/i);
@@ -174,7 +174,10 @@ test("un club ne peut être activé qu’après installation technique", () => {
     provisioningMigration,
     /Le club ne peut pas être activé avant la fin du provisionnement/,
   );
-  assert.match(provisioningMigration, /target_club\.supabase_project_ref is null/);
+  assert.match(
+    provisioningMigration,
+    /target_club\.supabase_project_ref is null/,
+  );
   assert.match(provisioningMigration, /target_club\.deployment_url is null/);
   assert.match(provisioningMigration, /target_club\.current_version is null/);
   assert.match(
