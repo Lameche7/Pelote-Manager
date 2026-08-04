@@ -4,7 +4,8 @@ import { createPlatformRegistryClient } from "./platformRegistryClient.mjs";
 import { processProvisioningJob } from "./processProvisioningJob.mjs";
 
 export async function runOnce({ env = process.env, fetchImpl = fetch } = {}) {
-  const workerId = env.PLATFORM_PROVISIONER_WORKER_ID || `worker-${process.pid}`;
+  const workerId =
+    env.PLATFORM_PROVISIONER_WORKER_ID || `worker-${process.pid}`;
   const leaseDurationSeconds = Number(
     env.PLATFORM_PROVISIONER_LEASE_SECONDS || 300,
   );
