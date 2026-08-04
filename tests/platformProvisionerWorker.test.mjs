@@ -198,7 +198,10 @@ test("la base centrale revendique les tâches avec un bail exclusif reprenable",
   assert.match(migration, /jobs\.lease_expires_at < now\(\)/);
   assert.match(migration, /gen_random_uuid\(\)/);
   assert.match(migration, /attempt_count = jobs\.attempt_count \+ 1/);
-  assert.match(migration, /Le bail du provisionnement est absent, expiré ou remplacé/);
+  assert.match(
+    migration,
+    /Le bail du provisionnement est absent, expiré ou remplacé/,
+  );
 });
 
 test("seul le service serveur peut revendiquer, prolonger ou terminer un travail", () => {
@@ -225,6 +228,12 @@ test("le worker utilise des variables serveur et n’est pas intégré au naviga
   assert.match(runOnce, /PLATFORM_PROVISIONER_WORKER_ID/);
   assert.doesNotMatch(registryClient, /VITE_/);
   assert.doesNotMatch(runOnce, /VITE_/);
-  assert.match(workerReadme, /ne doit jamais être compilé dans l’application Vite/);
-  assert.match(workerReadme, /Aucune de ces variables ne doit commencer par `VITE_`/);
+  assert.match(
+    workerReadme,
+    /ne doit jamais être compilé dans l’application Vite/,
+  );
+  assert.match(
+    workerReadme,
+    /Aucune de ces variables ne doit commencer par `VITE_`/,
+  );
 });
