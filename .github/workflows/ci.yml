@@ -21,26 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Générer le bundle SQL PR41
-        shell: bash
-        run: |
-          output="supabase/ALL_MIGRATIONS_PR41.sql"
-          : > "$output"
-          for file in $(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort); do
-            printf '\n-- ============================================================\n' >> "$output"
-            printf -- '-- %s\n' "$(basename "$file")" >> "$output"
-            printf -- '-- ============================================================\n\n' >> "$output"
-            cat "$file" >> "$output"
-            printf '\n' >> "$output"
-          done
-
-      - name: Publier le bundle SQL PR41
-        uses: actions/upload-artifact@v4
-        with:
-          name: ALL_MIGRATIONS_PR41
-          path: supabase/ALL_MIGRATIONS_PR41.sql
-          if-no-files-found: error
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
