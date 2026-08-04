@@ -1,7 +1,7 @@
 import { pathToFileURL } from "node:url";
-import { createManualProvisioningProvider } from "./manualProvisioningProvider.mjs";
 import { createPlatformRegistryClient } from "./platformRegistryClient.mjs";
 import { processProvisioningJob } from "./processProvisioningJob.mjs";
+import { createProvisioningProvider } from "./providerFactory.mjs";
 import { sanitizeErrorMessage } from "./provisioningStateMachine.mjs";
 
 export async function runOnce({ env = process.env, fetchImpl = fetch } = {}) {
@@ -16,11 +16,13 @@ export async function runOnce({ env = process.env, fetchImpl = fetch } = {}) {
     serviceRoleKey: env.PLATFORM_SUPABASE_SERVICE_ROLE_KEY,
     fetchImpl,
   });
-  const provider = createManualProvisioningProvider();
+  const provider = createProvisioningProvider({ env });
   const job = await registry.claimNextJob(workerId, leaseDurationSeconds);
 
   if (!job) {
-    console.info("Aucun provisionnement en attente.");
+    console.info("Aucun provisionnement en attente.", {
+      providerMode: provider.mode,
+    });
     return null;
   }
 
@@ -29,6 +31,7 @@ export async function runOnce({ env = process.env, fetchImpl = fetch } = {}) {
     clubSlug: job.club_slug,
     step: job.current_step,
     attemptCount: job.attempt_count,
+    providerMode: provider.mode,
   });
 
   return processProvisioningJob({
