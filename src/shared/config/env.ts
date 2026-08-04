@@ -16,6 +16,7 @@ const envSchema = z.object({
   VITE_CLUB_DESCRIPTION: optionalText,
   VITE_CLUB_LOGO_URL: optionalText,
   VITE_CLUB_LOGO_ALT: optionalText,
+  VITE_CLUB_HERO_URL: optionalText,
 });
 
 export const env = envSchema.parse(import.meta.env);
