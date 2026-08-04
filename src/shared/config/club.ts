@@ -15,4 +15,6 @@ export const CLUB_CONFIG = {
     "Le Pelotaris Club Lourdais fait vivre la pelote basque au cœur de Lourdes. Pelote Manager accompagne la vie quotidienne du club et de ses pratiquants.",
   logoUrl: env.VITE_CLUB_LOGO_URL || "/branding/pcl-logo.png",
   logoAlt: env.VITE_CLUB_LOGO_ALT || fallbackName,
+  heroImageUrl:
+    env.VITE_CLUB_HERO_URL || "/branding/trinquet-hero.jpg",
 } as const;
