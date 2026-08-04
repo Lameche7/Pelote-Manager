@@ -94,7 +94,29 @@ Un club ne peut pas passer au statut actif tant que sa référence Supabase, son
 
 La fin du provisionnement place le club en période d’essai. L’activation commerciale reste une décision explicite du super administrateur.
 
-## 5. Tournois internes et tournois ouverts
+## 5. Worker serveur reprenable
+
+Le worker est séparé de l’application Vite et ne peut utiliser que des variables d’environnement serveur.
+
+Chaque exécution :
+
+1. revendique une seule demande disponible ;
+2. reçoit un bail temporaire et un jeton de bail unique ;
+3. prolonge ce bail avant le traitement ;
+4. exécute une seule étape ;
+5. libère la demande pour l’étape suivante ou la classe en attente extérieure, terminée ou échouée.
+
+La sélection utilise un verrou PostgreSQL `FOR UPDATE SKIP LOCKED`. Deux workers ne peuvent donc pas prendre simultanément la même demande.
+
+Si un worker s’arrête, le bail expire et une nouvelle exécution peut reprendre la demande. L’ancien worker ne peut plus enregistrer sa réponse avec un jeton remplacé ou expiré.
+
+Chaque étape utilise une clé d’idempotence stable fondée sur l’identifiant de la demande et le nom de l’étape. Une reprise ne devra jamais créer une deuxième ressource Supabase ou Vercel.
+
+Le fournisseur actuel est volontairement manuel. Il s’arrête en `waiting_external` avant tout appel réel aux fournisseurs. Les adaptateurs automatiques ne seront activés qu’après validation sur une plateforme centrale et une instance de club jetable.
+
+Les erreurs sont nettoyées avant journalisation et seules les références publiques autorisées peuvent être renvoyées au registre.
+
+## 6. Tournois internes et tournois ouverts
 
 Chaque tournoi devra obligatoirement préciser son audience.
 
@@ -111,7 +133,7 @@ Le club organisateur choisit s’il accepte :
 
 L’annonce publique peut être diffusée sur le réseau Pelote Manager.
 
-## 6. Passeport joueur futur
+## 7. Passeport joueur futur
 
 Le passeport permettra à un licencié de s’inscrire à un tournoi ouvert d’un autre club sans recréer un compte complet dans l’instance organisatrice.
 
@@ -128,6 +150,6 @@ Le passeport devra être :
 - séparé du registre commercial de la plateforme ;
 - dépourvu de mot de passe ou de secret provenant du club d’origine.
 
-## 7. Règle définitive
+## 8. Règle définitive
 
 Les clubs partagent un logiciel et peuvent partager des informations publiques de tournois. Ils ne partagent jamais leurs comptes, leurs bases de licenciés ou leurs données métier privées.
