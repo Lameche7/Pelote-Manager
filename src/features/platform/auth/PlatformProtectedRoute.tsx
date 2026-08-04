@@ -13,8 +13,9 @@ export function PlatformProtectedRoute() {
           <p className="platform-kicker">Pelote Manager</p>
           <h1>Plateforme centrale non configurée</h1>
           <p>
-            Ce déploiement reste une instance de club. La connexion centrale sera
-            activée uniquement avec un projet Supabase de plateforme distinct.
+            Ce déploiement reste une instance de club. La connexion centrale
+            sera activée uniquement avec un projet Supabase de plateforme
+            distinct.
           </p>
         </section>
       </main>
