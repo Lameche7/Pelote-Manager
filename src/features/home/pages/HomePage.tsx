@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
@@ -26,14 +27,25 @@ const benefits = [
   },
 ];
 
+type ClubHeroStyle = CSSProperties & {
+  "--club-hero-image": string;
+};
+
 export function HomePage() {
   const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
     .filter(Boolean)
     .join(" · ");
+  const heroStyle: ClubHeroStyle = {
+    "--club-hero-image": `url("${CLUB_CONFIG.heroImageUrl}")`,
+  };
 
   return (
     <div className="premium-home">
-      <section className="premium-home__hero" aria-labelledby="home-title">
+      <section
+        className="premium-home__hero"
+        aria-labelledby="home-title"
+        style={heroStyle}
+      >
         <div className="premium-home__veil" aria-hidden="true" />
         <div className="premium-home__content">
           <ClubLogo className="premium-home__logo" />
