@@ -19,12 +19,14 @@ export type Season = {
   endsOn: string;
   isActive: boolean;
 };
-export type Price = {
-  id: string;
-  name: string;
-  amountCents: number;
-  audience: string;
-  isActive: boolean;
+export type ReservationPrices = {
+  licenseePriceCents: number;
+  publicPriceCents: number;
+};
+
+type ReservationPricesRow = {
+  licensee_price_cents: number;
+  public_price_cents: number;
 };
 
 const mapClub = (row: Record<string, unknown>): Club => ({
@@ -82,12 +84,12 @@ export const clubAdminService = {
       .eq("club_id", clubId)
       .order("starts_on", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map((r: any) => ({
-      id: r.id,
-      name: r.name,
-      startsOn: r.starts_on,
-      endsOn: r.ends_on,
-      isActive: r.is_active,
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      startsOn: row.starts_on,
+      endsOn: row.ends_on,
+      isActive: row.is_active,
     }));
   },
   async createSeason(value: Omit<Season, "id">) {
@@ -105,35 +107,23 @@ export const clubAdminService = {
     const { error } = await supabase.from("club_seasons").delete().eq("id", id);
     if (error) throw error;
   },
-  async listPrices(): Promise<Price[]> {
-    const clubId = await currentClubId();
-    const { data, error } = await supabase
-      .from("club_prices")
-      .select("*")
-      .eq("club_id", clubId)
-      .order("name");
+  async getReservationPrices(): Promise<ReservationPrices> {
+    const { data, error } = await supabase.rpc("admin_get_reservation_prices");
     if (error) throw error;
-    return (data ?? []).map((r: any) => ({
-      id: r.id,
-      name: r.name,
-      amountCents: r.amount_cents,
-      audience: r.audience,
-      isActive: r.is_active,
-    }));
+
+    const row = (data as ReservationPricesRow[] | null)?.[0];
+    if (!row) throw new Error("Tarifs de réservation introuvables.");
+
+    return {
+      licenseePriceCents: row.licensee_price_cents,
+      publicPriceCents: row.public_price_cents,
+    };
   },
-  async createPrice(value: Omit<Price, "id">) {
-    const clubId = await currentClubId();
-    const { error } = await supabase.from("club_prices").insert({
-      club_id: clubId,
-      name: value.name,
-      amount_cents: value.amountCents,
-      audience: value.audience,
-      is_active: value.isActive,
+  async updateReservationPrices(value: ReservationPrices): Promise<void> {
+    const { error } = await supabase.rpc("admin_update_reservation_prices", {
+      new_licensee_price_cents: value.licenseePriceCents,
+      new_public_price_cents: value.publicPriceCents,
     });
-    if (error) throw error;
-  },
-  async deletePrice(id: string) {
-    const { error } = await supabase.from("club_prices").delete().eq("id", id);
     if (error) throw error;
   },
 };

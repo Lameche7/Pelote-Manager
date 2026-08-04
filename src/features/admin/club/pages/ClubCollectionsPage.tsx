@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   clubAdminService,
-  type Price,
+  type ReservationPrices,
   type Season,
 } from "../services/clubAdminService";
 import "./ClubPages.css";
@@ -21,6 +21,18 @@ const initialFeedback: Feedback = {
 const messageOf = (error: unknown) =>
   error instanceof Error ? error.message : "Opération impossible.";
 
+function centsToEuros(value: number) {
+  return (value / 100).toFixed(2).replace(".", ",");
+}
+
+function eurosToCents(value: string) {
+  const amount = Number(value.trim().replace(",", "."));
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error("Saisissez des montants valides et positifs.");
+  }
+  return Math.round(amount * 100);
+}
+
 export function ClubSeasonsPage() {
   const [items, setItems] = useState<Season[]>([]);
   const [feedback, setFeedback] = useState(initialFeedback);
@@ -29,14 +41,29 @@ export function ClubSeasonsPage() {
   }
   useEffect(() => {
     load()
-      .catch((e) => setFeedback((f) => ({ ...f, error: messageOf(e) })))
-      .finally(() => setFeedback((f) => ({ ...f, loading: false })));
+      .catch((error) =>
+        setFeedback((feedbackValue) => ({
+          ...feedbackValue,
+          error: messageOf(error),
+        })),
+      )
+      .finally(() =>
+        setFeedback((feedbackValue) => ({
+          ...feedbackValue,
+          loading: false,
+        })),
+      );
   }, []);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    setFeedback((f) => ({ ...f, saving: true, error: "", message: "" }));
+    setFeedback((feedbackValue) => ({
+      ...feedbackValue,
+      saving: true,
+      error: "",
+      message: "",
+    }));
     try {
       await clubAdminService.createSeason({
         name: String(data.get("name")),
@@ -46,24 +73,47 @@ export function ClubSeasonsPage() {
       });
       form.reset();
       await load();
-      setFeedback((f) => ({ ...f, message: "Saison ajoutée." }));
-    } catch (e) {
-      setFeedback((f) => ({ ...f, error: messageOf(e) }));
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        message: "Saison ajoutée.",
+      }));
+    } catch (error) {
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        error: messageOf(error),
+      }));
     } finally {
-      setFeedback((f) => ({ ...f, saving: false }));
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        saving: false,
+      }));
     }
   }
   async function remove(id: string) {
     if (!confirm("Supprimer cette saison ?")) return;
-    setFeedback((f) => ({ ...f, saving: true, error: "", message: "" }));
+    setFeedback((feedbackValue) => ({
+      ...feedbackValue,
+      saving: true,
+      error: "",
+      message: "",
+    }));
     try {
       await clubAdminService.deleteSeason(id);
       await load();
-      setFeedback((f) => ({ ...f, message: "Saison supprimée." }));
-    } catch (e) {
-      setFeedback((f) => ({ ...f, error: messageOf(e) }));
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        message: "Saison supprimée.",
+      }));
+    } catch (error) {
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        error: messageOf(error),
+      }));
     } finally {
-      setFeedback((f) => ({ ...f, saving: false }));
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        saving: false,
+      }));
     }
   }
   return (
@@ -105,95 +155,111 @@ export function ClubSeasonsPage() {
 }
 
 export function ClubPricingPage() {
-  const [items, setItems] = useState<Price[]>([]);
+  const [form, setForm] = useState({ licensee: "", public: "" });
   const [feedback, setFeedback] = useState(initialFeedback);
+
   async function load() {
-    setItems(await clubAdminService.listPrices());
+    const prices = await clubAdminService.getReservationPrices();
+    setForm({
+      licensee: centsToEuros(prices.licenseePriceCents),
+      public: centsToEuros(prices.publicPriceCents),
+    });
   }
+
   useEffect(() => {
     load()
-      .catch((e) => setFeedback((f) => ({ ...f, error: messageOf(e) })))
-      .finally(() => setFeedback((f) => ({ ...f, loading: false })));
+      .catch((error) =>
+        setFeedback((feedbackValue) => ({
+          ...feedbackValue,
+          error: messageOf(error),
+        })),
+      )
+      .finally(() =>
+        setFeedback((feedbackValue) => ({
+          ...feedbackValue,
+          loading: false,
+        })),
+      );
   }, []);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    setFeedback((f) => ({ ...f, saving: true, error: "", message: "" }));
+    setFeedback((feedbackValue) => ({
+      ...feedbackValue,
+      saving: true,
+      error: "",
+      message: "",
+    }));
+
     try {
-      await clubAdminService.createPrice({
-        name: String(data.get("name")),
-        amountCents: Math.round(Number(data.get("amount")) * 100),
-        audience: String(data.get("audience")),
-        isActive: true,
-      });
-      form.reset();
+      const prices: ReservationPrices = {
+        licenseePriceCents: eurosToCents(form.licensee),
+        publicPriceCents: eurosToCents(form.public),
+      };
+      await clubAdminService.updateReservationPrices(prices);
       await load();
-      setFeedback((f) => ({ ...f, message: "Tarif ajouté." }));
-    } catch (e) {
-      setFeedback((f) => ({ ...f, error: messageOf(e) }));
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        message: "Les tarifs de réservation ont été enregistrés.",
+      }));
+    } catch (error) {
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        error: messageOf(error),
+      }));
     } finally {
-      setFeedback((f) => ({ ...f, saving: false }));
+      setFeedback((feedbackValue) => ({
+        ...feedbackValue,
+        saving: false,
+      }));
     }
   }
-  async function remove(id: string) {
-    if (!confirm("Supprimer ce tarif ?")) return;
-    setFeedback((f) => ({ ...f, saving: true, error: "", message: "" }));
-    try {
-      await clubAdminService.deletePrice(id);
-      await load();
-      setFeedback((f) => ({ ...f, message: "Tarif supprimé." }));
-    } catch (e) {
-      setFeedback((f) => ({ ...f, error: messageOf(e) }));
-    } finally {
-      setFeedback((f) => ({ ...f, saving: false }));
-    }
-  }
+
   return (
     <Collection
       title="Tarifs"
-      lead="Créez plusieurs catégories tarifaires sans figer les futures règles commerciales."
+      lead="Définissez les montants réellement affichés et appliqués lors d’une réservation."
       feedback={feedback}
     >
-      <form className="club-inline" onSubmit={submit}>
-        <input name="name" required placeholder="Tarif licencié" />
-        <input
-          name="amount"
-          required
-          type="number"
-          min="0"
-          step=".01"
-          placeholder="Montant (€)"
-        />
-        <select name="audience">
-          <option value="member">Licenciés</option>
-          <option value="public">Public</option>
-          <option value="all">Tous</option>
-        </select>
-        <button disabled={feedback.saving}>Ajouter</button>
+      <form className="club-stack" onSubmit={submit}>
+        <div className="club-inline">
+          <label>
+            Tarif licencié actif (€)
+            <input
+              inputMode="decimal"
+              required
+              value={form.licensee}
+              onChange={(event) =>
+                setForm({ ...form, licensee: event.target.value })
+              }
+            />
+          </label>
+          <label>
+            Tarif visiteur ou compte non licencié (€)
+            <input
+              inputMode="decimal"
+              required
+              value={form.public}
+              onChange={(event) =>
+                setForm({ ...form, public: event.target.value })
+              }
+            />
+          </label>
+          <button disabled={feedback.saving}>
+            {feedback.saving ? "Enregistrement…" : "Enregistrer les tarifs"}
+          </button>
+        </div>
+        <p>
+          Le tarif licencié est réservé aux comptes reliés à une licence active
+          et validée. Le montant public s’applique aux visiteurs et aux comptes
+          non licenciés.
+        </p>
+        <small>
+          Toute nouvelle réservation conserve le montant calculé au moment de sa
+          création. Une modification ultérieure ne change pas les réservations
+          déjà enregistrées.
+        </small>
       </form>
-      <ul className="club-list">
-        {items.map((item) => (
-          <li key={item.id}>
-            <span>
-              <strong>{item.name}</strong>
-              <small>
-                {(item.amountCents / 100).toLocaleString("fr-FR", {
-                  style: "currency",
-                  currency: "EUR",
-                })}{" "}
-                · {item.audience}
-              </small>
-            </span>
-            <button
-              disabled={feedback.saving}
-              onClick={() => void remove(item.id)}
-            >
-              Supprimer
-            </button>
-          </li>
-        ))}
-      </ul>
     </Collection>
   );
 }
