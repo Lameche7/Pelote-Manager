@@ -13,6 +13,10 @@ const homePage = fs.readFileSync(
   "src/features/home/pages/HomePage.tsx",
   "utf8",
 );
+const homeStyles = fs.readFileSync(
+  "src/features/home/pages/PremiumHomePage.css",
+  "utf8",
+);
 const profilePage = fs.readFileSync(
   "src/features/user-space/profile/pages/MyProfilePage.tsx",
   "utf8",
@@ -40,6 +44,7 @@ test("chaque déploiement peut recevoir l’identité propre de son club", () =>
     "VITE_CLUB_FOUNDED_YEAR",
     "VITE_CLUB_DESCRIPTION",
     "VITE_CLUB_LOGO_URL",
+    "VITE_CLUB_HERO_URL",
   ]) {
     assert.match(envExample, new RegExp(variable));
     assert.match(clubConfig, new RegExp(variable));
@@ -50,6 +55,8 @@ test("les écrans principaux lisent la configuration de l’instance", () => {
   for (const source of [clubLogo, mainLayout, homePage, profilePage]) {
     assert.match(source, /CLUB_CONFIG/);
   }
+  assert.match(homePage, /heroImageUrl/);
+  assert.match(homeStyles, /--club-hero-image/);
   assert.doesNotMatch(mainLayout, /Pelotaris Club Lourdais/);
   assert.doesNotMatch(homePage, /Pelotaris Club Lourdais/);
   assert.doesNotMatch(profilePage, /Pelotaris Club Lourdais/);
