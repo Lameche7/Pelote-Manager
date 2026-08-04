@@ -6,6 +6,40 @@ set default_duration_minutes = 60,
     updated_at = now()
 where id;
 
+-- Toutes les commandes d'administration restent cloisonnées au club du terrain.
+create or replace function public.assert_reservations_manage_resource(
+  target_resource_id uuid
+)
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  target_club_id uuid;
+  resource_active boolean;
+begin
+  select resource.club_id, resource.is_active
+  into target_club_id, resource_active
+  from public.reservable_resources as resource
+  where resource.id = target_resource_id;
+
+  if target_club_id is null or resource_active is distinct from true then
+    raise exception 'Terrain introuvable ou inactif' using errcode = 'P0002';
+  end if;
+
+  if not public.has_club_permission(
+    target_club_id,
+    'reservations.manage'
+  ) then
+    raise exception 'Accès refusé' using errcode = '42501';
+  end if;
+
+  return target_club_id;
+end;
+$$;
+
 create or replace function public.admin_list_opening_hours(target_resource_id uuid)
 returns table (
   id bigint,
@@ -21,9 +55,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not public.is_profile_admin() then
-    raise exception 'Accès administrateur requis' using errcode = '42501';
-  end if;
+  perform public.assert_reservations_manage_resource(target_resource_id);
 
   return query
   select
@@ -57,18 +89,7 @@ declare
   saved_id bigint;
   database_weekday smallint;
 begin
-  if not public.is_profile_admin() then
-    raise exception 'Accès administrateur requis' using errcode = '42501';
-  end if;
-
-  if not exists (
-    select 1
-    from public.reservable_resources
-    where id = target_resource_id
-      and is_active
-  ) then
-    raise exception 'Terrain introuvable ou inactif' using errcode = 'P0002';
-  end if;
+  perform public.assert_reservations_manage_resource(target_resource_id);
 
   if target_weekday not between 1 and 7
     or target_closes_at <= target_opens_at then
@@ -108,13 +129,13 @@ begin
     returning id into saved_id;
   else
     update public.resource_opening_hours
-    set resource_id = target_resource_id,
-        weekday = database_weekday,
+    set weekday = database_weekday,
         opens_at = target_opens_at,
         closes_at = target_closes_at,
         is_open = target_is_active,
         updated_at = now()
     where id = target_id
+      and resource_id = target_resource_id
     returning id into saved_id;
 
     if saved_id is null then
@@ -132,13 +153,23 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  target_resource_id uuid;
 begin
-  if not public.is_profile_admin() then
-    raise exception 'Accès administrateur requis' using errcode = '42501';
+  select hours.resource_id
+  into target_resource_id
+  from public.resource_opening_hours as hours
+  where hours.id = target_id;
+
+  if target_resource_id is null then
+    raise exception 'Horaire introuvable' using errcode = 'P0002';
   end if;
 
+  perform public.assert_reservations_manage_resource(target_resource_id);
+
   delete from public.resource_opening_hours
-  where id = target_id;
+  where id = target_id
+    and resource_id = target_resource_id;
 end;
 $$;
 
@@ -157,9 +188,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not public.is_profile_admin() then
-    raise exception 'Accès administrateur requis' using errcode = '42501';
-  end if;
+  perform public.assert_reservations_manage_resource(target_resource_id);
 
   return query
   select
@@ -190,9 +219,7 @@ as $$
 declare
   created_id uuid;
 begin
-  if not public.is_profile_admin() then
-    raise exception 'Accès administrateur requis' using errcode = '42501';
-  end if;
+  perform public.assert_reservations_manage_resource(target_resource_id);
 
   if nullif(btrim(target_title), '') is null
     or target_ends_at <= target_starts_at then
@@ -237,10 +264,21 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  target_resource_id uuid;
 begin
-  if not public.is_profile_admin() then
-    raise exception 'Accès administrateur requis' using errcode = '42501';
+  select occupation.resource_id
+  into target_resource_id
+  from public.calendar_occupations as occupation
+  where occupation.id = target_id
+    and occupation.occupation_type = 'closure'
+    and occupation.cancelled_at is null;
+
+  if target_resource_id is null then
+    raise exception 'Fermeture introuvable' using errcode = 'P0002';
   end if;
+
+  perform public.assert_reservations_manage_resource(target_resource_id);
 
   if nullif(btrim(target_title), '') is null
     or target_ends_at <= target_starts_at then
@@ -254,6 +292,7 @@ begin
       updated_at = now(),
       updated_by = auth.uid()
   where id = target_id
+    and resource_id = target_resource_id
     and occupation_type = 'closure'
     and cancelled_at is null;
 
@@ -273,18 +312,34 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  target_resource_id uuid;
 begin
-  if not public.is_profile_admin() then
-    raise exception 'Accès administrateur requis' using errcode = '42501';
+  select occupation.resource_id
+  into target_resource_id
+  from public.calendar_occupations as occupation
+  where occupation.id = target_id
+    and occupation.occupation_type = 'closure'
+    and occupation.cancelled_at is null;
+
+  if target_resource_id is null then
+    raise exception 'Fermeture introuvable' using errcode = 'P0002';
   end if;
+
+  perform public.assert_reservations_manage_resource(target_resource_id);
 
   update public.calendar_occupations
   set cancelled_at = now(),
       updated_at = now(),
       updated_by = auth.uid()
   where id = target_id
+    and resource_id = target_resource_id
     and occupation_type = 'closure'
     and cancelled_at is null;
+
+  if not found then
+    raise exception 'Fermeture introuvable' using errcode = 'P0002';
+  end if;
 end;
 $$;
 
@@ -352,6 +407,12 @@ begin
         and hours.is_open
         and hours.opens_at <= local_start::time
         and hours.closes_at >= local_end::time
+        and mod(
+          extract(
+            epoch from (local_start::time - hours.opens_at)
+          )::bigint,
+          settings.booking_step_minutes::bigint * 60
+        ) = 0
     ) then
     raise exception 'Ce créneau se situe hors des horaires de réservation'
       using errcode = 'P0001';
@@ -413,6 +474,8 @@ begin
 end;
 $$;
 
+revoke all on function public.assert_reservations_manage_resource(uuid)
+from public, anon, authenticated;
 revoke all on function public.admin_list_opening_hours(uuid) from public;
 revoke all on function public.admin_save_opening_hour(bigint, uuid, smallint, time, time, boolean) from public;
 revoke all on function public.admin_delete_opening_hour(bigint) from public;
