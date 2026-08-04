@@ -112,11 +112,28 @@ Si un worker s’arrête, le bail expire et une nouvelle exécution peut reprend
 
 Chaque étape utilise une clé d’idempotence stable fondée sur l’identifiant de la demande et le nom de l’étape. Une reprise ne devra jamais créer une deuxième ressource Supabase ou Vercel.
 
-Le fournisseur actuel est volontairement manuel. Il s’arrête en `waiting_external` avant tout appel réel aux fournisseurs. Les adaptateurs automatiques ne seront activés qu’après validation sur une plateforme centrale et une instance de club jetable.
-
 Les erreurs sont nettoyées avant journalisation et seules les références publiques autorisées peuvent être renvoyées au registre.
 
-## 6. Tournois internes et tournois ouverts
+## 6. Adaptateurs et mode simulation
+
+Le worker reste en mode `manual` par défaut. Ce mode s’arrête en `waiting_external` avant toute opération nécessitant Supabase ou Vercel.
+
+La PR43 ajoute des adaptateurs Supabase et Vercel en mode `simulation` pour valider le parcours complet sans réseau, sans ressource réelle et sans jeton fournisseur.
+
+La simulation exige une confirmation explicite dans l’environnement serveur. Elle est réservée aux clubs dont le slug commence par `simulation-` par défaut.
+
+Elle produit uniquement des références déterministes et fictives :
+
+- références Supabase préfixées par `sim` ;
+- URL terminées par `.supabase.invalid` ;
+- projets Vercel préfixés par `sim-` ;
+- déploiements terminés par `.pelote-manager.invalid`.
+
+Les domaines `.invalid` ne peuvent pas représenter un service réel. Le préfixe de slug empêche également d’attacher ces références fictives à un véritable club client.
+
+Le mode `live` est explicitement refusé. Aucun code de la PR43 n'appelle Supabase Management API ou Vercel et aucun jeton fournisseur n'est lu par les adaptateurs de simulation.
+
+## 7. Tournois internes et tournois ouverts
 
 Chaque tournoi devra obligatoirement préciser son audience.
 
@@ -133,7 +150,7 @@ Le club organisateur choisit s’il accepte :
 
 L’annonce publique peut être diffusée sur le réseau Pelote Manager.
 
-## 7. Passeport joueur futur
+## 8. Passeport joueur futur
 
 Le passeport permettra à un licencié de s’inscrire à un tournoi ouvert d’un autre club sans recréer un compte complet dans l’instance organisatrice.
 
@@ -150,6 +167,6 @@ Le passeport devra être :
 - séparé du registre commercial de la plateforme ;
 - dépourvu de mot de passe ou de secret provenant du club d’origine.
 
-## 8. Règle définitive
+## 9. Règle définitive
 
 Les clubs partagent un logiciel et peuvent partager des informations publiques de tournois. Ils ne partagent jamais leurs comptes, leurs bases de licenciés ou leurs données métier privées.
