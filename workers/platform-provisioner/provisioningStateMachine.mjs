@@ -41,7 +41,10 @@ export function sanitizeErrorMessage(error) {
 
   return rawMessage
     .replace(/bearer\s+[a-z0-9._~-]+/gi, "Bearer [REDACTED]")
-    .replace(/(service[_-]?role|api[_-]?key|token|password|secret)\s*[:=]\s*\S+/gi, "$1=[REDACTED]")
+    .replace(
+      /(service[_-]?role|api[_-]?key|token|password|secret)\s*[:=]\s*\S+/gi,
+      "$1=[REDACTED]",
+    )
     .slice(0, 500);
 }
 
