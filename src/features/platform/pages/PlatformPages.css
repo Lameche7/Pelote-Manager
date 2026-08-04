@@ -1,0 +1,258 @@
+.platform-page {
+  min-height: 100vh;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  color: #17211d;
+  background: #f3f5f4;
+}
+
+.platform-page--centered {
+  display: grid;
+  place-items: center;
+}
+
+.platform-header {
+  display: flex;
+  width: min(100%, 90rem);
+  margin: 0 auto 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.platform-header h1,
+.platform-card h1,
+.platform-card h2,
+.platform-club h3 {
+  margin: 0;
+}
+
+.platform-header span,
+.platform-card > p:not(.platform-kicker) {
+  color: #5c6862;
+}
+
+.platform-header__account {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.platform-kicker {
+  margin: 0 0 0.35rem;
+  color: #216b4d;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.platform-summary {
+  display: grid;
+  width: min(100%, 90rem);
+  margin: 0 auto 1.5rem;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platform-summary article,
+.platform-card {
+  border: 1px solid #dce2df;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.7rem 2rem rgb(26 53 41 / 7%);
+}
+
+.platform-summary article {
+  display: grid;
+  padding: 1.25rem;
+}
+
+.platform-summary strong {
+  color: #184f39;
+  font-size: 2rem;
+}
+
+.platform-summary span {
+  color: #68736e;
+}
+
+.platform-grid {
+  display: grid;
+  width: min(100%, 90rem);
+  margin: 0 auto;
+  align-items: start;
+  gap: 1.5rem;
+  grid-template-columns: minmax(18rem, 26rem) 1fr;
+}
+
+.platform-card {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.platform-login-card {
+  width: min(100%, 30rem);
+}
+
+.platform-card--wide {
+  min-width: 0;
+}
+
+.platform-form {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.platform-form label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.platform-form label small {
+  color: #6d7772;
+  font-weight: 400;
+}
+
+.platform-form input,
+.platform-form select,
+.platform-form textarea {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #bdc8c3;
+  border-radius: 0.65rem;
+  color: inherit;
+  background: #fff;
+  font: inherit;
+}
+
+.platform-form input:focus,
+.platform-form select:focus,
+.platform-form textarea:focus {
+  border-color: #2b7a58;
+  outline: 3px solid rgb(43 122 88 / 16%);
+}
+
+.platform-message {
+  width: min(100%, 90rem);
+  margin: 0 auto 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+}
+
+.platform-login-card .platform-message {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.platform-message--warning {
+  color: #684b10;
+  background: #fff4cf;
+}
+
+.platform-message--error {
+  color: #861d25;
+  background: #fde8ea;
+}
+
+.platform-message--success {
+  color: #15583d;
+  background: #e1f5eb;
+}
+
+.platform-club-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.platform-club {
+  padding: 1.15rem;
+  border: 1px solid #dce2df;
+  border-radius: 0.8rem;
+  background: #fbfcfb;
+}
+
+.platform-club__heading,
+.platform-club__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.platform-club__heading small {
+  color: #69746f;
+}
+
+.platform-club dl {
+  display: grid;
+  margin: 1rem 0;
+  gap: 0.75rem 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platform-club dl div {
+  min-width: 0;
+}
+
+.platform-club dt {
+  color: #75807b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.platform-club dd {
+  margin: 0.2rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.platform-club__actions {
+  justify-content: flex-end;
+}
+
+.platform-status {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.platform-status--provisioning {
+  color: #6b4d12;
+  background: #fff0bf;
+}
+
+.platform-status--trial {
+  color: #285079;
+  background: #e1effd;
+}
+
+.platform-status--active {
+  color: #15583d;
+  background: #dff5e9;
+}
+
+.platform-status--suspended,
+.platform-status--cancelled {
+  color: #81212a;
+  background: #fbe4e7;
+}
+
+@media (max-width: 55rem) {
+  .platform-header,
+  .platform-header__account,
+  .platform-club__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .platform-summary,
+  .platform-grid,
+  .platform-club dl {
+    grid-template-columns: 1fr;
+  }
+}
