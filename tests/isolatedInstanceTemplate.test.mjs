@@ -4,14 +4,8 @@ import test from "node:test";
 
 const envExample = fs.readFileSync(".env.example", "utf8");
 const clubConfig = fs.readFileSync("src/shared/config/club.ts", "utf8");
-const clubLogo = fs.readFileSync(
-  "src/shared/components/ClubLogo.tsx",
-  "utf8",
-);
-const mainLayout = fs.readFileSync(
-  "src/app/layouts/MainLayout.tsx",
-  "utf8",
-);
+const clubLogo = fs.readFileSync("src/shared/components/ClubLogo.tsx", "utf8");
+const mainLayout = fs.readFileSync("src/app/layouts/MainLayout.tsx", "utf8");
 const homePage = fs.readFileSync(
   "src/features/home/pages/HomePage.tsx",
   "utf8",
@@ -85,16 +79,13 @@ test("le bootstrap vierge refuse toute instance contenant déjà des données", 
   assert.match(blankBootstrap, /delete from public\.reservable_resources/);
 });
 
-test(
-  "le premier administrateur est créé uniquement dans l’instance du club",
-  () => {
-    assert.match(adminBootstrap, /from auth\.users/);
-    assert.match(adminBootstrap, /insert into public\.profiles/);
-    assert.match(adminBootstrap, /insert into public\.club_memberships/);
-    assert.match(adminBootstrap, /key = 'administrator'/);
-    assert.doesNotMatch(adminBootstrap, /search.*global/i);
-  },
-);
+test("le premier administrateur est créé uniquement dans l’instance du club", () => {
+  assert.match(adminBootstrap, /from auth\.users/);
+  assert.match(adminBootstrap, /insert into public\.profiles/);
+  assert.match(adminBootstrap, /insert into public\.club_memberships/);
+  assert.match(adminBootstrap, /key = 'administrator'/);
+  assert.doesNotMatch(adminBootstrap, /search.*global/i);
+});
 
 test("la documentation impose un projet Supabase distinct par club", () => {
   assert.match(instanceReadme, /propre projet Supabase/);
