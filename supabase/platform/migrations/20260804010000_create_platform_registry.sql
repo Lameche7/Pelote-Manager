@@ -221,7 +221,7 @@ returns void
 language plpgsql
 security definer
 set search_path = ''
-as $$;
+as $$
 begin
   if not public.is_platform_admin() then
     raise exception 'Accès refusé' using errcode = '42501';
