@@ -144,10 +144,7 @@ test("la simulation complète le parcours avec des références réservées et d
     existingReferences: {},
   });
 
-  assert.equal(
-    repeatedResult.references.supabaseProjectRef,
-    firstProjectRef,
-  );
+  assert.equal(repeatedResult.references.supabaseProjectRef, firstProjectRef);
 });
 
 test("la simulation refuse un vrai identifiant de club", async () => {
