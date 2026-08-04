@@ -1,9 +1,33 @@
 import { requirePlatformSupabase } from "@/infrastructure/platform/platformClient";
 
 export type PlatformClubStatus =
-  "provisioning" | "trial" | "active" | "suspended" | "cancelled";
+  | "provisioning"
+  | "trial"
+  | "active"
+  | "suspended"
+  | "cancelled";
 
 export type PlatformSubscriptionPlan = "standard" | "premium" | "custom";
+
+export type PlatformProvisioningStatus =
+  | "pending"
+  | "running"
+  | "waiting_external"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export type PlatformProvisioningStep =
+  | "requested"
+  | "supabase_project"
+  | "database_migrations"
+  | "club_bootstrap"
+  | "first_admin"
+  | "vercel_project"
+  | "environment_variables"
+  | "deployment"
+  | "verification"
+  | "completed";
 
 export type PlatformClub = {
   id: string;
@@ -20,6 +44,18 @@ export type PlatformClub = {
   targetVersion: string;
   notes: string;
   createdAt: string;
+  updatedAt: string;
+};
+
+export type PlatformProvisioningJob = {
+  id: string;
+  clubId: string;
+  status: PlatformProvisioningStatus;
+  currentStep: PlatformProvisioningStep;
+  requestedAt: string;
+  startedAt: string;
+  completedAt: string;
+  lastErrorMessage: string;
   updatedAt: string;
 };
 
@@ -49,6 +85,18 @@ type PlatformClubRow = {
   updated_at: string;
 };
 
+type PlatformProvisioningJobRow = {
+  id: string;
+  club_id: string;
+  status: PlatformProvisioningStatus;
+  current_step: PlatformProvisioningStep;
+  requested_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  last_error_message: string | null;
+  updated_at: string;
+};
+
 const mapClub = (row: PlatformClubRow): PlatformClub => ({
   id: row.id,
   name: row.name,
@@ -67,6 +115,20 @@ const mapClub = (row: PlatformClubRow): PlatformClub => ({
   updatedAt: row.updated_at,
 });
 
+const mapProvisioningJob = (
+  row: PlatformProvisioningJobRow,
+): PlatformProvisioningJob => ({
+  id: row.id,
+  clubId: row.club_id,
+  status: row.status,
+  currentStep: row.current_step,
+  requestedAt: row.requested_at,
+  startedAt: row.started_at ?? "",
+  completedAt: row.completed_at ?? "",
+  lastErrorMessage: row.last_error_message ?? "",
+  updatedAt: row.updated_at,
+});
+
 export const platformRegistryService = {
   async listClubs(): Promise<PlatformClub[]> {
     const { data, error } = await requirePlatformSupabase().rpc(
@@ -75,6 +137,17 @@ export const platformRegistryService = {
 
     if (error) throw error;
     return ((data ?? []) as PlatformClubRow[]).map(mapClub);
+  },
+
+  async listProvisioningJobs(): Promise<PlatformProvisioningJob[]> {
+    const { data, error } = await requirePlatformSupabase().rpc(
+      "platform_list_provisioning_jobs",
+    );
+
+    if (error) throw error;
+    return ((data ?? []) as PlatformProvisioningJobRow[]).map(
+      mapProvisioningJob,
+    );
   },
 
   async createClub(input: CreatePlatformClubInput): Promise<string> {
@@ -86,6 +159,18 @@ export const platformRegistryService = {
         new_contact_email: input.contactEmail || null,
         new_subscription_plan: input.subscriptionPlan,
         new_notes: input.notes || null,
+      },
+    );
+
+    if (error) throw error;
+    return String(data);
+  },
+
+  async requestProvisioning(clubId: string): Promise<string> {
+    const { data, error } = await requirePlatformSupabase().rpc(
+      "platform_request_provisioning",
+      {
+        target_club_id: clubId,
       },
     );
 
