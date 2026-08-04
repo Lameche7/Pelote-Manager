@@ -10,10 +10,7 @@ const bootstrap = fs.readFileSync(
   "supabase/platform/bootstrap/01_attach_first_platform_admin.sql",
   "utf8",
 );
-const platformReadme = fs.readFileSync(
-  "supabase/platform/README.md",
-  "utf8",
-);
+const platformReadme = fs.readFileSync("supabase/platform/README.md", "utf8");
 const envExample = fs.readFileSync(".env.example", "utf8");
 const platformClient = fs.readFileSync(
   "src/infrastructure/platform/platformClient.ts",
@@ -43,7 +40,10 @@ test("le registre central reste séparé des migrations et données de clubs", (
 test("seuls les super administrateurs actifs accèdent au registre", () => {
   assert.match(migration, /create table if not exists public\.platform_admins/);
   assert.match(migration, /create table if not exists public\.platform_clubs/);
-  assert.match(migration, /create table if not exists public\.platform_audit_log/);
+  assert.match(
+    migration,
+    /create table if not exists public\.platform_audit_log/,
+  );
   assert.match(migration, /enable row level security/g);
   assert.match(migration, /is_platform_admin\(\)/);
   assert.match(migration, /where admins\.user_id = auth\.uid\(\)/);
@@ -66,7 +66,10 @@ test("toutes les commandes de plateforme contrôlent et auditent l’appelant", 
   assert.match(migration, /'club\.created'/);
   assert.match(migration, /'club\.status_updated'/);
   assert.match(migration, /revoke all on function public\.platform_list_clubs/);
-  assert.match(migration, /grant execute on function public\.platform_list_clubs/);
+  assert.match(
+    migration,
+    /grant execute on function public\.platform_list_clubs/,
+  );
   assert.doesNotMatch(migration, /as \$\$;/);
 });
 
