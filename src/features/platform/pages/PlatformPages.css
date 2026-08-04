@@ -209,6 +209,45 @@
   overflow-wrap: anywhere;
 }
 
+.platform-provisioning {
+  display: grid;
+  margin: 0 0 1rem;
+  padding: 0.8rem 0.9rem;
+  border-left: 0.25rem solid #b58b24;
+  border-radius: 0.55rem;
+  gap: 0.2rem;
+  color: #684b10;
+  background: #fff7dc;
+}
+
+.platform-provisioning span,
+.platform-provisioning small {
+  color: inherit;
+}
+
+.platform-provisioning--running {
+  border-left-color: #376f9f;
+  color: #274f73;
+  background: #eaf4fc;
+}
+
+.platform-provisioning--waiting_external {
+  border-left-color: #a56b1c;
+}
+
+.platform-provisioning--completed {
+  border-left-color: #287454;
+  color: #15583d;
+  background: #e1f5eb;
+}
+
+.platform-provisioning--failed,
+.platform-provisioning--cancelled {
+  border-left-color: #a52c38;
+  color: #861d25;
+  background: #fde8ea;
+}
+
 .platform-club__actions {
   justify-content: flex-end;
 }
