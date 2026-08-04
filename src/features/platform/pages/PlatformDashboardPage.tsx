@@ -87,10 +87,7 @@ export function PlatformDashboardPage() {
     }
   };
 
-  const handleStatus = async (
-    clubId: string,
-    status: PlatformClubStatus,
-  ) => {
+  const handleStatus = async (clubId: string, status: PlatformClubStatus) => {
     setErrorMessage("");
     setMessage("");
 
@@ -125,13 +122,21 @@ export function PlatformDashboardPage() {
         </div>
       </header>
 
-      <section className="platform-summary" aria-label="Résumé de la plateforme">
+      <section
+        className="platform-summary"
+        aria-label="Résumé de la plateforme"
+      >
         <article>
           <strong>{clubs.length}</strong>
-          <span>club{clubs.length > 1 ? "s" : ""} enregistré{clubs.length > 1 ? "s" : ""}</span>
+          <span>
+            club{clubs.length > 1 ? "s" : ""} enregistré
+            {clubs.length > 1 ? "s" : ""}
+          </span>
         </article>
         <article>
-          <strong>{clubs.filter((club) => club.status === "active").length}</strong>
+          <strong>
+            {clubs.filter((club) => club.status === "active").length}
+          </strong>
           <span>actifs</span>
         </article>
         <article>
@@ -145,7 +150,9 @@ export function PlatformDashboardPage() {
       {(message || errorMessage) && (
         <div
           className={`platform-message ${
-            errorMessage ? "platform-message--error" : "platform-message--success"
+            errorMessage
+              ? "platform-message--error"
+              : "platform-message--success"
           }`}
         >
           {errorMessage || message}
@@ -239,7 +246,9 @@ export function PlatformDashboardPage() {
                       <h3>{club.name}</h3>
                       <small>{club.slug}</small>
                     </div>
-                    <span className={`platform-status platform-status--${club.status}`}>
+                    <span
+                      className={`platform-status platform-status--${club.status}`}
+                    >
                       {statusLabels[club.status]}
                     </span>
                   </div>
