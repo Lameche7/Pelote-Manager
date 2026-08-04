@@ -1,11 +1,7 @@
 import { requirePlatformSupabase } from "@/infrastructure/platform/platformClient";
 
 export type PlatformClubStatus =
-  | "provisioning"
-  | "trial"
-  | "active"
-  | "suspended"
-  | "cancelled";
+  "provisioning" | "trial" | "active" | "suspended" | "cancelled";
 
 export type PlatformSubscriptionPlan = "standard" | "premium" | "custom";
 
