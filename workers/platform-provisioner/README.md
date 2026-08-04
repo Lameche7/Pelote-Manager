@@ -11,7 +11,8 @@ Il utilise uniquement des variables serveur :
 - `PLATFORM_SUPABASE_URL` ;
 - `PLATFORM_SUPABASE_SERVICE_ROLE_KEY` ;
 - `PLATFORM_PROVISIONER_WORKER_ID` ;
-- `PLATFORM_PROVISIONER_LEASE_SECONDS`.
+- `PLATFORM_PROVISIONER_LEASE_SECONDS` ;
+- `PLATFORM_PROVISIONER_MODE`.
 
 Aucune de ces variables ne doit commencer par `VITE_`.
 
@@ -31,16 +32,43 @@ Chaque étape reçoit une clé d’idempotence stable composée de l’identifia
 
 Un worker interrompu perd son bail après expiration. Une nouvelle exécution peut alors reprendre la demande. Un ancien worker ne peut plus enregistrer de résultat avec un bail remplacé.
 
-## État actuel
+## Modes disponibles
 
-Le fournisseur inclus est volontairement manuel. Il place la demande en `waiting_external` à la première opération nécessitant Supabase ou Vercel.
+### Mode manuel par défaut
 
-Les appels réels aux fournisseurs ne seront ajoutés qu’après :
+Sans configuration particulière, `PLATFORM_PROVISIONER_MODE` vaut `manual`.
 
-- création d’un projet central dédié ;
-- choix des comptes et formules fournisseurs ;
-- configuration de secrets serveur ;
-- validation sur une instance de club jetable.
+Le fournisseur manuel place la demande en `waiting_external` à la première opération nécessitant Supabase ou Vercel. Aucun appel fournisseur n’est effectué.
+
+### Mode simulation
+
+Le mode `simulation` valide le parcours complet sans créer aucune ressource et sans utiliser de secret fournisseur.
+
+Il exige simultanément :
+
+- `PLATFORM_PROVISIONER_MODE=simulation` ;
+- `PLATFORM_PROVISIONER_SIMULATION_ACK=I_UNDERSTAND_NO_RESOURCES_ARE_CREATED` ;
+- un club dont le slug commence par `simulation-` par défaut.
+
+Le préfixe peut être rendu encore plus restrictif avec `PLATFORM_PROVISIONER_SIMULATION_SLUG_PREFIX`.
+
+La version simulée est définie par `PLATFORM_PROVISIONER_APPLICATION_VERSION`. Sa valeur par défaut est `0.0.0-simulation`.
+
+Les adaptateurs produisent uniquement des références déterministes et clairement fictives :
+
+- une URL Supabase terminée par `.supabase.invalid` ;
+- une URL de déploiement terminée par `.pelote-manager.invalid` ;
+- des noms préfixés par `sim`.
+
+Les domaines `.invalid` sont réservés à la documentation et ne représentent aucune ressource réelle.
+
+Le mode simulation refuse tout club dont le slug ne commence pas par le préfixe réservé. Cette protection évite d’attacher des références fictives à un vrai client.
+
+### Mode réel indisponible
+
+Le mode `live` est explicitement refusé dans la PR43.
+
+Aucun adaptateur n’appelle actuellement Supabase Management API ou Vercel. Aucun jeton fournisseur n’est lu par le code de simulation.
 
 ## Lancement ultérieur
 
