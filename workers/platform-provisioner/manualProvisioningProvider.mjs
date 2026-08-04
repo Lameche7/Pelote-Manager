@@ -7,8 +7,7 @@ const instructions = Object.freeze({
     "Exécuter le bootstrap vierge avec l’identité propre du club.",
   first_admin:
     "Créer puis rattacher le premier administrateur dans l’instance du club.",
-  vercel_project:
-    "Créer ou rattacher le projet Vercel dédié à cette instance.",
+  vercel_project: "Créer ou rattacher le projet Vercel dédié à cette instance.",
   environment_variables:
     "Configurer les variables du club et ses clés publiques dans le déploiement serveur.",
   deployment: "Déployer l’application du club.",
