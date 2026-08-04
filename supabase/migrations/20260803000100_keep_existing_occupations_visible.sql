@@ -109,22 +109,29 @@ as $$
         else null
       end as booked_by_name
     from slots_with_terms as slot
-    left join lateral (
-      select current_occupation.*
-      from public.calendar_occupations as current_occupation
-      where current_occupation.resource_id = slot.resource_id
-        and current_occupation.cancelled_at is null
-        and current_occupation.starts_at < slot.ends_at
-        and current_occupation.ends_at > slot.starts_at
-      order by current_occupation.starts_at
-      limit 1
-    ) as occupation on true
+    left join public.calendar_occupations as occupation
+      on occupation.resource_id = slot.resource_id
+      and occupation.cancelled_at is null
+      and occupation.starts_at = slot.starts_at
+      and occupation.ends_at = slot.ends_at
     left join public.reservations as reservation
       on reservation.id = occupation.reservation_id
     left join public.profiles as profile
       on profile.id = reservation.user_id
     left join public.club_members as club_member
       on club_member.id = profile.member_id
+    where not exists (
+      select 1
+      from public.calendar_occupations as overlapping_occupation
+      where overlapping_occupation.resource_id = slot.resource_id
+        and overlapping_occupation.cancelled_at is null
+        and overlapping_occupation.starts_at < slot.ends_at
+        and overlapping_occupation.ends_at > slot.starts_at
+        and not (
+          overlapping_occupation.starts_at = slot.starts_at
+          and overlapping_occupation.ends_at = slot.ends_at
+        )
+    )
   ),
   occupations_outside_schedule as (
     select
@@ -171,8 +178,8 @@ as $$
         select 1
         from generated_slots as slot
         where slot.resource_id = occupation.resource_id
-          and slot.starts_at < occupation.ends_at
-          and slot.ends_at > occupation.starts_at
+          and slot.starts_at = occupation.starts_at
+          and slot.ends_at = occupation.ends_at
       )
   )
   select * from scheduled_slots
@@ -186,6 +193,8 @@ grant execute on function public.list_available_slots(uuid, date, date)
 to anon, authenticated;
 
 -- Les commandes d'administration ne sont jamais exposées au rôle anonyme.
+revoke all on function public.assert_reservations_manage_resource(uuid)
+from public, anon, authenticated;
 revoke all on function public.admin_list_opening_hours(uuid)
 from public, anon, authenticated;
 revoke all on function public.admin_save_opening_hour(bigint, uuid, smallint, time, time, boolean)
