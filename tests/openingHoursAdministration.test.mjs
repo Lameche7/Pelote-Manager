@@ -38,10 +38,7 @@ test("les horaires sont enregistrés séparément pour chaque terrain", () => {
 });
 
 test("les commandes sont limitées au club et à la permission réservations", () => {
-  const guard = functionBody(
-    migration,
-    "assert_reservations_manage_resource",
-  );
+  const guard = functionBody(migration, "assert_reservations_manage_resource");
   assert.match(guard, /resource\.club_id/);
   assert.match(guard, /has_club_permission/);
   assert.match(guard, /'reservations\.manage'/);
