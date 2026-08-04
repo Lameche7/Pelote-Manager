@@ -21,12 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic formatage instance PR43
-        run: |
-          npx prettier --write tests/isolatedInstanceTemplate.test.mjs
-          git diff -- tests/isolatedInstanceTemplate.test.mjs
-        continue-on-error: true
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
