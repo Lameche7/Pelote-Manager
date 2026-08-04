@@ -70,11 +70,9 @@ export function createPlatformRegistryClient({
         expected_lease_token: job.lease_token,
         new_status: update.status,
         new_current_step: update.currentStep,
-        new_supabase_project_ref:
-          update.references?.supabaseProjectRef ?? null,
+        new_supabase_project_ref: update.references?.supabaseProjectRef ?? null,
         new_supabase_url: update.references?.supabaseUrl ?? null,
-        new_vercel_project_name:
-          update.references?.vercelProjectName ?? null,
+        new_vercel_project_name: update.references?.vercelProjectName ?? null,
         new_deployment_url: update.references?.deploymentUrl ?? null,
         new_current_version: update.references?.currentVersion ?? null,
         new_error_message: update.errorMessage ?? null,
