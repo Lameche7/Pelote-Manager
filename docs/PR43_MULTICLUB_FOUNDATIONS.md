@@ -1,327 +1,276 @@
-# PR43 — Fondations multi-club de la plateforme
+# PR43 — Plateforme et instances de clubs totalement isolées
 
-## 1. Objectif
+## 1. Décision d’architecture
 
-Préparer Pelote Manager à accueillir plusieurs clubs dans une même plateforme, sans mélange de données et sans créer une installation technique distincte par client.
+Pelote Manager ne partagera pas les comptes, les licenciés ni les données métier entre plusieurs clubs.
 
-La cible est :
+La cible retenue est une architecture **multi-instance**, et non une base multi-club partagée :
 
-- une seule application ;
-- une seule base de données ;
-- plusieurs clubs isolés par `club_id` ;
-- des utilisateurs pouvant appartenir à un ou plusieurs clubs ;
-- un rôle de plateforme distinct des rôles de club ;
-- un futur espace `/super-admin` pour créer et administrer les clubs clients.
+- un seul produit et un seul dépôt de code source ;
+- une plateforme centrale administrée par l’éditeur ;
+- une instance technique indépendante pour chaque club client ;
+- une base Supabase, une authentification et un stockage propres à chaque club ;
+- aucun licencié ni compte utilisateur global commun aux clubs ;
+- aucun accès métier automatique du super administrateur aux données des clubs.
 
-Cette PR traite d'abord les fondations de données et de sécurité. Elle ne doit pas introduire un tableau de bord super administrateur tant que l'isolation d'un deuxième club n'est pas démontrée.
+Une personne inscrite dans deux clubs possède deux comptes et deux fiches totalement indépendants. Une modification, une suppression ou une suspension dans un club n’a aucun effet dans l’autre.
 
-## 2. Principe d'autorisation retenu
+## 2. Séparation entre plateforme et clubs
 
-Trois niveaux doivent rester distincts :
+### 2.1 Plateforme centrale
 
-1. **Compte utilisateur global** : identité et authentification communes à la plateforme.
-2. **Appartenance à un club** : rôle et permissions valables uniquement dans ce club.
-3. **Administration de plateforme** : droit de gérer les clubs clients, sans devenir automatiquement administrateur de chacun d'eux.
+La plateforme centrale contient uniquement les informations nécessaires à la commercialisation et à l’exploitation du service :
 
-Un administrateur de club ne peut jamais accéder aux données d'un autre club.
+- identité du club client ;
+- formule souscrite ;
+- statut commercial : essai, actif, suspendu ou résilié ;
+- administrateur principal déclaré ;
+- domaine ou sous-domaine attribué ;
+- références techniques de l’instance ;
+- version applicative déployée ;
+- dates de création, renouvellement et suspension ;
+- journaux de provisionnement et de maintenance.
 
-Un administrateur de plateforme ne doit pas recevoir implicitement toutes les permissions métier des clubs. Les opérations de support devront être explicites, limitées et auditées.
+La plateforme centrale ne contient pas :
 
-## 3. Fondations déjà présentes
+- les licenciés ;
+- les membres ;
+- les comptes utilisateurs du club ;
+- les réservations ;
+- les horaires ;
+- les tournois ;
+- les paiements des réservations ;
+- les documents internes du club.
 
-Les éléments suivants sont déjà orientés multi-club :
+### 2.2 Instance d’un club
 
-- `clubs` ;
-- `club_roles` ;
-- `club_role_permissions` ;
-- `club_memberships` ;
-- `club_seasons` ;
-- `club_prices` ;
-- `reservable_resources.club_id` ;
-- `club_members.club_id` ;
-- `club_member_seasons.club_id` ;
-- `club_member_imports.club_id` ;
-- `club_member_audit_log.club_id` ;
-- `event_types.club_id` ;
-- `events.club_id` ;
-- `event_documents.club_id` ;
-- `event_audit_log.club_id` ;
-- les permissions `has_club_permission(...)` ;
-- les RPC d'administration utilisant majoritairement `admin_current_club_id()`.
-
-L'interface actuelle accepte exactement un club par compte administrateur. `admin_current_club_id()` refuse volontairement l'absence d'appartenance et les comptes liés à plusieurs clubs.
-
-## 4. Classification des données
-
-### 4.1 Données globales de plateforme
-
-| Élément | Cible | Observation |
-|---|---|---|
-| `auth.users` | Global | Authentification commune à tous les clubs. |
-| `profiles` | Global | Identité du compte utilisateur. Les colonnes métier de licence doivent en sortir. |
-| `permissions` | Global | Catalogue normalisé des permissions de club. |
-| futurs abonnements et offres | Global | À créer plus tard pour la commercialisation SaaS. |
-| futurs administrateurs de plateforme | Global | À créer séparément des rôles de club. |
-
-### 4.2 Données directement rattachées à un club
-
-| Élément | État actuel |
-|---|---|
-| `clubs` | Conforme. |
-| `club_roles` | Conforme. |
-| `club_memberships` | Conforme pour un rôle par club et par profil. |
-| `club_seasons` | Conforme. |
-| `club_prices` | Rattaché au club, mais n'est plus la source des tarifs de réservation. |
-| `reservable_resources` | `club_id` présent. |
-| `club_members` | `club_id` présent. |
-| tables de gestion et d'import des membres | Majoritairement conformes. |
-| `event_types`, `events`, `event_documents`, `event_audit_log` | `club_id` présent. |
-
-### 4.3 Données rattachées seulement de manière indirecte
-
-Ces tables peuvent retrouver leur club par une relation, mais l'absence de `club_id` direct complique les RLS, les audits et les contrôles d'intégrité.
-
-| Élément | Club retrouvé par | Risque |
-|---|---|---|
-| `resource_opening_hours` | `resource_id` | Faible si toutes les RPC contrôlent le terrain ; RLS publique à vérifier. |
-| `reservations` | `resource_id` | Important : aucune clé directe pour les politiques, statistiques et paiements. |
-| `calendar_occupations` | `resource_id` | Important : lecture publique actuellement trop large pour plusieurs clubs. |
-| `reservation_audit_log` | `reservation_id` | Audit inter-clubs plus difficile. |
-| `payments` | `reservation_id` | Gestion financière par club indirecte. |
-| `payment_events` | `payment_id` | Webhooks et rapprochements doivent identifier le club sans ambiguïté. |
-| `event_resources` | `event_id` et `resource_id` | Il faut garantir qu'un événement et un terrain appartiennent au même club. |
-
-### 4.4 Données encore globales alors qu'elles doivent être propres à un club
-
-#### `reservation_settings`
-
-La table est actuellement un singleton avec une clé booléenne `id = true`.
-
-Elle contient notamment :
-
-- délais de réservation licencié et public ;
-- tarifs licencié et public ;
-- durée d'un créneau ;
-- pas de réservation ;
-- préavis minimal.
-
-Elle doit devenir une table à une ligne par club, avec :
-
-- `club_id uuid primary key references clubs(id)` ;
-- suppression de la clé booléenne ;
-- toutes les lectures déterminées à partir du club du terrain ;
-- toutes les modifications administratives limitées au club actif.
-
-C'est le blocage prioritaire avant la création d'un deuxième club.
-
-## 5. Blocages critiques constatés
-
-### 5.1 Calendrier public non contextualisé par club
-
-Les ressources actives et les occupations non annulées sont actuellement lisibles publiquement sans sélection explicite de club.
-
-Avec deux clubs, une page publique pourrait donc agréger les terrains ou occupations des deux structures.
-
-La future consultation publique devra recevoir ou résoudre un club explicite :
-
-- par slug dans l'URL ;
-- puis filtrer toutes les ressources, horaires et occupations par ce club.
-
-### 5.2 Statut de licencié non contextualisé par club
-
-`is_active_licensee(profile_id, date)` ne reçoit pas de club.
-
-De plus, `profiles.member_id` est une relation unique vers un seul `club_member`. Une même personne ne peut donc pas être licenciée ou liée à des registres de plusieurs clubs.
-
-Décision à appliquer :
-
-- conserver `profiles` comme identité globale ;
-- remplacer le lien unique `profiles.member_id` par une table d'association entre profil et fiche membre de club ;
-- faire dépendre le statut de licencié du club concerné par la réservation.
-
-La fonction cible devra ressembler conceptuellement à :
-
-```sql
-is_active_licensee(target_profile_id, target_club_id, target_date)
-```
-
-### 5.3 Unicité mondiale du numéro de licence
-
-`club_members.licence_number_normalized` est actuellement unique dans toute la base.
-
-Cette règle peut être conservée uniquement si la fiche représente réellement une personne/licence globale. Or la même table porte aussi `club_id`, ce qui la présente comme une fiche appartenant à un club.
-
-Avant migration, il faut figer l'un des deux modèles :
-
-- **modèle recommandé** : identité globale séparée, adhésion/licence rattachée au club et à la saison ;
-- modèle simplifié temporaire : fiche de membre par club, avec unicité `(club_id, licence_number_normalized)`.
-
-La PR43 doit au minimum supprimer la contradiction actuelle et permettre à un même compte d'être lié à plusieurs clubs.
-
-### 5.4 Compte administrateur lié à plusieurs clubs
-
-`admin_current_club_id()` refuse les comptes multi-clubs. C'est une protection correcte aujourd'hui, mais elle ne constitue pas le futur sélecteur.
-
-Le club actif devra être explicite et contrôlé côté serveur. Il ne faut jamais accepter un `club_id` envoyé par le navigateur sans vérifier l'appartenance et la permission.
-
-### 5.5 Ancien rôle global dans `profiles`
-
-`profiles.role` et les contrôles historiques `is_profile_admin()` appartiennent au modèle mono-club initial.
-
-Ils ne doivent plus servir à donner des droits métier dans tous les clubs.
-
-Les rôles de club doivent provenir exclusivement de `club_memberships` et les droits de plateforme d'une structure distincte.
-
-## 6. Modèle cible minimal
-
-### 6.1 Identité globale
+Chaque club possède son propre environnement :
 
 ```text
-auth.users
-  └── profiles
+Club A
+  ├── Supabase Auth A
+  ├── Base de données A
+  ├── Stockage A
+  └── Application configurée pour A
+
+Club B
+  ├── Supabase Auth B
+  ├── Base de données B
+  ├── Stockage B
+  └── Application configurée pour B
 ```
 
-### 6.2 Appartenances et responsabilités de club
+Aucune requête du Club A ne peut atteindre la base du Club B, car les deux clubs n’utilisent pas le même projet Supabase.
+
+## 3. Comptes, administrateurs et licenciés
+
+### 3.1 Super administrateur
+
+Le super administrateur appartient uniquement à la plateforme centrale.
+
+Il peut :
+
+- créer une nouvelle instance de club ;
+- suivre son état technique ;
+- attribuer son adresse ;
+- déclencher une mise à jour ;
+- suspendre ou réactiver le service ;
+- consulter les journaux de déploiement ;
+- gérer l’abonnement et les options.
+
+Il ne devient pas administrateur métier du club et ne consulte pas ses licenciés par défaut.
+
+Une intervention de support dans une instance devra être exceptionnelle, explicite, limitée dans le temps et auditée.
+
+### 3.2 Administrateur du club
+
+Le premier administrateur est créé ou invité dans le projet Supabase propre au club.
+
+Il configure ensuite :
+
+- l’identité visuelle ;
+- les installations et terrains ;
+- les horaires et fermetures ;
+- les tarifs ;
+- les règles de réservation ;
+- les membres et licenciés ;
+- les responsables et leurs permissions ;
+- les événements, tournois et paiements.
+
+Il n’accède ni à la plateforme centrale ni aux autres clubs.
+
+### 3.3 Utilisateurs et licenciés
+
+Les utilisateurs sont locaux à l’instance du club.
+
+La même adresse électronique peut être utilisée dans deux clubs, car chaque club possède son propre système d’authentification Supabase.
+
+Exemple :
 
 ```text
-profiles
-  └── club_memberships
-        ├── club_id
-        └── role_id
+alain@example.fr dans le Club A = compte A
+alain@example.fr dans le Club B = compte B
 ```
 
-### 6.3 Registre sportif
+Les deux comptes n’ont aucun identifiant commun et aucune synchronisation automatique.
 
-Cible recommandée :
+Les numéros de licence, fiches de membres, saisons, classements et historiques restent exclusivement dans la base du club concerné.
+
+## 4. Code source et déploiements
+
+L’isolation complète ne signifie pas une copie manuelle du code pour chaque client.
+
+La cible reste :
+
+- un seul dépôt GitHub ;
+- une seule branche principale ;
+- les mêmes migrations et versions applicatives ;
+- un déploiement automatisé par instance ;
+- des variables d’environnement distinctes pour chaque club.
+
+Chaque instance reçoit notamment :
 
 ```text
-profiles
-  └── profile_club_members
-        ├── profile_id
-        └── club_member_id
-
-club_members
-  └── club_member_seasons
-        ├── club_id
-        ├── club_season_id
-        └── is_licensed
+VITE_SUPABASE_URL propre au club
+VITE_SUPABASE_ANON_KEY propre au club
+identifiant technique de l’instance
+nom de domaine ou sous-domaine du club
 ```
 
-Cette association permet à un même compte d'être rattaché à plusieurs clubs sans dupliquer son authentification.
+Une nouvelle version validée est publiée depuis le même code source vers les instances sélectionnées, sans modifier manuellement le code de chaque club.
 
-### 6.4 Réservations
+## 5. Conservation du modèle actuel
 
-Chaque agrégat métier doit porter directement le club :
+Le projet actuel du Pelotaris Club Lourdais devient la première instance de référence.
+
+Les tables `clubs`, les `club_id`, les rôles et les permissions peuvent être conservés dans chaque instance pour la cohérence du modèle métier, mais une instance de club ne contiendra qu’un seul club exploité.
+
+La PR43 ne doit donc plus transformer la base actuelle en base partagée entre plusieurs clubs.
+
+Elle doit préparer :
+
+- un modèle d’instance reproductible ;
+- un processus de création d’une nouvelle instance ;
+- un contrôle de version des migrations ;
+- une configuration initiale sans données du PCL ;
+- une plateforme centrale ne contenant aucune donnée métier des clubs.
+
+## 6. Provisionnement d’un nouveau club
+
+Depuis `/super-admin`, la création d’un club devra lancer un processus contrôlé :
+
+1. création de la fiche commerciale du club dans la plateforme centrale ;
+2. création ou rattachement d’un projet Supabase dédié ;
+3. application de toutes les migrations de référence ;
+4. insertion des réglages et rôles standards ;
+5. création du déploiement applicatif dédié ;
+6. installation des variables d’environnement propres à l’instance ;
+7. attribution du sous-domaine ;
+8. invitation du premier administrateur ;
+9. exécution de tests de santé ;
+10. passage de l’instance à l’état actif.
+
+Une création incomplète reste en état `provisioning_failed` et ne doit jamais être présentée comme opérationnelle.
+
+## 7. Mise à jour des clubs
+
+La plateforme doit connaître la version installée sur chaque instance.
+
+Exemple :
 
 ```text
-reservation_settings.club_id
-reservable_resources.club_id
-reservations.club_id
-calendar_occupations.club_id
-reservation_audit_log.club_id
-payments.club_id
-payment_events.club_id
+PCL Lourdes       version 1.8.0   à jour
+US Adéenne        version 1.8.0   à jour
+Club de Tarbes    version 1.7.2   mise à jour requise
 ```
 
-Les clés étrangères composites ou les triggers de contrôle doivent empêcher les incohérences, par exemple une réservation du club A utilisant un terrain du club B.
+Une mise à jour comprend :
 
-## 7. Administration de plateforme
+- les migrations Supabase compatibles ;
+- le déploiement du nouveau code ;
+- un contrôle de santé ;
+- un journal de résultat ;
+- une stratégie de reprise en cas d’échec.
 
-Le futur super administrateur doit être séparé des rôles de club.
+Les migrations doivent rester reproductibles et ne jamais dépendre de données particulières au PCL.
 
-Structure cible possible :
+## 8. Sécurité et confidentialité
 
-```text
-platform_admins
-  - profile_id
-  - is_active
-  - created_at
-  - created_by
-```
+L’isolation physique des projets constitue la première barrière de sécurité.
 
-Puis des RPC sécurisées et auditées :
+Elle doit être complétée par :
 
-- `platform_list_clubs()` ;
-- `platform_get_club(...)` ;
-- `platform_create_club(...)` ;
-- `platform_suspend_club(...)` ;
-- `platform_invite_club_admin(...)`.
+- RLS et permissions dans chaque instance ;
+- secrets propres à chaque club ;
+- absence de clés Supabase de club dans la base centrale en clair ;
+- journalisation des opérations de plateforme ;
+- sauvegardes et restaurations indépendantes ;
+- suppression ou export d’un club sans toucher aux autres ;
+- aucune recherche globale de licenciés entre clubs.
 
-Aucune de ces fonctions ne doit être accordée au rôle `authenticated` sans contrôle interne de `platform_admins`.
+## 9. Nouveau découpage de réalisation
 
-## 8. Provisionnement futur d'un club
+### Phase A — Modèle d’instance reproductible
 
-La création d'un club devra être atomique. Une seule commande serveur créera :
+- identifier toutes les données de démonstration ou spécifiques au PCL ;
+- séparer migrations structurelles et données d’initialisation ;
+- créer un jeu de réglages standards sans licencié ni réservation ;
+- vérifier qu’une base Supabase vide peut devenir une instance fonctionnelle uniquement avec les migrations.
 
-1. la ligne `clubs` ;
-2. les rôles standards du club ;
-3. les permissions de ces rôles ;
-4. les réglages de réservation du club ;
-5. les types d'événements par défaut ;
-6. éventuellement une saison initiale ;
-7. l'appartenance de l'administrateur principal ;
-8. une trace d'audit de plateforme.
+### Phase B — Registre central de plateforme
 
-En cas d'échec d'une étape, aucune création partielle ne doit rester en base.
+- créer les tables des clubs clients, abonnements, instances et versions ;
+- créer le rôle `platform_admin` ;
+- créer les journaux de provisionnement ;
+- ne stocker aucune donnée métier de club.
 
-## 9. Découpage de réalisation
+### Phase C — Espace `/super-admin`
 
-### Phase A — Isolation du moteur de réservation
+- lister les clients ;
+- consulter leur état ;
+- créer une demande de provisionnement ;
+- suspendre ou réactiver une instance ;
+- suivre les versions et erreurs techniques.
 
-- transformer `reservation_settings` en réglages par club ;
-- ajouter `club_id` aux réservations, occupations, audits et paiements ;
-- remplir ces colonnes à partir des relations existantes ;
-- ajouter contraintes, index et RLS ;
-- adapter toutes les RPC de réservation, tarifs, horaires et paiements ;
-- ajouter des tests avec deux clubs distincts.
+### Phase D — Provisionnement automatisé
 
-### Phase B — Identité membre multi-club
+- créer l’instance Supabase dédiée ;
+- appliquer les migrations ;
+- créer le déploiement et sa configuration ;
+- inviter le premier administrateur ;
+- contrôler la santé de l’instance.
 
-- créer l'association profil ↔ membre de club ;
-- migrer `profiles.member_id` ;
-- contextualiser `is_active_licensee` par club ;
-- adapter l'inscription et la liaison de licence ;
-- tester un compte lié à deux clubs.
+### Phase E — Assistant du club
 
-### Phase C — Club actif
+- identité du club ;
+- terrains ;
+- horaires ;
+- tarifs ;
+- règles ;
+- responsables ;
+- ouverture publique.
 
-- remplacer le refus des comptes multi-clubs par une sélection explicite ;
-- transporter le club actif dans les commandes serveur de façon vérifiable ;
-- conserver l'accès direct pour un compte lié à un seul club.
+## 10. Critères de validation
 
-### Phase D — Administration de plateforme
+La fondation sera validée lorsque :
 
-- créer `platform_admins` et son audit ;
-- créer `/super-admin` ;
-- lister et créer les clubs ;
-- inviter l'administrateur principal ;
-- gérer l'état commercial du club.
+1. une instance neuve peut être créée sans aucune donnée du PCL ;
+2. ses comptes et licenciés sont stockés uniquement dans son projet Supabase ;
+3. la même adresse électronique peut créer des comptes indépendants dans deux clubs ;
+4. la suppression d’un utilisateur dans un club n’affecte aucun autre club ;
+5. une clé ou une panne Supabase d’un club ne donne aucun accès aux autres ;
+6. le super administrateur voit les états techniques et commerciaux, pas les licenciés ;
+7. une mise à jour commune peut être déployée sans recopier manuellement le code ;
+8. le PCL continue de fonctionner comme première instance de référence.
 
-### Phase E — Adresse et personnalisation du club
+## 11. Règle irrévocable
 
-- URL publique par slug ;
-- identité visuelle par club ;
-- futur sous-domaine ou domaine personnalisé ;
-- assistant de première configuration.
+Aucune fonctionnalité ne devra introduire :
 
-## 10. Critères de validation de la PR43
+- un annuaire global de licenciés ;
+- une fiche membre partagée ;
+- un compte utilisateur commun aux clubs ;
+- une recherche inter-clubs de personnes ;
+- une base métier commune contenant les réservations de plusieurs clubs.
 
-La PR43 ne sera considérée comme terminée que si les tests démontrent :
-
-1. deux clubs peuvent avoir des tarifs, horaires et terrains différents ;
-2. une réservation du club A ne peut jamais utiliser un terrain du club B ;
-3. l'administrateur du club A ne peut lire ni modifier les données privées du club B ;
-4. le calendrier public d'un club ne retourne aucune donnée de l'autre club ;
-5. un tarif modifié dans le club A n'affecte pas le club B ;
-6. les paiements et audits sont rattachés sans ambiguïté à leur club ;
-7. les données actuelles du Pelotaris Club Lourdais sont migrées sans perte ;
-8. aucun accès de production ne dépend encore de `is_profile_admin()` pour les droits métier de club.
-
-## 11. Règles de déploiement
-
-- aucune migration multi-club directement en production sans validation sur le projet Supabase Test ;
-- sauvegarde ou export vérifiable avant les transformations destructrices ;
-- migrations progressives : ajout nullable, backfill contrôlé, contraintes, puis `not null` ;
-- contrôles SQL qui arrêtent la migration si une donnée ne peut pas être attribuée à un club ;
-- application des migrations en production avant la fusion du code qui en dépend ;
-- aucun deuxième club réel créé avant validation complète des tests d'isolation.
+La plateforme vend, provisionne et maintient des instances. Chaque club reste entièrement maître et isolé de ses données.
