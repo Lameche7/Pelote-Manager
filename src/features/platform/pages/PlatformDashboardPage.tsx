@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
 import {
   platformRegistryService,
   type PlatformClub,
   type PlatformClubStatus,
+  type PlatformProvisioningJob,
+  type PlatformProvisioningStatus,
+  type PlatformProvisioningStep,
   type PlatformSubscriptionPlan,
 } from "../services/platformRegistryService";
 import "./PlatformPages.css";
@@ -22,11 +31,43 @@ const planLabels: Record<PlatformSubscriptionPlan, string> = {
   custom: "Sur mesure",
 };
 
+const provisioningStatusLabels: Record<PlatformProvisioningStatus, string> = {
+  pending: "En attente",
+  running: "En cours",
+  waiting_external: "Action extérieure requise",
+  completed: "Terminé",
+  failed: "Échec",
+  cancelled: "Annulé",
+};
+
+const provisioningStepLabels: Record<PlatformProvisioningStep, string> = {
+  requested: "Demande enregistrée",
+  supabase_project: "Création du projet Supabase",
+  database_migrations: "Installation de la base",
+  club_bootstrap: "Initialisation du club",
+  first_admin: "Rattachement du premier administrateur",
+  vercel_project: "Création du projet Vercel",
+  environment_variables: "Configuration du déploiement",
+  deployment: "Déploiement de l’application",
+  verification: "Vérifications finales",
+  completed: "Instance prête pour essai",
+};
+
+const openProvisioningStatuses = new Set<PlatformProvisioningStatus>([
+  "pending",
+  "running",
+  "waiting_external",
+]);
+
 export function PlatformDashboardPage() {
   const { email, logout } = usePlatformAuth();
   const [clubs, setClubs] = useState<PlatformClub[]>([]);
+  const [provisioningJobs, setProvisioningJobs] = useState<
+    PlatformProvisioningJob[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [provisioningClubId, setProvisioningClubId] = useState("");
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [name, setName] = useState("");
@@ -36,12 +77,27 @@ export function PlatformDashboardPage() {
     useState<PlatformSubscriptionPlan>("standard");
   const [notes, setNotes] = useState("");
 
-  const loadClubs = useCallback(async () => {
+  const latestProvisioningByClub = useMemo(() => {
+    const latest = new Map<string, PlatformProvisioningJob>();
+
+    for (const job of provisioningJobs) {
+      if (!latest.has(job.clubId)) latest.set(job.clubId, job);
+    }
+
+    return latest;
+  }, [provisioningJobs]);
+
+  const loadPlatform = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      setClubs(await platformRegistryService.listClubs());
+      const [nextClubs, nextProvisioningJobs] = await Promise.all([
+        platformRegistryService.listClubs(),
+        platformRegistryService.listProvisioningJobs(),
+      ]);
+      setClubs(nextClubs);
+      setProvisioningJobs(nextProvisioningJobs);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Registre indisponible.",
@@ -52,8 +108,8 @@ export function PlatformDashboardPage() {
   }, []);
 
   useEffect(() => {
-    void loadClubs();
-  }, [loadClubs]);
+    void loadPlatform();
+  }, [loadPlatform]);
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,13 +133,35 @@ export function PlatformDashboardPage() {
       setMessage(
         "Club enregistré. Aucune instance ni donnée métier n’a encore été créée.",
       );
-      await loadClubs();
+      await loadPlatform();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Création impossible.",
       );
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleProvisioning = async (club: PlatformClub) => {
+    setProvisioningClubId(club.id);
+    setMessage("");
+    setErrorMessage("");
+
+    try {
+      await platformRegistryService.requestProvisioning(club.id);
+      setMessage(
+        `Provisionnement préparé pour ${club.name}. Le futur service sécurisé pourra traiter cette demande sans exposer ses clés au navigateur.`,
+      );
+      await loadPlatform();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Préparation du provisionnement impossible.",
+      );
+    } finally {
+      setProvisioningClubId("");
     }
   };
 
@@ -94,13 +172,17 @@ export function PlatformDashboardPage() {
     try {
       await platformRegistryService.updateStatus(clubId, status);
       setMessage(`Statut mis à jour : ${statusLabels[status]}.`);
-      await loadClubs();
+      await loadPlatform();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Mise à jour impossible.",
       );
     }
   };
+
+  const openProvisioningCount = provisioningJobs.filter((job) =>
+    openProvisioningStatuses.has(job.status),
+  ).length;
 
   return (
     <main className="platform-page">
@@ -140,10 +222,8 @@ export function PlatformDashboardPage() {
           <span>actifs</span>
         </article>
         <article>
-          <strong>
-            {clubs.filter((club) => club.status === "provisioning").length}
-          </strong>
-          <span>à provisionner</span>
+          <strong>{openProvisioningCount}</strong>
+          <span>provisionnement{openProvisioningCount > 1 ? "s" : ""} en attente</span>
         </article>
       </section>
 
@@ -239,65 +319,110 @@ export function PlatformDashboardPage() {
             <p>Aucun club client n’est encore enregistré.</p>
           ) : (
             <div className="platform-club-list">
-              {clubs.map((club) => (
-                <article className="platform-club" key={club.id}>
-                  <div className="platform-club__heading">
-                    <div>
-                      <h3>{club.name}</h3>
-                      <small>{club.slug}</small>
-                    </div>
-                    <span
-                      className={`platform-status platform-status--${club.status}`}
-                    >
-                      {statusLabels[club.status]}
-                    </span>
-                  </div>
+              {clubs.map((club) => {
+                const provisioningJob = latestProvisioningByClub.get(club.id);
+                const canRequestProvisioning =
+                  !provisioningJob &&
+                  !club.supabaseProjectRef &&
+                  !club.deploymentUrl &&
+                  club.status !== "cancelled";
+                const canActivate = Boolean(
+                  club.supabaseProjectRef &&
+                    club.deploymentUrl &&
+                    club.currentVersion,
+                );
 
-                  <dl>
-                    <div>
-                      <dt>Formule</dt>
-                      <dd>{planLabels[club.subscriptionPlan]}</dd>
+                return (
+                  <article className="platform-club" key={club.id}>
+                    <div className="platform-club__heading">
+                      <div>
+                        <h3>{club.name}</h3>
+                        <small>{club.slug}</small>
+                      </div>
+                      <span
+                        className={`platform-status platform-status--${club.status}`}
+                      >
+                        {statusLabels[club.status]}
+                      </span>
                     </div>
-                    <div>
-                      <dt>Contact</dt>
-                      <dd>{club.contactEmail || "Non renseigné"}</dd>
-                    </div>
-                    <div>
-                      <dt>Supabase</dt>
-                      <dd>{club.supabaseProjectRef || "Non provisionné"}</dd>
-                    </div>
-                    <div>
-                      <dt>Déploiement</dt>
-                      <dd>{club.deploymentUrl || "Non déployé"}</dd>
-                    </div>
-                    <div>
-                      <dt>Version</dt>
-                      <dd>{club.currentVersion || "Non installée"}</dd>
-                    </div>
-                  </dl>
 
-                  <div className="platform-club__actions">
-                    {club.status !== "active" && (
-                      <button
-                        className="button button--small button--primary"
-                        type="button"
-                        onClick={() => void handleStatus(club.id, "active")}
+                    <dl>
+                      <div>
+                        <dt>Formule</dt>
+                        <dd>{planLabels[club.subscriptionPlan]}</dd>
+                      </div>
+                      <div>
+                        <dt>Contact</dt>
+                        <dd>{club.contactEmail || "Non renseigné"}</dd>
+                      </div>
+                      <div>
+                        <dt>Supabase</dt>
+                        <dd>{club.supabaseProjectRef || "Non provisionné"}</dd>
+                      </div>
+                      <div>
+                        <dt>Déploiement</dt>
+                        <dd>{club.deploymentUrl || "Non déployé"}</dd>
+                      </div>
+                      <div>
+                        <dt>Version</dt>
+                        <dd>{club.currentVersion || "Non installée"}</dd>
+                      </div>
+                    </dl>
+
+                    {provisioningJob && (
+                      <div
+                        className={`platform-provisioning platform-provisioning--${provisioningJob.status}`}
                       >
-                        Activer
-                      </button>
+                        <strong>
+                          {provisioningStatusLabels[provisioningJob.status]}
+                        </strong>
+                        <span>
+                          {provisioningStepLabels[provisioningJob.currentStep]}
+                        </span>
+                        {provisioningJob.lastErrorMessage && (
+                          <small>{provisioningJob.lastErrorMessage}</small>
+                        )}
+                      </div>
                     )}
-                    {club.status !== "suspended" && (
-                      <button
-                        className="button button--small button--ghost"
-                        type="button"
-                        onClick={() => void handleStatus(club.id, "suspended")}
-                      >
-                        Suspendre
-                      </button>
-                    )}
-                  </div>
-                </article>
-              ))}
+
+                    <div className="platform-club__actions">
+                      {canRequestProvisioning && (
+                        <button
+                          className="button button--small button--primary"
+                          type="button"
+                          disabled={provisioningClubId === club.id}
+                          onClick={() => void handleProvisioning(club)}
+                        >
+                          {provisioningClubId === club.id
+                            ? "Préparation…"
+                            : "Préparer l’instance"}
+                        </button>
+                      )}
+                      {club.status !== "active" && canActivate && (
+                        <button
+                          className="button button--small button--primary"
+                          type="button"
+                          onClick={() => void handleStatus(club.id, "active")}
+                        >
+                          Activer
+                        </button>
+                      )}
+                      {club.status !== "suspended" &&
+                        club.status !== "cancelled" && (
+                          <button
+                            className="button button--small button--ghost"
+                            type="button"
+                            onClick={() =>
+                              void handleStatus(club.id, "suspended")
+                            }
+                          >
+                            Suspendre
+                          </button>
+                        )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
