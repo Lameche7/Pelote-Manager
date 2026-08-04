@@ -2,6 +2,7 @@ import { pathToFileURL } from "node:url";
 import { createManualProvisioningProvider } from "./manualProvisioningProvider.mjs";
 import { createPlatformRegistryClient } from "./platformRegistryClient.mjs";
 import { processProvisioningJob } from "./processProvisioningJob.mjs";
+import { sanitizeErrorMessage } from "./provisioningStateMachine.mjs";
 
 export async function runOnce({ env = process.env, fetchImpl = fetch } = {}) {
   const workerId =
@@ -44,7 +45,7 @@ const isMainModule =
 if (isMainModule) {
   runOnce().catch((error) => {
     console.error("Le worker de provisionnement s’est arrêté.", {
-      message: error instanceof Error ? error.message : String(error),
+      message: sanitizeErrorMessage(error),
     });
     process.exitCode = 1;
   });
