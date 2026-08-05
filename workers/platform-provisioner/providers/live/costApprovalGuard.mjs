@@ -1,5 +1,4 @@
-export const LIVE_COST_APPROVAL_ACK =
-  "I_APPROVE_THE_DECLARED_PROVIDER_COSTS";
+export const LIVE_COST_APPROVAL_ACK = "I_APPROVE_THE_DECLARED_PROVIDER_COSTS";
 
 function normalizeBudgetCents(value, label) {
   const normalized = Number(value);
@@ -27,7 +26,10 @@ export function createLiveCostPolicy({
   maxMonthlyCents,
 }) {
   return Object.freeze({
-    currency: requireNonEmptyString(currency, "La devise budgétaire").toUpperCase(),
+    currency: requireNonEmptyString(
+      currency,
+      "La devise budgétaire",
+    ).toUpperCase(),
     maxOneTimeCents: normalizeBudgetCents(
       maxOneTimeCents,
       "Le plafond ponctuel",
@@ -80,11 +82,15 @@ export function authorizeLiveStepPlan({
   }
 
   if (approval.acknowledgement !== LIVE_COST_APPROVAL_ACK) {
-    throw new Error("L’approbation du coût ne contient pas la confirmation attendue.");
+    throw new Error(
+      "L’approbation du coût ne contient pas la confirmation attendue.",
+    );
   }
 
   if (approval.planId !== plan.planId) {
-    throw new Error("L’approbation ne correspond pas exactement au plan courant.");
+    throw new Error(
+      "L’approbation ne correspond pas exactement au plan courant.",
+    );
   }
 
   const approvedBy = requireNonEmptyString(
