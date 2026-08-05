@@ -8,11 +8,13 @@ import {
 import { usePlatformAuth } from "../auth/usePlatformAuth";
 import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
+import { PlatformLiveExecutionConfirmationPanel } from "../components/PlatformLiveExecutionConfirmationPanel";
 import {
   platformRegistryService,
   type PlatformClub,
   type PlatformClubStatus,
   type PlatformCostPlan,
+  type PlatformLiveExecutionConfirmation,
   type PlatformProvisioningJob,
   type PlatformProvisioningStatus,
   type PlatformProvisioningStep,
@@ -69,6 +71,9 @@ export function PlatformDashboardPage() {
     PlatformProvisioningJob[]
   >([]);
   const [costPlans, setCostPlans] = useState<PlatformCostPlan[]>([]);
+  const [liveConfirmations, setLiveConfirmations] = useState<
+    PlatformLiveExecutionConfirmation[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [provisioningClubId, setProvisioningClubId] = useState("");
@@ -104,20 +109,38 @@ export function PlatformDashboardPage() {
     return grouped;
   }, [costPlans]);
 
+  const latestLiveConfirmationByClub = useMemo(() => {
+    const latest = new Map<string, PlatformLiveExecutionConfirmation>();
+
+    for (const confirmation of liveConfirmations) {
+      if (!latest.has(confirmation.clubId)) {
+        latest.set(confirmation.clubId, confirmation);
+      }
+    }
+
+    return latest;
+  }, [liveConfirmations]);
+
   const loadPlatform = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      const [nextClubs, nextProvisioningJobs, nextCostPlans] =
-        await Promise.all([
-          platformRegistryService.listClubs(),
-          platformRegistryService.listProvisioningJobs(),
-          platformRegistryService.listCostPlans(),
-        ]);
+      const [
+        nextClubs,
+        nextProvisioningJobs,
+        nextCostPlans,
+        nextLiveConfirmations,
+      ] = await Promise.all([
+        platformRegistryService.listClubs(),
+        platformRegistryService.listProvisioningJobs(),
+        platformRegistryService.listCostPlans(),
+        platformRegistryService.listLiveExecutionConfirmations(),
+      ]);
       setClubs(nextClubs);
       setProvisioningJobs(nextProvisioningJobs);
       setCostPlans(nextCostPlans);
+      setLiveConfirmations(nextLiveConfirmations);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Registre indisponible.",
@@ -395,6 +418,8 @@ export function PlatformDashboardPage() {
               {clubs.map((club) => {
                 const provisioningJob = latestProvisioningByClub.get(club.id);
                 const clubCostPlans = costPlansByClub.get(club.id) ?? [];
+                const liveConfirmation =
+                  latestLiveConfirmationByClub.get(club.id);
                 const canRequestProvisioning =
                   !provisioningJob &&
                   !club.supabaseProjectRef &&
@@ -464,6 +489,14 @@ export function PlatformDashboardPage() {
                       actionPlanId={costPlanActionId}
                       onApprove={handleApproveCostPlan}
                       onRevoke={handleRevokeCostPlan}
+                    />
+
+                    <PlatformLiveExecutionConfirmationPanel
+                      club={club}
+                      provisioningJob={provisioningJob}
+                      plans={clubCostPlans}
+                      confirmation={liveConfirmation}
+                      onChanged={loadPlatform}
                     />
 
                     <div className="platform-club__actions">
