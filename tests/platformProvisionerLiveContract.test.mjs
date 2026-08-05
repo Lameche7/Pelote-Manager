@@ -248,6 +248,8 @@ test("le planificateur prépare et autorise mais ne peut rien exécuter", async 
   assert.match(plan.planId, /^plan_[a-f0-9]{24}$/);
   await assert.rejects(
     () => planner.applyPlan(plan),
-    new RegExp(LIVE_PROVISIONING_DISABLED_MESSAGE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    new RegExp(
+      LIVE_PROVISIONING_DISABLED_MESSAGE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    ),
   );
 });
