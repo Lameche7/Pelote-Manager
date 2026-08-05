@@ -110,6 +110,12 @@ test("la base exige les approbations, le slug, la phrase exacte et dix minutes",
   assert.match(migration, /live_execution\.revoked/);
 });
 
+test("le snapshot charge séparément le travail et le slug du club", () => {
+  assert.match(migration, /select jobs\.\*\s+into target_job/s);
+  assert.match(migration, /select clubs\.slug\s+into target_slug/s);
+  assert.doesNotMatch(migration, /into target_job,\s*target_slug/s);
+});
+
 test("le super admin retape le club et une phrase sans activer le mode réel", () => {
   assert.match(panel, /Slug du club/);
   assert.match(panel, /Phrase de confirmation/);
