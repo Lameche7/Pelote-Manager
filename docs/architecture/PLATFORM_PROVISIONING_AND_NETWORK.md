@@ -131,9 +131,39 @@ Elle produit uniquement des références déterministes et fictives :
 
 Les domaines `.invalid` ne peuvent pas représenter un service réel. Le préfixe de slug empêche également d’attacher ces références fictives à un véritable club client.
 
-Le mode `live` est explicitement refusé. Aucun code de la PR43 n'appelle Supabase Management API ou Vercel et aucun jeton fournisseur n'est lu par les adaptateurs de simulation.
+Le mode `live` est explicitement refusé. Aucun code de la PR43 n’appelle Supabase Management API ou Vercel et aucun jeton fournisseur n’est lu par les adaptateurs de simulation.
 
-## 7. Tournois internes et tournois ouverts
+## 7. Contrat réel et maîtrise des coûts
+
+Les futurs adaptateurs réels devront séparer strictement la planification de l’exécution.
+
+La planification produit un document public et sans secret indiquant :
+
+- le fournisseur responsable ;
+- l’étape et l’action envisagée ;
+- la clé d’idempotence ;
+- la création éventuelle d’une ressource facturable ;
+- le coût ponctuel estimé ;
+- le coût mensuel estimé ;
+- la devise ;
+- un résumé compréhensible par le propriétaire de la plateforme.
+
+Ce document reçoit un identifiant déterministe. Toute modification du coût ou de l’opération produit un autre identifiant.
+
+La politique budgétaire est configurée côté serveur. Elle définit une devise, un plafond ponctuel et un plafond mensuel. Aucun prix fournisseur n’est figé dans le dépôt.
+
+Une création facturable exige une approbation :
+
+- visant exactement l’identifiant du plan courant ;
+- contenant la confirmation explicite attendue ;
+- identifiant son auteur ;
+- possédant une date d’expiration future.
+
+L’approbation devient automatiquement inutilisable lorsque le fournisseur, l’action ou le prix change. Un plan dépassant un plafond ou utilisant une autre devise est refusé avant toute mutation.
+
+Le planificateur de la PR43 peut vérifier ces règles, mais sa méthode d’application lève toujours une erreur. Il ne peut donc créer aucune ressource, même avec une approbation valide.
+
+## 8. Tournois internes et tournois ouverts
 
 Chaque tournoi devra obligatoirement préciser son audience.
 
@@ -150,7 +180,7 @@ Le club organisateur choisit s’il accepte :
 
 L’annonce publique peut être diffusée sur le réseau Pelote Manager.
 
-## 8. Passeport joueur futur
+## 9. Passeport joueur futur
 
 Le passeport permettra à un licencié de s’inscrire à un tournoi ouvert d’un autre club sans recréer un compte complet dans l’instance organisatrice.
 
@@ -167,6 +197,6 @@ Le passeport devra être :
 - séparé du registre commercial de la plateforme ;
 - dépourvu de mot de passe ou de secret provenant du club d’origine.
 
-## 9. Règle définitive
+## 10. Règle définitive
 
 Les clubs partagent un logiciel et peuvent partager des informations publiques de tournois. Ils ne partagent jamais leurs comptes, leurs bases de licenciés ou leurs données métier privées.
