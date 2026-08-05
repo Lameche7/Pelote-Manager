@@ -1,0 +1,59 @@
+import {
+  LIVE_STEP_ADAPTER,
+  assertLiveAdapter,
+  createLiveStepPlan,
+} from "./liveAdapterContract.mjs";
+import { authorizeLiveStepPlan } from "./costApprovalGuard.mjs";
+
+export const LIVE_PROVISIONING_DISABLED_MESSAGE =
+  "L’exécution réelle Supabase/Vercel reste désactivée dans la PR43.";
+
+export function createLiveProvisioningPlanner({
+  supabaseAdapter,
+  vercelAdapter,
+  costPolicy,
+}) {
+  const adapters = Object.freeze({
+    supabase: assertLiveAdapter(supabaseAdapter, "supabase"),
+    vercel: assertLiveAdapter(vercelAdapter, "vercel"),
+  });
+
+  if (!costPolicy?.currency) {
+    throw new Error("La politique budgétaire du mode réel est obligatoire.");
+  }
+
+  return Object.freeze({
+    mode: "live-planning-only",
+
+    async planStep(context) {
+      const adapterName = LIVE_STEP_ADAPTER[context?.step];
+
+      if (!adapterName) {
+        throw new Error(
+          `Aucun fournisseur réel n’est défini pour ${String(context?.step)}.`,
+        );
+      }
+
+      const planInput = await adapters[adapterName].planStep(context);
+
+      return createLiveStepPlan({
+        adapterName,
+        context,
+        ...planInput,
+      });
+    },
+
+    authorizePlan(plan, approval, options = {}) {
+      return authorizeLiveStepPlan({
+        plan,
+        policy: costPolicy,
+        approval,
+        ...options,
+      });
+    },
+
+    async applyPlan() {
+      throw new Error(LIVE_PROVISIONING_DISABLED_MESSAGE);
+    },
+  });
+}
