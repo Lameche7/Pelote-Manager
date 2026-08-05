@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
+import { adminAccessService, type ClubAccess } from "@/features/admin/access/adminAccessService";
+import { canAccessAdminDashboard } from "@/features/admin/access/adminAccessRules";
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
@@ -8,7 +10,9 @@ const navClassName = ({ isActive }: { isActive: boolean }) =>
   `app-navigation__link${isActive ? " app-navigation__link--active" : ""}`;
 
 export function MainLayout() {
-  const { isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
+  const [isAdminAccessLoading, setIsAdminAccessLoading] = useState(false);
 
   useEffect(() => {
     document.title = `${APP_CONFIG.name} · ${CLUB_CONFIG.name}`;
@@ -20,6 +24,36 @@ export function MainLayout() {
       `${APP_CONFIG.name}, l’espace de réservation de ${CLUB_CONFIG.name}.`,
     );
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    if (isLoading || !isAuthenticated || !user) {
+      setAdminAccess(null);
+      setIsAdminAccessLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setAdminAccess(null);
+    setIsAdminAccessLoading(true);
+    adminAccessService
+      .getOptionalAccess()
+      .then((access) => {
+        if (active) setAdminAccess(access);
+      })
+      .catch(() => {
+        if (active) setAdminAccess(null);
+      })
+      .finally(() => {
+        if (active) setIsAdminAccessLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, isLoading, user]);
 
   return (
     <div className="app-layout">
@@ -48,9 +82,13 @@ export function MainLayout() {
               Mon espace
             </NavLink>
           )}
-          <NavLink className={navClassName} to={ROUTES.admin}>
-            Administration
-          </NavLink>
+          {!isLoading &&
+            !isAdminAccessLoading &&
+            canAccessAdminDashboard(adminAccess) && (
+              <NavLink className={navClassName} to={ROUTES.admin}>
+                Administration
+              </NavLink>
+            )}
           {!isLoading &&
             (isAuthenticated ? (
               <button
