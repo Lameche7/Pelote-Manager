@@ -11,6 +11,7 @@ Elle contient uniquement :
 - les versions installées et attendues ;
 - les demandes et étapes de provisionnement ;
 - les plans publics de coût et leurs approbations ;
+- les confirmations renforcées préparant une future exécution réelle ;
 - un journal d’audit des opérations de plateforme.
 
 Elle ne contient jamais :
@@ -43,6 +44,7 @@ Le navigateur du super administrateur peut :
 - consulter les plans publics de coût ;
 - approuver un plan facturable pendant une heure ;
 - révoquer une approbation ;
+- préparer et révoquer une confirmation renforcée de dix minutes ;
 - activer le club une fois l’installation technique terminée.
 
 Il ne peut pas créer directement les projets Supabase ou Vercel.
@@ -54,6 +56,7 @@ Le worker serveur utilise les commandes réservées au rôle `service_role` :
 - `platform_worker_claim_next_provisioning` revendique une demande avec un bail temporaire ;
 - `platform_worker_heartbeat_provisioning` prolonge le bail du worker actif ;
 - `platform_worker_store_cost_plan` enregistre un plan public et chiffré ;
+- `platform_worker_get_live_execution_confirmation` relit une confirmation renforcée correspondant exactement aux plans courants ;
 - `platform_worker_update_provisioning` enregistre l’étape suivante et les références publiques obtenues.
 
 Les verrous PostgreSQL empêchent deux workers de prendre la même demande. Une tâche interrompue redevient disponible après expiration de son bail. Toute réponse utilisant un jeton de bail expiré ou remplacé est refusée.
@@ -85,6 +88,31 @@ Les plans sont consultables uniquement par les super administrateurs actifs. Une
 Les états possibles sont `pending`, `approved`, `expired`, `revoked` et `superseded`.
 
 L’approbation ne permet pas au navigateur d’exécuter une création. Le mode réel reste désactivé dans la PR43.
+
+## Confirmation renforcée
+
+La confirmation renforcée constitue une deuxième décision, distincte de l’approbation individuelle des plans. Elle ne peut être préparée que lorsque :
+
+- la demande de provisionnement est encore ouverte ;
+- tous les plans courants sont disponibles ;
+- tous les plans facturables sont approuvés et non expirés ;
+- tous les plans utilisent la même devise.
+
+La plateforme calcule alors une empreinte déterministe du jeu de plans, du fournisseur, des actions et des montants. Le super administrateur doit retaper exactement :
+
+- le slug du club concerné ;
+- une phrase unique liée à cette empreinte.
+
+La confirmation :
+
+- vise un club, une demande, un jeu de plans et un budget exacts ;
+- expire après dix minutes ;
+- devient inutilisable si les plans, les montants ou les approbations changent ;
+- peut être révoquée ;
+- est enregistrée dans le journal d’audit ;
+- doit être relue et revérifiée par le worker avec `service_role`.
+
+Même lorsque cette confirmation est valide, le mode réel reste volontairement désactivé dans la PR43. Aucun appel à Supabase Management API ou Vercel n’est déclenché.
 
 La fin du provisionnement place automatiquement le club en période d’essai. Le passage au statut actif reste une décision explicite du super administrateur.
 
