@@ -34,10 +34,10 @@ test("le lot central est ordonné, complet et vérifiable sans réseau", () => {
 
   assert.equal(report.valid, true);
   assert.equal(report.purpose, "central-control-plane");
-  assert.equal(report.migrations.length, 5);
+  assert.equal(report.migrations.length, 6);
   assert.deepEqual(
     report.migrations.map((migration) => migration.order),
-    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5, 6],
   );
   assert.ok(
     report.migrations.every((migration) =>
