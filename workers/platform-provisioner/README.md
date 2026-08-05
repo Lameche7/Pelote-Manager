@@ -112,7 +112,23 @@ Une ressource facturable ne pourra être créée que lorsque :
 
 Une ancienne approbation ne peut donc pas autoriser un plan dont le prix ou le contenu a changé.
 
-Même lorsqu’un plan satisfait toutes ces règles, `applyPlan` lève volontairement une erreur dans la PR43. Le contrat et les contrôles peuvent être testés, mais aucune opération réelle ne peut partir.
+## Confirmation renforcée
+
+Une future exécution réelle devra ensuite présenter une confirmation renforcée distincte des approbations de coût.
+
+Le worker la relira exclusivement avec `platform_worker_get_live_execution_confirmation`, puis vérifiera avec `authorizeLiveExecutionConfirmation` :
+
+- l’identifiant de la demande ;
+- le club concerné ;
+- l’empreinte déterministe de tous les plans courants ;
+- la devise ;
+- les coûts ponctuels et mensuels exacts ;
+- le nombre de plans ;
+- l’auteur et la date d’expiration.
+
+Cette confirmation expire après dix minutes. Un changement de plan, d’action, de fournisseur, de montant ou d’approbation rend la confirmation inutilisable. La validation côté navigateur ne remplace jamais cette revérification serveur.
+
+Même lorsqu’un plan et une confirmation renforcée satisfont toutes ces règles, `applyPlan` lève volontairement une erreur dans la PR43. Le contrat et les contrôles peuvent être testés, mais aucune opération réelle ne peut partir.
 
 ## Lancement ultérieur
 
