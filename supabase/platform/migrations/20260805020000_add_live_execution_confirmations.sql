@@ -83,14 +83,22 @@ declare
   snapshot_material text;
   snapshot_key text;
 begin
-  select jobs, clubs.slug
-  into target_job, target_slug
+  select jobs.*
+  into target_job
   from public.platform_provisioning_jobs as jobs
-  join public.platform_clubs as clubs on clubs.id = jobs.club_id
   where jobs.id = target_job_id;
 
   if not found then
     raise exception 'Provisionnement introuvable' using errcode = 'P0002';
+  end if;
+
+  select clubs.slug
+  into target_slug
+  from public.platform_clubs as clubs
+  where clubs.id = target_job.club_id;
+
+  if not found then
+    raise exception 'Club introuvable pour ce provisionnement' using errcode = 'P0002';
   end if;
 
   if target_job.status not in ('pending', 'running', 'waiting_external') then
