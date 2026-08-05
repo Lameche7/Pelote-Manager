@@ -121,10 +121,7 @@ export function validatePlatformInstallationBundle({
     });
   });
 
-  const bootstrap = readUtf8(
-    rootDir,
-    PLATFORM_INSTALLATION_BUNDLE.bootstrap,
-  );
+  const bootstrap = readUtf8(rootDir, PLATFORM_INSTALLATION_BUNDLE.bootstrap);
   validateBootstrap(bootstrap);
 
   return Object.freeze({
@@ -150,7 +147,9 @@ function printReport(report) {
   console.log(
     `Bootstrap séparé : ${report.bootstrap.path} — sha256:${report.bootstrap.sha256}`,
   );
-  console.log("Aucune connexion réseau et aucune migration n’ont été exécutées.");
+  console.log(
+    "Aucune connexion réseau et aucune migration n’ont été exécutées.",
+  );
 }
 
 if (
