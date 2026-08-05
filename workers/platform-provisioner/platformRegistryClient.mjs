@@ -64,6 +64,22 @@ export function createPlatformRegistryClient({
       });
     },
 
+    async storeCostPlan(job, plan) {
+      return callRpc("platform_worker_store_cost_plan", {
+        target_job_id: job.job_id,
+        new_plan_id: plan.planId,
+        new_provider: plan.adapterName,
+        new_step: plan.step,
+        new_action: plan.action,
+        new_idempotency_key: plan.idempotencyKey,
+        new_creates_billable_resource: plan.createsBillableResource,
+        new_currency: plan.estimatedCost.currency,
+        new_one_time_cents: plan.estimatedCost.oneTimeCents,
+        new_monthly_cents: plan.estimatedCost.monthlyCents,
+        new_public_summary: plan.publicSummary,
+      });
+    },
+
     async updateJob(job, update) {
       await callRpc("platform_worker_update_provisioning", {
         target_job_id: job.job_id,
