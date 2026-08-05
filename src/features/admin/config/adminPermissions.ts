@@ -1,7 +1,8 @@
 import { ROUTES } from "@/shared/config";
+import { ADMIN_DASHBOARD_PERMISSION } from "@/features/admin/access/adminAccessRules";
 
 export const ADMIN_PERMISSIONS = {
-  dashboard: "admin.dashboard.read",
+  dashboard: ADMIN_DASHBOARD_PERMISSION,
   club: "club.manage",
   reservations: "reservations.manage",
   members: "members.manage",
