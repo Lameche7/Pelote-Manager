@@ -21,11 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic formatage installation centrale PR43
-        run: |
-          npx prettier --write supabase/platform/installation/platformInstallationManifest.mjs supabase/platform/installation/validatePlatformInstallationBundle.mjs tests/platformCentralInstallationProtocol.test.mjs
-          git diff -- supabase/platform/installation/platformInstallationManifest.mjs supabase/platform/installation/validatePlatformInstallationBundle.mjs tests/platformCentralInstallationProtocol.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
