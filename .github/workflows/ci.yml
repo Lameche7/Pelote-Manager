@@ -21,11 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic formatage coûts PR43
-        run: |
-          npx prettier --write src/features/platform/components/PlatformCostPlanList.tsx src/features/platform/services/platformRegistryService.ts tests/platformCostPlans.test.mjs
-          git diff -- src/features/platform/components/PlatformCostPlanList.tsx src/features/platform/services/platformRegistryService.ts tests/platformCostPlans.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
