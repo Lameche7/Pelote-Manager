@@ -1,0 +1,139 @@
+.platform-budget {
+  width: min(100%, 90rem);
+  margin: 0 auto 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid #dce2df;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.7rem 2rem rgb(26 53 41 / 7%);
+}
+
+.platform-budget__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.platform-budget__heading h2 {
+  margin: 0;
+}
+
+.platform-budget__heading > p {
+  max-width: 42rem;
+  margin: 0;
+  color: #5c6862;
+}
+
+.platform-budget__empty,
+.platform-budget__notice {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.7rem;
+  color: #5c6862;
+  background: #f3f5f4;
+}
+
+.platform-budget__totals {
+  display: grid;
+  margin-top: 1.25rem;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+}
+
+.platform-budget__totals > article {
+  padding: 1rem;
+  border: 1px solid #cfe0d8;
+  border-radius: 0.8rem;
+  background: #f4fbf7;
+}
+
+.platform-budget__totals > article > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.platform-budget__totals > article > div:first-child strong {
+  color: #184f39;
+  font-size: 1.35rem;
+}
+
+.platform-budget__totals > article > div:first-child span,
+.platform-budget__totals small,
+.platform-budget__clubs small {
+  color: #68736e;
+}
+
+.platform-budget dl {
+  display: grid;
+  margin: 1rem 0;
+  gap: 0.75rem 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.platform-budget dt {
+  color: #75807b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.platform-budget dd {
+  margin: 0.2rem 0 0;
+  font-weight: 800;
+}
+
+.platform-budget__clubs {
+  display: grid;
+  margin-top: 1rem;
+  gap: 0.75rem;
+}
+
+.platform-budget__clubs > article {
+  padding: 0.9rem 1rem;
+  border: 1px solid #e0e5e2;
+  border-radius: 0.7rem;
+  background: #fbfcfb;
+}
+
+.platform-budget__club-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.platform-budget__club-heading span {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  color: #285079;
+  background: #e1effd;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.platform-budget__notice {
+  color: #684b10;
+  background: #fff4cf;
+}
+
+@media (max-width: 70rem) {
+  .platform-budget dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 55rem) {
+  .platform-budget__heading,
+  .platform-budget__club-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .platform-budget dl {
+    grid-template-columns: 1fr;
+  }
+}
