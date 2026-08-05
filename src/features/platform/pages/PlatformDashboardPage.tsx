@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
+import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
 import {
   platformRegistryService,
@@ -296,6 +297,8 @@ export function PlatformDashboardPage() {
           </span>
         </article>
       </section>
+
+      <PlatformBudgetForecastPanel clubs={clubs} plans={costPlans} />
 
       {(message || errorMessage) && (
         <div
