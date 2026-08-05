@@ -1,8 +1,10 @@
-# Éléments graphiques officiels
+# Éléments graphiques d’une instance
 
-Déposer dans ce dossier :
+Chaque déploiement peut utiliser des fichiers ou des URL propres au club :
 
-- `pcl-logo.png` : blason officiel du Pelotaris Club Lourdais, idéalement avec fond transparent ;
-- `trinquet-hero.jpg` : photo horizontale du trinquet sans texte ni logo ajouté.
+- le logo est défini par `VITE_CLUB_LOGO_URL` ;
+- la photo d’accueil est définie par `VITE_CLUB_HERO_URL`.
 
-La page d’accueil utilise automatiquement ces deux fichiers. En leur absence, le composant de logo simplifié et le fond de secours restent affichés.
+Les fichiers historiques `pcl-logo.png` et `trinquet-hero.jpg` restent présents uniquement comme valeurs de secours pour l’instance du Pelotaris Club Lourdais. Une nouvelle instance doit définir ses deux variables dans Vercel et ne dépend pas de ces fichiers.
+
+En cas de logo introuvable, l’application affiche automatiquement un blason neutre avec les initiales du club configuré.

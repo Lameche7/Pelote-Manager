@@ -25,6 +25,10 @@ import { GlobalMemberSearchPage } from "@/features/admin/members/pages/GlobalMem
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
+import { PlatformProtectedRoute } from "@/features/platform/auth/PlatformProtectedRoute";
+import { PlatformProviderLayout } from "@/features/platform/auth/PlatformProviderLayout";
+import { PlatformDashboardPage } from "@/features/platform/pages/PlatformDashboardPage";
+import { PlatformLoginPage } from "@/features/platform/pages/PlatformLoginPage";
 import { UserSpaceDashboardPage } from "@/features/user-space/dashboard/pages/UserSpaceDashboardPage";
 import { MyProfilePage } from "@/features/user-space/profile/pages/MyProfilePage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
@@ -42,6 +46,17 @@ const permittedAny = (permissions: AdminPermission[], page: React.ReactNode) => 
 );
 
 export const routes = [
+  {
+    path: ROUTES.platform,
+    element: <PlatformProviderLayout />,
+    children: [
+      { path: "connexion", element: <PlatformLoginPage /> },
+      {
+        element: <PlatformProtectedRoute />,
+        children: [{ index: true, element: <PlatformDashboardPage /> }],
+      },
+    ],
+  },
   {
     path: ROUTES.home,
     element: <MainLayout />,

@@ -14,7 +14,7 @@
   background-color: #102a22;
   background-image:
     linear-gradient(180deg, rgb(3 18 14 / 18%), rgb(3 18 14 / 74%)),
-    url('/branding/trinquet-hero.jpg');
+    var(--club-hero-image, url('/branding/trinquet-hero.jpg'));
   background-position: center;
   background-size: cover;
 }

@@ -5,7 +5,7 @@ import {
   memberProfileService,
   type MemberProfileDetails,
 } from "@/features/user-space/profile/services/memberProfileService";
-import { USER_ROLES } from "@/shared/config";
+import { CLUB_CONFIG, USER_ROLES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MyProfilePage.css";
 
@@ -88,7 +88,7 @@ export function MyProfilePage() {
                   <dt>
                     <Building2 aria-hidden="true" /> Club
                   </dt>
-                  <dd>Pelotaris Club Lourdais</dd>
+                  <dd>{CLUB_CONFIG.name}</dd>
                 </div>
                 <div>
                   <dt>Saison</dt>

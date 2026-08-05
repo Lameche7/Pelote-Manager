@@ -5,6 +5,7 @@ Docs
 package-lock.json
 index.html
 .github/workflows/build-supabase-sql-bundle.yml
+api/platform-provisioner-simulation.mjs
 src/index.css
 src/app/layouts/MainLayout.tsx
 src/app/router.tsx
@@ -50,6 +51,7 @@ supabase/migrations/20260728001000_add_helloasso_payments.sql
 supabase/migrations/20260728001100_complete_helloasso_payment_flow.sql
 supabase/migrations/20260728001200_add_my_reservations.sql
 tests/adminUsers.test.mjs
+tests/platformSimulationTrigger.test.mjs
 tests/reservationBenefits.test.mjs
 tests/reservationBooking.test.mjs
 tests/reservationCalendar.test.mjs

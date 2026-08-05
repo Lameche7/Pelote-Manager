@@ -25,6 +25,8 @@ export const ROUTES = {
   adminReservationOperations: "/admin/reservations/suivi",
   adminReservationSettings: "/admin/reservations/parametres",
   adminPayments: "/admin/paiements",
+  platform: "/super-admin",
+  platformLogin: "/super-admin/connexion",
   forbidden: "/acces-refuse",
   notFound: "*",
 } as const;

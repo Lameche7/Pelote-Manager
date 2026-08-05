@@ -33,6 +33,7 @@
     "src/features/auth/domain/accountProfileFinalization.ts",
     "src/features/members/domain/memberRegistration.ts",
     "supabase/functions/_shared/memberRegistrationCleanup.ts",
+    "src/features/platform/budget/platformBudgetForecast.ts",
     "src/features/reservations/domain/booking.ts",
     "src/features/reservations/domain/calendar.ts",
     "src/features/reservations/domain/reservationBenefits.ts",
