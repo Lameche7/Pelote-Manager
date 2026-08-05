@@ -17,7 +17,16 @@ export async function runOnce({ env = process.env, fetchImpl = fetch } = {}) {
     fetchImpl,
   });
   const provider = createProvisioningProvider({ env });
-  const job = await registry.claimNextJob(workerId, leaseDurationSeconds);
+  const simulationSlugPrefix =
+    env.PLATFORM_PROVISIONER_SIMULATION_SLUG_PREFIX || "simulation-";
+  const job =
+    provider.mode === "simulation"
+      ? await registry.claimNextSimulationJob(
+          workerId,
+          simulationSlugPrefix,
+          leaseDurationSeconds,
+        )
+      : await registry.claimNextJob(workerId, leaseDurationSeconds);
 
   if (!job) {
     console.info("Aucun provisionnement en attente.", {
