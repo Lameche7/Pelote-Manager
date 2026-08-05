@@ -32,6 +32,7 @@ Elle conserve uniquement :
 - les références techniques des projets Supabase et Vercel ;
 - les versions installées ;
 - les demandes et états de provisionnement ;
+- les plans publics de coût et leurs approbations ;
 - le journal d’audit.
 
 Elle ne contient aucun licencié, compte de club, réservation, paiement ou inscription à un tournoi.
@@ -163,7 +164,34 @@ L’approbation devient automatiquement inutilisable lorsque le fournisseur, l�
 
 Le planificateur de la PR43 peut vérifier ces règles, mais sa méthode d’application lève toujours une erreur. Il ne peut donc créer aucune ressource, même avec une approbation valide.
 
-## 8. Tournois internes et tournois ouverts
+## 8. Stockage audité des plans et approbations
+
+Le worker peut enregistrer dans la plateforme centrale le plan public qu’il vient de produire. Il transmet uniquement :
+
+- l’identifiant déterministe du plan ;
+- le fournisseur, l’étape et l’action ;
+- la clé d’idempotence ;
+- l’indication de création d’une ressource facturable ;
+- la devise et les montants en centimes ;
+- le résumé public.
+
+Aucun jeton, mot de passe, entête d’autorisation ou contenu de réponse fournisseur n’est accepté par ce stockage.
+
+Un seul plan courant est autorisé par étape et par demande de provisionnement. Lorsqu’une nouvelle estimation est enregistrée, l’ancienne est marquée comme remplacée et son approbation active est révoquée automatiquement.
+
+Le super administrateur peut consulter ces plans dans `/super-admin`. Une création facturable peut recevoir une approbation valable pendant une heure. Cette opération enregistre son auteur, sa date d’expiration et une trace d’audit. Elle peut être révoquée manuellement.
+
+Les états affichés sont :
+
+- `pending` : approbation requise ;
+- `approved` : approbation encore valable ;
+- `expired` : durée dépassée ;
+- `revoked` : approbation retirée ;
+- `superseded` : plan remplacé par une nouvelle estimation.
+
+Cette approbation ne débloque aucun appel fournisseur dans la PR43. Le mode réel reste explicitement désactivé.
+
+## 9. Tournois internes et tournois ouverts
 
 Chaque tournoi devra obligatoirement préciser son audience.
 
@@ -180,7 +208,7 @@ Le club organisateur choisit s’il accepte :
 
 L’annonce publique peut être diffusée sur le réseau Pelote Manager.
 
-## 9. Passeport joueur futur
+## 10. Passeport joueur futur
 
 Le passeport permettra à un licencié de s’inscrire à un tournoi ouvert d’un autre club sans recréer un compte complet dans l’instance organisatrice.
 
@@ -197,6 +225,6 @@ Le passeport devra être :
 - séparé du registre commercial de la plateforme ;
 - dépourvu de mot de passe ou de secret provenant du club d’origine.
 
-## 10. Règle définitive
+## 11. Règle définitive
 
 Les clubs partagent un logiciel et peuvent partager des informations publiques de tournois. Ils ne partagent jamais leurs comptes, leurs bases de licenciés ou leurs données métier privées.
