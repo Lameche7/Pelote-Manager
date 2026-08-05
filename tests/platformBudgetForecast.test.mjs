@@ -121,5 +121,8 @@ test("le super admin affiche une projection et jamais une facture", () => {
   assert.match(panel, /Prévision budgétaire mensuelle/);
   assert.match(panel, /n’est ni une facture ni une autorisation de dépense/);
   assert.match(panel, /ne sont jamais\s+converties automatiquement/);
-  assert.doesNotMatch(panel, /service_role|access_token|personal_access_token/i);
+  assert.doesNotMatch(
+    panel,
+    /service_role|access_token|personal_access_token/i,
+  );
 });
