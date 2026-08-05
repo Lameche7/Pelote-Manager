@@ -32,11 +32,7 @@ export function authorizeLiveExecutionConfirmation({
     expected.provisioningJobId,
     "Le provisionnement confirmé",
   );
-  requireExactValue(
-    confirmation.club_id,
-    expected.clubId,
-    "Le club confirmé",
-  );
+  requireExactValue(confirmation.club_id, expected.clubId, "Le club confirmé");
   requireExactValue(
     confirmation.plan_set_key,
     expected.planSetKey,
