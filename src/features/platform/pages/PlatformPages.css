@@ -51,7 +51,7 @@
   width: min(100%, 90rem);
   margin: 0 auto 1.5rem;
   gap: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .platform-summary article,
@@ -248,6 +248,99 @@
   background: #fde8ea;
 }
 
+.platform-cost-plans {
+  display: grid;
+  margin: 0 0 1rem;
+  gap: 0.75rem;
+}
+
+.platform-cost-plans__heading {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.platform-cost-plans__heading small {
+  color: #68736e;
+}
+
+.platform-cost-plan {
+  padding: 0.9rem;
+  border: 1px solid #d7dfdb;
+  border-left: 0.25rem solid #b58b24;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.platform-cost-plan--approved {
+  border-left-color: #287454;
+  background: #f0faf5;
+}
+
+.platform-cost-plan--expired,
+.platform-cost-plan--revoked {
+  border-left-color: #a56b1c;
+  background: #fff9e8;
+}
+
+.platform-cost-plan--superseded {
+  border-left-color: #8a9490;
+  opacity: 0.75;
+}
+
+.platform-cost-plan__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.platform-cost-plan__heading div {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.platform-cost-plan__heading small {
+  overflow-wrap: anywhere;
+  color: #68736e;
+}
+
+.platform-cost-plan__heading > span {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  color: #684b10;
+  background: #fff0bf;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.platform-cost-plan--approved .platform-cost-plan__heading > span {
+  color: #15583d;
+  background: #dff5e9;
+}
+
+.platform-cost-plan--superseded .platform-cost-plan__heading > span {
+  color: #4f5b56;
+  background: #e8ecea;
+}
+
+.platform-cost-plan p {
+  margin: 0.75rem 0;
+  color: #4f5b56;
+}
+
+.platform-cost-plan dl {
+  margin: 0.75rem 0;
+}
+
+.platform-cost-plan__actions {
+  display: flex;
+  margin-top: 0.75rem;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
 .platform-club__actions {
   justify-content: flex-end;
 }
@@ -281,10 +374,17 @@
   background: #fbe4e7;
 }
 
+@media (max-width: 70rem) {
+  .platform-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 55rem) {
   .platform-header,
   .platform-header__account,
-  .platform-club__heading {
+  .platform-club__heading,
+  .platform-cost-plan__heading {
     align-items: flex-start;
     flex-direction: column;
   }
