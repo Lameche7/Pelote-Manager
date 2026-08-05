@@ -28,7 +28,7 @@ export function AdminAccessProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let active = true;
     adminAccessService
-      .getAccess()
+      .getOptionalAccess()
       .then((value) => {
         if (active) setAccess(value);
       })
