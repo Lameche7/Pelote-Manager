@@ -33,10 +33,7 @@ export function PlatformBudgetForecastPanel({
   clubs,
   plans,
 }: PlatformBudgetForecastPanelProps) {
-  const forecasts = useMemo(
-    () => buildPlatformBudgetForecasts(plans),
-    [plans],
-  );
+  const forecasts = useMemo(() => buildPlatformBudgetForecasts(plans), [plans]);
   const totals = useMemo(
     () => buildPlatformBudgetTotals(forecasts),
     [forecasts],
@@ -47,7 +44,10 @@ export function PlatformBudgetForecastPanel({
   );
 
   return (
-    <section className="platform-budget" aria-labelledby="platform-budget-title">
+    <section
+      className="platform-budget"
+      aria-labelledby="platform-budget-title"
+    >
       <div className="platform-budget__heading">
         <div>
           <p className="platform-kicker">Pilotage financier</p>
