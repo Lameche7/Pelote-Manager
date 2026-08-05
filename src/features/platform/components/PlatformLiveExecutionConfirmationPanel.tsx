@@ -53,18 +53,18 @@ export function PlatformLiveExecutionConfirmationPanel({
   );
   const canPrepare = Boolean(
     provisioningJob &&
-      ["pending", "running", "waiting_external"].includes(
-        provisioningJob.status,
-      ) &&
-      currentPlans.length > 0 &&
-      allBillablePlansApproved,
+    ["pending", "running", "waiting_external"].includes(
+      provisioningJob.status,
+    ) &&
+    currentPlans.length > 0 &&
+    allBillablePlansApproved,
   );
   const activeConfirmation =
     confirmation?.status === "confirmed" ? confirmation : undefined;
   const exactInputMatches = Boolean(
     preview &&
-      typedSlug === preview.clubSlug &&
-      typedPhrase === preview.confirmationPhrase,
+    typedSlug === preview.clubSlug &&
+    typedPhrase === preview.confirmationPhrase,
   );
 
   if (!provisioningJob || currentPlans.length === 0) return null;
