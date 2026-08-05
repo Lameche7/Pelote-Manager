@@ -1,7 +1,5 @@
 import { createManualProvisioningProvider } from "./manualProvisioningProvider.mjs";
-import {
-  LIVE_PROVISIONING_DISABLED_MESSAGE,
-} from "./providers/live/liveProvisioningPlanner.mjs";
+import { LIVE_PROVISIONING_DISABLED_MESSAGE } from "./providers/live/liveProvisioningPlanner.mjs";
 import { createSimulationProvisioningProvider } from "./providers/simulation/simulationProvisioningProvider.mjs";
 
 export const PROVISIONER_SIMULATION_ACK =
