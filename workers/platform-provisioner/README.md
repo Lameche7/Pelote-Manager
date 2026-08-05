@@ -70,6 +70,50 @@ Le mode `live` est explicitement refusé dans la PR43.
 
 Aucun adaptateur n’appelle actuellement Supabase Management API ou Vercel. Aucun jeton fournisseur n’est lu par le code de simulation.
 
+## Contrat des futurs adaptateurs réels
+
+Les fichiers de `providers/live` définissent uniquement un contrat de planification. Ils ne créent aucune ressource.
+
+Chaque futur adaptateur devra exposer :
+
+- `name`, égal à `supabase` ou `vercel` ;
+- `planStep`, qui décrit l’opération avant toute mutation ;
+- `applyStep`, qui restera inutilisable tant que le mode réel n’est pas activé dans une décision distincte.
+
+Avant toute création ou modification, `planStep` devra produire un plan contenant :
+
+- l’étape et l’action fournisseur ;
+- la clé d’idempotence ;
+- un résumé public sans secret ;
+- l’indication qu’une ressource facturable sera ou non créée ;
+- la devise ;
+- le coût ponctuel estimé en centimes ;
+- le coût mensuel estimé en centimes.
+
+Le plan reçoit un identifiant déterministe. Une modification du fournisseur, de l’étape, de l’action ou du coût produit un nouvel identifiant et invalide automatiquement l’ancienne approbation.
+
+## Garde-fous de coût
+
+Aucun tarif Supabase ou Vercel n’est inscrit en dur dans le dépôt. Le futur adaptateur devra récupérer ou déclarer l’estimation applicable au moment du plan.
+
+La politique budgétaire restera configurée côté serveur et précisera :
+
+- la devise autorisée ;
+- le plafond ponctuel ;
+- le plafond mensuel.
+
+Une ressource facturable ne pourra être créée que lorsque :
+
+1. le plan est chiffré ;
+2. sa devise correspond à la politique serveur ;
+3. ses coûts restent sous les deux plafonds ;
+4. une approbation explicite vise exactement l’identifiant du plan ;
+5. l’approbation indique son auteur et n’est pas expirée.
+
+Une ancienne approbation ne peut donc pas autoriser un plan dont le prix ou le contenu a changé.
+
+Même lorsqu’un plan satisfait toutes ces règles, `applyPlan` lève volontairement une erreur dans la PR43. Le contrat et les contrôles peuvent être testés, mais aucune opération réelle ne peut partir.
+
 ## Lancement ultérieur
 
 Depuis un environnement serveur sécurisé :
