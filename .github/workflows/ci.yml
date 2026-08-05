@@ -21,11 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic formatage contrat réel PR43
-        run: |
-          npx prettier --write tests/platformProvisionerLiveContract.test.mjs workers/platform-provisioner/providerFactory.mjs workers/platform-provisioner/providers/live/costApprovalGuard.mjs workers/platform-provisioner/providers/live/liveAdapterContract.mjs
-          git diff -- tests/platformProvisionerLiveContract.test.mjs workers/platform-provisioner/providerFactory.mjs workers/platform-provisioner/providers/live/costApprovalGuard.mjs workers/platform-provisioner/providers/live/liveAdapterContract.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
