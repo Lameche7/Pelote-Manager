@@ -93,7 +93,10 @@ export function createLiveStepPlan({
     context.idempotencyKey,
     "La clé d’idempotence",
   );
-  const normalizedAction = requireNonEmptyString(action, "L’action fournisseur");
+  const normalizedAction = requireNonEmptyString(
+    action,
+    "L’action fournisseur",
+  );
 
   if (!LIVE_PLAN_ACTIONS.has(normalizedAction)) {
     throw new Error(`Action fournisseur interdite : ${normalizedAction}.`);
