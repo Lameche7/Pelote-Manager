@@ -6,10 +6,12 @@ import {
   type FormEvent,
 } from "react";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
+import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
 import {
   platformRegistryService,
   type PlatformClub,
   type PlatformClubStatus,
+  type PlatformCostPlan,
   type PlatformProvisioningJob,
   type PlatformProvisioningStatus,
   type PlatformProvisioningStep,
@@ -65,9 +67,11 @@ export function PlatformDashboardPage() {
   const [provisioningJobs, setProvisioningJobs] = useState<
     PlatformProvisioningJob[]
   >([]);
+  const [costPlans, setCostPlans] = useState<PlatformCostPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [provisioningClubId, setProvisioningClubId] = useState("");
+  const [costPlanActionId, setCostPlanActionId] = useState("");
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [name, setName] = useState("");
@@ -87,17 +91,32 @@ export function PlatformDashboardPage() {
     return latest;
   }, [provisioningJobs]);
 
+  const costPlansByClub = useMemo(() => {
+    const grouped = new Map<string, PlatformCostPlan[]>();
+
+    for (const plan of costPlans) {
+      const clubPlans = grouped.get(plan.clubId) ?? [];
+      clubPlans.push(plan);
+      grouped.set(plan.clubId, clubPlans);
+    }
+
+    return grouped;
+  }, [costPlans]);
+
   const loadPlatform = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      const [nextClubs, nextProvisioningJobs] = await Promise.all([
-        platformRegistryService.listClubs(),
-        platformRegistryService.listProvisioningJobs(),
-      ]);
+      const [nextClubs, nextProvisioningJobs, nextCostPlans] =
+        await Promise.all([
+          platformRegistryService.listClubs(),
+          platformRegistryService.listProvisioningJobs(),
+          platformRegistryService.listCostPlans(),
+        ]);
       setClubs(nextClubs);
       setProvisioningJobs(nextProvisioningJobs);
+      setCostPlans(nextCostPlans);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Registre indisponible.",
@@ -165,6 +184,44 @@ export function PlatformDashboardPage() {
     }
   };
 
+  const handleApproveCostPlan = async (plan: PlatformCostPlan) => {
+    setCostPlanActionId(plan.id);
+    setMessage("");
+    setErrorMessage("");
+
+    try {
+      await platformRegistryService.approveCostPlan(plan.id);
+      setMessage(
+        "Plan approuvé pour une heure. Cette approbation est auditée mais aucune création réelle n’est activée.",
+      );
+      await loadPlatform();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Approbation impossible.",
+      );
+    } finally {
+      setCostPlanActionId("");
+    }
+  };
+
+  const handleRevokeCostPlan = async (plan: PlatformCostPlan) => {
+    setCostPlanActionId(plan.id);
+    setMessage("");
+    setErrorMessage("");
+
+    try {
+      await platformRegistryService.revokeCostPlanApproval(plan.id);
+      setMessage("Approbation révoquée et opération inscrite dans l’audit.");
+      await loadPlatform();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Révocation impossible.",
+      );
+    } finally {
+      setCostPlanActionId("");
+    }
+  };
+
   const handleStatus = async (clubId: string, status: PlatformClubStatus) => {
     setErrorMessage("");
     setMessage("");
@@ -182,6 +239,11 @@ export function PlatformDashboardPage() {
 
   const openProvisioningCount = provisioningJobs.filter((job) =>
     openProvisioningStatuses.has(job.status),
+  ).length;
+  const pendingCostPlanCount = costPlans.filter(
+    (plan) =>
+      plan.createsBillableResource &&
+      ["pending", "expired", "revoked"].includes(plan.status),
   ).length;
 
   return (
@@ -225,6 +287,12 @@ export function PlatformDashboardPage() {
           <strong>{openProvisioningCount}</strong>
           <span>
             provisionnement{openProvisioningCount > 1 ? "s" : ""} en attente
+          </span>
+        </article>
+        <article>
+          <strong>{pendingCostPlanCount}</strong>
+          <span>
+            plan{pendingCostPlanCount > 1 ? "s" : ""} de coût à examiner
           </span>
         </article>
       </section>
@@ -323,6 +391,7 @@ export function PlatformDashboardPage() {
             <div className="platform-club-list">
               {clubs.map((club) => {
                 const provisioningJob = latestProvisioningByClub.get(club.id);
+                const clubCostPlans = costPlansByClub.get(club.id) ?? [];
                 const canRequestProvisioning =
                   !provisioningJob &&
                   !club.supabaseProjectRef &&
@@ -386,6 +455,13 @@ export function PlatformDashboardPage() {
                         )}
                       </div>
                     )}
+
+                    <PlatformCostPlanList
+                      plans={clubCostPlans}
+                      actionPlanId={costPlanActionId}
+                      onApprove={handleApproveCostPlan}
+                      onRevoke={handleRevokeCostPlan}
+                    />
 
                     <div className="platform-club__actions">
                       {canRequestProvisioning && (
