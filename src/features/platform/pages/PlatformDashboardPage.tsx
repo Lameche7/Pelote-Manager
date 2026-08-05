@@ -418,8 +418,9 @@ export function PlatformDashboardPage() {
               {clubs.map((club) => {
                 const provisioningJob = latestProvisioningByClub.get(club.id);
                 const clubCostPlans = costPlansByClub.get(club.id) ?? [];
-                const liveConfirmation =
-                  latestLiveConfirmationByClub.get(club.id);
+                const liveConfirmation = latestLiveConfirmationByClub.get(
+                  club.id,
+                );
                 const canRequestProvisioning =
                   !provisioningJob &&
                   !club.supabaseProjectRef &&
