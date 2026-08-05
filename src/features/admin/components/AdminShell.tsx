@@ -1,9 +1,10 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Navigate, NavLink, Outlet } from "react-router-dom";
 import { adminNavigation } from "@/features/admin/config/adminPermissions";
 import {
   AdminAccessProvider,
   useAdminAccess,
 } from "@/features/admin/access/AdminAccessProvider";
+import { ROUTES } from "@/shared/config";
 import "./AdminShell.css";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -27,13 +28,15 @@ function AdminShellContent() {
         <p>{error}</p>
       </section>
     );
+  if (!access) return <Navigate to={ROUTES.forbidden} replace />;
+
   return (
     <div className="admin-shell">
       <aside className="admin-shell__sidebar">
         <header>
           <span>Back Office</span>
           <strong>Administration</strong>
-          {access && <small>{access.clubName}</small>}
+          <small>{access.clubName}</small>
         </header>
         <nav aria-label="Navigation de l’administration">
           {adminNavigation
