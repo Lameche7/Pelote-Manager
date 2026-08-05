@@ -22,6 +22,7 @@
   },
   "include": [
     "src/app/router/protectedRouteAccess.ts",
+    "src/features/admin/access/adminAccessRules.ts",
     "src/features/admin/utils/adminUsers.ts",
     "src/features/admin/reservations/domain/adminReservations.ts",
     "src/features/admin/events/domain/eventDateTime.ts",
