@@ -80,6 +80,18 @@ export function createPlatformRegistryClient({
       });
     },
 
+    async getLiveExecutionConfirmation(job, planSetKey) {
+      const rows = await callRpc(
+        "platform_worker_get_live_execution_confirmation",
+        {
+          target_job_id: job.job_id,
+          expected_plan_set_key: planSetKey,
+        },
+      );
+
+      return Array.isArray(rows) ? (rows[0] ?? null) : null;
+    },
+
     async updateJob(job, update) {
       await callRpc("platform_worker_update_provisioning", {
         target_job_id: job.job_id,
