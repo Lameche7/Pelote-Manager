@@ -31,7 +31,10 @@ function extractFunction(name) {
 }
 
 test("reprend les anciens profils administrateurs dans le club unique", () => {
-  assert.match(migration, /Admin access hardening requires exactly one club per instance/);
+  assert.match(
+    migration,
+    /Admin access hardening requires exactly one club per instance/,
+  );
   assert.match(migration, /from public\.profiles as profiles/);
   assert.match(migration, /profiles\.role = 'admin'::public\.user_role/);
   assert.match(migration, /insert into public\.club_memberships/);
@@ -50,11 +53,17 @@ test("l'habilitation de club remplace profiles.role comme source de vérité", (
 test("la gestion des utilisateurs synchronise le rôle et l'habilitation", () => {
   const setRoleFunction = extractFunction("set_profile_role");
   assert.match(setRoleFunction, /public\.admin_current_club_id\(\)/);
-  assert.match(setRoleFunction, /public\.has_club_permission\(actor_club_id, 'settings\.manage'\)/);
+  assert.match(
+    setRoleFunction,
+    /public\.has_club_permission\(actor_club_id, 'settings\.manage'\)/,
+  );
   assert.match(setRoleFunction, /if new_role = 'admin'::public\.user_role/);
   assert.match(setRoleFunction, /insert into public\.club_memberships/);
   assert.match(setRoleFunction, /delete from public\.club_memberships/);
-  assert.match(setRoleFunction, /roles\.key = 'administrator'::public\.club_role_key/);
+  assert.match(
+    setRoleFunction,
+    /roles\.key = 'administrator'::public\.club_role_key/,
+  );
 });
 
 test("le lien et la route Administration exigent une permission réelle", () => {
@@ -62,7 +71,10 @@ test("le lien et la route Administration exigent une permission réelle", () => 
   assert.match(layout, /getOptionalAccess\(\)/);
   assert.match(layout, /canAccessAdminDashboard\(adminAccess\)/);
   assert.match(provider, /getOptionalAccess\(\)/);
-  assert.match(shell, /if \(!access\) return <Navigate to=\{ROUTES\.forbidden\} replace \/>/);
+  assert.match(
+    shell,
+    /if \(!access\) return <Navigate to=\{ROUTES\.forbidden\} replace \/>/,
+  );
 });
 
 test("l'écran utilisateurs annonce la synchronisation automatique", () => {
