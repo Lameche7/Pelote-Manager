@@ -40,7 +40,9 @@ test("le lot central est ordonné, complet et vérifiable sans réseau", () => {
     [1, 2, 3, 4, 5],
   );
   assert.ok(
-    report.migrations.every((migration) => /^[a-f0-9]{64}$/.test(migration.sha256)),
+    report.migrations.every((migration) =>
+      /^[a-f0-9]{64}$/.test(migration.sha256),
+    ),
   );
   assert.match(report.bootstrap.sha256, /^[a-f0-9]{64}$/);
   assert.equal(report.bootstrap.mustBeCustomizedOutsideGit, true);
@@ -89,7 +91,10 @@ test("le protocole interdit les bases de clubs, les secrets et le mode réel", (
   assert.match(runbook, /Production PCL et le projet Test restent exclus/i);
   assert.match(runbook, /Règles d’arrêt immédiat/);
   assert.match(runbook, /Aucune création n’est réalisée dans la PR43/);
-  assert.match(runbook, /ne reçoit aucune migration provenant de `supabase\/migrations`/);
+  assert.match(
+    runbook,
+    /ne recevoir aucune migration provenant de `supabase\/migrations`/,
+  );
   assert.match(runbook, /ne jamais consigner la clé `service_role`/i);
   assert.match(runbook, /Le mode `live` reste interdit/);
   assert.match(runbook, /domaines `\.invalid`/);
@@ -107,5 +112,8 @@ test("la commande de validation du lot reste purement locale", () => {
     "utf8",
   );
   assert.doesNotMatch(validator, /fetch\s*\(|https:\/\//i);
-  assert.doesNotMatch(validator, /service_role|access_token|management_access_token/i);
+  assert.doesNotMatch(
+    validator,
+    /service_role|access_token|management_access_token/i,
+  );
 });
