@@ -1,7 +1,6 @@
 import type {
   PlatformCostPlan,
   PlatformCostPlanStatus,
-  PlatformProvisioningStep,
 } from "../services/platformRegistryService";
 
 const statusLabels: Record<PlatformCostPlanStatus, string> = {
@@ -137,10 +136,3 @@ export function PlatformCostPlanList({
     </section>
   );
 }
-
-export const PLATFORM_COST_PLAN_STEPS = Object.freeze(
-  Object.keys(stepLabels) as Exclude<
-    PlatformProvisioningStep,
-    "requested" | "completed"
-  >[],
-);
