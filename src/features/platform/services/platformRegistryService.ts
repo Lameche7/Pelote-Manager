@@ -26,9 +26,19 @@ export type PlatformProvisioningStep =
   | "completed";
 
 export type PlatformCostPlanStatus =
-  "pending" | "approved" | "expired" | "revoked" | "superseded";
+  | "pending"
+  | "approved"
+  | "expired"
+  | "revoked"
+  | "superseded";
 
 export type PlatformCostPlanProvider = "supabase" | "vercel";
+
+export type PlatformLiveExecutionConfirmationStatus =
+  | "confirmed"
+  | "expired"
+  | "revoked"
+  | "consumed";
 
 export type PlatformClub = {
   id: string;
@@ -77,6 +87,33 @@ export type PlatformCostPlan = {
   approvedAt: string;
   approvalExpiresAt: string;
   createdAt: string;
+};
+
+export type PlatformLiveExecutionPreview = {
+  provisioningJobId: string;
+  clubId: string;
+  clubSlug: string;
+  planSetKey: string;
+  currency: string;
+  oneTimeCents: number;
+  monthlyCents: number;
+  currentPlanCount: number;
+  confirmationPhrase: string;
+  validityMinutes: number;
+};
+
+export type PlatformLiveExecutionConfirmation = {
+  id: string;
+  provisioningJobId: string;
+  clubId: string;
+  planSetKey: string;
+  currency: string;
+  oneTimeCents: number;
+  monthlyCents: number;
+  currentPlanCount: number;
+  status: PlatformLiveExecutionConfirmationStatus;
+  confirmedAt: string;
+  expiresAt: string;
 };
 
 export type CreatePlatformClubInput = {
@@ -136,6 +173,33 @@ type PlatformCostPlanRow = {
   created_at: string;
 };
 
+type PlatformLiveExecutionPreviewRow = {
+  provisioning_job_id: string;
+  club_id: string;
+  club_slug: string;
+  plan_set_key: string;
+  currency: string;
+  one_time_cents: number;
+  monthly_cents: number;
+  current_plan_count: number;
+  confirmation_phrase: string;
+  validity_minutes: number;
+};
+
+type PlatformLiveExecutionConfirmationRow = {
+  id: string;
+  provisioning_job_id: string;
+  club_id: string;
+  plan_set_key: string;
+  currency: string;
+  one_time_cents: number;
+  monthly_cents: number;
+  current_plan_count: number;
+  lifecycle_status: PlatformLiveExecutionConfirmationStatus;
+  confirmed_at: string;
+  expires_at: string;
+};
+
 const mapClub = (row: PlatformClubRow): PlatformClub => ({
   id: row.id,
   name: row.name,
@@ -187,6 +251,37 @@ const mapCostPlan = (row: PlatformCostPlanRow): PlatformCostPlan => ({
   createdAt: row.created_at,
 });
 
+const mapLiveExecutionPreview = (
+  row: PlatformLiveExecutionPreviewRow,
+): PlatformLiveExecutionPreview => ({
+  provisioningJobId: row.provisioning_job_id,
+  clubId: row.club_id,
+  clubSlug: row.club_slug,
+  planSetKey: row.plan_set_key,
+  currency: row.currency,
+  oneTimeCents: Number(row.one_time_cents),
+  monthlyCents: Number(row.monthly_cents),
+  currentPlanCount: Number(row.current_plan_count),
+  confirmationPhrase: row.confirmation_phrase,
+  validityMinutes: Number(row.validity_minutes),
+});
+
+const mapLiveExecutionConfirmation = (
+  row: PlatformLiveExecutionConfirmationRow,
+): PlatformLiveExecutionConfirmation => ({
+  id: row.id,
+  provisioningJobId: row.provisioning_job_id,
+  clubId: row.club_id,
+  planSetKey: row.plan_set_key,
+  currency: row.currency,
+  oneTimeCents: Number(row.one_time_cents),
+  monthlyCents: Number(row.monthly_cents),
+  currentPlanCount: Number(row.current_plan_count),
+  status: row.lifecycle_status,
+  confirmedAt: row.confirmed_at,
+  expiresAt: row.expires_at,
+});
+
 export const platformRegistryService = {
   async listClubs(): Promise<PlatformClub[]> {
     const { data, error } = await requirePlatformSupabase().rpc(
@@ -215,6 +310,69 @@ export const platformRegistryService = {
 
     if (error) throw error;
     return ((data ?? []) as PlatformCostPlanRow[]).map(mapCostPlan);
+  },
+
+  async listLiveExecutionConfirmations(): Promise<
+    PlatformLiveExecutionConfirmation[]
+  > {
+    const { data, error } = await requirePlatformSupabase().rpc(
+      "platform_list_live_execution_confirmations",
+    );
+
+    if (error) throw error;
+    return ((data ?? []) as PlatformLiveExecutionConfirmationRow[]).map(
+      mapLiveExecutionConfirmation,
+    );
+  },
+
+  async previewLiveExecutionConfirmation(
+    provisioningJobId: string,
+  ): Promise<PlatformLiveExecutionPreview> {
+    const { data, error } = await requirePlatformSupabase().rpc(
+      "platform_preview_live_execution_confirmation",
+      {
+        target_job_id: provisioningJobId,
+      },
+    );
+
+    if (error) throw error;
+    const row = (data as PlatformLiveExecutionPreviewRow[] | null)?.[0];
+    if (!row) throw new Error("Prévisualisation renforcée indisponible.");
+    return mapLiveExecutionPreview(row);
+  },
+
+  async confirmLiveExecution(input: {
+    provisioningJobId: string;
+    planSetKey: string;
+    clubSlug: string;
+    confirmationPhrase: string;
+  }): Promise<string> {
+    const { data, error } = await requirePlatformSupabase().rpc(
+      "platform_confirm_live_execution",
+      {
+        target_job_id: input.provisioningJobId,
+        expected_plan_set_key: input.planSetKey,
+        typed_club_slug: input.clubSlug,
+        typed_confirmation: input.confirmationPhrase,
+      },
+    );
+
+    if (error) throw error;
+    return String(data);
+  },
+
+  async revokeLiveExecutionConfirmation(
+    confirmationId: string,
+  ): Promise<void> {
+    const { error } = await requirePlatformSupabase().rpc(
+      "platform_revoke_live_execution_confirmation",
+      {
+        target_confirmation_id: confirmationId,
+        new_reason: "Révocation depuis la plateforme propriétaire",
+      },
+    );
+
+    if (error) throw error;
   },
 
   async createClub(input: CreatePlatformClubInput): Promise<string> {
