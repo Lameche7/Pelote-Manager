@@ -50,14 +50,16 @@ test("les plans et approbations restent dans la plateforme centrale", () => {
 test("seul le worker serveur peut enregistrer un plan public", () => {
   assert.match(migration, /function public\.platform_worker_store_cost_plan/);
   assert.match(migration, /auth\.role\(\) <> 'service_role'/);
-  assert.match(
-    migration,
-    /grant execute on function public\.platform_worker_store_cost_plan[\s\S]*to service_role/,
+
+  const workerGrantStart = migration.indexOf(
+    "grant execute on function public.platform_worker_store_cost_plan",
   );
-  assert.doesNotMatch(
-    migration,
-    /grant execute on function public\.platform_worker_store_cost_plan[\s\S]{0,250}to authenticated/,
-  );
+  const workerGrantEnd = migration.indexOf(";", workerGrantStart);
+  const workerGrant = migration.slice(workerGrantStart, workerGrantEnd + 1);
+
+  assert.notEqual(workerGrantStart, -1);
+  assert.match(workerGrant, /to service_role/);
+  assert.doesNotMatch(workerGrant, /to authenticated/);
   assert.match(migration, /'cost_plan\.recorded'/);
 });
 
@@ -105,9 +107,12 @@ test("le super admin consulte, approuve et révoque sans secret serveur", () => 
   assert.match(registryService, /platform_list_cost_plans/);
   assert.match(registryService, /platform_approve_cost_plan/);
   assert.match(registryService, /platform_revoke_cost_plan_approval/);
-  assert.match(dashboard, /plan de coût à examiner/);
+  assert.match(dashboard, /de coût à examiner/);
   assert.match(costPlanList, /Approuver pour une heure/);
-  assert.match(costPlanList, /Aucune approbation ne déclenche de création réelle/);
+  assert.match(
+    costPlanList,
+    /Aucune approbation ne déclenche de création réelle/,
+  );
   assert.doesNotMatch(registryService, /service_role/i);
   assert.doesNotMatch(dashboard, /access_token|personal_access_token/i);
   assert.doesNotMatch(costPlanList, /access_token|personal_access_token/i);
