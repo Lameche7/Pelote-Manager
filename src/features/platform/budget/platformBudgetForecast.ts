@@ -1,4 +1,11 @@
-import type { PlatformCostPlan } from "../services/platformRegistryService";
+export type PlatformBudgetPlan = {
+  clubId: string;
+  currency: string;
+  oneTimeCents: number;
+  monthlyCents: number;
+  createsBillableResource: boolean;
+  status: "pending" | "approved" | "expired" | "revoked" | "superseded";
+};
 
 export type PlatformBudgetForecast = {
   clubId: string;
@@ -30,12 +37,12 @@ function getForecastMonth(date: Date) {
   return `${year}-${month}`;
 }
 
-function isCleared(plan: PlatformCostPlan) {
+function isCleared(plan: PlatformBudgetPlan) {
   return !plan.createsBillableResource || plan.status === "approved";
 }
 
 export function buildPlatformBudgetForecasts(
-  plans: PlatformCostPlan[],
+  plans: PlatformBudgetPlan[],
   now = new Date(),
 ): PlatformBudgetForecast[] {
   const forecastMonth = getForecastMonth(now);
