@@ -6,7 +6,7 @@ import {
 import { authorizeLiveStepPlan } from "./costApprovalGuard.mjs";
 
 export const LIVE_PROVISIONING_DISABLED_MESSAGE =
-  "L’exécution réelle Supabase/Vercel reste désactivée dans la PR43.";
+  "Le mode réel Supabase/Vercel n’est pas disponible dans la PR43 : l’exécution reste désactivée.";
 
 export function createLiveProvisioningPlanner({
   supabaseAdapter,
