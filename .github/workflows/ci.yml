@@ -21,11 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic formatage confirmation PR43
-        run: |
-          npx prettier --write src/features/platform/components/PlatformLiveExecutionConfirmationPanel.tsx src/features/platform/pages/PlatformDashboardPage.tsx src/features/platform/services/platformRegistryService.ts workers/platform-provisioner/providers/live/liveExecutionConfirmationGuard.mjs
-          git diff -- src/features/platform/components/PlatformLiveExecutionConfirmationPanel.tsx src/features/platform/pages/PlatformDashboardPage.tsx src/features/platform/services/platformRegistryService.ts workers/platform-provisioner/providers/live/liveExecutionConfirmationGuard.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
