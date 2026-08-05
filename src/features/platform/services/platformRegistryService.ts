@@ -26,19 +26,12 @@ export type PlatformProvisioningStep =
   | "completed";
 
 export type PlatformCostPlanStatus =
-  | "pending"
-  | "approved"
-  | "expired"
-  | "revoked"
-  | "superseded";
+  "pending" | "approved" | "expired" | "revoked" | "superseded";
 
 export type PlatformCostPlanProvider = "supabase" | "vercel";
 
 export type PlatformLiveExecutionConfirmationStatus =
-  | "confirmed"
-  | "expired"
-  | "revoked"
-  | "consumed";
+  "confirmed" | "expired" | "revoked" | "consumed";
 
 export type PlatformClub = {
   id: string;
@@ -361,9 +354,7 @@ export const platformRegistryService = {
     return String(data);
   },
 
-  async revokeLiveExecutionConfirmation(
-    confirmationId: string,
-  ): Promise<void> {
+  async revokeLiveExecutionConfirmation(confirmationId: string): Promise<void> {
     const { error } = await requirePlatformSupabase().rpc(
       "platform_revoke_live_execution_confirmation",
       {
