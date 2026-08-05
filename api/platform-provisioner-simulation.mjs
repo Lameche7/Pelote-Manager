@@ -130,14 +130,16 @@ function renderPage() {
       button.disabled = true;
       result.textContent = "Exécution en cours…";
       try {
-        const response = await fetch(location.pathname, {
+        const simulationResponse = await fetch(location.pathname, {
           method: "POST",
-          headers: { authorization: `Bearer ${token}` },
+          headers: { authorization: "Bearer " + token },
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || `Erreur HTTP ${response.status}`);
+        const payload = await simulationResponse.json();
+        if (!simulationResponse.ok) {
+          throw new Error(payload.error || "Erreur HTTP " + simulationResponse.status);
+        }
         result.textContent = payload.result
-          ? `Étape terminée : ${payload.result.currentStep} (${payload.result.status}).`
+          ? "Étape terminée : " + payload.result.currentStep + " (" + payload.result.status + ")."
           : "Aucune étape de simulation n’est actuellement en attente.";
       } catch (error) {
         result.textContent = error instanceof Error ? error.message : "Erreur inconnue.";
