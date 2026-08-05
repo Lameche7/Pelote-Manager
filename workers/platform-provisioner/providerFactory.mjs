@@ -1,4 +1,7 @@
 import { createManualProvisioningProvider } from "./manualProvisioningProvider.mjs";
+import {
+  LIVE_PROVISIONING_DISABLED_MESSAGE,
+} from "./providers/live/liveProvisioningPlanner.mjs";
 import { createSimulationProvisioningProvider } from "./providers/simulation/simulationProvisioningProvider.mjs";
 
 export const PROVISIONER_SIMULATION_ACK =
@@ -36,9 +39,7 @@ export function createProvisioningProvider({ env = process.env } = {}) {
   }
 
   if (mode === "live") {
-    throw new Error(
-      "Le mode réel Supabase/Vercel n’est pas disponible dans la PR43.",
-    );
+    throw new Error(LIVE_PROVISIONING_DISABLED_MESSAGE);
   }
 
   throw new Error(`Mode de provisionnement inconnu : ${mode}`);
