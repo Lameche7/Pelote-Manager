@@ -55,6 +55,23 @@ export function createPlatformRegistryClient({
       return Array.isArray(rows) ? (rows[0] ?? null) : null;
     },
 
+    async claimNextSimulationJob(
+      workerId,
+      expectedSlugPrefix = "simulation-",
+      leaseDurationSeconds = 300,
+    ) {
+      const rows = await callRpc(
+        "platform_worker_claim_next_simulation_provisioning",
+        {
+          new_worker_id: workerId,
+          expected_slug_prefix: expectedSlugPrefix,
+          lease_duration_seconds: leaseDurationSeconds,
+        },
+      );
+
+      return Array.isArray(rows) ? (rows[0] ?? null) : null;
+    },
+
     async heartbeat(job, reportedCurrentStep, leaseDurationSeconds = 300) {
       await callRpc("platform_worker_heartbeat_provisioning", {
         target_job_id: job.job_id,
