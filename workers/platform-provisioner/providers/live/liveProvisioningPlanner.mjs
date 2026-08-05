@@ -4,6 +4,7 @@ import {
   createLiveStepPlan,
 } from "./liveAdapterContract.mjs";
 import { authorizeLiveStepPlan } from "./costApprovalGuard.mjs";
+import { authorizeLiveExecutionConfirmation } from "./liveExecutionConfirmationGuard.mjs";
 
 export const LIVE_PROVISIONING_DISABLED_MESSAGE =
   "Le mode réel Supabase/Vercel n’est pas disponible dans la PR43 : l’exécution reste désactivée.";
@@ -48,6 +49,14 @@ export function createLiveProvisioningPlanner({
         plan,
         policy: costPolicy,
         approval,
+        ...options,
+      });
+    },
+
+    authorizeExecution(confirmation, expected, options = {}) {
+      return authorizeLiveExecutionConfirmation({
+        confirmation,
+        expected,
         ...options,
       });
     },
