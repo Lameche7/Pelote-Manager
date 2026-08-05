@@ -10,6 +10,7 @@ Elle contient uniquement :
 - les statuts d’abonnement et de déploiement ;
 - les versions installées et attendues ;
 - les demandes et étapes de provisionnement ;
+- les plans publics de coût et leurs approbations ;
 - un journal d’audit des opérations de plateforme.
 
 Elle ne contient jamais :
@@ -39,16 +40,20 @@ Le navigateur du super administrateur peut :
 - enregistrer un club ;
 - demander la préparation de son instance ;
 - suivre l’étape et le statut de la demande ;
+- consulter les plans publics de coût ;
+- approuver un plan facturable pendant une heure ;
+- révoquer une approbation ;
 - activer le club une fois l’installation technique terminée.
 
 Il ne peut pas créer directement les projets Supabase ou Vercel.
 
 La fonction `platform_request_provisioning` crée une demande idempotente. Une seule demande ouverte est autorisée par club.
 
-Le worker serveur utilise trois commandes réservées au rôle `service_role` :
+Le worker serveur utilise les commandes réservées au rôle `service_role` :
 
 - `platform_worker_claim_next_provisioning` revendique une demande avec un bail temporaire ;
 - `platform_worker_heartbeat_provisioning` prolonge le bail du worker actif ;
+- `platform_worker_store_cost_plan` enregistre un plan public et chiffré ;
 - `platform_worker_update_provisioning` enregistre l’étape suivante et les références publiques obtenues.
 
 Les verrous PostgreSQL empêchent deux workers de prendre la même demande. Une tâche interrompue redevient disponible après expiration de son bail. Toute réponse utilisant un jeton de bail expiré ou remplacé est refusée.
@@ -58,9 +63,28 @@ Le worker peut enregistrer uniquement :
 - la référence et l’URL Supabase ;
 - le nom du projet Vercel ;
 - l’URL du déploiement ;
-- la version installée.
+- la version installée ;
+- le fournisseur, l’étape et l’action d’un plan ;
+- la devise et les montants estimés en centimes ;
+- un résumé public du plan.
 
 Il ne reçoit et ne stocke aucun mot de passe, jeton d’accès ou secret fournisseur. Les erreurs sont nettoyées avant journalisation.
+
+## Plans de coût
+
+Un seul plan courant est autorisé pour une étape d’une demande de provisionnement. Une nouvelle estimation remplace l’ancienne et révoque automatiquement son approbation active.
+
+Les plans sont consultables uniquement par les super administrateurs actifs. Une approbation :
+
+- vise un plan précis ;
+- est liée au compte central de son auteur ;
+- expire automatiquement après une heure ;
+- peut être révoquée ;
+- est enregistrée dans le journal d’audit.
+
+Les états possibles sont `pending`, `approved`, `expired`, `revoked` et `superseded`.
+
+L’approbation ne permet pas au navigateur d’exécuter une création. Le mode réel reste désactivé dans la PR43.
 
 La fin du provisionnement place automatiquement le club en période d’essai. Le passage au statut actif reste une décision explicite du super administrateur.
 
