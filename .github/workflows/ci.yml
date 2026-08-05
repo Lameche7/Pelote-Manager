@@ -21,6 +21,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic formatage budget PR43
+        run: |
+          npx prettier --write src/features/platform/components/PlatformBudgetForecastPanel.tsx tests/platformBudgetForecast.test.mjs
+          git diff -- src/features/platform/components/PlatformBudgetForecastPanel.tsx tests/platformBudgetForecast.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
