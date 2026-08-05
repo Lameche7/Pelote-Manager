@@ -1,324 +1,234 @@
-# 19 - Roadmap de développement
+# 19 — Roadmap de développement
 
-Version : 2.0
+Version : 2.1  
+Mise à jour : 5 août 2026
 
-Ce document décrit le plan de développement de Pelote Manager.
+Ce document est le tableau de pilotage technique de Pelote Manager. Il décrit l’état réel du produit et ne doit pas être interprété comme une promesse commerciale.
 
-Il constitue le document de pilotage technique du projet.
+## Légende
 
-Contrairement à la Roadmap Produit, cette Roadmap est évolutive et peut être mise à jour régulièrement.
+- ✅ **Terminé et intégré** : disponible sur `main` et validé.
+- 🟡 **Partiel** : une partie fonctionne, le périmètre restant est indiqué.
+- ⬜ **À faire** : aucun périmètre complet n’est encore livré.
+- 🔒 **Bloqué volontairement** : préparé techniquement mais désactivé pour des raisons de sécurité ou de coût.
 
----
+## État global
 
-# Objectif
+Pelote Manager dispose désormais d’une application de club fonctionnelle pour l’authentification, les profils, les licenciés, les réservations, les tarifs, le paiement simulé, une partie du paramétrage et le Back Office.
 
-La Roadmap de développement permet :
-
-- de planifier les développements ;
-- de suivre l'avancement du projet ;
-- de définir les priorités techniques ;
-- de préparer les prochaines versions.
-
----
-
-# Philosophie
-
-Le développement progresse par étapes.
-
-Chaque étape doit produire une application :
-
-- fonctionnelle ;
-- testable ;
-- stable.
-
-Une étape n'est jamais considérée comme terminée tant que sa qualité n'est pas validée.
+Le socle multi-instance est intégré : chaque club est destiné à posséder son propre projet Supabase, son authentification, sa base, son stockage et son déploiement. La plateforme centrale super administrateur a été installée et validée en simulation. Le provisionnement réel demeure désactivé.
 
 ---
 
-# Phase 1 — Fondations
+## Phase 1 — Fondations
 
-Objectif :
+**Statut : ✅ Terminé et intégré**
 
-Mettre en place une architecture saine.
+Livré :
 
-Travaux :
-
-- configuration du projet ;
-- architecture React ;
-- configuration TypeScript ;
-- configuration Supabase ;
-- authentification ;
-- architecture SQL ;
-- navigation générale ;
-- composants de base.
-
-Statut :
-
-☐ À faire
+- architecture React et TypeScript ;
+- client Supabase et authentification ;
+- profils utilisateurs ;
+- navigation et routes protégées ;
+- migrations SQL et politiques de sécurité ;
+- tests, typage, lint, formatage et build automatisés ;
+- configuration d’identité propre à chaque instance de club.
 
 ---
 
-# Phase 2 — Paramétrage
+## Phase 2 — Paramétrage du club
 
-Objectif :
+**Statut : 🟡 Partiel**
 
-Permettre au club de configurer entièrement son environnement.
+Livré :
 
-Travaux :
+- informations du club ;
+- horaires d’ouverture ;
+- fermetures ;
+- saisons ;
+- paramètres de réservation ;
+- tarifs effectivement appliqués aux réservations.
 
-- paramètres du club ;
-- horaires d'ouverture ;
-- paramètres des réservations ;
-- paramètres des tournois ;
-- créneaux du tournoi.
+Reste à réaliser :
 
-Statut :
-
-☐ À faire
-
----
-
-# Phase 3 — Gestion des tournois
-
-Objectif :
-
-Permettre la création complète d'un tournoi.
-
-Travaux :
-
-- création d'un tournoi ;
-- gestion des séries ;
-- ouverture des inscriptions ;
-- gestion des équipes ;
-- disponibilités.
-
-Statut :
-
-☐ À faire
+- paramètres propres aux tournois ;
+- définition des créneaux de compétition ;
+- finalisation de certains écrans de configuration avancée.
 
 ---
 
-# Phase 4 — Génération des poules
+## Phase 3 — Gestion des tournois
 
-Objectif :
+**Statut : ⬜ À faire**
 
-Développer le Pool Engine.
+Périmètre prévu :
 
-Travaux :
+- création et cycle de vie d’un tournoi ;
+- séries et catégories ;
+- ouverture et fermeture des inscriptions ;
+- équipes, joueurs et postes ;
+- disponibilités ;
+- distinction tournoi interne / tournoi ouvert.
 
-- calcul des configurations ;
-- génération automatique ;
+Aucun développement ne démarre sans décision explicite de priorité.
+
+---
+
+## Phase 4 — Pool Engine
+
+**Statut : ⬜ À faire**
+
+Périmètre prévu :
+
+- calcul des configurations possibles ;
+- génération automatique des poules ;
+- diagnostics et score de qualité ;
+- validation manuelle avant publication.
+
+---
+
+## Phase 5 — Planning Engine
+
+**Statut : ⬜ À faire**
+
+Périmètre prévu :
+
+- génération des matchs et créneaux ;
+- respect des disponibilités et contraintes ;
+- optimisation et comparaison de solutions ;
 - diagnostics ;
-- score de qualité ;
-- validation.
-
-Statut :
-
-☐ À faire
+- validation avant publication.
 
 ---
 
-# Phase 5 — Génération du planning
+## Phase 6 — Ranking Engine et résultats
 
-Objectif :
+**Statut : ⬜ À faire**
 
-Développer le Planning Engine.
+Périmètre prévu :
 
-Travaux :
-
-- génération du calendrier ;
-- optimisation ;
-- diagnostics ;
-- comparaison de plusieurs solutions ;
-- validation.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 6 — Résultats
-
-Objectif :
-
-Développer le Ranking Engine.
-
-Travaux :
-
-- saisie des scores ;
-- calcul automatique ;
+- saisie et validation des scores ;
+- calcul des points et classements ;
+- goal-average et départages ;
 - statistiques ;
-- classements ;
-- publication.
-
-Statut :
-
-☐ À faire
+- publication des résultats.
 
 ---
 
-# Phase 7 — Réservations
+## Phase 7 — Réservations du trinquet
 
-Objectif :
+**Statut : ✅ Opérationnel**
 
-Mettre en place la réservation du trinquet.
+Livré :
 
-Travaux :
+- calendrier et disponibilités ;
+- création et annulation des réservations ;
+- prévention des conflits ;
+- espace personnel et historique ;
+- gestion administrative ;
+- tarifs licencié et visiteur ;
+- paiement simulé ;
+- bases du flux HelloAsso.
 
-- calendrier ;
-- réservations ;
-- annulations ;
-- paramètres ;
-- gestion des conflits.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 8 — Portail public
-
-Objectif :
-
-Mettre à disposition les informations publiques.
-
-Travaux :
-
-- accueil ;
-- inscriptions ;
-- planning ;
-- résultats ;
-- classements.
-
-Statut :
-
-☐ À faire
+À consolider ultérieurement : paiement réel, remboursements et notifications automatiques.
 
 ---
 
-# Phase 9 — Affichage dynamique
+## Phase 8 — Portail public
 
-Objectif :
+**Statut : 🟡 Partiel**
 
-Développer le Mode TV.
+Livré :
 
-Travaux :
+- accueil public ;
+- accès aux réservations ;
+- inscription et connexion ;
+- identité visuelle configurable par club.
 
-- rotation automatique ;
-- résultats ;
-- planning ;
-- classements ;
-- partenaires.
+Reste à réaliser avec le domaine Tournois :
 
-Statut :
-
-☐ À faire
+- inscriptions publiques aux compétitions ;
+- planning publié ;
+- résultats et classements publics.
 
 ---
 
-# Phase 10 — Finalisation
+## Phase 9 — Mode TV
 
-Objectif :
+**Statut : ⬜ À faire**
 
-Préparer la mise en production.
+Périmètre prévu : rotation automatique, planning, résultats, classements et partenaires.
 
-Travaux :
+---
 
-- optimisation ;
-- corrections ;
-- tests ;
+## Phase 10 — Finalisation produit
+
+**Statut : 🟡 En continu**
+
+Travaux permanents :
+
+- corrections et non-régressions ;
+- sécurité et permissions ;
+- performance ;
 - documentation ;
-- déploiement.
-
-Statut :
-
-☐ À faire
+- déploiements contrôlés ;
+- accessibilité et ergonomie.
 
 ---
 
-# Règles de développement
+## Chantier transversal — Administration du club
 
-Chaque phase doit respecter les étapes suivantes :
+**Statut : 🟡 Consolidation en cours dans la PR44**
 
-1. Documentation.
-2. Développement.
-3. Tests.
-4. Validation.
-5. Intégration.
+Objectifs immédiats :
 
-Aucune phase ne doit être considérée comme terminée sans validation complète.
-
----
-
-# Gestion des anomalies
-
-Les anomalies sont classées selon leur gravité.
-
-Critique
-
-Empêche l'utilisation du logiciel.
-
-Haute
-
-Fonction importante dégradée.
-
-Moyenne
-
-Fonction secondaire impactée.
-
-Faible
-
-Problème esthétique ou mineur.
-
-Les anomalies critiques sont corrigées avant tout nouveau développement.
+- utiliser les permissions de `club_memberships` comme source de vérité ;
+- synchroniser automatiquement le rôle Administrateur et son habilitation ;
+- masquer et protéger le Back Office pour les comptes non habilités ;
+- reprendre les anciens administrateurs sans correction SQL manuelle.
 
 ---
 
-# Critères de validation
+## Chantier transversal — Plateforme multi-instance
 
-Une phase est validée lorsque :
+**Statut : ✅ Socle simulé / 🔒 exécution réelle désactivée**
 
-✓ Les fonctionnalités prévues sont terminées.
+Livré :
 
-✓ Les tests sont validés.
+- configuration d’une instance par club ;
+- registre commercial et technique central séparé ;
+- authentification super administrateur distincte ;
+- suivi reprenable du provisionnement ;
+- plans de coût et confirmations ;
+- simulation complète sans création de ressources réelles.
 
-✓ La documentation est à jour.
+Non livré volontairement :
 
-✓ Les règles métier sont respectées.
+- création réelle de projets Supabase ;
+- création réelle de projets Vercel ;
+- facturation ou dépense automatique ;
+- partage de comptes ou de données métier entre clubs.
 
-✓ Aucun bug bloquant n'est identifié.
-
----
-
-# Suivi
-
-Le suivi du développement est réalisé au moyen de GitHub.
-
-Chaque évolution est associée à :
-
-- une Issue ;
-- une branche dédiée ;
-- une Pull Request ;
-- une validation avant fusion.
+Le mode réel ne sera étudié que lorsqu’un besoin commercial concret le justifiera et après une validation séparée.
 
 ---
 
-# Révision
+## Règles de développement
 
-Cette Roadmap est un document vivant.
+Chaque évolution suit obligatoirement :
 
-Elle est mise à jour à la fin de chaque phase importante.
+1. besoin et périmètre validés ;
+2. Issue GitHub ;
+3. branche dédiée ;
+4. développement et migrations ;
+5. tests automatisés ;
+6. Preview et validation fonctionnelle ;
+7. Pull Request ;
+8. fusion contrôlée ;
+9. contrôle de production.
 
----
+Une anomalie critique ou haute est traitée avant une nouvelle fonction non prioritaire.
 
-# Principe fondamental
+## Prochaine décision
 
-Le développement de Pelote Manager privilégie la qualité à la vitesse.
-
-Chaque étape doit produire une version stable, documentée et évolutive.
-
-L'objectif n'est pas de développer plus vite.
-
-L'objectif est de développer durablement.
+Après la PR44, la prochaine évolution fonctionnelle sera choisie explicitement. La présente roadmap n’engage pas automatiquement le démarrage du module Tournois, du provisionnement réel ou d’un autre chantier.
