@@ -94,10 +94,13 @@ test("un changement de plan, de coût ou une expiration bloque l’exécution", 
 test("la base exige les approbations, le slug, la phrase exacte et dix minutes", () => {
   assert.match(migration, /platform_live_execution_confirmations/);
   assert.match(migration, /public\.is_platform_admin\(\)/);
-  assert.match(migration, /typed_club_slug\s+<>\s+snapshot\.club_slug/);
   assert.match(
     migration,
-    /typed_confirmation\s+<>\s+snapshot\.confirmation_phrase/,
+    /typed_club_slug\s+is distinct from\s+snapshot\.club_slug/,
+  );
+  assert.match(
+    migration,
+    /typed_confirmation\s+is distinct from\s+snapshot\.confirmation_phrase/,
   );
   assert.match(migration, /interval '10 minutes'/);
   assert.match(migration, /Tous les plans facturables doivent être approuvés/);
