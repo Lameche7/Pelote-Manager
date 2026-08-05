@@ -7,6 +7,7 @@ import type {
   PlatformClub,
   PlatformCostPlan,
 } from "../services/platformRegistryService";
+import "./PlatformBudgetForecastPanel.css";
 
 function formatCost(cents: number, currency: string) {
   return new Intl.NumberFormat("fr-FR", {
