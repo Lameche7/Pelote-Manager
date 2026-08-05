@@ -102,7 +102,8 @@ export function PlatformCostPlanList({
 
             {plan.status === "approved" && plan.approvalExpiresAt && (
               <small>
-                Approbation valable jusqu’au {formatExpiry(plan.approvalExpiresAt)}.
+                Approbation valable jusqu’au{" "}
+                {formatExpiry(plan.approvalExpiresAt)}.
               </small>
             )}
 
