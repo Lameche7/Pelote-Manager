@@ -83,7 +83,7 @@ declare
   snapshot_material text;
   snapshot_key text;
 begin
-  select jobs.*, clubs.slug
+  select jobs, clubs.slug
   into target_job, target_slug
   from public.platform_provisioning_jobs as jobs
   join public.platform_clubs as clubs on clubs.id = jobs.club_id
@@ -255,17 +255,17 @@ begin
   into snapshot
   from public.platform_live_execution_snapshot(target_job_id);
 
-  if expected_plan_set_key <> snapshot.plan_set_key then
+  if expected_plan_set_key is distinct from snapshot.plan_set_key then
     raise exception 'Les plans ont changé : une nouvelle prévisualisation est obligatoire'
       using errcode = '22023';
   end if;
 
-  if typed_club_slug <> snapshot.club_slug then
+  if typed_club_slug is distinct from snapshot.club_slug then
     raise exception 'Le slug du club ne correspond pas exactement'
       using errcode = '22023';
   end if;
 
-  if typed_confirmation <> snapshot.confirmation_phrase then
+  if typed_confirmation is distinct from snapshot.confirmation_phrase then
     raise exception 'La phrase de confirmation ne correspond pas exactement'
       using errcode = '22023';
   end if;
@@ -469,7 +469,7 @@ begin
   into snapshot
   from public.platform_live_execution_snapshot(target_job_id);
 
-  if expected_plan_set_key <> snapshot.plan_set_key then
+  if expected_plan_set_key is distinct from snapshot.plan_set_key then
     raise exception 'La confirmation ne correspond plus aux plans courants'
       using errcode = '22023';
   end if;
