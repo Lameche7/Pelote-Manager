@@ -40,10 +40,22 @@ const numberValue = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const weekdays = ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+const weekdays = [
+  "",
+  "Lundi",
+  "Mardi",
+  "Mercredi",
+  "Jeudi",
+  "Vendredi",
+  "Samedi",
+  "Dimanche",
+];
 
 export const statisticsAdminService = {
-  async getStatistics(periodStart: string, periodEnd: string): Promise<ClubStatistics> {
+  async getStatistics(
+    periodStart: string,
+    periodEnd: string,
+  ): Promise<ClubStatistics> {
     const { data, error } = await supabase.rpc("admin_get_club_statistics", {
       period_start: periodStart,
       period_end: periodEnd,
