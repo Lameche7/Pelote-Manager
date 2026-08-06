@@ -108,15 +108,15 @@ export function TvDisplayPage() {
   }, []);
 
   useEffect(() => {
-    if (!display || display.status === "invalid") return;
+    if (!tokenIsValid || display?.status === "invalid") return;
 
     const refresh = window.setInterval(
       () => void loadDisplay(false),
-      display.refreshIntervalSeconds * 1_000,
+      (display?.refreshIntervalSeconds ?? 30) * 1_000,
     );
 
     return () => window.clearInterval(refresh);
-  }, [display, loadDisplay]);
+  }, [display?.refreshIntervalSeconds, display?.status, loadDisplay, tokenIsValid]);
 
   const clubName = display?.clubName || CLUB_CONFIG.name;
   const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
@@ -126,7 +126,8 @@ export function TvDisplayPage() {
   );
 
   useEffect(() => {
-    document.title = display?.status === "ready" ? `Mode TV — ${clubName}` : "Mode TV";
+    document.title =
+      display?.status === "ready" ? `Mode TV — ${clubName}` : "Mode TV";
   }, [clubName, display?.status]);
 
   if (isLoading) {
@@ -143,7 +144,7 @@ export function TvDisplayPage() {
       <main className="tv-display tv-display--centered">
         <WifiOff aria-hidden="true" />
         <h1>Connexion momentanément indisponible</h1>
-        <p>L’écran tentera de se reconnecter lors du prochain chargement.</p>
+        <p>L’écran tente automatiquement de se reconnecter.</p>
       </main>
     );
   }
@@ -179,7 +180,10 @@ export function TvDisplayPage() {
           </div>
         </div>
 
-        <div className="tv-display__clock" aria-label="Date et heure actuelles">
+        <div
+          className="tv-display__clock"
+          aria-label="Date et heure actuelles"
+        >
           <div>
             <CalendarDays aria-hidden="true" />
             <span>{displayedDate}</span>
@@ -195,7 +199,10 @@ export function TvDisplayPage() {
         </p>
       )}
 
-      <section className="tv-display__resources" aria-label="Créneaux par terrain">
+      <section
+        className="tv-display__resources"
+        aria-label="Créneaux par terrain"
+      >
         {display.resources.map((resource) => (
           <article className="tv-display__resource" key={resource.id}>
             <header>
