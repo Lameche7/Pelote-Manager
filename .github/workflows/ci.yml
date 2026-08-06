@@ -21,22 +21,25 @@ jobs:
 
       - run: npm ci
 
-      - name: Formater et imprimer les fichiers PR57
+      - name: Formater les fichiers PR57
         run: |
-          files=(
+          npx prettier --write \
+            src/features/admin/club/pages/ClubBranding.css \
+            src/features/admin/club/pages/ClubInformationPage.tsx \
+            src/features/admin/statistics/pages/AdminStatisticsPage.css \
+            src/features/admin/statistics/pages/AdminStatisticsPage.tsx \
+            tests/clubStatisticsBranding.test.mjs
+
+      - name: Exporter les fichiers formatés
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr57-formatted
+          path: |
             src/features/admin/club/pages/ClubBranding.css
             src/features/admin/club/pages/ClubInformationPage.tsx
             src/features/admin/statistics/pages/AdminStatisticsPage.css
             src/features/admin/statistics/pages/AdminStatisticsPage.tsx
             tests/clubStatisticsBranding.test.mjs
-          )
-          npx prettier --write "${files[@]}"
-          for file in "${files[@]}"; do
-            echo "FORMATTED_FILE_BEGIN:$file"
-            base64 -w0 "$file"
-            echo
-            echo "FORMATTED_FILE_END:$file"
-          done
 
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
