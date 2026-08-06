@@ -1,9 +1,10 @@
 import { localInputToStoredDateTime } from "@/features/admin/events/domain/eventDateTime";
+import type {
+  CommunicationPriority,
+  CommunicationStatus,
+} from "@/features/communication/domain/communication";
 import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
-
-export type CommunicationPriority = "normal" | "important" | "urgent";
-export type CommunicationStatus = "draft" | "published" | "archived";
 
 export type AdminCommunication = {
   id: string;
