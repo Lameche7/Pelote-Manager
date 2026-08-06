@@ -12,6 +12,7 @@ import {
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
 
 const benefits = [
