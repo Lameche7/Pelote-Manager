@@ -104,7 +104,9 @@ export function ClubInformationPage() {
     setStatus("");
 
     if (!club.name.trim() || !club.shortName.trim() || !club.logoAlt.trim()) {
-      setStatus("Le nom, le nom court et le texte alternatif du logo sont obligatoires.");
+      setStatus(
+        "Le nom, le nom court et le texte alternatif du logo sont obligatoires.",
+      );
       return;
     }
 
@@ -123,7 +125,10 @@ export function ClubInformationPage() {
     try {
       let nextClub = { ...club };
       if (logoFile) {
-        nextClub.logoUrl = await clubIdentityService.uploadLogo(club.id, logoFile);
+        nextClub.logoUrl = await clubIdentityService.uploadLogo(
+          club.id,
+          logoFile,
+        );
       }
       if (heroFile) {
         nextClub.heroImageUrl = await clubIdentityService.uploadHeroImage(
@@ -292,7 +297,9 @@ export function ClubInformationPage() {
               <Palette aria-hidden="true" />
               <div>
                 <h2>Palette du club</h2>
-                <p>Quatre couleurs structurent automatiquement toute l’interface.</p>
+                <p>
+                  Quatre couleurs structurent automatiquement toute l’interface.
+                </p>
               </div>
             </header>
             <div className="club-identity__palette">
@@ -333,7 +340,9 @@ export function ClubInformationPage() {
                 Adresse
                 <textarea
                   value={club.address}
-                  onChange={(event) => updateText("address", event.target.value)}
+                  onChange={(event) =>
+                    updateText("address", event.target.value)
+                  }
                 />
               </label>
               {textField("socialLinks", "Réseaux sociaux")}
@@ -351,7 +360,10 @@ export function ClubInformationPage() {
         <aside className="club-identity__preview-column">
           <div className="club-identity__preview-sticky">
             <p>Aperçu de l’accueil</p>
-            <article className="club-identity__site-preview" style={previewStyle}>
+            <article
+              className="club-identity__site-preview"
+              style={previewStyle}
+            >
               <div className="club-identity__preview-header">
                 {logoPreview && <img src={logoPreview} alt="" />}
                 <strong>Pelote Manager</strong>
