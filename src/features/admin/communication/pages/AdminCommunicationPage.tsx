@@ -29,7 +29,9 @@ const statusLabels = {
 } as const;
 
 export function AdminCommunicationPage() {
-  const [communications, setCommunications] = useState<AdminCommunication[]>([]);
+  const [communications, setCommunications] = useState<AdminCommunication[]>(
+    [],
+  );
   const [draft, setDraft] = useState<CommunicationDraft | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -134,7 +136,10 @@ export function AdminCommunicationPage() {
       </div>
 
       {error && (
-        <p className="communication-admin__alert communication-admin__alert--error" role="alert">
+        <p
+          className="communication-admin__alert communication-admin__alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -168,14 +173,20 @@ export function AdminCommunicationPage() {
             <header className="communication-card__header">
               <div>
                 <div className="communication-card__badges">
-                  <span className={`communication-card__priority communication-card__priority--${communication.priority}`}>
+                  <span
+                    className={`communication-card__priority communication-card__priority--${communication.priority}`}
+                  >
                     {priorityLabels[communication.priority]}
                   </span>
-                  <span className={`communication-card__status communication-card__status--${communication.status}`}>
+                  <span
+                    className={`communication-card__status communication-card__status--${communication.status}`}
+                  >
                     {statusLabels[communication.status]}
                   </span>
                   {communication.showOnHome && (
-                    <span className="communication-card__home">Bandeau accueil</span>
+                    <span className="communication-card__home">
+                      Bandeau accueil
+                    </span>
                   )}
                 </div>
                 <h2>{communication.title}</h2>
@@ -220,12 +231,16 @@ export function AdminCommunicationPage() {
               <div className="communication-card__dates">
                 {communication.publishedAt && (
                   <span>
-                    Publiée le {new Date(communication.publishedAt).toLocaleString("fr-FR")}
+                    Publiée le{" "}
+                    {new Date(communication.publishedAt).toLocaleString(
+                      "fr-FR",
+                    )}
                   </span>
                 )}
                 {communication.expiresAt && (
                   <span>
-                    Fin d’affichage le {new Date(communication.expiresAt).toLocaleString("fr-FR")}
+                    Fin d’affichage le{" "}
+                    {new Date(communication.expiresAt).toLocaleString("fr-FR")}
                   </span>
                 )}
               </div>
@@ -339,7 +354,12 @@ function CommunicationForm({
   ) => setValue((current) => ({ ...current, [key]: next }));
 
   return (
-    <div className="communication-modal" role="dialog" aria-modal="true" aria-labelledby="communication-form-title">
+    <div
+      className="communication-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="communication-form-title"
+    >
       <form
         className="communication-form"
         onSubmit={(event) => {
@@ -387,10 +407,7 @@ function CommunicationForm({
             <select
               value={value.priority}
               onChange={(event) =>
-                update(
-                  "priority",
-                  event.target.value as CommunicationPriority,
-                )
+                update("priority", event.target.value as CommunicationPriority)
               }
             >
               <option value="normal">Normale</option>
@@ -427,7 +444,11 @@ function CommunicationForm({
           <button type="button" disabled={saving} onClick={onCancel}>
             Annuler
           </button>
-          <button className="communication-admin__primary" type="submit" disabled={saving}>
+          <button
+            className="communication-admin__primary"
+            type="submit"
+            disabled={saving}
+          >
             {saving ? "Enregistrement…" : "Enregistrer le brouillon"}
           </button>
         </footer>
