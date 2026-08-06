@@ -194,34 +194,10 @@ export const routes = [
               <AdminPaymentsPage />,
             ),
           },
-          {
-            path: "membres",
-            element: permitted(
-              ADMIN_PERMISSIONS.members,
-              <AdminMembersPage />,
-            ),
-          },
-          {
-            path: "membres/importer",
-            element: permitted(
-              ADMIN_PERMISSIONS.members,
-              <MemberImportPage />,
-            ),
-          },
-          {
-            path: "membres/imports/:importId",
-            element: permitted(
-              ADMIN_PERMISSIONS.members,
-              <MemberImportDetailPage />,
-            ),
-          },
-          {
-            path: "membres/imports",
-            element: permitted(
-              ADMIN_PERMISSIONS.members,
-              <MemberImportsPage />,
-            ),
-          },
+          { path: "membres", element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />) },
+          { path: "membres/importer", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportPage />) },
+          { path: "membres/imports/:importId", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportDetailPage />) },
+          { path: "membres/imports", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportsPage />) },
           {
             path: "membres/recherche-globale",
             element: permittedAny(
