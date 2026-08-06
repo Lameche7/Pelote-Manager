@@ -61,7 +61,8 @@ const compactDateFormatter = new Intl.DateTimeFormat("fr-FR", {
   month: "short",
 });
 
-const formatCurrency = (cents: number) => currencyFormatter.format(cents / 100);
+const formatCurrency = (cents: number) =>
+  currencyFormatter.format(cents / 100);
 const formatDate = (value: string) =>
   value ? dateFormatter.format(new Date(`${value}T12:00:00`)) : "—";
 const formatCompactDate = (value: string) =>
@@ -95,7 +96,10 @@ function DistributionBars({
     <div className="admin-statistics__bar-list">
       {visibleRows.map((row) => {
         const style: BarStyle = {
-          "--statistics-bar-size": `${Math.max(5, (row.reservations / maximum) * 100)}%`,
+          "--statistics-bar-size": `${Math.max(
+            5,
+            (row.reservations / maximum) * 100,
+          )}%`,
         };
         return (
           <div className="admin-statistics__bar-row" key={row.key}>
@@ -212,7 +216,10 @@ export function AdminStatisticsPage() {
         </button>
       </header>
 
-      <form className="admin-card admin-statistics__filters" onSubmit={applyPeriod}>
+      <form
+        className="admin-card admin-statistics__filters"
+        onSubmit={applyPeriod}
+      >
         <div className="admin-statistics__quick-periods">
           <button type="button" onClick={() => applyRollingPeriod(7)}>
             7 jours
@@ -356,7 +363,10 @@ export function AdminStatisticsPage() {
                   )}%`,
                 };
                 return (
-                  <div key={row.day} title={`${row.reservations} réservation(s)`}>
+                  <div
+                    key={row.day}
+                    title={`${row.reservations} réservation(s)`}
+                  >
                     <strong>{row.reservations}</strong>
                     <span aria-hidden="true">
                       <i style={style} />
@@ -451,7 +461,9 @@ export function AdminStatisticsPage() {
                 <CircleDollarSign aria-hidden="true" />
                 <div>
                   <h2>État des paiements</h2>
-                  <p>Toutes les tentatives liées aux réservations de la période.</p>
+                  <p>
+                    Toutes les tentatives liées aux réservations de la période.
+                  </p>
                 </div>
               </div>
             </header>
