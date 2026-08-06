@@ -41,6 +41,7 @@ import { PlatformLoginPage } from "@/features/platform/pages/PlatformLoginPage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
+import { TvDisplayPage } from "@/features/tv/pages/TvDisplayPage";
 import { UserSpaceDashboardPage } from "@/features/user-space/dashboard/pages/UserSpaceDashboardPage";
 import { MyProfilePage } from "@/features/user-space/profile/pages/MyProfilePage";
 import { ROUTES, USER_ROLES } from "@/shared/config";
@@ -62,6 +63,7 @@ const allAuthenticatedRoles = [
 ];
 
 export const routes = [
+  { path: `${ROUTES.tv}/:token`, element: <TvDisplayPage /> },
   {
     path: ROUTES.platform,
     element: <PlatformProviderLayout />,

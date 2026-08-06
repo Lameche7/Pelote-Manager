@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Monitor, RefreshCcw, Save } from "lucide-react";
+import { Copy, ExternalLink, Monitor, RefreshCcw, Save } from "lucide-react";
 import {
   adminTvSettingsService,
   type TvModeSettings,
@@ -326,9 +326,8 @@ export function AdminTvSettingsPage() {
       <article className="admin-tv-settings__panel">
         <h2>Lien public sécurisé</h2>
         <p>
-          Ce lien est difficile à deviner et pourra être ouvert sur la
-          télévision sans connexion. L’écran correspondant sera branché dans la
-          prochaine étape.
+          Ce lien est difficile à deviner et peut être ouvert sur la télévision
+          sans connexion. Enregistrez les paramètres avant de vérifier l’écran.
         </p>
         <div className="admin-tv-settings__url">
           <input
@@ -340,6 +339,14 @@ export function AdminTvSettingsPage() {
             <Copy aria-hidden="true" /> Copier
           </button>
         </div>
+        <a
+          className="admin-tv-settings__open-link"
+          href={publicUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <ExternalLink aria-hidden="true" /> Ouvrir l’écran TV
+        </a>
         <button
           className="admin-tv-settings__secondary-button"
           type="button"

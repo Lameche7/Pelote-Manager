@@ -246,6 +246,7 @@
 }
 
 .admin-tv-settings__url button,
+.admin-tv-settings__open-link,
 .admin-tv-settings__secondary-button,
 .admin-tv-settings__save-button {
   display: inline-flex;
@@ -264,6 +265,7 @@
   background: var(--brand-blue);
 }
 
+.admin-tv-settings__open-link,
 .admin-tv-settings__secondary-button {
   margin-top: 0.75rem;
   border: 1px solid #cbd5da;
@@ -271,7 +273,18 @@
   background: #fff;
 }
 
+.admin-tv-settings__open-link {
+  margin-right: 0.6rem;
+  text-decoration: none;
+}
+
+.admin-tv-settings__open-link:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+
 .admin-tv-settings__url button svg,
+.admin-tv-settings__open-link svg,
 .admin-tv-settings__secondary-button svg,
 .admin-tv-settings__save-button svg {
   width: 1rem;
@@ -322,8 +335,14 @@
     grid-column: 1 / -1;
   }
 
+  .admin-tv-settings__open-link,
+  .admin-tv-settings__secondary-button,
   .admin-tv-settings__actions,
   .admin-tv-settings__save-button {
     width: 100%;
+  }
+
+  .admin-tv-settings__open-link {
+    margin-right: 0;
   }
 }
