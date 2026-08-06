@@ -1,0 +1,20 @@
+.app-navigation__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.app-navigation__badge {
+  display: inline-grid;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  padding-inline: 0.3rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.67rem;
+  font-weight: 900;
+  line-height: 1;
+  background: var(--brand-red);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 16%);
+}

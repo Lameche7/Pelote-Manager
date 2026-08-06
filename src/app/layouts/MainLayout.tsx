@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { adminAccessService, type ClubAccess } from "@/features/admin/access/adminAccessService";
+import {
+  adminAccessService,
+  type ClubAccess,
+} from "@/features/admin/access/adminAccessService";
 import { canAccessAdminDashboard } from "@/features/admin/access/adminAccessRules";
+import {
+  NOTIFICATIONS_CHANGED_EVENT,
+  notificationService,
+} from "@/features/notifications/services/notificationService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import "./MainLayout.css";
 
 const navClassName = ({ isActive }: { isActive: boolean }) =>
   `app-navigation__link${isActive ? " app-navigation__link--active" : ""}`;
@@ -13,6 +21,7 @@ export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const [isAdminAccessLoading, setIsAdminAccessLoading] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     document.title = `${APP_CONFIG.name} · ${CLUB_CONFIG.name}`;
@@ -55,6 +64,34 @@ export function MainLayout() {
     };
   }, [isAuthenticated, isLoading, user]);
 
+  useEffect(() => {
+    let active = true;
+
+    const loadUnread = () => {
+      if (isLoading || !isAuthenticated || !user) {
+        setUnreadNotifications(0);
+        return;
+      }
+
+      notificationService
+        .countUnread()
+        .then((count) => {
+          if (active) setUnreadNotifications(count);
+        })
+        .catch(() => {
+          if (active) setUnreadNotifications(0);
+        });
+    };
+
+    loadUnread();
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, loadUnread);
+
+    return () => {
+      active = false;
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, loadUnread);
+    };
+  }, [isAuthenticated, isLoading, user]);
+
   return (
     <div className="app-layout">
       <header className="app-header">
@@ -80,6 +117,14 @@ export function MainLayout() {
           {!isLoading && isAuthenticated && (
             <NavLink className={navClassName} to={ROUTES.userSpace}>
               Mon espace
+              {unreadNotifications > 0 && (
+                <span
+                  className="app-navigation__badge"
+                  aria-label={`${unreadNotifications} notification${unreadNotifications > 1 ? "s" : ""} non lue${unreadNotifications > 1 ? "s" : ""}`}
+                >
+                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                </span>
+              )}
             </NavLink>
           )}
           {!isLoading &&

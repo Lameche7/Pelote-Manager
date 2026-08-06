@@ -5,9 +5,14 @@ import {
   publicEventService,
   type PublicEvent,
 } from "@/features/home/services/publicEventService";
+import {
+  notificationService,
+  type MemberHomeBanner,
+} from "@/features/notifications/services/notificationService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
 
 const benefits = [
@@ -33,6 +38,12 @@ const benefits = [
   },
 ];
 
+const bannerPriorityLabels = {
+  normal: "Information du club",
+  important: "Information importante",
+  urgent: "Information urgente",
+} as const;
+
 type ClubHeroStyle = CSSProperties & {
   "--club-hero-image": string;
 };
@@ -46,6 +57,7 @@ export function HomePage() {
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [banners, setBanners] = useState<MemberHomeBanner[]>([]);
   const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
     .filter(Boolean)
     .join(" · ");
@@ -76,6 +88,27 @@ export function HomePage() {
       })
       .finally(() => {
         if (active) setEventsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, isAuthLoading]);
+
+  useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) {
+      setBanners([]);
+      return;
+    }
+
+    let active = true;
+    notificationService
+      .listHomeBanners()
+      .then((clubBanners) => {
+        if (active) setBanners(clubBanners);
+      })
+      .catch(() => {
+        if (active) setBanners([]);
       });
 
     return () => {
@@ -116,6 +149,29 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {banners.length > 0 && (
+        <section
+          className="premium-home__announcements"
+          aria-label="Informations importantes du club"
+        >
+          <div className="premium-home__announcement-list">
+            {banners.map((banner) => (
+              <article
+                className={`club-announcement club-announcement--${banner.priority}`}
+                key={banner.communicationId}
+              >
+                <div>
+                  <p>{bannerPriorityLabels[banner.priority]}</p>
+                  <h2>{banner.title}</h2>
+                  <span>{banner.body}</span>
+                </div>
+                <Link to={ROUTES.myNotifications}>Voir mes notifications →</Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section
         className="premium-home__benefits"

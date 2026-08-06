@@ -1,0 +1,93 @@
+.premium-home__announcements {
+  padding: 1rem 1.5rem;
+  background: #eef3f1;
+}
+
+.premium-home__announcement-list {
+  display: grid;
+  width: min(100%, var(--content-width));
+  gap: 0.75rem;
+  margin: 0 auto;
+}
+
+.club-announcement {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  overflow: hidden;
+  padding: 1rem 1.2rem 1rem 1.5rem;
+  border: 1px solid rgb(15 61 46 / 15%);
+  border-radius: 0.9rem;
+  color: #173e32;
+  background: #fff;
+  box-shadow: 0 0.7rem 1.8rem rgb(15 61 46 / 7%);
+}
+
+.club-announcement::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.38rem;
+  content: "";
+  background: var(--brand-green-light);
+}
+
+.club-announcement--important {
+  border-color: rgb(217 119 6 / 25%);
+  background: #fffaf0;
+}
+
+.club-announcement--important::before {
+  background: #d97706;
+}
+
+.club-announcement--urgent {
+  border-color: rgb(214 40 40 / 28%);
+  background: #fff5f5;
+}
+
+.club-announcement--urgent::before {
+  background: var(--brand-red);
+}
+
+.club-announcement p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.club-announcement h2 {
+  margin: 0.25rem 0 0.3rem;
+  color: var(--brand-green);
+  font-size: 1.15rem;
+}
+
+.club-announcement > div > span {
+  display: block;
+  color: #4a5961;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.club-announcement > a {
+  flex: 0 0 auto;
+  color: var(--brand-blue);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+@media (max-width: 42rem) {
+  .premium-home__announcements {
+    padding-inline: 1rem;
+  }
+
+  .club-announcement {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
