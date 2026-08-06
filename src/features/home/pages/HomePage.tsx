@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { useClubBranding } from "@/features/branding/context/ClubBrandingContext";
 import { formatPublicEventPeriod } from "@/features/home/domain/publicEventPresentation";
 import {
   publicEventService,
@@ -10,7 +11,7 @@ import {
   type MemberHomeBanner,
 } from "@/features/notifications/services/notificationService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
-import { CLUB_CONFIG, ROUTES } from "@/shared/config";
+import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
@@ -53,16 +54,17 @@ type PublicEventCardStyle = CSSProperties & {
 };
 
 export function HomePage() {
+  const { branding } = useClubBranding();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [banners, setBanners] = useState<MemberHomeBanner[]>([]);
-  const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
+  const venueLabel = [branding.venueName, branding.location]
     .filter(Boolean)
     .join(" · ");
   const heroStyle: ClubHeroStyle = {
-    "--club-hero-image": `url("${CLUB_CONFIG.heroImageUrl}")`,
+    "--club-hero-image": `url("${branding.heroImageUrl}")`,
   };
 
   useEffect(() => {
@@ -129,15 +131,15 @@ export function HomePage() {
         <div className="premium-home__veil" aria-hidden="true" />
         <div className="premium-home__content">
           <ClubLogo className="premium-home__logo" />
-          <p className="premium-home__eyebrow">{CLUB_CONFIG.name}</p>
+          <p className="premium-home__eyebrow">{branding.name}</p>
           <h1 id="home-title">Pelote Manager</h1>
           <p className="premium-home__signature">
-            {CLUB_CONFIG.foundedYear && (
+            {branding.foundedYear && (
               <>
-                Depuis <strong>{CLUB_CONFIG.foundedYear}</strong> –{" "}
+                Depuis <strong>{branding.foundedYear}</strong> –{" "}
               </>
             )}
-            {CLUB_CONFIG.tagline}
+            {branding.tagline}
           </p>
           <div className="premium-home__actions">
             <Link className="button button--primary" to={ROUTES.reservations}>
@@ -276,7 +278,7 @@ export function HomePage() {
           <div>
             <p className="section-kicker">{venueLabel}</p>
             <h2>Le club, notre passion.</h2>
-            <p>{CLUB_CONFIG.description}</p>
+            <p>{branding.description}</p>
             <Link className="text-link" to={ROUTES.reservations}>
               Voir les créneaux disponibles →
             </Link>
