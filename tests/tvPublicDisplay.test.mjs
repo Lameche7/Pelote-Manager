@@ -38,7 +38,10 @@ test("la projection respecte les réglages, les terrains et les créneaux à ven
   assert.match(migration, /now\(\) at time zone 'Europe\/Paris'/);
   assert.match(migration, /selected\.club_id = settings\.club_id/);
   assert.match(migration, /resources\.club_id = selected\.club_id/);
-  assert.match(migration, /opening_hours\.weekday = extract\(dow from display_day\)/);
+  assert.match(
+    migration,
+    /opening_hours\.weekday = extract\(dow from display_day\)/,
+  );
   assert.match(migration, /settings\.display_start_time/);
   assert.match(migration, /settings\.display_end_time/);
   assert.match(migration, /where slots\.ends_at > now\(\)/);
@@ -74,11 +77,8 @@ test("la route TV est publique, plein écran et s’actualise selon le réglage"
   assert.match(service, /target_token: token/);
   assert.match(router, /path: `\$\{ROUTES\.tv\}\/\:token`/);
   assert.match(router, /element: <TvDisplayPage \/>/);
-  assert.doesNotMatch(
-    router,
-    /ROUTES\.tv[\s\S]{0,180}<ProtectedRoute/,
-  );
-  assert.match(page, /display\.refreshIntervalSeconds \* 1_000/);
+  assert.doesNotMatch(router, /ROUTES\.tv[\s\S]{0,180}<ProtectedRoute/);
+  assert.match(page, /display\?\.refreshIntervalSeconds \?\? 30/);
   assert.match(page, /Réservations du jour/);
   assert.match(page, /Disponible/);
   assert.match(page, /Réservé/);
