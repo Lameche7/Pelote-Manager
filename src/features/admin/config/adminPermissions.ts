@@ -98,6 +98,7 @@ export const adminNavigation = [
     label: "Tournois",
     to: ROUTES.adminTournaments,
     permission: ADMIN_PERMISSIONS.tournaments,
+    enabled: false,
   },
   {
     label: "Recherche licenciés",
@@ -113,6 +114,7 @@ export const adminNavigation = [
     label: "Statistiques",
     to: ROUTES.adminStatistics,
     permission: ADMIN_PERMISSIONS.statistics,
+    enabled: false,
   },
   {
     label: "Paiements",
@@ -123,5 +125,6 @@ export const adminNavigation = [
     label: "Paramètres",
     to: ROUTES.adminSettings,
     permission: ADMIN_PERMISSIONS.settings,
+    enabled: false,
   },
 ] as const;
