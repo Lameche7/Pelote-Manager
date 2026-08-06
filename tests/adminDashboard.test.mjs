@@ -6,8 +6,7 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 const migrationPath =
   "../supabase/migrations/20260806130000_add_admin_dashboard.sql";
-const servicePath =
-  "../src/features/admin/services/adminDashboardService.ts";
+const servicePath = "../src/features/admin/services/adminDashboardService.ts";
 const pagePath = "../src/features/admin/pages/AdminPage.tsx";
 
 test("le tableau de bord repose sur une projection sécurisée et isolée par club", async () => {
@@ -16,7 +15,10 @@ test("le tableau de bord repose sur une projection sécurisée et isolée par cl
   assert.match(migration, /create function public\.admin_get_dashboard\(\)/);
   assert.match(migration, /security definer/);
   assert.match(migration, /admin_current_club_id\(\)/);
-  assert.match(migration, /has_club_permission\(club, 'admin\.dashboard\.read'\)/);
+  assert.match(
+    migration,
+    /has_club_permission\(club, 'admin\.dashboard\.read'\)/,
+  );
   assert.match(
     migration,
     /grant execute on function public\.admin_get_dashboard/,
