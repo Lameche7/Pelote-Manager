@@ -1,4 +1,6 @@
-import { CLUB_BRANDING_CHANGED_EVENT } from "@/features/branding/services/clubBrandingService";
+import {
+  CLUB_BRANDING_CHANGED_EVENT,
+} from "@/features/branding/services/clubBrandingService";
 import { supabase } from "@/infrastructure/supabase/client";
 
 export type ClubIdentity = {
@@ -86,14 +88,18 @@ const uploadImage = async (
   }
 
   const path = `${clubId}/${kind}.${extension}`;
-  const { error } = await supabase.storage.from("club-branding").upload(path, file, {
-    cacheControl: "3600",
-    contentType: file.type,
-    upsert: true,
-  });
+  const { error } = await supabase.storage
+    .from("club-branding")
+    .upload(path, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: true,
+    });
   if (error) throw error;
 
-  const { data } = supabase.storage.from("club-branding").getPublicUrl(path);
+  const { data } = supabase.storage
+    .from("club-branding")
+    .getPublicUrl(path);
   return `${data.publicUrl}?v=${Date.now()}`;
 };
 
