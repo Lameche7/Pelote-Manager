@@ -78,8 +78,7 @@
   text-align: center;
   background-color: var(--preview-primary);
   background-image:
-    linear-gradient(rgb(4 18 14 / 35%), rgb(4 18 14 / 78%)),
-    var(--preview-hero);
+    linear-gradient(rgb(4 18 14 / 35%), rgb(4 18 14 / 78%)), var(--preview-hero);
   background-position: center;
   background-size: cover;
 }
