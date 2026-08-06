@@ -21,6 +21,12 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic temporaire format évènements publics
+        run: |
+          npx prettier --write tests/publicEventsHome.test.mjs
+          echo "=== TEST FORMATÉ ==="
+          cat tests/publicEventsHome.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
