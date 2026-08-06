@@ -53,18 +53,23 @@ test("le service et la page consomment les données réelles du dashboard", asyn
   );
 });
 
-test("les modules encore factices sont masqués de la navigation", async () => {
+test("seuls les modules encore factices sont masqués de la navigation", async () => {
   const [navigation, shell] = await Promise.all([
     read("../src/features/admin/config/adminPermissions.ts"),
     read("../src/features/admin/components/AdminShell.tsx"),
   ]);
 
-  for (const label of ["Tournois", "Statistiques", "Paramètres"]) {
+  for (const label of ["Tournois", "Statistiques"]) {
     assert.match(
       navigation,
       new RegExp(`label: "${label}"[\\s\\S]*?enabled: false`),
     );
   }
+  assert.match(
+    navigation,
+    /label: "Paramètres"[\s\S]*?permission: ADMIN_PERMISSIONS\.settings/,
+  );
+  assert.doesNotMatch(navigation, /label: "Paramètres"[\s\S]*?enabled: false/);
   assert.match(shell, /const isEnabled/);
   assert.match(shell, /isEnabled\(item\)/);
   assert.match(shell, /isEnabled\(child\)/);

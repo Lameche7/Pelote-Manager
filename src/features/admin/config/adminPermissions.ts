@@ -125,6 +125,5 @@ export const adminNavigation = [
     label: "Paramètres",
     to: ROUTES.adminSettings,
     permission: ADMIN_PERMISSIONS.settings,
-    enabled: false,
   },
 ] as const;

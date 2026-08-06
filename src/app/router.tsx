@@ -29,6 +29,7 @@ import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminRese
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
+import { AdminTvSettingsPage } from "@/features/admin/settings/pages/AdminTvSettingsPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
@@ -243,7 +244,7 @@ export const routes = [
             path: "parametres",
             element: permitted(
               ADMIN_PERMISSIONS.settings,
-              <AdminComingSoonPage title="Paramètres" />,
+              <AdminTvSettingsPage />,
             ),
           },
         ],
