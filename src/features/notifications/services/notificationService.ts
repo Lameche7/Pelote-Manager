@@ -53,10 +53,9 @@ export const notificationService = {
   },
 
   async countUnread(): Promise<number> {
-    const { data, error } = await supabase.rpc(
-      "count_my_unread_notifications",
-    );
-    if (error) fail(error, "Impossible de charger le compteur de notifications.");
+    const { data, error } = await supabase.rpc("count_my_unread_notifications");
+    if (error)
+      fail(error, "Impossible de charger le compteur de notifications.");
     return Number(data ?? 0);
   },
 
