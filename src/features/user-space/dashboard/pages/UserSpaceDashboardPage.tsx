@@ -35,7 +35,12 @@ const cards: DashboardCard[] = [
   },
   { title: "Mes tournois", icon: Trophy },
   { title: "Mes paiements", icon: CreditCard },
-  { title: "Notifications", icon: Bell },
+  {
+    title: "Notifications",
+    description: "Lire les informations et alertes publiées par le club.",
+    icon: Bell,
+    to: ROUTES.myNotifications,
+  },
   { title: "Mon activité", icon: TrendingUp },
 ];
 
