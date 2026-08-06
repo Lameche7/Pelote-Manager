@@ -6,11 +6,15 @@ import {
 } from "@/features/admin/access/adminAccessService";
 import { canAccessAdminDashboard } from "@/features/admin/access/adminAccessRules";
 import {
+  ClubBrandingProvider,
+  useClubBranding,
+} from "@/features/branding/context/ClubBrandingContext";
+import {
   NOTIFICATIONS_CHANGED_EVENT,
   notificationService,
 } from "@/features/notifications/services/notificationService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
-import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
+import { APP_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MainLayout.css";
 
@@ -18,21 +22,30 @@ const navClassName = ({ isActive }: { isActive: boolean }) =>
   `app-navigation__link${isActive ? " app-navigation__link--active" : ""}`;
 
 export function MainLayout() {
+  return (
+    <ClubBrandingProvider>
+      <MainLayoutContent />
+    </ClubBrandingProvider>
+  );
+}
+
+function MainLayoutContent() {
+  const { branding } = useClubBranding();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const [isAdminAccessLoading, setIsAdminAccessLoading] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
-    document.title = `${APP_CONFIG.name} · ${CLUB_CONFIG.name}`;
+    document.title = `${APP_CONFIG.name} · ${branding.name}`;
     const description = document.querySelector<HTMLMetaElement>(
       'meta[name="description"]',
     );
     description?.setAttribute(
       "content",
-      `${APP_CONFIG.name}, l’espace de réservation de ${CLUB_CONFIG.name}.`,
+      `${APP_CONFIG.name}, l’espace de réservation de ${branding.name}.`,
     );
-  }, []);
+  }, [branding.name]);
 
   useEffect(() => {
     let active = true;
@@ -103,7 +116,7 @@ export function MainLayout() {
           <ClubLogo compact className="app-brand__logo" />
           <span>
             <strong>{APP_CONFIG.name}</strong>
-            <small>{CLUB_CONFIG.name}</small>
+            <small>{branding.name}</small>
           </span>
         </Link>
 
@@ -162,11 +175,11 @@ export function MainLayout() {
         <div className="app-footer__brand">
           <ClubLogo compact />
           <div>
-            <strong>{CLUB_CONFIG.name}</strong>
+            <strong>{branding.name}</strong>
             <span>
-              {CLUB_CONFIG.foundedYear
-                ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
-                : CLUB_CONFIG.tagline}
+              {branding.foundedYear
+                ? `Depuis ${branding.foundedYear} – ${branding.tagline}`
+                : branding.tagline}
             </span>
           </div>
         </div>
