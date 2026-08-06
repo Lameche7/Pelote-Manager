@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
+import { Bell, CalendarDays, LayoutDashboard, UserRound } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, UserRound } from "lucide-react";
 import { ROUTES } from "@/shared/config";
 import "./UserSpaceShell.css";
 
@@ -16,6 +16,9 @@ export function UserSpaceShell({ children }: PropsWithChildren) {
         </NavLink>
         <NavLink to={ROUTES.myReservations}>
           <CalendarDays aria-hidden="true" /> Mes réservations
+        </NavLink>
+        <NavLink to={ROUTES.myNotifications}>
+          <Bell aria-hidden="true" /> Notifications
         </NavLink>
         <NavLink to={ROUTES.myProfile}>
           <UserRound aria-hidden="true" /> Mon profil
