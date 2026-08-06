@@ -116,7 +116,12 @@ export function TvDisplayPage() {
     );
 
     return () => window.clearInterval(refresh);
-  }, [display?.refreshIntervalSeconds, display?.status, loadDisplay, tokenIsValid]);
+  }, [
+    display?.refreshIntervalSeconds,
+    display?.status,
+    loadDisplay,
+    tokenIsValid,
+  ]);
 
   const clubName = display?.clubName || CLUB_CONFIG.name;
   const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
@@ -180,10 +185,7 @@ export function TvDisplayPage() {
           </div>
         </div>
 
-        <div
-          className="tv-display__clock"
-          aria-label="Date et heure actuelles"
-        >
+        <div className="tv-display__clock" aria-label="Date et heure actuelles">
           <div>
             <CalendarDays aria-hidden="true" />
             <span>{displayedDate}</span>
