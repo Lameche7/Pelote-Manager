@@ -15,7 +15,11 @@
   color: #fff;
   font-weight: 800;
   cursor: pointer;
-  background: linear-gradient(135deg, var(--brand-blue-light), var(--brand-blue));
+  background: linear-gradient(
+    135deg,
+    var(--brand-blue-light),
+    var(--brand-blue)
+  );
 }
 
 .communication-admin__primary:disabled {
