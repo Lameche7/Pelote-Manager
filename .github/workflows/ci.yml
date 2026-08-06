@@ -21,27 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic temporaire format communication
-        run: |
-          npx prettier --write \
-            src/features/admin/communication/pages/AdminCommunicationPage.css \
-            src/features/admin/communication/pages/AdminCommunicationPage.tsx \
-            src/features/notifications/pages/NotificationsPage.tsx \
-            src/features/notifications/services/notificationService.ts \
-            tests/communicationNotifications.test.mjs
-
-      - name: Exporter les fichiers formatés
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatted-communication
-          path: |
-            src/features/admin/communication/pages/AdminCommunicationPage.css
-            src/features/admin/communication/pages/AdminCommunicationPage.tsx
-            src/features/notifications/pages/NotificationsPage.tsx
-            src/features/notifications/services/notificationService.ts
-            tests/communicationNotifications.test.mjs
-          if-no-files-found: error
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
