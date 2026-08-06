@@ -12,6 +12,7 @@ import {
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import "./MainLayout.css";
 
 const navClassName = ({ isActive }: { isActive: boolean }) =>
   `app-navigation__link${isActive ? " app-navigation__link--active" : ""}`;
