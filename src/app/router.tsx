@@ -30,6 +30,7 @@ import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsP
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminTvSettingsPage } from "@/features/admin/settings/pages/AdminTvSettingsPage";
+import { AdminStatisticsPage } from "@/features/admin/statistics/pages/AdminStatisticsPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
@@ -196,10 +197,34 @@ export const routes = [
               <AdminPaymentsPage />,
             ),
           },
-          { path: "membres", element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />) },
-          { path: "membres/importer", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportPage />) },
-          { path: "membres/imports/:importId", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportDetailPage />) },
-          { path: "membres/imports", element: permitted(ADMIN_PERMISSIONS.members, <MemberImportsPage />) },
+          {
+            path: "membres",
+            element: permitted(
+              ADMIN_PERMISSIONS.members,
+              <AdminMembersPage />,
+            ),
+          },
+          {
+            path: "membres/importer",
+            element: permitted(
+              ADMIN_PERMISSIONS.members,
+              <MemberImportPage />,
+            ),
+          },
+          {
+            path: "membres/imports/:importId",
+            element: permitted(
+              ADMIN_PERMISSIONS.members,
+              <MemberImportDetailPage />,
+            ),
+          },
+          {
+            path: "membres/imports",
+            element: permitted(
+              ADMIN_PERMISSIONS.members,
+              <MemberImportsPage />,
+            ),
+          },
           {
             path: "membres/recherche-globale",
             element: permittedAny(
@@ -239,7 +264,7 @@ export const routes = [
             path: "statistiques",
             element: permitted(
               ADMIN_PERMISSIONS.statistics,
-              <AdminComingSoonPage title="Statistiques" />,
+              <AdminStatisticsPage />,
             ),
           },
           {
