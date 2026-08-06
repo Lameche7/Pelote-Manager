@@ -73,8 +73,7 @@ const record = (value: unknown): Record<string, unknown> =>
     ? (value as Record<string, unknown>)
     : {};
 
-const list = (value: unknown): unknown[] =>
-  Array.isArray(value) ? value : [];
+const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 const text = (value: unknown): string =>
   typeof value === "string" ? value : "";
 const number = (value: unknown): number => {
@@ -118,7 +117,9 @@ const mapActiveSeason = (value: unknown): ActiveSeason | null => {
 const mapStatistics = (value: unknown): ClubStatistics => {
   const payload = record(value);
   if (payload.status !== "ready") {
-    throw new Error("Les statistiques du club sont momentanément indisponibles.");
+    throw new Error(
+      "Les statistiques du club sont momentanément indisponibles.",
+    );
   }
 
   return {
