@@ -73,9 +73,7 @@ function Breakdown({
                 />
               </div>
               {row.secondaryValue !== undefined && (
-                <small>
-                  {number.format(row.secondaryValue)} h occupée(s)
-                </small>
+                <small>{number.format(row.secondaryValue)} h occupée(s)</small>
               )}
             </li>
           ))}
@@ -116,7 +114,8 @@ export function AdminStatisticsPage() {
 
   const cancellationRate = useMemo(() => {
     if (!statistics) return 0;
-    const total = statistics.summary.reservations + statistics.summary.cancelled;
+    const total =
+      statistics.summary.reservations + statistics.summary.cancelled;
     return total ? (statistics.summary.cancelled / total) * 100 : 0;
   }, [statistics]);
 
@@ -244,7 +243,10 @@ export function AdminStatisticsPage() {
             />
           </div>
           <p className="statistics-footnote">
-            Données générées le {new Date(statistics.generatedAt).toLocaleString("fr-FR")}. Le chiffre d’affaires est une projection fondée sur le prix enregistré dans chaque réservation, pas une comptabilité encaissée.
+            Données générées le{" "}
+            {new Date(statistics.generatedAt).toLocaleString("fr-FR")}. Le
+            chiffre d’affaires est une projection fondée sur le prix enregistré
+            dans chaque réservation, pas une comptabilité encaissée.
           </p>
         </>
       )}

@@ -73,9 +73,7 @@ export function ClubInformationPage() {
       <input
         type={type}
         value={String(club[key])}
-        onChange={(event) =>
-          setClub({ ...club, [key]: event.target.value })
-        }
+        onChange={(event) => setClub({ ...club, [key]: event.target.value })}
       />
     </label>
   );

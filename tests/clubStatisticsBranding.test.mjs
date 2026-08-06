@@ -8,9 +8,7 @@ const read = (path) =>
 const migration = read(
   "supabase/migrations/20260806170000_add_club_branding_and_statistics.sql",
 );
-const clubPage = read(
-  "src/features/admin/club/pages/ClubInformationPage.tsx",
-);
+const clubPage = read("src/features/admin/club/pages/ClubInformationPage.tsx");
 const homePage = read("src/features/home/pages/HomePage.tsx");
 const statisticsPage = read(
   "src/features/admin/statistics/pages/AdminStatisticsPage.tsx",

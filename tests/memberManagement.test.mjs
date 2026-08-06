@@ -278,7 +278,7 @@ test("tournaments.manage ouvre seulement la recherche et le détail", async () =
   );
   assert.match(
     router,
-    /membres\/importer[^\n]*permitted\(ADMIN_PERMISSIONS\.members/,
+    /membres\/importer[\s\S]*?permitted\(ADMIN_PERMISSIONS\.members/,
   );
 });
 
