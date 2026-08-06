@@ -52,6 +52,12 @@ jobs:
         run: npx prettier --check tests/protectedRouteAccess.test.mjs tests/roles.test.mjs tsconfig.test.json
         continue-on-error: true
 
+      - name: Diagnostic format PR55
+        run: |
+          npx prettier --write src/features/admin/statistics/pages/AdminStatisticsPage.css src/features/admin/statistics/pages/AdminStatisticsPage.tsx src/features/admin/statistics/services/adminStatisticsService.ts
+          git diff --no-color -- src/features/admin/statistics/pages/AdminStatisticsPage.css src/features/admin/statistics/pages/AdminStatisticsPage.tsx src/features/admin/statistics/services/adminStatisticsService.ts
+          exit 1
+
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
