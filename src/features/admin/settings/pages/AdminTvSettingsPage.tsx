@@ -86,10 +86,7 @@ export function AdminTvSettingsPage() {
       setError("Sélectionnez au moins un terrain avant d’activer le Mode TV.");
       return false;
     }
-    if (
-      settings.visibleSlotCount < 1 ||
-      settings.visibleSlotCount > 24
-    ) {
+    if (settings.visibleSlotCount < 1 || settings.visibleSlotCount > 24) {
       setError("Le nombre de créneaux doit être compris entre 1 et 24.");
       return false;
     }
@@ -187,12 +184,17 @@ export function AdminTvSettingsPage() {
           className={`admin-tv-settings__status${settings.isEnabled ? " admin-tv-settings__status--enabled" : ""}`}
         >
           <Monitor aria-hidden="true" />
-          <span>{settings.isEnabled ? "Mode TV activé" : "Mode TV désactivé"}</span>
+          <span>
+            {settings.isEnabled ? "Mode TV activé" : "Mode TV désactivé"}
+          </span>
         </div>
       </header>
 
       {error && (
-        <p className="admin-tv-settings__alert admin-tv-settings__alert--error" role="alert">
+        <p
+          className="admin-tv-settings__alert admin-tv-settings__alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -311,7 +313,10 @@ export function AdminTvSettingsPage() {
           </label>
         </div>
 
-        <div className="admin-tv-settings__preview" aria-label="Aperçu du format TV">
+        <div
+          className="admin-tv-settings__preview"
+          aria-label="Aperçu du format TV"
+        >
           <span>18h30</span>
           <strong>Réservé</strong>
           <span>Nom</span>
@@ -321,12 +326,16 @@ export function AdminTvSettingsPage() {
       <article className="admin-tv-settings__panel">
         <h2>Lien public sécurisé</h2>
         <p>
-          Ce lien est difficile à deviner et pourra être ouvert sur la télévision
-          sans connexion. L’écran correspondant sera branché dans la prochaine
-          étape.
+          Ce lien est difficile à deviner et pourra être ouvert sur la
+          télévision sans connexion. L’écran correspondant sera branché dans la
+          prochaine étape.
         </p>
         <div className="admin-tv-settings__url">
-          <input aria-label="Lien public du Mode TV" readOnly value={publicUrl} />
+          <input
+            aria-label="Lien public du Mode TV"
+            readOnly
+            value={publicUrl}
+          />
           <button type="button" onClick={() => void copyPublicUrl()}>
             <Copy aria-hidden="true" /> Copier
           </button>
