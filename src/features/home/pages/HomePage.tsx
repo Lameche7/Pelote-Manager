@@ -14,6 +14,7 @@ import { CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
+import "./ClubBrandingTheme.css";
 
 const benefits = [
   { icon: "▦", title: "Réservations simples", text: "Consultez les disponibilités et réservez en quelques instants." },
