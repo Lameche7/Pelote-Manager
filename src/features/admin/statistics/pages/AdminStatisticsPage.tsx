@@ -244,4 +244,10 @@ export function AdminStatisticsPage() {
             />
           </div>
           <p className="statistics-footnote">
-            Données générées le{" 
+            Données générées le {new Date(statistics.generatedAt).toLocaleString("fr-FR")}. Le chiffre d’affaires est une projection fondée sur le prix enregistré dans chaque réservation, pas une comptabilité encaissée.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
