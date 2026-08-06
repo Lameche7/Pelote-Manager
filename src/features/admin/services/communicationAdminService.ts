@@ -6,6 +6,11 @@ import type {
 import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
+export type {
+  CommunicationPriority,
+  CommunicationStatus,
+} from "@/features/communication/domain/communication";
+
 export type AdminCommunication = {
   id: string;
   title: string;
