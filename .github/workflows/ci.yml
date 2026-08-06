@@ -21,6 +21,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic temporaire dernier format TV
+        run: npx prettier src/features/tv/pages/TvDisplayPage.tsx
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
