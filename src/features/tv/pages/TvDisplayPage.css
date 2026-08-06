@@ -4,7 +4,11 @@
   color: #f8fafc;
   background:
     radial-gradient(circle at top left, rgb(37 99 235 / 22%), transparent 34%),
-    radial-gradient(circle at bottom right, rgb(220 38 38 / 18%), transparent 32%),
+    radial-gradient(
+      circle at bottom right,
+      rgb(220 38 38 / 18%),
+      transparent 32%
+    ),
     #071b17;
 }
 
@@ -163,7 +167,10 @@
 
 .tv-display__slot {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 0.8fr) minmax(8.5rem, 1fr) minmax(0, 2fr);
+  grid-template-columns: minmax(5.5rem, 0.8fr) minmax(8.5rem, 1fr) minmax(
+      0,
+      2fr
+    );
   align-items: center;
   gap: clamp(0.75rem, 1.8vw, 1.35rem);
   min-height: clamp(4.2rem, 7vh, 6rem);
