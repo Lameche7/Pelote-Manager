@@ -21,17 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic temporaire format TV public
-        run: |
-          echo '=== SERVICE TV ==='
-          npx prettier src/features/tv/services/tvDisplayService.ts
-          echo '=== PAGE TV ==='
-          npx prettier src/features/tv/pages/TvDisplayPage.tsx
-          echo '=== CSS TV ==='
-          npx prettier src/features/tv/pages/TvDisplayPage.css
-          echo '=== TEST TV ==='
-          npx prettier tests/tvPublicDisplay.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
