@@ -171,11 +171,11 @@ begin
     ), '[]'::jsonb),
     'by_hour', coalesce((
       select jsonb_agg(jsonb_build_object(
-        'hour', data.hour,
+        'hour', data.hour_value,
         'reservations', data.reservations
-      ) order by data.hour)
+      ) order by data.hour_value)
       from (
-        select extract(hour from timezone('Europe/Paris', r.starts_at))::integer hour,
+        select extract(hour from timezone('Europe/Paris', r.starts_at))::integer as hour_value,
           count(*)::integer reservations
         from public.reservations r
         join public.reservable_resources rr on rr.id = r.resource_id
