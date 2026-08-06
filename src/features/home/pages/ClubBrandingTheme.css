@@ -1,0 +1,58 @@
+.premium-home {
+  --brand-green: var(--club-primary, #0f3d2e);
+  --brand-blue: var(--club-secondary, #1e5aa8);
+  --brand-red: var(--club-accent, #b22525);
+  --muted: var(--club-neutral, #6b7280);
+}
+
+.premium-home__hero {
+  background-color: var(--club-primary, #102a22);
+}
+
+.premium-home__veil {
+  background: linear-gradient(
+    90deg,
+    var(--club-secondary, #1e5aa8) 0 34%,
+    #fff 34% 66%,
+    var(--club-accent, #b22525) 66% 100%
+  );
+}
+
+.premium-home__signature strong {
+  color: var(--club-accent, #ff4b4b);
+}
+
+.premium-home__benefits {
+  background: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--club-primary, #0f3d2e) 82%, #000),
+    var(--club-primary, #0f3d2e) 52%,
+    color-mix(in srgb, var(--club-primary, #0f3d2e) 88%, #000)
+  );
+}
+
+.premium-benefit__icon {
+  border-color: color-mix(in srgb, var(--club-secondary, #1e5aa8) 72%, #fff);
+}
+
+.premium-home__section-heading h2,
+.premium-home__club h2 {
+  color: var(--club-primary, #0f3d2e);
+}
+
+.public-event-card__period {
+  color: var(--club-accent, #b22525);
+}
+
+.public-event-card__audience {
+  color: var(--club-primary, #0f3d2e);
+  background: color-mix(in srgb, var(--club-primary, #0f3d2e) 10%, transparent);
+}
+
+.premium-home .button--primary {
+  background: var(--club-accent, #b22525);
+}
+
+.premium-home .text-link {
+  color: var(--club-secondary, #1e5aa8);
+}
