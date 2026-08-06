@@ -16,10 +16,7 @@ test("les paramètres TV sont isolés par club et réservés aux administrateurs
     migration,
     /create function public\.admin_save_tv_settings\(payload jsonb\)/,
   );
-  assert.match(
-    migration,
-    /create function public\.admin_rotate_tv_token\(\)/,
-  );
+  assert.match(migration, /create function public\.admin_rotate_tv_token\(\)/);
   assert.match(migration, /public\.admin_current_club_id\(\)/);
   assert.match(
     migration,
@@ -27,7 +24,10 @@ test("les paramètres TV sont isolés par club et réservés aux administrateurs
   );
   assert.match(migration, /resources\.club_id = club/);
   assert.match(migration, /resources\.is_active/);
-  assert.match(migration, /public_token uuid not null default gen_random_uuid\(\)/);
+  assert.match(
+    migration,
+    /public_token uuid not null default gen_random_uuid\(\)/,
+  );
   assert.match(migration, /club_tv_settings_public_token_unique/);
   assert.match(migration, /revoke all on table public\.club_tv_settings/);
   assert.match(
@@ -78,10 +78,7 @@ test("l’administration expose un écran complet et un lien révocable", async 
     navigation,
     /label: "Paramètres"[\s\S]*?permission: ADMIN_PERMISSIONS\.settings/,
   );
-  assert.doesNotMatch(
-    navigation,
-    /label: "Paramètres"[\s\S]*?enabled: false/,
-  );
+  assert.doesNotMatch(navigation, /label: "Paramètres"[\s\S]*?enabled: false/);
   assert.match(router, /AdminTvSettingsPage/);
   assert.match(router, /<AdminTvSettingsPage \/>/);
 });
