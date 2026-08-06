@@ -33,7 +33,7 @@ test("le service et la page consomment les données réelles du dashboard", asyn
   ]);
 
   assert.match(service, /admin_get_dashboard/);
-  assert.match(service, /todayReservations/);
+  assert.match(service, /reservationsToday/);
   assert.match(service, /nextReservations/);
   assert.match(service, /activeMembers/);
   assert.match(service, /activeCommunications/);
