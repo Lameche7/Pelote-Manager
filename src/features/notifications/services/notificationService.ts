@@ -1,4 +1,4 @@
-import type { CommunicationPriority } from "@/features/admin/services/communicationAdminService";
+import type { CommunicationPriority } from "@/features/communication/domain/communication";
 import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
