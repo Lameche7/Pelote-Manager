@@ -1,5 +1,6 @@
 export const ROUTES = {
   home: "/",
+  tv: "/tv",
   login: "/connexion",
   register: "/inscription",
   reservations: "/reservations",
