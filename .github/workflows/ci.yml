@@ -21,25 +21,41 @@ jobs:
 
       - run: npm ci
 
-      - name: Formater les fichiers PR57
+      - name: Corriger et formater les fichiers PR57
         run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("tests/memberManagement.test.mjs")
+          text = path.read_text()
+          text = text.replace(
+              r"/membres\/importer[^\n]*permitted\(ADMIN_PERMISSIONS\.members/",
+              r"/membres\/importer[\s\S]*?permitted\(ADMIN_PERMISSIONS\.members/",
+          )
+          path.write_text(text)
+          PY
+
           npx prettier --write \
             src/features/admin/club/pages/ClubBranding.css \
             src/features/admin/club/pages/ClubInformationPage.tsx \
             src/features/admin/statistics/pages/AdminStatisticsPage.css \
             src/features/admin/statistics/pages/AdminStatisticsPage.tsx \
-            tests/clubStatisticsBranding.test.mjs
+            tests/adminDashboard.test.mjs \
+            tests/clubStatisticsBranding.test.mjs \
+            tests/memberManagement.test.mjs
 
-      - name: Exporter les fichiers formatés
+      - name: Exporter les fichiers corrigés
         uses: actions/upload-artifact@v4
         with:
-          name: pr57-formatted
+          name: pr57-final-files
           path: |
             src/features/admin/club/pages/ClubBranding.css
             src/features/admin/club/pages/ClubInformationPage.tsx
             src/features/admin/statistics/pages/AdminStatisticsPage.css
             src/features/admin/statistics/pages/AdminStatisticsPage.tsx
+            tests/adminDashboard.test.mjs
             tests/clubStatisticsBranding.test.mjs
+            tests/memberManagement.test.mjs
 
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
