@@ -1,0 +1,329 @@
+.admin-tv-settings {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-tv-settings__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.admin-tv-settings__eyebrow {
+  margin: 0;
+  color: var(--brand-red);
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.admin-tv-settings__header h1 {
+  margin: 0.35rem 0 0.5rem;
+  color: var(--brand-green);
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.admin-tv-settings__header p:not(.admin-tv-settings__eyebrow) {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.admin-tv-settings__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 0 0 auto;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #cbd5da;
+  border-radius: 999px;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: #fff;
+}
+
+.admin-tv-settings__status svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.admin-tv-settings__status--enabled {
+  border-color: rgb(22 101 52 / 24%);
+  color: #166534;
+  background: #f0fdf4;
+}
+
+.admin-tv-settings__alert {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(22 101 52 / 18%);
+  border-radius: 0.8rem;
+  color: #166534;
+  background: #f0fdf4;
+}
+
+.admin-tv-settings__alert--error {
+  border-color: rgb(185 28 28 / 22%);
+  color: #991b1b;
+  background: #fff1f2;
+}
+
+.admin-tv-settings__panel {
+  padding: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.7rem 1.8rem rgb(15 61 46 / 5%);
+}
+
+.admin-tv-settings__panel h2 {
+  margin: 0 0 0.45rem;
+  color: var(--brand-green);
+  font-size: 1.12rem;
+}
+
+.admin-tv-settings__panel > p,
+.admin-tv-settings__panel-heading p,
+.admin-tv-settings__panel small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.admin-tv-settings__panel > p,
+.admin-tv-settings__panel-heading p {
+  margin: 0;
+}
+
+.admin-tv-settings__panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-tv-settings__panel-heading strong {
+  color: var(--brand-green);
+  font-size: 0.85rem;
+}
+
+.admin-tv-settings__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--brand-green);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-tv-settings__switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.admin-tv-settings__switch > span {
+  position: relative;
+  width: 2.8rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background 160ms ease;
+}
+
+.admin-tv-settings__switch > span::after {
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  content: "";
+  background: #fff;
+  box-shadow: 0 0.15rem 0.35rem rgb(15 23 42 / 20%);
+  transition: transform 160ms ease;
+}
+
+.admin-tv-settings__switch input:checked + span {
+  background: var(--brand-green);
+}
+
+.admin-tv-settings__switch input:checked + span::after {
+  transform: translateX(1.25rem);
+}
+
+.admin-tv-settings__switch input:focus-visible + span {
+  outline: 3px solid rgb(37 99 235 / 25%);
+  outline-offset: 2px;
+}
+
+.admin-tv-settings__resources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.admin-tv-settings__resources label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid #d8e0e4;
+  border-radius: 0.8rem;
+  color: #334155;
+  font-weight: 750;
+  cursor: pointer;
+  background: #fbfcfc;
+}
+
+.admin-tv-settings__resources input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--brand-green);
+}
+
+.admin-tv-settings__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.admin-tv-settings__grid label {
+  display: grid;
+  gap: 0.4rem;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.admin-tv-settings__grid input,
+.admin-tv-settings__grid select,
+.admin-tv-settings__url input {
+  min-width: 0;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid #cbd5da;
+  border-radius: 0.7rem;
+  color: #24323b;
+  font: inherit;
+  background: #fff;
+}
+
+.admin-tv-settings__preview {
+  display: grid;
+  grid-template-columns: minmax(5rem, auto) minmax(7rem, auto) 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 0.85rem;
+  color: #fff;
+  font-size: clamp(1rem, 2.5vw, 1.35rem);
+  background: #102f27;
+}
+
+.admin-tv-settings__preview strong {
+  color: #f6c453;
+}
+
+.admin-tv-settings__url {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.admin-tv-settings__url input {
+  color: #475569;
+  background: #f8fafc;
+}
+
+.admin-tv-settings__url button,
+.admin-tv-settings__secondary-button,
+.admin-tv-settings__save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-tv-settings__url button {
+  border: 1px solid var(--brand-blue);
+  color: #fff;
+  background: var(--brand-blue);
+}
+
+.admin-tv-settings__secondary-button {
+  margin-top: 0.75rem;
+  border: 1px solid #cbd5da;
+  color: #475569;
+  background: #fff;
+}
+
+.admin-tv-settings__url button svg,
+.admin-tv-settings__secondary-button svg,
+.admin-tv-settings__save-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.admin-tv-settings__panel small {
+  display: block;
+  margin-top: 0.55rem;
+}
+
+.admin-tv-settings__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-tv-settings__save-button {
+  border: 1px solid var(--brand-blue);
+  color: #fff;
+  background: var(--brand-blue);
+  box-shadow: 0 0.5rem 1rem rgb(23 74 156 / 18%);
+}
+
+.admin-tv-settings__url button:disabled,
+.admin-tv-settings__secondary-button:disabled,
+.admin-tv-settings__save-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+@media (max-width: 48rem) {
+  .admin-tv-settings__header,
+  .admin-tv-settings__panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-tv-settings__grid,
+  .admin-tv-settings__url {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tv-settings__preview {
+    grid-template-columns: auto 1fr;
+  }
+
+  .admin-tv-settings__preview > span:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .admin-tv-settings__actions,
+  .admin-tv-settings__save-button {
+    width: 100%;
+  }
+}
