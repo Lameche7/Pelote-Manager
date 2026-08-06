@@ -21,6 +21,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic formatage Mode TV
+        run: |
+          npx prettier --write src/features/tv/pages/TvDisplayPage.tsx src/features/tv/services/tvDisplayService.ts tests/tvWeeklyRotation.test.mjs
+          git diff -- src/features/tv/pages/TvDisplayPage.tsx src/features/tv/services/tvDisplayService.ts tests/tvWeeklyRotation.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
