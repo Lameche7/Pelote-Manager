@@ -73,8 +73,10 @@ const record = (value: unknown): Record<string, unknown> =>
     ? (value as Record<string, unknown>)
     : {};
 
-const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
-const text = (value: unknown): string => (typeof value === "string" ? value : "");
+const list = (value: unknown): unknown[] =>
+  Array.isArray(value) ? value : [];
+const text = (value: unknown): string =>
+  typeof value === "string" ? value : "";
 const number = (value: unknown): number => {
   const parsed = typeof value === "number" ? value : Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -176,7 +178,10 @@ const mapStatistics = (value: unknown): ClubStatistics => {
 };
 
 export const adminStatisticsService = {
-  async getStatistics(startDate: string, endDate: string): Promise<ClubStatistics> {
+  async getStatistics(
+    startDate: string,
+    endDate: string,
+  ): Promise<ClubStatistics> {
     const { data, error } = await supabase.rpc("admin_get_club_statistics", {
       target_start_date: startDate,
       target_end_date: endDate,
