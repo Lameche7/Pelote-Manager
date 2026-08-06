@@ -1,7 +1,8 @@
 import { supabase } from "@/infrastructure/supabase/client";
 import { CLUB_CONFIG } from "@/shared/config";
 
-export const CLUB_BRANDING_CHANGED_EVENT = "pelote-manager:club-branding-changed";
+export const CLUB_BRANDING_CHANGED_EVENT =
+  "pelote-manager:club-branding-changed";
 
 export type ClubBranding = {
   name: string;
@@ -81,7 +82,10 @@ const mapBranding = (value: unknown): ClubBranding => {
       payload.secondary_color,
       DEFAULT_CLUB_BRANDING.secondaryColor,
     ),
-    accentColor: color(payload.accent_color, DEFAULT_CLUB_BRANDING.accentColor),
+    accentColor: color(
+      payload.accent_color,
+      DEFAULT_CLUB_BRANDING.accentColor,
+    ),
     neutralColor: color(
       payload.neutral_color,
       DEFAULT_CLUB_BRANDING.neutralColor,
