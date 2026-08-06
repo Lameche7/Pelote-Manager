@@ -21,6 +21,13 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic temporaire format TV
+        run: |
+          echo '=== PAGE TV ==='
+          npx prettier src/features/admin/settings/pages/AdminTvSettingsPage.tsx
+          echo '=== TEST TV ==='
+          npx prettier tests/tvModeSettings.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
