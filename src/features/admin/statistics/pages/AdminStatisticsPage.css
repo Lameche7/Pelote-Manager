@@ -44,8 +44,7 @@
   align-items: end;
   gap: 0.8rem;
   padding: 1rem;
-  grid-template-columns:
-    minmax(14rem, 1fr) repeat(2, minmax(9rem, 0.4fr)) auto;
+  grid-template-columns: minmax(14rem, 1fr) repeat(2, minmax(9rem, 0.4fr)) auto;
 }
 
 .admin-statistics__filters label {
@@ -315,8 +314,7 @@
   display: grid;
   align-items: center;
   gap: 0.65rem;
-  grid-template-columns:
-    minmax(5rem, 0.45fr) minmax(8rem, 1fr) 2rem;
+  grid-template-columns: minmax(5rem, 0.45fr) minmax(8rem, 1fr) 2rem;
 }
 
 .admin-statistics__bar-row > span {
