@@ -71,7 +71,9 @@ export function AdminUsersPage() {
           currentProfile.id === updatedProfile.id ? updatedProfile : currentProfile,
         ),
       );
-      setSuccess(`Le rôle de ${getProfileDisplayName(updatedProfile)} a été modifié.`);
+      setSuccess(
+        `Le rôle et les habilitations de ${getProfileDisplayName(updatedProfile)} ont été modifiés.`,
+      );
     } catch (updateError: unknown) {
       setError(
         updateError instanceof Error
@@ -87,6 +89,11 @@ export function AdminUsersPage() {
     <section className="simple-page" aria-labelledby="admin-users-title">
       <h1 id="admin-users-title">Gestion des utilisateurs</h1>
       <p>Consultez les profils et attribuez les droits applicatifs.</p>
+      <p>
+        Attribuer le rôle Administrateur donne automatiquement l’habilitation
+        complète du club. Retirer ce rôle retire également cette habilitation,
+        sans intervention dans Supabase.
+      </p>
 
       <div>
         <label htmlFor="admin-user-search">Rechercher</label>{" "}

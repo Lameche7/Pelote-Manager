@@ -1,525 +1,129 @@
-# 15 - Roadmap
+# 15 — Roadmap produit
 
-Version : 2.0
+Version : 2.1  
+Mise à jour : 5 août 2026
 
-Ce document définit la stratégie d'évolution de Pelote Manager.
+Cette roadmap présente les orientations produit de Pelote Manager. Elle distingue clairement les fonctions déjà disponibles, celles encore en construction et les idées futures.
 
-Il décrit les grandes orientations du projet ainsi que les fonctionnalités prévues à moyen et long terme.
+## Principes
 
-La Roadmap constitue un document de pilotage.
+Pelote Manager évolue par ensembles cohérents, testés et utilisables. La stabilité, l’isolation des données de chaque club et la simplicité d’usage sont prioritaires.
 
-Elle ne remplace pas les spécifications fonctionnelles.
-
----
-
-# Objectif
-
-La Roadmap permet :
-
-- de planifier les évolutions ;
-- de définir les priorités ;
-- de garantir une progression cohérente du projet.
-
-Elle évolue tout au long de la vie du logiciel.
+Une fonction préparée techniquement mais désactivée n’est pas considérée comme commercialement disponible.
 
 ---
 
-# Philosophie
+## Version 2.0 — Socle fonctionnel du club
 
-Pelote Manager évolue par versions.
+**Statut : en cours, avec plusieurs blocs déjà opérationnels.**
 
-Chaque version apporte un ensemble cohérent de fonctionnalités.
+### Disponible
 
-Une version ne doit jamais introduire une fonctionnalité inachevée.
+- accueil et identité visuelle du club ;
+- comptes, connexion et profils ;
+- espace utilisateur ;
+- gestion des licenciés ;
+- calendrier et réservations ;
+- tarifs licencié et visiteur ;
+- paiement simulé ;
+- administration des réservations ;
+- informations, horaires, fermetures, saisons et tarifs du club ;
+- événements ;
+- permissions modulaires du Back Office ;
+- socle d’instances de clubs techniquement isolées ;
+- plateforme centrale super administrateur validée en simulation.
 
-La stabilité est prioritaire sur la quantité.
+### À terminer pour la V2.0
 
----
+- gestion complète des tournois ;
+- séries, équipes, inscriptions et disponibilités ;
+- Pool Engine ;
+- Planning Engine ;
+- Ranking Engine et résultats ;
+- pages publiques de planning, résultats et classements ;
+- Mode TV ;
+- finalisation ergonomique et documentaire.
 
-# Version 2.0
+### Limites actuelles assumées
 
-Cette version constitue la refonte complète du projet.
-
-Elle comprend notamment :
-
-- gestion des paramètres du club ;
-- gestion des tournois ;
-- gestion des séries ;
-- inscriptions des équipes ;
-- gestion des disponibilités ;
-- génération intelligente des poules ;
-- génération intelligente du planning ;
-- saisie des résultats ;
-- calcul automatique des classements ;
-- portail public ;
-- espace d'administration ;
-- réservation du trinquet ;
-- affichage dynamique (Mode TV).
-
-Cette version constitue le socle fonctionnel du logiciel.
-
----
-
-# Version 2.1
-
-Améliorations prévues :
-
-- optimisation du moteur de génération des poules ;
-- amélioration du moteur de planification ;
-- assistant de réservation proposant des créneaux alternatifs ;
-- personnalisation avancée de l'affichage dynamique ;
-- statistiques enrichies.
+- le provisionnement réel d’un nouveau club est désactivé ;
+- aucune ressource Supabase ou Vercel n’est créée automatiquement ;
+- aucun compte, licencié ou dossier métier n’est partagé entre clubs ;
+- le futur réseau de tournois et le passeport joueur ne sont pas implémentés.
 
 ---
 
-# Version 2.2
+## Version 2.1 — Optimisation et confort
 
-Fonctionnalités envisagées :
+Envisagé après stabilisation de la V2.0 :
 
-- paiement en ligne des réservations ;
-- gestion des abonnements ;
-- notifications automatiques par e-mail ;
-- rappels des matchs ;
-- rappels des réservations.
+- optimisation des moteurs de poules et de planning ;
+- aide au choix de créneaux alternatifs ;
+- statistiques enrichies ;
+- personnalisation avancée du Mode TV ;
+- améliorations d’ergonomie issues des retours des clubs pilotes.
 
 ---
 
-# Version 2.3
+## Version 2.2 — Paiements et notifications
 
-Fonctionnalités envisagées :
+Fonctions envisagées :
+
+- paiement réel des réservations et inscriptions ;
+- gestion des remboursements ;
+- abonnements ou forfaits ;
+- notifications automatiques par email ;
+- rappels de matchs et de réservations.
+
+Ces fonctions nécessiteront une étude de coûts, de conformité et de sécurité avant développement.
+
+---
+
+## Version 2.3 — Rapports et exploitation
+
+Fonctions envisagées :
 
 - tableau de bord statistique avancé ;
-- export PDF ;
-- export Excel ;
-- génération automatique des feuilles de match ;
-- rapports de tournoi.
+- exports PDF et Excel ;
+- feuilles de match ;
+- rapports de tournoi ;
+- outils de suivi administratif et financier.
 
 ---
 
-# Version 3.0
+## Version 3.0 — Réseau et extensions
 
-Évolutions majeures envisageables :
+Orientations futures, non planifiées à ce jour :
 
+- passeport joueur minimal pour les inscriptions interclubs ;
+- réseau de tournois ouverts ;
 - application mobile ;
 - notifications Push ;
-- gestion de plusieurs clubs ;
-- synchronisation avec des services externes ;
-- API publique.
+- synchronisations externes ;
+- API publique contrôlée.
 
-Ces fonctionnalités ne font pas partie du périmètre actuel.
-
----
-
-# Gestion des évolutions
-
-Toute nouvelle fonctionnalité doit être :
-
-- documentée ;
-- validée ;
-- priorisée.
-
-Une fonctionnalité ne peut être développée que si son besoin est clairement identifié.
+Le réseau restera séparé du registre commercial central. Les bases des clubs resteront indépendantes et aucun club n’aura accès au fichier complet d’un autre club.
 
 ---
 
-# Priorisation
+## Architecture commerciale multi-instance
 
-Les évolutions sont classées selon quatre niveaux.
+Le socle technique permet de viser plusieurs clubs tout en conservant :
 
-Critique
+- un seul produit et un seul dépôt de code ;
+- une instance Supabase et un déploiement propres à chaque club ;
+- une plateforme centrale limitée aux clients, abonnements, versions et états techniques ;
+- aucune donnée de licencié, réservation, paiement ou tournoi dans le registre commercial.
 
-Fonction indispensable au fonctionnement du logiciel.
-
----
-
-Importante
-
-Améliore significativement l'expérience utilisateur.
+La création automatique d’instances réelles ne sera activée qu’après un besoin commercial concret, une validation des coûts et une campagne de tests spécifique.
 
 ---
 
-Confort
+## Priorisation
 
-Apporte un gain d'utilisation.
+- **Critique** : sécurité, perte de données ou blocage d’utilisation.
+- **Importante** : fonction indispensable au fonctionnement quotidien du club.
+- **Confort** : amélioration significative de l’expérience.
+- **Future** : idée retenue mais non planifiée.
 
----
-
-Future
-
-Idée retenue mais non planifiée.
-
----
-
-# Principes d'évolution
-
-Le logiciel privilégie :
-
-- les besoins réels des utilisateurs ;
-- la simplicité ;
-- la stabilité.
-
-Une nouvelle fonctionnalité ne doit jamais complexifier inutilement l'application.
-
----
-
-# Révision
-
-La Roadmap est un document vivant.
-
-Elle est mise à jour à chaque nouvelle version importante.
-
-Les fonctionnalités peuvent être :
-
-- ajoutées ;
-- reportées ;
-- supprimées ;
-- re-priorisées.
-
----
-
-# Principe fondamental
-
-Pelote Manager évolue progressivement.
-
-Chaque version doit améliorer le logiciel sans remettre en cause les fondations existantes.
-
-La qualité et la stabilité restent prioritaires sur la quantité de fonctionnalités.
-
----
-
-# Consolidation documentaire et architecturale
-
-Avant la poursuite fonctionnelle de la V2 :
-- adoption de la Domain Map ;
-- harmonisation Event → Occupation ;
-- modèle Person / Account / Membership / Player ;
-- adoption des Value Objects Calendar ;
-- formalisation des Policies ;
-- consolidation des ADR ;
-- création du domaine Calendar de référence.
-
-Cette consolidation documentaire n'est pas une version fonctionnelle. Les versions existantes sont conservées et l'API publique reste prévue en V3.0.
-
----
-
-# Annexe — Plan de développement consolidé
-
-Il constitue le document de pilotage technique du projet.
-
-Contrairement à la Roadmap Produit, cette Roadmap est évolutive et peut être mise à jour régulièrement.
-
----
-
-# Objectif
-
-La Roadmap de développement permet :
-
-- de planifier les développements ;
-- de suivre l'avancement du projet ;
-- de définir les priorités techniques ;
-- de préparer les prochaines versions.
-
----
-
-# Philosophie
-
-Le développement progresse par étapes.
-
-Chaque étape doit produire une application :
-
-- fonctionnelle ;
-- testable ;
-- stable.
-
-Une étape n'est jamais considérée comme terminée tant que sa qualité n'est pas validée.
-
----
-
-# Phase 1 — Fondations
-
-Objectif :
-
-Mettre en place une architecture saine.
-
-Travaux :
-
-- configuration du projet ;
-- architecture React ;
-- configuration TypeScript ;
-- configuration Supabase ;
-- authentification ;
-- architecture SQL ;
-- navigation générale ;
-- composants de base.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 2 — Paramétrage
-
-Objectif :
-
-Permettre au club de configurer entièrement son environnement.
-
-Travaux :
-
-- paramètres du club ;
-- horaires d'ouverture ;
-- paramètres des réservations ;
-- paramètres des tournois ;
-- créneaux du tournoi.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 3 — Gestion des tournois
-
-Objectif :
-
-Permettre la création complète d'un tournoi.
-
-Travaux :
-
-- création d'un tournoi ;
-- gestion des séries ;
-- ouverture des inscriptions ;
-- gestion des équipes ;
-- disponibilités.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 4 — Génération des poules
-
-Objectif :
-
-Développer le Pool Engine.
-
-Travaux :
-
-- calcul des configurations ;
-- génération automatique ;
-- diagnostics ;
-- score de qualité ;
-- validation.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 5 — Génération du planning
-
-Objectif :
-
-Développer le Planning Engine.
-
-Travaux :
-
-- génération du calendrier ;
-- optimisation ;
-- diagnostics ;
-- comparaison de plusieurs solutions ;
-- validation.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 6 — Résultats
-
-Objectif :
-
-Développer le Ranking Engine.
-
-Travaux :
-
-- saisie des scores ;
-- calcul automatique ;
-- statistiques ;
-- classements ;
-- publication.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 7 — Réservations
-
-Objectif :
-
-Mettre en place la réservation du trinquet.
-
-Travaux :
-
-- calendrier ;
-- réservations ;
-- annulations ;
-- paramètres ;
-- gestion des conflits.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 8 — Portail public
-
-Objectif :
-
-Mettre à disposition les informations publiques.
-
-Travaux :
-
-- accueil ;
-- inscriptions ;
-- planning ;
-- résultats ;
-- classements.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 9 — Affichage dynamique
-
-Objectif :
-
-Développer le Mode TV.
-
-Travaux :
-
-- rotation automatique ;
-- résultats ;
-- planning ;
-- classements ;
-- partenaires.
-
-Statut :
-
-☐ À faire
-
----
-
-# Phase 10 — Finalisation
-
-Objectif :
-
-Préparer la mise en production.
-
-Travaux :
-
-- optimisation ;
-- corrections ;
-- tests ;
-- documentation ;
-- déploiement.
-
-Statut :
-
-☐ À faire
-
----
-
-# Règles de développement
-
-Chaque phase doit respecter les étapes suivantes :
-
-1. Documentation.
-2. Développement.
-3. Tests.
-4. Validation.
-
-5. Intégration.
-
-Aucune phase ne doit être considérée comme terminée sans validation complète.
-
----
-
-# Gestion des anomalies
-
-Les anomalies sont classées selon leur gravité.
-
-Critique
-
-Empêche l'utilisation du logiciel.
-
-Haute
-
-Fonction importante dégradée.
-
-Moyenne
-
-Fonction secondaire impactée.
-
-Faible
-
-Problème esthétique ou mineur.
-
-Les anomalies critiques sont corrigées avant tout nouveau développement.
-
----
-
-# Critères de validation
-
-Une phase est validée lorsque :
-
-✓ Les fonctionnalités prévues sont terminées.
-
-✓ Les tests sont validés.
-
-✓ La documentation est à jour.
-
-✓ Les règles métier sont respectées.
-
-✓ Aucun bug bloquant n'est identifié.
-
----
-
-# Suivi
-
-Le suivi du développement est réalisé au moyen de GitHub.
-
-Chaque évolution est associée à :
-
-- une Issue ;
-- une branche dédiée ;
-- une Pull Request ;
-- une validation avant fusion.
-
----
-
-# Révision
-
-Cette Roadmap est un document vivant.
-
-Elle est mise à jour à la fin de chaque phase importante.
-
----
-
-# Principe fondamental
-
-Le développement de Pelote Manager privilégie la qualité à la vitesse.
-
-Chaque étape doit produire une version stable, documentée et évolutive.
-
-L'objectif n'est pas de développer plus vite.
-
-L'objectif est de développer durablement.
+La prochaine priorité après la sécurisation des habilitations administrateur sera décidée séparément. Cette roadmap ne déclenche automatiquement aucun nouveau chantier.
