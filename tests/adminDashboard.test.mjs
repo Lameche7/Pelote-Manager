@@ -9,10 +9,7 @@ test("le tableau de bord repose sur une projection sécurisée et isolée par cl
     "../supabase/migrations/20260806130000_add_admin_dashboard.sql",
   );
 
-  assert.match(
-    migration,
-    /create function public\.admin_get_dashboard\(\)/,
-  );
+  assert.match(migration, /create function public\.admin_get_dashboard\(\)/);
   assert.match(migration, /public\.admin_current_club_id\(\)/);
   assert.match(
     migration,
@@ -50,7 +47,10 @@ test("le service et la page consomment les données réelles du dashboard", asyn
   assert.match(page, /Communications actives/);
   assert.match(page, /Activité récente/);
   assert.doesNotMatch(page, /Indicateur prêt à être connecté/);
-  assert.doesNotMatch(page, /Les prochaines réservations et opérations apparaîtront ici/);
+  assert.doesNotMatch(
+    page,
+    /Les prochaines réservations et opérations apparaîtront ici/,
+  );
 });
 
 test("les modules encore factices sont masqués de la navigation", async () => {
