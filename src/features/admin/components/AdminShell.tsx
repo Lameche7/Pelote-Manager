@@ -10,6 +10,9 @@ import "./AdminShell.css";
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `admin-shell__link${isActive ? " admin-shell__link--active" : ""}`;
 
+const isEnabled = <T extends object>(item: T) =>
+  !("enabled" in item) || item.enabled !== false;
+
 export function AdminShell() {
   return (
     <AdminAccessProvider>
@@ -40,17 +43,25 @@ function AdminShellContent() {
         </header>
         <nav aria-label="Navigation de l’administration">
           {adminNavigation
-            .filter((item) =>
-              "children" in item
-                ? item.children.some((child) => hasPermission(child.permission))
-                : hasPermission(item.permission),
+            .filter(
+              (item) =>
+                isEnabled(item) &&
+                ("children" in item
+                  ? item.children.some(
+                      (child) =>
+                        isEnabled(child) && hasPermission(child.permission),
+                    )
+                  : hasPermission(item.permission)),
             )
             .map((item) =>
               "children" in item ? (
                 <section key={item.label} className="admin-shell__group">
                   <p>{item.label}</p>
                   {item.children
-                    .filter((child) => hasPermission(child.permission))
+                    .filter(
+                      (child) =>
+                        isEnabled(child) && hasPermission(child.permission),
+                    )
                     .map((child) => (
                       <NavLink
                         key={child.to}
