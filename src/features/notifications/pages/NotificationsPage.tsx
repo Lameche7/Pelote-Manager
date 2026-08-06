@@ -88,7 +88,10 @@ export function NotificationsPage() {
 
   return (
     <UserSpaceShell>
-      <section className="notifications-page" aria-labelledby="notifications-title">
+      <section
+        className="notifications-page"
+        aria-labelledby="notifications-title"
+      >
         <header className="notifications-page__header">
           <div>
             <p className="notifications-page__eyebrow">Mon espace</p>
