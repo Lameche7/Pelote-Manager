@@ -21,9 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic temporaire format dashboard
-        run: npx prettier tests/adminDashboard.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
