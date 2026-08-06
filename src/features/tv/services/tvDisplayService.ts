@@ -65,9 +65,7 @@ const mapDisplay = (value: unknown): TvDisplay => {
     displayStartTime: row.display_start_time
       ? String(row.display_start_time)
       : null,
-    displayEndTime: row.display_end_time
-      ? String(row.display_end_time)
-      : null,
+    displayEndTime: row.display_end_time ? String(row.display_end_time) : null,
     refreshIntervalSeconds: Math.max(
       15,
       Number(row.refresh_interval_seconds ?? 30),
@@ -76,9 +74,7 @@ const mapDisplay = (value: unknown): TvDisplay => {
     resources: resources.map((resource) => ({
       id: String(resource.id ?? ""),
       name: String(resource.name ?? "Terrain"),
-      slots: Array.isArray(resource.slots)
-        ? resource.slots.map(mapSlot)
-        : [],
+      slots: Array.isArray(resource.slots) ? resource.slots.map(mapSlot) : [],
     })),
   };
 };
