@@ -21,6 +21,23 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic temporaire format communication
+        run: |
+          files=(
+            src/features/admin/communication/pages/AdminCommunicationPage.css
+            src/features/admin/communication/pages/AdminCommunicationPage.tsx
+            src/features/notifications/pages/NotificationsPage.tsx
+            src/features/notifications/services/notificationService.ts
+            tests/communicationNotifications.test.mjs
+          )
+          npx prettier --write "${files[@]}"
+          for file in "${files[@]}"; do
+            echo "===BEGIN:${file}==="
+            base64 -w 0 "${file}"
+            echo
+            echo "===END:${file}==="
+          done
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
