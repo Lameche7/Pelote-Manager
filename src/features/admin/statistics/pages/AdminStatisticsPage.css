@@ -44,7 +44,8 @@
   align-items: end;
   gap: 0.8rem;
   padding: 1rem;
-  grid-template-columns: minmax(14rem, 1fr) repeat(2, minmax(9rem, 0.4fr)) auto;
+  grid-template-columns:
+    minmax(14rem, 1fr) repeat(2, minmax(9rem, 0.4fr)) auto;
 }
 
 .admin-statistics__filters label {
@@ -285,7 +286,11 @@
   height: var(--statistics-bar-size);
   min-height: 0;
   border-radius: 0.35rem 0.35rem 0.1rem 0.1rem;
-  background: linear-gradient(180deg, var(--brand-green-light), var(--brand-green));
+  background: linear-gradient(
+    180deg,
+    var(--brand-green-light),
+    var(--brand-green)
+  );
 }
 
 .admin-statistics__daily-chart small {
@@ -310,7 +315,8 @@
   display: grid;
   align-items: center;
   gap: 0.65rem;
-  grid-template-columns: minmax(5rem, 0.45fr) minmax(8rem, 1fr) 2rem;
+  grid-template-columns:
+    minmax(5rem, 0.45fr) minmax(8rem, 1fr) 2rem;
 }
 
 .admin-statistics__bar-row > span {
@@ -331,7 +337,11 @@
   width: var(--statistics-bar-size);
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand-blue), var(--brand-blue-light));
+  background: linear-gradient(
+    90deg,
+    var(--brand-blue),
+    var(--brand-blue-light)
+  );
 }
 
 .admin-statistics__bar-row strong {
