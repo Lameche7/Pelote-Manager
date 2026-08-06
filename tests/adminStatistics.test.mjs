@@ -11,9 +11,12 @@ test("la projection statistique est limitée au club et à la permission dédié
 
   assert.match(
     migration,
-    /create function public\.admin_get_club_statistics\(/[\s\S]*target_start_date date,[\s\S]*target_end_date date/,
+    /create function public\.admin_get_club_statistics\([\s\S]*target_start_date date,[\s\S]*target_end_date date/,
   );
-  assert.match(migration, /target_club_id := public\.admin_current_club_id\(\)/);
+  assert.match(
+    migration,
+    /target_club_id := public\.admin_current_club_id\(\)/,
+  );
   assert.match(
     migration,
     /public\.has_club_permission\(target_club_id, 'statistics\.read'\)/,
@@ -33,7 +36,10 @@ test("les indicateurs couvrent occupation, fréquentation et finances", async ()
   );
 
   assert.match(migration, /public\.resource_opening_hours/);
-  assert.match(migration, /generate_series\(/[\s\S]*target_start_date,[\s\S]*target_end_date/);
+  assert.match(
+    migration,
+    /generate_series\([\s\S]*target_start_date,[\s\S]*target_end_date/,
+  );
   assert.match(migration, /'occupancy_rate'/);
   assert.match(migration, /'cancellation_rate'/);
   assert.match(migration, /'expected_revenue_cents'/);
