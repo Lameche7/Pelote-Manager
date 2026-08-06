@@ -1,7 +1,13 @@
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { formatPublicEventPeriod } from "@/features/home/domain/publicEventPresentation";
+import {
+  publicEventService,
+  type PublicEvent,
+} from "@/features/home/services/publicEventService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
+import { useAuth } from "@/shared/hooks/useAuth";
 import "./PremiumHomePage.css";
 
 const benefits = [
@@ -31,13 +37,54 @@ type ClubHeroStyle = CSSProperties & {
   "--club-hero-image": string;
 };
 
+type PublicEventCardStyle = CSSProperties & {
+  "--event-accent": string;
+};
+
 export function HomePage() {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const [events, setEvents] = useState<PublicEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
     .filter(Boolean)
     .join(" · ");
   const heroStyle: ClubHeroStyle = {
     "--club-hero-image": `url("${CLUB_CONFIG.heroImageUrl}")`,
   };
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+
+    let active = true;
+    setEvents([]);
+    setEventsLoading(true);
+    setEventsError(null);
+
+    publicEventService
+      .listUpcomingEvents()
+      .then((upcomingEvents) => {
+        if (active) setEvents(upcomingEvents);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setEventsError(
+          error instanceof Error
+            ? error.message
+            : "Les prochains évènements sont momentanément indisponibles.",
+        );
+      })
+      .finally(() => {
+        if (active) setEventsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, isAuthLoading]);
+
+  const showEventsSection =
+    eventsLoading || eventsError !== null || events.length > 0;
 
   return (
     <div className="premium-home">
@@ -88,6 +135,84 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      {showEventsSection && (
+        <section
+          className="premium-home__events"
+          aria-labelledby="upcoming-events-title"
+        >
+          <div className="premium-home__events-inner">
+            <header className="premium-home__section-heading">
+              <p className="section-kicker">La vie du club</p>
+              <h2 id="upcoming-events-title">Prochains évènements</h2>
+              <p>
+                Les rendez-vous publiés par le club, mis à jour directement
+                depuis l’espace administration.
+              </p>
+            </header>
+
+            {eventsLoading && (
+              <p className="premium-home__events-status" role="status">
+                Chargement des prochains évènements…
+              </p>
+            )}
+
+            {eventsError && (
+              <p
+                className="premium-home__events-status premium-home__events-status--error"
+                role="alert"
+              >
+                {eventsError}
+              </p>
+            )}
+
+            {!eventsLoading && !eventsError && events.length > 0 && (
+              <div className="premium-home__event-grid">
+                {events.map((event) => {
+                  const cardStyle: PublicEventCardStyle = {
+                    "--event-accent": event.typeColor,
+                  };
+                  const eventLocation = [
+                    venueLabel,
+                    event.resourceNames.join(", "),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ");
+
+                  return (
+                    <article
+                      className="public-event-card"
+                      key={event.id}
+                      style={cardStyle}
+                    >
+                      <div className="public-event-card__meta">
+                        <span className="public-event-card__type">
+                          {event.typeName}
+                        </span>
+                        {event.visibility === "members" && (
+                          <span className="public-event-card__audience">
+                            Licenciés
+                          </span>
+                        )}
+                      </div>
+                      <p className="public-event-card__period">
+                        {formatPublicEventPeriod(event.startsAt, event.endsAt)}
+                      </p>
+                      <h3>{event.name}</h3>
+                      {event.description && <p>{event.description}</p>}
+                      {eventLocation && (
+                        <p className="public-event-card__location">
+                          {eventLocation}
+                        </p>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="premium-home__club">
         <div className="premium-home__club-card">
