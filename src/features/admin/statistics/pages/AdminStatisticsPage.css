@@ -1,0 +1,256 @@
+.statistics-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.statistics-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.statistics-refresh,
+.statistics-period button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.7rem;
+  padding: 0.65rem 0.9rem;
+  border: 0;
+  border-radius: 0.7rem;
+  color: #fff;
+  font-weight: 800;
+  background: var(--brand-green);
+  cursor: pointer;
+}
+
+.statistics-refresh svg {
+  width: 1rem;
+}
+
+.statistics-refresh:disabled,
+.statistics-period button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.statistics-period {
+  display: flex;
+  align-items: end;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.statistics-period > svg {
+  width: 1.4rem;
+  align-self: center;
+  color: var(--brand-red);
+}
+
+.statistics-period label {
+  display: grid;
+  gap: 0.35rem;
+  color: #485952;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.statistics-period input {
+  min-height: 2.7rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #ccd6d2;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.statistics-error,
+.statistics-loading {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+}
+
+.statistics-error {
+  color: #8f2020;
+  background: #fdeaea;
+}
+
+.statistics-loading {
+  color: var(--muted);
+  background: #fff;
+}
+
+.statistics-metrics {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.statistics-metrics article {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+.statistics-metrics svg {
+  width: 1.25rem;
+  color: var(--brand-red);
+}
+
+.statistics-metrics span {
+  color: #65717c;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.statistics-metrics strong {
+  overflow-wrap: anywhere;
+  color: var(--brand-green);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  line-height: 1;
+}
+
+.statistics-metrics small {
+  color: #889198;
+  line-height: 1.35;
+}
+
+.statistics-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.statistics-panel:last-child {
+  grid-column: 1 / -1;
+}
+
+.statistics-panel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #e4e9e7;
+}
+
+.statistics-panel h2 {
+  margin: 0;
+  color: var(--brand-green);
+  font-size: 1.05rem;
+}
+
+.statistics-panel header p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.statistics-panel header svg {
+  width: 1.25rem;
+  color: var(--brand-blue);
+}
+
+.statistics-bars {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.statistics-bars li {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.statistics-bars li > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.statistics-bars span {
+  color: #46564f;
+  font-weight: 750;
+}
+
+.statistics-bars strong {
+  color: var(--brand-green);
+  font-size: 0.78rem;
+}
+
+.statistics-bars small {
+  color: var(--muted);
+}
+
+.statistics-bars__track {
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eeeb;
+}
+
+.statistics-bars__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-green));
+}
+
+.statistics-empty {
+  margin: 1rem 0 0;
+  color: var(--muted);
+}
+
+.statistics-footnote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 64rem) {
+  .statistics-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .statistics-panel:last-child {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 42rem) {
+  .statistics-page__header {
+    flex-direction: column;
+  }
+
+  .statistics-refresh {
+    width: 100%;
+  }
+
+  .statistics-period {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .statistics-period > svg {
+    display: none;
+  }
+
+  .statistics-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .statistics-bars li > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+}

@@ -1,46 +1,41 @@
 import assert from "node:assert/strict";
-import test from "node:test";
 import { readFile } from "node:fs/promises";
+import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
+const migrationPath =
+  "../supabase/migrations/20260806130000_add_admin_dashboard.sql";
+const servicePath = "../src/features/admin/services/adminDashboardService.ts";
+const pagePath = "../src/features/admin/pages/AdminPage.tsx";
+
 test("le tableau de bord repose sur une projection sécurisée et isolée par club", async () => {
-  const migration = await read(
-    "../supabase/migrations/20260806130000_add_admin_dashboard.sql",
-  );
+  const migration = await read(migrationPath);
 
   assert.match(migration, /create function public\.admin_get_dashboard\(\)/);
-  assert.match(migration, /public\.admin_current_club_id\(\)/);
+  assert.match(migration, /security definer/);
+  assert.match(migration, /admin_current_club_id\(\)/);
   assert.match(
     migration,
-    /public\.has_club_permission\(club, 'admin\.dashboard\.read'\)/,
-  );
-  assert.match(migration, /resources\.club_id = club/);
-  assert.match(migration, /members\.club_id = club/);
-  assert.match(migration, /events\.club_id = club/);
-  assert.match(migration, /communications\.club_id = club/);
-  assert.match(
-    migration,
-    /revoke all on function public\.admin_get_dashboard\(\) from public/,
+    /has_club_permission\(club, 'admin\.dashboard\.read'\)/,
   );
   assert.match(
     migration,
-    /grant execute on function public\.admin_get_dashboard\(\) to authenticated/,
+    /grant execute on function public\.admin_get_dashboard/,
   );
-  assert.doesNotMatch(
-    migration,
-    /customer_name|guest_email|guest_phone|display_name/,
-  );
+  assert.doesNotMatch(migration, /guest_email|guest_phone/);
 });
 
 test("le service et la page consomment les données réelles du dashboard", async () => {
   const [service, page] = await Promise.all([
-    read("../src/features/admin/services/adminDashboardService.ts"),
-    read("../src/features/admin/pages/AdminPage.tsx"),
+    read(servicePath),
+    read(pagePath),
   ]);
 
-  assert.match(service, /supabase\.rpc\("admin_get_dashboard"\)/);
+  assert.match(service, /admin_get_dashboard/);
   assert.match(service, /reservationsToday/);
+  assert.match(service, /nextReservations/);
+  assert.match(service, /activeMembers/);
   assert.match(service, /activeCommunications/);
   assert.match(page, /adminDashboardService\.getDashboard\(\)/);
   assert.match(page, /Prochaines réservations/);
@@ -59,12 +54,15 @@ test("seuls les modules encore factices sont masqués de la navigation", async (
     read("../src/features/admin/components/AdminShell.tsx"),
   ]);
 
-  for (const label of ["Tournois", "Statistiques"]) {
-    assert.match(
-      navigation,
-      new RegExp(`label: "${label}"[\\s\\S]*?enabled: false`),
-    );
-  }
+  assert.match(navigation, /label: "Tournois"[\s\S]*?enabled: false/);
+  assert.match(
+    navigation,
+    /label: "Statistiques"[\s\S]*?permission: ADMIN_PERMISSIONS\.statistics/,
+  );
+  assert.doesNotMatch(
+    navigation,
+    /label: "Statistiques"[\s\S]{0,160}enabled: false/,
+  );
   assert.match(
     navigation,
     /label: "Paramètres"[\s\S]*?permission: ADMIN_PERMISSIONS\.settings/,

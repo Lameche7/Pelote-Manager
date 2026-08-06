@@ -4,6 +4,11 @@ export type Club = {
   id: string;
   name: string;
   logoUrl: string;
+  heroImageUrl: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  neutralColor: string;
   address: string;
   phone: string;
   email: string;
@@ -33,6 +38,11 @@ const mapClub = (row: Record<string, unknown>): Club => ({
   id: String(row.id),
   name: String(row.name ?? ""),
   logoUrl: String(row.logo_url ?? ""),
+  heroImageUrl: String(row.hero_image_url ?? ""),
+  primaryColor: String(row.primary_color ?? "#0F3D2E"),
+  secondaryColor: String(row.secondary_color ?? "#1E5AA8"),
+  accentColor: String(row.accent_color ?? "#B22525"),
+  neutralColor: String(row.neutral_color ?? "#6B7280"),
   address: String(row.address ?? ""),
   phone: String(row.phone ?? ""),
   email: String(row.email ?? ""),
@@ -65,6 +75,11 @@ export const clubAdminService = {
       .update({
         name: club.name,
         logo_url: club.logoUrl || null,
+        hero_image_url: club.heroImageUrl || null,
+        primary_color: club.primaryColor,
+        secondary_color: club.secondaryColor,
+        accent_color: club.accentColor,
+        neutral_color: club.neutralColor,
         address: club.address || null,
         phone: club.phone || null,
         email: club.email || null,

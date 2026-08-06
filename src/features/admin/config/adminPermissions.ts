@@ -114,7 +114,6 @@ export const adminNavigation = [
     label: "Statistiques",
     to: ROUTES.adminStatistics,
     permission: ADMIN_PERMISSIONS.statistics,
-    enabled: false,
   },
   {
     label: "Paiements",
