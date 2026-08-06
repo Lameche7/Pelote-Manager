@@ -32,6 +32,7 @@
     "src/features/admin/members/domain/importPreview.ts",
     "src/features/admin/members/domain/importWorkflow.ts",
     "src/features/auth/domain/accountProfileFinalization.ts",
+    "src/features/home/domain/publicEventPresentation.ts",
     "src/features/members/domain/memberRegistration.ts",
     "supabase/functions/_shared/memberRegistrationCleanup.ts",
     "src/features/platform/budget/platformBudgetForecast.ts",
