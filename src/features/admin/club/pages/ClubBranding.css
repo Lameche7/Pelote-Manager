@@ -47,7 +47,7 @@
   grid-template-columns: 3rem 1fr;
 }
 
-.club-branding-color-input input[type='color'] {
+.club-branding-color-input input[type="color"] {
   height: 2.7rem;
   padding: 0.15rem;
   cursor: pointer;
@@ -77,7 +77,9 @@
   color: #fff;
   text-align: center;
   background-color: var(--preview-primary);
-  background-image: linear-gradient(rgb(4 18 14 / 35%), rgb(4 18 14 / 78%)), var(--preview-hero);
+  background-image:
+    linear-gradient(rgb(4 18 14 / 35%), rgb(4 18 14 / 78%)),
+    var(--preview-hero);
   background-position: center;
   background-size: cover;
 }
@@ -121,10 +123,21 @@
   border-radius: 0.45rem;
 }
 
-.club-branding-preview__palette span:nth-child(1) { background: var(--preview-primary); }
-.club-branding-preview__palette span:nth-child(2) { background: var(--preview-secondary); }
-.club-branding-preview__palette span:nth-child(3) { background: var(--preview-accent); }
-.club-branding-preview__palette span:nth-child(4) { background: var(--preview-neutral); }
+.club-branding-preview__palette span:nth-child(1) {
+  background: var(--preview-primary);
+}
+
+.club-branding-preview__palette span:nth-child(2) {
+  background: var(--preview-secondary);
+}
+
+.club-branding-preview__palette span:nth-child(3) {
+  background: var(--preview-accent);
+}
+
+.club-branding-preview__palette span:nth-child(4) {
+  background: var(--preview-neutral);
+}
 
 .club-branding-preview > small {
   color: var(--preview-neutral);
@@ -132,11 +145,21 @@
 }
 
 @media (max-width: 68rem) {
-  .club-information-layout { grid-template-columns: 1fr; }
-  .club-branding-preview { position: static; }
-  .club-branding-preview__hero { min-height: 20rem; }
+  .club-information-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .club-branding-preview {
+    position: static;
+  }
+
+  .club-branding-preview__hero {
+    min-height: 20rem;
+  }
 }
 
 @media (max-width: 45rem) {
-  .club-branding-colors { grid-template-columns: 1fr; }
+  .club-branding-colors {
+    grid-template-columns: 1fr;
+  }
 }
