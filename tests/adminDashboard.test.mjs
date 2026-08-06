@@ -69,10 +69,7 @@ test("seuls les modules encore factices sont masqués de la navigation", async (
     navigation,
     /label: "Paramètres"[\s\S]*?permission: ADMIN_PERMISSIONS\.settings/,
   );
-  assert.doesNotMatch(
-    navigation,
-    /label: "Paramètres"[\s\S]*?enabled: false/,
-  );
+  assert.doesNotMatch(navigation, /label: "Paramètres"[\s\S]*?enabled: false/);
   assert.match(shell, /const isEnabled/);
   assert.match(shell, /isEnabled\(item\)/);
   assert.match(shell, /isEnabled\(child\)/);
