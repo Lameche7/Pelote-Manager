@@ -61,8 +61,7 @@ const compactDateFormatter = new Intl.DateTimeFormat("fr-FR", {
   month: "short",
 });
 
-const formatCurrency = (cents: number) =>
-  currencyFormatter.format(cents / 100);
+const formatCurrency = (cents: number) => currencyFormatter.format(cents / 100);
 const formatDate = (value: string) =>
   value ? dateFormatter.format(new Date(`${value}T12:00:00`)) : "—";
 const formatCompactDate = (value: string) =>
@@ -307,12 +306,16 @@ export function AdminStatisticsPage() {
               <strong>
                 {formatCurrency(statistics.summary.paidRevenueCents)}
               </strong>
-              <small>{formatCurrency(outstandingRevenue)} restant attendu</small>
+              <small>
+                {formatCurrency(outstandingRevenue)} restant attendu
+              </small>
             </article>
             <article className="admin-card admin-statistics__metric admin-statistics__metric--alert">
               <XCircle aria-hidden="true" />
               <span>Taux d’annulation</span>
-              <strong>{statistics.summary.cancellationRate.toFixed(1)} %</strong>
+              <strong>
+                {statistics.summary.cancellationRate.toFixed(1)} %
+              </strong>
               <small>
                 {statistics.summary.cancelledReservations} annulation(s) ·{" "}
                 {statistics.summary.noShowReservations} absence(s)
@@ -472,7 +475,9 @@ export function AdminStatisticsPage() {
                 .filter((payment) => payment.count > 0)
                 .map((payment) => (
                   <div key={payment.status}>
-                    <span>{paymentLabels[payment.status] ?? payment.status}</span>
+                    <span>
+                      {paymentLabels[payment.status] ?? payment.status}
+                    </span>
                     <strong>{payment.count}</strong>
                     <small>{formatCurrency(payment.amountCents)}</small>
                   </div>
