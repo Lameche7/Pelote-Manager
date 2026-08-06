@@ -16,11 +16,7 @@ const notificationService = await readFile(
 );
 const router = await readFile("src/app/router.tsx", "utf8");
 const mainLayout = await readFile("src/app/layouts/MainLayout.tsx", "utf8");
-const homePage = await readFile(
-  "src/features/home/pages/HomePage.tsx",
-  "utf8",
-);
-
+const homePage = await readFile("src/features/home/pages/HomePage.tsx", "utf8");
 
 test("la communication possède une source, des livraisons et un audit isolés par club", () => {
   for (const table of [
@@ -35,10 +31,15 @@ test("la communication possède une source, des livraisons et un audit isolés p
   assert.match(migration, /communication\.manage/);
 });
 
-
 test("un brouillon ne diffuse rien et la publication photographie chaque licencié actif", () => {
-  assert.match(migration, /status public\.communication_status not null default 'draft'/);
-  assert.match(migration, /create function public\.admin_publish_communication/);
+  assert.match(
+    migration,
+    /status public\.communication_status not null default 'draft'/,
+  );
+  assert.match(
+    migration,
+    /create function public\.admin_publish_communication/,
+  );
   assert.match(migration, /insert into public\.communication_deliveries/);
   assert.match(migration, /members\.is_active/);
   assert.match(migration, /profile_id_at_publication/);
@@ -46,16 +47,17 @@ test("un brouillon ne diffuse rien et la publication photographie chaque licenci
   assert.match(migration, /not_configured/);
 });
 
-
 test("la publication est idempotente et ne duplique jamais un destinataire", () => {
-  assert.match(migration, /if previous_communication\.status = 'published' then\s+return;/);
+  assert.match(
+    migration,
+    /if previous_communication\.status = 'published' then\s+return;/,
+  );
   assert.match(migration, /unique \(communication_id, club_member_id\)/);
   assert.match(
     migration,
     /on conflict \(communication_id, club_member_id\) do nothing/,
   );
 });
-
 
 test("un licencié ne consulte et ne modifie que ses propres livraisons", () => {
   assert.match(migration, /profiles\.id = auth\.uid\(\)/);
@@ -69,9 +71,11 @@ test("un licencié ne consulte et ne modifie que ses propres livraisons", () => 
   );
 });
 
-
 test("le compteur et le bandeau ignorent les messages archivés ou expirés", () => {
-  assert.match(migration, /create function public\.count_my_unread_notifications/);
+  assert.match(
+    migration,
+    /create function public\.count_my_unread_notifications/,
+  );
   assert.match(migration, /communications\.status = 'published'/);
   assert.match(
     migration,
@@ -80,7 +84,6 @@ test("le compteur et le bandeau ignorent les messages archivés ou expirés", ()
   assert.match(migration, /create function public\.list_my_home_banners/);
   assert.match(migration, /communications\.show_on_home/);
 });
-
 
 test("l’administration et l’espace licencié utilisent uniquement les RPC prévues", () => {
   for (const rpc of [
@@ -104,14 +107,10 @@ test("l’administration et l’espace licencié utilisent uniquement les RPC pr
   }
 });
 
-
 test("les routes, le compteur et le bandeau remplacent les écrans factices", () => {
   assert.match(router, /AdminCommunicationPage/);
   assert.match(router, /NotificationsPage/);
-  assert.doesNotMatch(
-    router,
-    /AdminComingSoonPage title="Communication"/,
-  );
+  assert.doesNotMatch(router, /AdminComingSoonPage title="Communication"/);
   assert.match(mainLayout, /countUnread/);
   assert.match(mainLayout, /app-navigation__badge/);
   assert.match(homePage, /listHomeBanners/);
