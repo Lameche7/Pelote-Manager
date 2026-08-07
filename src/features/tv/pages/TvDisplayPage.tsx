@@ -3,7 +3,6 @@ import {
   CalendarDays,
   CalendarRange,
   Clock3,
-  Handshake,
   Megaphone,
   Monitor,
   QrCode,
@@ -17,6 +16,7 @@ import {
   type PublicEvent,
 } from "@/features/home/services/publicEventService";
 import { CLUB_CONFIG } from "@/shared/config";
+import { TvPromotionPanel } from "@/features/tv/components/TvPromotionPanel";
 import {
   tvDisplayService,
   type TvDisplay,
@@ -490,48 +490,12 @@ export function TvDisplayPage() {
       )}
 
       {activeView === "club" && (
-        <section
-          className="tv-display__promotion tv-display__view"
-          aria-label="Boutique et partenaires du club"
+        <TvPromotionPanel
           key="club"
-        >
-          <div className="tv-display__promotion-main">
-            <article className="tv-display__shop-panel">
-              <div className="tv-display__shop-copy">
-                <span className="tv-display__promotion-kicker">
-                  <ShoppingBag aria-hidden="true" /> Boutique du club
-                </span>
-                <h2>Dotations 2026</h2>
-                <p>
-                  Retrouvez les tenues et équipements aux couleurs du Pelotaris
-                  Club Lourdais sur la boutique HelloAsso.
-                </p>
-
-                <div className="tv-display__shop-highlights">
-                  <span>Textile club</span>
-                  <span>Équipements</span>
-                  <span>Idées cadeaux</span>
-                </div>
-              </div>
-
-              <QrCard
-                value={SHOP_URL}
-                title="Ouvrir la boutique"
-                subtitle="Scannez pour découvrir les dotations 2026"
-              />
-            </article>
-
-            <aside className="tv-display__partners-panel">
-              <Handshake aria-hidden="true" />
-              <span>Partenaires</span>
-              <h2>Merci à ceux qui font vivre le club</h2>
-              <p>
-                Cet espace est prêt à accueillir les logos et messages de nos
-                partenaires dès leur ajout dans Pelote Manager.
-              </p>
-            </aside>
-          </div>
-        </section>
+          token={token}
+          refreshIntervalSeconds={display.refreshIntervalSeconds}
+          shopUrl={SHOP_URL}
+        />
       )}
 
       <footer className="tv-display__footer">
