@@ -52,10 +52,7 @@ const slotStatuses = new Set<TvSlotStatus>([
   "reserved",
   "unavailable",
 ]);
-const weekItemStatuses = new Set<TvWeekItemStatus>([
-  "reserved",
-  "unavailable",
-]);
+const weekItemStatuses = new Set<TvWeekItemStatus>(["reserved", "unavailable"]);
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -109,9 +106,7 @@ const mapDisplay = (value: unknown): TvDisplay => {
     displayStartTime: row.display_start_time
       ? String(row.display_start_time)
       : null,
-    displayEndTime: row.display_end_time
-      ? String(row.display_end_time)
-      : null,
+    displayEndTime: row.display_end_time ? String(row.display_end_time) : null,
     refreshIntervalSeconds: Math.max(
       15,
       Number(row.refresh_interval_seconds ?? 30),
