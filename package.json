@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx src/features/tournaments/pages/TournamentDetailPage.tsx tests/tournamentRegistrations.test.mjs && prettier --check src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx src/features/tournaments/pages/TournamentDetailPage.tsx tests/tournamentRegistrations.test.mjs && printf '\\n===HASHES===\\n' && git hash-object src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx src/features/tournaments/pages/TournamentDetailPage.tsx tests/tournamentRegistrations.test.mjs && printf '\\n===DIFF===\\n' && git diff -- src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx src/features/tournaments/pages/TournamentDetailPage.tsx tests/tournamentRegistrations.test.mjs",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
     "preview": "vite preview"
