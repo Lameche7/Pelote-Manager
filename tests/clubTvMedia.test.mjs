@@ -11,8 +11,14 @@ test("les médias TV sont stockés par club avec des droits stricts", async () =
 
   assert.match(migration, /create table public\.club_tv_media/);
   assert.match(migration, /kind in \('shop', 'partner'\)/);
-  assert.match(migration, /alter table public\.club_tv_media enable row level security/);
-  assert.match(migration, /public\.has_club_permission\(club_id, 'club\.manage'\)/);
+  assert.match(
+    migration,
+    /alter table public\.club_tv_media enable row level security/,
+  );
+  assert.match(
+    migration,
+    /public\.has_club_permission\(club_id, 'club\.manage'\)/,
+  );
   assert.match(migration, /storage_path like club_id::text \|\| '\/%'/);
   assert.match(migration, /'club-tv-media'/);
   assert.match(migration, /8388608/);
