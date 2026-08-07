@@ -119,7 +119,7 @@ const nextTvView = (current: TvView): TvView => {
 
 const viewEyebrow = (view: TvView) => {
   if (view === "today") return "Réservations du jour";
-  if (view === "week") return "Planning de la semaine";
+  if (view === "week") return "Planning des 7 prochains jours";
   return "Boutique & partenaires";
 };
 
@@ -290,7 +290,7 @@ export function TvDisplayPage() {
     [display?.displayDate, now],
   );
   const displayedWeek = useMemo(() => {
-    if (!display?.weekStart || !display.weekEnd) return "Semaine en cours";
+    if (!display?.weekStart || !display.weekEnd) return "7 jours à venir";
 
     return `Du ${compactDateFormatter.format(
       dateFromIso(display.weekStart),
@@ -454,14 +454,14 @@ export function TvDisplayPage() {
       {activeView === "week" && (
         <section
           className="tv-display__week tv-display__view"
-          aria-label="Planning des réservations de la semaine"
+          aria-label="Planning des réservations des 7 prochains jours"
           key="week"
         >
           <header className="tv-display__week-heading">
             <div>
               <CalendarRange aria-hidden="true" />
               <div>
-                <h2>Vue de la semaine</h2>
+                <h2>7 jours à venir</h2>
                 <p>{displayedWeek}</p>
               </div>
             </div>
