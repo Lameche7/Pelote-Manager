@@ -1,26 +1,29 @@
 .tv-display__shop-media {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(0.55rem, 1vw, 0.85rem);
-  margin-top: clamp(1rem, 1.8vw, 1.4rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.5rem, 0.9vw, 0.75rem);
+  margin-top: 0.9rem;
 }
 
 .tv-display__shop-media img {
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: contain;
-  padding: 0.35rem;
+  padding: 0.3rem;
   border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 0.85rem;
+  border-radius: 0.75rem;
   background: rgb(255 255 255 / 94%);
 }
 
 .tv-display__partner-media {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(0.55rem, 1vw, 0.85rem);
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: center;
+  gap: clamp(0.65rem, 1.1vw, 1rem);
   width: 100%;
-  margin-top: 1rem;
+  min-height: 0;
+  margin-top: 0.9rem;
 }
 
 .tv-display__partner-media img {
@@ -34,16 +37,21 @@
 
 .tv-display__partner-media img:only-child {
   grid-column: 1 / -1;
-  max-height: min(38vh, 22rem);
+  width: 100%;
+  max-height: min(50vh, 34rem);
+  aspect-ratio: auto;
+  object-fit: contain;
+  padding: 0.65rem;
 }
 
 @media (max-width: 72rem) {
-  .tv-display__shop-media {
+  .tv-display__shop-media,
+  .tv-display__partner-media {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .tv-display__partner-media {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .tv-display__partner-media img:only-child {
+    max-height: min(42vh, 28rem);
   }
 }
 
