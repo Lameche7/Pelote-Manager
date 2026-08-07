@@ -94,7 +94,9 @@ export function AdminTvSettingsPage() {
       settings.viewDurationSeconds < 10 ||
       settings.viewDurationSeconds > 300
     ) {
-      setError("La durée de chaque écran doit être comprise entre 10 et 300 secondes.");
+      setError(
+        "La durée de chaque écran doit être comprise entre 10 et 300 secondes.",
+      );
       return false;
     }
     return true;
