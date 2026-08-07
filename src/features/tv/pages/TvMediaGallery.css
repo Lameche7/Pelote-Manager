@@ -1,0 +1,68 @@
+.tv-display__shop-media {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.5rem, 0.9vw, 0.75rem);
+  margin-top: 0.9rem;
+}
+
+.tv-display__shop-media img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  padding: 0.3rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 94%);
+}
+
+.tv-display__partner-media {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: stretch;
+  gap: clamp(0.65rem, 1.1vw, 1rem);
+  width: 100%;
+  min-height: 0;
+  margin-top: 0.9rem;
+}
+
+.tv-display__partner-media img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  padding: 0.45rem;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.tv-display__partner-media img:only-child {
+  grid-column: 1 / -1;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: contain;
+  padding: 0.5rem;
+}
+
+@media (max-width: 72rem) {
+  .tv-display__shop-media,
+  .tv-display__partner-media {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .tv-display__partner-media img:only-child {
+    height: auto;
+    max-height: min(55vh, 34rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .tv-display__shop-media,
+  .tv-display__partner-media {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

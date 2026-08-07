@@ -1,0 +1,200 @@
+.club-media-manager {
+  display: grid;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e4e9e7;
+}
+
+.club-media-manager__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.club-media-manager__header h2,
+.club-media-section h3,
+.club-media-manager__header p,
+.club-media-section p {
+  margin: 0;
+}
+
+.club-media-manager__header > div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.club-media-manager__header > div > p:last-child,
+.club-media-section header p {
+  color: #65717c;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.club-media-manager__header > svg {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  color: #174a3a;
+}
+
+.club-media-manager__sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.club-media-section {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid #dce5e1;
+  border-radius: 0.85rem;
+  background: #f9fbfa;
+}
+
+.club-media-section > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.club-media-section > header > svg {
+  flex: 0 0 auto;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: #174a3a;
+}
+
+.club-media-section > header > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.club-media-section > header span {
+  color: #1e5aa8;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.club-media-upload {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.8rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px dashed #8eb5a6;
+  border-radius: 0.7rem;
+  color: #174a3a !important;
+  background: #edf7f3;
+  cursor: pointer;
+}
+
+.club-media-upload:hover {
+  background: #e3f2ec;
+}
+
+.club-media-upload > svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.club-media-upload input {
+  position: absolute;
+  width: 1px !important;
+  height: 1px;
+  margin: -1px;
+  padding: 0 !important;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0 !important;
+}
+
+.club-media-empty {
+  padding: 1rem;
+  border-radius: 0.7rem;
+  color: #65717c;
+  background: #fff;
+  text-align: center;
+}
+
+.club-media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.club-media-tile {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.45rem;
+  border: 1px solid #dce5e1;
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.club-media-tile img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  background: #f4f7f6;
+}
+
+.club-media-tile figcaption {
+  overflow: hidden;
+  color: #52635d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.club-media-tile button {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(127 29 29 / 88%);
+  box-shadow: 0 0.25rem 0.8rem rgb(0 0 0 / 18%);
+}
+
+.club-media-tile button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.club-media-manager__status {
+  min-height: 1.2rem;
+  margin: 0;
+  color: #52635d;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 70rem) {
+  .club-media-manager__sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 45rem) {
+  .club-media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

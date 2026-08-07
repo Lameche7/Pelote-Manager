@@ -23,13 +23,20 @@ import {
   type TvDisplaySlot,
   type TvWeekItem,
 } from "@/features/tv/services/tvDisplayService";
+import {
+  tvMediaService,
+  type TvMediaAsset,
+} from "@/features/tv/services/tvMediaService";
 import "./TvDisplayPage.css";
 import "./TvWeeklyView.css";
 import "./TvPromotionView.css";
+import "./TvMediaGallery.css";
 
 const TV_VIEW_DURATION_MS = 60_000;
 const MAX_WEEK_ITEMS_PER_DAY = 5;
 const MAX_TV_EVENTS = 3;
+const MAX_SHOP_MEDIA = 6;
+const MAX_PARTNER_MEDIA = 8;
 const SHOP_URL =
   "https://www.helloasso.com/associations/pelotaris-club-lourdais/boutiques/dotations-2026";
 const QR_ENDPOINT = "https://quickchart.io/qr";
@@ -154,6 +161,7 @@ export function TvDisplayPage() {
   const tokenIsValid = tokenPattern.test(token);
   const [display, setDisplay] = useState<TvDisplay | null>(null);
   const [upcomingEvents, setUpcomingEvents] = useState<PublicEvent[]>([]);
+  const [tvMedia, setTvMedia] = useState<TvMediaAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [eventsError, setEventsError] = useState(false);
@@ -209,10 +217,21 @@ export function TvDisplayPage() {
     }
   }, []);
 
+  const loadTvMedia = useCallback(async () => {
+    if (!tokenIsValid) return;
+
+    try {
+      setTvMedia(await tvMediaService.list(token));
+    } catch {
+      // Les médias promotionnels sont facultatifs : on conserve le dernier état connu.
+    }
+  }, [token, tokenIsValid]);
+
   useEffect(() => {
     void loadDisplay(true);
     void loadUpcomingEvents();
-  }, [loadDisplay, loadUpcomingEvents]);
+    void loadTvMedia();
+  }, [loadDisplay, loadUpcomingEvents, loadTvMedia]);
 
   useEffect(() => {
     const clock = window.setInterval(() => setNow(new Date()), 1_000);
@@ -226,6 +245,7 @@ export function TvDisplayPage() {
       () => {
         void loadDisplay(false);
         void loadUpcomingEvents();
+        void loadTvMedia();
       },
       (display?.refreshIntervalSeconds ?? 30) * 1_000,
     );
@@ -236,6 +256,7 @@ export function TvDisplayPage() {
     display?.status,
     loadDisplay,
     loadUpcomingEvents,
+    loadTvMedia,
     tokenIsValid,
   ]);
 
@@ -252,6 +273,18 @@ export function TvDisplayPage() {
   const clubName = display?.clubName || CLUB_CONFIG.name;
   const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
   const appUrl = window.location.origin;
+  const shopMedia = useMemo(
+    () =>
+      tvMedia.filter((item) => item.kind === "shop").slice(0, MAX_SHOP_MEDIA),
+    [tvMedia],
+  );
+  const partnerMedia = useMemo(
+    () =>
+      tvMedia
+        .filter((item) => item.kind === "partner")
+        .slice(0, MAX_PARTNER_MEDIA),
+    [tvMedia],
+  );
   const displayedDate = useMemo(
     () => formatDisplayDate(display?.displayDate ?? null, now),
     [display?.displayDate, now],
@@ -507,11 +540,23 @@ export function TvDisplayPage() {
                   Club Lourdais sur la boutique HelloAsso.
                 </p>
 
-                <div className="tv-display__shop-highlights">
-                  <span>Textile club</span>
-                  <span>Équipements</span>
-                  <span>Idées cadeaux</span>
-                </div>
+                {shopMedia.length > 0 ? (
+                  <div className="tv-display__shop-media">
+                    {shopMedia.map((item) => (
+                      <img
+                        src={item.publicUrl}
+                        alt={item.originalName}
+                        key={item.id}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="tv-display__shop-highlights">
+                    <span>Textile club</span>
+                    <span>Équipements</span>
+                    <span>Idées cadeaux</span>
+                  </div>
+                )}
               </div>
 
               <QrCard
@@ -525,10 +570,22 @@ export function TvDisplayPage() {
               <Handshake aria-hidden="true" />
               <span>Partenaires</span>
               <h2>Merci à ceux qui font vivre le club</h2>
-              <p>
-                Cet espace est prêt à accueillir les logos et messages de nos
-                partenaires dès leur ajout dans Pelote Manager.
-              </p>
+              {partnerMedia.length > 0 ? (
+                <div className="tv-display__partner-media">
+                  {partnerMedia.map((item) => (
+                    <img
+                      src={item.publicUrl}
+                      alt={item.originalName}
+                      key={item.id}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p>
+                  Les logos et plaquettes partenaires ajoutés dans Infos du Club
+                  apparaîtront ici automatiquement.
+                </p>
+              )}
             </aside>
           </div>
         </section>
