@@ -30,6 +30,7 @@ import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminTvSettingsPage } from "@/features/admin/settings/pages/AdminTvSettingsPage";
 import { AdminStatisticsPage } from "@/features/admin/statistics/pages/AdminStatisticsPage";
+import { AdminTournamentTeamsPage } from "@/features/admin/tournaments/pages/AdminTournamentTeamsPage";
 import { AdminTournamentsPage } from "@/features/admin/tournaments/pages/AdminTournamentsPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
@@ -42,6 +43,8 @@ import { PlatformLoginPage } from "@/features/platform/pages/PlatformLoginPage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
+import { TournamentDetailPage } from "@/features/tournaments/pages/TournamentDetailPage";
+import { TournamentsPage } from "@/features/tournaments/pages/TournamentsPage";
 import { TvDisplayPage } from "@/features/tv/pages/TvDisplayPage";
 import { UserSpaceDashboardPage } from "@/features/user-space/dashboard/pages/UserSpaceDashboardPage";
 import { MyProfilePage } from "@/features/user-space/profile/pages/MyProfilePage";
@@ -84,6 +87,11 @@ export const routes = [
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage /> },
       { path: ROUTES.reservations, element: <ReservationsPage /> },
+      { path: ROUTES.tournaments, element: <TournamentsPage /> },
+      {
+        path: `${ROUTES.tournaments}/:tournamentId`,
+        element: <TournamentDetailPage />,
+      },
       {
         path: ROUTES.userSpace,
         element: (
@@ -235,6 +243,13 @@ export const routes = [
             element: permitted(
               ADMIN_PERMISSIONS.events,
               <AdminEventsPage />,
+            ),
+          },
+          {
+            path: "tournois/equipes",
+            element: permitted(
+              ADMIN_PERMISSIONS.tournaments,
+              <AdminTournamentTeamsPage />,
             ),
           },
           {

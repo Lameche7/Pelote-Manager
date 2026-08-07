@@ -114,6 +114,9 @@ export function MainLayout() {
           <NavLink className={navClassName} to={ROUTES.reservations}>
             Réservations
           </NavLink>
+          <NavLink className={navClassName} to={ROUTES.tournaments}>
+            Tournois
+          </NavLink>
           {!isLoading && isAuthenticated && (
             <NavLink className={navClassName} to={ROUTES.userSpace}>
               Mon espace

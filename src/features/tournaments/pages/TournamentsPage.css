@@ -1,0 +1,404 @@
+.public-tournaments {
+  display: grid;
+  gap: 1.5rem;
+  width: min(74rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.public-tournaments__hero,
+.public-tournament-detail__hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  border-radius: 1.25rem;
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgb(15 61 46 / 96%), rgb(30 90 168 / 88%));
+}
+
+.public-tournaments__hero > p,
+.public-tournament-detail__hero > div > p {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.public-tournaments__hero h1,
+.public-tournament-detail__hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.7rem);
+}
+
+.public-tournaments__hero span,
+.public-tournament-detail__hero span {
+  max-width: 42rem;
+  line-height: 1.55;
+  opacity: 0.88;
+}
+
+.public-tournaments__error,
+.public-tournaments__success {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.8rem;
+}
+
+.public-tournaments__error {
+  border: 1px solid rgb(178 37 37 / 28%);
+  background: rgb(178 37 37 / 8%);
+}
+
+.public-tournaments__success {
+  border: 1px solid rgb(15 61 46 / 28%);
+  background: rgb(15 61 46 / 8%);
+}
+
+.public-tournaments__empty,
+.public-tournament-panel {
+  padding: 1.25rem;
+  border: 1px solid rgb(107 114 128 / 16%);
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.public-tournaments__empty h2,
+.public-tournaments__empty p,
+.public-tournament-panel h2,
+.public-tournament-panel h3,
+.public-tournament-panel p {
+  margin-top: 0;
+}
+
+.public-tournaments__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1rem;
+}
+
+.public-tournament-card {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgb(107 114 128 / 16%);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.5rem 1.5rem rgb(15 23 42 / 5%);
+}
+
+.public-tournament-card__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.public-tournament-status,
+.public-registration-status {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  background: rgb(107 114 128 / 12%);
+}
+
+.public-tournament-status--registrations_open,
+.public-registration-status--accepted {
+  color: #0f3d2e;
+  background: rgb(15 61 46 / 12%);
+}
+
+.public-registration-status--pending {
+  color: #805b00;
+  background: rgb(220 160 0 / 14%);
+}
+
+.public-registration-status--rejected {
+  color: #8b1f1f;
+  background: rgb(178 37 37 / 10%);
+}
+
+.public-tournament-card h2 {
+  margin: 0;
+  font-size: 1.55rem;
+}
+
+.public-tournament-card > p {
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.78;
+}
+
+.public-tournament-card dl,
+.public-tournament-detail__hero dl {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.public-tournament-card dl div,
+.public-tournament-detail__hero dl div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.public-tournament-card dt,
+.public-tournament-detail__hero dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.64;
+}
+
+.public-tournament-card dd,
+.public-tournament-detail__hero dd {
+  margin: 0;
+  font-weight: 750;
+}
+
+.public-tournament-card__series {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.public-tournament-card__series span {
+  border-radius: 999px;
+  padding: 0.32rem 0.55rem;
+  font-size: 0.76rem;
+  background: rgb(107 114 128 / 8%);
+}
+
+.public-tournament-card .button {
+  justify-self: start;
+}
+
+.public-tournament-detail__back {
+  width: fit-content;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.public-tournament-detail__hero > div {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.public-tournament-detail__hero dl {
+  min-width: min(22rem, 100%);
+}
+
+.public-tournament-preline {
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+.public-tournament-series-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.public-tournament-series {
+  border: 1px solid rgb(107 114 128 / 14%);
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+.public-tournament-series > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.public-tournament-series h3 {
+  margin-bottom: 0.15rem;
+}
+
+.public-tournament-series header span,
+.public-tournament-series header strong {
+  font-size: 0.82rem;
+}
+
+.public-team-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.65rem;
+}
+
+.public-team {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  border-radius: 0.75rem;
+  background: rgb(15 61 46 / 5%);
+}
+
+.public-team span {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.public-team small {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.public-registration-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.public-registration-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.public-registration-panel__heading p,
+.public-registration-panel__heading h2 {
+  margin: 0;
+}
+
+.public-registration-panel__heading p {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  opacity: 0.65;
+}
+
+.public-registration-login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.public-registration-login p {
+  margin: 0;
+}
+
+.public-registration-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.public-registration-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.public-registration-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.public-registration-form input,
+.public-registration-form select,
+.public-registration-form textarea,
+.public-availability-row input,
+.public-availability-row select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgb(107 114 128 / 28%);
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.7rem;
+  font: inherit;
+  background: #fff;
+}
+
+.public-registration-form textarea {
+  resize: vertical;
+}
+
+.public-availability-editor {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  background: rgb(107 114 128 / 5%);
+}
+
+.public-availability-editor > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.public-availability-editor h3,
+.public-availability-editor p {
+  margin: 0;
+}
+
+.public-availability-editor header p {
+  max-width: 46rem;
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  opacity: 0.7;
+}
+
+.public-availability-editor button,
+.public-availability-row button {
+  cursor: pointer;
+  border: 1px solid rgb(107 114 128 / 25%);
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+}
+
+.public-availability-row {
+  display: grid;
+  grid-template-columns: 9rem 9rem 7.5rem 7.5rem auto;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.public-availability-empty {
+  padding: 0.7rem;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.public-registration-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+@media (max-width: 48rem) {
+  .public-tournaments__hero,
+  .public-tournament-detail__hero,
+  .public-tournament-series > header,
+  .public-registration-panel__heading,
+  .public-availability-editor > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .public-registration-form__grid,
+  .public-availability-row {
+    grid-template-columns: 1fr;
+  }
+
+  .public-tournament-detail__hero dl {
+    min-width: 0;
+  }
+}
