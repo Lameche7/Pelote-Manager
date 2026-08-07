@@ -6,6 +6,8 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 const migrationPath =
   "../supabase/migrations/20260807180000_add_tournament_registrations.sql";
+const refinementMigrationPath =
+  "../supabase/migrations/20260807190000_refine_tournament_registration_form.sql";
 
 test("les inscriptions créent des équipes privées, joueurs et disponibilités récurrentes", async () => {
   const migration = await read(migrationPath);
@@ -116,18 +118,58 @@ test("l'administrateur peut gérer les équipes après clôture mais pas après 
   assert.match(migration, /'team_updated_by_admin'/);
 });
 
-test("les pages Tournois exposent consultation publique, inscription et gestion admin", async () => {
-  const [router, navigation, layout, publicPage, detailPage, adminPage] =
-    await Promise.all([
-      read("../src/app/router.tsx"),
-      read("../src/features/admin/config/adminPermissions.ts"),
-      read("../src/app/layouts/MainLayout.tsx"),
-      read("../src/features/tournaments/pages/TournamentsPage.tsx"),
-      read("../src/features/tournaments/pages/TournamentDetailPage.tsx"),
-      read(
-        "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
-      ),
-    ]);
+test("les coordonnées licenciés sont prioritaires et les contacts manquants deviennent obligatoires", async () => {
+  const refinement = await read(refinementMigrationPath);
+
+  assert.match(
+    refinement,
+    /get_my_tournament_registration_identity/,
+  );
+  assert.match(refinement, /search_tournament_partner_members/);
+  assert.match(refinement, /current_member\.email/);
+  assert.match(refinement, /current_member\.phone/);
+  assert.match(refinement, /partner_member\.email/);
+  assert.match(refinement, /partner_member\.phone/);
+  assert.match(refinement, /Tournament player contacts are incomplete/);
+  assert.match(refinement, /partner_member_id/);
+  assert.match(
+    refinement,
+    /grant execute on function public\.search_tournament_partner_members\(uuid, text\) to authenticated/,
+  );
+});
+
+test("les disponibilités utilisateur reprennent les plages du tournoi et sont contrôlées côté serveur", async () => {
+  const refinement = await read(refinementMigrationPath);
+
+  assert.match(refinement, /'play_windows'/);
+  assert.match(refinement, /public\.tournament_play_windows/);
+  assert.match(refinement, /play_window\.weekday = availability_weekday/);
+  assert.match(refinement, /play_window\.opens_at = availability_starts_at/);
+  assert.match(refinement, /play_window\.closes_at = availability_ends_at/);
+});
+
+test("les pages Tournois exposent consultation publique, inscription compacte et gestion admin", async () => {
+  const [
+    router,
+    navigation,
+    layout,
+    publicPage,
+    detailPage,
+    registrationForm,
+    adminPage,
+  ] = await Promise.all([
+    read("../src/app/router.tsx"),
+    read("../src/features/admin/config/adminPermissions.ts"),
+    read("../src/app/layouts/MainLayout.tsx"),
+    read("../src/features/tournaments/pages/TournamentsPage.tsx"),
+    read("../src/features/tournaments/pages/TournamentDetailPage.tsx"),
+    read(
+      "../src/features/tournaments/components/TournamentRegistrationForm.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
+    ),
+  ]);
 
   assert.match(router, /TournamentsPage/);
   assert.match(router, /TournamentDetailPage/);
@@ -136,9 +178,13 @@ test("les pages Tournois exposent consultation publique, inscription et gestion 
   assert.match(navigation, /Équipes & inscriptions/);
   assert.match(publicPage, /Voir le tournoi/);
   assert.match(detailPage, /Se connecter pour inscrire une équipe/);
-  assert.match(detailPage, /Préféré/);
-  assert.match(detailPage, /Possible/);
-  assert.match(detailPage, /Indisponible/);
+  assert.match(detailPage, /public-tournament-panel--teams/);
+  assert.match(registrationForm, /Poste du partenaire/);
+  assert.match(registrationForm, /type="checkbox"/);
+  assert.match(registrationForm, /Disponible/);
+  assert.match(registrationForm, /Si nécessaire/);
+  assert.match(registrationForm, /searchPartnerMembers/);
+  assert.match(registrationForm, /Récupéré depuis la fiche licencié/);
   assert.match(adminPage, /Ajouter une équipe/);
   assert.match(adminPage, /Valider/);
   assert.match(adminPage, /Refuser/);
