@@ -4,20 +4,19 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("la projection TV expose la semaine courante sans élargir les données publiques", async () => {
+test("la projection TV expose aujourd'hui et les six jours suivants", async () => {
   const migration = await read(
-    "../supabase/migrations/20260806190000_add_tv_weekly_rotation.sql",
+    "../supabase/migrations/20260807150000_tv_rolling_seven_days.sql",
   );
 
   assert.match(
     migration,
     /create or replace function public\.get_public_tv_display\(target_token uuid\)/,
   );
-  assert.match(
-    migration,
-    /date_trunc\('week', now\(\) at time zone 'Europe\/Paris'\)/,
-  );
-  assert.match(migration, /week_end date := week_start \+ 6/);
+  assert.match(migration, /display_day date := \(now\(\) at time zone 'Europe\/Paris'\)::date/);
+  assert.match(migration, /week_start date := display_day/);
+  assert.match(migration, /week_end date := display_day \+ 6/);
+  assert.doesNotMatch(migration, /date_trunc\('week'/);
   assert.match(migration, /selected\.club_id = settings\.club_id/);
   assert.match(migration, /current_occupation\.cancelled_at is null/);
   assert.match(migration, /'week_start', week_start/);
@@ -29,11 +28,14 @@ test("la projection TV expose la semaine courante sans élargir les données pub
   );
 });
 
-test("la semaine regroupe réservations et indisponibilités par jour et terrain", async () => {
+test("les sept jours glissants regroupent réservations et indisponibilités par jour et terrain", async () => {
   const migration = await read(
-    "../supabase/migrations/20260806190000_add_tv_weekly_rotation.sql",
+    "../supabase/migrations/20260807150000_tv_rolling_seven_days.sql",
   );
 
+  assert.match(migration, /generate_series\(/);
+  assert.match(migration, /week_start::timestamp/);
+  assert.match(migration, /week_end::timestamp/);
   assert.match(migration, /cross join week_dates as dates/);
   assert.match(migration, /'resource_id', items\.resource_id/);
   assert.match(migration, /'resource_name', items\.resource_name/);
@@ -44,7 +46,7 @@ test("la semaine regroupe réservations et indisponibilités par jour et terrain
   assert.match(migration, /reservation\.guest_name/);
 });
 
-test("le service mappe la vue hebdomadaire sans modifier le lien public", async () => {
+test("le service mappe les sept jours sans modifier le lien public", async () => {
   const service = await read("../src/features/tv/services/tvDisplayService.ts");
 
   assert.match(service, /weekStart: string \| null/);
@@ -70,12 +72,14 @@ test("l'écran commence par le jour puis alterne sur trois vues selon la durée 
   assert.match(page, /useState<TvView>\("today"\)/);
   assert.match(page, /setActiveView\(nextTvView\)/);
   assert.match(page, /display\.viewDurationSeconds \* 1_000/);
-  assert.match(page, /Planning de la semaine/);
+  assert.match(page, /Planning des 7 prochains jours/);
+  assert.match(page, /7 jours à venir/);
   assert.match(page, /Boutique & partenaires/);
   assert.match(
     page,
     /Alternance toutes les \{display\.viewDurationSeconds\} secondes/,
   );
+  assert.doesNotMatch(page, /Semaine en cours/);
   assert.doesNotMatch(page, /TV_VIEW_DURATION_MS = 60_000/);
   assert.match(page, /MAX_WEEK_ITEMS_PER_DAY = 5/);
   assert.match(styles, /grid-template-columns: repeat\(7, minmax\(0, 1fr\)\)/);
