@@ -56,13 +56,12 @@ test("le service mappe la vue hebdomadaire sans modifier le lien public", async 
   assert.match(service, /target_token: token/);
 });
 
-test("l'écran commence par le jour puis alterne sur trois vues toutes les 60 secondes", async () => {
+test("l'écran commence par le jour puis alterne sur trois vues selon la durée configurée", async () => {
   const [page, styles] = await Promise.all([
     read("../src/features/tv/pages/TvDisplayPage.tsx"),
     read("../src/features/tv/pages/TvWeeklyView.css"),
   ]);
 
-  assert.match(page, /const TV_VIEW_DURATION_MS = 60_000/);
   assert.match(page, /type TvView = "today" \| "week" \| "club"/);
   assert.match(
     page,
@@ -70,9 +69,14 @@ test("l'écran commence par le jour puis alterne sur trois vues toutes les 60 se
   );
   assert.match(page, /useState<TvView>\("today"\)/);
   assert.match(page, /setActiveView\(nextTvView\)/);
+  assert.match(page, /display\.viewDurationSeconds \* 1_000/);
   assert.match(page, /Planning de la semaine/);
   assert.match(page, /Boutique & partenaires/);
-  assert.match(page, /Alternance toutes les 60 secondes/);
+  assert.match(
+    page,
+    /Alternance toutes les \{display\.viewDurationSeconds\} secondes/,
+  );
+  assert.doesNotMatch(page, /TV_VIEW_DURATION_MS = 60_000/);
   assert.match(page, /MAX_WEEK_ITEMS_PER_DAY = 5/);
   assert.match(styles, /grid-template-columns: repeat\(7, minmax\(0, 1fr\)\)/);
   assert.match(styles, /tv-display__week-item--reserved/);
