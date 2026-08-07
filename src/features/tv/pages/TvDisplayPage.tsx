@@ -118,7 +118,9 @@ const viewEyebrow = (view: TvView) => {
 };
 
 const eventLocation = (event: PublicEvent) =>
-  event.resourceNames.length > 0 ? event.resourceNames.join(" · ") : event.typeName;
+  event.resourceNames.length > 0
+    ? event.resourceNames.join(" · ")
+    : event.typeName;
 
 function QrCard({
   value,
@@ -220,10 +222,13 @@ export function TvDisplayPage() {
   useEffect(() => {
     if (!tokenIsValid || display?.status === "invalid") return;
 
-    const refresh = window.setInterval(() => {
-      void loadDisplay(false);
-      void loadUpcomingEvents();
-    }, (display?.refreshIntervalSeconds ?? 30) * 1_000);
+    const refresh = window.setInterval(
+      () => {
+        void loadDisplay(false);
+        void loadUpcomingEvents();
+      },
+      (display?.refreshIntervalSeconds ?? 30) * 1_000,
+    );
 
     return () => window.clearInterval(refresh);
   }, [
@@ -331,7 +336,10 @@ export function TvDisplayPage() {
       )}
 
       {activeView === "today" && (
-        <section className="tv-display__today-layout tv-display__view" key="today">
+        <section
+          className="tv-display__today-layout tv-display__view"
+          key="today"
+        >
           <div
             className="tv-display__resources tv-display__resources--today"
             aria-label="Créneaux du jour par terrain"
@@ -367,7 +375,10 @@ export function TvDisplayPage() {
             ))}
           </div>
 
-          <aside className="tv-display__today-aside" aria-label="Informations du club">
+          <aside
+            className="tv-display__today-aside"
+            aria-label="Informations du club"
+          >
             <section className="tv-display__events-panel">
               <header>
                 <Megaphone aria-hidden="true" />
