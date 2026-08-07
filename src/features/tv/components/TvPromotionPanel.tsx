@@ -4,6 +4,7 @@ import {
   tvMediaService,
   type TvMedia,
 } from "@/features/tv/services/tvMediaService";
+import "./TvPromotionPanel.css";
 
 const QR_ENDPOINT = "https://quickchart.io/qr";
 const MAX_DOTATIONS = 6;
@@ -87,7 +88,10 @@ export function TvPromotionPanel({
               <div className="tv-display__shop-gallery">
                 {dotations.map((asset) => (
                   <figure key={asset.id}>
-                    <img src={asset.imageUrl} alt={asset.label || "Dotation du club"} />
+                    <img
+                      src={asset.imageUrl}
+                      alt={asset.label || "Dotation du club"}
+                    />
                     {asset.label && <figcaption>{asset.label}</figcaption>}
                   </figure>
                 ))}
@@ -113,7 +117,10 @@ export function TvPromotionPanel({
             <div className="tv-display__partners-grid">
               {partners.map((asset) => (
                 <figure key={asset.id}>
-                  <img src={asset.imageUrl} alt={asset.label || "Partenaire du club"} />
+                  <img
+                    src={asset.imageUrl}
+                    alt={asset.label || "Partenaire du club"}
+                  />
                   {asset.label && <figcaption>{asset.label}</figcaption>}
                 </figure>
               ))}
