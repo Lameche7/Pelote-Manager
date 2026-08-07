@@ -92,11 +92,15 @@ const buildDraft = (
     partnerEmail: partner?.email ?? "",
     partnerPhone: partner?.phone ?? "",
     contactEmail:
-      (identity.emailFromMember ? identity.email : registration?.contactEmail) ||
+      (identity.emailFromMember
+        ? identity.email
+        : registration?.contactEmail) ||
       identity.email ||
       "",
     contactPhone:
-      (identity.phoneFromMember ? identity.phone : registration?.contactPhone) ||
+      (identity.phoneFromMember
+        ? identity.phone
+        : registration?.contactPhone) ||
       identity.phone ||
       "",
     comments: registration?.comments ?? "",
@@ -121,7 +125,9 @@ export function TournamentRegistrationForm({
 }: Props) {
   const [identity, setIdentity] =
     useState<TournamentRegistrationIdentity | null>(null);
-  const [draft, setDraft] = useState<MyTournamentRegistrationDraft | null>(null);
+  const [draft, setDraft] = useState<MyTournamentRegistrationDraft | null>(
+    null,
+  );
   const [partnerQuery, setPartnerQuery] = useState("");
   const [partnerSuggestions, setPartnerSuggestions] = useState<
     TournamentPartnerSuggestion[]
@@ -238,7 +244,8 @@ export function TournamentRegistrationForm({
 
   const changePartnerQuery = (value: string) => {
     if (!draft) return;
-    const selectedName = `${draft.partnerFirstName} ${draft.partnerLastName}`.trim();
+    const selectedName =
+      `${draft.partnerFirstName} ${draft.partnerLastName}`.trim();
     setPartnerQuery(value);
     if (draft.partnerMemberId && value.trim() !== selectedName) {
       setDraft({
@@ -564,7 +571,10 @@ export function TournamentRegistrationForm({
           </p>
         ) : (
           <div className="public-availability-grid">
-            <div className="public-availability-grid__header" aria-hidden="true">
+            <div
+              className="public-availability-grid__header"
+              aria-hidden="true"
+            >
               <span>Plage</span>
               <span>Disponible</span>
               <span>Si nécessaire</span>
