@@ -13,7 +13,10 @@ test("la projection TV expose aujourd'hui et les six jours suivants", async () =
     migration,
     /create or replace function public\.get_public_tv_display\(target_token uuid\)/,
   );
-  assert.match(migration, /display_day date := \(now\(\) at time zone 'Europe\/Paris'\)::date/);
+  assert.match(
+    migration,
+    /display_day date := \(now\(\) at time zone 'Europe\/Paris'\)::date/,
+  );
   assert.match(migration, /week_start date := display_day/);
   assert.match(migration, /week_end date := display_day \+ 6/);
   assert.doesNotMatch(migration, /date_trunc\('week'/);
