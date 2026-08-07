@@ -1,6 +1,7 @@
 import { supabase } from "@/infrastructure/supabase/client";
 
 export type TvSlotStatus = "available" | "reserved" | "unavailable";
+export type TvWeekItemStatus = "reserved" | "unavailable";
 export type TvDisplayStatus = "ready" | "disabled" | "invalid";
 
 export type TvDisplaySlot = {
@@ -16,6 +17,20 @@ export type TvDisplayResource = {
   slots: TvDisplaySlot[];
 };
 
+export type TvWeekItem = {
+  resourceId: string;
+  resourceName: string;
+  startsAt: string;
+  endsAt: string;
+  status: TvWeekItemStatus;
+  displayName: string;
+};
+
+export type TvWeekDay = {
+  date: string;
+  items: TvWeekItem[];
+};
+
 export type TvDisplay = {
   status: TvDisplayStatus;
   clubName: string | null;
@@ -26,6 +41,9 @@ export type TvDisplay = {
   refreshIntervalSeconds: number;
   generatedAt: string | null;
   resources: TvDisplayResource[];
+  weekStart: string | null;
+  weekEnd: string | null;
+  weekDays: TvWeekDay[];
 };
 
 const statuses = new Set<TvDisplayStatus>(["ready", "disabled", "invalid"]);
@@ -34,9 +52,15 @@ const slotStatuses = new Set<TvSlotStatus>([
   "reserved",
   "unavailable",
 ]);
+const weekItemStatuses = new Set<TvWeekItemStatus>(["reserved", "unavailable"]);
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 
 const mapSlot = (value: unknown): TvDisplaySlot => {
-  const row = value as Record<string, unknown>;
+  const row = asRecord(value);
   const status = String(row.status ?? "unavailable") as TvSlotStatus;
 
   return {
@@ -50,11 +74,28 @@ const mapSlot = (value: unknown): TvDisplaySlot => {
   };
 };
 
+const mapWeekItem = (value: unknown): TvWeekItem => {
+  const row = asRecord(value);
+  const status = String(row.status ?? "unavailable") as TvWeekItemStatus;
+
+  return {
+    resourceId: String(row.resource_id ?? ""),
+    resourceName: String(row.resource_name ?? "Terrain"),
+    startsAt: String(row.starts_at ?? ""),
+    endsAt: String(row.ends_at ?? ""),
+    status: weekItemStatuses.has(status) ? status : "unavailable",
+    displayName: String(row.display_name ?? "Indisponible"),
+  };
+};
+
 const mapDisplay = (value: unknown): TvDisplay => {
-  const row = (value ?? {}) as Record<string, unknown>;
+  const row = asRecord(value);
   const status = String(row.status ?? "invalid") as TvDisplayStatus;
   const resources = Array.isArray(row.resources)
     ? (row.resources as Record<string, unknown>[])
+    : [];
+  const weekDays = Array.isArray(row.week_days)
+    ? (row.week_days as Record<string, unknown>[])
     : [];
 
   return {
@@ -75,6 +116,12 @@ const mapDisplay = (value: unknown): TvDisplay => {
       id: String(resource.id ?? ""),
       name: String(resource.name ?? "Terrain"),
       slots: Array.isArray(resource.slots) ? resource.slots.map(mapSlot) : [],
+    })),
+    weekStart: row.week_start ? String(row.week_start) : null,
+    weekEnd: row.week_end ? String(row.week_end) : null,
+    weekDays: weekDays.map((day) => ({
+      date: String(day.date ?? ""),
+      items: Array.isArray(day.items) ? day.items.map(mapWeekItem) : [],
     })),
   };
 };
