@@ -302,7 +302,9 @@ export function AdminTournamentTeamsPage() {
         </p>
       )}
       {message && (
-        <p className="admin-tournament-teams__alert" role="status">{message}</p>
+        <p className="admin-tournament-teams__alert" role="status">
+          {message}
+        </p>
       )}
 
       {tournaments.length === 0 ? (

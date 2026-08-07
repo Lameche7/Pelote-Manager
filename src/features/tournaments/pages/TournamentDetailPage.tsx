@@ -117,12 +117,14 @@ const registrationToDraft = (
 export function TournamentDetailPage() {
   const { tournamentId = "" } = useParams();
   const { profile, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [tournament, setTournament] =
-    useState<PublicTournamentDetail | null>(null);
+  const [tournament, setTournament] = useState<PublicTournamentDetail | null>(
+    null,
+  );
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
-  const [draft, setDraft] =
-    useState<MyTournamentRegistrationDraft | null>(null);
+  const [draft, setDraft] = useState<MyTournamentRegistrationDraft | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
