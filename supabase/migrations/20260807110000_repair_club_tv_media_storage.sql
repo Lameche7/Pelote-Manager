@@ -1,5 +1,23 @@
 -- Repair PR60 media storage after partial/manual application.
--- This migration is intentionally idempotent for the bucket and RLS policies.
+-- This migration is intentionally idempotent and can bootstrap a missing table,
+-- bucket, policies and public TV projection.
+
+create table if not exists public.club_tv_media (
+  id uuid primary key default gen_random_uuid(),
+  club_id uuid not null references public.clubs (id) on delete cascade,
+  kind text not null check (kind in ('shop', 'partner')),
+  storage_path text not null check (btrim(storage_path) <> ''),
+  original_name text not null check (btrim(original_name) <> ''),
+  created_at timestamptz not null default now(),
+  created_by uuid references public.profiles (id) on delete set null,
+  unique (club_id, storage_path)
+);
+
+create index if not exists club_tv_media_club_kind_created_idx
+on public.club_tv_media (club_id, kind, created_at, id);
+
+alter table public.club_tv_media enable row level security;
+grant select, insert, delete on table public.club_tv_media to authenticated;
 
 insert into storage.buckets (
   id,
@@ -19,8 +37,6 @@ on conflict (id) do update
 set public = excluded.public,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
-
-grant select, insert, delete on table public.club_tv_media to authenticated;
 
 drop policy if exists club_tv_media_admin_read on public.club_tv_media;
 create policy club_tv_media_admin_read
@@ -85,3 +101,31 @@ using (
   and (storage.foldername(name))[1] = public.admin_current_club_id()::text
   and public.has_club_permission(public.admin_current_club_id(), 'club.manage')
 );
+
+create or replace function public.list_public_tv_media(target_token uuid)
+returns table (
+  id uuid,
+  kind text,
+  storage_path text,
+  original_name text
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select
+    media.id,
+    media.kind,
+    media.storage_path,
+    media.original_name
+  from public.club_tv_settings as settings
+  join public.club_tv_media as media
+    on media.club_id = settings.club_id
+  where settings.public_token = target_token
+    and settings.is_enabled
+  order by media.kind, media.created_at, media.id;
+$$;
+
+revoke all on function public.list_public_tv_media(uuid) from public;
+grant execute on function public.list_public_tv_media(uuid) to anon, authenticated;
