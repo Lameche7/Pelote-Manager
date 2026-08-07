@@ -108,7 +108,7 @@
 .tournament-card header button,
 .tournament-config header button,
 .tournament-repeat-row button,
-.tournament-lifecycle__actions button,
+.tournament-lifecycle__actions button:not(.tournaments-primary),
 .tournaments-empty button {
   border: 1px solid rgb(107 114 128 / 28%);
   border-radius: 0.65rem;
