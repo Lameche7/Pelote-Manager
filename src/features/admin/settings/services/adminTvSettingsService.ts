@@ -13,6 +13,7 @@ export type TvModeSettings = {
   displayEndTime: string;
   visibleSlotCount: number;
   refreshIntervalSeconds: number;
+  viewDurationSeconds: number;
   publicToken: string;
   resources: TvModeResource[];
 };
@@ -29,6 +30,7 @@ const mapSettings = (value: unknown): TvModeSettings => {
     displayEndTime: String(row.display_end_time ?? "23:00"),
     visibleSlotCount: Number(row.visible_slot_count ?? 8),
     refreshIntervalSeconds: Number(row.refresh_interval_seconds ?? 30),
+    viewDurationSeconds: Number(row.view_duration_seconds ?? 60),
     publicToken: String(row.public_token ?? ""),
     resources: resources.map((resource) => ({
       id: String(resource.id),
@@ -57,6 +59,7 @@ export const adminTvSettingsService = {
         display_end_time: settings.displayEndTime,
         visible_slot_count: settings.visibleSlotCount,
         refresh_interval_seconds: settings.refreshIntervalSeconds,
+        view_duration_seconds: settings.viewDurationSeconds,
         resource_ids: settings.resources
           .filter((resource) => resource.selected)
           .map((resource) => resource.id),

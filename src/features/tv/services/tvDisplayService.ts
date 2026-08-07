@@ -39,6 +39,7 @@ export type TvDisplay = {
   displayStartTime: string | null;
   displayEndTime: string | null;
   refreshIntervalSeconds: number;
+  viewDurationSeconds: number;
   generatedAt: string | null;
   resources: TvDisplayResource[];
   weekStart: string | null;
@@ -88,7 +89,16 @@ const mapWeekItem = (value: unknown): TvWeekItem => {
   };
 };
 
-const mapDisplay = (value: unknown): TvDisplay => {
+const clampViewDuration = (value: unknown) => {
+  const seconds = Number(value ?? 60);
+  if (!Number.isFinite(seconds)) return 60;
+  return Math.min(300, Math.max(10, seconds));
+};
+
+const mapDisplay = (
+  value: unknown,
+  viewDurationSeconds: unknown,
+): TvDisplay => {
   const row = asRecord(value);
   const status = String(row.status ?? "invalid") as TvDisplayStatus;
   const resources = Array.isArray(row.resources)
@@ -111,6 +121,7 @@ const mapDisplay = (value: unknown): TvDisplay => {
       15,
       Number(row.refresh_interval_seconds ?? 30),
     ),
+    viewDurationSeconds: clampViewDuration(viewDurationSeconds),
     generatedAt: row.generated_at ? String(row.generated_at) : null,
     resources: resources.map((resource) => ({
       id: String(resource.id ?? ""),
@@ -128,11 +139,18 @@ const mapDisplay = (value: unknown): TvDisplay => {
 
 export const tvDisplayService = {
   async getDisplay(token: string): Promise<TvDisplay> {
-    const { data, error } = await supabase.rpc("get_public_tv_display", {
-      target_token: token,
-    });
+    const [displayResult, durationResult] = await Promise.all([
+      supabase.rpc("get_public_tv_display", {
+        target_token: token,
+      }),
+      supabase.rpc("get_public_tv_view_duration", {
+        target_token: token,
+      }),
+    ]);
 
-    if (error) throw error;
-    return mapDisplay(data);
+    if (displayResult.error) throw displayResult.error;
+    if (durationResult.error) throw durationResult.error;
+
+    return mapDisplay(displayResult.data, durationResult.data);
   },
 };
