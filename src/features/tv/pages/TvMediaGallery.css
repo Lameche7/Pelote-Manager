@@ -1,0 +1,55 @@
+.tv-display__shop-media {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.55rem, 1vw, 0.85rem);
+  margin-top: clamp(1rem, 1.8vw, 1.4rem);
+}
+
+.tv-display__shop-media img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  padding: 0.35rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 0.85rem;
+  background: rgb(255 255 255 / 94%);
+}
+
+.tv-display__partner-media {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.55rem, 1vw, 0.85rem);
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.tv-display__partner-media img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  padding: 0.45rem;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.tv-display__partner-media img:only-child {
+  grid-column: 1 / -1;
+  max-height: min(38vh, 22rem);
+}
+
+@media (max-width: 72rem) {
+  .tv-display__shop-media {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .tv-display__partner-media {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 48rem) {
+  .tv-display__shop-media,
+  .tv-display__partner-media {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
