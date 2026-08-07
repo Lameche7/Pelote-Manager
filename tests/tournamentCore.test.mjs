@@ -15,12 +15,18 @@ test("le Tournament Core crée les agrégats et protège les données par RPC", 
   assert.match(migration, /create table public\.tournament_series/);
   assert.match(migration, /create table public\.tournament_play_windows/);
   assert.match(migration, /create table public\.tournament_audit_log/);
-  assert.match(migration, /alter table public\.tournaments enable row level security/);
+  assert.match(
+    migration,
+    /alter table public\.tournaments enable row level security/,
+  );
   assert.match(
     migration,
     /revoke all on table public\.tournaments from public, anon, authenticated/,
   );
-  assert.match(migration, /has_club_permission\(target_club_id, 'tournaments\.manage'\)/);
+  assert.match(
+    migration,
+    /has_club_permission\(target_club_id, 'tournaments\.manage'\)/,
+  );
   assert.match(migration, /admin_current_club_id\(\)/);
 });
 
@@ -78,10 +84,16 @@ test("la configuration prépare les futurs Pool et Planning Engines", async () =
     "../supabase/migrations/20260807160000_add_tournament_core.sql",
   );
 
-  assert.match(migration, /resource_id uuid not null references public\.reservable_resources/);
+  assert.match(
+    migration,
+    /resource_id uuid not null references public\.reservable_resources/,
+  );
   assert.match(migration, /capacity integer not null default 0/);
   assert.match(migration, /not enabled or capacity > 0/);
-  assert.match(migration, /weekday smallint not null check \(weekday between 0 and 6\)/);
+  assert.match(
+    migration,
+    /weekday smallint not null check \(weekday between 0 and 6\)/,
+  );
   assert.match(migration, /check \(closes_at > opens_at\)/);
   assert.match(migration, /admin_save_tournament_configuration/);
 });
@@ -91,17 +103,24 @@ test("l'administration Tournois remplace l'écran provisoire", async () => {
     read("../src/app/router.tsx"),
     read("../src/features/admin/config/adminPermissions.ts"),
     read("../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx"),
-    read("../src/features/admin/tournaments/services/tournamentAdminService.ts"),
+    read(
+      "../src/features/admin/tournaments/services/tournamentAdminService.ts",
+    ),
   ]);
 
   assert.match(router, /AdminTournamentsPage/);
   assert.doesNotMatch(router, /AdminComingSoonPage title="Tournois"/);
   assert.match(permissions, /label: "Tournois"/);
-  assert.doesNotMatch(permissions, /label: "Tournois"[\s\S]{0,180}enabled: false/);
+  assert.doesNotMatch(
+    permissions,
+    /label: "Tournois"[\s\S]{0,180}enabled: false/,
+  );
   assert.match(page, /Créer un tournoi/);
   assert.match(page, /Séries/);
   assert.match(page, /Horaires du tournoi/);
   assert.match(page, /Valider la configuration/);
+  assert.match(page, /pools_validated/);
+  assert.match(page, /planning_published/);
   assert.match(service, /admin_create_tournament/);
   assert.match(service, /admin_save_tournament_configuration/);
   assert.match(service, /admin_transition_tournament/);
