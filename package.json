@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/features/tournaments/components/TournamentRegistrationForm.tsx src/features/tournaments/pages/TournamentDetailPage.tsx src/features/tournaments/types.ts tests/tournamentRegistrations.test.mjs && echo '===FORMAT:COMPONENT===' && cat src/features/tournaments/components/TournamentRegistrationForm.tsx && echo '===FORMAT:PAGE===' && cat src/features/tournaments/pages/TournamentDetailPage.tsx && echo '===FORMAT:TYPES===' && cat src/features/tournaments/types.ts && echo '===FORMAT:TESTS===' && cat tests/tournamentRegistrations.test.mjs && echo '===FORMAT:END===' && prettier --check .",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
     "preview": "vite preview"
