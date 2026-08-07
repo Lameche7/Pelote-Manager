@@ -121,10 +121,7 @@ test("l'administrateur peut gérer les équipes après clôture mais pas après 
 test("les coordonnées licenciés sont prioritaires et les contacts manquants deviennent obligatoires", async () => {
   const refinement = await read(refinementMigrationPath);
 
-  assert.match(
-    refinement,
-    /get_my_tournament_registration_identity/,
-  );
+  assert.match(refinement, /get_my_tournament_registration_identity/);
   assert.match(refinement, /search_tournament_partner_members/);
   assert.match(refinement, /current_member\.email/);
   assert.match(refinement, /current_member\.phone/);
