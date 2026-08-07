@@ -138,7 +138,8 @@ export function TournamentDetailPage() {
           <div>
             <dt>Période</dt>
             <dd>
-              {formatDate(tournament.startsOn)} → {formatDate(tournament.endsOn)}
+              {formatDate(tournament.startsOn)} →{" "}
+              {formatDate(tournament.endsOn)}
             </dd>
           </div>
           <div>
