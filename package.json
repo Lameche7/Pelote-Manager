@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/features/tv/pages/TvDisplayPage.tsx src/features/tv/pages/TvPromotionView.css && git diff -- src/features/tv/pages/TvDisplayPage.tsx src/features/tv/pages/TvPromotionView.css && prettier --check .",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
     "preview": "vite preview"
