@@ -80,7 +80,12 @@ const emptyDraft = (
 
 const registrationToDraft = (
   registration: MyTournamentRegistration,
-  profile: { memberId?: string; email?: string; firstName?: string; lastName?: string },
+  profile: {
+    memberId?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  },
 ): MyTournamentRegistrationDraft => {
   const submitter =
     registration.players.find(
@@ -90,7 +95,9 @@ const registrationToDraft = (
       (player) => profile.email && player.email === profile.email,
     ) ??
     registration.players[0];
-  const partner = registration.players.find((player) => player !== submitter) ?? registration.players[1];
+  const partner =
+    registration.players.find((player) => player !== submitter) ??
+    registration.players[1];
   return {
     seriesId: registration.seriesId,
     submitterRole: submitter?.role ?? "front",
@@ -110,9 +117,13 @@ const registrationToDraft = (
 export function TournamentDetailPage() {
   const { tournamentId = "" } = useParams();
   const { profile, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [tournament, setTournament] = useState<PublicTournamentDetail | null>(null);
-  const [registration, setRegistration] = useState<MyTournamentRegistration | null>(null);
-  const [draft, setDraft] = useState<MyTournamentRegistrationDraft | null>(null);
+  const [tournament, setTournament] =
+    useState<PublicTournamentDetail | null>(null);
+  const [registration, setRegistration] =
+    useState<MyTournamentRegistration | null>(null);
+  const [draft, setDraft] = useState<MyTournamentRegistrationDraft | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -232,13 +243,19 @@ export function TournamentDetailPage() {
   };
 
   if (loading || authLoading) {
-    return <section className="public-tournaments"><p role="status">Chargement du tournoi…</p></section>;
+    return (
+      <section className="public-tournaments">
+        <p role="status">Chargement du tournoi…</p>
+      </section>
+    );
   }
 
   if (error && !tournament) {
     return (
       <section className="public-tournaments">
-        <p className="public-tournaments__error" role="alert">{error}</p>
+        <p className="public-tournaments__error" role="alert">
+          {error}
+        </p>
         <Link to={ROUTES.tournaments}>← Retour aux tournois</Link>
       </section>
     );
@@ -258,7 +275,12 @@ export function TournamentDetailPage() {
 
   return (
     <section className="public-tournaments public-tournament-detail">
-      <Link className="public-tournament-detail__back" to={ROUTES.tournaments}>← Tous les tournois</Link>
+      <Link
+        className="public-tournament-detail__back"
+        to={ROUTES.tournaments}
+      >
+        ← Tous les tournois
+      </Link>
 
       <header className="public-tournament-detail__hero">
         <div>
@@ -267,13 +289,33 @@ export function TournamentDetailPage() {
           {tournament.description && <span>{tournament.description}</span>}
         </div>
         <dl>
-          <div><dt>Période</dt><dd>{formatDate(tournament.startsOn)} → {formatDate(tournament.endsOn)}</dd></div>
-          <div><dt>Inscriptions</dt><dd>{formatDateTime(tournament.registrationOpensAt)} → {formatDateTime(tournament.registrationClosesAt)}</dd></div>
+          <div>
+            <dt>Période</dt>
+            <dd>
+              {formatDate(tournament.startsOn)} →{" "}
+              {formatDate(tournament.endsOn)}
+            </dd>
+          </div>
+          <div>
+            <dt>Inscriptions</dt>
+            <dd>
+              {formatDateTime(tournament.registrationOpensAt)} →{" "}
+              {formatDateTime(tournament.registrationClosesAt)}
+            </dd>
+          </div>
         </dl>
       </header>
 
-      {error && <p className="public-tournaments__error" role="alert">{error}</p>}
-      {message && <p className="public-tournaments__success" role="status">{message}</p>}
+      {error && (
+        <p className="public-tournaments__error" role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="public-tournaments__success" role="status">
+          {message}
+        </p>
+      )}
 
       {tournament.rules && (
         <section className="public-tournament-panel">
@@ -288,8 +330,17 @@ export function TournamentDetailPage() {
           {tournament.series.map((series) => (
             <article key={series.id} className="public-tournament-series">
               <header>
-                <div><h3>{series.name}</h3><span>{series.acceptedCount}/{series.capacity} validées</span></div>
-                <strong>{series.remainingSlots} place{series.remainingSlots > 1 ? "s" : ""} disponible{series.remainingSlots > 1 ? "s" : ""}</strong>
+                <div>
+                  <h3>{series.name}</h3>
+                  <span>
+                    {series.acceptedCount}/{series.capacity} validées
+                  </span>
+                </div>
+                <strong>
+                  {series.remainingSlots} place
+                  {series.remainingSlots > 1 ? "s" : ""} disponible
+                  {series.remainingSlots > 1 ? "s" : ""}
+                </strong>
               </header>
               {(teamsBySeries.get(series.id) ?? []).length === 0 ? (
                 <p>Aucune équipe validée pour le moment.</p>
@@ -300,7 +351,9 @@ export function TournamentDetailPage() {
                       {team.players.map((player) => (
                         <span key={`${team.id}-${player.role}`}>
                           <small>{playerRoleLabels[player.role]}</small>
-                          <strong>{player.firstName} {player.lastName}</strong>
+                          <strong>
+                            {player.firstName} {player.lastName}
+                          </strong>
                         </span>
                       ))}
                     </div>
@@ -312,24 +365,40 @@ export function TournamentDetailPage() {
         </div>
       </section>
 
-      <section className="public-tournament-panel public-registration-panel" id="inscription">
+      <section
+        className="public-tournament-panel public-registration-panel"
+        id="inscription"
+      >
         <div className="public-registration-panel__heading">
-          <div><p>Votre équipe</p><h2>Inscription</h2></div>
+          <div>
+            <p>Votre équipe</p>
+            <h2>Inscription</h2>
+          </div>
           {registration && (
-            <span className={`public-registration-status public-registration-status--${registration.status}`}>
+            <span
+              className={`public-registration-status public-registration-status--${registration.status}`}
+            >
               {registrationStatusLabels[registration.status]}
             </span>
           )}
         </div>
 
         {!tournament.canRegister && (
-          <p>Les inscriptions sont actuellement fermées. Les équipes déjà validées restent consultables ci-dessus.</p>
+          <p>
+            Les inscriptions sont actuellement fermées. Les équipes déjà
+            validées restent consultables ci-dessus.
+          </p>
         )}
 
         {tournament.canRegister && !isAuthenticated && (
           <div className="public-registration-login">
-            <p>Un compte Pelote Manager est nécessaire pour créer ou modifier une inscription.</p>
-            <Link className="button button--primary" to={ROUTES.login}>Se connecter pour inscrire une équipe</Link>
+            <p>
+              Un compte Pelote Manager est nécessaire pour créer ou modifier une
+              inscription.
+            </p>
+            <Link className="button button--primary" to={ROUTES.login}>
+              Se connecter pour inscrire une équipe
+            </Link>
           </div>
         )}
 
@@ -338,84 +407,276 @@ export function TournamentDetailPage() {
             <div className="public-registration-form__grid">
               <label>
                 Série
-                <select required disabled={saving} value={draft.seriesId} onChange={(event) => setDraft({ ...draft, seriesId: event.target.value })}>
+                <select
+                  required
+                  disabled={saving}
+                  value={draft.seriesId}
+                  onChange={(event) =>
+                    setDraft({ ...draft, seriesId: event.target.value })
+                  }
+                >
                   <option value="">Choisir une série</option>
                   {tournament.series.map((series) => (
-                    <option key={series.id} value={series.id}>{series.name} · {series.remainingSlots} place{series.remainingSlots > 1 ? "s" : ""}</option>
+                    <option key={series.id} value={series.id}>
+                      {series.name} · {series.remainingSlots} place
+                      {series.remainingSlots > 1 ? "s" : ""}
+                    </option>
                   ))}
                 </select>
               </label>
               <label>
                 Votre poste
-                <select disabled={saving} value={draft.submitterRole} onChange={(event) => setDraft({ ...draft, submitterRole: event.target.value as TournamentPlayerRole })}>
+                <select
+                  disabled={saving}
+                  value={draft.submitterRole}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      submitterRole: event.target.value as TournamentPlayerRole,
+                    })
+                  }
+                >
                   <option value="front">Avant</option>
                   <option value="back">Arrière</option>
                 </select>
               </label>
               <label>
                 Votre prénom
-                <input required disabled={saving} value={draft.submitterFirstName} onChange={(event) => setDraft({ ...draft, submitterFirstName: event.target.value })} />
+                <input
+                  required
+                  disabled={saving}
+                  value={draft.submitterFirstName}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      submitterFirstName: event.target.value,
+                    })
+                  }
+                />
               </label>
               <label>
                 Votre nom
-                <input required disabled={saving} value={draft.submitterLastName} onChange={(event) => setDraft({ ...draft, submitterLastName: event.target.value })} />
+                <input
+                  required
+                  disabled={saving}
+                  value={draft.submitterLastName}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      submitterLastName: event.target.value,
+                    })
+                  }
+                />
               </label>
               <label>
                 Prénom du partenaire
-                <input required disabled={saving} value={draft.partnerFirstName} onChange={(event) => setDraft({ ...draft, partnerFirstName: event.target.value })} />
+                <input
+                  required
+                  disabled={saving}
+                  value={draft.partnerFirstName}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      partnerFirstName: event.target.value,
+                    })
+                  }
+                />
               </label>
               <label>
                 Nom du partenaire
-                <input required disabled={saving} value={draft.partnerLastName} onChange={(event) => setDraft({ ...draft, partnerLastName: event.target.value })} />
+                <input
+                  required
+                  disabled={saving}
+                  value={draft.partnerLastName}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      partnerLastName: event.target.value,
+                    })
+                  }
+                />
               </label>
               <label>
                 E-mail du partenaire
-                <input type="email" disabled={saving} value={draft.partnerEmail} onChange={(event) => setDraft({ ...draft, partnerEmail: event.target.value })} />
+                <input
+                  type="email"
+                  disabled={saving}
+                  value={draft.partnerEmail}
+                  onChange={(event) =>
+                    setDraft({ ...draft, partnerEmail: event.target.value })
+                  }
+                />
               </label>
               <label>
                 Téléphone du partenaire
-                <input disabled={saving} value={draft.partnerPhone} onChange={(event) => setDraft({ ...draft, partnerPhone: event.target.value })} />
+                <input
+                  disabled={saving}
+                  value={draft.partnerPhone}
+                  onChange={(event) =>
+                    setDraft({ ...draft, partnerPhone: event.target.value })
+                  }
+                />
               </label>
               <label>
                 E-mail de contact
-                <input required type="email" disabled={saving} value={draft.contactEmail} onChange={(event) => setDraft({ ...draft, contactEmail: event.target.value })} />
+                <input
+                  required
+                  type="email"
+                  disabled={saving}
+                  value={draft.contactEmail}
+                  onChange={(event) =>
+                    setDraft({ ...draft, contactEmail: event.target.value })
+                  }
+                />
               </label>
               <label>
                 Téléphone de contact
-                <input disabled={saving} value={draft.contactPhone} onChange={(event) => setDraft({ ...draft, contactPhone: event.target.value })} />
+                <input
+                  disabled={saving}
+                  value={draft.contactPhone}
+                  onChange={(event) =>
+                    setDraft({ ...draft, contactPhone: event.target.value })
+                  }
+                />
               </label>
             </div>
 
             <label>
               Commentaire pour l’organisateur
-              <textarea rows={3} disabled={saving} value={draft.comments} onChange={(event) => setDraft({ ...draft, comments: event.target.value })} />
+              <textarea
+                rows={3}
+                disabled={saving}
+                value={draft.comments}
+                onChange={(event) =>
+                  setDraft({ ...draft, comments: event.target.value })
+                }
+              />
             </label>
 
             <div className="public-availability-editor">
               <header>
-                <div><h3>Disponibilités</h3><p>Indiquez vos règles habituelles. Elles guideront les futurs moteurs de poules et de planning sans garantir un horaire.</p></div>
-                <button type="button" disabled={saving} onClick={() => setDraft({ ...draft, availabilityRules: [...draft.availabilityRules, emptyAvailability()] })}>+ Ajouter</button>
+                <div>
+                  <h3>Disponibilités</h3>
+                  <p>
+                    Indiquez vos règles habituelles. Elles guideront les futurs
+                    moteurs de poules et de planning sans garantir un horaire.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      availabilityRules: [
+                        ...draft.availabilityRules,
+                        emptyAvailability(),
+                      ],
+                    })
+                  }
+                >
+                  + Ajouter
+                </button>
               </header>
               {draft.availabilityRules.map((rule, index) => (
-                <div className="public-availability-row" key={`${index}-${rule.kind}-${rule.weekday}`}>
-                  <select aria-label={`Type disponibilité ${index + 1}`} disabled={saving} value={rule.kind} onChange={(event) => setRule(index, { ...rule, kind: event.target.value as TournamentAvailabilityRule["kind"] })}>
-                    {Object.entries(availabilityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                <div
+                  className="public-availability-row"
+                  key={`${index}-${rule.kind}-${rule.weekday}`}
+                >
+                  <select
+                    aria-label={`Type disponibilité ${index + 1}`}
+                    disabled={saving}
+                    value={rule.kind}
+                    onChange={(event) =>
+                      setRule(index, {
+                        ...rule,
+                        kind: event.target.value as TournamentAvailabilityRule["kind"],
+                      })
+                    }
+                  >
+                    {Object.entries(availabilityLabels).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
-                  <select aria-label={`Jour disponibilité ${index + 1}`} disabled={saving} value={rule.weekday} onChange={(event) => setRule(index, { ...rule, weekday: Number(event.target.value) })}>
-                    {weekdays.map((weekday) => <option key={weekday.value} value={weekday.value}>{weekday.label}</option>)}
+                  <select
+                    aria-label={`Jour disponibilité ${index + 1}`}
+                    disabled={saving}
+                    value={rule.weekday}
+                    onChange={(event) =>
+                      setRule(index, {
+                        ...rule,
+                        weekday: Number(event.target.value),
+                      })
+                    }
+                  >
+                    {weekdays.map((weekday) => (
+                      <option key={weekday.value} value={weekday.value}>
+                        {weekday.label}
+                      </option>
+                    ))}
                   </select>
-                  <input aria-label={`Début disponibilité ${index + 1}`} type="time" disabled={saving} value={rule.startsAt} onChange={(event) => setRule(index, { ...rule, startsAt: event.target.value })} />
-                  <input aria-label={`Fin disponibilité ${index + 1}`} type="time" disabled={saving} value={rule.endsAt} onChange={(event) => setRule(index, { ...rule, endsAt: event.target.value })} />
-                  <button type="button" disabled={saving} onClick={() => setDraft({ ...draft, availabilityRules: draft.availabilityRules.filter((_, ruleIndex) => ruleIndex !== index) })}>Retirer</button>
+                  <input
+                    aria-label={`Début disponibilité ${index + 1}`}
+                    type="time"
+                    disabled={saving}
+                    value={rule.startsAt}
+                    onChange={(event) =>
+                      setRule(index, { ...rule, startsAt: event.target.value })
+                    }
+                  />
+                  <input
+                    aria-label={`Fin disponibilité ${index + 1}`}
+                    type="time"
+                    disabled={saving}
+                    value={rule.endsAt}
+                    onChange={(event) =>
+                      setRule(index, { ...rule, endsAt: event.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      setDraft({
+                        ...draft,
+                        availabilityRules: draft.availabilityRules.filter(
+                          (_, ruleIndex) => ruleIndex !== index,
+                        ),
+                      })
+                    }
+                  >
+                    Retirer
+                  </button>
                 </div>
               ))}
-              {draft.availabilityRules.length === 0 && <p className="public-availability-empty">Aucune règle renseignée pour le moment.</p>}
+              {draft.availabilityRules.length === 0 && (
+                <p className="public-availability-empty">
+                  Aucune règle renseignée pour le moment.
+                </p>
+              )}
             </div>
 
             <div className="public-registration-form__actions">
-              <button className="button button--primary" type="submit" disabled={saving}>{registration ? "Mettre à jour mon équipe" : "Inscrire mon équipe"}</button>
+              <button
+                className="button button--primary"
+                type="submit"
+                disabled={saving}
+              >
+                {registration
+                  ? "Mettre à jour mon équipe"
+                  : "Inscrire mon équipe"}
+              </button>
               {registration && registration.status !== "withdrawn" && (
-                <button className="button button--ghost" type="button" disabled={saving} onClick={() => void withdraw()}>Retirer mon inscription</button>
+                <button
+                  className="button button--ghost"
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void withdraw()}
+                >
+                  Retirer mon inscription
+                </button>
               )}
             </div>
           </form>

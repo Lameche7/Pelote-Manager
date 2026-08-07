@@ -15,8 +15,11 @@
   padding: clamp(1.4rem, 3vw, 2.4rem);
   border-radius: 1.25rem;
   color: #fff;
-  background:
-    linear-gradient(135deg, rgb(15 61 46 / 96%), rgb(30 90 168 / 88%));
+  background: linear-gradient(
+    135deg,
+    rgb(15 61 46 / 96%),
+    rgb(30 90 168 / 88%)
+  );
 }
 
 .public-tournaments__hero > p,

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  tournamentService,
-} from "@/features/tournaments/services/tournamentService";
+import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type { PublicTournamentSummary } from "@/features/tournaments/types";
 import { ROUTES } from "@/shared/config";
 import "./TournamentsPage.css";
@@ -67,12 +65,19 @@ export function TournamentsPage() {
       </header>
 
       {loading && <p role="status">Chargement des tournois…</p>}
-      {error && <p className="public-tournaments__error" role="alert">{error}</p>}
+      {error && (
+        <p className="public-tournaments__error" role="alert">
+          {error}
+        </p>
+      )}
 
       {!loading && !error && tournaments.length === 0 && (
         <div className="public-tournaments__empty">
           <h2>Aucun tournoi publié pour le moment</h2>
-          <p>Les prochains tournois apparaîtront ici dès l’ouverture des inscriptions.</p>
+          <p>
+            Les prochains tournois apparaîtront ici dès l’ouverture des
+            inscriptions.
+          </p>
         </div>
       )}
 
@@ -80,17 +85,25 @@ export function TournamentsPage() {
         {tournaments.map((tournament) => (
           <article className="public-tournament-card" key={tournament.id}>
             <div className="public-tournament-card__topline">
-              <span className={`public-tournament-status public-tournament-status--${tournament.status}`}>
+              <span
+                className={`public-tournament-status public-tournament-status--${tournament.status}`}
+              >
                 {statusLabels[tournament.status] ?? tournament.status}
               </span>
-              <strong>{tournament.teamCount} équipe{tournament.teamCount > 1 ? "s" : ""}</strong>
+              <strong>
+                {tournament.teamCount} équipe
+                {tournament.teamCount > 1 ? "s" : ""}
+              </strong>
             </div>
             <h2>{tournament.name}</h2>
             {tournament.description && <p>{tournament.description}</p>}
             <dl>
               <div>
                 <dt>Tournoi</dt>
-                <dd>{formatDate(tournament.startsOn)} → {formatDate(tournament.endsOn)}</dd>
+                <dd>
+                  {formatDate(tournament.startsOn)} →{" "}
+                  {formatDate(tournament.endsOn)}
+                </dd>
               </div>
               <div>
                 <dt>Séries</dt>
@@ -100,11 +113,15 @@ export function TournamentsPage() {
             <div className="public-tournament-card__series">
               {tournament.series.map((series) => (
                 <span key={series.id}>
-                  {series.name} · {series.remainingSlots} place{series.remainingSlots > 1 ? "s" : ""}
+                  {series.name} · {series.remainingSlots} place
+                  {series.remainingSlots > 1 ? "s" : ""}
                 </span>
               ))}
             </div>
-            <Link className="button button--primary" to={`${ROUTES.tournaments}/${tournament.id}`}>
+            <Link
+              className="button button--primary"
+              to={`${ROUTES.tournaments}/${tournament.id}`}
+            >
               Voir le tournoi
             </Link>
           </article>

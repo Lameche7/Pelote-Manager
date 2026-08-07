@@ -134,7 +134,9 @@ export const tournamentService = {
     };
   },
 
-  async getMine(tournamentId: string): Promise<MyTournamentRegistration | null> {
+  async getMine(
+    tournamentId: string,
+  ): Promise<MyTournamentRegistration | null> {
     const { data, error } = await supabase.rpc(
       "get_my_tournament_registration",
       { target_tournament_id: tournamentId },
