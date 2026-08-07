@@ -11,6 +11,8 @@ import {
 } from "@/features/admin/tournaments/services/tournamentAdminService";
 import "./AdminTournamentsPage.css";
 
+const CLUB_TIME_ZONE = "Europe/Paris";
+
 const statusLabels: Record<TournamentStatus, string> = {
   preparation: "Préparation",
   configuration: "Configuration",
@@ -25,6 +27,20 @@ const statusLabels: Record<TournamentStatus, string> = {
   archived: "Archivé",
   cancelled: "Annulé",
 };
+
+const lifecycleStatuses: TournamentStatus[] = [
+  "preparation",
+  "configuration",
+  "registrations_open",
+  "registrations_closed",
+  "pools_generated",
+  "pools_validated",
+  "planning_generated",
+  "planning_published",
+  "in_progress",
+  "completed",
+  "archived",
+];
 
 const weekdays = [
   { value: 1, label: "Lundi" },
@@ -47,13 +63,74 @@ type TournamentForm = {
   registrationClosesAt: string;
 };
 
+type DateTimeParts = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+};
+
 const emptyOptions: TournamentOptions = { seasons: [], resources: [] };
+
+const clubDateTimeFormatter = new Intl.DateTimeFormat("fr-CA", {
+  timeZone: CLUB_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
+const pad = (value: number) => String(value).padStart(2, "0");
+
+const partsAt = (date: Date): DateTimeParts => {
+  const parts = Object.fromEntries(
+    clubDateTimeFormatter
+      .formatToParts(date)
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)]),
+  );
+  return parts as DateTimeParts;
+};
 
 const toLocalInput = (value: string) => {
   if (!value) return "";
   const date = new Date(value);
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  if (Number.isNaN(date.getTime())) throw new Error("Date de tournoi invalide.");
+  const parts = partsAt(date);
+  return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
+};
+
+const toStoredDateTime = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) throw new Error("Date et heure incomplètes.");
+
+  const [, year, month, day, hour, minute] = match.map(Number);
+  const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute);
+  let instant = wallClockUtc;
+
+  for (let pass = 0; pass < 2; pass += 1) {
+    const local = partsAt(new Date(instant));
+    const representedAsUtc = Date.UTC(
+      local.year,
+      local.month - 1,
+      local.day,
+      local.hour,
+      local.minute,
+      local.second,
+    );
+    instant = wallClockUtc - (representedAsUtc - instant);
+  }
+
+  const result = new Date(instant);
+  if (toLocalInput(result.toISOString()) !== value) {
+    throw new Error("Cette heure locale n’existe pas en Europe/Paris.");
+  }
+  return result.toISOString();
 };
 
 const blankForm = (seasonId = ""): TournamentForm => ({
@@ -80,7 +157,9 @@ const detailToForm = (detail: TournamentDetail): TournamentForm => ({
 
 const toDraft = (form: TournamentForm): TournamentDraft => {
   if (!form.registrationOpensAt || !form.registrationClosesAt) {
-    throw new Error("Renseignez les dates d’ouverture et de fermeture des inscriptions.");
+    throw new Error(
+      "Renseignez les dates d’ouverture et de fermeture des inscriptions.",
+    );
   }
   return {
     seasonId: form.seasonId,
@@ -89,8 +168,8 @@ const toDraft = (form: TournamentForm): TournamentDraft => {
     rules: form.rules,
     startsOn: form.startsOn,
     endsOn: form.endsOn,
-    registrationOpensAt: new Date(form.registrationOpensAt).toISOString(),
-    registrationClosesAt: new Date(form.registrationClosesAt).toISOString(),
+    registrationOpensAt: toStoredDateTime(form.registrationOpensAt),
+    registrationClosesAt: toStoredDateTime(form.registrationClosesAt),
   };
 };
 
@@ -102,6 +181,7 @@ const formatDateTime = (value: string) =>
     ? new Date(value).toLocaleString("fr-FR", {
         dateStyle: "short",
         timeStyle: "short",
+        timeZone: CLUB_TIME_ZONE,
       })
     : "—";
 
@@ -134,7 +214,9 @@ export function AdminTournamentsPage() {
       setPlayWindows(loaded.playWindows);
     } catch (openError) {
       setError(
-        openError instanceof Error ? openError.message : "Chargement impossible.",
+        openError instanceof Error
+          ? openError.message
+          : "Chargement impossible.",
       );
     } finally {
       setSaving(false);
@@ -142,21 +224,29 @@ export function AdminTournamentsPage() {
   };
 
   useEffect(() => {
-    Promise.all([tournamentAdminService.list(), tournamentAdminService.getOptions()])
+    Promise.all([
+      tournamentAdminService.list(),
+      tournamentAdminService.getOptions(),
+    ])
       .then(([items, loadedOptions]) => {
         setTournaments(items);
         setOptions(loadedOptions);
       })
       .catch((loadError: unknown) =>
         setError(
-          loadError instanceof Error ? loadError.message : "Chargement impossible.",
+          loadError instanceof Error
+            ? loadError.message
+            : "Chargement impossible.",
         ),
       )
       .finally(() => setLoading(false));
   }, []);
 
   const activeSeasonId = useMemo(
-    () => options.seasons.find((season) => season.isActive)?.id ?? options.seasons[0]?.id ?? "",
+    () =>
+      options.seasons.find((season) => season.isActive)?.id ??
+      options.seasons[0]?.id ??
+      "",
     [options.seasons],
   );
 
@@ -206,12 +296,16 @@ export function AdminTournamentsPage() {
         const id = await tournamentAdminService.create(draft);
         await loadList();
         await openTournament(id);
-        setMessage("Tournoi créé. Configurez maintenant les terrains, séries et horaires.");
+        setMessage(
+          "Tournoi créé. Configurez maintenant les terrains, séries et horaires.",
+        );
       }
       await loadList();
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : "Enregistrement impossible.",
+        saveError instanceof Error
+          ? saveError.message
+          : "Enregistrement impossible.",
       );
     } finally {
       setSaving(false);
@@ -234,7 +328,9 @@ export function AdminTournamentsPage() {
       setMessage("Configuration sportive enregistrée.");
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : "Enregistrement impossible.",
+        saveError instanceof Error
+          ? saveError.message
+          : "Enregistrement impossible.",
       );
     } finally {
       setSaving(false);
@@ -277,11 +373,15 @@ export function AdminTournamentsPage() {
           <p className="admin-page__eyebrow">Administration</p>
           <h1>Tournois</h1>
           <p className="admin-page__lead">
-            Créez le tournoi, verrouillez sa configuration puis laissez Pelote Manager
-            guider son cycle de vie.
+            Créez le tournoi, verrouillez sa configuration puis laissez Pelote
+            Manager guider son cycle de vie.
           </p>
         </div>
-        <button className="tournaments-primary" type="button" onClick={beginCreate}>
+        <button
+          className="tournaments-primary"
+          type="button"
+          onClick={beginCreate}
+        >
           Créer un tournoi
         </button>
       </header>
@@ -303,15 +403,17 @@ export function AdminTournamentsPage() {
           <span>tournoi{tournaments.length > 1 ? "s" : ""}</span>
         </div>
         <p>
-          Le Pool Engine, le Planning Engine et les résultats seront branchés sur ce
-          noyau lors des prochaines PR.
+          Le Pool Engine, le Planning Engine et les résultats seront branchés
+          sur ce noyau lors des prochaines PR.
         </p>
       </div>
 
       {tournaments.length === 0 ? (
         <div className="admin-card tournaments-empty">
           <h2>Aucun tournoi pour le moment</h2>
-          <p>Créez le premier tournoi pour démarrer son parcours de préparation.</p>
+          <p>
+            Créez le premier tournoi pour démarrer son parcours de préparation.
+          </p>
           <button type="button" onClick={beginCreate}>
             Créer le premier tournoi
           </button>
@@ -322,7 +424,9 @@ export function AdminTournamentsPage() {
             <article className="admin-card tournament-card" key={tournament.id}>
               <header>
                 <div>
-                  <span className={`tournament-status tournament-status--${tournament.status}`}>
+                  <span
+                    className={`tournament-status tournament-status--${tournament.status}`}
+                  >
                     {statusLabels[tournament.status]}
                   </span>
                   <h2>{tournament.name}</h2>
@@ -340,7 +444,8 @@ export function AdminTournamentsPage() {
                 <div>
                   <dt>Période</dt>
                   <dd>
-                    {formatDate(tournament.startsOn)} → {formatDate(tournament.endsOn)}
+                    {formatDate(tournament.startsOn)} →{" "}
+                    {formatDate(tournament.endsOn)}
                   </dd>
                 </div>
                 <div>
@@ -353,8 +458,8 @@ export function AdminTournamentsPage() {
                 </div>
               </dl>
               <p>
-                Inscriptions : {formatDateTime(tournament.registrationOpensAt)} →{" "}
-                {formatDateTime(tournament.registrationClosesAt)}
+                Inscriptions : {formatDateTime(tournament.registrationOpensAt)}{" "}
+                → {formatDateTime(tournament.registrationClosesAt)}
               </p>
             </article>
           ))}
@@ -363,7 +468,10 @@ export function AdminTournamentsPage() {
 
       {form && (
         <div className="tournament-editor" role="dialog" aria-modal="true">
-          <div className="tournament-editor__backdrop" onClick={closeEditor} />
+          <div
+            className="tournament-editor__backdrop"
+            onClick={closeEditor}
+          />
           <div className="tournament-editor__panel">
             <header className="tournament-editor__header">
               <div>
@@ -388,7 +496,9 @@ export function AdminTournamentsPage() {
                       required
                       disabled={!editable || saving}
                       value={form.name}
-                      onChange={(event) => setForm({ ...form, name: event.target.value })}
+                      onChange={(event) =>
+                        setForm({ ...form, name: event.target.value })
+                      }
                     />
                   </label>
                   <label>
@@ -404,7 +514,8 @@ export function AdminTournamentsPage() {
                       <option value="">Choisir une saison</option>
                       {options.seasons.map((season) => (
                         <option key={season.id} value={season.id}>
-                          {season.name}{season.isActive ? " · Active" : ""}
+                          {season.name}
+                          {season.isActive ? " · Active" : ""}
                         </option>
                       ))}
                     </select>
@@ -428,7 +539,9 @@ export function AdminTournamentsPage() {
                       type="date"
                       disabled={!editable || saving}
                       value={form.endsOn}
-                      onChange={(event) => setForm({ ...form, endsOn: event.target.value })}
+                      onChange={(event) =>
+                        setForm({ ...form, endsOn: event.target.value })
+                      }
                     />
                   </label>
                   <label>
@@ -439,7 +552,10 @@ export function AdminTournamentsPage() {
                       disabled={!editable || saving}
                       value={form.registrationOpensAt}
                       onChange={(event) =>
-                        setForm({ ...form, registrationOpensAt: event.target.value })
+                        setForm({
+                          ...form,
+                          registrationOpensAt: event.target.value,
+                        })
                       }
                     />
                   </label>
@@ -451,7 +567,10 @@ export function AdminTournamentsPage() {
                       disabled={!editable || saving}
                       value={form.registrationClosesAt}
                       onChange={(event) =>
-                        setForm({ ...form, registrationClosesAt: event.target.value })
+                        setForm({
+                          ...form,
+                          registrationClosesAt: event.target.value,
+                        })
                       }
                     />
                   </label>
@@ -473,12 +592,20 @@ export function AdminTournamentsPage() {
                     rows={4}
                     disabled={!editable || saving}
                     value={form.rules}
-                    onChange={(event) => setForm({ ...form, rules: event.target.value })}
+                    onChange={(event) =>
+                      setForm({ ...form, rules: event.target.value })
+                    }
                   />
                 </label>
                 {editable && (
-                  <button className="tournaments-primary" type="submit" disabled={saving}>
-                    {detail ? "Enregistrer les informations" : "Créer le tournoi"}
+                  <button
+                    className="tournaments-primary"
+                    type="submit"
+                    disabled={saving}
+                  >
+                    {detail
+                      ? "Enregistrer les informations"
+                      : "Créer le tournoi"}
                   </button>
                 )}
               </section>
@@ -490,7 +617,10 @@ export function AdminTournamentsPage() {
                   <header>
                     <div>
                       <h3>2. Terrains</h3>
-                      <p>Sélectionnez les ressources que le Planning Engine pourra utiliser.</p>
+                      <p>
+                        Sélectionnez les ressources que le Planning Engine
+                        pourra utiliser.
+                      </p>
                     </div>
                   </header>
                   <div className="tournament-resource-list">
@@ -518,7 +648,10 @@ export function AdminTournamentsPage() {
                   <header>
                     <div>
                       <h3>3. Séries</h3>
-                      <p>Une série active doit disposer d’une capacité supérieure à zéro.</p>
+                      <p>
+                        Une série active doit disposer d’une capacité supérieure
+                        à zéro.
+                      </p>
                     </div>
                     {editable && (
                       <button
@@ -542,7 +675,10 @@ export function AdminTournamentsPage() {
                   </header>
                   <div className="tournament-repeat-list">
                     {series.map((item, index) => (
-                      <div className="tournament-repeat-row" key={item.id ?? `series-${index}`}>
+                      <div
+                        className="tournament-repeat-row"
+                        key={item.id ?? `series-${index}`}
+                      >
                         <input
                           aria-label={`Nom série ${index + 1}`}
                           placeholder="Ex. 1ère Série"
@@ -588,7 +724,10 @@ export function AdminTournamentsPage() {
                               setSeries((current) =>
                                 current.map((seriesItem, itemIndex) =>
                                   itemIndex === index
-                                    ? { ...seriesItem, enabled: event.target.checked }
+                                    ? {
+                                        ...seriesItem,
+                                        enabled: event.target.checked,
+                                      }
                                     : seriesItem,
                                 ),
                               )
@@ -602,7 +741,9 @@ export function AdminTournamentsPage() {
                             disabled={saving}
                             onClick={() =>
                               setSeries((current) =>
-                                current.filter((_, itemIndex) => itemIndex !== index),
+                                current.filter(
+                                  (_, itemIndex) => itemIndex !== index,
+                                ),
                               )
                             }
                           >
@@ -620,8 +761,8 @@ export function AdminTournamentsPage() {
                     <div>
                       <h3>4. Horaires du tournoi</h3>
                       <p>
-                        Ces plages hebdomadaires seront croisées avec la période du tournoi
-                        par le futur Planning Engine.
+                        Ces plages hebdomadaires seront croisées avec la période
+                        du tournoi par le futur Planning Engine.
                       </p>
                     </div>
                     {editable && (
@@ -658,7 +799,10 @@ export function AdminTournamentsPage() {
                             setPlayWindows((current) =>
                               current.map((windowItem, itemIndex) =>
                                 itemIndex === index
-                                  ? { ...windowItem, weekday: Number(event.target.value) }
+                                  ? {
+                                      ...windowItem,
+                                      weekday: Number(event.target.value),
+                                    }
                                   : windowItem,
                               ),
                             )
@@ -680,7 +824,10 @@ export function AdminTournamentsPage() {
                               setPlayWindows((current) =>
                                 current.map((windowItem, itemIndex) =>
                                   itemIndex === index
-                                    ? { ...windowItem, opensAt: event.target.value }
+                                    ? {
+                                        ...windowItem,
+                                        opensAt: event.target.value,
+                                      }
                                     : windowItem,
                                 ),
                               )
@@ -697,7 +844,10 @@ export function AdminTournamentsPage() {
                               setPlayWindows((current) =>
                                 current.map((windowItem, itemIndex) =>
                                   itemIndex === index
-                                    ? { ...windowItem, closesAt: event.target.value }
+                                    ? {
+                                        ...windowItem,
+                                        closesAt: event.target.value,
+                                      }
                                     : windowItem,
                                 ),
                               )
@@ -710,7 +860,9 @@ export function AdminTournamentsPage() {
                             disabled={saving}
                             onClick={() =>
                               setPlayWindows((current) =>
-                                current.filter((_, itemIndex) => itemIndex !== index),
+                                current.filter(
+                                  (_, itemIndex) => itemIndex !== index,
+                                ),
                               )
                             }
                           >
@@ -719,7 +871,9 @@ export function AdminTournamentsPage() {
                         )}
                       </div>
                     ))}
-                    {playWindows.length === 0 && <p>Aucune plage horaire configurée.</p>}
+                    {playWindows.length === 0 && (
+                      <p>Aucune plage horaire configurée.</p>
+                    )}
                   </div>
                 </section>
 
@@ -739,22 +893,12 @@ export function AdminTournamentsPage() {
                 <section className="tournament-lifecycle">
                   <h3>5. Cycle du tournoi</h3>
                   <div className="tournament-progress">
-                    {[
-                      "preparation",
-                      "configuration",
-                      "registrations_open",
-                      "registrations_closed",
-                      "pools_generated",
-                      "planning_generated",
-                      "in_progress",
-                      "completed",
-                      "archived",
-                    ].map((status) => (
+                    {lifecycleStatuses.map((status) => (
                       <span
                         className={detail.status === status ? "is-current" : ""}
                         key={status}
                       >
-                        {statusLabels[status as TournamentStatus]}
+                        {statusLabels[status]}
                       </span>
                     ))}
                   </div>
@@ -779,7 +923,10 @@ export function AdminTournamentsPage() {
                       <>
                         <p>
                           Les inscriptions s’ouvriront automatiquement le{" "}
-                          <strong>{formatDateTime(detail.registrationOpensAt)}</strong>.
+                          <strong>
+                            {formatDateTime(detail.registrationOpensAt)}
+                          </strong>
+                          .
                         </p>
                         <button
                           type="button"
@@ -811,13 +958,16 @@ export function AdminTournamentsPage() {
                     )}
                     {detail.status === "registrations_closed" && (
                       <p>
-                        Prochaine étape : gestion des équipes et des inscriptions, puis Pool
-                        Engine.
+                        Prochaine étape : gestion des équipes et des
+                        inscriptions, puis Pool Engine.
                       </p>
                     )}
-                    {["preparation", "configuration", "registrations_open", "registrations_closed"].includes(
-                      detail.status,
-                    ) && (
+                    {[
+                      "preparation",
+                      "configuration",
+                      "registrations_open",
+                      "registrations_closed",
+                    ].includes(detail.status) && (
                       <button
                         className="tournament-danger"
                         type="button"
@@ -828,7 +978,10 @@ export function AdminTournamentsPage() {
                               "Annuler ce tournoi ? Les données resteront conservées dans l’historique.",
                             )
                           ) {
-                            void transition("cancelled", "Le tournoi a été annulé.");
+                            void transition(
+                              "cancelled",
+                              "Le tournoi a été annulé.",
+                            );
                           }
                         }}
                       >
