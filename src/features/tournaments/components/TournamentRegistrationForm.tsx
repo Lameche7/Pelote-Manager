@@ -352,8 +352,8 @@ export function TournamentRegistrationForm({
               })
             }
           >
-            <option value="front">Avant</option>
-            <option value="back">Arrière</option>
+            <option value="front">{playerRoleLabels.front}</option>
+            <option value="back">{playerRoleLabels.back}</option>
           </select>
         </label>
 
@@ -436,8 +436,8 @@ export function TournamentRegistrationForm({
           <label>
             Poste du partenaire
             <select disabled value={partnerRole}>
-              <option value="front">Avant</option>
-              <option value="back">Arrière</option>
+              <option value="front">{playerRoleLabels.front}</option>
+              <option value="back">{playerRoleLabels.back}</option>
             </select>
             <small>Le binôme doit contenir un Avant et un Arrière.</small>
           </label>
