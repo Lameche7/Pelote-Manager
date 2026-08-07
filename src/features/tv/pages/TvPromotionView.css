@@ -157,16 +157,17 @@
 
 .tv-display__promotion-main {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(20rem, 0.8fr);
+  grid-template-columns: minmax(0, 2.2fr) minmax(18rem, 0.8fr);
   gap: clamp(1rem, 2vw, 1.6rem);
 }
 
 .tv-display__shop-panel {
+  order: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(19rem, 0.55fr);
-  align-items: stretch;
-  gap: clamp(1rem, 2vw, 1.6rem);
-  padding: clamp(1.4rem, 3vw, 2.5rem);
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: clamp(0.9rem, 1.5vw, 1.2rem);
+  padding: clamp(1rem, 2vw, 1.5rem);
   background:
     radial-gradient(circle at top right, rgb(37 99 235 / 24%), transparent 42%),
     rgb(15 47 39 / 92%);
@@ -195,52 +196,55 @@
 }
 
 .tv-display__shop-copy h2 {
-  margin: 0.55rem 0 0;
-  font-size: clamp(2.4rem, 5vw, 5rem);
-  line-height: 0.96;
+  margin: 0.45rem 0 0;
+  font-size: clamp(1.7rem, 2.8vw, 2.8rem);
+  line-height: 1;
 }
 
 .tv-display__shop-copy > p {
-  max-width: 46rem;
-  margin: 1rem 0 0;
+  max-width: 30rem;
+  margin: 0.7rem 0 0;
   color: #e2e8f0;
-  font-size: clamp(1rem, 1.8vw, 1.45rem);
-  line-height: 1.45;
+  font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+  line-height: 1.4;
 }
 
 .tv-display__shop-highlights {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+  gap: 0.55rem;
+  margin-top: 1rem;
 }
 
 .tv-display__shop-highlights span {
-  padding: 0.65rem 0.9rem;
+  padding: 0.5rem 0.7rem;
   border: 1px solid rgb(255 255 255 / 14%);
   border-radius: 999px;
   color: #dbeafe;
   background: rgb(30 64 175 / 22%);
-  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
   font-weight: 800;
 }
 
 .tv-display__shop-panel > .tv-display__qr-card {
-  align-self: center;
+  align-self: end;
   grid-template-columns: 1fr;
   text-align: center;
   background: rgb(2 20 16 / 72%);
 }
 
 .tv-display__shop-panel > .tv-display__qr-card .tv-display__qr-image img {
-  width: min(100%, 15rem);
+  width: min(100%, 10rem);
 }
 
 .tv-display__partners-panel {
+  order: 1;
   display: flex;
+  min-height: min(58vh, 38rem);
   flex-direction: column;
-  justify-content: center;
-  padding: clamp(1.4rem, 2.5vw, 2rem);
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: clamp(1.2rem, 2vw, 1.7rem);
   background:
     radial-gradient(
       circle at bottom left,
@@ -251,15 +255,15 @@
 }
 
 .tv-display__partners-panel > svg {
-  width: clamp(2.5rem, 4vw, 4rem);
-  height: clamp(2.5rem, 4vw, 4rem);
-  margin-bottom: 1rem;
+  width: clamp(2rem, 3vw, 3rem);
+  height: clamp(2rem, 3vw, 3rem);
+  margin-bottom: 0.55rem;
   color: #f6c453;
 }
 
 .tv-display__partners-panel h2 {
-  margin-top: 0.45rem;
-  font-size: clamp(1.7rem, 3vw, 2.8rem);
+  margin-top: 0.3rem;
+  font-size: clamp(1.5rem, 2.5vw, 2.4rem);
   line-height: 1.05;
 }
 
@@ -275,6 +279,15 @@
   .tv-display__promotion-main,
   .tv-display__shop-panel {
     grid-template-columns: 1fr;
+  }
+
+  .tv-display__partners-panel,
+  .tv-display__shop-panel {
+    order: initial;
+  }
+
+  .tv-display__partners-panel {
+    min-height: auto;
   }
 
   .tv-display__today-aside {
