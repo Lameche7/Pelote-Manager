@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { ClubMediaManager } from "../components/ClubMediaManager";
 import { clubAdminService, type Club } from "../services/clubAdminService";
 import "./ClubPages.css";
 import "./ClubBranding.css";
@@ -184,6 +185,8 @@ export function ClubInformationPage() {
               </label>
             ))}
           </div>
+
+          <ClubMediaManager />
 
           <div className="club-form__actions">
             <button type="submit" disabled={isSaving}>
