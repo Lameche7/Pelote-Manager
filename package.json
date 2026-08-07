@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --write src/features/admin/club/components/ClubMediaManager.tsx src/features/tv/pages/TvDisplayPage.tsx tests/clubTvMedia.test.mjs && git diff -- src/features/admin/club/components/ClubMediaManager.tsx src/features/tv/pages/TvDisplayPage.tsx tests/clubTvMedia.test.mjs && prettier --check .",
+    "format:check": "prettier --check .",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
     "preview": "vite preview"
