@@ -242,7 +242,11 @@
   justify-content: center;
   padding: clamp(1.4rem, 2.5vw, 2rem);
   background:
-    radial-gradient(circle at bottom left, rgb(220 38 38 / 20%), transparent 45%),
+    radial-gradient(
+      circle at bottom left,
+      rgb(220 38 38 / 20%),
+      transparent 45%
+    ),
     rgb(15 47 39 / 88%);
 }
 
