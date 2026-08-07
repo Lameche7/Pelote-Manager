@@ -84,10 +84,14 @@ export function ClubMediaManager() {
 
     try {
       await clubMediaService.remove(item);
-      setMedia((current) => current.filter((mediaItem) => mediaItem.id !== item.id));
+      setMedia((current) =>
+        current.filter((mediaItem) => mediaItem.id !== item.id),
+      );
       setStatus("Image supprimée.");
     } catch (error: unknown) {
-      setStatus(error instanceof Error ? error.message : "Suppression impossible.");
+      setStatus(
+        error instanceof Error ? error.message : "Suppression impossible.",
+      );
     } finally {
       setDeletingId(null);
     }
