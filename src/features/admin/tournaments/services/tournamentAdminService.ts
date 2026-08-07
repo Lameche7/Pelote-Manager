@@ -98,26 +98,33 @@ const asRows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 
 const knownErrors: Record<string, string> = {
-  "Tournament fields are incomplete": "Complétez tous les champs obligatoires du tournoi.",
+  "Tournament fields are incomplete":
+    "Complétez tous les champs obligatoires du tournoi.",
   "Tournament dates are invalid": "Les dates du tournoi sont incohérentes.",
-  "Registration dates are invalid": "Les dates d’inscription sont incohérentes.",
+  "Registration dates are invalid":
+    "Les dates d’inscription sont incohérentes.",
   "Tournament must fit inside its season":
     "Les dates du tournoi doivent être comprises dans la saison sélectionnée.",
   "Tournament settings are locked at this stage":
     "Les informations générales sont verrouillées à cette étape du tournoi.",
   "Tournament configuration is locked at this stage":
     "La configuration sportive est verrouillée à cette étape du tournoi.",
-  "A resource can only be selected once": "Un terrain ne peut être sélectionné qu’une fois.",
-  "One or more resources are invalid": "Un des terrains sélectionnés n’est plus disponible.",
+  "A resource can only be selected once":
+    "Un terrain ne peut être sélectionné qu’une fois.",
+  "One or more resources are invalid":
+    "Un des terrains sélectionnés n’est plus disponible.",
   "Tournament series are invalid":
     "Chaque série active doit avoir un nom et une capacité strictement positive.",
-  "Tournament play windows are invalid": "Vérifiez les jours et horaires du tournoi.",
+  "Tournament play windows are invalid":
+    "Vérifiez les jours et horaires du tournoi.",
   "Complete resources, series and play windows first":
     "Sélectionnez au moins un terrain, une série active et une plage horaire avant de valider la configuration.",
-  "Tournament configuration is incomplete": "La configuration du tournoi est incomplète.",
+  "Tournament configuration is incomplete":
+    "La configuration du tournoi est incomplète.",
   "Registration window is not open":
     "La date prévue d’ouverture des inscriptions n’est pas encore atteinte ou la clôture est déjà passée.",
-  "Invalid tournament transition": "Cette transition n’est pas autorisée depuis l’état actuel.",
+  "Invalid tournament transition":
+    "Cette transition n’est pas autorisée depuis l’état actuel.",
   "Tournament cannot be cancelled by the core engine at this stage":
     "L’annulation sera gérée par le moteur correspondant à cette étape.",
 };
@@ -257,25 +264,29 @@ export const tournamentAdminService = {
       playWindows: TournamentPlayWindow[];
     },
   ): Promise<void> {
-    const { error } = await supabase.rpc("admin_save_tournament_configuration", {
-      target_id: id,
-      payload: {
-        resource_ids: value.resourceIds,
-        series: value.series.map((series, index) => ({
-          name: series.name.trim(),
-          display_order: index,
-          capacity: series.capacity,
-          enabled: series.enabled,
-        })),
-        play_windows: value.playWindows.map((playWindow, index) => ({
-          weekday: playWindow.weekday,
-          opens_at: playWindow.opensAt,
-          closes_at: playWindow.closesAt,
-          display_order: index,
-        })),
+    const { error } = await supabase.rpc(
+      "admin_save_tournament_configuration",
+      {
+        target_id: id,
+        payload: {
+          resource_ids: value.resourceIds,
+          series: value.series.map((series, index) => ({
+            name: series.name.trim(),
+            display_order: index,
+            capacity: series.capacity,
+            enabled: series.enabled,
+          })),
+          play_windows: value.playWindows.map((playWindow, index) => ({
+            weekday: playWindow.weekday,
+            opens_at: playWindow.opensAt,
+            closes_at: playWindow.closesAt,
+            display_order: index,
+          })),
+        },
       },
-    });
-    if (error) fail(error, "Impossible d’enregistrer la configuration du tournoi.");
+    );
+    if (error)
+      fail(error, "Impossible d’enregistrer la configuration du tournoi.");
   },
 
   async transition(id: string, status: TournamentStatus): Promise<void> {
