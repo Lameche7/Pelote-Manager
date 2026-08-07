@@ -90,6 +90,13 @@ export function AdminTvSettingsPage() {
       setError("Le nombre de créneaux doit être compris entre 1 et 24.");
       return false;
     }
+    if (
+      settings.viewDurationSeconds < 10 ||
+      settings.viewDurationSeconds > 300
+    ) {
+      setError("La durée de chaque écran doit être comprise entre 10 et 300 secondes.");
+      return false;
+    }
     return true;
   };
 
@@ -290,6 +297,21 @@ export function AdminTvSettingsPage() {
               onChange={(event) =>
                 updateSettings({
                   visibleSlotCount: Number(event.target.value),
+                })
+              }
+            />
+          </label>
+          <label>
+            Durée de chaque écran (secondes)
+            <input
+              type="number"
+              min="10"
+              max="300"
+              step="5"
+              value={settings.viewDurationSeconds}
+              onChange={(event) =>
+                updateSettings({
+                  viewDurationSeconds: Number(event.target.value),
                 })
               }
             />
