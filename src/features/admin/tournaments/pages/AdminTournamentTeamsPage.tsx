@@ -202,10 +202,7 @@ export function AdminTournamentTeamsPage() {
     setMessage("");
   };
 
-  const setAvailability = (
-    index: number,
-    rule: TournamentAvailabilityRule,
-  ) => {
+  const setAvailability = (index: number, rule: TournamentAvailabilityRule) => {
     if (!draft) return;
     setDraft({
       ...draft,
@@ -305,9 +302,7 @@ export function AdminTournamentTeamsPage() {
         </p>
       )}
       {message && (
-        <p className="admin-tournament-teams__alert" role="status">
-          {message}
-        </p>
+        <p className="admin-tournament-teams__alert" role="status">{message}</p>
       )}
 
       {tournaments.length === 0 ? (
@@ -735,11 +730,9 @@ export function AdminTournamentTeamsPage() {
                         {team.availabilityRules.map((rule, index) => (
                           <span key={`${team.id}-rule-${index}`}>
                             {availabilityLabels[rule.kind]} ·{" "}
-                            {
-                              weekdays.find(
-                                (weekday) => weekday.value === rule.weekday,
-                              )?.label
-                            }{" "}
+                            {weekdays.find(
+                              (weekday) => weekday.value === rule.weekday,
+                            )?.label}{" "}
                             {rule.startsAt}–{rule.endsAt}
                           </span>
                         ))}

@@ -121,9 +121,8 @@ export function TournamentDetailPage() {
     useState<PublicTournamentDetail | null>(null);
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
-  const [draft, setDraft] = useState<MyTournamentRegistrationDraft | null>(
-    null,
-  );
+  const [draft, setDraft] =
+    useState<MyTournamentRegistrationDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -253,9 +252,7 @@ export function TournamentDetailPage() {
   if (error && !tournament) {
     return (
       <section className="public-tournaments">
-        <p className="public-tournaments__error" role="alert">
-          {error}
-        </p>
+        <p className="public-tournaments__error" role="alert">{error}</p>
         <Link to={ROUTES.tournaments}>← Retour aux tournois</Link>
       </section>
     );
@@ -275,10 +272,7 @@ export function TournamentDetailPage() {
 
   return (
     <section className="public-tournaments public-tournament-detail">
-      <Link
-        className="public-tournament-detail__back"
-        to={ROUTES.tournaments}
-      >
+      <Link className="public-tournament-detail__back" to={ROUTES.tournaments}>
         ← Tous les tournois
       </Link>
 
@@ -307,14 +301,10 @@ export function TournamentDetailPage() {
       </header>
 
       {error && (
-        <p className="public-tournaments__error" role="alert">
-          {error}
-        </p>
+        <p className="public-tournaments__error" role="alert">{error}</p>
       )}
       {message && (
-        <p className="public-tournaments__success" role="status">
-          {message}
-        </p>
+        <p className="public-tournaments__success" role="status">{message}</p>
       )}
 
       {tournament.rules && (
@@ -351,9 +341,7 @@ export function TournamentDetailPage() {
                       {team.players.map((player) => (
                         <span key={`${team.id}-${player.role}`}>
                           <small>{playerRoleLabels[player.role]}</small>
-                          <strong>
-                            {player.firstName} {player.lastName}
-                          </strong>
+                          <strong>{player.firstName} {player.lastName}</strong>
                         </span>
                       ))}
                     </div>
@@ -590,15 +578,18 @@ export function TournamentDetailPage() {
                     onChange={(event) =>
                       setRule(index, {
                         ...rule,
-                        kind: event.target.value as TournamentAvailabilityRule["kind"],
+                        kind: event.target
+                          .value as TournamentAvailabilityRule["kind"],
                       })
                     }
                   >
-                    {Object.entries(availabilityLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
+                    {Object.entries(availabilityLabels).map(
+                      ([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ),
+                    )}
                   </select>
                   <select
                     aria-label={`Jour disponibilité ${index + 1}`}
