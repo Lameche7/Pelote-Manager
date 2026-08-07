@@ -274,7 +274,8 @@ export function TvDisplayPage() {
   const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
   const appUrl = window.location.origin;
   const shopMedia = useMemo(
-    () => tvMedia.filter((item) => item.kind === "shop").slice(0, MAX_SHOP_MEDIA),
+    () =>
+      tvMedia.filter((item) => item.kind === "shop").slice(0, MAX_SHOP_MEDIA),
     [tvMedia],
   );
   const partnerMedia = useMemo(
