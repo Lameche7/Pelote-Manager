@@ -32,7 +32,6 @@ import "./TvWeeklyView.css";
 import "./TvPromotionView.css";
 import "./TvMediaGallery.css";
 
-const TV_VIEW_DURATION_MS = 60_000;
 const MAX_WEEK_ITEMS_PER_DAY = 5;
 const MAX_TV_EVENTS = 3;
 const MAX_SHOP_MEDIA = 6;
@@ -179,6 +178,7 @@ export function TvDisplayPage() {
           displayStartTime: null,
           displayEndTime: null,
           refreshIntervalSeconds: 30,
+          viewDurationSeconds: 60,
           generatedAt: null,
           resources: [],
           weekStart: null,
@@ -265,10 +265,10 @@ export function TvDisplayPage() {
 
     const rotation = window.setInterval(() => {
       setActiveView(nextTvView);
-    }, TV_VIEW_DURATION_MS);
+    }, display.viewDurationSeconds * 1_000);
 
     return () => window.clearInterval(rotation);
-  }, [display?.status]);
+  }, [display?.status, display?.viewDurationSeconds]);
 
   const clubName = display?.clubName || CLUB_CONFIG.name;
   const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
@@ -616,7 +616,7 @@ export function TvDisplayPage() {
           {TV_VIEW_ORDER.map((view) => (
             <i className={activeView === view ? "is-active" : ""} key={view} />
           ))}
-          Alternance toutes les 60 secondes
+          Alternance toutes les {display.viewDurationSeconds} secondes
         </span>
         <span>
           <RefreshCw aria-hidden="true" />
