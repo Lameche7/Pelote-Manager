@@ -1,0 +1,648 @@
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { tournamentService } from "@/features/tournaments/services/tournamentService";
+import type {
+  MyTournamentRegistration,
+  MyTournamentRegistrationDraft,
+  PublicTournamentDetail,
+  TournamentAvailabilityKind,
+  TournamentPartnerSuggestion,
+  TournamentPlayerRole,
+  TournamentRegistrationIdentity,
+} from "@/features/tournaments/types";
+
+const weekdayLabels: Record<number, string> = {
+  0: "Dimanche",
+  1: "Lundi",
+  2: "Mardi",
+  3: "Mercredi",
+  4: "Jeudi",
+  5: "Vendredi",
+  6: "Samedi",
+};
+
+const playerRoleLabels: Record<TournamentPlayerRole, string> = {
+  front: "Avant",
+  back: "Arrière",
+};
+
+const oppositeRole = (role: TournamentPlayerRole): TournamentPlayerRole =>
+  role === "front" ? "back" : "front";
+
+const sameWindow = (
+  rule: MyTournamentRegistration["availabilityRules"][number],
+  weekday: number,
+  startsAt: string,
+  endsAt: string,
+) =>
+  rule.weekday === weekday &&
+  rule.startsAt === startsAt &&
+  rule.endsAt === endsAt;
+
+const normalizeAvailability = (
+  tournament: PublicTournamentDetail,
+  registration: MyTournamentRegistration | null,
+): MyTournamentRegistrationDraft["availabilityRules"] =>
+  tournament.playWindows.map((window) => {
+    const saved = registration?.availabilityRules.find((rule) =>
+      sameWindow(rule, window.weekday, window.opensAt, window.closesAt),
+    );
+    return {
+      kind: saved?.kind ?? "unavailable",
+      weekday: window.weekday,
+      startsAt: window.opensAt,
+      endsAt: window.closesAt,
+    };
+  });
+
+const registrationPlayers = (
+  registration: MyTournamentRegistration | null,
+  identity: TournamentRegistrationIdentity,
+) => {
+  if (!registration) return { submitter: undefined, partner: undefined };
+  const submitter =
+    registration.players.find(
+      (player) => identity.memberId && player.memberId === identity.memberId,
+    ) ??
+    registration.players.find(
+      (player) => identity.email && player.email === identity.email,
+    ) ??
+    registration.players[0];
+  return {
+    submitter,
+    partner:
+      registration.players.find((player) => player !== submitter) ??
+      registration.players[1],
+  };
+};
+
+const buildDraft = (
+  tournament: PublicTournamentDetail,
+  registration: MyTournamentRegistration | null,
+  identity: TournamentRegistrationIdentity,
+): MyTournamentRegistrationDraft => {
+  const { submitter, partner } = registrationPlayers(registration, identity);
+  return {
+    seriesId: registration?.seriesId ?? tournament.series[0]?.id ?? "",
+    submitterRole: submitter?.role ?? "front",
+    submitterFirstName: identity.firstName || submitter?.firstName || "",
+    submitterLastName: identity.lastName || submitter?.lastName || "",
+    partnerMemberId: partner?.memberId ?? null,
+    partnerFirstName: partner?.firstName ?? "",
+    partnerLastName: partner?.lastName ?? "",
+    partnerEmail: partner?.email ?? "",
+    partnerPhone: partner?.phone ?? "",
+    contactEmail:
+      (identity.emailFromMember ? identity.email : registration?.contactEmail) ||
+      identity.email ||
+      "",
+    contactPhone:
+      (identity.phoneFromMember ? identity.phone : registration?.contactPhone) ||
+      identity.phone ||
+      "",
+    comments: registration?.comments ?? "",
+    availabilityRules: normalizeAvailability(tournament, registration),
+  };
+};
+
+type Props = {
+  tournament: PublicTournamentDetail;
+  registration: MyTournamentRegistration | null;
+  onReload: () => Promise<void>;
+  onMessage: (message: string) => void;
+  onError: (message: string) => void;
+};
+
+export function TournamentRegistrationForm({
+  tournament,
+  registration,
+  onReload,
+  onMessage,
+  onError,
+}: Props) {
+  const [identity, setIdentity] =
+    useState<TournamentRegistrationIdentity | null>(null);
+  const [draft, setDraft] = useState<MyTournamentRegistrationDraft | null>(null);
+  const [partnerQuery, setPartnerQuery] = useState("");
+  const [partnerSuggestions, setPartnerSuggestions] = useState<
+    TournamentPartnerSuggestion[]
+  >([]);
+  const [partnerEmailFromMember, setPartnerEmailFromMember] = useState(false);
+  const [partnerPhoneFromMember, setPartnerPhoneFromMember] = useState(false);
+  const [loadingIdentity, setLoadingIdentity] = useState(true);
+  const [searchingPartner, setSearchingPartner] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingIdentity(true);
+    tournamentService
+      .getIdentity(tournament.id)
+      .then((loadedIdentity) => {
+        if (!active) return;
+        const nextDraft = buildDraft(tournament, registration, loadedIdentity);
+        const { partner } = registrationPlayers(registration, loadedIdentity);
+        setIdentity(loadedIdentity);
+        setDraft(nextDraft);
+        setPartnerQuery(
+          partner ? `${partner.firstName} ${partner.lastName}`.trim() : "",
+        );
+        setPartnerEmailFromMember(Boolean(partner?.emailFromMember));
+        setPartnerPhoneFromMember(Boolean(partner?.phoneFromMember));
+      })
+      .catch((loadError: unknown) => {
+        if (active) {
+          onError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Impossible de charger vos coordonnées.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingIdentity(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [onError, registration, tournament]);
+
+  useEffect(() => {
+    if (!draft || draft.partnerMemberId || partnerQuery.trim().length < 2) {
+      setPartnerSuggestions([]);
+      setSearchingPartner(false);
+      return;
+    }
+
+    let active = true;
+    const timer = window.setTimeout(() => {
+      setSearchingPartner(true);
+      tournamentService
+        .searchPartnerMembers(tournament.id, partnerQuery)
+        .then((results) => {
+          if (active) setPartnerSuggestions(results);
+        })
+        .catch((searchError: unknown) => {
+          if (active) {
+            onError(
+              searchError instanceof Error
+                ? searchError.message
+                : "Recherche des licenciés impossible.",
+            );
+          }
+        })
+        .finally(() => {
+          if (active) setSearchingPartner(false);
+        });
+    }, 250);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [draft, onError, partnerQuery, tournament.id]);
+
+  const partnerRole = draft ? oppositeRole(draft.submitterRole) : "back";
+
+  const selectedAvailabilityCount = useMemo(
+    () =>
+      draft?.availabilityRules.filter((rule) => rule.kind !== "unavailable")
+        .length ?? 0,
+    [draft],
+  );
+
+  const setAvailability = (index: number, kind: TournamentAvailabilityKind) => {
+    if (!draft) return;
+    setDraft({
+      ...draft,
+      availabilityRules: draft.availabilityRules.map((rule, ruleIndex) =>
+        ruleIndex === index ? { ...rule, kind } : rule,
+      ),
+    });
+  };
+
+  const selectPartner = (member: TournamentPartnerSuggestion) => {
+    if (!draft) return;
+    setDraft({
+      ...draft,
+      partnerMemberId: member.id,
+      partnerFirstName: member.firstName,
+      partnerLastName: member.lastName,
+      partnerEmail: member.hasEmail ? "" : draft.partnerEmail,
+      partnerPhone: member.hasPhone ? "" : draft.partnerPhone,
+    });
+    setPartnerQuery(`${member.firstName} ${member.lastName}`);
+    setPartnerEmailFromMember(member.hasEmail);
+    setPartnerPhoneFromMember(member.hasPhone);
+    setPartnerSuggestions([]);
+  };
+
+  const changePartnerQuery = (value: string) => {
+    if (!draft) return;
+    const selectedName = `${draft.partnerFirstName} ${draft.partnerLastName}`.trim();
+    setPartnerQuery(value);
+    if (draft.partnerMemberId && value.trim() !== selectedName) {
+      setDraft({
+        ...draft,
+        partnerMemberId: null,
+        partnerFirstName: "",
+        partnerLastName: "",
+      });
+      setPartnerEmailFromMember(false);
+      setPartnerPhoneFromMember(false);
+    }
+  };
+
+  const clearPartnerSelection = () => {
+    if (!draft) return;
+    setDraft({
+      ...draft,
+      partnerMemberId: null,
+      partnerFirstName: "",
+      partnerLastName: "",
+      partnerEmail: "",
+      partnerPhone: "",
+    });
+    setPartnerQuery("");
+    setPartnerEmailFromMember(false);
+    setPartnerPhoneFromMember(false);
+    setPartnerSuggestions([]);
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!draft) return;
+    setSaving(true);
+    onError("");
+    onMessage("");
+    try {
+      await tournamentService.saveMine(tournament.id, draft);
+      await onReload();
+      onMessage(
+        registration
+          ? "Votre inscription a été mise à jour et repasse en validation."
+          : "Votre équipe est enregistrée et attend la validation du club.",
+      );
+    } catch (saveError) {
+      onError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Impossible d’enregistrer votre équipe.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const withdraw = async () => {
+    if (!window.confirm("Retirer votre équipe de ce tournoi ?")) return;
+    setSaving(true);
+    onError("");
+    onMessage("");
+    try {
+      await tournamentService.withdrawMine(tournament.id);
+      await onReload();
+      onMessage("Votre inscription a été retirée.");
+    } catch (withdrawError) {
+      onError(
+        withdrawError instanceof Error
+          ? withdrawError.message
+          : "Impossible de retirer votre inscription.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loadingIdentity || !identity || !draft) {
+    return <p role="status">Préparation du formulaire d’inscription…</p>;
+  }
+
+  return (
+    <form className="public-registration-form" onSubmit={submit}>
+      <div className="public-registration-form__grid">
+        <label>
+          Série
+          <select
+            required
+            disabled={saving}
+            value={draft.seriesId}
+            onChange={(event) =>
+              setDraft({ ...draft, seriesId: event.target.value })
+            }
+          >
+            <option value="">Choisir une série</option>
+            {tournament.series.map((series) => (
+              <option key={series.id} value={series.id}>
+                {series.name} · {series.remainingSlots} place
+                {series.remainingSlots > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Votre poste
+          <select
+            disabled={saving}
+            value={draft.submitterRole}
+            onChange={(event) =>
+              setDraft({
+                ...draft,
+                submitterRole: event.target.value as TournamentPlayerRole,
+              })
+            }
+          >
+            <option value="front">Avant</option>
+            <option value="back">Arrière</option>
+          </select>
+        </label>
+
+        <label>
+          Votre prénom
+          <input
+            required
+            disabled={saving || Boolean(identity.memberId)}
+            value={draft.submitterFirstName}
+            onChange={(event) =>
+              setDraft({ ...draft, submitterFirstName: event.target.value })
+            }
+          />
+        </label>
+
+        <label>
+          Votre nom
+          <input
+            required
+            disabled={saving || Boolean(identity.memberId)}
+            value={draft.submitterLastName}
+            onChange={(event) =>
+              setDraft({ ...draft, submitterLastName: event.target.value })
+            }
+          />
+        </label>
+
+        <label>
+          Votre e-mail
+          <input
+            required
+            type="email"
+            disabled={saving}
+            readOnly={identity.emailFromMember}
+            value={draft.contactEmail}
+            onChange={(event) =>
+              setDraft({ ...draft, contactEmail: event.target.value })
+            }
+          />
+          {identity.emailFromMember && (
+            <small>Récupéré depuis votre fiche licencié.</small>
+          )}
+        </label>
+
+        <label>
+          Votre téléphone
+          <input
+            required
+            type="tel"
+            disabled={saving}
+            readOnly={identity.phoneFromMember}
+            value={draft.contactPhone}
+            onChange={(event) =>
+              setDraft({ ...draft, contactPhone: event.target.value })
+            }
+          />
+          {identity.phoneFromMember && (
+            <small>Récupéré depuis votre fiche licencié.</small>
+          )}
+        </label>
+      </div>
+
+      <fieldset className="public-partner-fieldset">
+        <legend>Partenaire</legend>
+        <div className="public-registration-form__grid">
+          <label className="public-registration-form__wide">
+            Rechercher dans les licenciés
+            <input
+              autoComplete="off"
+              disabled={saving}
+              placeholder="Tapez au moins 2 lettres du prénom ou du nom"
+              value={partnerQuery}
+              onChange={(event) => changePartnerQuery(event.target.value)}
+            />
+            <small>
+              La recherche reste limitée aux licenciés actifs de ce club.
+            </small>
+          </label>
+
+          <label>
+            Poste du partenaire
+            <select disabled value={partnerRole}>
+              <option value="front">Avant</option>
+              <option value="back">Arrière</option>
+            </select>
+            <small>Le binôme doit contenir un Avant et un Arrière.</small>
+          </label>
+        </div>
+
+        {searchingPartner && <p role="status">Recherche…</p>}
+        {partnerSuggestions.length > 0 && (
+          <div className="public-partner-suggestions">
+            {partnerSuggestions.map((member) => (
+              <button
+                key={member.id}
+                type="button"
+                disabled={saving}
+                onClick={() => selectPartner(member)}
+              >
+                <strong>
+                  {member.firstName} {member.lastName}
+                </strong>
+                <span>{member.clubName}</span>
+                <small>
+                  {member.hasEmail ? "E-mail renseigné" : "E-mail à saisir"} ·{" "}
+                  {member.hasPhone
+                    ? "Téléphone renseigné"
+                    : "Téléphone à saisir"}
+                </small>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {draft.partnerMemberId && (
+          <div className="public-partner-selected">
+            <span>Licencié sélectionné dans la base du club.</span>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={clearPartnerSelection}
+            >
+              Changer de partenaire
+            </button>
+          </div>
+        )}
+
+        <div className="public-registration-form__grid">
+          <label>
+            Prénom du partenaire
+            <input
+              required
+              disabled={saving}
+              readOnly={Boolean(draft.partnerMemberId)}
+              value={draft.partnerFirstName}
+              onChange={(event) =>
+                setDraft({ ...draft, partnerFirstName: event.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Nom du partenaire
+            <input
+              required
+              disabled={saving}
+              readOnly={Boolean(draft.partnerMemberId)}
+              value={draft.partnerLastName}
+              onChange={(event) =>
+                setDraft({ ...draft, partnerLastName: event.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            E-mail du partenaire
+            <input
+              required={!partnerEmailFromMember}
+              type={partnerEmailFromMember ? "text" : "email"}
+              disabled={saving}
+              readOnly={partnerEmailFromMember}
+              value={
+                partnerEmailFromMember
+                  ? "Récupéré depuis la fiche licencié"
+                  : draft.partnerEmail
+              }
+              onChange={(event) =>
+                setDraft({ ...draft, partnerEmail: event.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Téléphone du partenaire
+            <input
+              required={!partnerPhoneFromMember}
+              type={partnerPhoneFromMember ? "text" : "tel"}
+              disabled={saving}
+              readOnly={partnerPhoneFromMember}
+              value={
+                partnerPhoneFromMember
+                  ? "Récupéré depuis la fiche licencié"
+                  : draft.partnerPhone
+              }
+              onChange={(event) =>
+                setDraft({ ...draft, partnerPhone: event.target.value })
+              }
+            />
+          </label>
+        </div>
+      </fieldset>
+
+      <div className="public-availability-editor">
+        <header>
+          <div>
+            <h3>Disponibilités</h3>
+            <p>
+              Cochez les plages où votre équipe peut jouer. Sans coche, la plage
+              est considérée comme indisponible.
+            </p>
+          </div>
+          <strong>{selectedAvailabilityCount} sélectionnée(s)</strong>
+        </header>
+
+        {draft.availabilityRules.length === 0 ? (
+          <p className="public-availability-empty">
+            Aucune plage de jeu n’a été configurée pour ce tournoi.
+          </p>
+        ) : (
+          <div className="public-availability-grid">
+            <div className="public-availability-grid__header" aria-hidden="true">
+              <span>Plage</span>
+              <span>Disponible</span>
+              <span>Si nécessaire</span>
+            </div>
+            {draft.availabilityRules.map((rule, index) => (
+              <div
+                className="public-availability-choice"
+                key={`${rule.weekday}-${rule.startsAt}-${rule.endsAt}`}
+              >
+                <strong>
+                  {weekdayLabels[rule.weekday] ?? "Jour"} · {rule.startsAt}–
+                  {rule.endsAt}
+                </strong>
+                <label>
+                  <input
+                    type="checkbox"
+                    disabled={saving}
+                    checked={rule.kind === "preferred"}
+                    onChange={(event) =>
+                      setAvailability(
+                        index,
+                        event.target.checked ? "preferred" : "unavailable",
+                      )
+                    }
+                  />
+                  <span>Disponible</span>
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    disabled={saving}
+                    checked={rule.kind === "possible"}
+                    onChange={(event) =>
+                      setAvailability(
+                        index,
+                        event.target.checked ? "possible" : "unavailable",
+                      )
+                    }
+                  />
+                  <span>Si nécessaire</span>
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <label>
+        Commentaire pour l’organisateur
+        <textarea
+          rows={3}
+          disabled={saving}
+          value={draft.comments}
+          onChange={(event) =>
+            setDraft({ ...draft, comments: event.target.value })
+          }
+        />
+      </label>
+
+      <div className="public-registration-form__actions">
+        <button
+          className="button button--primary"
+          type="submit"
+          disabled={saving}
+        >
+          {registration ? "Mettre à jour mon équipe" : "Inscrire mon équipe"}
+        </button>
+        {registration && registration.status !== "withdrawn" && (
+          <button
+            className="button button--ghost"
+            type="button"
+            disabled={saving}
+            onClick={() => void withdraw()}
+          >
+            Retirer mon inscription
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
