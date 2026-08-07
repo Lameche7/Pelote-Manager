@@ -21,8 +21,9 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostic formatage Mode TV
+      - name: Diagnostic formatage Mode TV temporaire
         run: |
+          echo "Application de Prettier sur les trois fichiers de la PR58"
           npx prettier --write src/features/tv/pages/TvDisplayPage.tsx src/features/tv/services/tvDisplayService.ts tests/tvWeeklyRotation.test.mjs
           git diff -- src/features/tv/pages/TvDisplayPage.tsx src/features/tv/services/tvDisplayService.ts tests/tvWeeklyRotation.test.mjs
 
