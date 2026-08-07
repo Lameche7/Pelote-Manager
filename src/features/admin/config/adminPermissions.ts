@@ -98,7 +98,6 @@ export const adminNavigation = [
     label: "Tournois",
     to: ROUTES.adminTournaments,
     permission: ADMIN_PERMISSIONS.tournaments,
-    enabled: false,
   },
   {
     label: "Recherche licenciés",

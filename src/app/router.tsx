@@ -22,7 +22,6 @@ import { MemberDetailPage } from "@/features/admin/members/pages/MemberDetailPag
 import { MemberImportDetailPage } from "@/features/admin/members/pages/MemberImportDetailPage";
 import { MemberImportPage } from "@/features/admin/members/pages/MemberImportPage";
 import { MemberImportsPage } from "@/features/admin/members/pages/MemberImportsPage";
-import { AdminComingSoonPage } from "@/features/admin/pages/AdminComingSoonPage";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
@@ -31,6 +30,7 @@ import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminTvSettingsPage } from "@/features/admin/settings/pages/AdminTvSettingsPage";
 import { AdminStatisticsPage } from "@/features/admin/statistics/pages/AdminStatisticsPage";
+import { AdminTournamentsPage } from "@/features/admin/tournaments/pages/AdminTournamentsPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
@@ -241,7 +241,7 @@ export const routes = [
             path: "tournois",
             element: permitted(
               ADMIN_PERMISSIONS.tournaments,
-              <AdminComingSoonPage title="Tournois" />,
+              <AdminTournamentsPage />,
             ),
           },
           {
