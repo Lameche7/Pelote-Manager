@@ -96,7 +96,18 @@ export const adminNavigation = [
   },
   {
     label: "Tournois",
-    to: ROUTES.adminTournaments,
+    children: [
+      {
+        label: "Gestion des tournois",
+        to: ROUTES.adminTournaments,
+        permission: ADMIN_PERMISSIONS.tournaments,
+      },
+      {
+        label: "Équipes & inscriptions",
+        to: ROUTES.adminTournamentTeams,
+        permission: ADMIN_PERMISSIONS.tournaments,
+      },
+    ],
     permission: ADMIN_PERMISSIONS.tournaments,
   },
   {
