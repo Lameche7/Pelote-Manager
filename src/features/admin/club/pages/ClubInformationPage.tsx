@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { ClubMediaManager } from "../components/ClubMediaManager";
 import { clubAdminService, type Club } from "../services/clubAdminService";
 import "./ClubPages.css";
 import "./ClubBranding.css";
@@ -213,6 +214,8 @@ export function ClubInformationPage() {
           </small>
         </aside>
       </form>
+
+      <ClubMediaManager />
     </section>
   );
 }
