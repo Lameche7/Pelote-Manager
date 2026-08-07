@@ -11,7 +11,10 @@ test("la durée d'affichage TV est stockée et validée côté Supabase", async 
 
   assert.match(migration, /view_duration_seconds integer not null default 60/);
   assert.match(migration, /view_duration_seconds between 10 and 300/);
-  assert.match(migration, /'view_duration_seconds', settings\.view_duration_seconds/);
+  assert.match(
+    migration,
+    /'view_duration_seconds', settings\.view_duration_seconds/,
+  );
   assert.match(migration, /target_view_duration integer/);
   assert.match(migration, /view_duration_seconds = target_view_duration/);
   assert.match(
@@ -49,6 +52,9 @@ test("la rotation TV utilise la durée enregistrée au lieu de 60 secondes fixes
   assert.match(service, /get_public_tv_view_duration/);
   assert.match(service, /viewDurationSeconds: clampViewDuration/);
   assert.match(page, /display\.viewDurationSeconds \* 1_000/);
-  assert.match(page, /Alternance toutes les \{display\.viewDurationSeconds\} secondes/);
+  assert.match(
+    page,
+    /Alternance toutes les \{display\.viewDurationSeconds\} secondes/,
+  );
   assert.doesNotMatch(page, /TV_VIEW_DURATION_MS = 60_000/);
 });
