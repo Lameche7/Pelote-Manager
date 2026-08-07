@@ -377,7 +377,8 @@ export function TvDisplayPage() {
         </span>
         <span>
           <RefreshCw aria-hidden="true" />
-          Données actualisées toutes les {display.refreshIntervalSeconds} secondes
+          Données actualisées toutes les {display.refreshIntervalSeconds}{" "}
+          secondes
         </span>
       </footer>
     </main>
