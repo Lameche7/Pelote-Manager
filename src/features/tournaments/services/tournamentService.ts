@@ -6,6 +6,9 @@ import type {
   PublicTournamentDetail,
   PublicTournamentSummary,
   TournamentAvailabilityRule,
+  TournamentPartnerSuggestion,
+  TournamentPlayWindow,
+  TournamentRegistrationIdentity,
   TournamentSeriesRegistration,
   TournamentTeamPlayer,
 } from "@/features/tournaments/types";
@@ -30,6 +33,14 @@ const mapSeries = (value: unknown): TournamentSeriesRegistration[] =>
         : Number(series.reserved_count ?? 0),
   }));
 
+const mapPlayWindows = (value: unknown): TournamentPlayWindow[] =>
+  rows(value).map((window) => ({
+    id: String(window.id),
+    weekday: Number(window.weekday),
+    opensAt: String(window.opens_at ?? "").slice(0, 5),
+    closesAt: String(window.closes_at ?? "").slice(0, 5),
+  }));
+
 const mapPlayers = (value: unknown): TournamentTeamPlayer[] =>
   rows(value).map((player) => ({
     memberId: player.member_id ? String(player.member_id) : null,
@@ -37,6 +48,14 @@ const mapPlayers = (value: unknown): TournamentTeamPlayer[] =>
     lastName: String(player.last_name ?? ""),
     email: String(player.email ?? ""),
     phone: String(player.phone ?? ""),
+    emailFromMember:
+      player.email_from_member === undefined
+        ? undefined
+        : Boolean(player.email_from_member),
+    phoneFromMember:
+      player.phone_from_member === undefined
+        ? undefined
+        : Boolean(player.phone_from_member),
     role: player.role as TournamentTeamPlayer["role"],
   }));
 
@@ -71,9 +90,13 @@ const knownErrors: Record<string, string> = {
   "Tournament series is full": "Cette série est complète.",
   "Tournament player role is invalid": "Choisissez votre poste dans l’équipe.",
   "Tournament registration fields are incomplete":
-    "Complétez les informations des deux joueurs et l’adresse de contact.",
+    "Complétez les informations des deux joueurs.",
+  "Tournament player contacts are incomplete":
+    "Renseignez un e-mail et un téléphone pour chaque joueur lorsque la fiche licencié ne les fournit pas.",
+  "Tournament partner is invalid":
+    "Le partenaire sélectionné n’est pas un licencié actif de ce club.",
   "Tournament availability rules are invalid":
-    "Vérifiez les jours et horaires de disponibilité.",
+    "Vérifiez les disponibilités sélectionnées.",
   "A player can only belong to one active team per tournament":
     "Un joueur est déjà inscrit dans une autre équipe de ce tournoi.",
   "Tournament registration not found": "Aucune inscription active trouvée.",
@@ -92,6 +115,7 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
   submitter_role: draft.submitterRole,
   submitter_first_name: draft.submitterFirstName.trim(),
   submitter_last_name: draft.submitterLastName.trim(),
+  partner_member_id: draft.partnerMemberId,
   partner_first_name: draft.partnerFirstName.trim(),
   partner_last_name: draft.partnerLastName.trim(),
   partner_email: draft.partnerEmail.trim(),
@@ -125,6 +149,7 @@ export const tournamentService = {
       ...mapSummary({ ...row, team_count: rows(row.teams).length }),
       rules: String(row.rules ?? ""),
       canRegister: Boolean(row.can_register),
+      playWindows: mapPlayWindows(row.play_windows),
       teams: rows(row.teams).map((team) => ({
         id: String(team.id),
         seriesId: String(team.series_id),
@@ -154,6 +179,50 @@ export const tournamentService = {
       players: mapPlayers(row.players),
       availabilityRules: mapAvailability(row.availability_rules),
     };
+  },
+
+  async getIdentity(
+    tournamentId: string,
+  ): Promise<TournamentRegistrationIdentity> {
+    const { data, error } = await supabase.rpc(
+      "get_my_tournament_registration_identity",
+      { target_tournament_id: tournamentId },
+    );
+    if (error) fail(error, "Impossible de charger vos coordonnées.");
+    const row = (data ?? {}) as Row;
+    return {
+      memberId: row.member_id ? String(row.member_id) : null,
+      firstName: String(row.first_name ?? ""),
+      lastName: String(row.last_name ?? ""),
+      email: String(row.email ?? ""),
+      phone: String(row.phone ?? ""),
+      emailFromMember: Boolean(row.email_from_member),
+      phoneFromMember: Boolean(row.phone_from_member),
+    };
+  },
+
+  async searchPartnerMembers(
+    tournamentId: string,
+    query: string,
+  ): Promise<TournamentPartnerSuggestion[]> {
+    const search = query.trim();
+    if (search.length < 2) return [];
+    const { data, error } = await supabase.rpc(
+      "search_tournament_partner_members",
+      {
+        target_tournament_id: tournamentId,
+        search_text: search,
+      },
+    );
+    if (error) fail(error, "Impossible de rechercher les licenciés.");
+    return rows(data).map((member) => ({
+      id: String(member.id),
+      firstName: String(member.first_name ?? ""),
+      lastName: String(member.last_name ?? ""),
+      clubName: String(member.club_name ?? ""),
+      hasEmail: Boolean(member.has_email),
+      hasPhone: Boolean(member.has_phone),
+    }));
   },
 
   async saveMine(
