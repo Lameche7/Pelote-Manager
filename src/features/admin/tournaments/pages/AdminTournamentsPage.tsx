@@ -100,7 +100,8 @@ const partsAt = (date: Date): DateTimeParts => {
 const toLocalInput = (value: string) => {
   if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) throw new Error("Date de tournoi invalide.");
+  if (Number.isNaN(date.getTime()))
+    throw new Error("Date de tournoi invalide.");
   const parts = partsAt(date);
   return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
 };
@@ -468,10 +469,7 @@ export function AdminTournamentsPage() {
 
       {form && (
         <div className="tournament-editor" role="dialog" aria-modal="true">
-          <div
-            className="tournament-editor__backdrop"
-            onClick={closeEditor}
-          />
+          <div className="tournament-editor__backdrop" onClick={closeEditor} />
           <div className="tournament-editor__panel">
             <header className="tournament-editor__header">
               <div>
