@@ -1,10 +1,15 @@
 export type TournamentTeamStatus =
-  "pending" | "accepted" | "rejected" | "withdrawn";
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "withdrawn";
 
 export type TournamentPlayerRole = "front" | "back";
 
 export type TournamentAvailabilityKind =
-  "unavailable" | "preferred" | "possible";
+  | "unavailable"
+  | "preferred"
+  | "possible";
 
 export type TournamentSeriesRegistration = {
   id: string;
@@ -16,12 +21,21 @@ export type TournamentSeriesRegistration = {
   reservedCount?: number;
 };
 
+export type TournamentPlayWindow = {
+  id: string;
+  weekday: number;
+  opensAt: string;
+  closesAt: string;
+};
+
 export type TournamentTeamPlayer = {
   memberId?: string | null;
   firstName: string;
   lastName: string;
   email?: string;
   phone?: string;
+  emailFromMember?: boolean;
+  phoneFromMember?: boolean;
   role: TournamentPlayerRole;
 };
 
@@ -30,6 +44,25 @@ export type TournamentAvailabilityRule = {
   weekday: number;
   startsAt: string;
   endsAt: string;
+};
+
+export type TournamentRegistrationIdentity = {
+  memberId: string | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  emailFromMember: boolean;
+  phoneFromMember: boolean;
+};
+
+export type TournamentPartnerSuggestion = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  clubName: string;
+  hasEmail: boolean;
+  hasPhone: boolean;
 };
 
 export type PublicTournamentSummary = {
@@ -55,6 +88,7 @@ export type PublicTournamentTeam = {
 export type PublicTournamentDetail = PublicTournamentSummary & {
   rules: string;
   canRegister: boolean;
+  playWindows: TournamentPlayWindow[];
   teams: PublicTournamentTeam[];
 };
 
@@ -74,6 +108,7 @@ export type MyTournamentRegistrationDraft = {
   submitterRole: TournamentPlayerRole;
   submitterFirstName: string;
   submitterLastName: string;
+  partnerMemberId: string | null;
   partnerFirstName: string;
   partnerLastName: string;
   partnerEmail: string;
