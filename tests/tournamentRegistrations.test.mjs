@@ -12,7 +12,10 @@ test(
   async () => {
     const migration = await read(migrationPath);
 
-    assert.match(migration, /create table if not exists public\.tournament_teams/);
+    assert.match(
+      migration,
+      /create table if not exists public\.tournament_teams/,
+    );
     assert.match(
       migration,
       /create table if not exists public\.tournament_team_players/,
@@ -42,7 +45,10 @@ test(
       migration,
       /jsonb_array_length\(coalesce\(players, '\[\]'::jsonb\)\) <> 2/,
     );
-    assert.match(migration, /A tournament team must contain exactly two players/);
+    assert.match(
+      migration,
+      /A tournament team must contain exactly two players/,
+    );
     assert.match(
       migration,
       /A team must contain one front player and one back player/,

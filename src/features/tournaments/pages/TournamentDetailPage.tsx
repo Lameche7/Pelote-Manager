@@ -252,7 +252,9 @@ export function TournamentDetailPage() {
   if (error && !tournament) {
     return (
       <section className="public-tournaments">
-        <p className="public-tournaments__error" role="alert">{error}</p>
+        <p className="public-tournaments__error" role="alert">
+          {error}
+        </p>
         <Link to={ROUTES.tournaments}>← Retour aux tournois</Link>
       </section>
     );
@@ -301,10 +303,14 @@ export function TournamentDetailPage() {
       </header>
 
       {error && (
-        <p className="public-tournaments__error" role="alert">{error}</p>
+        <p className="public-tournaments__error" role="alert">
+          {error}
+        </p>
       )}
       {message && (
-        <p className="public-tournaments__success" role="status">{message}</p>
+        <p className="public-tournaments__success" role="status">
+          {message}
+        </p>
       )}
 
       {tournament.rules && (
@@ -341,7 +347,9 @@ export function TournamentDetailPage() {
                       {team.players.map((player) => (
                         <span key={`${team.id}-${player.role}`}>
                           <small>{playerRoleLabels[player.role]}</small>
-                          <strong>{player.firstName} {player.lastName}</strong>
+                          <strong>
+                            {player.firstName} {player.lastName}
+                          </strong>
                         </span>
                       ))}
                     </div>

@@ -730,9 +730,11 @@ export function AdminTournamentTeamsPage() {
                         {team.availabilityRules.map((rule, index) => (
                           <span key={`${team.id}-rule-${index}`}>
                             {availabilityLabels[rule.kind]} ·{" "}
-                            {weekdays.find(
-                              (weekday) => weekday.value === rule.weekday,
-                            )?.label}{" "}
+                            {
+                              weekdays.find(
+                                (weekday) => weekday.value === rule.weekday,
+                              )?.label
+                            }{" "}
                             {rule.startsAt}–{rule.endsAt}
                           </span>
                         ))}
