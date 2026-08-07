@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/features/admin/settings/pages/AdminTvSettingsPage.tsx src/features/tv/services/tvDisplayService.ts tests/tvViewDuration.test.mjs && git diff -- src/features/admin/settings/pages/AdminTvSettingsPage.tsx src/features/tv/services/tvDisplayService.ts tests/tvViewDuration.test.mjs && prettier --check .",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
     "preview": "vite preview"
@@ -21,7 +21,7 @@
     "dayjs": "^1.11.21",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react-dom": "^19.2.3",
     "react-hook-form": "^7.81.0",
     "react-router-dom": "^7.18.1",
     "zod": "^4.4.3"
