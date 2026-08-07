@@ -19,7 +19,7 @@
   display: grid;
   flex: 1;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-content: center;
+  align-content: stretch;
   gap: clamp(0.65rem, 1.1vw, 1rem);
   width: 100%;
   min-height: 0;
@@ -37,11 +37,15 @@
 
 .tv-display__partner-media img:only-child {
   grid-column: 1 / -1;
+  align-self: stretch;
+  justify-self: stretch;
   width: 100%;
-  max-height: min(50vh, 34rem);
+  height: 100%;
+  min-height: 0;
+  max-height: none;
   aspect-ratio: auto;
   object-fit: contain;
-  padding: 0.65rem;
+  padding: 0.5rem;
 }
 
 @media (max-width: 72rem) {
@@ -51,7 +55,8 @@
   }
 
   .tv-display__partner-media img:only-child {
-    max-height: min(42vh, 28rem);
+    height: auto;
+    max-height: min(55vh, 34rem);
   }
 }
 
