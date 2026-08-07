@@ -45,9 +45,7 @@ test("la semaine regroupe réservations et indisponibilités par jour et terrain
 });
 
 test("le service mappe la vue hebdomadaire sans modifier le lien public", async () => {
-  const service = await read(
-    "../src/features/tv/services/tvDisplayService.ts",
-  );
+  const service = await read("../src/features/tv/services/tvDisplayService.ts");
 
   assert.match(service, /weekStart: string \| null/);
   assert.match(service, /weekEnd: string \| null/);
