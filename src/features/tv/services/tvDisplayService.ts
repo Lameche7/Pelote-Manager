@@ -95,7 +95,10 @@ const clampViewDuration = (value: unknown) => {
   return Math.min(300, Math.max(10, seconds));
 };
 
-const mapDisplay = (value: unknown, viewDurationSeconds: unknown): TvDisplay => {
+const mapDisplay = (
+  value: unknown,
+  viewDurationSeconds: unknown,
+): TvDisplay => {
   const row = asRecord(value);
   const status = String(row.status ?? "invalid") as TvDisplayStatus;
   const resources = Array.isArray(row.resources)
