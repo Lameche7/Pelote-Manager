@@ -80,7 +80,7 @@ declare
   folders text[] := storage.foldername(object_name);
   target_club uuid;
 begin
-  if array_length(folders, 1) < 2 then
+  if coalesce(array_length(folders, 1), 0) < 2 then
     return false;
   end if;
 
