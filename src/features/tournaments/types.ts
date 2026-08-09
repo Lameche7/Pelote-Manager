@@ -150,3 +150,5 @@ export type AdminTournamentTeamsPayload = {
   series: TournamentSeriesRegistration[];
   teams: AdminTournamentTeam[];
 };
+
+// Tournament DTOs intentionally mirror the secured RPC projections.
