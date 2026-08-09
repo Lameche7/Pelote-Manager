@@ -1,20 +1,29 @@
 .tv-display__today-layout {
   display: grid;
-  grid-template-columns: minmax(0, 2.1fr) minmax(18rem, 0.9fr);
-  gap: clamp(1rem, 2vw, 1.6rem);
-  margin-top: clamp(1rem, 2vw, 1.7rem);
+  grid-template-columns: minmax(0, 2.3fr) minmax(14rem, 0.7fr);
+  gap: clamp(0.6rem, 1.1vmin, 0.95rem);
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin-top: clamp(0.55rem, 1vmin, 0.9rem);
+  overflow: hidden;
 }
 
 .tv-display__resources--today {
-  align-content: start;
+  align-content: stretch;
+  height: 100%;
+  min-height: 0;
   margin-top: 0;
 }
 
 .tv-display__today-aside {
   display: grid;
-  align-content: start;
-  gap: clamp(1rem, 1.8vw, 1.4rem);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+  gap: clamp(0.55rem, 1vmin, 0.85rem);
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .tv-display__events-panel,
@@ -22,27 +31,31 @@
 .tv-display__shop-panel,
 .tv-display__partners-panel {
   border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 1.2rem;
+  border-radius: 1rem;
   background: rgb(15 47 39 / 88%);
-  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 18%);
+  box-shadow: 0 0.75rem 1.8rem rgb(0 0 0 / 16%);
 }
 
 .tv-display__events-panel {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
   overflow: hidden;
 }
 
 .tv-display__events-panel > header {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.9rem 1rem;
+  gap: 0.6rem;
+  padding: clamp(0.45rem, 0.9vmin, 0.7rem) clamp(0.6rem, 1vw, 0.85rem);
   border-bottom: 1px solid rgb(255 255 255 / 12%);
   background: rgb(255 255 255 / 5%);
 }
 
 .tv-display__events-panel > header > svg {
-  width: clamp(1.5rem, 2.4vw, 2rem);
-  height: clamp(1.5rem, 2.4vw, 2rem);
+  width: clamp(1.25rem, 2.4vmin, 1.7rem);
+  height: clamp(1.25rem, 2.4vmin, 1.7rem);
   color: #f6c453;
 }
 
@@ -50,27 +63,34 @@
 .tv-display__partners-panel > span {
   display: block;
   color: #93c5fd;
-  font-size: clamp(0.72rem, 1vw, 0.9rem);
+  font-size: clamp(0.58rem, 1.05vmin, 0.78rem);
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .tv-display__events-panel h2,
 .tv-display__partners-panel h2 {
-  margin: 0.12rem 0 0;
-  font-size: clamp(1.05rem, 1.8vw, 1.45rem);
+  margin: 0.08rem 0 0;
+  font-size: clamp(0.9rem, 1.9vmin, 1.3rem);
 }
 
 .tv-display__events-list {
   display: grid;
+  flex: 1 1 auto;
+  grid-auto-rows: minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .tv-display__event {
   display: grid;
-  gap: 0.28rem;
-  padding: 0.82rem 1rem;
+  align-content: center;
+  gap: 0.12rem;
+  min-height: 0;
+  padding: clamp(0.35rem, 0.7vmin, 0.58rem) clamp(0.6rem, 1vw, 0.85rem);
   border-bottom: 1px solid rgb(255 255 255 / 9%);
+  overflow: hidden;
 }
 
 .tv-display__event:last-child {
@@ -79,48 +99,56 @@
 
 .tv-display__event time {
   color: #f6c453;
-  font-size: clamp(0.76rem, 1vw, 0.9rem);
+  font-size: clamp(0.62rem, 1.05vmin, 0.8rem);
   font-weight: 900;
   text-transform: capitalize;
 }
 
 .tv-display__event strong {
   overflow: hidden;
-  font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+  font-size: clamp(0.78rem, 1.45vmin, 1.05rem);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .tv-display__event span,
 .tv-display__events-empty {
+  overflow: hidden;
   color: #cbd5e1;
-  font-size: clamp(0.78rem, 1.15vw, 0.95rem);
+  font-size: clamp(0.62rem, 1.1vmin, 0.82rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tv-display__events-empty {
-  margin: 0;
-  padding: 1.25rem 1rem;
+  margin: auto;
+  padding: 0.85rem;
+  text-align: center;
+  white-space: normal;
 }
 
 .tv-display__qr-card {
   display: grid;
-  grid-template-columns: minmax(7.5rem, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(5rem, 0.72fr) minmax(0, 1.28fr);
   align-items: center;
-  gap: clamp(0.8rem, 1.5vw, 1.2rem);
-  padding: clamp(0.8rem, 1.4vw, 1rem);
+  gap: clamp(0.55rem, 1vmin, 0.85rem);
+  min-width: 0;
+  padding: clamp(0.5rem, 0.9vmin, 0.75rem);
+  overflow: hidden;
 }
 
 .tv-display__qr-image {
   display: grid;
   place-items: center;
-  padding: 0.45rem;
-  border-radius: 0.9rem;
+  min-width: 0;
+  padding: 0.28rem;
+  border-radius: 0.7rem;
   background: #fff;
 }
 
 .tv-display__qr-image img {
   display: block;
-  width: min(100%, 11rem);
+  width: min(100%, 8rem);
   aspect-ratio: 1;
 }
 
@@ -129,9 +157,9 @@
 }
 
 .tv-display__qr-card > div:last-child svg {
-  width: 1.6rem;
-  height: 1.6rem;
-  margin-bottom: 0.4rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-bottom: 0.25rem;
   color: #60a5fa;
 }
 
@@ -141,33 +169,47 @@
 }
 
 .tv-display__qr-card strong {
-  font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+  overflow: hidden;
+  font-size: clamp(0.88rem, 1.55vmin, 1.15rem);
+  text-overflow: ellipsis;
 }
 
 .tv-display__qr-card span {
-  margin-top: 0.35rem;
+  margin-top: 0.2rem;
   color: #cbd5e1;
-  font-size: clamp(0.78rem, 1.1vw, 0.95rem);
-  line-height: 1.4;
+  font-size: clamp(0.62rem, 1.05vmin, 0.8rem);
+  line-height: 1.3;
 }
 
 .tv-display__promotion {
-  margin-top: clamp(1rem, 2vw, 1.7rem);
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin-top: clamp(0.55rem, 1vmin, 0.9rem);
+  overflow: hidden;
 }
 
 .tv-display__promotion-main {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(18rem, 0.8fr);
-  gap: clamp(1rem, 2vw, 1.6rem);
+  grid-template-columns: minmax(0, 3fr) minmax(13rem, 1fr);
+  gap: clamp(0.6rem, 1.1vmin, 0.95rem);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .tv-display__shop-panel {
   order: 2;
   display: grid;
-  grid-template-columns: 1fr;
-  align-content: start;
-  gap: clamp(0.9rem, 1.5vw, 1.2rem);
-  padding: clamp(1rem, 2vw, 1.5rem);
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  gap: clamp(0.45rem, 0.8vmin, 0.7rem);
+  padding: clamp(0.65rem, 1.2vmin, 1rem);
+  overflow: hidden;
   background:
     radial-gradient(circle at top right, rgb(37 99 235 / 24%), transparent 42%),
     rgb(15 47 39 / 92%);
@@ -175,76 +217,83 @@
 
 .tv-display__shop-copy {
   display: flex;
+  min-width: 0;
+  min-height: 0;
   flex-direction: column;
-  justify-content: center;
+  overflow: hidden;
 }
 
 .tv-display__promotion-kicker {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.4rem;
   color: #f6c453;
-  font-size: clamp(0.78rem, 1.2vw, 1rem);
+  font-size: clamp(0.62rem, 1.1vmin, 0.82rem);
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .tv-display__promotion-kicker svg {
-  width: 1.25em;
-  height: 1.25em;
+  width: 1.1em;
+  height: 1.1em;
 }
 
 .tv-display__shop-copy h2 {
-  margin: 0.45rem 0 0;
-  font-size: clamp(1.7rem, 2.8vw, 2.8rem);
+  flex: 0 0 auto;
+  margin: 0.3rem 0 0;
+  font-size: clamp(1.15rem, 2.6vmin, 1.9rem);
   line-height: 1;
 }
 
 .tv-display__shop-copy > p {
-  max-width: 30rem;
-  margin: 0.7rem 0 0;
+  flex: 0 0 auto;
+  margin: 0.42rem 0 0;
   color: #e2e8f0;
-  font-size: clamp(0.85rem, 1.2vw, 1.05rem);
-  line-height: 1.4;
+  font-size: clamp(0.62rem, 1.05vmin, 0.8rem);
+  line-height: 1.3;
 }
 
 .tv-display__shop-highlights {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 1rem;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
 }
 
 .tv-display__shop-highlights span {
-  padding: 0.5rem 0.7rem;
+  padding: 0.35rem 0.5rem;
   border: 1px solid rgb(255 255 255 / 14%);
   border-radius: 999px;
   color: #dbeafe;
   background: rgb(30 64 175 / 22%);
-  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  font-size: clamp(0.58rem, 0.95vmin, 0.72rem);
   font-weight: 800;
 }
 
 .tv-display__shop-panel > .tv-display__qr-card {
+  grid-template-columns: minmax(4.6rem, 0.65fr) minmax(0, 1.35fr);
   align-self: end;
-  grid-template-columns: 1fr;
-  text-align: center;
+  padding: 0.45rem;
+  text-align: left;
   background: rgb(2 20 16 / 72%);
 }
 
 .tv-display__shop-panel > .tv-display__qr-card .tv-display__qr-image img {
-  width: min(100%, 10rem);
+  width: min(100%, 5.8rem);
 }
 
 .tv-display__partners-panel {
   order: 1;
   display: flex;
-  min-height: min(58vh, 38rem);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
   flex-direction: column;
   justify-content: flex-start;
   overflow: hidden;
-  padding: clamp(1.2rem, 2vw, 1.7rem);
+  padding: clamp(0.7rem, 1.25vmin, 1.05rem);
   background:
     radial-gradient(
       circle at bottom left,
@@ -255,59 +304,53 @@
 }
 
 .tv-display__partners-panel > svg {
-  width: clamp(2rem, 3vw, 3rem);
-  height: clamp(2rem, 3vw, 3rem);
-  margin-bottom: 0.55rem;
+  flex: 0 0 auto;
+  width: clamp(1.35rem, 2.5vmin, 2rem);
+  height: clamp(1.35rem, 2.5vmin, 2rem);
+  margin-bottom: 0.25rem;
   color: #f6c453;
 }
 
 .tv-display__partners-panel h2 {
-  margin-top: 0.3rem;
-  font-size: clamp(1.5rem, 2.5vw, 2.4rem);
+  flex: 0 0 auto;
+  margin-top: 0.18rem;
+  font-size: clamp(1rem, 2.2vmin, 1.65rem);
   line-height: 1.05;
 }
 
 .tv-display__partners-panel p {
-  margin: 1rem 0 0;
+  margin: auto;
   color: #cbd5e1;
-  font-size: clamp(0.95rem, 1.45vw, 1.2rem);
-  line-height: 1.5;
+  font-size: clamp(0.72rem, 1.25vmin, 0.95rem);
+  line-height: 1.35;
+  text-align: center;
 }
 
-@media (max-width: 72rem) {
+@media (max-height: 38rem) {
   .tv-display__today-layout,
-  .tv-display__promotion-main,
-  .tv-display__shop-panel {
-    grid-template-columns: 1fr;
+  .tv-display__promotion {
+    margin-top: 0.4rem;
   }
 
-  .tv-display__partners-panel,
-  .tv-display__shop-panel {
-    order: initial;
+  .tv-display__events-panel > header {
+    padding-block: 0.32rem;
   }
 
+  .tv-display__event {
+    padding-block: 0.22rem;
+  }
+
+  .tv-display__qr-card span,
+  .tv-display__shop-copy > p {
+    display: none;
+  }
+
+  .tv-display__shop-panel,
   .tv-display__partners-panel {
-    min-height: auto;
-  }
-
-  .tv-display__today-aside {
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.7fr);
+    padding: 0.5rem;
   }
 
   .tv-display__shop-panel > .tv-display__qr-card {
-    grid-template-columns: minmax(8rem, 0.45fr) minmax(0, 1fr);
-    text-align: left;
-  }
-}
-
-@media (max-width: 48rem) {
-  .tv-display__today-aside {
-    grid-template-columns: 1fr;
-  }
-
-  .tv-display__qr-card,
-  .tv-display__shop-panel > .tv-display__qr-card {
-    grid-template-columns: 1fr;
-    text-align: center;
+    grid-template-columns: 4rem minmax(0, 1fr);
   }
 }
