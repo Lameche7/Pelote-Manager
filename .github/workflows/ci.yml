@@ -21,6 +21,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Afficher le format TV attendu
+        run: |
+          npx prettier --write src/features/tv/pages/TvDisplayPage.css tests/tvFixedScreenLayout.test.mjs
+          git diff -- src/features/tv/pages/TvDisplayPage.css tests/tvFixedScreenLayout.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
