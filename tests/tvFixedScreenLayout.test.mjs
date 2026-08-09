@@ -25,9 +25,7 @@ test("la vue hebdomadaire conserve toujours les sept jours sur une ligne", async
 });
 
 test("les partenaires restent prioritaires sur la boutique", async () => {
-  const promotion = await read(
-    "../src/features/tv/pages/TvPromotionView.css",
-  );
+  const promotion = await read("../src/features/tv/pages/TvPromotionView.css");
   const gallery = await read("../src/features/tv/pages/TvMediaGallery.css");
 
   assert.match(
