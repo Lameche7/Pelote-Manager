@@ -32,14 +32,8 @@ test("les partenaires restent prioritaires sur la boutique", async () => {
     promotion,
     /\.tv-display__promotion-main\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 3fr\) minmax\(13rem, 1fr\)/,
   );
-  assert.match(
-    promotion,
-    /\.tv-display__partners-panel\s*\{[\s\S]*order:\s*1/,
-  );
-  assert.match(
-    promotion,
-    /\.tv-display__shop-panel\s*\{[\s\S]*order:\s*2/,
-  );
+  assert.match(promotion, /\.tv-display__partners-panel\s*\{[\s\S]*order:\s*1/);
+  assert.match(promotion, /\.tv-display__shop-panel\s*\{[\s\S]*order:\s*2/);
   assert.doesNotMatch(promotion, /@media\s*\(max-width:\s*72rem\)/);
   assert.match(
     gallery,
