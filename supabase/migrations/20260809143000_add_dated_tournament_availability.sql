@@ -99,8 +99,8 @@ begin
           on play_window.tournament_id = target_tournament.id
          and play_window.weekday = extract(dow from date_series.play_timestamp)::integer
         cross join lateral generate_series(
-          date_series.play_timestamp + play_window.opens_at,
-          date_series.play_timestamp + play_window.closes_at - slot_interval,
+          date_series.play_timestamp::date + play_window.opens_at,
+          date_series.play_timestamp::date + play_window.closes_at - slot_interval,
           slot_interval
         ) as slot_series(starts_at)
       )
@@ -210,9 +210,9 @@ begin
   for availability_item in
     select value from jsonb_array_elements(availability_payload)
   loop
-    if coalesce(availability_item->>'date', '') !~ '^\d{4}-\d{2}-\d{2}$'
-      or coalesce(availability_item->>'starts_at', '') !~ '^\d{2}:\d{2}(:\d{2})?$'
-      or coalesce(availability_item->>'ends_at', '') !~ '^\d{2}:\d{2}(:\d{2})?$' then
+    if coalesce(availability_item->>'date', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+      or coalesce(availability_item->>'starts_at', '') !~ '^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$'
+      or coalesce(availability_item->>'ends_at', '') !~ '^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$' then
       raise exception 'Tournament availability slots are invalid'
         using errcode = '22023';
     end if;
@@ -240,8 +240,8 @@ begin
         select 1
         from public.tournament_play_windows as play_window
         cross join lateral generate_series(
-          availability_date::timestamp + play_window.opens_at,
-          availability_date::timestamp + play_window.closes_at - slot_interval,
+          availability_date + play_window.opens_at,
+          availability_date + play_window.closes_at - slot_interval,
           slot_interval
         ) as slot_series(starts_at)
         where play_window.tournament_id = target_tournament_id

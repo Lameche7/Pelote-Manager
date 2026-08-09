@@ -179,13 +179,12 @@ export function TournamentRegistrationForm({
 
   const partnerRole = draft ? oppositeRole(draft.submitterRole) : "back";
   const weekendAvailabilityCount =
-    draft?.availabilitySlots.filter((slot) => isWeekendDate(slot.date)).length ??
-    0;
+    draft?.availabilitySlots.filter((slot) => isWeekendDate(slot.date))
+      .length ?? 0;
   const availabilityMinimumReached = Boolean(
     draft &&
-      draft.availabilitySlots.length >= tournament.minimumAvailabilitySlots &&
-      weekendAvailabilityCount >=
-        tournament.minimumWeekendAvailabilitySlots,
+    draft.availabilitySlots.length >= tournament.minimumAvailabilitySlots &&
+    weekendAvailabilityCount >= tournament.minimumWeekendAvailabilitySlots,
   );
 
   const selectPartner = (member: TournamentPartnerSuggestion) => {
@@ -531,8 +530,9 @@ export function TournamentRegistrationForm({
       <div className="public-registration-team-summary">
         <strong>Série : {selectedSeries?.name ?? "—"}</strong>
         <span>
-          J1 : {draft.submitterFirstName} {draft.submitterLastName} &nbsp;|&nbsp;
-          J2 : {draft.partnerFirstName || "—"} {draft.partnerLastName}
+          J1 : {draft.submitterFirstName} {draft.submitterLastName}{" "}
+          &nbsp;|&nbsp; J2 : {draft.partnerFirstName || "—"}{" "}
+          {draft.partnerLastName}
         </span>
       </div>
 

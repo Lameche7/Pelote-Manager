@@ -19,7 +19,11 @@ const isWeekend = (value: string) => {
 const isoWeek = (value: string) => {
   const source = new Date(`${value}T12:00:00Z`);
   const date = new Date(
-    Date.UTC(source.getUTCFullYear(), source.getUTCMonth(), source.getUTCDate()),
+    Date.UTC(
+      source.getUTCFullYear(),
+      source.getUTCMonth(),
+      source.getUTCDate(),
+    ),
   );
   const weekday = date.getUTCDay() || 7;
   date.setUTCDate(date.getUTCDate() + 4 - weekday);
@@ -116,7 +120,9 @@ export function TournamentAvailabilityGrid({
   const selectedKeys = useMemo(() => new Set(value.map(slotKey)), [value]);
   const validSelected = useMemo(
     () =>
-      tournament.availableSlots.filter((slot) => selectedKeys.has(slotKey(slot))),
+      tournament.availableSlots.filter((slot) =>
+        selectedKeys.has(slotKey(slot)),
+      ),
     [selectedKeys, tournament.availableSlots],
   );
   const weekendCount = useMemo(

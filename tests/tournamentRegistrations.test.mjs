@@ -144,7 +144,10 @@ test("les disponibilités sont des créneaux datés générés depuis la configu
     migration,
     /create table if not exists public\.tournament_team_availability_slots/,
   );
-  assert.match(migration, /minimum_availability_slots integer not null default 65/);
+  assert.match(
+    migration,
+    /minimum_availability_slots integer not null default 65/,
+  );
   assert.match(
     migration,
     /minimum_weekend_availability_slots integer not null default 0/,
