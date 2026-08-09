@@ -1,6 +1,15 @@
 .tv-display {
-  min-height: 100vh;
-  padding: clamp(1.25rem, 2.5vw, 2.75rem);
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: clamp(0.7rem, 1.4vmin, 1.45rem);
   color: #f8fafc;
   background:
     radial-gradient(circle at top left, rgb(37 99 235 / 22%), transparent 34%),
@@ -12,6 +21,12 @@
     #071b17;
 }
 
+.tv-display *,
+.tv-display *::before,
+.tv-display *::after {
+  box-sizing: border-box;
+}
+
 .tv-display--centered {
   display: grid;
   place-content: center;
@@ -21,8 +36,8 @@
 }
 
 .tv-display--centered > svg {
-  width: clamp(3rem, 8vw, 5rem);
-  height: clamp(3rem, 8vw, 5rem);
+  width: clamp(3rem, 8vmin, 5rem);
+  height: clamp(3rem, 8vmin, 5rem);
   color: #f6c453;
 }
 
@@ -34,7 +49,7 @@
 .tv-display--centered p {
   max-width: 42rem;
   color: #cbd5e1;
-  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-size: clamp(1rem, 2vmin, 1.35rem);
 }
 
 .tv-display__spinner {
@@ -43,41 +58,44 @@
 
 .tv-display__header {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
-  gap: 2rem;
-  padding-bottom: clamp(1rem, 2vw, 1.7rem);
+  gap: clamp(1rem, 2vw, 2rem);
+  min-width: 0;
+  padding-bottom: clamp(0.55rem, 1.1vmin, 1rem);
   border-bottom: 1px solid rgb(255 255 255 / 14%);
 }
 
 .tv-display__identity {
   display: flex;
   align-items: center;
-  gap: clamp(0.9rem, 2vw, 1.4rem);
+  gap: clamp(0.7rem, 1.4vmin, 1.2rem);
   min-width: 0;
 }
 
 .tv-display__logo {
-  width: clamp(4.25rem, 8vw, 7rem);
-  height: clamp(4.25rem, 8vw, 7rem);
+  flex: 0 0 auto;
+  width: clamp(3.35rem, 7.5vmin, 6rem);
+  height: clamp(3.35rem, 7.5vmin, 6rem);
   object-fit: contain;
   filter: drop-shadow(0 0.45rem 0.8rem rgb(0 0 0 / 28%));
 }
 
 .tv-display__eyebrow {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.18rem;
   color: #f6c453;
-  font-size: clamp(0.78rem, 1.35vw, 1rem);
+  font-size: clamp(0.68rem, 1.35vmin, 0.95rem);
   font-weight: 900;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .tv-display__identity h1 {
   margin: 0;
   overflow: hidden;
-  font-size: clamp(1.75rem, 4vw, 4rem);
-  line-height: 1;
+  font-size: clamp(1.45rem, 4.4vmin, 3.6rem);
+  line-height: 0.98;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -92,90 +110,100 @@
 .tv-display__offline {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.45rem;
 }
 
 .tv-display__clock > div {
   color: #cbd5e1;
-  font-size: clamp(0.88rem, 1.5vw, 1.15rem);
+  font-size: clamp(0.72rem, 1.35vmin, 1rem);
   text-transform: capitalize;
 }
 
 .tv-display__clock svg,
 .tv-display__footer svg,
 .tv-display__offline svg {
-  width: 1.1em;
-  height: 1.1em;
+  width: 1.05em;
+  height: 1.05em;
 }
 
 .tv-display__clock strong {
   display: block;
-  margin-top: 0.2rem;
+  margin-top: 0.1rem;
   color: #fff;
-  font-size: clamp(2.4rem, 6vw, 5.4rem);
+  font-size: clamp(2rem, 6vmin, 4.8rem);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: 0.95;
 }
 
 .tv-display__offline {
-  margin: 1rem 0 0;
-  padding: 0.65rem 0.85rem;
+  flex: 0 0 auto;
+  margin: 0.45rem 0 0;
+  padding: 0.42rem 0.65rem;
   border: 1px solid rgb(246 196 83 / 28%);
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   color: #fde68a;
   background: rgb(120 53 15 / 32%);
+  font-size: clamp(0.68rem, 1.2vmin, 0.9rem);
 }
 
 .tv-display__resources {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
-  gap: clamp(1rem, 2vw, 1.6rem);
-  margin-top: clamp(1rem, 2vw, 1.7rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: clamp(0.65rem, 1.2vmin, 1rem);
+  min-width: 0;
+  min-height: 0;
 }
 
 .tv-display__resource {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 1.2rem;
+  border-radius: 1rem;
   background: rgb(15 47 39 / 88%);
-  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 18%);
+  box-shadow: 0 0.75rem 1.8rem rgb(0 0 0 / 16%);
 }
 
 .tv-display__resource > header {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.95rem 1.15rem;
+  gap: 0.55rem;
+  padding: clamp(0.5rem, 1vmin, 0.8rem) clamp(0.7rem, 1.2vw, 1rem);
   border-bottom: 1px solid rgb(255 255 255 / 12%);
   background: rgb(255 255 255 / 5%);
 }
 
 .tv-display__resource > header svg {
-  width: clamp(1.35rem, 2vw, 1.8rem);
-  height: clamp(1.35rem, 2vw, 1.8rem);
+  width: clamp(1.15rem, 2.2vmin, 1.6rem);
+  height: clamp(1.15rem, 2.2vmin, 1.6rem);
   color: #60a5fa;
 }
 
 .tv-display__resource h2 {
   margin: 0;
-  font-size: clamp(1.25rem, 2.5vw, 2rem);
+  font-size: clamp(1rem, 2.4vmin, 1.7rem);
 }
 
 .tv-display__slots {
   display: grid;
+  flex: 1 1 auto;
+  grid-auto-rows: minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .tv-display__slot {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 0.8fr) minmax(8.5rem, 1fr) minmax(
-      0,
-      2fr
-    );
+  grid-template-columns: minmax(4.4rem, 0.72fr) minmax(6.5rem, 0.9fr) minmax(0, 2fr);
   align-items: center;
-  gap: clamp(0.75rem, 1.8vw, 1.35rem);
-  min-height: clamp(4.2rem, 7vh, 6rem);
-  padding: 0.8rem 1.15rem;
+  gap: clamp(0.45rem, 1vw, 0.9rem);
+  min-height: 0;
+  padding: clamp(0.35rem, 0.75vmin, 0.65rem) clamp(0.65rem, 1.1vw, 0.95rem);
   border-bottom: 1px solid rgb(255 255 255 / 9%);
+  overflow: hidden;
 }
 
 .tv-display__slot:last-child {
@@ -184,19 +212,23 @@
 
 .tv-display__slot time {
   color: #fff;
-  font-size: clamp(1.45rem, 3.4vw, 3rem);
+  font-size: clamp(1.05rem, 2.8vmin, 2.25rem);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .tv-display__slot strong {
-  font-size: clamp(1.05rem, 2vw, 1.55rem);
+  overflow: hidden;
+  font-size: clamp(0.85rem, 1.8vmin, 1.25rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tv-display__slot span {
   overflow: hidden;
   color: #e2e8f0;
-  font-size: clamp(1rem, 2.1vw, 1.65rem);
+  font-size: clamp(0.82rem, 1.9vmin, 1.35rem);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -223,21 +255,31 @@
 }
 
 .tv-display__empty {
-  margin: 0;
-  padding: 2rem 1.15rem;
+  margin: auto;
+  padding: 1rem;
   color: #cbd5e1;
-  font-size: clamp(1rem, 1.8vw, 1.3rem);
+  font-size: clamp(0.85rem, 1.6vmin, 1.15rem);
   text-align: center;
 }
 
 .tv-display__footer {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-top: clamp(1rem, 2vw, 1.5rem);
+  gap: 0.8rem;
+  min-width: 0;
+  margin-top: clamp(0.4rem, 0.8vmin, 0.7rem);
   color: #94a3b8;
-  font-size: clamp(0.78rem, 1.25vw, 1rem);
+  font-size: clamp(0.62rem, 1.15vmin, 0.86rem);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.tv-display__footer > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes tv-display-spin {
@@ -246,24 +288,26 @@
   }
 }
 
-@media (max-width: 48rem) {
-  .tv-display__header,
+@media (max-height: 38rem) {
+  .tv-display {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .tv-display__header {
+    padding-bottom: 0.4rem;
+  }
+
+  .tv-display__logo {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .tv-display__clock > div {
+    display: none;
+  }
+
   .tv-display__footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .tv-display__clock {
-    text-align: left;
-  }
-
-  .tv-display__slot {
-    grid-template-columns: auto 1fr;
-  }
-
-  .tv-display__slot span {
-    grid-column: 1 / -1;
-    padding-bottom: 0.35rem;
+    margin-top: 0.32rem;
   }
 }
 
