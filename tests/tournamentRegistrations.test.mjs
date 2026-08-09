@@ -8,8 +8,10 @@ const migrationPath =
   "../supabase/migrations/20260807180000_add_tournament_registrations.sql";
 const refinementMigrationPath =
   "../supabase/migrations/20260807190000_refine_tournament_registration_form.sql";
+const datedAvailabilityMigrationPath =
+  "../supabase/migrations/20260809143000_add_dated_tournament_availability.sql";
 
-test("les inscriptions créent des équipes privées, joueurs et disponibilités récurrentes", async () => {
+test("les inscriptions créent des équipes privées, joueurs et disponibilités récurrentes historiques", async () => {
   const migration = await read(migrationPath);
 
   assert.match(
@@ -135,14 +137,61 @@ test("les coordonnées licenciés sont prioritaires et les contacts manquants de
   );
 });
 
-test("les disponibilités utilisateur reprennent les plages du tournoi et sont contrôlées côté serveur", async () => {
-  const refinement = await read(refinementMigrationPath);
+test("les disponibilités sont des créneaux datés générés depuis la configuration admin", async () => {
+  const migration = await read(datedAvailabilityMigrationPath);
 
-  assert.match(refinement, /'play_windows'/);
-  assert.match(refinement, /public\.tournament_play_windows/);
-  assert.match(refinement, /play_window\.weekday = availability_weekday/);
-  assert.match(refinement, /play_window\.opens_at = availability_starts_at/);
-  assert.match(refinement, /play_window\.closes_at = availability_ends_at/);
+  assert.match(
+    migration,
+    /create table if not exists public\.tournament_team_availability_slots/,
+  );
+  assert.match(migration, /minimum_availability_slots integer not null default 65/);
+  assert.match(
+    migration,
+    /minimum_weekend_availability_slots integer not null default 0/,
+  );
+  assert.match(migration, /slot_duration_minutes integer not null default 60/);
+  assert.match(migration, /get_public_tournament_availability_grid/);
+  assert.match(migration, /generate_series\(/);
+  assert.match(migration, /public\.tournament_play_windows/);
+  assert.match(migration, /date_series\.play_timestamp::date as play_date/);
+  assert.match(migration, /Tournament availability minimum not reached/);
+  assert.match(
+    migration,
+    /Tournament weekend availability minimum not reached/,
+  );
+  assert.match(migration, /Tournament availability slots are invalid/);
+  assert.match(migration, /get_my_tournament_registration_v2/);
+  assert.match(migration, /save_my_tournament_registration_v2/);
+});
+
+test("le service public utilise la grille datée et les RPC V2", async () => {
+  const service = await read(
+    "../src/features/tournaments/services/tournamentService.ts",
+  );
+
+  assert.match(service, /get_public_tournament_availability_grid/);
+  assert.match(service, /availableSlots: mapAvailabilitySlots/);
+  assert.match(service, /minimumAvailabilitySlots/);
+  assert.match(service, /minimumWeekendAvailabilitySlots/);
+  assert.match(service, /get_my_tournament_registration_v2/);
+  assert.match(service, /save_my_tournament_registration_v2/);
+  assert.match(service, /availability_slots/);
+});
+
+test("la grille d'inscription est datée, groupée par semaine et propose les raccourcis demandés", async () => {
+  const grid = await read(
+    "../src/features/tournaments/components/TournamentAvailabilityGrid.tsx",
+  );
+
+  assert.match(grid, /Semaine \{week\.week\} — \{week\.year\}/);
+  assert.match(grid, /Créneaux cochés/);
+  assert.match(grid, /Minimum requis/);
+  assert.match(grid, /Week-end/);
+  assert.match(grid, /Dupliquer cette semaine → suivante/);
+  assert.match(grid, /toggleDay/);
+  assert.match(grid, />Tout</);
+  assert.match(grid, /type="checkbox"/);
+  assert.doesNotMatch(grid, /Si nécessaire/);
 });
 
 test("les pages Tournois exposent consultation publique, inscription compacte et gestion admin", async () => {
@@ -177,9 +226,8 @@ test("les pages Tournois exposent consultation publique, inscription compacte et
   assert.match(detailPage, /Se connecter pour inscrire une équipe/);
   assert.match(detailPage, /public-tournament-panel--teams/);
   assert.match(registrationForm, /Poste du partenaire/);
-  assert.match(registrationForm, /type="checkbox"/);
-  assert.match(registrationForm, /Disponible/);
-  assert.match(registrationForm, /Si nécessaire/);
+  assert.match(registrationForm, /TournamentAvailabilityGrid/);
+  assert.match(registrationForm, /availabilityMinimumReached/);
   assert.match(registrationForm, /searchPartnerMembers/);
   assert.match(registrationForm, /Récupéré depuis la fiche licencié/);
   assert.match(adminPage, /Ajouter une équipe/);

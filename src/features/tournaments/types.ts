@@ -23,6 +23,12 @@ export type TournamentPlayWindow = {
   closesAt: string;
 };
 
+export type TournamentAvailabilitySlot = {
+  date: string;
+  startsAt: string;
+  endsAt: string;
+};
+
 export type TournamentTeamPlayer = {
   memberId?: string | null;
   firstName: string;
@@ -84,6 +90,10 @@ export type PublicTournamentDetail = PublicTournamentSummary & {
   rules: string;
   canRegister: boolean;
   playWindows: TournamentPlayWindow[];
+  availableSlots: TournamentAvailabilitySlot[];
+  minimumAvailabilitySlots: number;
+  minimumWeekendAvailabilitySlots: number;
+  slotDurationMinutes: number;
   teams: PublicTournamentTeam[];
 };
 
@@ -96,6 +106,7 @@ export type MyTournamentRegistration = {
   comments: string;
   players: TournamentTeamPlayer[];
   availabilityRules: TournamentAvailabilityRule[];
+  availabilitySlots: TournamentAvailabilitySlot[];
 };
 
 export type MyTournamentRegistrationDraft = {
@@ -112,6 +123,7 @@ export type MyTournamentRegistrationDraft = {
   contactPhone: string;
   comments: string;
   availabilityRules: TournamentAvailabilityRule[];
+  availabilitySlots: TournamentAvailabilitySlot[];
 };
 
 export type AdminTournamentTeam = {

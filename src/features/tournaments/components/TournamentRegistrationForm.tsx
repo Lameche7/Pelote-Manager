@@ -1,24 +1,14 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
   MyTournamentRegistration,
   MyTournamentRegistrationDraft,
   PublicTournamentDetail,
-  TournamentAvailabilityKind,
   TournamentPartnerSuggestion,
   TournamentPlayerRole,
   TournamentRegistrationIdentity,
 } from "@/features/tournaments/types";
-
-const weekdayLabels: Record<number, string> = {
-  0: "Dimanche",
-  1: "Lundi",
-  2: "Mardi",
-  3: "Mercredi",
-  4: "Jeudi",
-  5: "Vendredi",
-  6: "Samedi",
-};
 
 const playerRoleLabels: Record<TournamentPlayerRole, string> = {
   front: "Avant",
@@ -27,32 +17,6 @@ const playerRoleLabels: Record<TournamentPlayerRole, string> = {
 
 const oppositeRole = (role: TournamentPlayerRole): TournamentPlayerRole =>
   role === "front" ? "back" : "front";
-
-const sameWindow = (
-  rule: MyTournamentRegistration["availabilityRules"][number],
-  weekday: number,
-  startsAt: string,
-  endsAt: string,
-) =>
-  rule.weekday === weekday &&
-  rule.startsAt === startsAt &&
-  rule.endsAt === endsAt;
-
-const normalizeAvailability = (
-  tournament: PublicTournamentDetail,
-  registration: MyTournamentRegistration | null,
-): MyTournamentRegistrationDraft["availabilityRules"] =>
-  tournament.playWindows.map((window) => {
-    const saved = registration?.availabilityRules.find((rule) =>
-      sameWindow(rule, window.weekday, window.opensAt, window.closesAt),
-    );
-    return {
-      kind: saved?.kind ?? "unavailable",
-      weekday: window.weekday,
-      startsAt: window.opensAt,
-      endsAt: window.closesAt,
-    };
-  });
 
 const registrationPlayers = (
   registration: MyTournamentRegistration | null,
@@ -104,8 +68,14 @@ const buildDraft = (
       identity.phone ||
       "",
     comments: registration?.comments ?? "",
-    availabilityRules: normalizeAvailability(tournament, registration),
+    availabilityRules: [],
+    availabilitySlots: registration?.availabilitySlots ?? [],
   };
+};
+
+const isWeekendDate = (value: string) => {
+  const weekday = new Date(`${value}T12:00:00Z`).getUTCDay();
+  return weekday === 0 || weekday === 6;
 };
 
 type Props = {
@@ -208,23 +178,15 @@ export function TournamentRegistrationForm({
   }, [draft, onError, partnerQuery, tournament.id]);
 
   const partnerRole = draft ? oppositeRole(draft.submitterRole) : "back";
-
-  const selectedAvailabilityCount = useMemo(
-    () =>
-      draft?.availabilityRules.filter((rule) => rule.kind !== "unavailable")
-        .length ?? 0,
-    [draft],
+  const weekendAvailabilityCount =
+    draft?.availabilitySlots.filter((slot) => isWeekendDate(slot.date)).length ??
+    0;
+  const availabilityMinimumReached = Boolean(
+    draft &&
+      draft.availabilitySlots.length >= tournament.minimumAvailabilitySlots &&
+      weekendAvailabilityCount >=
+        tournament.minimumWeekendAvailabilitySlots,
   );
-
-  const setAvailability = (index: number, kind: TournamentAvailabilityKind) => {
-    if (!draft) return;
-    setDraft({
-      ...draft,
-      availabilityRules: draft.availabilityRules.map((rule, ruleIndex) =>
-        ruleIndex === index ? { ...rule, kind } : rule,
-      ),
-    });
-  };
 
   const selectPartner = (member: TournamentPartnerSuggestion) => {
     if (!draft) return;
@@ -253,6 +215,8 @@ export function TournamentRegistrationForm({
         partnerMemberId: null,
         partnerFirstName: "",
         partnerLastName: "",
+        partnerEmail: "",
+        partnerPhone: "",
       });
       setPartnerEmailFromMember(false);
       setPartnerPhoneFromMember(false);
@@ -278,6 +242,13 @@ export function TournamentRegistrationForm({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!draft) return;
+    if (!availabilityMinimumReached) {
+      onError(
+        `Vous devez cocher au moins ${tournament.minimumAvailabilitySlots} créneaux au total dont ${tournament.minimumWeekendAvailabilitySlots} le week-end.`,
+      );
+      return;
+    }
+
     setSaving(true);
     onError("");
     onMessage("");
@@ -323,6 +294,10 @@ export function TournamentRegistrationForm({
   if (loadingIdentity || !identity || !draft) {
     return <p role="status">Préparation du formulaire d’inscription…</p>;
   }
+
+  const selectedSeries = tournament.series.find(
+    (series) => series.id === draft.seriesId,
+  );
 
   return (
     <form className="public-registration-form" onSubmit={submit}>
@@ -553,74 +528,22 @@ export function TournamentRegistrationForm({
         </div>
       </fieldset>
 
-      <div className="public-availability-editor">
-        <header>
-          <div>
-            <h3>Disponibilités</h3>
-            <p>
-              Cochez les plages où votre équipe peut jouer. Sans coche, la plage
-              est considérée comme indisponible.
-            </p>
-          </div>
-          <strong>{selectedAvailabilityCount} sélectionnée(s)</strong>
-        </header>
-
-        {draft.availabilityRules.length === 0 ? (
-          <p className="public-availability-empty">
-            Aucune plage de jeu n’a été configurée pour ce tournoi.
-          </p>
-        ) : (
-          <div className="public-availability-grid">
-            <div
-              className="public-availability-grid__header"
-              aria-hidden="true"
-            >
-              <span>Plage</span>
-              <span>Disponible</span>
-              <span>Si nécessaire</span>
-            </div>
-            {draft.availabilityRules.map((rule, index) => (
-              <div
-                className="public-availability-choice"
-                key={`${rule.weekday}-${rule.startsAt}-${rule.endsAt}`}
-              >
-                <strong>
-                  {weekdayLabels[rule.weekday] ?? "Jour"} · {rule.startsAt}–
-                  {rule.endsAt}
-                </strong>
-                <label>
-                  <input
-                    type="checkbox"
-                    disabled={saving}
-                    checked={rule.kind === "preferred"}
-                    onChange={(event) =>
-                      setAvailability(
-                        index,
-                        event.target.checked ? "preferred" : "unavailable",
-                      )
-                    }
-                  />
-                  <span>Disponible</span>
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    disabled={saving}
-                    checked={rule.kind === "possible"}
-                    onChange={(event) =>
-                      setAvailability(
-                        index,
-                        event.target.checked ? "possible" : "unavailable",
-                      )
-                    }
-                  />
-                  <span>Si nécessaire</span>
-                </label>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="public-registration-team-summary">
+        <strong>Série : {selectedSeries?.name ?? "—"}</strong>
+        <span>
+          J1 : {draft.submitterFirstName} {draft.submitterLastName} &nbsp;|&nbsp;
+          J2 : {draft.partnerFirstName || "—"} {draft.partnerLastName}
+        </span>
       </div>
+
+      <TournamentAvailabilityGrid
+        tournament={tournament}
+        value={draft.availabilitySlots}
+        disabled={saving}
+        onChange={(availabilitySlots) =>
+          setDraft({ ...draft, availabilitySlots })
+        }
+      />
 
       <label>
         Commentaire pour l’organisateur
@@ -638,7 +561,7 @@ export function TournamentRegistrationForm({
         <button
           className="button button--primary"
           type="submit"
-          disabled={saving}
+          disabled={saving || !availabilityMinimumReached}
         >
           {registration ? "Mettre à jour mon équipe" : "Inscrire mon équipe"}
         </button>

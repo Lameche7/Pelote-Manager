@@ -6,6 +6,7 @@ import type {
   PublicTournamentDetail,
   PublicTournamentSummary,
   TournamentAvailabilityRule,
+  TournamentAvailabilitySlot,
   TournamentPartnerSuggestion,
   TournamentPlayWindow,
   TournamentRegistrationIdentity,
@@ -67,6 +68,13 @@ const mapAvailability = (value: unknown): TournamentAvailabilityRule[] =>
     endsAt: String(rule.ends_at ?? "").slice(0, 5),
   }));
 
+const mapAvailabilitySlots = (value: unknown): TournamentAvailabilitySlot[] =>
+  rows(value).map((slot) => ({
+    date: String(slot.play_date ?? slot.date ?? ""),
+    startsAt: String(slot.starts_at ?? "").slice(0, 5),
+    endsAt: String(slot.ends_at ?? "").slice(0, 5),
+  }));
+
 const mapSummary = (row: Row): PublicTournamentSummary => ({
   id: String(row.id),
   name: String(row.name ?? ""),
@@ -97,6 +105,12 @@ const knownErrors: Record<string, string> = {
     "Le partenaire sélectionné n’est pas un licencié actif de ce club.",
   "Tournament availability rules are invalid":
     "Vérifiez les disponibilités sélectionnées.",
+  "Tournament availability slots are invalid":
+    "Un ou plusieurs créneaux sélectionnés ne sont pas disponibles pour ce tournoi.",
+  "Tournament availability minimum not reached":
+    "Vous n’avez pas sélectionné assez de créneaux disponibles.",
+  "Tournament weekend availability minimum not reached":
+    "Vous n’avez pas sélectionné assez de créneaux le week-end.",
   "A player can only belong to one active team per tournament":
     "Un joueur est déjà inscrit dans une autre équipe de ce tournoi.",
   "Tournament registration not found": "Aucune inscription active trouvée.",
@@ -123,11 +137,11 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
   contact_email: draft.contactEmail.trim(),
   contact_phone: draft.contactPhone.trim(),
   comments: draft.comments.trim(),
-  availability_rules: draft.availabilityRules.map((rule) => ({
-    kind: rule.kind,
-    weekday: rule.weekday,
-    starts_at: rule.startsAt,
-    ends_at: rule.endsAt,
+  availability_rules: [],
+  availability_slots: draft.availabilitySlots.map((slot) => ({
+    date: slot.date,
+    starts_at: slot.startsAt,
+    ends_at: slot.endsAt,
   })),
 });
 
@@ -139,17 +153,35 @@ export const tournamentService = {
   },
 
   async getPublic(id: string): Promise<PublicTournamentDetail | null> {
-    const { data, error } = await supabase.rpc("get_public_tournament", {
-      target_id: id,
-    });
-    if (error) fail(error, "Impossible de charger le tournoi.");
-    if (!data) return null;
-    const row = data as Row;
+    const [tournamentResult, availabilityResult] = await Promise.all([
+      supabase.rpc("get_public_tournament", { target_id: id }),
+      supabase.rpc("get_public_tournament_availability_grid", {
+        target_tournament_id: id,
+      }),
+    ]);
+
+    if (tournamentResult.error)
+      fail(tournamentResult.error, "Impossible de charger le tournoi.");
+    if (availabilityResult.error)
+      fail(
+        availabilityResult.error,
+        "Impossible de charger les créneaux du tournoi.",
+      );
+    if (!tournamentResult.data) return null;
+
+    const row = tournamentResult.data as Row;
+    const availability = (availabilityResult.data ?? {}) as Row;
     return {
       ...mapSummary({ ...row, team_count: rows(row.teams).length }),
       rules: String(row.rules ?? ""),
       canRegister: Boolean(row.can_register),
       playWindows: mapPlayWindows(row.play_windows),
+      availableSlots: mapAvailabilitySlots(availability.slots),
+      minimumAvailabilitySlots: Number(availability.minimum_total ?? 65),
+      minimumWeekendAvailabilitySlots: Number(
+        availability.minimum_weekend ?? 0,
+      ),
+      slotDurationMinutes: Number(availability.slot_duration_minutes ?? 60),
       teams: rows(row.teams).map((team) => ({
         id: String(team.id),
         seriesId: String(team.series_id),
@@ -163,7 +195,7 @@ export const tournamentService = {
     tournamentId: string,
   ): Promise<MyTournamentRegistration | null> {
     const { data, error } = await supabase.rpc(
-      "get_my_tournament_registration",
+      "get_my_tournament_registration_v2",
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de charger votre inscription.");
@@ -178,6 +210,7 @@ export const tournamentService = {
       comments: String(row.comments ?? ""),
       players: mapPlayers(row.players),
       availabilityRules: mapAvailability(row.availability_rules),
+      availabilitySlots: mapAvailabilitySlots(row.availability_slots),
     };
   },
 
@@ -230,7 +263,7 @@ export const tournamentService = {
     draft: MyTournamentRegistrationDraft,
   ): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "save_my_tournament_registration",
+      "save_my_tournament_registration_v2",
       {
         target_tournament_id: tournamentId,
         payload: registrationPayload(draft),
