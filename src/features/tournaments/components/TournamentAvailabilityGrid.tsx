@@ -1,8 +1,5 @@
 import { useMemo } from "react";
-import type {
-  PublicTournamentDetail,
-  TournamentAvailabilitySlot,
-} from "@/features/tournaments/types";
+import type { TournamentAvailabilitySlot } from "@/features/tournaments/types";
 import "./TournamentAvailabilityGrid.css";
 
 const slotKey = (slot: TournamentAvailabilitySlot) =>
@@ -100,10 +97,17 @@ const buildWeeks = (slots: TournamentAvailabilitySlot[]): WeekGroup[] => {
   }));
 };
 
+type AvailabilityTournament = {
+  availableSlots: TournamentAvailabilitySlot[];
+  minimumAvailabilitySlots: number;
+  minimumWeekendAvailabilitySlots: number;
+};
+
 type Props = {
-  tournament: PublicTournamentDetail;
+  tournament: AvailabilityTournament;
   value: TournamentAvailabilitySlot[];
   disabled?: boolean;
+  variant?: "registration" | "admin";
   onChange: (slots: TournamentAvailabilitySlot[]) => void;
 };
 
@@ -111,6 +115,7 @@ export function TournamentAvailabilityGrid({
   tournament,
   value,
   disabled = false,
+  variant = "registration",
   onChange,
 }: Props) {
   const weeks = useMemo(
@@ -184,12 +189,18 @@ export function TournamentAvailabilityGrid({
     emitKeys(next);
   };
 
+  const admin = variant === "admin";
+
   return (
     <section className="tournament-availability-grid">
       <header className="tournament-availability-grid__heading">
         <div>
-          <p>Étape 3 / 5</p>
-          <h3>Créneaux disponibles (poules)</h3>
+          <p>{admin ? "Administration" : "Étape 3 / 5"}</p>
+          <h3>
+            {admin
+              ? "Disponibilités datées de l’équipe"
+              : "Créneaux disponibles (poules)"}
+          </h3>
         </div>
         <strong>
           {validSelected.length} créneau{validSelected.length > 1 ? "x" : ""}
@@ -206,7 +217,8 @@ export function TournamentAvailabilityGrid({
         }`}
         role="status"
       >
-        {minimumReached ? "✅" : "⚠️"} Vous devez cocher au moins{" "}
+        {minimumReached ? "✅" : "⚠️"}{" "}
+        {admin ? "L’équipe doit conserver au moins " : "Vous devez cocher au moins "}
         <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux au total
         dont <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
         week-end.
