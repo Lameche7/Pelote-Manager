@@ -616,7 +616,9 @@ export function AdminTournamentTeamsPage() {
                             <button
                               type="button"
                               disabled={saving || loadingDraft}
-                              onClick={() => void changeStatus(team, "accepted")}
+                              onClick={() =>
+                                void changeStatus(team, "accepted")
+                              }
                             >
                               Réactiver
                             </button>
