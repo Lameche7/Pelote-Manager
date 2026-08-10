@@ -411,8 +411,8 @@ export function TournamentRegistrationForm({
             />
             <small>
               La recherche porte sur les licenciés actifs du club. Pour un
-              partenaire d’un autre club, ne sélectionnez personne et renseignez
-              directement ses coordonnées ci-dessous.
+              partenaire d’un autre club, ne sélectionnez personne et
+              renseignez directement ses coordonnées ci-dessous.
             </small>
           </label>
 
