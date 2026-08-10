@@ -86,6 +86,12 @@ const playerName = (team: AdminTournamentTeam) =>
     .map((player) => `${player.firstName} ${player.lastName}`.trim())
     .join(" / ");
 
+const availabilitySummary = (
+  team: AdminTournamentTeam,
+  data: AdminTournamentTeamsPayload,
+) =>
+  `${team.availabilitySlotCount}/${data.tournament.availableSlotCount} créneaux · ${team.weekendAvailabilitySlotCount} week-end · minimum ${data.tournament.minimumAvailabilitySlots}`;
+
 export function AdminTournamentTeamsPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -278,8 +284,9 @@ export function AdminTournamentTeamsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Équipes & inscriptions</h1>
           <p className="admin-page__lead">
-            Gérez les inscriptions, ajoutez une équipe manuellement et
-            contrôlez les disponibilités avant la génération des poules.
+            {
+              "Gérez les inscriptions, ajoutez une équipe manuellement et contrôlez les disponibilités avant la génération des poules."
+            }
           </p>
         </div>
         {editable && (
@@ -558,9 +565,9 @@ export function AdminTournamentTeamsPage() {
                   <div>
                     <h3>Règles de disponibilité historiques</h3>
                     <p>
-                      Conservées pour compatibilité. Les créneaux datés
-                      affichés sur la fiche équipe font foi pour les futurs
-                      moteurs de poules et de planning.
+                      {
+                        "Conservées pour compatibilité. Les créneaux datés affichés sur la fiche équipe font foi pour les futurs moteurs de poules et de planning."
+                      }
                     </p>
                   </div>
                   <button
@@ -720,9 +727,7 @@ export function AdminTournamentTeamsPage() {
                       </div>
                       <div>
                         <dt>Disponibilités datées</dt>
-                        <dd>
-                          {`${team.availabilitySlotCount}/${data.tournament.availableSlotCount} créneaux · ${team.weekendAvailabilitySlotCount} week-end · minimum ${data.tournament.minimumAvailabilitySlots}`}
-                        </dd>
+                        <dd>{availabilitySummary(team, data)}</dd>
                       </div>
                     </dl>
                     {team.comments && (
