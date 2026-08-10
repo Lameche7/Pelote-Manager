@@ -1,10 +1,15 @@
 export type TournamentTeamStatus =
-  "pending" | "accepted" | "rejected" | "withdrawn";
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "withdrawn";
 
 export type TournamentPlayerRole = "front" | "back";
 
 export type TournamentAvailabilityKind =
-  "unavailable" | "preferred" | "possible";
+  | "unavailable"
+  | "preferred"
+  | "possible";
 
 export type TournamentSeriesRegistration = {
   id: string;
@@ -151,6 +156,7 @@ export type AdminTournamentTeamDraft = {
   comments: string;
   players: TournamentTeamPlayer[];
   availabilityRules: TournamentAvailabilityRule[];
+  availabilitySlots: TournamentAvailabilitySlot[];
 };
 
 export type AdminTournamentTeamsPayload = {
@@ -162,8 +168,10 @@ export type AdminTournamentTeamsPayload = {
     registrationClosesAt: string;
     minimumAvailabilitySlots: number;
     minimumWeekendAvailabilitySlots: number;
+    slotDurationMinutes: number;
     availableSlotCount: number;
     availableWeekendSlotCount: number;
+    availableSlots: TournamentAvailabilitySlot[];
   };
   series: TournamentSeriesRegistration[];
   teams: AdminTournamentTeam[];
