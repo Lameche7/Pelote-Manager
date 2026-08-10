@@ -195,7 +195,9 @@ export const adminTournamentTeamService = {
     };
   },
 
-  async getDatedAvailability(teamId: string): Promise<TournamentAvailabilitySlot[]> {
+  async getDatedAvailability(
+    teamId: string,
+  ): Promise<TournamentAvailabilitySlot[]> {
     const { data, error } = await supabase.rpc(
       "admin_get_tournament_team_dated_availability",
       { target_team_id: teamId },
@@ -212,11 +214,14 @@ export const adminTournamentTeamService = {
     teamId: string | null,
     draft: AdminTournamentTeamDraft,
   ): Promise<string> {
-    const { data, error } = await supabase.rpc("admin_save_tournament_team_v2", {
-      target_tournament_id: tournamentId,
-      target_team_id: teamId,
-      payload: teamPayload(draft),
-    });
+    const { data, error } = await supabase.rpc(
+      "admin_save_tournament_team_v2",
+      {
+        target_tournament_id: tournamentId,
+        target_team_id: teamId,
+        payload: teamPayload(draft),
+      },
+    );
     if (error) fail(error, "Impossible d’enregistrer l’équipe.");
     return String(data);
   },
