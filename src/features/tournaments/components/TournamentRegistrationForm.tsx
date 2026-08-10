@@ -256,8 +256,8 @@ export function TournamentRegistrationForm({
       await onReload();
       onMessage(
         registration
-          ? "Votre inscription a été mise à jour et repasse en validation."
-          : "Votre équipe est enregistrée et attend la validation du club.",
+          ? "Votre inscription a été mise à jour."
+          : "Votre équipe est inscrite au tournoi.",
       );
     } catch (saveError) {
       onError(
@@ -410,7 +410,9 @@ export function TournamentRegistrationForm({
               onChange={(event) => changePartnerQuery(event.target.value)}
             />
             <small>
-              La recherche reste limitée aux licenciés actifs de ce club.
+              La recherche porte sur les licenciés actifs du club. Pour un
+              partenaire d’un autre club, ne sélectionnez personne et renseignez
+              directement ses coordonnées ci-dessous.
             </small>
           </label>
 
