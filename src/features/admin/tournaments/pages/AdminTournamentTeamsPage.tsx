@@ -278,7 +278,7 @@ export function AdminTournamentTeamsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Équipes & inscriptions</h1>
           <p className="admin-page__lead">
-            Validez les inscriptions, ajoutez une équipe manuellement et
+            Gérez les inscriptions, ajoutez une équipe manuellement et
             contrôlez les disponibilités avant la génération des poules.
           </p>
         </div>
@@ -556,10 +556,11 @@ export function AdminTournamentTeamsPage() {
               <div className="admin-tournament-team-form__availability">
                 <header>
                   <div>
-                    <h3>Disponibilités</h3>
+                    <h3>Règles de disponibilité historiques</h3>
                     <p>
-                      Règles récurrentes utilisées ensuite par les moteurs de
-                      poules et de planning.
+                      Conservées pour compatibilité. Les créneaux datés
+                      affichés sur la fiche équipe font foi pour les futurs
+                      moteurs de poules et de planning.
                     </p>
                   </div>
                   <button
@@ -718,29 +719,21 @@ export function AdminTournamentTeamsPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt>Disponibilités</dt>
-                        <dd>{team.availabilityRules.length}</dd>
+                        <dt>Disponibilités datées</dt>
+                        <dd>
+                          {team.availabilitySlotCount}/
+                          {data.tournament.availableSlotCount} créneaux ·{" "}
+                          {team.weekendAvailabilitySlotCount} week-end
+                          {data.tournament.minimumAvailabilitySlots > 0
+                            ? ` · minimum ${data.tournament.minimumAvailabilitySlots}`
+                            : ""}
+                        </dd>
                       </div>
                     </dl>
                     {team.comments && (
                       <p className="admin-tournament-team-card__comments">
                         {team.comments}
                       </p>
-                    )}
-                    {team.availabilityRules.length > 0 && (
-                      <div className="admin-tournament-team-card__rules">
-                        {team.availabilityRules.map((rule, index) => (
-                          <span key={`${team.id}-rule-${index}`}>
-                            {availabilityLabels[rule.kind]} ·{" "}
-                            {
-                              weekdays.find(
-                                (weekday) => weekday.value === rule.weekday,
-                              )?.label
-                            }{" "}
-                            {rule.startsAt}–{rule.endsAt}
-                          </span>
-                        ))}
-                      </div>
                     )}
                     {editable && (
                       <div className="admin-tournament-team-card__actions">
