@@ -218,7 +218,9 @@ export function TournamentAvailabilityGrid({
         role="status"
       >
         {minimumReached ? "✅" : "⚠️"}{" "}
-        {admin ? "L’équipe doit conserver au moins " : "Vous devez cocher au moins "}
+        {admin
+          ? "L’équipe doit conserver au moins "
+          : "Vous devez cocher au moins "}
         <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux au total
         dont <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
         week-end.
