@@ -4,37 +4,22 @@ import {
   tournamentAdminService,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
+import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
 import type {
   AdminTournamentTeam,
   AdminTournamentTeamDraft,
   AdminTournamentTeamsPayload,
-  TournamentAvailabilityRule,
+  TournamentAvailabilitySlot,
   TournamentTeamStatus,
 } from "@/features/tournaments/types";
 import "./AdminTournamentTeamsPage.css";
 
-const weekdays = [
-  { value: 1, label: "Lundi" },
-  { value: 2, label: "Mardi" },
-  { value: 3, label: "Mercredi" },
-  { value: 4, label: "Jeudi" },
-  { value: 5, label: "Vendredi" },
-  { value: 6, label: "Samedi" },
-  { value: 0, label: "Dimanche" },
-];
-
 const teamStatusLabels: Record<TournamentTeamStatus, string> = {
   pending: "À valider",
-  accepted: "Validée",
+  accepted: "Inscrite",
   rejected: "Refusée",
   withdrawn: "Retirée",
 };
-
-const availabilityLabels = {
-  preferred: "Préféré",
-  possible: "Possible",
-  unavailable: "Indisponible",
-} as const;
 
 const tournamentStatusLabels: Record<string, string> = {
   preparation: "Préparation",
@@ -51,13 +36,6 @@ const tournamentStatusLabels: Record<string, string> = {
   cancelled: "Annulé",
 };
 
-const emptyAvailability = (): TournamentAvailabilityRule => ({
-  kind: "preferred",
-  weekday: 1,
-  startsAt: "17:30",
-  endsAt: "22:30",
-});
-
 const blankDraft = (seriesId = ""): AdminTournamentTeamDraft => ({
   seriesId,
   status: "accepted",
@@ -69,16 +47,21 @@ const blankDraft = (seriesId = ""): AdminTournamentTeamDraft => ({
     { firstName: "", lastName: "", email: "", phone: "", role: "back" },
   ],
   availabilityRules: [],
+  availabilitySlots: [],
 });
 
-const teamToDraft = (team: AdminTournamentTeam): AdminTournamentTeamDraft => ({
+const teamToDraft = (
+  team: AdminTournamentTeam,
+  availabilitySlots: TournamentAvailabilitySlot[],
+): AdminTournamentTeamDraft => ({
   seriesId: team.seriesId,
   status: team.status === "pending" ? "pending" : "accepted",
   contactEmail: team.contactEmail,
   contactPhone: team.contactPhone,
   comments: team.comments,
   players: team.players.map((player) => ({ ...player })),
-  availabilityRules: team.availabilityRules.map((rule) => ({ ...rule })),
+  availabilityRules: [],
+  availabilitySlots,
 });
 
 const playerName = (team: AdminTournamentTeam) =>
@@ -101,6 +84,7 @@ export function AdminTournamentTeamsPage() {
   );
   const [draft, setDraft] = useState<AdminTournamentTeamDraft | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingDraft, setLoadingDraft] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -201,21 +185,24 @@ export function AdminTournamentTeamsPage() {
     setMessage("");
   };
 
-  const beginEdit = (team: AdminTournamentTeam) => {
-    setEditingId(team.id);
-    setDraft(teamToDraft(team));
+  const beginEdit = async (team: AdminTournamentTeam) => {
+    setLoadingDraft(true);
     setError("");
     setMessage("");
-  };
-
-  const setAvailability = (index: number, rule: TournamentAvailabilityRule) => {
-    if (!draft) return;
-    setDraft({
-      ...draft,
-      availabilityRules: draft.availabilityRules.map((item, itemIndex) =>
-        itemIndex === index ? rule : item,
-      ),
-    });
+    try {
+      const availabilitySlots =
+        await adminTournamentTeamService.getDatedAvailability(team.id);
+      setEditingId(team.id);
+      setDraft(teamToDraft(team, availabilitySlots));
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Impossible de charger les disponibilités de l’équipe.",
+      );
+    } finally {
+      setLoadingDraft(false);
+    }
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -284,15 +271,15 @@ export function AdminTournamentTeamsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Équipes & inscriptions</h1>
           <p className="admin-page__lead">
-            {
-              "Gérez les inscriptions, ajoutez une équipe manuellement et contrôlez les disponibilités avant la génération des poules."
-            }
+            Gérez les inscriptions, corrigez les équipes et leurs disponibilités
+            avant la génération des poules.
           </p>
         </div>
         {editable && (
           <button
             className="admin-tournament-teams__primary"
             type="button"
+            disabled={loadingDraft || saving}
             onClick={beginCreate}
           >
             Ajouter une équipe
@@ -313,6 +300,7 @@ export function AdminTournamentTeamsPage() {
           {message}
         </p>
       )}
+      {loadingDraft && <p role="status">Chargement de l’équipe…</p>}
 
       {tournaments.length === 0 ? (
         <div className="admin-card">
@@ -325,7 +313,7 @@ export function AdminTournamentTeamsPage() {
               Tournoi
               <select
                 value={selectedId}
-                disabled={saving}
+                disabled={saving || loadingDraft}
                 onChange={(event) => void chooseTournament(event.target.value)}
               >
                 {tournaments.map((tournament) => (
@@ -340,10 +328,10 @@ export function AdminTournamentTeamsPage() {
             {data && (
               <div className="admin-tournament-teams__counters">
                 <span>
-                  <strong>{counts.accepted}</strong> validées
+                  <strong>{counts.accepted}</strong> inscrites
                 </span>
                 <span>
-                  <strong>{counts.pending}</strong> à valider
+                  <strong>{counts.pending}</strong> en attente
                 </span>
                 <span>
                   <strong>{counts.rejected}</strong> refusées
@@ -362,13 +350,12 @@ export function AdminTournamentTeamsPage() {
                   <span>{series.enabled ? "Série active" : "Désactivée"}</span>
                   <h2>{series.name}</h2>
                   <strong>
-                    {series.acceptedCount}/{series.capacity} validées
+                    {series.acceptedCount}/{series.capacity} inscrites
                   </strong>
                   <small>
-                    {series.reservedCount ?? 0} place
-                    {(series.reservedCount ?? 0) > 1 ? "s" : ""} réservée
-                    {(series.reservedCount ?? 0) > 1 ? "s" : ""} avec les
-                    dossiers en attente
+                    {series.remainingSlots} place
+                    {series.remainingSlots > 1 ? "s" : ""} disponible
+                    {series.remainingSlots > 1 ? "s" : ""}
                   </small>
                 </article>
               ))}
@@ -391,6 +378,7 @@ export function AdminTournamentTeamsPage() {
                 </div>
                 <button
                   type="button"
+                  disabled={saving}
                   onClick={() => {
                     setDraft(null);
                     setEditingId(undefined);
@@ -399,6 +387,7 @@ export function AdminTournamentTeamsPage() {
                   Fermer
                 </button>
               </header>
+
               <div className="admin-tournament-team-form__grid">
                 <label>
                   Série
@@ -421,23 +410,7 @@ export function AdminTournamentTeamsPage() {
                       ))}
                   </select>
                 </label>
-                <label>
-                  Statut à l’enregistrement
-                  <select
-                    disabled={saving}
-                    value={draft.status}
-                    onChange={(event) =>
-                      setDraft({
-                        ...draft,
-                        status: event.target
-                          .value as AdminTournamentTeamDraft["status"],
-                      })
-                    }
-                  >
-                    <option value="accepted">Validée</option>
-                    <option value="pending">À valider</option>
-                  </select>
-                </label>
+
                 <label>
                   E-mail de contact
                   <input
@@ -450,6 +423,7 @@ export function AdminTournamentTeamsPage() {
                     }
                   />
                 </label>
+
                 <label>
                   Téléphone de contact
                   <input
@@ -480,10 +454,7 @@ export function AdminTournamentTeamsPage() {
                               ...draft,
                               players: draft.players.map((item, itemIndex) =>
                                 itemIndex === index
-                                  ? {
-                                      ...item,
-                                      firstName: event.target.value,
-                                    }
+                                  ? { ...item, firstName: event.target.value }
                                   : item,
                               ),
                             })
@@ -560,122 +531,22 @@ export function AdminTournamentTeamsPage() {
                 />
               </label>
 
-              <div className="admin-tournament-team-form__availability">
-                <header>
-                  <div>
-                    <h3>Règles de disponibilité historiques</h3>
-                    <p>
-                      {
-                        "Conservées pour compatibilité. Les créneaux datés affichés sur la fiche équipe font foi pour les futurs moteurs de poules et de planning."
-                      }
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() =>
-                      setDraft({
-                        ...draft,
-                        availabilityRules: [
-                          ...draft.availabilityRules,
-                          emptyAvailability(),
-                        ],
-                      })
-                    }
-                  >
-                    + Ajouter une règle
-                  </button>
-                </header>
-                {draft.availabilityRules.map((rule, index) => (
-                  <div
-                    className="admin-tournament-team-form__availability-row"
-                    key={`${index}-${rule.kind}-${rule.weekday}`}
-                  >
-                    <select
-                      aria-label={`Type disponibilité ${index + 1}`}
-                      disabled={saving}
-                      value={rule.kind}
-                      onChange={(event) =>
-                        setAvailability(index, {
-                          ...rule,
-                          kind: event.target
-                            .value as TournamentAvailabilityRule["kind"],
-                        })
-                      }
-                    >
-                      {Object.entries(availabilityLabels).map(
-                        ([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                    <select
-                      aria-label={`Jour disponibilité ${index + 1}`}
-                      disabled={saving}
-                      value={rule.weekday}
-                      onChange={(event) =>
-                        setAvailability(index, {
-                          ...rule,
-                          weekday: Number(event.target.value),
-                        })
-                      }
-                    >
-                      {weekdays.map((weekday) => (
-                        <option key={weekday.value} value={weekday.value}>
-                          {weekday.label}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      aria-label={`Début disponibilité ${index + 1}`}
-                      type="time"
-                      disabled={saving}
-                      value={rule.startsAt}
-                      onChange={(event) =>
-                        setAvailability(index, {
-                          ...rule,
-                          startsAt: event.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      aria-label={`Fin disponibilité ${index + 1}`}
-                      type="time"
-                      disabled={saving}
-                      value={rule.endsAt}
-                      onChange={(event) =>
-                        setAvailability(index, {
-                          ...rule,
-                          endsAt: event.target.value,
-                        })
-                      }
-                    />
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() =>
-                        setDraft({
-                          ...draft,
-                          availabilityRules: draft.availabilityRules.filter(
-                            (_, itemIndex) => itemIndex !== index,
-                          ),
-                        })
-                      }
-                    >
-                      Retirer
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <TournamentAvailabilityGrid
+                variant="admin"
+                tournament={data.tournament}
+                value={draft.availabilitySlots}
+                disabled={saving}
+                onChange={(availabilitySlots) =>
+                  setDraft({ ...draft, availabilitySlots })
+                }
+              />
 
               <button
                 className="admin-tournament-teams__primary"
                 type="submit"
                 disabled={saving}
               >
-                Enregistrer l’équipe
+                Enregistrer l’équipe et ses disponibilités
               </button>
             </form>
           )}
@@ -707,16 +578,17 @@ export function AdminTournamentTeamsPage() {
                             : "Ajout administrateur"}
                         </p>
                       </div>
-                      {editable && (
+                      {editable && team.status !== "withdrawn" && (
                         <button
                           type="button"
-                          disabled={saving}
-                          onClick={() => beginEdit(team)}
+                          disabled={saving || loadingDraft}
+                          onClick={() => void beginEdit(team)}
                         >
                           Modifier
                         </button>
                       )}
                     </header>
+
                     <dl>
                       <div>
                         <dt>Contact</dt>
@@ -730,36 +602,30 @@ export function AdminTournamentTeamsPage() {
                         <dd>{availabilitySummary(team, data)}</dd>
                       </div>
                     </dl>
+
                     {team.comments && (
                       <p className="admin-tournament-team-card__comments">
                         {team.comments}
                       </p>
                     )}
+
                     {editable && (
                       <div className="admin-tournament-team-card__actions">
-                        {team.status !== "accepted" && (
-                          <button
-                            type="button"
-                            disabled={saving}
-                            onClick={() => void changeStatus(team, "accepted")}
-                          >
-                            Valider
-                          </button>
-                        )}
-                        {team.status !== "rejected" && (
-                          <button
-                            type="button"
-                            disabled={saving}
-                            onClick={() => void changeStatus(team, "rejected")}
-                          >
-                            Refuser
-                          </button>
-                        )}
+                        {team.status !== "accepted" &&
+                          team.status !== "withdrawn" && (
+                            <button
+                              type="button"
+                              disabled={saving || loadingDraft}
+                              onClick={() => void changeStatus(team, "accepted")}
+                            >
+                              Réactiver
+                            </button>
+                          )}
                         {team.status !== "withdrawn" && (
                           <button
                             className="admin-tournament-team-card__danger"
                             type="button"
-                            disabled={saving}
+                            disabled={saving || loadingDraft}
                             onClick={() => void changeStatus(team, "withdrawn")}
                           >
                             Retirer
