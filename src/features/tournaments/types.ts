@@ -139,6 +139,8 @@ export type AdminTournamentTeam = {
   updatedAt: string;
   players: TournamentTeamPlayer[];
   availabilityRules: TournamentAvailabilityRule[];
+  availabilitySlotCount: number;
+  weekendAvailabilitySlotCount: number;
 };
 
 export type AdminTournamentTeamDraft = {
@@ -149,6 +151,7 @@ export type AdminTournamentTeamDraft = {
   comments: string;
   players: TournamentTeamPlayer[];
   availabilityRules: TournamentAvailabilityRule[];
+  availabilitySlots: TournamentAvailabilitySlot[];
 };
 
 export type AdminTournamentTeamsPayload = {
@@ -158,6 +161,12 @@ export type AdminTournamentTeamsPayload = {
     status: string;
     registrationOpensAt: string;
     registrationClosesAt: string;
+    minimumAvailabilitySlots: number;
+    minimumWeekendAvailabilitySlots: number;
+    slotDurationMinutes: number;
+    availableSlotCount: number;
+    availableWeekendSlotCount: number;
+    availableSlots: TournamentAvailabilitySlot[];
   };
   series: TournamentSeriesRegistration[];
   teams: AdminTournamentTeam[];

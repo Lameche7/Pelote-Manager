@@ -10,6 +10,8 @@ const refinementMigrationPath =
   "../supabase/migrations/20260807190000_refine_tournament_registration_form.sql";
 const datedAvailabilityMigrationPath =
   "../supabase/migrations/20260809143000_add_dated_tournament_availability.sql";
+const adminDatedAvailabilityMigrationPath =
+  "../supabase/migrations/20260810171500_admin_edit_tournament_dated_availability.sql";
 
 test("les inscriptions créent des équipes privées, joueurs et disponibilités récurrentes historiques", async () => {
   const migration = await read(migrationPath);
@@ -181,7 +183,7 @@ test("le service public utilise la grille datée et les RPC V2", async () => {
   assert.match(service, /availability_slots/);
 });
 
-test("la grille d'inscription est datée, groupée par semaine et propose les raccourcis demandés", async () => {
+test("la grille d'inscription est datée, groupée par semaine et réutilisable dans l'admin", async () => {
   const grid = await read(
     "../src/features/tournaments/components/TournamentAvailabilityGrid.tsx",
   );
@@ -194,7 +196,38 @@ test("la grille d'inscription est datée, groupée par semaine et propose les ra
   assert.match(grid, /toggleDay/);
   assert.match(grid, />Tout</);
   assert.match(grid, /type="checkbox"/);
+  assert.match(grid, /variant = "registration"/);
+  assert.match(grid, /Disponibilités datées de l’équipe/);
   assert.doesNotMatch(grid, /Si nécessaire/);
+});
+
+test("l'administrateur peut lire et enregistrer les créneaux datés avec les mêmes contrôles", async () => {
+  const migration = await read(adminDatedAvailabilityMigrationPath);
+  const service = await read(
+    "../src/features/admin/tournaments/services/adminTournamentTeamService.ts",
+  );
+  const adminPage = await read(
+    "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
+  );
+
+  assert.match(migration, /admin_get_tournament_dated_availability/);
+  assert.match(migration, /admin_get_tournament_team_dated_availability/);
+  assert.match(migration, /admin_save_tournament_team_v2/);
+  assert.match(migration, /Tournament availability minimum not reached/);
+  assert.match(
+    migration,
+    /Tournament weekend availability minimum not reached/,
+  );
+  assert.match(migration, /Tournament availability slots are invalid/);
+  assert.match(migration, /team_availability_slots_saved_by_admin/);
+  assert.match(migration, /has_club_permission[\s\S]*tournaments\.manage/);
+  assert.match(service, /admin_get_tournament_team_dated_availability/);
+  assert.match(service, /admin_save_tournament_team_v2/);
+  assert.match(service, /availability_slots/);
+  assert.match(adminPage, /TournamentAvailabilityGrid/);
+  assert.match(adminPage, /variant="admin"/);
+  assert.match(adminPage, /availabilitySlots/);
+  assert.match(adminPage, /Enregistrer l’équipe et ses disponibilités/);
 });
 
 test("les pages Tournois exposent consultation publique, inscription compacte et gestion admin", async () => {
@@ -234,7 +267,6 @@ test("les pages Tournois exposent consultation publique, inscription compacte et
   assert.match(registrationForm, /searchPartnerMembers/);
   assert.match(registrationForm, /Récupéré depuis la fiche licencié/);
   assert.match(adminPage, /Ajouter une équipe/);
-  assert.match(adminPage, /Valider/);
-  assert.match(adminPage, /Refuser/);
+  assert.match(adminPage, /Modifier/);
   assert.match(adminPage, /Retirer/);
 });

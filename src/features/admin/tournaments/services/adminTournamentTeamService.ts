@@ -5,6 +5,7 @@ import type {
   AdminTournamentTeamDraft,
   AdminTournamentTeamsPayload,
   TournamentAvailabilityRule,
+  TournamentAvailabilitySlot,
   TournamentSeriesRegistration,
   TournamentTeamPlayer,
   TournamentTeamStatus,
@@ -31,6 +32,13 @@ const mapAvailability = (value: unknown): TournamentAvailabilityRule[] =>
     weekday: Number(rule.weekday),
     startsAt: String(rule.starts_at ?? "").slice(0, 5),
     endsAt: String(rule.ends_at ?? "").slice(0, 5),
+  }));
+
+const mapAvailabilitySlots = (value: unknown): TournamentAvailabilitySlot[] =>
+  rows(value).map((slot) => ({
+    date: String(slot.play_date ?? slot.date ?? ""),
+    startsAt: String(slot.starts_at ?? "").slice(0, 5),
+    endsAt: String(slot.ends_at ?? "").slice(0, 5),
   }));
 
 const mapSeries = (value: unknown): TournamentSeriesRegistration[] =>
@@ -66,6 +74,12 @@ const knownErrors: Record<string, string> = {
     "L’équipe doit comporter un Avant et un Arrière.",
   "Tournament availability rules are invalid":
     "Vérifiez les disponibilités de l’équipe.",
+  "Tournament availability slots are invalid":
+    "Les créneaux sélectionnés ne correspondent plus à la configuration du tournoi.",
+  "Tournament availability minimum not reached":
+    "Le nombre minimum de créneaux disponibles n’est pas atteint.",
+  "Tournament weekend availability minimum not reached":
+    "Le nombre minimum de créneaux disponibles le week-end n’est pas atteint.",
   "A player can only belong to one active team per tournament":
     "Un joueur appartient déjà à une autre équipe active de ce tournoi.",
 };
@@ -92,22 +106,51 @@ const teamPayload = (draft: AdminTournamentTeamDraft) => ({
     phone: (player.phone ?? "").trim(),
     role: player.role,
   })),
-  availability_rules: draft.availabilityRules.map((rule) => ({
-    kind: rule.kind,
-    weekday: rule.weekday,
-    starts_at: rule.startsAt,
-    ends_at: rule.endsAt,
+  availability_rules: [],
+  availability_slots: draft.availabilitySlots.map((slot) => ({
+    date: slot.date,
+    starts_at: slot.startsAt,
+    ends_at: slot.endsAt,
   })),
 });
 
 export const adminTournamentTeamService = {
   async get(tournamentId: string): Promise<AdminTournamentTeamsPayload> {
-    const { data, error } = await supabase.rpc("admin_list_tournament_teams", {
-      target_tournament_id: tournamentId,
-    });
-    if (error) fail(error, "Impossible de charger les équipes du tournoi.");
-    const row = (data ?? {}) as Row;
+    const [teamsResponse, availabilityResponse] = await Promise.all([
+      supabase.rpc("admin_list_tournament_teams", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_dated_availability", {
+        target_tournament_id: tournamentId,
+      }),
+    ]);
+
+    if (teamsResponse.error) {
+      fail(
+        teamsResponse.error,
+        "Impossible de charger les équipes du tournoi.",
+      );
+    }
+    if (availabilityResponse.error) {
+      fail(
+        availabilityResponse.error,
+        "Impossible de charger les disponibilités du tournoi.",
+      );
+    }
+
+    const row = (teamsResponse.data ?? {}) as Row;
     const tournament = (row.tournament ?? {}) as Row;
+    const availability = (availabilityResponse.data ?? {}) as Row;
+    const availabilityByTeam = new Map(
+      rows(availability.teams).map((item) => [
+        String(item.team_id),
+        {
+          slotCount: Number(item.slot_count ?? 0),
+          weekendSlotCount: Number(item.weekend_slot_count ?? 0),
+        },
+      ]),
+    );
+
     return {
       tournament: {
         id: String(tournament.id ?? ""),
@@ -115,23 +158,55 @@ export const adminTournamentTeamService = {
         status: String(tournament.status ?? ""),
         registrationOpensAt: String(tournament.registration_opens_at ?? ""),
         registrationClosesAt: String(tournament.registration_closes_at ?? ""),
+        minimumAvailabilitySlots: Number(availability.minimum_total ?? 0),
+        minimumWeekendAvailabilitySlots: Number(
+          availability.minimum_weekend ?? 0,
+        ),
+        slotDurationMinutes: Number(availability.slot_duration_minutes ?? 60),
+        availableSlotCount: Number(availability.available_slot_count ?? 0),
+        availableWeekendSlotCount: Number(
+          availability.available_weekend_slot_count ?? 0,
+        ),
+        availableSlots: mapAvailabilitySlots(availability.slots),
       },
       series: mapSeries(row.series),
-      teams: rows(row.teams).map((team): AdminTournamentTeam => ({
-        id: String(team.id),
-        seriesId: String(team.series_id),
-        seriesName: String(team.series_name ?? ""),
-        status: team.status as TournamentTeamStatus,
-        contactEmail: String(team.contact_email ?? ""),
-        contactPhone: String(team.contact_phone ?? ""),
-        comments: String(team.comments ?? ""),
-        submittedBy: team.submitted_by ? String(team.submitted_by) : null,
-        registeredAt: String(team.registered_at ?? ""),
-        updatedAt: String(team.updated_at ?? ""),
-        players: mapPlayers(team.players),
-        availabilityRules: mapAvailability(team.availability_rules),
-      })),
+      teams: rows(row.teams).map((team): AdminTournamentTeam => {
+        const datedAvailability = availabilityByTeam.get(String(team.id)) ?? {
+          slotCount: 0,
+          weekendSlotCount: 0,
+        };
+        return {
+          id: String(team.id),
+          seriesId: String(team.series_id),
+          seriesName: String(team.series_name ?? ""),
+          status: team.status as TournamentTeamStatus,
+          contactEmail: String(team.contact_email ?? ""),
+          contactPhone: String(team.contact_phone ?? ""),
+          comments: String(team.comments ?? ""),
+          submittedBy: team.submitted_by ? String(team.submitted_by) : null,
+          registeredAt: String(team.registered_at ?? ""),
+          updatedAt: String(team.updated_at ?? ""),
+          players: mapPlayers(team.players),
+          availabilityRules: mapAvailability(team.availability_rules),
+          availabilitySlotCount: datedAvailability.slotCount,
+          weekendAvailabilitySlotCount: datedAvailability.weekendSlotCount,
+        };
+      }),
     };
+  },
+
+  async getDatedAvailability(
+    teamId: string,
+  ): Promise<TournamentAvailabilitySlot[]> {
+    const { data, error } = await supabase.rpc(
+      "admin_get_tournament_team_dated_availability",
+      { target_team_id: teamId },
+    );
+    if (error) {
+      fail(error, "Impossible de charger les créneaux de l’équipe.");
+    }
+    const row = (data ?? {}) as Row;
+    return mapAvailabilitySlots(row.slots);
   },
 
   async save(
@@ -139,11 +214,14 @@ export const adminTournamentTeamService = {
     teamId: string | null,
     draft: AdminTournamentTeamDraft,
   ): Promise<string> {
-    const { data, error } = await supabase.rpc("admin_save_tournament_team", {
-      target_tournament_id: tournamentId,
-      target_team_id: teamId,
-      payload: teamPayload(draft),
-    });
+    const { data, error } = await supabase.rpc(
+      "admin_save_tournament_team_v2",
+      {
+        target_tournament_id: tournamentId,
+        target_team_id: teamId,
+        payload: teamPayload(draft),
+      },
+    );
     if (error) fail(error, "Impossible d’enregistrer l’équipe.");
     return String(data);
   },
