@@ -721,12 +721,7 @@ export function AdminTournamentTeamsPage() {
                       <div>
                         <dt>Disponibilités datées</dt>
                         <dd>
-                          {team.availabilitySlotCount}/
-                          {data.tournament.availableSlotCount} créneaux ·{" "}
-                          {team.weekendAvailabilitySlotCount} week-end
-                          {data.tournament.minimumAvailabilitySlots > 0
-                            ? ` · minimum ${data.tournament.minimumAvailabilitySlots}`
-                            : ""}
+                          {`${team.availabilitySlotCount}/${data.tournament.availableSlotCount} créneaux · ${team.weekendAvailabilitySlotCount} week-end · minimum ${data.tournament.minimumAvailabilitySlots}`}
                         </dd>
                       </div>
                     </dl>
