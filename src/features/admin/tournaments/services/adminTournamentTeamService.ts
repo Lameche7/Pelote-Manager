@@ -112,7 +112,10 @@ export const adminTournamentTeamService = {
     ]);
 
     if (teamsResponse.error) {
-      fail(teamsResponse.error, "Impossible de charger les équipes du tournoi.");
+      fail(
+        teamsResponse.error,
+        "Impossible de charger les équipes du tournoi.",
+      );
     }
     if (availabilityResponse.error) {
       fail(
