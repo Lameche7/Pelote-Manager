@@ -195,7 +195,9 @@ export const adminTournamentTeamService = {
     };
   },
 
-  async getDatedAvailability(teamId: string): Promise<TournamentAvailabilitySlot[]> {
+  async getDatedAvailability(
+    teamId: string,
+  ): Promise<TournamentAvailabilitySlot[]> {
     const { data, error } = await supabase.rpc(
       "admin_get_tournament_team_dated_availability",
       { target_team_id: teamId },
