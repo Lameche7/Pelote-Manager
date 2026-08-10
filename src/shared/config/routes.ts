@@ -19,6 +19,7 @@ export const ROUTES = {
   adminMembers: "/admin/membres",
   adminEvents: "/admin/evenements",
   adminTournaments: "/admin/tournois",
+  adminTournamentTeams: "/admin/tournois/equipes",
   adminCommunication: "/admin/communication",
   adminStatistics: "/admin/statistiques",
   adminSettings: "/admin/parametres",

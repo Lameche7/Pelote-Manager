@@ -1,0 +1,324 @@
+.admin-tournament-teams {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-tournament-teams__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-tournament-teams__primary {
+  cursor: pointer;
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.72rem 1rem;
+  color: #fff;
+  font-weight: 750;
+  background: var(--club-primary, #0f3d2e);
+}
+
+.admin-tournament-teams__primary:disabled,
+.admin-tournament-teams button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-tournament-teams__alert {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgb(15 61 46 / 22%);
+  border-radius: 0.75rem;
+  background: rgb(15 61 46 / 7%);
+}
+
+.admin-tournament-teams__alert--error {
+  border-color: rgb(178 37 37 / 28%);
+  background: rgb(178 37 37 / 7%);
+}
+
+.admin-tournament-teams__selector {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-tournament-teams__selector label {
+  display: grid;
+  gap: 0.35rem;
+  min-width: min(26rem, 100%);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-tournament-teams__selector select,
+.admin-tournament-team-form input,
+.admin-tournament-team-form select,
+.admin-tournament-team-form textarea,
+.admin-tournament-team-form__availability-row input,
+.admin-tournament-team-form__availability-row select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgb(107 114 128 / 28%);
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.7rem;
+  font: inherit;
+  background: #fff;
+}
+
+.admin-tournament-teams__counters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.admin-tournament-teams__counters span {
+  border-radius: 999px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.8rem;
+  background: rgb(107 114 128 / 8%);
+}
+
+.admin-tournament-teams__series {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-tournament-teams__series article {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-tournament-teams__series h2,
+.admin-tournament-teams__series span,
+.admin-tournament-teams__series strong,
+.admin-tournament-teams__series small {
+  margin: 0;
+}
+
+.admin-tournament-teams__series span {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.admin-tournament-team-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-tournament-team-form > header,
+.admin-tournament-team-form__availability > header,
+.admin-tournament-team-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-tournament-team-form > header h2,
+.admin-tournament-team-form > header p,
+.admin-tournament-team-form__availability h3,
+.admin-tournament-team-form__availability p,
+.admin-tournament-team-card h2,
+.admin-tournament-team-card p {
+  margin: 0;
+}
+
+.admin-tournament-team-form button,
+.admin-tournament-team-card button {
+  cursor: pointer;
+}
+
+.admin-tournament-team-form > header > button,
+.admin-tournament-team-form__availability header button,
+.admin-tournament-team-form__availability-row button,
+.admin-tournament-team-card > header button,
+.admin-tournament-team-card__actions button {
+  border: 1px solid rgb(107 114 128 / 25%);
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  background: #fff;
+}
+
+.admin-tournament-team-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-tournament-team-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-tournament-team-form textarea {
+  resize: vertical;
+}
+
+.admin-tournament-team-form__players {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-tournament-team-form fieldset {
+  margin: 0;
+  border: 1px solid rgb(107 114 128 / 18%);
+  border-radius: 0.85rem;
+  padding: 0.8rem;
+}
+
+.admin-tournament-team-form legend {
+  padding: 0 0.35rem;
+  font-weight: 800;
+}
+
+.admin-tournament-team-form__availability {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border-radius: 0.85rem;
+  background: rgb(107 114 128 / 5%);
+}
+
+.admin-tournament-team-form__availability header p {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.admin-tournament-team-form__availability-row {
+  display: grid;
+  grid-template-columns: 9rem 9rem 7rem 7rem auto;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.admin-tournament-team-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-tournament-team-card {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-tournament-team-card > header > div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.admin-tournament-team-card h2 {
+  font-size: 1.15rem;
+}
+
+.admin-tournament-team-card header p {
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+.admin-tournament-team-status {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgb(107 114 128 / 10%);
+}
+
+.admin-tournament-team-status--accepted {
+  color: #0f3d2e;
+  background: rgb(15 61 46 / 12%);
+}
+
+.admin-tournament-team-status--pending {
+  color: #805b00;
+  background: rgb(220 160 0 / 14%);
+}
+
+.admin-tournament-team-status--rejected,
+.admin-tournament-team-status--withdrawn {
+  color: #8b1f1f;
+  background: rgb(178 37 37 / 10%);
+}
+
+.admin-tournament-team-card dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.admin-tournament-team-card dl div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.admin-tournament-team-card dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.admin-tournament-team-card dd {
+  margin: 0;
+  font-weight: 650;
+}
+
+.admin-tournament-team-card__comments {
+  padding: 0.65rem;
+  border-radius: 0.65rem;
+  background: rgb(107 114 128 / 6%);
+}
+
+.admin-tournament-team-card__rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-tournament-team-card__rules span {
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.74rem;
+  background: rgb(30 90 168 / 8%);
+}
+
+.admin-tournament-team-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.admin-tournament-team-card__danger {
+  color: #8b1f1f;
+  border-color: rgb(178 37 37 / 28%) !important;
+  background: rgb(178 37 37 / 5%) !important;
+}
+
+@media (max-width: 56rem) {
+  .admin-tournament-teams__heading,
+  .admin-tournament-teams__selector,
+  .admin-tournament-team-form > header,
+  .admin-tournament-team-form__availability > header,
+  .admin-tournament-team-card > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-tournament-team-form__grid,
+  .admin-tournament-team-form__players,
+  .admin-tournament-team-form__availability-row,
+  .admin-tournament-team-card dl {
+    grid-template-columns: 1fr;
+  }
+}
