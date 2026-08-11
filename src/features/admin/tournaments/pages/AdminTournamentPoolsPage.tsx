@@ -120,9 +120,8 @@ export function AdminTournamentPoolsPage() {
   );
   const [pools, setPools] = useState<PoolDraft[]>([]);
   const [persistedPools, setPersistedPools] = useState<PoolDraft[]>([]);
-  const [poolSizeCountsBySeries, setPoolSizeCountsBySeries] = useState<
-    Record<string, PoolSizeCounts>
-  >({});
+  const [poolSizeCountsBySeries, setPoolSizeCountsBySeries] =
+    useState<Record<string, PoolSizeCounts>>({});
   const [activeSeriesId, setActiveSeriesId] = useState("");
   const [draggedTeamId, setDraggedTeamId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
