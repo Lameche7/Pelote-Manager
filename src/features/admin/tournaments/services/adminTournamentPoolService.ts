@@ -15,6 +15,7 @@ const rows = (value: unknown): Row[] =>
 export type TournamentPoolPlayer = {
   firstName: string;
   lastName: string;
+  clubName: string;
   role: "front" | "back";
 };
 
@@ -91,16 +92,23 @@ const mapWorkspace = (value: unknown): TournamentPoolWorkspace => {
       displayOrder: Number(series.display_order ?? 0),
       acceptedCount: Number(series.accepted_count ?? 0),
     })),
-    teams: rows(root.teams).map((team) => ({
-      id: String(team.id),
-      seriesId: String(team.series_id),
-      poolAvailabilityCount: Number(team.pool_availability_count ?? 0),
-      players: rows(team.players).map((player) => ({
+    teams: rows(root.teams).map((team) => {
+      const players: TournamentPoolPlayer[] = rows(team.players).map((player) => ({
         firstName: String(player.first_name ?? ""),
         lastName: String(player.last_name ?? ""),
+        clubName: String(player.club_name ?? ""),
         role: player.role as TournamentPoolPlayer["role"],
-      })),
-    })),
+      }));
+      return {
+        id: String(team.id),
+        seriesId: String(team.series_id),
+        clubNames: [
+          ...new Set(players.map((player) => player.clubName.trim()).filter(Boolean)),
+        ],
+        poolAvailabilityCount: Number(team.pool_availability_count ?? 0),
+        players,
+      };
+    }),
     pairings: rows(root.pairings).map((pairing) => ({
       teamAId: String(pairing.team_a_id),
       teamBId: String(pairing.team_b_id),
