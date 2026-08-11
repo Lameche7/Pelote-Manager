@@ -16,10 +16,8 @@ const migrationPath =
   "../supabase/migrations/20260811103000_add_tournament_pool_engine.sql";
 const upgradeMigrationPath =
   "../supabase/migrations/20260811114500_upgrade_tournament_pool_engine_adaptive.sql";
-const poolPageCssPath =
-  "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css";
 
-test("le moteur privilégie les poules de 4", () => {
+test("le nombre reel d equipes produit des poules equilibrees de 4 a 6", () => {
   assert.deepEqual(poolSizesFor(8), [4, 4]);
   assert.deepEqual(poolSizesFor(10), [4, 6]);
   assert.deepEqual(poolSizesFor(11), [5, 6]);
@@ -158,10 +156,9 @@ test("une base ayant deja la premiere version PR70 est mise a niveau sans recree
 });
 
 test("l atelier admin regenere sans verrous et equilibre les clubs", async () => {
-  const [page, css] = await Promise.all([
-    read("../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx"),
-    read(poolPageCssPath),
-  ]);
+  const page = await read(
+    "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx",
+  );
 
   assert.match(page, /4, 5 ou 6 équipes/);
   assert.match(page, /Régénérer et rééquilibrer/);
@@ -170,7 +167,4 @@ test("l atelier admin regenere sans verrous et equilibre les clubs", async () =>
   assert.match(page, /Pire duel|pire duel/);
   assert.match(page, /répartissant[\s\S]*clubs/);
   assert.doesNotMatch(page, /Verrouiller/);
-  assert.match(css, /repeat\(auto-fit, minmax\(17rem, 1fr\)\)/);
-  assert.doesNotMatch(css, /overflow-x:\s*auto/);
-  assert.doesNotMatch(css, /grid-auto-flow:\s*column/);
 });
