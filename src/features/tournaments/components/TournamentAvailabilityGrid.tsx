@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS } from "@/features/tournaments/domain/tournamentAvailabilityRules";
 import type {
   TournamentAvailabilitySlot,
   TournamentPhase,
@@ -160,9 +161,18 @@ export function TournamentAvailabilityGrid({
     () => poolSelected.filter((slot) => isWeekend(slot.date)).length,
     [poolSelected],
   );
+  const hasFinals = useMemo(
+    () =>
+      tournament.availableSlots.some((slot) => slotPhase(slot) === "finals"),
+    [tournament.availableSlots],
+  );
+  const finalsMinimumReached =
+    !hasFinals ||
+    finalsSelected.length >= TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS;
   const minimumReached =
     poolSelected.length >= tournament.minimumAvailabilitySlots &&
-    poolWeekendCount >= tournament.minimumWeekendAvailabilitySlots;
+    poolWeekendCount >= tournament.minimumWeekendAvailabilitySlots &&
+    finalsMinimumReached;
 
   const emitKeys = (keys: Set<string>) => {
     onChange(
@@ -216,9 +226,6 @@ export function TournamentAvailabilityGrid({
   };
 
   const admin = variant === "admin";
-  const hasFinals = tournament.availableSlots.some(
-    (slot) => slotPhase(slot) === "finals",
-  );
 
   return (
     <section className="tournament-availability-grid">
@@ -252,8 +259,17 @@ export function TournamentAvailabilityGrid({
           : "Pour les poules, vous devez cocher au moins "}
         <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux dont{" "}
         <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
-        week-end. Les disponibilités de phase finale sont enregistrées
-        séparément.
+        week-end.
+        {hasFinals && (
+          <>
+            {" "}
+            {admin
+              ? "Pour la phase finale, l’équipe doit conserver au moins "
+              : "Pour la phase finale, vous devez cocher au moins "}
+            <strong>{TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS}</strong>{" "}
+            créneaux.
+          </>
+        )}
       </p>
 
       <div className="tournament-availability-grid__stats">
@@ -272,6 +288,12 @@ export function TournamentAvailabilityGrid({
           <strong>{tournament.minimumAvailabilitySlots}</strong> / Week-end :{" "}
           <strong>{tournament.minimumWeekendAvailabilitySlots}</strong>
         </span>
+        {hasFinals && (
+          <span>
+            Minimum phase finale :{" "}
+            <strong>{TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS}</strong>
+          </span>
+        )}
       </div>
 
       {weeks.length === 0 ? (
