@@ -102,7 +102,7 @@ test("les interfaces demandent et affichent le club", async () => {
 
   assert.match(registrationForm, /Votre club/);
   assert.match(registrationForm, /Club du partenaire/);
-  assert.match(adminTeamsPage, />Club</);
+  assert.match(adminTeamsPage, /Club\(s\)/);
   assert.match(poolPage, /Clubs parfaitement répartis/);
   assert.match(poolPage, /clubNames: team\.clubNames/);
   assert.match(service, /get_public_tournament_v2/);
