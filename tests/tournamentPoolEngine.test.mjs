@@ -6,6 +6,7 @@ import {
   generateOptimizedPools,
   getPoolMetric,
   poolSizesFor,
+  setPoolLock,
   swapPoolTeams,
 } from "../.test-dist/src/features/tournaments/domain/poolEngine.js";
 
@@ -109,6 +110,29 @@ test("une équipe verrouillée ne peut pas être échangée", () => {
   assert.equal(swapped[1].teams[0].teamId, "e");
 });
 
+test("le verrou de poule ne transforme pas les verrous individuels", () => {
+  const pools = [
+    {
+      key: "p1",
+      seriesId: "s1",
+      displayOrder: 0,
+      targetSize: 4,
+      isLocked: false,
+      teams: [
+        { teamId: "a", isLocked: false },
+        { teamId: "b", isLocked: true },
+        { teamId: "c", isLocked: false },
+        { teamId: "d", isLocked: false },
+      ],
+    },
+  ];
+
+  const locked = setPoolLock(pools, "p1", true);
+  const unlocked = setPoolLock(locked, "p1", false);
+  assert.equal(unlocked[0].teams[0].isLocked, false);
+  assert.equal(unlocked[0].teams[1].isLocked, true);
+});
+
 test("la base sécurise le brouillon puis la validation", async () => {
   const migration = await read(migrationPath);
 
@@ -118,7 +142,10 @@ test("la base sécurise le brouillon puis la validation", async () => {
   assert.match(migration, /admin_save_tournament_pools/);
   assert.match(migration, /admin_validate_tournament_pools/);
   assert.match(migration, /target_size in \(4, 5\)/);
-  assert.match(migration, /Every accepted team must belong to exactly one pool/);
+  assert.match(
+    migration,
+    /Every accepted team must belong to exactly one pool/,
+  );
   assert.match(migration, /status = 'pools_generated'/);
   assert.match(migration, /status = 'pools_validated'/);
 });
