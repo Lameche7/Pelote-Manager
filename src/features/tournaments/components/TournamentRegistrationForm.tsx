@@ -179,8 +179,9 @@ export function TournamentRegistrationForm({
 
   const partnerRole = draft ? oppositeRole(draft.submitterRole) : "back";
   const poolAvailabilitySlots =
-    draft?.availabilitySlots.filter((slot) => (slot.phase ?? "pools") === "pools") ??
-    [];
+    draft?.availabilitySlots.filter(
+      (slot) => (slot.phase ?? "pools") === "pools",
+    ) ?? [];
   const weekendAvailabilityCount = poolAvailabilitySlots.filter((slot) =>
     isWeekendDate(slot.date),
   ).length;
