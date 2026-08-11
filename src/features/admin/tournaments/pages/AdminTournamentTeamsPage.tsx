@@ -320,7 +320,10 @@ export function AdminTournamentTeamsPage() {
     setError("");
     setMessage("");
     try {
-      const result = await adminTournamentTeamService.setStatus(team.id, status);
+      const result = await adminTournamentTeamService.setStatus(
+        team.id,
+        status,
+      );
       await reloadSelected();
       const baseMessage = `Équipe ${teamStatusLabels[status].toLowerCase()}.`;
       setMessage(
