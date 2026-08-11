@@ -69,7 +69,11 @@ export const poolSizesFor = (teamCount: number): (4 | 5 | 6)[] => {
 
   const baseSize = Math.floor(teamCount / poolCount);
   const largerPoolCount = teamCount % poolCount;
-  if (baseSize < 4 || baseSize > 6 || baseSize + (largerPoolCount > 0 ? 1 : 0) > 6) {
+  if (
+    baseSize < 4 ||
+    baseSize > 6 ||
+    baseSize + (largerPoolCount > 0 ? 1 : 0) > 6
+  ) {
     return [];
   }
 
@@ -292,7 +296,9 @@ export const movePoolTeam = (
     return result;
   }
 
-  const team = sourcePool.teams.find((candidate) => candidate.teamId === teamId);
+  const team = sourcePool.teams.find(
+    (candidate) => candidate.teamId === teamId,
+  );
   if (
     !team ||
     sourcePool.seriesId !== targetPool.seriesId ||
