@@ -14,6 +14,14 @@ import type {
 
 type Row = Record<string, unknown>;
 
+type TeamMutationResult = {
+  poolsInvalidated: boolean;
+};
+
+type TeamSaveResult = TeamMutationResult & {
+  teamId: string;
+};
+
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 
@@ -66,7 +74,9 @@ const knownErrors: Record<string, string> = {
   "Tournament not found": "Tournoi introuvable.",
   "Tournament team not found": "Équipe introuvable.",
   "Tournament teams are locked at this stage":
-    "Les équipes sont verrouillées depuis la génération des poules.",
+    "Les équipes sont verrouillées à cette étape.",
+  "Tournament teams cannot be changed after planning generation":
+    "Les équipes ne peuvent plus être modifiées une fois le planning généré.",
   "Tournament series is invalid": "La série choisie n’est pas disponible.",
   "Tournament series is full": "Cette série est complète.",
   "Tournament team status is invalid": "Le statut de l’équipe est invalide.",
@@ -100,6 +110,11 @@ const fail = (error: unknown, fallback: string): never => {
     if (knownErrors[message]) throw new Error(knownErrors[message]);
   }
   throw new Error(getSupabaseErrorMessage(error, fallback));
+};
+
+const mapMutationResult = (value: unknown): TeamMutationResult => {
+  const row = (value ?? {}) as Row;
+  return { poolsInvalidated: Boolean(row.pools_invalidated) };
 };
 
 const teamPayload = (draft: AdminTournamentTeamDraft) => ({
@@ -244,9 +259,9 @@ export const adminTournamentTeamService = {
     tournamentId: string,
     teamId: string | null,
     draft: AdminTournamentTeamDraft,
-  ): Promise<string> {
+  ): Promise<TeamSaveResult> {
     const { data, error } = await supabase.rpc(
-      "admin_save_tournament_team_v3",
+      "admin_save_tournament_team_v4",
       {
         target_tournament_id: tournamentId,
         target_team_id: teamId,
@@ -254,14 +269,33 @@ export const adminTournamentTeamService = {
       },
     );
     if (error) fail(error, "Impossible d’enregistrer l’équipe.");
-    return String(data);
+    const row = (data ?? {}) as Row;
+    return {
+      teamId: String(row.team_id ?? ""),
+      ...mapMutationResult(row),
+    };
   },
 
-  async setStatus(teamId: string, status: TournamentTeamStatus): Promise<void> {
-    const { error } = await supabase.rpc("admin_set_tournament_team_status", {
-      target_team_id: teamId,
-      target_status: status,
-    });
+  async setStatus(
+    teamId: string,
+    status: TournamentTeamStatus,
+  ): Promise<TeamMutationResult> {
+    const { data, error } = await supabase.rpc(
+      "admin_set_tournament_team_status_v2",
+      {
+        target_team_id: teamId,
+        target_status: status,
+      },
+    );
     if (error) fail(error, "Impossible de modifier le statut de l’équipe.");
+    return mapMutationResult(data);
+  },
+
+  async delete(teamId: string): Promise<TeamMutationResult> {
+    const { data, error } = await supabase.rpc("admin_delete_tournament_team", {
+      target_team_id: teamId,
+    });
+    if (error) fail(error, "Impossible de supprimer l’équipe.");
+    return mapMutationResult(data);
   },
 };
