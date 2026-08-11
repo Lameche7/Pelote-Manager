@@ -21,24 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Formater les fichiers PR76
-        run: >-
-          npx prettier --write
-          src/features/admin/tournaments/pages/AdminTournamentPlanningPage.css
-          src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
-          src/features/tournaments/domain/planningEngine.ts
-          tests/tournamentPlanningEngine.test.mjs
-
-      - name: Exporter les fichiers formatés PR76
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr76-prettier
-          path: |
-            src/features/admin/tournaments/pages/AdminTournamentPlanningPage.css
-            src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
-            src/features/tournaments/domain/planningEngine.ts
-            tests/tournamentPlanningEngine.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
