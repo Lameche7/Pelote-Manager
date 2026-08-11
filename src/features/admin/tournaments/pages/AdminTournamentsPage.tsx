@@ -193,7 +193,9 @@ const toDraft = (form: TournamentForm): TournamentDraft => {
     throw new Error("Vérifiez les minima de disponibilités.");
   }
   if (form.slotDurationMinutes < 15 || form.slotDurationMinutes > 240) {
-    throw new Error("La durée d’un créneau doit être comprise entre 15 et 240 minutes.");
+    throw new Error(
+      "La durée d’un créneau doit être comprise entre 15 et 240 minutes.",
+    );
   }
 
   const finalsStartsOn = form.finalsStartsOn || null;
@@ -452,8 +454,8 @@ export function AdminTournamentsPage() {
           <span>tournoi{tournaments.length > 1 ? "s" : ""}</span>
         </div>
         <p>
-          Les disponibilités sont désormais distinguées entre phase de poules
-          et phase finale pour préparer le Pool Engine puis le Planning Engine.
+          Les disponibilités sont désormais distinguées entre phase de poules et
+          phase finale pour préparer le Pool Engine puis le Planning Engine.
         </p>
       </div>
 
@@ -643,9 +645,8 @@ export function AdminTournamentsPage() {
               <section>
                 <h3>2. Phases & créneaux</h3>
                 <p>
-                  Le minimum de disponibilités s’applique uniquement aux
-                  poules. Les disponibilités de phase finale sont recueillies en
-                  plus.
+                  Le minimum de disponibilités s’applique uniquement aux poules.
+                  Les disponibilités de phase finale sont recueillies en plus.
                 </p>
                 <div className="tournament-form__grid">
                   <label>
@@ -766,8 +767,8 @@ export function AdminTournamentsPage() {
                     <div>
                       <h3>3. Terrains</h3>
                       <p>
-                        Sélectionnez les ressources que le Planning Engine pourra
-                        utiliser.
+                        Sélectionnez les ressources que le Planning Engine
+                        pourra utiliser.
                       </p>
                     </div>
                   </header>
