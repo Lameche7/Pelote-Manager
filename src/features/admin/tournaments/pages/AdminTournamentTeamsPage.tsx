@@ -36,6 +36,17 @@ const tournamentStatusLabels: Record<string, string> = {
   cancelled: "Annulé",
 };
 
+const adminEditableStatuses = new Set([
+  "preparation",
+  "configuration",
+  "registrations_open",
+  "registrations_closed",
+  "pools_generated",
+  "pools_validated",
+]);
+
+const poolStatuses = new Set(["pools_generated", "pools_validated"]);
+
 const blankDraft = (seriesId = ""): AdminTournamentTeamDraft => ({
   seriesId,
   status: "accepted",
@@ -122,6 +133,16 @@ export function AdminTournamentTeamsPage() {
     setData(await adminTournamentTeamService.get(tournamentId));
   };
 
+  const reloadSelected = async () => {
+    if (!selectedId) return;
+    const [items, payload] = await Promise.all([
+      tournamentAdminService.list(),
+      adminTournamentTeamService.get(selectedId),
+    ]);
+    setTournaments(items);
+    setData(payload);
+  };
+
   useEffect(() => {
     let active = true;
     tournamentAdminService
@@ -135,6 +156,8 @@ export function AdminTournamentTeamsPage() {
               "configuration",
               "registrations_open",
               "registrations_closed",
+              "pools_generated",
+              "pools_validated",
               "preparation",
             ].includes(item.status),
           ) ?? items[0];
@@ -162,12 +185,10 @@ export function AdminTournamentTeamsPage() {
   }, []);
 
   const editable = data
-    ? [
-        "preparation",
-        "configuration",
-        "registrations_open",
-        "registrations_closed",
-      ].includes(data.tournament.status)
+    ? adminEditableStatuses.has(data.tournament.status)
+    : false;
+  const poolsAlreadyBuilt = data
+    ? poolStatuses.has(data.tournament.status)
     : false;
 
   const counts = useMemo(() => {
@@ -264,16 +285,21 @@ export function AdminTournamentTeamsPage() {
     setError("");
     setMessage("");
     try {
-      await adminTournamentTeamService.save(
+      const result = await adminTournamentTeamService.save(
         selectedId,
         editingId ?? null,
         draft,
       );
-      await loadTeams(selectedId);
+      await reloadSelected();
       setDraft(null);
       setEditingId(undefined);
+      const baseMessage = editingId
+        ? "Équipe mise à jour."
+        : "Équipe ajoutée au tournoi.";
       setMessage(
-        editingId ? "Équipe mise à jour." : "Équipe ajoutée au tournoi.",
+        result.poolsInvalidated
+          ? `${baseMessage} Les poules ont été invalidées : régénérez-les.`
+          : baseMessage,
       );
     } catch (saveError) {
       setError(
@@ -294,14 +320,59 @@ export function AdminTournamentTeamsPage() {
     setError("");
     setMessage("");
     try {
-      await adminTournamentTeamService.setStatus(team.id, status);
-      await loadTeams(selectedId);
-      setMessage(`Équipe ${teamStatusLabels[status].toLowerCase()}.`);
+      const result = await adminTournamentTeamService.setStatus(team.id, status);
+      await reloadSelected();
+      const baseMessage = `Équipe ${teamStatusLabels[status].toLowerCase()}.`;
+      setMessage(
+        result.poolsInvalidated
+          ? `${baseMessage} Les poules ont été invalidées : régénérez-les.`
+          : baseMessage,
+      );
     } catch (statusError) {
       setError(
         statusError instanceof Error
           ? statusError.message
           : "Impossible de modifier le statut de l’équipe.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteTeam = async (team: AdminTournamentTeam) => {
+    const name = playerName(team);
+    const poolWarning =
+      poolsAlreadyBuilt && team.status === "accepted"
+        ? " Les poules actuelles seront supprimées et devront être régénérées."
+        : "";
+    if (
+      !window.confirm(
+        `Supprimer définitivement l’équipe ${name} ? Cette action est irréversible.${poolWarning}`,
+      )
+    ) {
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await adminTournamentTeamService.delete(team.id);
+      await reloadSelected();
+      if (editingId === team.id) {
+        setDraft(null);
+        setEditingId(undefined);
+      }
+      setMessage(
+        result.poolsInvalidated
+          ? "Équipe supprimée. Les poules ont été invalidées : régénérez-les."
+          : "Équipe supprimée définitivement.",
+      );
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Impossible de supprimer l’équipe.",
       );
     } finally {
       setSaving(false);
@@ -331,7 +402,7 @@ export function AdminTournamentTeamsPage() {
           <h1>Équipes & inscriptions</h1>
           <p className="admin-page__lead">
             Suivez les capacités par série, les clubs des joueurs et les
-            disponibilités avant la génération des poules.
+            disponibilités avant la génération du planning.
           </p>
         </div>
         {editable && (
@@ -481,6 +552,14 @@ export function AdminTournamentTeamsPage() {
                   Fermer
                 </button>
               </header>
+
+              {poolsAlreadyBuilt && (
+                <p className="admin-tournament-teams__alert" role="status">
+                  Les corrections de nom, club, contact ou disponibilités
+                  conservent les poules. Un ajout, une réactivation ou un
+                  changement de série les invalidera automatiquement.
+                </p>
+              )}
 
               <div className="admin-tournament-team-form__grid">
                 <label>
@@ -796,6 +875,16 @@ export function AdminTournamentTeamsPage() {
                                           Retirer
                                         </button>
                                       )}
+                                    {editable && (
+                                      <button
+                                        className="admin-tournament-team-card__danger"
+                                        type="button"
+                                        disabled={saving || loadingDraft}
+                                        onClick={() => void deleteTeam(team)}
+                                      >
+                                        Supprimer
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
