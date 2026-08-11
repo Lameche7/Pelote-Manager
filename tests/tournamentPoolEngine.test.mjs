@@ -138,22 +138,19 @@ test("la base securise la composition 4 5 6 et permet de rouvrir", async () => {
   assert.doesNotMatch(migration, /is_locked/);
 });
 
-test(
-  "une base ayant deja la premiere version PR70 est mise a niveau sans recreer les tables",
-  async () => {
-    const migration = await read(upgradeMigrationPath);
+test("une base ayant deja la premiere version PR70 est mise a niveau sans recreer les tables", async () => {
+  const migration = await read(upgradeMigrationPath);
 
-    assert.doesNotMatch(migration, /create table public\.tournament_pools/);
-    assert.match(
-      migration,
-      /drop constraint if exists tournament_pools_target_size_check/,
-    );
-    assert.match(migration, /target_size in \(4, 5, 6\)/);
-    assert.match(migration, /admin_save_tournament_pools/);
-    assert.match(migration, /admin_validate_tournament_pools/);
-    assert.match(migration, /admin_reopen_tournament_pools/);
-  },
-);
+  assert.doesNotMatch(migration, /create table public\.tournament_pools/);
+  assert.match(
+    migration,
+    /drop constraint if exists tournament_pools_target_size_check/,
+  );
+  assert.match(migration, /target_size in \(4, 5, 6\)/);
+  assert.match(migration, /admin_save_tournament_pools/);
+  assert.match(migration, /admin_validate_tournament_pools/);
+  assert.match(migration, /admin_reopen_tournament_pools/);
+});
 
 test("l atelier admin regenere sans verrous", async () => {
   const page = await read(
