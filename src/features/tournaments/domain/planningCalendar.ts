@@ -54,7 +54,11 @@ export const buildMonthGridDays = (value: string) => {
   const gridEnd = addDaysIso(startOfWeekIso(monthEnd), 6);
   const days: string[] = [];
 
-  for (let current = gridStart; current <= gridEnd; current = addDaysIso(current, 1)) {
+  for (
+    let current = gridStart;
+    current <= gridEnd;
+    current = addDaysIso(current, 1)
+  ) {
     days.push(current);
   }
 
