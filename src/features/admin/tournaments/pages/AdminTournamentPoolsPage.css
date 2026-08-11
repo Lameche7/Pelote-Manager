@@ -59,6 +59,7 @@
 
 .admin-tournament-pools__toolbar-actions button,
 .admin-tournament-pools__empty button,
+.admin-tournament-pools__distribution-actions button,
 .admin-tournament-pool > header button,
 .admin-tournament-pool-team > header button {
   border: 1px solid rgb(107 114 128 / 25%);
@@ -71,12 +72,14 @@
 }
 
 .admin-tournament-pools__toolbar-actions button:disabled,
-.admin-tournament-pools__empty button:disabled {
+.admin-tournament-pools__empty button:disabled,
+.admin-tournament-pools__distribution-actions button:disabled {
   cursor: default;
   opacity: 0.45;
 }
 
-.admin-tournament-pools__toolbar-actions .admin-tournament-pools__primary {
+.admin-tournament-pools__toolbar-actions .admin-tournament-pools__primary,
+.admin-tournament-pools__distribution-actions .admin-tournament-pools__primary {
   color: #fff;
   border-color: var(--club-accent, #1e5aa8);
   background: var(--club-accent, #1e5aa8);
@@ -158,6 +161,79 @@
   font-size: 0.72rem;
 }
 
+.admin-tournament-pools__distribution {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1.4fr) minmax(18rem, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+}
+
+.admin-tournament-pools__distribution-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-tournament-pools__distribution-copy > span {
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  opacity: 0.58;
+}
+
+.admin-tournament-pools__distribution-copy > small {
+  opacity: 0.68;
+}
+
+.admin-tournament-pools__distribution-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(5.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.admin-tournament-pools__distribution-controls label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.admin-tournament-pools__distribution-controls input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid rgb(107 114 128 / 24%);
+  border-radius: 0.6rem;
+  padding: 0.52rem 0.6rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.admin-tournament-pools__distribution-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.admin-tournament-pools__distribution-total {
+  border-radius: 999px;
+  padding: 0.38rem 0.62rem;
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.admin-tournament-pools__distribution-total--valid {
+  color: #1c6a3c;
+  background: rgb(28 106 60 / 9%);
+}
+
+.admin-tournament-pools__distribution-total--invalid {
+  color: #8b1f1f;
+  background: rgb(178 37 37 / 10%);
+}
+
 .admin-tournament-pools__empty {
   display: grid;
   justify-items: start;
@@ -171,17 +247,17 @@
 
 .admin-tournament-pools__board {
   display: grid;
-  grid-auto-columns: minmax(19rem, 23rem);
-  grid-auto-flow: column;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  align-items: start;
   gap: 0.85rem;
-  overflow-x: auto;
-  padding: 0.1rem 0.05rem 1rem;
-  scroll-snap-type: x proximity;
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-tournament-pool {
   display: grid;
   align-content: start;
+  min-width: 0;
   gap: 0.7rem;
   min-height: 23rem;
   border: 1px solid rgb(107 114 128 / 18%);
@@ -189,12 +265,6 @@
   padding: 0.85rem;
   background: rgb(255 255 255 / 96%);
   box-shadow: 0 0.35rem 1rem rgb(15 23 42 / 6%);
-  scroll-snap-align: start;
-}
-
-.admin-tournament-pool--locked {
-  border-color: rgb(28 106 60 / 25%);
-  background: rgb(28 106 60 / 4%);
 }
 
 .admin-tournament-pool > header,
@@ -202,12 +272,14 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  min-width: 0;
   gap: 0.65rem;
 }
 
 .admin-tournament-pool > header div,
 .admin-tournament-pool-team > header div {
   display: grid;
+  min-width: 0;
   gap: 0.15rem;
 }
 
@@ -231,6 +303,7 @@
 }
 
 .admin-tournament-pool > header small {
+  overflow-wrap: anywhere;
   opacity: 0.67;
 }
 
@@ -243,11 +316,13 @@
 
 .admin-tournament-pool__teams {
   display: grid;
+  min-width: 0;
   gap: 0.6rem;
 }
 
 .admin-tournament-pool-team {
   display: grid;
+  min-width: 0;
   gap: 0.55rem;
   border: 1px solid rgb(107 114 128 / 16%);
   border-radius: 0.8rem;
@@ -270,21 +345,13 @@
   cursor: grabbing;
 }
 
-.admin-tournament-pool-team--locked {
-  cursor: default;
-  background: rgb(107 114 128 / 5%);
-}
-
-.admin-tournament-pool-team--locked:hover {
-  transform: none;
-  box-shadow: none;
-}
-
 .admin-tournament-pool-team > header strong {
+  overflow-wrap: anywhere;
   font-size: 0.82rem;
 }
 
 .admin-tournament-pool-team > header small {
+  overflow-wrap: anywhere;
   font-size: 0.7rem;
   opacity: 0.6;
 }
@@ -299,6 +366,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+  min-width: 0;
   gap: 0.35rem;
   border-radius: 0.55rem;
   padding: 0.35rem 0.45rem;
@@ -321,6 +389,17 @@
   background: rgb(178 37 37 / 9%);
 }
 
+@media (max-width: 1080px) {
+  .admin-tournament-pools__distribution {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .admin-tournament-pools__distribution-actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 760px) {
   .admin-tournament-pools__toolbar,
   .admin-tournament-pools__notice,
@@ -341,7 +420,15 @@
     grid-template-columns: 1fr;
   }
 
+  .admin-tournament-pools__distribution-controls {
+    grid-template-columns: 1fr;
+  }
+
   .admin-tournament-pools__board {
-    grid-auto-columns: minmax(17.5rem, 88vw);
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tournament-pool-team__compatibility {
+    grid-template-columns: 1fr;
   }
 }
