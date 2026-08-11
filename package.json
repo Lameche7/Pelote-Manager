@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write . && git diff --exit-code -- src/features/admin/tournaments/pages/AdminTournamentsPage.tsx src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx src/features/tournaments/components/TournamentAvailabilityGrid.tsx src/features/tournaments/components/TournamentRegistrationForm.tsx tests/tournamentAdminPhases.test.mjs",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
     "preview": "vite preview"
@@ -18,7 +18,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.110.5",
     "@tanstack/react-query": "^5.101.2",
-    "dayjs": "^1.11.21",
+    "dayjs": "^11.1.21",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.3",
