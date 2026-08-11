@@ -21,23 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Aperçu formatage PR72
-        run: |
-          npx prettier --write \
-            src/features/admin/tournaments/components/AdminTournamentPlayerFields.tsx \
-            src/features/admin/tournaments/components/AdminTournamentPlayerFields.css \
-            src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx \
-            src/features/admin/tournaments/services/adminTournamentTeamService.ts \
-            src/features/tournaments/types.ts \
-            tests/tournamentAdminTeamControl.test.mjs
-          git diff -- \
-            src/features/admin/tournaments/components/AdminTournamentPlayerFields.tsx \
-            src/features/admin/tournaments/components/AdminTournamentPlayerFields.css \
-            src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx \
-            src/features/admin/tournaments/services/adminTournamentTeamService.ts \
-            src/features/tournaments/types.ts \
-            tests/tournamentAdminTeamControl.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
