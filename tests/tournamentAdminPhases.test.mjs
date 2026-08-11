@@ -43,9 +43,7 @@ test("la configuration reste administrable pendant les inscriptions avec garde-f
 
 test("l'administration expose les paramètres de phase et les cartes naviguent vers le tableau", async () => {
   const [page, teamsPage] = await Promise.all([
-    read(
-      "../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx",
-    ),
+    read("../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx"),
     read(
       "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
     ),
