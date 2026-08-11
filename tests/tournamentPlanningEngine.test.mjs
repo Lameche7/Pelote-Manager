@@ -73,7 +73,10 @@ test("le moteur planifie tous les matchs quand les capacites suffisent", () => {
   assert.equal(proposal.assignments.length, 6);
   assert.equal(proposal.quality.completionRate, 100);
   assert.equal(proposal.quality.availabilityRate, 100);
-  assert.equal(new Set(proposal.assignments.map((item) => item.slotId)).size, 6);
+  assert.equal(
+    new Set(proposal.assignments.map((item) => item.slotId)).size,
+    6,
+  );
 });
 
 test("le repos minimal peut rendre une rencontre impossible a placer", () => {
@@ -182,5 +185,8 @@ test("l atelier admin genere, controle et enregistre le planning", async () => {
   assert.match(page, /validatePlanning/);
   assert.match(page, /Générer le planning/);
   assert.match(page, /Enregistrer le planning/);
-  assert.match(routes, /adminTournamentPlanning:\s*"\/admin\/tournois\/planning"/);
+  assert.match(
+    routes,
+    /adminTournamentPlanning:\s*"\/admin\/tournois\/planning"/,
+  );
 });
