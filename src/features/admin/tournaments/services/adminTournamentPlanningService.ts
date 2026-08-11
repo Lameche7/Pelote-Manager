@@ -77,8 +77,7 @@ const knownErrors: Record<string, string> = {
     "Les rencontres doivent être préparées avant d’enregistrer le planning.",
   "Every tournament match must be scheduled exactly once":
     "Toutes les rencontres doivent être planifiées exactement une fois.",
-  "Tournament series colors are invalid":
-    "Une couleur de série est invalide.",
+  "Tournament series colors are invalid": "Une couleur de série est invalide.",
   "Tournament series colors are locked at this stage":
     "Les couleurs des séries ne peuvent plus être modifiées sur ce tournoi.",
 };
@@ -110,7 +109,9 @@ const mapWorkspace = (value: unknown): TournamentPlanningWorkspace => {
       status: tournament.status as TournamentStatus,
       startsOn: String(tournament.starts_on ?? tournament.pool_starts_on ?? ""),
       endsOn: String(tournament.ends_on ?? tournament.pool_ends_on ?? ""),
-      poolStartsOn: String(tournament.pool_starts_on ?? tournament.starts_on ?? ""),
+      poolStartsOn: String(
+        tournament.pool_starts_on ?? tournament.starts_on ?? "",
+      ),
       poolEndsOn: String(tournament.pool_ends_on ?? tournament.ends_on ?? ""),
       finalsStartsOn: tournament.finals_starts_on
         ? String(tournament.finals_starts_on)
@@ -235,7 +236,6 @@ export const adminTournamentPlanningService = {
         })),
       },
     );
-    if (error)
-      fail(error, "Impossible d’enregistrer les couleurs des séries.");
+    if (error) fail(error, "Impossible d’enregistrer les couleurs des séries.");
   },
 };
