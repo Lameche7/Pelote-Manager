@@ -166,7 +166,7 @@ export const tournamentService = {
 
   async getPublic(id: string): Promise<PublicTournamentDetail | null> {
     const [tournamentResult, availabilityResult] = await Promise.all([
-      supabase.rpc("get_public_tournament", { target_id: id }),
+      supabase.rpc("get_public_tournament_v2", { target_id: id }),
       supabase.rpc("get_public_tournament_availability_grid", {
         target_tournament_id: id,
       }),
@@ -221,7 +221,7 @@ export const tournamentService = {
     tournamentId: string,
   ): Promise<MyTournamentRegistration | null> {
     const { data, error } = await supabase.rpc(
-      "get_my_tournament_registration_v2",
+      "get_my_tournament_registration_v3",
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de charger votre inscription.");
@@ -244,7 +244,7 @@ export const tournamentService = {
     tournamentId: string,
   ): Promise<TournamentRegistrationIdentity> {
     const { data, error } = await supabase.rpc(
-      "get_my_tournament_registration_identity",
+      "get_my_tournament_registration_identity_v2",
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de charger vos coordonnées.");
@@ -290,7 +290,7 @@ export const tournamentService = {
     draft: MyTournamentRegistrationDraft,
   ): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "save_my_tournament_registration_v2",
+      "save_my_tournament_registration_v3",
       {
         target_tournament_id: tournamentId,
         payload: registrationPayload(draft),
