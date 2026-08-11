@@ -55,8 +55,9 @@ const compatibilityKey = (left: string, right: string) =>
 const normalizeClubName = (value: string) =>
   value.trim().toLocaleLowerCase("fr-FR");
 
-const distinctClubNames = (values: readonly string[]) =>
-  [...new Set(values.map(normalizeClubName).filter(Boolean))];
+const distinctClubNames = (values: readonly string[]) => [
+  ...new Set(values.map(normalizeClubName).filter(Boolean)),
+];
 
 export const buildCompatibilityMap = (pairings: PoolCompatibility[]) => {
   const result = new Map<string, number>();
@@ -241,10 +242,7 @@ const clubMetricIsBetter = (
   return candidate.duplicatePairCount < current.duplicatePairCount;
 };
 
-const clubMetricIsEqual = (
-  left: PoolClubMetric,
-  right: PoolClubMetric,
-) =>
+const clubMetricIsEqual = (left: PoolClubMetric, right: PoolClubMetric) =>
   left.maxTeamsPerClub === right.maxTeamsPerClub &&
   left.duplicatePairCount === right.duplicatePairCount;
 
@@ -308,7 +306,10 @@ const optimizeSeries = (
     candidate[second.poolIndex].teams[second.teamIndex] = firstTeam;
 
     const candidateClubScore = getSeriesClubMetric(candidate, affiliations);
-    const candidateAvailabilityScore = getSeriesMetric(candidate, compatibility);
+    const candidateAvailabilityScore = getSeriesMetric(
+      candidate,
+      compatibility,
+    );
     if (
       clubMetricIsBetter(candidateClubScore, clubScore) ||
       (clubMetricIsEqual(candidateClubScore, clubScore) &&
