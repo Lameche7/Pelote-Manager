@@ -72,7 +72,10 @@ const clonePools = (pools: PoolDraft[]) =>
     teams: pool.teams.map((team) => ({ ...team })),
   }));
 
-const clubMetricLabel = (maxTeamsPerClub: number, duplicatePairCount: number) =>
+const clubMetricLabel = (
+  maxTeamsPerClub: number,
+  duplicatePairCount: number,
+) =>
   duplicatePairCount === 0
     ? "Clubs parfaitement répartis"
     : `Max ${maxTeamsPerClub} équipes d’un même club · ${duplicatePairCount} rapprochement${duplicatePairCount > 1 ? "s" : ""}`;
