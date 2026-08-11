@@ -102,6 +102,10 @@ test("l'ajout admin recherche les licenciés disponibles du club", async () => {
   assert.match(migration, /member\.is_active/);
   assert.match(migration, /existing_team\.status in \('pending', 'accepted'\)/);
   assert.match(migration, /has_club_permission[\s\S]*tournaments\.manage/);
+  assert.match(migration, /member_result record/);
+  assert.match(migration, /into member_result/);
+  assert.match(migration, /if not found then/);
+  assert.doesNotMatch(migration, /into\s+member_row\s*,/);
   assert.match(service, /admin_search_tournament_members/);
   assert.match(playerFields, /Rechercher un licencié du club/);
   assert.match(playerFields, /Récupéré depuis la fiche licencié/);
