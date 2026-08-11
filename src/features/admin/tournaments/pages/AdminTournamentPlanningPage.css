@@ -1,0 +1,211 @@
+.admin-tournament-planning {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-tournament-planning__alert {
+  margin: 0;
+  border: 1px solid rgb(15 61 46 / 22%);
+  border-radius: 0.75rem;
+  padding: 0.8rem 1rem;
+  background: rgb(15 61 46 / 7%);
+}
+
+.admin-tournament-planning__alert--error {
+  border-color: rgb(178 37 37 / 28%);
+  background: rgb(178 37 37 / 7%);
+}
+
+.admin-tournament-planning__toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-tournament-planning__toolbar label {
+  display: grid;
+  gap: 0.35rem;
+  min-width: min(28rem, 100%);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.admin-tournament-planning select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid rgb(107 114 128 / 28%);
+  border-radius: 0.65rem;
+  padding: 0.62rem 0.7rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.admin-tournament-planning__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.admin-tournament-planning__toolbar-actions button {
+  cursor: pointer;
+  border: 1px solid rgb(107 114 128 / 25%);
+  border-radius: 0.65rem;
+  padding: 0.62rem 0.8rem;
+  background: #fff;
+  font: inherit;
+  font-weight: 750;
+}
+
+.admin-tournament-planning__toolbar-actions button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.admin-tournament-planning__toolbar-actions .admin-tournament-planning__primary {
+  color: #fff;
+  border-color: var(--club-accent, #1e5aa8);
+  background: var(--club-accent, #1e5aa8);
+}
+
+.admin-tournament-planning__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-tournament-planning__metrics article {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-tournament-planning__metrics span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.58;
+}
+
+.admin-tournament-planning__metrics strong {
+  font-size: 1.35rem;
+}
+
+.admin-tournament-planning__diagnostics h2,
+.admin-tournament-planning__matches h2,
+.admin-tournament-planning__matches p,
+.admin-tournament-planning__agenda h2 {
+  margin: 0;
+}
+
+.admin-tournament-planning__diagnostics ul {
+  margin: 0.75rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.admin-tournament-planning__matches {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-tournament-planning__matches > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-tournament-planning__matches > header div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-tournament-planning__matches > header p {
+  max-width: 70rem;
+  opacity: 0.68;
+}
+
+.admin-tournament-planning__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-tournament-planning table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-tournament-planning th,
+.admin-tournament-planning td {
+  border-bottom: 1px solid rgb(107 114 128 / 14%);
+  padding: 0.65rem 0.55rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-tournament-planning th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  opacity: 0.58;
+}
+
+.admin-tournament-planning td:first-child {
+  min-width: 20rem;
+}
+
+.admin-tournament-planning td:last-child {
+  min-width: 22rem;
+}
+
+.admin-tournament-planning__agenda {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-tournament-planning__agenda-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 0.65rem;
+}
+
+.admin-tournament-planning__agenda-list article {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+  border: 1px solid rgb(107 114 128 / 16%);
+  border-radius: 0.75rem;
+  padding: 0.7rem;
+}
+
+.admin-tournament-planning__agenda-list time,
+.admin-tournament-planning__agenda-list span {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.admin-tournament-planning__agenda-list strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .admin-tournament-planning__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-tournament-planning__toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-tournament-planning__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .admin-tournament-planning__metrics {
+    grid-template-columns: 1fr;
+  }
+}
