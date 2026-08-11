@@ -133,6 +133,54 @@ test("le verrou de poule ne transforme pas les verrous individuels", () => {
   assert.equal(unlocked[0].teams[1].isLocked, true);
 });
 
+test("le rééquilibrage d’une poule verrouillée préserve les verrous individuels", () => {
+  const teams = ["a", "b", "c", "d", "e", "f", "g", "h"].map((id) => ({
+    id,
+    seriesId: "s1",
+  }));
+  const existingPools = [
+    {
+      key: "p1",
+      seriesId: "s1",
+      displayOrder: 0,
+      targetSize: 4,
+      isLocked: true,
+      teams: [
+        { teamId: "a", isLocked: false },
+        { teamId: "b", isLocked: true },
+        { teamId: "c", isLocked: false },
+        { teamId: "d", isLocked: false },
+      ],
+    },
+    {
+      key: "p2",
+      seriesId: "s1",
+      displayOrder: 1,
+      targetSize: 4,
+      isLocked: false,
+      teams: [
+        { teamId: "e", isLocked: false },
+        { teamId: "f", isLocked: false },
+        { teamId: "g", isLocked: false },
+        { teamId: "h", isLocked: false },
+      ],
+    },
+  ];
+
+  const generated = generateOptimizedPools({
+    series: [{ id: "s1", name: "Série", teams }],
+    pairings: [],
+    existingPools,
+    random: () => 0.4,
+    iterationsPerSeries: 10,
+  });
+  const lockedPool = generated.find((pool) => pool.key === "p1");
+  assert.ok(lockedPool);
+  assert.equal(lockedPool.teams[0].isLocked, false);
+  assert.equal(lockedPool.teams[1].isLocked, true);
+  assert.equal(lockedPool.teams[2].isLocked, false);
+});
+
 test("la base sécurise le brouillon puis la validation", async () => {
   const migration = await read(migrationPath);
 
