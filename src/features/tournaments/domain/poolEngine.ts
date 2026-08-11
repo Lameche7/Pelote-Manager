@@ -43,6 +43,7 @@ export type SeriesPoolInput = {
 export type GeneratePoolOptions = {
   series: SeriesPoolInput[];
   pairings: PoolCompatibility[];
+  poolSizesBySeries?: Record<string, (4 | 5 | 6)[]>;
   random?: () => number;
   iterationsPerSeries?: number;
 };
@@ -85,25 +86,43 @@ export const poolSizesFor = (teamCount: number): (4 | 5 | 6)[] => {
   if (teamCount === 0) return [];
   if (teamCount < 4) return [];
 
-  const poolCount = Math.ceil(teamCount / 6);
-  if (poolCount * 4 > teamCount) return [];
+  let best: { fours: number; fives: number; sixes: number } | null = null;
 
-  const baseSize = Math.floor(teamCount / poolCount);
-  const largerPoolCount = teamCount % poolCount;
-  if (
-    baseSize < 4 ||
-    baseSize > 6 ||
-    baseSize + (largerPoolCount > 0 ? 1 : 0) > 6
-  ) {
-    return [];
+  for (let sixes = 0; sixes <= Math.floor(teamCount / 6); sixes += 1) {
+    for (let fives = 0; fives <= Math.floor(teamCount / 5); fives += 1) {
+      const remaining = teamCount - sixes * 6 - fives * 5;
+      if (remaining < 0 || remaining % 4 !== 0) continue;
+      const fours = remaining / 4;
+      const candidate = { fours, fives, sixes };
+
+      if (
+        !best ||
+        candidate.fours > best.fours ||
+        (candidate.fours === best.fours && candidate.sixes < best.sixes) ||
+        (candidate.fours === best.fours &&
+          candidate.sixes === best.sixes &&
+          candidate.fives < best.fives)
+      ) {
+        best = candidate;
+      }
+    }
   }
 
-  return Array.from({ length: poolCount }, (_, index) =>
-    index < poolCount - largerPoolCount
-      ? (baseSize as 4 | 5 | 6)
-      : ((baseSize + 1) as 4 | 5 | 6),
-  );
+  if (!best) return [];
+  return [
+    ...Array.from({ length: best.fours }, () => 4 as const),
+    ...Array.from({ length: best.fives }, () => 5 as const),
+    ...Array.from({ length: best.sixes }, () => 6 as const),
+  ];
 };
+
+export const poolSizesAreValidFor = (
+  teamCount: number,
+  sizes: readonly number[],
+): sizes is readonly (4 | 5 | 6)[] =>
+  sizes.length > 0 &&
+  sizes.every((size) => size === 4 || size === 5 || size === 6) &&
+  sizes.reduce((sum, size) => sum + size, 0) === teamCount;
 
 const shuffle = <T>(items: T[], random: () => number) => {
   const result = [...items];
@@ -246,11 +265,15 @@ const clubMetricIsEqual = (left: PoolClubMetric, right: PoolClubMetric) =>
   left.maxTeamsPerClub === right.maxTeamsPerClub &&
   left.duplicatePairCount === right.duplicatePairCount;
 
-const seedSeriesPools = (series: SeriesPoolInput, random: () => number) => {
-  const sizes = poolSizesFor(series.teams.length);
-  if (sizes.length === 0 && series.teams.length > 0) {
+const seedSeriesPools = (
+  series: SeriesPoolInput,
+  random: () => number,
+  requestedSizes?: readonly (4 | 5 | 6)[],
+) => {
+  const sizes = requestedSizes ? [...requestedSizes] : poolSizesFor(series.teams.length);
+  if (!poolSizesAreValidFor(series.teams.length, sizes)) {
     throw new Error(
-      `${series.name} compte ${series.teams.length} équipes : impossible de constituer des poules de 4 à 6 équipes.`,
+      `${series.name} compte ${series.teams.length} équipes : la répartition choisie doit utiliser uniquement des poules de 4, 5 ou 6 et affecter toutes les équipes.`,
     );
   }
 
@@ -330,6 +353,7 @@ const optimizeSeries = (
 export const generateOptimizedPools = ({
   series,
   pairings,
+  poolSizesBySeries = {},
   random = Math.random,
   iterationsPerSeries = 2_500,
 }: GeneratePoolOptions): PoolDraft[] => {
@@ -337,7 +361,12 @@ export const generateOptimizedPools = ({
   const result: PoolDraft[] = [];
 
   for (const currentSeries of series) {
-    const seeded = seedSeriesPools(currentSeries, random);
+    if (currentSeries.teams.length === 0) continue;
+    const seeded = seedSeriesPools(
+      currentSeries,
+      random,
+      poolSizesBySeries[currentSeries.id],
+    );
     const affiliations = buildClubAffiliationMap(currentSeries.teams);
     result.push(
       ...optimizeSeries(
