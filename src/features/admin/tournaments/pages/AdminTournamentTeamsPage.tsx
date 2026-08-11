@@ -418,7 +418,8 @@ export function AdminTournamentTeamsPage() {
               <div>
                 <span>Phase finale</span>
                 <strong>
-                  {data.tournament.finalsStartsOn && data.tournament.finalsEndsOn
+                  {data.tournament.finalsStartsOn &&
+                  data.tournament.finalsEndsOn
                     ? `${data.tournament.finalsStartsOn} → ${data.tournament.finalsEndsOn}`
                     : "Non planifiée"}
                 </strong>
@@ -658,13 +659,17 @@ export function AdminTournamentTeamsPage() {
                             <th colSpan={6} scope="rowgroup">
                               <strong>{series.name}</strong>
                               <span>
-                                {series.acceptedCount}/{series.capacity} inscrites
+                                {series.acceptedCount}/{series.capacity}{" "}
+                                inscrites
                               </span>
                             </th>
                           </tr>
                           {seriesTeams.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="admin-tournament-team-table__empty">
+                              <td
+                                colSpan={6}
+                                className="admin-tournament-team-table__empty"
+                              >
                                 Aucune équipe dans cette série.
                               </td>
                             </tr>
@@ -673,16 +678,22 @@ export function AdminTournamentTeamsPage() {
                               <tr key={team.id}>
                                 <td className="admin-tournament-team-table__team">
                                   <strong>{playerName(team)}</strong>
-                                  {team.comments && <small>{team.comments}</small>}
+                                  {team.comments && (
+                                    <small>{team.comments}</small>
+                                  )}
                                 </td>
                                 <td>
                                   <span>{team.contactEmail}</span>
-                                  {team.contactPhone && <small>{team.contactPhone}</small>}
+                                  {team.contactPhone && (
+                                    <small>{team.contactPhone}</small>
+                                  )}
                                 </td>
                                 <td>
-                                  <strong>{availabilitySummary(team, data)}</strong>
+                                  <strong>
+                                    {availabilitySummary(team, data)}
+                                  </strong>
                                   <small>
-                                    Week-end poules :{" "}
+                                    Week-end poules:{" "}
                                     {team.weekendAvailabilitySlotCount}
                                   </small>
                                 </td>
@@ -698,15 +709,16 @@ export function AdminTournamentTeamsPage() {
                                 </td>
                                 <td>
                                   <div className="admin-tournament-team-table__actions">
-                                    {editable && team.status !== "withdrawn" && (
-                                      <button
-                                        type="button"
-                                        disabled={saving || loadingDraft}
-                                        onClick={() => void beginEdit(team)}
-                                      >
-                                        Modifier
-                                      </button>
-                                    )}
+                                    {editable &&
+                                      team.status !== "withdrawn" && (
+                                        <button
+                                          type="button"
+                                          disabled={saving || loadingDraft}
+                                          onClick={() => void beginEdit(team)}
+                                        >
+                                          Modifier
+                                        </button>
+                                      )}
                                     {editable &&
                                       team.status !== "accepted" &&
                                       team.status !== "withdrawn" && (
@@ -720,18 +732,19 @@ export function AdminTournamentTeamsPage() {
                                           Réactiver
                                         </button>
                                       )}
-                                    {editable && team.status !== "withdrawn" && (
-                                      <button
-                                        className="admin-tournament-team-card__danger"
-                                        type="button"
-                                        disabled={saving || loadingDraft}
-                                        onClick={() =>
-                                          void changeStatus(team, "withdrawn")
-                                        }
-                                      >
-                                        Retirer
-                                      </button>
-                                    )}
+                                    {editable &&
+                                      team.status !== "withdrawn" && (
+                                        <button
+                                          className="admin-tournament-team-card__danger"
+                                          type="button"
+                                          disabled={saving || loadingDraft}
+                                          onClick={() =>
+                                            void changeStatus(team, "withdrawn")
+                                          }
+                                        >
+                                          Retirer
+                                        </button>
+                                      )}
                                   </div>
                                 </td>
                               </tr>
