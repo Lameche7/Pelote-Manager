@@ -270,7 +270,9 @@ const seedSeriesPools = (
   random: () => number,
   requestedSizes?: readonly (4 | 5 | 6)[],
 ) => {
-  const sizes = requestedSizes ? [...requestedSizes] : poolSizesFor(series.teams.length);
+  const sizes = requestedSizes
+    ? [...requestedSizes]
+    : poolSizesFor(series.teams.length);
   if (!poolSizesAreValidFor(series.teams.length, sizes)) {
     throw new Error(
       `${series.name} compte ${series.teams.length} équipes : la répartition choisie doit utiliser uniquement des poules de 4, 5 ou 6 et affecter toutes les équipes.`,
