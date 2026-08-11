@@ -189,8 +189,9 @@ test("la grille d'inscription est datée, groupée par semaine et réutilisable 
   );
 
   assert.match(grid, /Semaine \{week\.week\} — \{week\.year\}/);
-  assert.match(grid, /Créneaux cochés/);
-  assert.match(grid, /Minimum requis/);
+  assert.match(grid, /Poules :/);
+  assert.match(grid, /Minimum poules/);
+  assert.match(grid, /Phase finale/);
   assert.match(grid, /Week-end/);
   assert.match(grid, /Dupliquer cette semaine → suivante/);
   assert.match(grid, /toggleDay/);
