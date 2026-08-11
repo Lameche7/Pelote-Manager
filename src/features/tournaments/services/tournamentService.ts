@@ -8,6 +8,7 @@ import type {
   TournamentAvailabilityRule,
   TournamentAvailabilitySlot,
   TournamentPartnerSuggestion,
+  TournamentPhase,
   TournamentPlayWindow,
   TournamentRegistrationIdentity,
   TournamentSeriesRegistration,
@@ -73,6 +74,10 @@ const mapAvailabilitySlots = (value: unknown): TournamentAvailabilitySlot[] =>
     date: String(slot.play_date ?? slot.date ?? ""),
     startsAt: String(slot.starts_at ?? "").slice(0, 5),
     endsAt: String(slot.ends_at ?? "").slice(0, 5),
+    phase:
+      slot.phase === "pools" || slot.phase === "finals"
+        ? (slot.phase as TournamentPhase)
+        : undefined,
   }));
 
 const mapSummary = (row: Row): PublicTournamentSummary => ({
@@ -108,9 +113,9 @@ const knownErrors: Record<string, string> = {
   "Tournament availability slots are invalid":
     "Un ou plusieurs créneaux sélectionnés ne sont pas disponibles pour ce tournoi.",
   "Tournament availability minimum not reached":
-    "Vous n’avez pas sélectionné assez de créneaux disponibles.",
+    "Vous n’avez pas sélectionné assez de créneaux disponibles pour la phase de poules.",
   "Tournament weekend availability minimum not reached":
-    "Vous n’avez pas sélectionné assez de créneaux le week-end.",
+    "Vous n’avez pas sélectionné assez de créneaux le week-end pendant la phase de poules.",
   "A player can only belong to one active team per tournament":
     "Un joueur est déjà inscrit dans une autre équipe de ce tournoi.",
   "Tournament registration not found": "Aucune inscription active trouvée.",
@@ -182,6 +187,20 @@ export const tournamentService = {
         availability.minimum_weekend ?? 0,
       ),
       slotDurationMinutes: Number(availability.slot_duration_minutes ?? 60),
+      poolStartsOn: String(availability.pool_starts_on ?? row.starts_on ?? ""),
+      poolEndsOn: String(availability.pool_ends_on ?? row.ends_on ?? ""),
+      finalsStartsOn: availability.finals_starts_on
+        ? String(availability.finals_starts_on)
+        : null,
+      finalsEndsOn: availability.finals_ends_on
+        ? String(availability.finals_ends_on)
+        : null,
+      availablePoolSlotCount: Number(
+        availability.available_pool_slot_count ?? 0,
+      ),
+      availableFinalsSlotCount: Number(
+        availability.available_finals_slot_count ?? 0,
+      ),
       teams: rows(row.teams).map((team) => ({
         id: String(team.id),
         seriesId: String(team.series_id),
