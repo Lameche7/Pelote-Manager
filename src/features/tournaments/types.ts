@@ -3,6 +3,8 @@ export type TournamentTeamStatus =
 
 export type TournamentPlayerRole = "front" | "back";
 
+export type TournamentPhase = "pools" | "finals";
+
 export type TournamentAvailabilityKind =
   "unavailable" | "preferred" | "possible";
 
@@ -27,6 +29,7 @@ export type TournamentAvailabilitySlot = {
   date: string;
   startsAt: string;
   endsAt: string;
+  phase?: TournamentPhase;
 };
 
 export type TournamentTeamPlayer = {
@@ -94,6 +97,12 @@ export type PublicTournamentDetail = PublicTournamentSummary & {
   minimumAvailabilitySlots: number;
   minimumWeekendAvailabilitySlots: number;
   slotDurationMinutes: number;
+  poolStartsOn: string;
+  poolEndsOn: string;
+  finalsStartsOn: string | null;
+  finalsEndsOn: string | null;
+  availablePoolSlotCount: number;
+  availableFinalsSlotCount: number;
   teams: PublicTournamentTeam[];
 };
 
@@ -141,6 +150,8 @@ export type AdminTournamentTeam = {
   availabilityRules: TournamentAvailabilityRule[];
   availabilitySlotCount: number;
   weekendAvailabilitySlotCount: number;
+  poolAvailabilitySlotCount: number;
+  finalsAvailabilitySlotCount: number;
 };
 
 export type AdminTournamentTeamDraft = {
@@ -164,8 +175,14 @@ export type AdminTournamentTeamsPayload = {
     minimumAvailabilitySlots: number;
     minimumWeekendAvailabilitySlots: number;
     slotDurationMinutes: number;
+    poolStartsOn: string;
+    poolEndsOn: string;
+    finalsStartsOn: string | null;
+    finalsEndsOn: string | null;
     availableSlotCount: number;
     availableWeekendSlotCount: number;
+    availablePoolSlotCount: number;
+    availableFinalsSlotCount: number;
     availableSlots: TournamentAvailabilitySlot[];
   };
   series: TournamentSeriesRegistration[];
