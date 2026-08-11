@@ -6,6 +6,7 @@ import {
   generateOptimizedPools,
   getPoolMetric,
   movePoolTeam,
+  poolSizesAreValidFor,
   poolSizesFor,
   swapPoolTeams,
 } from "../.test-dist/src/features/tournaments/domain/poolEngine.js";
@@ -17,17 +18,26 @@ const migrationPath =
 const upgradeMigrationPath =
   "../supabase/migrations/20260811114500_upgrade_tournament_pool_engine_adaptive.sql";
 
-test("le nombre reel d equipes produit des poules equilibrees de 4 a 6", () => {
+test("la proposition automatique privilegie au maximum les poules de 4", () => {
   assert.deepEqual(poolSizesFor(8), [4, 4]);
+  assert.deepEqual(poolSizesFor(10), [4, 6]);
   assert.deepEqual(poolSizesFor(11), [5, 6]);
-  assert.deepEqual(poolSizesFor(22), [5, 5, 6, 6]);
-  assert.deepEqual(poolSizesFor(23), [5, 6, 6, 6]);
-  assert.deepEqual(poolSizesFor(24), [6, 6, 6, 6]);
-  assert.deepEqual(poolSizesFor(26), [5, 5, 5, 5, 6]);
+  assert.deepEqual(poolSizesFor(22), [4, 4, 4, 4, 6]);
+  assert.deepEqual(poolSizesFor(23), [4, 4, 4, 5, 6]);
+  assert.deepEqual(poolSizesFor(24), [4, 4, 4, 4, 4, 4]);
+  assert.deepEqual(poolSizesFor(26), [4, 4, 4, 4, 4, 6]);
+  assert.deepEqual(poolSizesFor(32), [4, 4, 4, 4, 4, 4, 4, 4]);
   assert.deepEqual(poolSizesFor(7), []);
 });
 
-test("la generation attribue chaque equipe une seule fois", () => {
+test("une repartition admin doit utiliser 4 5 6 et couvrir toutes les equipes", () => {
+  assert.equal(poolSizesAreValidFor(32, [4, 4, 4, 4, 4, 4, 4, 4]), true);
+  assert.equal(poolSizesAreValidFor(32, [5, 5, 5, 5, 6, 6]), true);
+  assert.equal(poolSizesAreValidFor(32, [4, 4, 4, 4, 5, 5]), false);
+  assert.equal(poolSizesAreValidFor(32, [3, 5, 6, 6, 6, 6]), false);
+});
+
+test("la generation attribue chaque equipe une seule fois avec la proposition auto", () => {
   const teams = Array.from({ length: 23 }, (_, index) => ({
     id: `team-${index + 1}`,
     seriesId: "series-1",
@@ -42,12 +52,53 @@ test("la generation attribue chaque equipe une seule fois", () => {
 
   assert.deepEqual(
     generated.map((pool) => pool.teams.length),
-    [5, 6, 6, 6],
+    [4, 4, 4, 5, 6],
   );
   assert.equal(
     new Set(generated.flatMap((pool) => pool.teams.map((team) => team.teamId)))
       .size,
     23,
+  );
+});
+
+test("l administrateur peut imposer une repartition valide", () => {
+  const teams = Array.from({ length: 32 }, (_, index) => ({
+    id: `team-${index + 1}`,
+    seriesId: "series-1",
+    clubNames: [],
+  }));
+  const generated = generateOptimizedPools({
+    series: [{ id: "series-1", name: "3e serie", teams }],
+    pairings: [],
+    poolSizesBySeries: {
+      "series-1": [5, 5, 5, 5, 6, 6],
+    },
+    random: () => 0.42,
+    iterationsPerSeries: 0,
+  });
+
+  assert.deepEqual(
+    generated.map((pool) => pool.teams.length),
+    [5, 5, 5, 5, 6, 6],
+  );
+});
+
+test("une repartition admin invalide est refusee", () => {
+  const teams = Array.from({ length: 32 }, (_, index) => ({
+    id: `team-${index + 1}`,
+    seriesId: "series-1",
+    clubNames: [],
+  }));
+
+  assert.throws(
+    () =>
+      generateOptimizedPools({
+        series: [{ id: "series-1", name: "3e serie", teams }],
+        pairings: [],
+        poolSizesBySeries: { "series-1": [4, 4, 4, 4] },
+        iterationsPerSeries: 0,
+      }),
+    /répartition choisie/,
   );
 });
 
@@ -153,16 +204,27 @@ test("une base ayant deja la premiere version PR70 est mise a niveau sans recree
   assert.match(migration, /admin_reopen_tournament_pools/);
 });
 
-test("l atelier admin regenere sans verrous et equilibre les clubs", async () => {
-  const page = await read(
-    "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx",
-  );
+test("l atelier admin propose et laisse choisir la repartition", async () => {
+  const [page, css] = await Promise.all([
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css",
+    ),
+  ]);
 
-  assert.match(page, /4, 5 ou 6 équipes/);
-  assert.match(page, /Régénérer et rééquilibrer/);
+  assert.match(page, /privilégie les poules de 4/);
+  assert.match(page, /Proposition automatique/);
+  assert.match(page, /Poules de \{size\}/);
+  assert.match(page, /Appliquer cette répartition/);
+  assert.match(page, /Reprendre la proposition/);
+  assert.match(page, /Régénérer la proposition auto/);
   assert.match(page, /Rouvrir les poules/);
   assert.match(page, /draggable=/);
   assert.match(page, /Pire duel|pire duel/);
-  assert.match(page, /répartissant[\s\S]*clubs/);
   assert.doesNotMatch(page, /Verrouiller/);
+  assert.match(css, /grid-template-columns: repeat\(auto-fit/);
+  assert.doesNotMatch(css, /grid-auto-flow: column/);
+  assert.doesNotMatch(css, /overflow-x: auto/);
 });
