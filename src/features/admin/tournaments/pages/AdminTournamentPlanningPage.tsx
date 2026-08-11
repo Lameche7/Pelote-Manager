@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   adminTournamentPlanningService,
   type TournamentPlanningSeries,
@@ -136,7 +131,9 @@ export function AdminTournamentPlanningPage() {
     setSelectedMatchId(null);
     setAnchorDate(loaded.tournament.poolStartsOn || loaded.tournament.startsOn);
     setSeriesColors(
-      Object.fromEntries(loaded.series.map((series) => [series.id, series.color])),
+      Object.fromEntries(
+        loaded.series.map((series) => [series.id, series.color]),
+      ),
     );
   };
 
@@ -200,7 +197,8 @@ export function AdminTournamentPlanningPage() {
     [workspace?.slots],
   );
   const seriesById = useMemo(
-    () => new Map((workspace?.series ?? []).map((series) => [series.id, series])),
+    () =>
+      new Map((workspace?.series ?? []).map((series) => [series.id, series])),
     [workspace?.series],
   );
   const availabilityByTeam = useMemo(
@@ -267,8 +265,7 @@ export function AdminTournamentPlanningPage() {
       scheduledRows.filter(
         (row) =>
           (seriesFilter === "all" || row.match.seriesId === seriesFilter) &&
-          (resourceFilter === "all" ||
-            row.slot.resourceId === resourceFilter),
+          (resourceFilter === "all" || row.slot.resourceId === resourceFilter),
       ),
     [resourceFilter, scheduledRows, seriesFilter],
   );
@@ -295,11 +292,13 @@ export function AdminTournamentPlanningPage() {
   const weekTimes = useMemo(() => {
     if (!workspace || weekDays.length === 0) return [];
     const dates = new Set(weekDays);
-    return [...new Set(
-      workspace.slots
-        .filter((slot) => dates.has(slot.date))
-        .map((slot) => slot.startsAt),
-    )].sort();
+    return [
+      ...new Set(
+        workspace.slots
+          .filter((slot) => dates.has(slot.date))
+          .map((slot) => slot.startsAt),
+      ),
+    ].sort();
   }, [weekDays, workspace]);
 
   const availableWeekCells = useMemo(() => {
@@ -310,7 +309,7 @@ export function AdminTournamentPlanningPage() {
   }, [workspace]);
 
   const selectedMatch = selectedMatchId
-    ? matchById.get(selectedMatchId) ?? null
+    ? (matchById.get(selectedMatchId) ?? null)
     : null;
   const selectedAssignment = selectedMatch
     ? assignments.find((assignment) => assignment.matchId === selectedMatch.id)
@@ -569,7 +568,8 @@ export function AdminTournamentPlanningPage() {
             <option value="">Choisir un tournoi</option>
             {tournaments.map((tournament) => (
               <option key={tournament.id} value={tournament.id}>
-                {tournament.name} · {statusLabels[tournament.status] ?? tournament.status}
+                {tournament.name} ·{" "}
+                {statusLabels[tournament.status] ?? tournament.status}
               </option>
             ))}
           </select>
@@ -688,7 +688,11 @@ export function AdminTournamentPlanningPage() {
                 <h2>Calendrier du tournoi</h2>
                 <p>{periodLabel}</p>
               </div>
-              <div className="planning-calendar-shell__views" role="group" aria-label="Vue du planning">
+              <div
+                className="planning-calendar-shell__views"
+                role="group"
+                aria-label="Vue du planning"
+              >
                 <button
                   className={calendarView === "week" ? "is-active" : ""}
                   type="button"
@@ -802,9 +806,12 @@ export function AdminTournamentPlanningPage() {
                       {weekDays.map((date) => {
                         const events = visibleRows.filter(
                           (row) =>
-                            row.slot.date === date && row.slot.startsAt === time,
+                            row.slot.date === date &&
+                            row.slot.startsAt === time,
                         );
-                        const available = availableWeekCells.has(`${date}|${time}`);
+                        const available = availableWeekCells.has(
+                          `${date}|${time}`,
+                        );
                         return (
                           <div
                             className={`planning-week__cell${available ? " is-open" : " is-closed"}`}
@@ -812,7 +819,9 @@ export function AdminTournamentPlanningPage() {
                           >
                             {events.map((row) => renderEvent(row))}
                             {events.length === 0 && available && (
-                              <span className="planning-week__available">Créneau libre</span>
+                              <span className="planning-week__available">
+                                Créneau libre
+                              </span>
                             )}
                           </div>
                         );
@@ -826,22 +835,17 @@ export function AdminTournamentPlanningPage() {
             {calendarView === "month" && (
               <div className="planning-month-scroll">
                 <div className="planning-month">
-                  {[
-                    "Lun",
-                    "Mar",
-                    "Mer",
-                    "Jeu",
-                    "Ven",
-                    "Sam",
-                    "Dim",
-                  ].map((day) => (
-                    <div className="planning-month__weekday" key={day}>
-                      {day}
-                    </div>
-                  ))}
+                  {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map(
+                    (day) => (
+                      <div className="planning-month__weekday" key={day}>
+                        {day}
+                      </div>
+                    ),
+                  )}
                   {monthDays.map((date) => {
                     const dayRows = rowsForDay(date);
-                    const currentMonth = date.slice(0, 7) === anchorDate.slice(0, 7);
+                    const currentMonth =
+                      date.slice(0, 7) === anchorDate.slice(0, 7);
                     return (
                       <div
                         className={`planning-month__day${currentMonth ? "" : " is-outside"}`}
@@ -849,13 +853,21 @@ export function AdminTournamentPlanningPage() {
                       >
                         <header>
                           <strong>{Number(date.slice(-2))}</strong>
-                          {dayRows.length > 0 && <span>{dayRows.length} match{dayRows.length > 1 ? "s" : ""}</span>}
+                          {dayRows.length > 0 && (
+                            <span>
+                              {dayRows.length} match
+                              {dayRows.length > 1 ? "s" : ""}
+                            </span>
+                          )}
                         </header>
                         <div className="planning-month__events">
-                          {dayRows.slice(0, 5).map((row) => renderEvent(row, true))}
+                          {dayRows
+                            .slice(0, 5)
+                            .map((row) => renderEvent(row, true))}
                           {dayRows.length > 5 && (
                             <span className="planning-calendar__more">
-                              + {dayRows.length - 5} autre{dayRows.length - 5 > 1 ? "s" : ""}
+                              + {dayRows.length - 5} autre
+                              {dayRows.length - 5 > 1 ? "s" : ""}
                             </span>
                           )}
                         </div>
@@ -869,7 +881,10 @@ export function AdminTournamentPlanningPage() {
             {calendarView === "tournament" && (
               <div className="planning-tournament-view">
                 {tournamentWeeks.map((week, weekIndex) => (
-                  <section className="planning-tournament-week" key={week.start}>
+                  <section
+                    className="planning-tournament-week"
+                    key={week.start}
+                  >
                     <header>
                       <strong>Semaine {weekIndex + 1}</strong>
                       <span>
@@ -894,10 +909,13 @@ export function AdminTournamentPlanningPage() {
                               <span>{dayRows.length}</span>
                             </header>
                             <div>
-                              {dayRows.slice(0, 6).map((row) => renderEvent(row, true))}
+                              {dayRows
+                                .slice(0, 6)
+                                .map((row) => renderEvent(row, true))}
                               {dayRows.length > 6 && (
                                 <span className="planning-calendar__more">
-                                  + {dayRows.length - 6} autre{dayRows.length - 6 > 1 ? "s" : ""}
+                                  + {dayRows.length - 6} autre
+                                  {dayRows.length - 6 > 1 ? "s" : ""}
                                 </span>
                               )}
                             </div>
@@ -919,7 +937,8 @@ export function AdminTournamentPlanningPage() {
                     {seriesById.get(selectedMatch.seriesId)?.name ?? "Série"}
                   </p>
                   <h2>
-                    {teamName(selectedMatch.teamAId)} — {teamName(selectedMatch.teamBId)}
+                    {teamName(selectedMatch.teamAId)} —{" "}
+                    {teamName(selectedMatch.teamBId)}
                   </h2>
                   <p>
                     {selectedSlot
@@ -947,7 +966,8 @@ export function AdminTournamentPlanningPage() {
                   <option value="">Non planifié</option>
                   {compatibleSlots(selectedMatch).map((slot) => (
                     <option key={slot.id} value={slot.id}>
-                      {formatDateLong(slot.date)} · {formatTime(slot.startsAt)} · {slot.resourceName}
+                      {formatDateLong(slot.date)} · {formatTime(slot.startsAt)}{" "}
+                      · {slot.resourceName}
                     </option>
                   ))}
                 </select>
