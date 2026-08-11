@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -145,4 +146,41 @@ test("la validation refuse un meme terrain et creneau utilise deux fois", () => 
 
   assert.equal(validation.valid, false);
   assert.equal(validation.diagnostics.length, 1);
+});
+
+test("la migration persiste les matchs et le planning sans publier le calendrier", async () => {
+  const migration = await readFile(
+    new URL(
+      "../supabase/migrations/20260811203500_add_tournament_planning_engine.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(migration, /create table public\.tournament_matches/i);
+  assert.match(migration, /create table public\.tournament_match_planning/i);
+  assert.match(migration, /admin_prepare_tournament_matches/i);
+  assert.match(migration, /admin_save_tournament_planning/i);
+  assert.match(migration, /status = 'planning_generated'/i);
+  assert.doesNotMatch(migration, /calendar_occupations/i);
+});
+
+test("l atelier admin genere, controle et enregistre le planning", async () => {
+  const page = await readFile(
+    new URL(
+      "../src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const routes = await readFile(
+    new URL("../src/shared/config/routes.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(page, /generatePlanningProposal/);
+  assert.match(page, /validatePlanning/);
+  assert.match(page, /Générer le planning/);
+  assert.match(page, /Enregistrer le planning/);
+  assert.match(routes, /adminTournamentPlanning:\s*"\/admin\/tournois\/planning"/);
 });
