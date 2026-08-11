@@ -85,24 +85,31 @@ export const poolSizesFor = (teamCount: number): (4 | 5 | 6)[] => {
   if (teamCount === 0) return [];
   if (teamCount < 4) return [];
 
-  const poolCount = Math.ceil(teamCount / 6);
-  if (poolCount * 4 > teamCount) return [];
+  let best: { fours: number; fives: number; sixes: number } | null = null;
 
-  const baseSize = Math.floor(teamCount / poolCount);
-  const largerPoolCount = teamCount % poolCount;
-  if (
-    baseSize < 4 ||
-    baseSize > 6 ||
-    baseSize + (largerPoolCount > 0 ? 1 : 0) > 6
-  ) {
-    return [];
+  for (let fours = 0; fours <= Math.floor(teamCount / 4); fours += 1) {
+    const afterFours = teamCount - fours * 4;
+    for (let fives = 0; fives <= Math.floor(afterFours / 5); fives += 1) {
+      const remaining = afterFours - fives * 5;
+      if (remaining < 0 || remaining % 6 !== 0) continue;
+      const sixes = remaining / 6;
+      const candidate = { fours, fives, sixes };
+      if (
+        !best ||
+        candidate.fours > best.fours ||
+        (candidate.fours === best.fours && candidate.fives > best.fives)
+      ) {
+        best = candidate;
+      }
+    }
   }
 
-  return Array.from({ length: poolCount }, (_, index) =>
-    index < poolCount - largerPoolCount
-      ? (baseSize as 4 | 5 | 6)
-      : ((baseSize + 1) as 4 | 5 | 6),
-  );
+  if (!best) return [];
+  return [
+    ...Array.from({ length: best.fours }, () => 4 as const),
+    ...Array.from({ length: best.fives }, () => 5 as const),
+    ...Array.from({ length: best.sixes }, () => 6 as const),
+  ];
 };
 
 const shuffle = <T>(items: T[], random: () => number) => {

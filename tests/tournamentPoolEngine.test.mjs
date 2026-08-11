@@ -16,14 +16,18 @@ const migrationPath =
   "../supabase/migrations/20260811103000_add_tournament_pool_engine.sql";
 const upgradeMigrationPath =
   "../supabase/migrations/20260811114500_upgrade_tournament_pool_engine_adaptive.sql";
+const poolPageCssPath =
+  "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css";
 
-test("le nombre reel d equipes produit des poules equilibrees de 4 a 6", () => {
+test("le moteur privilégie les poules de 4 puis utilise 5 ou 6 pour absorber le reste", () => {
   assert.deepEqual(poolSizesFor(8), [4, 4]);
+  assert.deepEqual(poolSizesFor(10), [4, 6]);
   assert.deepEqual(poolSizesFor(11), [5, 6]);
-  assert.deepEqual(poolSizesFor(22), [5, 5, 6, 6]);
-  assert.deepEqual(poolSizesFor(23), [5, 6, 6, 6]);
-  assert.deepEqual(poolSizesFor(24), [6, 6, 6, 6]);
-  assert.deepEqual(poolSizesFor(26), [5, 5, 5, 5, 6]);
+  assert.deepEqual(poolSizesFor(22), [4, 4, 4, 4, 6]);
+  assert.deepEqual(poolSizesFor(23), [4, 4, 4, 5, 6]);
+  assert.deepEqual(poolSizesFor(24), [4, 4, 4, 4, 4, 4]);
+  assert.deepEqual(poolSizesFor(26), [4, 4, 4, 4, 4, 6]);
+  assert.deepEqual(poolSizesFor(32), [4, 4, 4, 4, 4, 4, 4, 4]);
   assert.deepEqual(poolSizesFor(7), []);
 });
 
@@ -42,7 +46,7 @@ test("la generation attribue chaque equipe une seule fois", () => {
 
   assert.deepEqual(
     generated.map((pool) => pool.teams.length),
-    [5, 6, 6, 6],
+    [4, 4, 4, 5, 6],
   );
   assert.equal(
     new Set(generated.flatMap((pool) => pool.teams.map((team) => team.teamId)))
@@ -154,9 +158,10 @@ test("une base ayant deja la premiere version PR70 est mise a niveau sans recree
 });
 
 test("l atelier admin regenere sans verrous et equilibre les clubs", async () => {
-  const page = await read(
-    "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx",
-  );
+  const [page, css] = await Promise.all([
+    read("../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx"),
+    read(poolPageCssPath),
+  ]);
 
   assert.match(page, /4, 5 ou 6 équipes/);
   assert.match(page, /Régénérer et rééquilibrer/);
@@ -165,4 +170,10 @@ test("l atelier admin regenere sans verrous et equilibre les clubs", async () =>
   assert.match(page, /Pire duel|pire duel/);
   assert.match(page, /répartissant[\s\S]*clubs/);
   assert.doesNotMatch(page, /Verrouiller/);
+  assert.match(
+    css,
+    /grid-template-columns:\s*repeat\(auto-fit, minmax\(17rem, 1fr\)\)/,
+  );
+  assert.doesNotMatch(css, /overflow-x:\s*auto/);
+  assert.doesNotMatch(css, /grid-auto-flow:\s*column/);
 });

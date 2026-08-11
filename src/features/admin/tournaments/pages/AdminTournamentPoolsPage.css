@@ -171,25 +171,24 @@
 
 .admin-tournament-pools__board {
   display: grid;
-  grid-auto-columns: minmax(19rem, 23rem);
-  grid-auto-flow: column;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
   gap: 0.85rem;
-  overflow-x: auto;
+  width: 100%;
+  min-width: 0;
   padding: 0.1rem 0.05rem 1rem;
-  scroll-snap-type: x proximity;
 }
 
 .admin-tournament-pool {
   display: grid;
   align-content: start;
   gap: 0.7rem;
+  min-width: 0;
   min-height: 23rem;
   border: 1px solid rgb(107 114 128 / 18%);
   border-radius: 1rem;
   padding: 0.85rem;
   background: rgb(255 255 255 / 96%);
   box-shadow: 0 0.35rem 1rem rgb(15 23 42 / 6%);
-  scroll-snap-align: start;
 }
 
 .admin-tournament-pool--locked {
@@ -208,6 +207,7 @@
 .admin-tournament-pool > header div,
 .admin-tournament-pool-team > header div {
   display: grid;
+  min-width: 0;
   gap: 0.15rem;
 }
 
@@ -248,6 +248,7 @@
 
 .admin-tournament-pool-team {
   display: grid;
+  min-width: 0;
   gap: 0.55rem;
   border: 1px solid rgb(107 114 128 / 16%);
   border-radius: 0.8rem;
@@ -282,6 +283,7 @@
 
 .admin-tournament-pool-team > header strong {
   font-size: 0.82rem;
+  overflow-wrap: anywhere;
 }
 
 .admin-tournament-pool-team > header small {
@@ -299,6 +301,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+  min-width: 0;
   gap: 0.35rem;
   border-radius: 0.55rem;
   padding: 0.35rem 0.45rem;
@@ -337,11 +340,12 @@
     flex: 1 1 auto;
   }
 
-  .admin-tournament-pools__series-tabs {
+  .admin-tournament-pools__series-tabs,
+  .admin-tournament-pools__board {
     grid-template-columns: 1fr;
   }
 
-  .admin-tournament-pools__board {
-    grid-auto-columns: minmax(17.5rem, 88vw);
+  .admin-tournament-pool-team__compatibility {
+    grid-template-columns: 1fr;
   }
 }
