@@ -224,7 +224,9 @@ const seedSeriesPools = (
   for (const pool of seeded) {
     const missing = pool.targetSize - pool.teams.length;
     if (missing < 0) {
-      throw new Error(`La ${series.name} contient trop d’équipes verrouillées.`);
+      throw new Error(
+        `La ${series.name} contient trop d’équipes verrouillées.`,
+      );
     }
     const additions = availableTeams.slice(cursor, cursor + missing);
     cursor += missing;
@@ -234,7 +236,9 @@ const seedSeriesPools = (
   }
 
   if (cursor !== availableTeams.length) {
-    throw new Error(`Impossible de rééquilibrer ${series.name} avec ces verrous.`);
+    throw new Error(
+      `Impossible de rééquilibrer ${series.name} avec ces verrous.`,
+    );
   }
 
   return seeded;
@@ -370,7 +374,9 @@ export const movePoolTeam = (
     return result;
   }
 
-  const team = sourcePool.teams.find((candidate) => candidate.teamId === teamId);
+  const team = sourcePool.teams.find(
+    (candidate) => candidate.teamId === teamId,
+  );
   if (
     !team ||
     team.isLocked ||
@@ -398,16 +404,7 @@ export const setPoolLock = (
   locked: boolean,
 ) =>
   clonePools(pools).map((pool) =>
-    pool.key === poolKey
-      ? {
-          ...pool,
-          isLocked: locked,
-          teams: pool.teams.map((team) => ({
-            ...team,
-            isLocked: locked ? true : team.isLocked,
-          })),
-        }
-      : pool,
+    pool.key === poolKey ? { ...pool, isLocked: locked } : pool,
   );
 
 export const setTeamLock = (
