@@ -84,7 +84,9 @@ const playerName = (team: AdminTournamentTeam) =>
     .join(" / ");
 
 const teamClubNames = (team: AdminTournamentTeam) => [
-  ...new Set(team.players.map((player) => player.clubName.trim()).filter(Boolean)),
+  ...new Set(
+    team.players.map((player) => player.clubName.trim()).filter(Boolean),
+  ),
 ];
 
 const availabilitySummary = (
