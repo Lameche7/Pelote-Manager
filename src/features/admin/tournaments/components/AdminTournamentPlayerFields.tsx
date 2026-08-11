@@ -4,6 +4,7 @@ import type {
   TournamentMemberSuggestion,
   TournamentTeamPlayer,
 } from "@/features/tournaments/types";
+import "./AdminTournamentPlayerFields.css";
 
 type Props = {
   tournamentId: string;
@@ -88,8 +89,8 @@ export function AdminTournamentPlayerFields({
       firstName: member.firstName,
       lastName: member.lastName,
       clubName: member.clubName,
-      email: member.hasEmail ? "" : "",
-      phone: member.hasPhone ? "" : "",
+      email: "",
+      phone: "",
       emailFromMember: member.hasEmail,
       phoneFromMember: member.hasPhone,
     });
