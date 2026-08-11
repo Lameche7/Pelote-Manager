@@ -206,8 +206,12 @@ test("une base ayant deja la premiere version PR70 est mise a niveau sans recree
 
 test("l atelier admin propose et laisse choisir la repartition", async () => {
   const [page, css] = await Promise.all([
-    read("../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx"),
-    read("../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css"),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css",
+    ),
   ]);
 
   assert.match(page, /privilégie les poules de 4/);

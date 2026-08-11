@@ -40,30 +40,30 @@ const statusLabels: Record<string, string> = {
   cancelled: "Annulé",
 };
 
-type PoolSizeCounts = {
+type PoolCounts = {
   4: number;
   5: number;
   6: number;
 };
 
-const emptyPoolSizeCounts = (): PoolSizeCounts => ({ 4: 0, 5: 0, 6: 0 });
+const emptyPoolCounts = (): PoolCounts => ({ 4: 0, 5: 0, 6: 0 });
 
-const poolSizeCountsFromSizes = (sizes: readonly number[]): PoolSizeCounts => {
-  const result = emptyPoolSizeCounts();
+const poolCountsFromSizes = (sizes: readonly number[]): PoolCounts => {
+  const result = emptyPoolCounts();
   for (const size of sizes) {
     if (size === 4 || size === 5 || size === 6) result[size] += 1;
   }
   return result;
 };
 
-const poolSizesFromCounts = (counts: PoolSizeCounts): (4 | 5 | 6)[] => [
+const poolSizesFromCounts = (counts: PoolCounts): (4 | 5 | 6)[] => [
   ...Array.from({ length: Math.max(counts[4], 0) }, () => 4 as const),
   ...Array.from({ length: Math.max(counts[5], 0) }, () => 5 as const),
   ...Array.from({ length: Math.max(counts[6], 0) }, () => 6 as const),
 ];
 
 const formatPoolSizes = (sizes: readonly number[]) => {
-  const counts = poolSizeCountsFromSizes(sizes);
+  const counts = poolCountsFromSizes(sizes);
   return ([4, 5, 6] as const)
     .filter((size) => counts[size] > 0)
     .map((size) => `${counts[size]} × ${size}`)
@@ -120,8 +120,7 @@ export function AdminTournamentPoolsPage() {
   );
   const [pools, setPools] = useState<PoolDraft[]>([]);
   const [persistedPools, setPersistedPools] = useState<PoolDraft[]>([]);
-  const [poolSizeCountsBySeries, setPoolSizeCountsBySeries] =
-    useState<Record<string, PoolSizeCounts>>({});
+  const [poolCounts, setPoolCounts] = useState<Record<string, PoolCounts>>({});
   const [activeSeriesId, setActiveSeriesId] = useState("");
   const [draggedTeamId, setDraggedTeamId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,7 +141,7 @@ export function AdminTournamentPoolsPage() {
           seriesPools.length > 0
             ? seriesPools.map((pool) => pool.teams.length)
             : poolSizesFor(series.acceptedCount);
-        return [series.id, poolSizeCountsFromSizes(sizes)];
+        return [series.id, poolCountsFromSizes(sizes)];
       }),
     );
 
@@ -151,7 +150,7 @@ export function AdminTournamentPoolsPage() {
     setWorkspace(loaded);
     setPools(loadedPools);
     setPersistedPools(clonePools(loadedPools));
-    setPoolSizeCountsBySeries(countsForWorkspace(loaded, loadedPools));
+    setPoolCounts(countsForWorkspace(loaded, loadedPools));
     setActiveSeriesId((current) =>
       loaded.series.some((series) => series.id === current)
         ? current
@@ -228,12 +227,18 @@ export function AdminTournamentPoolsPage() {
   const activePools = pools
     .filter((pool) => pool.seriesId === activeSeriesId)
     .sort((left, right) => left.displayOrder - right.displayOrder);
-  const activePoolSizeCounts =
-    poolSizeCountsBySeries[activeSeriesId] ?? emptyPoolSizeCounts();
-  const activeRequestedSizes = poolSizesFromCounts(activePoolSizeCounts);
+  const activePoolCounts = poolCounts[activeSeriesId] ?? emptyPoolCounts();
+  const activeRequestedSizes = poolSizesFromCounts(activePoolCounts);
+  const activeAssignedCount = activeRequestedSizes.reduce(
+    (sum, size) => sum + size,
+    0,
+  );
   const activeDistributionValid = activeSeries
     ? poolSizesAreValidFor(activeSeries.acceptedCount, activeRequestedSizes)
     : false;
+  const activeDistributionTotalClass = activeDistributionValid
+    ? "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--valid"
+    : "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--invalid";
   const activeAutomaticSizes = activeSeries
     ? poolSizesFor(activeSeries.acceptedCount)
     : [];
@@ -297,11 +302,11 @@ export function AdminTournamentPoolsPage() {
         poolSizesBySeries: sizesBySeries,
       });
       setPools(generated);
-      setPoolSizeCountsBySeries(
+      setPoolCounts(
         Object.fromEntries(
           Object.entries(sizesBySeries).map(([seriesId, sizes]) => [
             seriesId,
-            poolSizeCountsFromSizes(sizes),
+            poolCountsFromSizes(sizes),
           ]),
         ),
       );
@@ -319,18 +324,18 @@ export function AdminTournamentPoolsPage() {
 
   const useAutomaticDistribution = () => {
     if (!activeSeries) return;
-    setPoolSizeCountsBySeries((current) => ({
+    setPoolCounts((current) => ({
       ...current,
-      [activeSeries.id]: poolSizeCountsFromSizes(activeAutomaticSizes),
+      [activeSeries.id]: poolCountsFromSizes(activeAutomaticSizes),
     }));
   };
 
   const changePoolSizeCount = (size: 4 | 5 | 6, value: number) => {
     if (!activeSeries) return;
-    setPoolSizeCountsBySeries((current) => ({
+    setPoolCounts((current) => ({
       ...current,
       [activeSeries.id]: {
-        ...(current[activeSeries.id] ?? emptyPoolSizeCounts()),
+        ...(current[activeSeries.id] ?? emptyPoolCounts()),
         [size]: Math.max(0, Math.floor(Number.isFinite(value) ? value : 0)),
       },
     }));
@@ -341,12 +346,8 @@ export function AdminTournamentPoolsPage() {
     setError("");
     setMessage("");
     if (!activeDistributionValid) {
-      const assigned = activeRequestedSizes.reduce(
-        (sum, size) => sum + size,
-        0,
-      );
       setError(
-        `La répartition choisie représente ${assigned} équipes alors que ${activeSeries.acceptedCount} sont inscrites dans ${activeSeries.name}.`,
+        `La répartition choisie représente ${activeAssignedCount} équipes alors que ${activeSeries.acceptedCount} sont inscrites dans ${activeSeries.name}.`,
       );
       return;
     }
@@ -468,9 +469,9 @@ export function AdminTournamentPoolsPage() {
       const sizes = moved
         .filter((pool) => pool.seriesId === activeSeriesId)
         .map((pool) => pool.teams.length);
-      setPoolSizeCountsBySeries((counts) => ({
+      setPoolCounts((counts) => ({
         ...counts,
-        [activeSeriesId]: poolSizeCountsFromSizes(sizes),
+        [activeSeriesId]: poolCountsFromSizes(sizes),
       }));
       return moved;
     });
@@ -552,7 +553,7 @@ export function AdminTournamentPoolsPage() {
                     onClick={() => {
                       setPools(clonePools(persistedPools));
                       if (workspace) {
-                        setPoolSizeCountsBySeries(
+                        setPoolCounts(
                           countsForWorkspace(workspace, persistedPools),
                         );
                       }
@@ -704,7 +705,7 @@ export function AdminTournamentPoolsPage() {
                         min={0}
                         step={1}
                         disabled={saving}
-                        value={activePoolSizeCounts[size]}
+                        value={activePoolCounts[size]}
                         onChange={(event) =>
                           changePoolSizeCount(size, Number(event.target.value))
                         }
@@ -714,18 +715,8 @@ export function AdminTournamentPoolsPage() {
                 </div>
 
                 <div className="admin-tournament-pools__distribution-actions">
-                  <span
-                    className={
-                      activeDistributionValid
-                        ? "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--valid"
-                        : "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--invalid"
-                    }
-                  >
-                    {activeRequestedSizes.reduce(
-                      (sum, size) => sum + size,
-                      0,
-                    )}{" "}
-                    / {activeSeries.acceptedCount} équipes
+                  <span className={activeDistributionTotalClass}>
+                    {activeAssignedCount} / {activeSeries.acceptedCount} équipes
                   </span>
                   <button
                     type="button"
