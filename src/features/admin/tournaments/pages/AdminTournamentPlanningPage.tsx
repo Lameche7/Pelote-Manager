@@ -56,13 +56,12 @@ const signature = (assignments: PlanningAssignment[]) =>
 export function AdminTournamentPlanningPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
-  const [workspace, setWorkspace] = useState<TournamentPlanningWorkspace | null>(
-    null,
-  );
+  const [workspace, setWorkspace] =
+    useState<TournamentPlanningWorkspace | null>(null);
   const [assignments, setAssignments] = useState<PlanningAssignment[]>([]);
-  const [savedAssignments, setSavedAssignments] = useState<PlanningAssignment[]>(
-    [],
-  );
+  const [savedAssignments, setSavedAssignments] = useState<
+    PlanningAssignment[]
+  >([]);
   const [qualityScore, setQualityScore] = useState<number | null>(null);
   const [distributionRate, setDistributionRate] = useState<number | null>(null);
   const [diagnostics, setDiagnostics] = useState<string[]>([]);
@@ -269,7 +268,9 @@ export function AdminTournamentPlanningPage() {
       minimumRestMinutes: workspace.tournament.minimumRestMinutes,
     });
     if (!validation.valid) {
-      setError(validation.diagnostics[0]?.message ?? "Le planning est invalide.");
+      setError(
+        validation.diagnostics[0]?.message ?? "Le planning est invalide.",
+      );
       return;
     }
     setSaving(true);
@@ -288,7 +289,9 @@ export function AdminTournamentPlanningPage() {
       ]);
       setTournaments(items);
       hydrate(loaded);
-      setMessage("Planning enregistré. Le tournoi est maintenant à l’état Planning généré.");
+      setMessage(
+        "Planning enregistré. Le tournoi est maintenant à l’état Planning généré.",
+      );
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -316,7 +319,11 @@ export function AdminTournamentPlanningPage() {
         </div>
       </header>
 
-      {error && <p className="admin-tournament-planning__alert admin-tournament-planning__alert--error">{error}</p>}
+      {error && (
+        <p className="admin-tournament-planning__alert admin-tournament-planning__alert--error">
+          {error}
+        </p>
+      )}
       {message && <p className="admin-tournament-planning__alert">{message}</p>}
 
       <div className="admin-card admin-tournament-planning__toolbar">
@@ -330,19 +337,31 @@ export function AdminTournamentPlanningPage() {
             <option value="">Choisir un tournoi</option>
             {tournaments.map((tournament) => (
               <option key={tournament.id} value={tournament.id}>
-                {tournament.name} · {statusLabels[tournament.status] ?? tournament.status}
+                {tournament.name} ·{" "}
+                {statusLabels[tournament.status] ?? tournament.status}
               </option>
             ))}
           </select>
         </label>
         <div className="admin-tournament-planning__toolbar-actions">
-          <button type="button" disabled={!workspace || saving} onClick={generate}>
-            {assignments.length > 0 ? "Rechercher une meilleure proposition" : "Générer le planning"}
+          <button
+            type="button"
+            disabled={!workspace || saving}
+            onClick={generate}
+          >
+            {assignments.length > 0
+              ? "Rechercher une meilleure proposition"
+              : "Générer le planning"}
           </button>
           <button
             className="admin-tournament-planning__primary"
             type="button"
-            disabled={!workspace || saving || !complete || (!dirty && workspace.tournament.status === "planning_generated")}
+            disabled={
+              !workspace ||
+              saving ||
+              !complete ||
+              (!dirty && workspace.tournament.status === "planning_generated")
+            }
             onClick={() => void save()}
           >
             {saving ? "Enregistrement…" : "Enregistrer le planning"}
@@ -350,7 +369,9 @@ export function AdminTournamentPlanningPage() {
         </div>
       </div>
 
-      {loading && <div className="admin-card">Chargement du Planning Engine…</div>}
+      {loading && (
+        <div className="admin-card">Chargement du Planning Engine…</div>
+      )}
 
       {workspace && !loading && (
         <>
@@ -361,15 +382,21 @@ export function AdminTournamentPlanningPage() {
             </article>
             <article className="admin-card">
               <span>Planifiées</span>
-              <strong>{assignments.length}/{workspace.matches.length}</strong>
+              <strong>
+                {assignments.length}/{workspace.matches.length}
+              </strong>
             </article>
             <article className="admin-card">
               <span>Qualité</span>
-              <strong>{qualityScore === null ? "—" : `${qualityScore}/100`}</strong>
+              <strong>
+                {qualityScore === null ? "—" : `${qualityScore}/100`}
+              </strong>
             </article>
             <article className="admin-card">
               <span>Répartition</span>
-              <strong>{distributionRate === null ? "—" : `${distributionRate}%`}</strong>
+              <strong>
+                {distributionRate === null ? "—" : `${distributionRate}%`}
+              </strong>
             </article>
           </div>
 
@@ -426,7 +453,9 @@ export function AdminTournamentPlanningPage() {
                             <option value="">Non planifié</option>
                             {compatibleSlots(match).map((slot) => (
                               <option key={slot.id} value={slot.id}>
-                                {formatDate(slot.date)} · {formatTime(slot.startsAt)} · {slot.resourceName}
+                                {formatDate(slot.date)} ·{" "}
+                                {formatTime(slot.startsAt)} ·{" "}
+                                {slot.resourceName}
                               </option>
                             ))}
                           </select>
@@ -445,8 +474,12 @@ export function AdminTournamentPlanningPage() {
               <div className="admin-tournament-planning__agenda-list">
                 {scheduledRows.map(({ assignment, match, slot }) => (
                   <article key={assignment.matchId}>
-                    <time>{formatDate(slot.date)} · {formatTime(slot.startsAt)}</time>
-                    <strong>{teamName(match.teamAId)} — {teamName(match.teamBId)}</strong>
+                    <time>
+                      {formatDate(slot.date)} · {formatTime(slot.startsAt)}
+                    </time>
+                    <strong>
+                      {teamName(match.teamAId)} — {teamName(match.teamBId)}
+                    </strong>
                     <span>{slot.resourceName}</span>
                   </article>
                 ))}
