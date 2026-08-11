@@ -46,8 +46,14 @@ test("la vue tournoi couvre toute la duree sans perdre les semaines partielles",
   assert.equal(weeks.length, 4);
   assert.equal(weeks[0].start, "2026-08-10");
   assert.equal(weeks.at(-1).end, "2026-09-06");
-  assert.equal(isIsoDateBetween("2026-08-12", "2026-08-12", "2026-09-03"), true);
-  assert.equal(isIsoDateBetween("2026-08-11", "2026-08-12", "2026-09-03"), false);
+  assert.equal(
+    isIsoDateBetween("2026-08-12", "2026-08-12", "2026-09-03"),
+    true,
+  );
+  assert.equal(
+    isIsoDateBetween("2026-08-11", "2026-08-12", "2026-09-03"),
+    false,
+  );
 });
 
 test("l atelier planning expose semaine mois tournoi et couleurs de series", async () => {
