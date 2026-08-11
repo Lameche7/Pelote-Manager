@@ -65,7 +65,8 @@
   opacity: 0.45;
 }
 
-.admin-tournament-planning__toolbar-actions .admin-tournament-planning__primary {
+.admin-tournament-planning__toolbar-actions
+  .admin-tournament-planning__primary {
   color: #fff;
   border-color: var(--club-accent, #1e5aa8);
   background: var(--club-accent, #1e5aa8);
