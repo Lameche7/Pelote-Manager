@@ -6,6 +6,7 @@ import type {
   AdminTournamentTeamsPayload,
   TournamentAvailabilityRule,
   TournamentAvailabilitySlot,
+  TournamentMemberSuggestion,
   TournamentPhase,
   TournamentSeriesRegistration,
   TournamentTeamPlayer,
@@ -33,7 +34,19 @@ const mapPlayers = (value: unknown): TournamentTeamPlayer[] =>
     clubName: String(player.club_name ?? ""),
     email: String(player.email ?? ""),
     phone: String(player.phone ?? ""),
+    emailFromMember: Boolean(player.email_from_member),
+    phoneFromMember: Boolean(player.phone_from_member),
     role: player.role as TournamentTeamPlayer["role"],
+  }));
+
+const mapMemberSuggestions = (value: unknown): TournamentMemberSuggestion[] =>
+  rows(value).map((member) => ({
+    id: String(member.id),
+    firstName: String(member.first_name ?? ""),
+    lastName: String(member.last_name ?? ""),
+    clubName: String(member.club_name ?? ""),
+    hasEmail: Boolean(member.has_email),
+    hasPhone: Boolean(member.has_phone),
   }));
 
 const mapAvailability = (value: unknown): TournamentAvailabilityRule[] =>
@@ -73,6 +86,7 @@ const knownErrors: Record<string, string> = {
   Forbidden: "Vous n’avez pas le droit de gérer les équipes de ce tournoi.",
   "Tournament not found": "Tournoi introuvable.",
   "Tournament team not found": "Équipe introuvable.",
+  "Tournament member is invalid": "Ce licencié n’est plus disponible.",
   "Tournament teams are locked at this stage":
     "Les équipes sont verrouillées à cette étape.",
   "Tournament teams cannot be changed after planning generation":
@@ -81,7 +95,9 @@ const knownErrors: Record<string, string> = {
   "Tournament series is full": "Cette série est complète.",
   "Tournament team status is invalid": "Le statut de l’équipe est invalide.",
   "Tournament registration fields are incomplete":
-    "Renseignez au minimum une adresse de contact.",
+    "Renseignez les informations nécessaires des joueurs.",
+  "Tournament player contacts are incomplete":
+    "Renseignez l’e-mail et le téléphone de chacun des deux joueurs.",
   "A tournament team must contain exactly two players":
     "Une équipe doit contenir exactement deux joueurs.",
   "Tournament players are invalid":
@@ -120,8 +136,6 @@ const mapMutationResult = (value: unknown): TeamMutationResult => {
 const teamPayload = (draft: AdminTournamentTeamDraft) => ({
   series_id: draft.seriesId,
   status: draft.status,
-  contact_email: draft.contactEmail.trim(),
-  contact_phone: draft.contactPhone.trim(),
   comments: draft.comments.trim(),
   players: draft.players.map((player) => ({
     member_id: player.memberId || null,
@@ -143,7 +157,7 @@ const teamPayload = (draft: AdminTournamentTeamDraft) => ({
 export const adminTournamentTeamService = {
   async get(tournamentId: string): Promise<AdminTournamentTeamsPayload> {
     const [teamsResponse, availabilityResponse] = await Promise.all([
-      supabase.rpc("admin_list_tournament_teams_v2", {
+      supabase.rpc("admin_list_tournament_teams_v3", {
         target_tournament_id: tournamentId,
       }),
       supabase.rpc("admin_get_tournament_dated_availability", {
@@ -241,6 +255,24 @@ export const adminTournamentTeamService = {
     };
   },
 
+  async searchMembers(
+    tournamentId: string,
+    query: string,
+    excludedTeamId: string | null,
+  ): Promise<TournamentMemberSuggestion[]> {
+    if (query.trim().length < 2) return [];
+    const { data, error } = await supabase.rpc(
+      "admin_search_tournament_members",
+      {
+        target_tournament_id: tournamentId,
+        search_text: query,
+        excluded_team_id: excludedTeamId,
+      },
+    );
+    if (error) fail(error, "Recherche des licenciés impossible.");
+    return mapMemberSuggestions(data);
+  },
+
   async getDatedAvailability(
     teamId: string,
   ): Promise<TournamentAvailabilitySlot[]> {
@@ -261,7 +293,7 @@ export const adminTournamentTeamService = {
     draft: AdminTournamentTeamDraft,
   ): Promise<TeamSaveResult> {
     const { data, error } = await supabase.rpc(
-      "admin_save_tournament_team_v4",
+      "admin_save_tournament_team_v5",
       {
         target_tournament_id: tournamentId,
         target_team_id: teamId,
