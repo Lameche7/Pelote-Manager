@@ -251,7 +251,9 @@ export function AdminTournamentPoolsPage() {
   const validate = async () => {
     if (!workspace || workspace.tournament.status !== "pools_generated") return;
     if (dirty) {
-      setError("Enregistrez vos dernières modifications avant de valider les poules.");
+      setError(
+        "Enregistrez vos dernières modifications avant de valider les poules.",
+      );
       return;
     }
     if (
@@ -268,7 +270,9 @@ export function AdminTournamentPoolsPage() {
     try {
       await adminTournamentPoolService.validate(workspace.tournament.id);
       await refresh(workspace.tournament.id);
-      setMessage("Poules validées. Elles sont maintenant prêtes pour les matchs.");
+      setMessage(
+        "Poules validées. Elles sont maintenant prêtes pour les matchs.",
+      );
     } catch (validationError) {
       setError(
         validationError instanceof Error
@@ -300,9 +304,7 @@ export function AdminTournamentPoolsPage() {
 
   const dropOnTeam = (targetTeamId: string) => {
     if (!draggedTeamId || draggedTeamId === targetTeamId || !editable) return;
-    setPools((current) =>
-      swapPoolTeams(current, draggedTeamId, targetTeamId),
-    );
+    setPools((current) => swapPoolTeams(current, draggedTeamId, targetTeamId));
     setDraggedTeamId(null);
   };
 
@@ -335,7 +337,10 @@ export function AdminTournamentPoolsPage() {
       </header>
 
       {error && (
-        <p className="admin-tournament-pools__alert admin-tournament-pools__alert--error" role="alert">
+        <p
+          className="admin-tournament-pools__alert admin-tournament-pools__alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -361,7 +366,8 @@ export function AdminTournamentPoolsPage() {
               >
                 {tournaments.map((tournament) => (
                   <option key={tournament.id} value={tournament.id}>
-                    {tournament.name} · {statusLabels[tournament.status] ?? tournament.status}
+                    {tournament.name} ·{" "}
+                    {statusLabels[tournament.status] ?? tournament.status}
                   </option>
                 ))}
               </select>
@@ -411,7 +417,10 @@ export function AdminTournamentPoolsPage() {
 
           {workspace && !editable && !validated && (
             <div className="admin-card admin-tournament-pools__notice">
-              <strong>{statusLabels[workspace.tournament.status] ?? workspace.tournament.status}</strong>
+              <strong>
+                {statusLabels[workspace.tournament.status] ??
+                  workspace.tournament.status}
+              </strong>
               <span>
                 Fermez les inscriptions avant de générer les poules. Après
                 validation, elles deviennent en lecture seule.
@@ -431,7 +440,9 @@ export function AdminTournamentPoolsPage() {
 
           {workspace && workspace.tournament.pendingCount > 0 && editable && (
             <div className="admin-card admin-tournament-pools__notice">
-              <strong>Équipes en attente : {workspace.tournament.pendingCount}</strong>
+              <strong>
+                Équipes en attente : {workspace.tournament.pendingCount}
+              </strong>
               <span>
                 Elles doivent être acceptées ou refusées dans Équipes &
                 inscriptions avant la génération.
@@ -440,7 +451,11 @@ export function AdminTournamentPoolsPage() {
           )}
 
           {workspace && (
-            <div className="admin-tournament-pools__series-tabs" role="tablist" aria-label="Séries du tournoi">
+            <div
+              className="admin-tournament-pools__series-tabs"
+              role="tablist"
+              aria-label="Séries du tournoi"
+            >
               {workspace.series.map((series) => {
                 const seriesPools = pools.filter(
                   (pool) => pool.seriesId === series.id,
@@ -461,12 +476,14 @@ export function AdminTournamentPoolsPage() {
                   >
                     <strong>{series.name}</strong>
                     <span>
-                      {series.acceptedCount} équipes · {seriesPools.length} poule
+                      {series.acceptedCount} équipes · {seriesPools.length}{" "}
+                      poule
                       {seriesPools.length > 1 ? "s" : ""}
                     </span>
                     {seriesPools.length > 0 && (
                       <small>
-                        Pire duel {metric.minimum} · moyenne {metric.average.toFixed(1)}
+                        Pire duel {metric.minimum} · moyenne{" "}
+                        {metric.average.toFixed(1)}
                       </small>
                     )}
                   </button>
@@ -496,9 +513,10 @@ export function AdminTournamentPoolsPage() {
               <div className="admin-card admin-tournament-pools__help">
                 <strong>{activeSeries?.name}</strong>
                 <span>
-                  Glissez une équipe sur une autre pour les échanger. Un déplacement
-                  direct est possible d’une poule de 5 vers une poule de 4. Les
-                  compteurs de créneaux communs sont recalculés immédiatement.
+                  Glissez une équipe sur une autre pour les échanger. Un
+                  déplacement direct est possible d’une poule de 5 vers une
+                  poule de 4. Les compteurs de créneaux communs sont recalculés
+                  immédiatement.
                 </span>
               </div>
 
@@ -526,8 +544,9 @@ export function AdminTournamentPoolsPage() {
                           <span>{activeSeries?.name}</span>
                           <h2>{poolName(poolIndex)}</h2>
                           <small>
-                            {pool.teams.length} équipes · pire duel {metric.minimum} ·
-                            moyenne {metric.average.toFixed(1)}
+                            {pool.teams.length} équipes · pire duel{" "}
+                            {metric.minimum} · moyenne{" "}
+                            {metric.average.toFixed(1)}
                           </small>
                         </div>
                         {editable && (
@@ -549,9 +568,12 @@ export function AdminTournamentPoolsPage() {
                         {pool.teams.map((assignment) => {
                           const team = teamById.get(assignment.teamId);
                           if (!team) return null;
-                          const effectiveLocked = pool.isLocked || assignment.isLocked;
+                          const effectiveLocked =
+                            pool.isLocked || assignment.isLocked;
                           const opponents = pool.teams
-                            .filter((other) => other.teamId !== assignment.teamId)
+                            .filter(
+                              (other) => other.teamId !== assignment.teamId,
+                            )
                             .map((other) => ({
                               team: teamById.get(other.teamId),
                               count: commonSlots(
@@ -561,8 +583,12 @@ export function AdminTournamentPoolsPage() {
                               ),
                             }))
                             .filter(
-                              (item): item is { team: TournamentPoolTeam; count: number } =>
-                                Boolean(item.team),
+                              (
+                                item,
+                              ): item is {
+                                team: TournamentPoolTeam;
+                                count: number;
+                              } => Boolean(item.team),
                             )
                             .sort((left, right) => left.count - right.count);
 
@@ -575,7 +601,9 @@ export function AdminTournamentPoolsPage() {
                               }
                               key={assignment.teamId}
                               draggable={Boolean(editable && !effectiveLocked)}
-                              onDragStart={() => setDraggedTeamId(assignment.teamId)}
+                              onDragStart={() =>
+                                setDraggedTeamId(assignment.teamId)
+                              }
                               onDragEnd={() => setDraggedTeamId(null)}
                               onDragOver={(event) => {
                                 if (editable && !effectiveLocked) {
@@ -593,13 +621,16 @@ export function AdminTournamentPoolsPage() {
                                 <div>
                                   <strong>{teamName(team)}</strong>
                                   <small>
-                                    {team.poolAvailabilityCount} disponibilités poules
+                                    {team.poolAvailabilityCount} disponibilités
+                                    poules
                                   </small>
                                 </div>
                                 {editable && !pool.isLocked && (
                                   <button
                                     type="button"
-                                    onClick={() => toggleTeamLock(assignment.teamId)}
+                                    onClick={() =>
+                                      toggleTeamLock(assignment.teamId)
+                                    }
                                     title="Conserver cette équipe dans sa poule au prochain rééquilibrage"
                                   >
                                     {assignment.isLocked ? "🔒" : "🔓"}
@@ -617,7 +648,9 @@ export function AdminTournamentPoolsPage() {
                                         : "admin-tournament-pool-team__duel"
                                     }
                                   >
-                                    <small>avec {teamName(opponent.team)}</small>
+                                    <small>
+                                      avec {teamName(opponent.team)}
+                                    </small>
                                     <strong>{opponent.count}</strong>
                                   </span>
                                 ))}
