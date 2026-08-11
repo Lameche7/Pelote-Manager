@@ -78,7 +78,10 @@ test("la migration fige le club sur le joueur et conserve les anciens moteurs", 
   assert.match(migration, /save_my_tournament_registration_v3/);
   assert.match(migration, /admin_save_tournament_team_v3/);
   assert.match(migration, /admin_get_tournament_pool_workspace_v2/);
-  assert.match(migration, /generate_tournament_test_data_before_club_affiliation/);
+  assert.match(
+    migration,
+    /generate_tournament_test_data_before_club_affiliation/,
+  );
   assert.match(migration, /Club test /);
 });
 
