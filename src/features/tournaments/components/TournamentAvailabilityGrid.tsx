@@ -1,9 +1,15 @@
 import { useMemo } from "react";
-import type { TournamentAvailabilitySlot } from "@/features/tournaments/types";
+import type {
+  TournamentAvailabilitySlot,
+  TournamentPhase,
+} from "@/features/tournaments/types";
 import "./TournamentAvailabilityGrid.css";
 
 const slotKey = (slot: TournamentAvailabilitySlot) =>
   `${slot.date}|${slot.startsAt}|${slot.endsAt}`;
+
+const slotPhase = (slot: TournamentAvailabilitySlot): TournamentPhase =>
+  slot.phase ?? "pools";
 
 const dateWeekday = (value: string) =>
   new Date(`${value}T12:00:00Z`).getUTCDay();
@@ -49,6 +55,7 @@ type DayGroup = {
 
 type WeekGroup = {
   key: string;
+  phase: TournamentPhase;
   week: number;
   year: number;
   days: DayGroup[];
@@ -56,14 +63,21 @@ type WeekGroup = {
 };
 
 const buildWeeks = (slots: TournamentAvailabilitySlot[]): WeekGroup[] => {
-  const ordered = [...slots].sort((left, right) =>
-    `${left.date}|${left.startsAt}|${left.endsAt}`.localeCompare(
+  const ordered = [...slots].sort((left, right) => {
+    const phaseOrder = slotPhase(left) === slotPhase(right)
+      ? 0
+      : slotPhase(left) === "pools"
+        ? -1
+        : 1;
+    if (phaseOrder !== 0) return phaseOrder;
+    return `${left.date}|${left.startsAt}|${left.endsAt}`.localeCompare(
       `${right.date}|${right.startsAt}|${right.endsAt}`,
-    ),
-  );
+    );
+  });
   const weeks = new Map<
     string,
     {
+      phase: TournamentPhase;
       week: number;
       year: number;
       days: Map<string, TournamentAvailabilitySlot[]>;
@@ -72,9 +86,11 @@ const buildWeeks = (slots: TournamentAvailabilitySlot[]): WeekGroup[] => {
   >();
 
   for (const slot of ordered) {
+    const phase = slotPhase(slot);
     const { week, year } = isoWeek(slot.date);
-    const key = `${year}-${String(week).padStart(2, "0")}`;
+    const key = `${phase}-${year}-${String(week).padStart(2, "0")}`;
     const group = weeks.get(key) ?? {
+      phase,
       week,
       year,
       days: new Map<string, TournamentAvailabilitySlot[]>(),
@@ -87,6 +103,7 @@ const buildWeeks = (slots: TournamentAvailabilitySlot[]): WeekGroup[] => {
 
   return [...weeks.entries()].map(([key, group]) => ({
     key,
+    phase: group.phase,
     week: group.week,
     year: group.year,
     days: [...group.days.entries()].map(([date, daySlots]) => ({
@@ -130,13 +147,21 @@ export function TournamentAvailabilityGrid({
       ),
     [selectedKeys, tournament.availableSlots],
   );
-  const weekendCount = useMemo(
-    () => validSelected.filter((slot) => isWeekend(slot.date)).length,
+  const poolSelected = useMemo(
+    () => validSelected.filter((slot) => slotPhase(slot) === "pools"),
     [validSelected],
   );
+  const finalsSelected = useMemo(
+    () => validSelected.filter((slot) => slotPhase(slot) === "finals"),
+    [validSelected],
+  );
+  const poolWeekendCount = useMemo(
+    () => poolSelected.filter((slot) => isWeekend(slot.date)).length,
+    [poolSelected],
+  );
   const minimumReached =
-    validSelected.length >= tournament.minimumAvailabilitySlots &&
-    weekendCount >= tournament.minimumWeekendAvailabilitySlots;
+    poolSelected.length >= tournament.minimumAvailabilitySlots &&
+    poolWeekendCount >= tournament.minimumWeekendAvailabilitySlots;
 
   const emitKeys = (keys: Set<string>) => {
     onChange(
@@ -163,7 +188,7 @@ export function TournamentAvailabilityGrid({
   const duplicateWeek = (sourceIndex: number) => {
     const source = weeks[sourceIndex];
     const target = weeks[sourceIndex + 1];
-    if (!source || !target) return;
+    if (!source || !target || source.phase !== target.phase) return;
 
     const selectedPatterns = new Set(
       source.days.flatMap((day) =>
@@ -190,6 +215,9 @@ export function TournamentAvailabilityGrid({
   };
 
   const admin = variant === "admin";
+  const hasFinals = tournament.availableSlots.some(
+    (slot) => slotPhase(slot) === "finals",
+  );
 
   return (
     <section className="tournament-availability-grid">
@@ -199,7 +227,7 @@ export function TournamentAvailabilityGrid({
           <h3>
             {admin
               ? "Disponibilités datées de l’équipe"
-              : "Créneaux disponibles (poules)"}
+              : "Créneaux disponibles — poules & phase finale"}
           </h3>
         </div>
         <strong>
@@ -219,20 +247,27 @@ export function TournamentAvailabilityGrid({
       >
         {minimumReached ? "✅" : "⚠️"}{" "}
         {admin
-          ? "L’équipe doit conserver au moins "
-          : "Vous devez cocher au moins "}
-        <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux au total
-        dont <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
-        week-end.
+          ? "Pour les poules, l’équipe doit conserver au moins "
+          : "Pour les poules, vous devez cocher au moins "}
+        <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux dont{" "}
+        <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
+        week-end. Les disponibilités de phase finale sont enregistrées
+        séparément.
       </p>
 
       <div className="tournament-availability-grid__stats">
         <span>
-          Créneaux cochés : <strong>{validSelected.length}</strong> — Week-end :{" "}
-          <strong>{weekendCount}</strong>
+          Poules : <strong>{poolSelected.length}</strong> créneaux — Week-end :{" "}
+          <strong>{poolWeekendCount}</strong>
         </span>
+        {hasFinals && (
+          <span>
+            Phase finale : <strong>{finalsSelected.length}</strong> créneau
+            {finalsSelected.length > 1 ? "x" : ""}
+          </span>
+        )}
         <span>
-          Minimum requis — Total :{" "}
+          Minimum poules — Total :{" "}
           <strong>{tournament.minimumAvailabilitySlots}</strong> / Week-end :{" "}
           <strong>{tournament.minimumWeekendAvailabilitySlots}</strong>
         </span>
@@ -240,92 +275,99 @@ export function TournamentAvailabilityGrid({
 
       {weeks.length === 0 ? (
         <p className="tournament-availability-grid__empty">
-          Aucun créneau daté n’est disponible sur la période de ce tournoi.
+          Aucun créneau daté n’est disponible sur les phases configurées de ce
+          tournoi.
         </p>
       ) : (
         <div className="tournament-availability-grid__weeks">
-          {weeks.map((week, weekIndex) => (
-            <article className="tournament-availability-week" key={week.key}>
-              <header>
-                <h4>
-                  Semaine {week.week} — {week.year}
-                </h4>
-                {weekIndex < weeks.length - 1 && (
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => duplicateWeek(weekIndex)}
-                  >
-                    Dupliquer cette semaine → suivante
-                  </button>
-                )}
-              </header>
+          {weeks.map((week, weekIndex) => {
+            const canDuplicate =
+              weekIndex < weeks.length - 1 &&
+              weeks[weekIndex + 1]?.phase === week.phase;
+            return (
+              <article className="tournament-availability-week" key={week.key}>
+                <header>
+                  <h4>
+                    {week.phase === "pools" ? "Phase de poules" : "Phase finale"}
+                    {" · "}Semaine {week.week} — {week.year}
+                  </h4>
+                  {canDuplicate && (
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => duplicateWeek(weekIndex)}
+                    >
+                      Dupliquer cette semaine → suivante
+                    </button>
+                  )}
+                </header>
 
-              <div className="tournament-availability-week__scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">Jour</th>
-                      {week.times.map((time) => (
-                        <th scope="col" key={`${week.key}-${time}`}>
-                          {time}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {week.days.map((day) => {
-                      const allSelected = day.slots.every((slot) =>
-                        selectedKeys.has(slotKey(slot)),
-                      );
-                      return (
-                        <tr key={day.date}>
-                          <th scope="row">
-                            <div className="tournament-availability-day">
-                              <strong>{formatDay(day.date)}</strong>
-                              <label>
-                                <input
-                                  type="checkbox"
-                                  disabled={disabled}
-                                  checked={allSelected}
-                                  onChange={(event) =>
-                                    toggleDay(day, event.target.checked)
-                                  }
-                                />
-                                <span>Tout</span>
-                              </label>
-                            </div>
+                <div className="tournament-availability-week__scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Jour</th>
+                        {week.times.map((time) => (
+                          <th scope="col" key={`${week.key}-${time}`}>
+                            {time}
                           </th>
-                          {week.times.map((time) => {
-                            const slot = day.slots.find(
-                              (candidate) => candidate.startsAt === time,
-                            );
-                            return (
-                              <td key={`${day.date}-${time}`}>
-                                {slot ? (
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {week.days.map((day) => {
+                        const allSelected = day.slots.every((slot) =>
+                          selectedKeys.has(slotKey(slot)),
+                        );
+                        return (
+                          <tr key={day.date}>
+                            <th scope="row">
+                              <div className="tournament-availability-day">
+                                <strong>{formatDay(day.date)}</strong>
+                                <label>
                                   <input
                                     type="checkbox"
-                                    aria-label={`${formatDay(day.date)} à ${time}`}
                                     disabled={disabled}
-                                    checked={selectedKeys.has(slotKey(slot))}
+                                    checked={allSelected}
                                     onChange={(event) =>
-                                      toggleSlot(slot, event.target.checked)
+                                      toggleDay(day, event.target.checked)
                                     }
                                   />
-                                ) : (
-                                  <span aria-hidden="true">—</span>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </article>
-          ))}
+                                  <span>Tout</span>
+                                </label>
+                              </div>
+                            </th>
+                            {week.times.map((time) => {
+                              const slot = day.slots.find(
+                                (candidate) => candidate.startsAt === time,
+                              );
+                              return (
+                                <td key={`${day.date}-${time}`}>
+                                  {slot ? (
+                                    <input
+                                      type="checkbox"
+                                      aria-label={`${formatDay(day.date)} à ${time}`}
+                                      disabled={disabled}
+                                      checked={selectedKeys.has(slotKey(slot))}
+                                      onChange={(event) =>
+                                        toggleSlot(slot, event.target.checked)
+                                      }
+                                    />
+                                  ) : (
+                                    <span aria-hidden="true">—</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </section>
