@@ -31,10 +31,7 @@ test("la proposition automatique privilegie au maximum les poules de 4", () => {
 });
 
 test("une repartition admin doit utiliser 4 5 6 et couvrir toutes les equipes", () => {
-  assert.equal(
-    poolSizesAreValidFor(32, [4, 4, 4, 4, 4, 4, 4, 4]),
-    true,
-  );
+  assert.equal(poolSizesAreValidFor(32, [4, 4, 4, 4, 4, 4, 4, 4]), true);
   assert.equal(poolSizesAreValidFor(32, [5, 5, 5, 5, 6, 6]), true);
   assert.equal(poolSizesAreValidFor(32, [4, 4, 4, 4, 5, 5]), false);
   assert.equal(poolSizesAreValidFor(32, [3, 5, 6, 6, 6, 6]), false);
