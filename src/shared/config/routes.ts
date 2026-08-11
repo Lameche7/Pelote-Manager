@@ -20,6 +20,7 @@ export const ROUTES = {
   adminEvents: "/admin/evenements",
   adminTournaments: "/admin/tournois",
   adminTournamentTeams: "/admin/tournois/equipes",
+  adminTournamentPools: "/admin/tournois/poules",
   adminCommunication: "/admin/communication",
   adminStatistics: "/admin/statistiques",
   adminSettings: "/admin/parametres",
