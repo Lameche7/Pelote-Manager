@@ -21,24 +21,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Formater les fichiers calendrier PR76
-        run: >-
-          npx prettier --write
-          src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
-          src/features/admin/tournaments/services/adminTournamentPlanningService.ts
-          src/features/tournaments/domain/planningCalendar.ts
-          tests/tournamentPlanningCalendar.test.mjs
-
-      - name: Exporter les fichiers formatés calendrier PR76
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr76-calendar-prettier
-          path: |
-            src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
-            src/features/admin/tournaments/services/adminTournamentPlanningService.ts
-            src/features/tournaments/domain/planningCalendar.ts
-            tests/tournamentPlanningCalendar.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
