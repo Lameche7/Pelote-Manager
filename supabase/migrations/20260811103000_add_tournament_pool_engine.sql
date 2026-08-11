@@ -1,15 +1,15 @@
 begin;
 
--- PR70 — Pool Engine.
--- Les poules restent privées et sont manipulées uniquement via des RPC admin.
+-- PR70 — Pool Engine adaptatif.
+-- Les poules sont calculées à partir des équipes réellement acceptées,
+-- avec 4, 5 ou 6 équipes par poule. Aucun verrou équipe/poule n'est persisté.
 
 create table public.tournament_pools (
   id uuid primary key default gen_random_uuid(),
   tournament_id uuid not null references public.tournaments (id) on delete cascade,
   series_id uuid not null references public.tournament_series (id) on delete cascade,
   display_order integer not null check (display_order >= 0),
-  target_size smallint not null check (target_size in (4, 5)),
-  is_locked boolean not null default false,
+  target_size smallint not null check (target_size in (4, 5, 6)),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (tournament_id, series_id, display_order)
@@ -19,7 +19,6 @@ create table public.tournament_pool_teams (
   pool_id uuid not null references public.tournament_pools (id) on delete cascade,
   team_id uuid not null references public.tournament_teams (id) on delete cascade,
   display_order integer not null check (display_order >= 0),
-  is_locked boolean not null default false,
   created_at timestamptz not null default now(),
   primary key (pool_id, team_id),
   unique (team_id),
@@ -63,7 +62,7 @@ as $$
       ) as stats on true
       where pool.tournament_id = target_tournament_id
         and (
-          pool.target_size not in (4, 5)
+          pool.target_size not in (4, 5, 6)
           or stats.team_count <> pool.target_size
         )
     )
@@ -258,14 +257,12 @@ begin
             'series_id', pool.series_id,
             'display_order', pool.display_order,
             'target_size', pool.target_size,
-            'is_locked', pool.is_locked,
             'teams', (
               select coalesce(
                 jsonb_agg(
                   jsonb_build_object(
                     'team_id', assignment.team_id,
-                    'display_order', assignment.display_order,
-                    'is_locked', assignment.is_locked
+                    'display_order', assignment.display_order
                   )
                   order by assignment.display_order
                 ),
@@ -305,8 +302,6 @@ declare
   target_team_id uuid;
   target_display_order integer;
   target_size integer;
-  target_pool_locked boolean;
-  target_team_locked boolean;
   target_pool_id uuid;
   target_team_display_order integer;
   accepted_count integer;
@@ -366,7 +361,7 @@ begin
     if target_series_id is null
       or target_display_order is null
       or target_display_order < 0
-      or target_size not in (4, 5)
+      or target_size not in (4, 5, 6)
       or jsonb_typeof(coalesce(pool_item->'teams', '[]'::jsonb)) <> 'array'
       or jsonb_array_length(coalesce(pool_item->'teams', '[]'::jsonb)) <> target_size then
       raise exception 'Tournament pool payload is invalid' using errcode = '22023';
@@ -425,14 +420,12 @@ begin
     target_series_id := (pool_item->>'series_id')::uuid;
     target_display_order := (pool_item->>'display_order')::integer;
     target_size := (pool_item->>'target_size')::integer;
-    target_pool_locked := coalesce((pool_item->>'is_locked')::boolean, false);
 
     insert into public.tournament_pools (
       tournament_id,
       series_id,
       display_order,
       target_size,
-      is_locked,
       updated_at
     )
     values (
@@ -440,7 +433,6 @@ begin
       target_series_id,
       target_display_order,
       target_size,
-      target_pool_locked,
       now()
     )
     returning id into target_pool_id;
@@ -449,23 +441,18 @@ begin
     for team_item in
       select value from jsonb_array_elements(pool_item->'teams')
     loop
-      target_team_id := (team_item->>'team_id')::uuid;
-      target_team_locked := coalesce((team_item->>'is_locked')::boolean, false);
-
       insert into public.tournament_pool_teams (
         pool_id,
         team_id,
-        display_order,
-        is_locked
+        display_order
       )
       values (
         target_pool_id,
-        target_team_id,
+        (team_item->>'team_id')::uuid,
         coalesce(
           nullif(team_item->>'display_order', '')::integer,
           target_team_display_order
-        ),
-        target_pool_locked or target_team_locked
+        )
       );
 
       target_team_display_order := target_team_display_order + 1;
@@ -546,16 +533,6 @@ begin
     raise exception 'Tournament pools are incomplete' using errcode = 'P0001';
   end if;
 
-  update public.tournament_pools
-  set is_locked = true, updated_at = now()
-  where tournament_id = target_tournament.id;
-
-  update public.tournament_pool_teams as assignment
-  set is_locked = true
-  from public.tournament_pools as pool
-  where pool.id = assignment.pool_id
-    and pool.tournament_id = target_tournament.id;
-
   update public.tournaments
   set
     status = 'pools_validated',
@@ -588,11 +565,71 @@ begin
 end;
 $$;
 
+create or replace function public.admin_reopen_tournament_pools(
+  target_tournament_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_club_id uuid := public.admin_current_club_id();
+  target_tournament public.tournaments;
+begin
+  if not public.has_club_permission(target_club_id, 'tournaments.manage') then
+    raise exception 'Forbidden' using errcode = '42501';
+  end if;
+
+  select tournament.*
+  into target_tournament
+  from public.tournaments as tournament
+  where tournament.id = target_tournament_id
+    and tournament.club_id = target_club_id
+  for update;
+
+  if target_tournament.id is null then
+    raise exception 'Tournament not found' using errcode = 'P0002';
+  end if;
+
+  if target_tournament.status <> 'pools_validated' then
+    raise exception 'Tournament pools cannot be reopened at this stage'
+      using errcode = 'P0001';
+  end if;
+
+  update public.tournaments
+  set
+    status = 'pools_generated',
+    updated_by = auth.uid(),
+    updated_at = now()
+  where id = target_tournament.id;
+
+  insert into public.tournament_audit_log (
+    tournament_id,
+    action,
+    before_status,
+    after_status,
+    payload,
+    created_by
+  )
+  values (
+    target_tournament.id,
+    'pools_reopened',
+    'pools_validated',
+    'pools_generated',
+    '{}'::jsonb,
+    auth.uid()
+  );
+end;
+$$;
+
 revoke all on function public.admin_get_tournament_pool_workspace(uuid)
 from public, anon;
 revoke all on function public.admin_save_tournament_pools(uuid, jsonb)
 from public, anon;
 revoke all on function public.admin_validate_tournament_pools(uuid)
+from public, anon;
+revoke all on function public.admin_reopen_tournament_pools(uuid)
 from public, anon;
 
 grant execute on function public.admin_get_tournament_pool_workspace(uuid)
@@ -600,6 +637,8 @@ to authenticated;
 grant execute on function public.admin_save_tournament_pools(uuid, jsonb)
 to authenticated;
 grant execute on function public.admin_validate_tournament_pools(uuid)
+to authenticated;
+grant execute on function public.admin_reopen_tournament_pools(uuid)
 to authenticated;
 
 commit;
