@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
+import { TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS } from "@/features/tournaments/domain/tournamentAvailabilityRules";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
   MyTournamentRegistration,
@@ -182,13 +183,22 @@ export function TournamentRegistrationForm({
     draft?.availabilitySlots.filter(
       (slot) => (slot.phase ?? "pools") === "pools",
     ) ?? [];
+  const finalsAvailabilitySlots =
+    draft?.availabilitySlots.filter((slot) => slot.phase === "finals") ?? [];
   const weekendAvailabilityCount = poolAvailabilitySlots.filter((slot) =>
     isWeekendDate(slot.date),
   ).length;
-  const availabilityMinimumReached = Boolean(
+  const poolMinimumReached = Boolean(
     draft &&
     poolAvailabilitySlots.length >= tournament.minimumAvailabilitySlots &&
     weekendAvailabilityCount >= tournament.minimumWeekendAvailabilitySlots,
+  );
+  const finalsMinimumReached =
+    tournament.availableFinalsSlotCount === 0 ||
+    finalsAvailabilitySlots.length >=
+      TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS;
+  const availabilityMinimumReached = Boolean(
+    draft && poolMinimumReached && finalsMinimumReached,
   );
 
   const selectPartner = (member: TournamentPartnerSuggestion) => {
@@ -245,9 +255,15 @@ export function TournamentRegistrationForm({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!draft) return;
-    if (!availabilityMinimumReached) {
+    if (!poolMinimumReached) {
       onError(
         `Pour la phase de poules, vous devez cocher au moins ${tournament.minimumAvailabilitySlots} créneaux dont ${tournament.minimumWeekendAvailabilitySlots} le week-end.`,
+      );
+      return;
+    }
+    if (!finalsMinimumReached) {
+      onError(
+        `Pour la phase finale, vous devez cocher au moins ${TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS} créneaux.`,
       );
       return;
     }
