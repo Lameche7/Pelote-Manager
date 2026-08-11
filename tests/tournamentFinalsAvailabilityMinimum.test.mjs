@@ -10,9 +10,7 @@ const migrationPath =
 test("la phase finale exige 35 créneaux dès qu'elle est configurée", async () => {
   const [migration, rules] = await Promise.all([
     read(migrationPath),
-    read(
-      "../src/features/tournaments/domain/tournamentAvailabilityRules.ts",
-    ),
+    read("../src/features/tournaments/domain/tournamentAvailabilityRules.ts"),
   ]);
 
   assert.match(rules, /TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS = 35/);
@@ -32,7 +30,10 @@ test("le générateur complète les équipes fictives jusqu'au minimum final", a
     /generate_tournament_test_data_phase_aware_legacy/,
   );
   assert.match(migration, /available_finals_count < 35/);
-  assert.match(migration, /missing_finals_count := greatest\(35 - selected_finals_count, 0\)/);
+  assert.match(
+    migration,
+    /missing_finals_count := greatest\(35 - selected_finals_count, 0\)/,
+  );
   assert.match(migration, /minimum_finals_slots/);
 });
 
