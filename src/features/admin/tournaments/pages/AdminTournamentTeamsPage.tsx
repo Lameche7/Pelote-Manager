@@ -43,8 +43,22 @@ const blankDraft = (seriesId = ""): AdminTournamentTeamDraft => ({
   contactPhone: "",
   comments: "",
   players: [
-    { firstName: "", lastName: "", email: "", phone: "", role: "front" },
-    { firstName: "", lastName: "", email: "", phone: "", role: "back" },
+    {
+      firstName: "",
+      lastName: "",
+      clubName: "",
+      email: "",
+      phone: "",
+      role: "front",
+    },
+    {
+      firstName: "",
+      lastName: "",
+      clubName: "",
+      email: "",
+      phone: "",
+      role: "back",
+    },
   ],
   availabilityRules: [],
   availabilitySlots: [],
@@ -68,6 +82,10 @@ const playerName = (team: AdminTournamentTeam) =>
   team.players
     .map((player) => `${player.firstName} ${player.lastName}`.trim())
     .join(" / ");
+
+const teamClubNames = (team: AdminTournamentTeam) => [
+  ...new Set(team.players.map((player) => player.clubName.trim()).filter(Boolean)),
+];
 
 const availabilitySummary = (
   team: AdminTournamentTeam,
@@ -236,6 +254,10 @@ export function AdminTournamentTeamsPage() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!draft || !selectedId) return;
+    if (draft.players.some((player) => !player.clubName.trim())) {
+      setError("Renseignez le club de chacun des deux joueurs.");
+      return;
+    }
     setSaving(true);
     setError("");
     setMessage("");
@@ -306,9 +328,8 @@ export function AdminTournamentTeamsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Équipes & inscriptions</h1>
           <p className="admin-page__lead">
-            Suivez les capacités par série, accédez rapidement au tableau des
-            équipes et corrigez une inscription ou ses disponibilités avant la
-            génération des poules.
+            Suivez les capacités par série, les clubs des joueurs et les
+            disponibilités avant la génération des poules.
           </p>
         </div>
         {editable && (
@@ -551,6 +572,24 @@ export function AdminTournamentTeamsPage() {
                         />
                       </label>
                       <label>
+                        Club
+                        <input
+                          required
+                          disabled={saving}
+                          value={player.clubName}
+                          onChange={(event) =>
+                            setDraft({
+                              ...draft,
+                              players: draft.players.map((item, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...item, clubName: event.target.value }
+                                  : item,
+                              ),
+                            })
+                          }
+                        />
+                      </label>
+                      <label>
                         E-mail
                         <input
                           type="email"
@@ -640,6 +679,7 @@ export function AdminTournamentTeamsPage() {
                     <thead>
                       <tr>
                         <th scope="col">Équipe</th>
+                        <th scope="col">Club(s)</th>
                         <th scope="col">Contact</th>
                         <th scope="col">Disponibilités</th>
                         <th scope="col">Origine</th>
@@ -656,7 +696,7 @@ export function AdminTournamentTeamsPage() {
                           className="admin-tournament-team-table__series"
                         >
                           <tr className="admin-tournament-team-table__series-heading">
-                            <th colSpan={6} scope="rowgroup">
+                            <th colSpan={7} scope="rowgroup">
                               <strong>{series.name}</strong>
                               <span>
                                 {series.acceptedCount}/{series.capacity}{" "}
@@ -667,7 +707,7 @@ export function AdminTournamentTeamsPage() {
                           {seriesTeams.length === 0 ? (
                             <tr>
                               <td
-                                colSpan={6}
+                                colSpan={7}
                                 className="admin-tournament-team-table__empty"
                               >
                                 Aucune équipe dans cette série.
@@ -680,6 +720,15 @@ export function AdminTournamentTeamsPage() {
                                   <strong>{playerName(team)}</strong>
                                   {team.comments && (
                                     <small>{team.comments}</small>
+                                  )}
+                                </td>
+                                <td>
+                                  {teamClubNames(team).length > 0 ? (
+                                    teamClubNames(team).map((clubName) => (
+                                      <small key={clubName}>{clubName}</small>
+                                    ))
+                                  ) : (
+                                    <small>Non renseigné</small>
                                   )}
                                 </td>
                                 <td>
