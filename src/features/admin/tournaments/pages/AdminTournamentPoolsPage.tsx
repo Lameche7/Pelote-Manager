@@ -9,10 +9,13 @@ import {
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
 import {
+  buildClubAffiliationMap,
   buildCompatibilityMap,
   commonSlots,
   generateOptimizedPools,
+  getPoolClubMetric,
   getPoolMetric,
+  getSeriesClubMetric,
   getSeriesMetric,
   movePoolTeam,
   swapPoolTeams,
@@ -50,6 +53,9 @@ const teamName = (team: TournamentPoolTeam) =>
     .map((player) => `${player.firstName} ${player.lastName}`.trim())
     .join(" / ");
 
+const teamClubs = (team: TournamentPoolTeam) =>
+  team.clubNames.length > 0 ? team.clubNames.join(" · ") : "Club non renseigné";
+
 const signature = (pools: PoolDraft[]) =>
   JSON.stringify(
     pools.map((pool) => ({
@@ -65,6 +71,11 @@ const clonePools = (pools: PoolDraft[]) =>
     ...pool,
     teams: pool.teams.map((team) => ({ ...team })),
   }));
+
+const clubMetricLabel = (maxTeamsPerClub: number, duplicatePairCount: number) =>
+  duplicatePairCount === 0
+    ? "Clubs parfaitement répartis"
+    : `Max ${maxTeamsPerClub} équipes d’un même club · ${duplicatePairCount} rapprochement${duplicatePairCount > 1 ? "s" : ""}`;
 
 export function AdminTournamentPoolsPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
@@ -147,6 +158,10 @@ export function AdminTournamentPoolsPage() {
     () => buildCompatibilityMap(workspace?.pairings ?? []),
     [workspace?.pairings],
   );
+  const clubAffiliations = useMemo(
+    () => buildClubAffiliationMap(workspace?.teams ?? []),
+    [workspace?.teams],
+  );
   const dirty = signature(pools) !== signature(persistedPools);
   const editable =
     workspace?.tournament.status === "registrations_closed" ||
@@ -184,7 +199,11 @@ export function AdminTournamentPoolsPage() {
       name: series.name,
       teams: (workspace?.teams ?? [])
         .filter((team) => team.seriesId === series.id)
-        .map((team) => ({ id: team.id, seriesId: team.seriesId })),
+        .map((team) => ({
+          id: team.id,
+          seriesId: team.seriesId,
+          clubNames: team.clubNames,
+        })),
     }));
 
   const generate = () => {
@@ -205,7 +224,7 @@ export function AdminTournamentPoolsPage() {
       });
       setPools(generated);
       setMessage(
-        "Nouvelle proposition calculée à partir du nombre réel d’équipes acceptées.",
+        "Nouvelle proposition : clubs répartis au mieux, puis disponibilités optimisées.",
       );
     } catch (generationError) {
       setError(
@@ -321,9 +340,8 @@ export function AdminTournamentPoolsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Poules</h1>
           <p className="admin-page__lead">
-            Le moteur part du nombre réel d’équipes inscrites et compose
-            automatiquement des poules équilibrées de 4, 5 ou 6 équipes avant
-            d’optimiser leurs disponibilités.
+            Le moteur compose des poules de 4, 5 ou 6 équipes en répartissant
+            d’abord au mieux les clubs, puis en optimisant les disponibilités.
           </p>
         </div>
       </header>
@@ -424,7 +442,7 @@ export function AdminTournamentPoolsPage() {
               </strong>
               <span>
                 Fermez les inscriptions avant de générer les poules. Le moteur
-                utilisera alors uniquement les équipes réellement acceptées.
+                utilisera uniquement les équipes réellement acceptées.
               </span>
             </div>
           )}
@@ -462,6 +480,10 @@ export function AdminTournamentPoolsPage() {
                   (pool) => pool.seriesId === series.id,
                 );
                 const metric = getSeriesMetric(seriesPools, compatibility);
+                const clubMetric = getSeriesClubMetric(
+                  seriesPools,
+                  clubAffiliations,
+                );
                 return (
                   <button
                     key={series.id}
@@ -482,7 +504,11 @@ export function AdminTournamentPoolsPage() {
                     </span>
                     {seriesPools.length > 0 && (
                       <small>
-                        Pire duel {metric.minimum} · moyenne{" "}
+                        {clubMetricLabel(
+                          clubMetric.maxTeamsPerClub,
+                          clubMetric.duplicatePairCount,
+                        )}
+                        {" · "}Pire duel {metric.minimum} · moyenne{" "}
                         {metric.average.toFixed(1)}
                       </small>
                     )}
@@ -513,17 +539,18 @@ export function AdminTournamentPoolsPage() {
               <div className="admin-card admin-tournament-pools__help">
                 <strong>{activeSeries?.name}</strong>
                 <span>
-                  Les poules sont dimensionnées automatiquement entre 4 et 6
-                  équipes. Glissez une équipe sur une autre pour les échanger,
-                  ou sur une autre poule pour la déplacer si les deux poules
-                  restent dans cette plage. Les indicateurs sont recalculés
-                  immédiatement.
+                  Le moteur limite d’abord les équipes représentant le même club
+                  dans une poule, puis optimise les créneaux communs. Une équipe
+                  composée de joueurs de deux clubs représente les deux. Le
+                  glisser-déposer reste libre et les indicateurs clubs/dispos se
+                  recalculent immédiatement.
                 </span>
               </div>
 
               <div className="admin-tournament-pools__board">
                 {activePools.map((pool, poolIndex) => {
                   const metric = getPoolMetric(pool, compatibility);
+                  const clubMetric = getPoolClubMetric(pool, clubAffiliations);
                   return (
                     <article
                       className="admin-tournament-pool"
@@ -541,8 +568,12 @@ export function AdminTournamentPoolsPage() {
                           <span>{activeSeries?.name}</span>
                           <h2>{poolName(poolIndex)}</h2>
                           <small>
-                            {pool.teams.length} équipes · pire duel{" "}
-                            {metric.minimum} · moyenne{" "}
+                            {pool.teams.length} équipes ·{" "}
+                            {clubMetricLabel(
+                              clubMetric.maxTeamsPerClub,
+                              clubMetric.duplicatePairCount,
+                            )}
+                            {" · "}pire duel {metric.minimum} · moyenne{" "}
                             {metric.average.toFixed(1)}
                           </small>
                         </div>
@@ -598,6 +629,7 @@ export function AdminTournamentPoolsPage() {
                               <header>
                                 <div>
                                   <strong>{teamName(team)}</strong>
+                                  <small>{teamClubs(team)}</small>
                                   <small>
                                     {team.poolAvailabilityCount} disponibilités
                                     poules
