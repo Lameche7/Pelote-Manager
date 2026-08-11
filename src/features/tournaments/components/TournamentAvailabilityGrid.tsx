@@ -64,11 +64,12 @@ type WeekGroup = {
 
 const buildWeeks = (slots: TournamentAvailabilitySlot[]): WeekGroup[] => {
   const ordered = [...slots].sort((left, right) => {
-    const phaseOrder = slotPhase(left) === slotPhase(right)
-      ? 0
-      : slotPhase(left) === "pools"
-        ? -1
-        : 1;
+    const phaseOrder =
+      slotPhase(left) === slotPhase(right)
+        ? 0
+        : slotPhase(left) === "pools"
+          ? -1
+          : 1;
     if (phaseOrder !== 0) return phaseOrder;
     return `${left.date}|${left.startsAt}|${left.endsAt}`.localeCompare(
       `${right.date}|${right.startsAt}|${right.endsAt}`,
@@ -288,7 +289,9 @@ export function TournamentAvailabilityGrid({
               <article className="tournament-availability-week" key={week.key}>
                 <header>
                   <h4>
-                    {week.phase === "pools" ? "Phase de poules" : "Phase finale"}
+                    {week.phase === "pools"
+                      ? "Phase de poules"
+                      : "Phase finale"}
                     {" · "}Semaine {week.week} — {week.year}
                   </h4>
                   {canDuplicate && (
