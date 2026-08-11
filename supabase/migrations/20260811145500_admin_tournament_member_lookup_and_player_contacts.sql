@@ -114,6 +114,12 @@ as $$
       nullif(btrim(member.phone), '') is not null as has_phone
     from public.club_members as member
     where member.id = nullif(player_item.value->>'member_id', '')::uuid
+      and exists (
+        select 1
+        from public.tournament_team_players as stored_player
+        where stored_player.team_id = target_team_id
+          and stored_player.member_id = member.id
+      )
   ) as member_stats on true;
 $$;
 
@@ -167,6 +173,7 @@ declare
   player_values jsonb := coalesce(payload->'players', '[]'::jsonb);
   player_item jsonb;
   normalized_players jsonb := '[]'::jsonb;
+  seen_member_ids uuid[] := '{}'::uuid[];
   item_member_id uuid;
   item_role text;
   item_first_name text;
@@ -211,7 +218,12 @@ begin
     item_phone := btrim(coalesce(player_item->>'phone', ''));
 
     if item_member_id is not null then
-      select member.*, club.name
+      if item_member_id = any(seen_member_ids) then
+        raise exception 'Tournament players are invalid' using errcode = '22023';
+      end if;
+      seen_member_ids := array_append(seen_member_ids, item_member_id);
+
+      select member, club.name
       into member_row, member_club_name
       from public.club_members as member
       join public.clubs as club on club.id = member.club_id
