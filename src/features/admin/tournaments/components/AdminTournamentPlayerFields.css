@@ -1,0 +1,80 @@
+.admin-tournament-member-search {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.admin-tournament-member-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid rgb(15 61 46 / 18%);
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  background: rgb(15 61 46 / 6%);
+}
+
+.admin-tournament-member-selected > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.admin-tournament-member-selected small {
+  opacity: 0.65;
+}
+
+.admin-tournament-member-selected button,
+.admin-tournament-member-suggestions button {
+  cursor: pointer;
+  border: 1px solid rgb(107 114 128 / 24%);
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.admin-tournament-member-selected button {
+  padding: 0.45rem 0.65rem;
+}
+
+.admin-tournament-member-suggestions {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.admin-tournament-member-suggestions button {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+}
+
+.admin-tournament-member-suggestions button:hover {
+  border-color: var(--club-primary, #0f3d2e);
+  background: rgb(15 61 46 / 5%);
+}
+
+.admin-tournament-member-suggestions span,
+.admin-tournament-member-suggestions small {
+  font-size: 0.76rem;
+}
+
+.admin-tournament-member-suggestions small {
+  opacity: 0.65;
+}
+
+.admin-tournament-team-table__contacts {
+  min-width: 13rem;
+}
+
+.admin-tournament-team-table__contacts > div + div {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgb(107 114 128 / 12%);
+}
+
+.admin-tournament-team-table__contacts strong {
+  display: block;
+  font-size: 0.72rem;
+}

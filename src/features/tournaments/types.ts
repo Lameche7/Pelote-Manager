@@ -62,7 +62,7 @@ export type TournamentRegistrationIdentity = {
   phoneFromMember: boolean;
 };
 
-export type TournamentPartnerSuggestion = {
+export type TournamentMemberSuggestion = {
   id: string;
   firstName: string;
   lastName: string;
@@ -70,6 +70,8 @@ export type TournamentPartnerSuggestion = {
   hasEmail: boolean;
   hasPhone: boolean;
 };
+
+export type TournamentPartnerSuggestion = TournamentMemberSuggestion;
 
 export type PublicTournamentSummary = {
   id: string;
@@ -161,8 +163,6 @@ export type AdminTournamentTeam = {
 export type AdminTournamentTeamDraft = {
   seriesId: string;
   status: "pending" | "accepted";
-  contactEmail: string;
-  contactPhone: string;
   comments: string;
   players: TournamentTeamPlayer[];
   availabilityRules: TournamentAvailabilityRule[];
