@@ -51,9 +51,11 @@ const buildDraft = (
     submitterRole: submitter?.role ?? "front",
     submitterFirstName: identity.firstName || submitter?.firstName || "",
     submitterLastName: identity.lastName || submitter?.lastName || "",
+    submitterClubName: identity.clubName || submitter?.clubName || "",
     partnerMemberId: partner?.memberId ?? null,
     partnerFirstName: partner?.firstName ?? "",
     partnerLastName: partner?.lastName ?? "",
+    partnerClubName: partner?.clubName ?? "",
     partnerEmail: partner?.email ?? "",
     partnerPhone: partner?.phone ?? "",
     contactEmail:
@@ -208,6 +210,7 @@ export function TournamentRegistrationForm({
       partnerMemberId: member.id,
       partnerFirstName: member.firstName,
       partnerLastName: member.lastName,
+      partnerClubName: member.clubName,
       partnerEmail: member.hasEmail ? "" : draft.partnerEmail,
       partnerPhone: member.hasPhone ? "" : draft.partnerPhone,
     });
@@ -228,6 +231,7 @@ export function TournamentRegistrationForm({
         partnerMemberId: null,
         partnerFirstName: "",
         partnerLastName: "",
+        partnerClubName: "",
         partnerEmail: "",
         partnerPhone: "",
       });
@@ -243,6 +247,7 @@ export function TournamentRegistrationForm({
       partnerMemberId: null,
       partnerFirstName: "",
       partnerLastName: "",
+      partnerClubName: "",
       partnerEmail: "",
       partnerPhone: "",
     });
@@ -255,6 +260,10 @@ export function TournamentRegistrationForm({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!draft) return;
+    if (!draft.submitterClubName.trim() || !draft.partnerClubName.trim()) {
+      onError("Renseignez le club de chacun des deux joueurs.");
+      return;
+    }
     if (!poolMinimumReached) {
       onError(
         `Pour la phase de poules, vous devez cocher au moins ${tournament.minimumAvailabilitySlots} créneaux dont ${tournament.minimumWeekendAvailabilitySlots} le week-end.`,
@@ -380,6 +389,22 @@ export function TournamentRegistrationForm({
               setDraft({ ...draft, submitterLastName: event.target.value })
             }
           />
+        </label>
+
+        <label>
+          Votre club
+          <input
+            required
+            disabled={saving}
+            readOnly={Boolean(identity.memberId)}
+            value={draft.submitterClubName}
+            onChange={(event) =>
+              setDraft({ ...draft, submitterClubName: event.target.value })
+            }
+          />
+          {identity.memberId && (
+            <small>Récupéré depuis votre fiche licencié.</small>
+          )}
         </label>
 
         <label>
@@ -512,6 +537,22 @@ export function TournamentRegistrationForm({
           </label>
 
           <label>
+            Club du partenaire
+            <input
+              required
+              disabled={saving}
+              readOnly={Boolean(draft.partnerMemberId)}
+              value={draft.partnerClubName}
+              onChange={(event) =>
+                setDraft({ ...draft, partnerClubName: event.target.value })
+              }
+            />
+            {draft.partnerMemberId && (
+              <small>Récupéré depuis la fiche licencié.</small>
+            )}
+          </label>
+
+          <label>
             E-mail du partenaire
             <input
               required={!partnerEmailFromMember}
@@ -552,9 +593,10 @@ export function TournamentRegistrationForm({
       <div className="public-registration-team-summary">
         <strong>Série : {selectedSeries?.name ?? "—"}</strong>
         <span>
-          J1 : {draft.submitterFirstName} {draft.submitterLastName}{" "}
-          &nbsp;|&nbsp; J2 : {draft.partnerFirstName || "—"}{" "}
-          {draft.partnerLastName}
+          J1 : {draft.submitterFirstName} {draft.submitterLastName} ·{" "}
+          {draft.submitterClubName || "club à renseigner"} &nbsp;|&nbsp; J2 :{" "}
+          {draft.partnerFirstName || "—"} {draft.partnerLastName} ·{" "}
+          {draft.partnerClubName || "club à renseigner"}
         </span>
       </div>
 

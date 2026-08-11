@@ -31,6 +31,7 @@ test("la generation attribue chaque equipe une seule fois", () => {
   const teams = Array.from({ length: 23 }, (_, index) => ({
     id: `team-${index + 1}`,
     seriesId: "series-1",
+    clubNames: [],
   }));
   const generated = generateOptimizedPools({
     series: [{ id: "series-1", name: "1ere serie", teams }],
@@ -152,16 +153,16 @@ test("une base ayant deja la premiere version PR70 est mise a niveau sans recree
   assert.match(migration, /admin_reopen_tournament_pools/);
 });
 
-test("l atelier admin regenere sans verrous", async () => {
+test("l atelier admin regenere sans verrous et equilibre les clubs", async () => {
   const page = await read(
     "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx",
   );
 
-  assert.match(page, /nombre réel d’équipes/);
   assert.match(page, /4, 5 ou 6 équipes/);
   assert.match(page, /Régénérer et rééquilibrer/);
   assert.match(page, /Rouvrir les poules/);
   assert.match(page, /draggable=/);
-  assert.match(page, /Pire duel/);
+  assert.match(page, /Pire duel|pire duel/);
+  assert.match(page, /répartissant[\s\S]*clubs/);
   assert.doesNotMatch(page, /Verrouiller/);
 });

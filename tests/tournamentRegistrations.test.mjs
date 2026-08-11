@@ -169,7 +169,7 @@ test("les disponibilités sont des créneaux datés générés depuis la configu
   assert.match(migration, /save_my_tournament_registration_v2/);
 });
 
-test("le service public utilise la grille datée et les RPC V2", async () => {
+test("le service public utilise la grille datée et les RPC enrichies", async () => {
   const service = await read(
     "../src/features/tournaments/services/tournamentService.ts",
   );
@@ -178,8 +178,8 @@ test("le service public utilise la grille datée et les RPC V2", async () => {
   assert.match(service, /availableSlots: mapAvailabilitySlots/);
   assert.match(service, /minimumAvailabilitySlots/);
   assert.match(service, /minimumWeekendAvailabilitySlots/);
-  assert.match(service, /get_my_tournament_registration_v2/);
-  assert.match(service, /save_my_tournament_registration_v2/);
+  assert.match(service, /get_my_tournament_registration_v3/);
+  assert.match(service, /save_my_tournament_registration_v3/);
   assert.match(service, /availability_slots/);
 });
 
@@ -223,7 +223,7 @@ test("l'administrateur peut lire et enregistrer les créneaux datés avec les m�
   assert.match(migration, /team_availability_slots_saved_by_admin/);
   assert.match(migration, /has_club_permission[\s\S]*tournaments\.manage/);
   assert.match(service, /admin_get_tournament_team_dated_availability/);
-  assert.match(service, /admin_save_tournament_team_v2/);
+  assert.match(service, /admin_save_tournament_team_v3/);
   assert.match(service, /availability_slots/);
   assert.match(adminPage, /TournamentAvailabilityGrid/);
   assert.match(adminPage, /variant="admin"/);

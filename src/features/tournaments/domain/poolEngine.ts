@@ -7,6 +7,7 @@ export type PoolCompatibility = {
 export type PoolEngineTeam = {
   id: string;
   seriesId: string;
+  clubNames: string[];
 };
 
 export type PoolDraftTeam = {
@@ -27,6 +28,12 @@ export type PoolMetric = {
   pairCount: number;
 };
 
+export type PoolClubMetric = {
+  maxTeamsPerClub: number;
+  duplicatePairCount: number;
+  representedClubCount: number;
+};
+
 export type SeriesPoolInput = {
   id: string;
   name: string;
@@ -40,8 +47,17 @@ export type GeneratePoolOptions = {
   iterationsPerSeries?: number;
 };
 
+export type ClubAffiliations = ReadonlyMap<string, readonly string[]>;
+
 const compatibilityKey = (left: string, right: string) =>
   left < right ? `${left}|${right}` : `${right}|${left}`;
+
+const normalizeClubName = (value: string) =>
+  value.trim().toLocaleLowerCase("fr-FR");
+
+const distinctClubNames = (values: readonly string[]) => [
+  ...new Set(values.map(normalizeClubName).filter(Boolean)),
+];
 
 export const buildCompatibilityMap = (pairings: PoolCompatibility[]) => {
   const result = new Map<string, number>();
@@ -53,6 +69,11 @@ export const buildCompatibilityMap = (pairings: PoolCompatibility[]) => {
   }
   return result;
 };
+
+export const buildClubAffiliationMap = (
+  teams: Pick<PoolEngineTeam, "id" | "clubNames">[],
+): Map<string, string[]> =>
+  new Map(teams.map((team) => [team.id, distinctClubNames(team.clubNames)]));
 
 export const commonSlots = (
   compatibility: Map<string, number>,
@@ -146,12 +167,84 @@ export const getSeriesMetric = (
   };
 };
 
-const metricIsBetter = (candidate: PoolMetric, current: PoolMetric) => {
+export const getPoolClubMetric = (
+  pool: PoolDraft,
+  affiliations: ClubAffiliations,
+): PoolClubMetric => {
+  const counts = new Map<string, number>();
+  for (const assignment of pool.teams) {
+    for (const clubName of distinctClubNames(
+      affiliations.get(assignment.teamId) ?? [],
+    )) {
+      counts.set(clubName, (counts.get(clubName) ?? 0) + 1);
+    }
+  }
+
+  let maxTeamsPerClub = 0;
+  let duplicatePairCount = 0;
+  for (const count of counts.values()) {
+    maxTeamsPerClub = Math.max(maxTeamsPerClub, count);
+    duplicatePairCount += (count * (count - 1)) / 2;
+  }
+
+  return {
+    maxTeamsPerClub,
+    duplicatePairCount,
+    representedClubCount: counts.size,
+  };
+};
+
+export const getSeriesClubMetric = (
+  pools: PoolDraft[],
+  affiliations: ClubAffiliations,
+): PoolClubMetric => {
+  let maxTeamsPerClub = 0;
+  let duplicatePairCount = 0;
+  const representedClubs = new Set<string>();
+
+  for (const pool of pools) {
+    const poolMetric = getPoolClubMetric(pool, affiliations);
+    maxTeamsPerClub = Math.max(maxTeamsPerClub, poolMetric.maxTeamsPerClub);
+    duplicatePairCount += poolMetric.duplicatePairCount;
+    for (const assignment of pool.teams) {
+      for (const clubName of distinctClubNames(
+        affiliations.get(assignment.teamId) ?? [],
+      )) {
+        representedClubs.add(clubName);
+      }
+    }
+  }
+
+  return {
+    maxTeamsPerClub,
+    duplicatePairCount,
+    representedClubCount: representedClubs.size,
+  };
+};
+
+const availabilityMetricIsBetter = (
+  candidate: PoolMetric,
+  current: PoolMetric,
+) => {
   if (candidate.minimum !== current.minimum) {
     return candidate.minimum > current.minimum;
   }
   return candidate.average > current.average + 0.0001;
 };
+
+const clubMetricIsBetter = (
+  candidate: PoolClubMetric,
+  current: PoolClubMetric,
+) => {
+  if (candidate.maxTeamsPerClub !== current.maxTeamsPerClub) {
+    return candidate.maxTeamsPerClub < current.maxTeamsPerClub;
+  }
+  return candidate.duplicatePairCount < current.duplicatePairCount;
+};
+
+const clubMetricIsEqual = (left: PoolClubMetric, right: PoolClubMetric) =>
+  left.maxTeamsPerClub === right.maxTeamsPerClub &&
+  left.duplicatePairCount === right.duplicatePairCount;
 
 const seedSeriesPools = (series: SeriesPoolInput, random: () => number) => {
   const sizes = poolSizesFor(series.teams.length);
@@ -179,6 +272,7 @@ const seedSeriesPools = (series: SeriesPoolInput, random: () => number) => {
 const optimizeSeries = (
   pools: PoolDraft[],
   compatibility: Map<string, number>,
+  affiliations: ClubAffiliations,
   random: () => number,
   iterations: number,
 ) => {
@@ -186,7 +280,8 @@ const optimizeSeries = (
     ...pool,
     teams: pool.teams.map((team) => ({ ...team })),
   }));
-  let score = getSeriesMetric(result, compatibility);
+  let clubScore = getSeriesClubMetric(result, affiliations);
+  let availabilityScore = getSeriesMetric(result, compatibility);
 
   for (let iteration = 0; iteration < iterations; iteration += 1) {
     const positions = result.flatMap((pool, poolIndex) =>
@@ -210,10 +305,22 @@ const optimizeSeries = (
       candidate[second.poolIndex].teams[second.teamIndex];
     candidate[second.poolIndex].teams[second.teamIndex] = firstTeam;
 
-    const candidateScore = getSeriesMetric(candidate, compatibility);
-    if (metricIsBetter(candidateScore, score)) {
+    const candidateClubScore = getSeriesClubMetric(candidate, affiliations);
+    const candidateAvailabilityScore = getSeriesMetric(
+      candidate,
+      compatibility,
+    );
+    if (
+      clubMetricIsBetter(candidateClubScore, clubScore) ||
+      (clubMetricIsEqual(candidateClubScore, clubScore) &&
+        availabilityMetricIsBetter(
+          candidateAvailabilityScore,
+          availabilityScore,
+        ))
+    ) {
       result = candidate;
-      score = candidateScore;
+      clubScore = candidateClubScore;
+      availabilityScore = candidateAvailabilityScore;
     }
   }
 
@@ -224,17 +331,19 @@ export const generateOptimizedPools = ({
   series,
   pairings,
   random = Math.random,
-  iterationsPerSeries = 1_200,
+  iterationsPerSeries = 2_500,
 }: GeneratePoolOptions): PoolDraft[] => {
   const compatibility = buildCompatibilityMap(pairings);
   const result: PoolDraft[] = [];
 
   for (const currentSeries of series) {
     const seeded = seedSeriesPools(currentSeries, random);
+    const affiliations = buildClubAffiliationMap(currentSeries.teams);
     result.push(
       ...optimizeSeries(
         seeded,
         compatibility,
+        affiliations,
         random,
         Math.max(iterationsPerSeries, 0),
       ),

@@ -48,6 +48,7 @@ const mapPlayers = (value: unknown): TournamentTeamPlayer[] =>
     memberId: player.member_id ? String(player.member_id) : null,
     firstName: String(player.first_name ?? ""),
     lastName: String(player.last_name ?? ""),
+    clubName: String(player.club_name ?? ""),
     email: String(player.email ?? ""),
     phone: String(player.phone ?? ""),
     emailFromMember:
@@ -104,6 +105,8 @@ const knownErrors: Record<string, string> = {
   "Tournament player role is invalid": "Choisissez votre poste dans l’équipe.",
   "Tournament registration fields are incomplete":
     "Complétez les informations des deux joueurs.",
+  "Tournament player clubs are incomplete":
+    "Renseignez le club de chacun des deux joueurs.",
   "Tournament player contacts are incomplete":
     "Renseignez un e-mail et un téléphone pour chaque joueur lorsque la fiche licencié ne les fournit pas.",
   "Tournament partner is invalid":
@@ -136,9 +139,11 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
   submitter_role: draft.submitterRole,
   submitter_first_name: draft.submitterFirstName.trim(),
   submitter_last_name: draft.submitterLastName.trim(),
+  submitter_club_name: draft.submitterClubName.trim(),
   partner_member_id: draft.partnerMemberId,
   partner_first_name: draft.partnerFirstName.trim(),
   partner_last_name: draft.partnerLastName.trim(),
+  partner_club_name: draft.partnerClubName.trim(),
   partner_email: draft.partnerEmail.trim(),
   partner_phone: draft.partnerPhone.trim(),
   contact_email: draft.contactEmail.trim(),
@@ -161,7 +166,7 @@ export const tournamentService = {
 
   async getPublic(id: string): Promise<PublicTournamentDetail | null> {
     const [tournamentResult, availabilityResult] = await Promise.all([
-      supabase.rpc("get_public_tournament", { target_id: id }),
+      supabase.rpc("get_public_tournament_v2", { target_id: id }),
       supabase.rpc("get_public_tournament_availability_grid", {
         target_tournament_id: id,
       }),
@@ -216,7 +221,7 @@ export const tournamentService = {
     tournamentId: string,
   ): Promise<MyTournamentRegistration | null> {
     const { data, error } = await supabase.rpc(
-      "get_my_tournament_registration_v2",
+      "get_my_tournament_registration_v3",
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de charger votre inscription.");
@@ -239,7 +244,7 @@ export const tournamentService = {
     tournamentId: string,
   ): Promise<TournamentRegistrationIdentity> {
     const { data, error } = await supabase.rpc(
-      "get_my_tournament_registration_identity",
+      "get_my_tournament_registration_identity_v2",
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de charger vos coordonnées.");
@@ -248,6 +253,7 @@ export const tournamentService = {
       memberId: row.member_id ? String(row.member_id) : null,
       firstName: String(row.first_name ?? ""),
       lastName: String(row.last_name ?? ""),
+      clubName: String(row.club_name ?? ""),
       email: String(row.email ?? ""),
       phone: String(row.phone ?? ""),
       emailFromMember: Boolean(row.email_from_member),
@@ -284,7 +290,7 @@ export const tournamentService = {
     draft: MyTournamentRegistrationDraft,
   ): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "save_my_tournament_registration_v2",
+      "save_my_tournament_registration_v3",
       {
         target_tournament_id: tournamentId,
         payload: registrationPayload(draft),

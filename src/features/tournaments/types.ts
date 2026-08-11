@@ -36,6 +36,7 @@ export type TournamentTeamPlayer = {
   memberId?: string | null;
   firstName: string;
   lastName: string;
+  clubName: string;
   email?: string;
   phone?: string;
   emailFromMember?: boolean;
@@ -54,6 +55,7 @@ export type TournamentRegistrationIdentity = {
   memberId: string | null;
   firstName: string;
   lastName: string;
+  clubName: string;
   email: string;
   phone: string;
   emailFromMember: boolean;
@@ -123,9 +125,11 @@ export type MyTournamentRegistrationDraft = {
   submitterRole: TournamentPlayerRole;
   submitterFirstName: string;
   submitterLastName: string;
+  submitterClubName: string;
   partnerMemberId: string | null;
   partnerFirstName: string;
   partnerLastName: string;
+  partnerClubName: string;
   partnerEmail: string;
   partnerPhone: string;
   contactEmail: string;

@@ -22,6 +22,7 @@ const mapPlayers = (value: unknown): TournamentTeamPlayer[] =>
     memberId: player.member_id ? String(player.member_id) : null,
     firstName: String(player.first_name ?? ""),
     lastName: String(player.last_name ?? ""),
+    clubName: String(player.club_name ?? ""),
     email: String(player.email ?? ""),
     phone: String(player.phone ?? ""),
     role: player.role as TournamentTeamPlayer["role"],
@@ -75,6 +76,8 @@ const knownErrors: Record<string, string> = {
     "Une équipe doit contenir exactement deux joueurs.",
   "Tournament players are invalid":
     "Renseignez les noms et postes des deux joueurs.",
+  "Tournament player clubs are incomplete":
+    "Renseignez le club de chacun des deux joueurs.",
   "A team must contain one front player and one back player":
     "L’équipe doit comporter un Avant et un Arrière.",
   "Tournament availability rules are invalid":
@@ -109,6 +112,7 @@ const teamPayload = (draft: AdminTournamentTeamDraft) => ({
     member_id: player.memberId || null,
     first_name: player.firstName.trim(),
     last_name: player.lastName.trim(),
+    club_name: player.clubName.trim(),
     email: (player.email ?? "").trim(),
     phone: (player.phone ?? "").trim(),
     role: player.role,
@@ -124,7 +128,7 @@ const teamPayload = (draft: AdminTournamentTeamDraft) => ({
 export const adminTournamentTeamService = {
   async get(tournamentId: string): Promise<AdminTournamentTeamsPayload> {
     const [teamsResponse, availabilityResponse] = await Promise.all([
-      supabase.rpc("admin_list_tournament_teams", {
+      supabase.rpc("admin_list_tournament_teams_v2", {
         target_tournament_id: tournamentId,
       }),
       supabase.rpc("admin_get_tournament_dated_availability", {
@@ -242,7 +246,7 @@ export const adminTournamentTeamService = {
     draft: AdminTournamentTeamDraft,
   ): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "admin_save_tournament_team_v2",
+      "admin_save_tournament_team_v3",
       {
         target_tournament_id: tournamentId,
         target_team_id: teamId,

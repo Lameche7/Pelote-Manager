@@ -199,6 +199,7 @@ export function TournamentDetailPage() {
                           <strong>
                             {player.firstName} {player.lastName}
                           </strong>
+                          {player.clubName && <small>{player.clubName}</small>}
                         </span>
                       ))}
                     </div>
