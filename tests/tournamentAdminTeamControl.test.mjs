@@ -6,6 +6,8 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 const migrationPath =
   "../supabase/migrations/20260811133500_restore_admin_tournament_team_control.sql";
+const memberLookupMigrationPath =
+  "../supabase/migrations/20260811145500_admin_tournament_member_lookup_and_player_contacts.sql";
 
 test("l'administrateur garde la main jusqu'aux poules validées", async () => {
   const [migration, page] = await Promise.all([
@@ -83,4 +85,47 @@ test("le retrait ou la réactivation utilisent aussi le garde-fou des poules", a
   assert.match(migration, /admin_set_tournament_team_status_v2/);
   assert.match(migration, /pools_invalidated_by_team_status_change/);
   assert.match(service, /admin_set_tournament_team_status_v2/);
+});
+
+test("l'ajout admin recherche les licenciés disponibles du club", async () => {
+  const [migration, service, playerFields] = await Promise.all([
+    read(memberLookupMigrationPath),
+    read(
+      "../src/features/admin/tournaments/services/adminTournamentTeamService.ts",
+    ),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentPlayerFields.tsx",
+    ),
+  ]);
+
+  assert.match(migration, /admin_search_tournament_members/);
+  assert.match(migration, /member\.is_active/);
+  assert.match(migration, /existing_team\.status in \('pending', 'accepted'\)/);
+  assert.match(migration, /has_club_permission[\s\S]*tournaments\.manage/);
+  assert.match(service, /admin_search_tournament_members/);
+  assert.match(playerFields, /Rechercher un licencié du club/);
+  assert.match(playerFields, /Récupéré depuis la fiche licencié/);
+  assert.match(playerFields, /memberId: member\.id/);
+});
+
+test("les coordonnées d'équipe sont dérivées des joueurs et ne sont plus saisies en double", async () => {
+  const [migration, service, page] = await Promise.all([
+    read(memberLookupMigrationPath),
+    read(
+      "../src/features/admin/tournaments/services/adminTournamentTeamService.ts",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
+    ),
+  ]);
+
+  assert.match(migration, /admin_save_tournament_team_v5/);
+  assert.match(migration, /'contact_email', derived_email/);
+  assert.match(migration, /'contact_phone', derived_phone/);
+  assert.match(migration, /Tournament player contacts are incomplete/);
+  assert.match(service, /admin_save_tournament_team_v5/);
+  assert.match(service, /admin_list_tournament_teams_v3/);
+  assert.doesNotMatch(page, /E-mail de contact/);
+  assert.doesNotMatch(page, /Téléphone de contact/);
+  assert.match(page, /Coordonnées joueurs/);
 });
