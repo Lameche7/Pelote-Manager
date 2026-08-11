@@ -258,7 +258,9 @@ export function AdminTournamentPoolsPage() {
     try {
       await adminTournamentPoolService.validate(workspace.tournament.id);
       await refresh(workspace.tournament.id);
-      setMessage("Poules validées. Elles restent réouvrables avant le planning.");
+      setMessage(
+        "Poules validées. Elles restent réouvrables avant le planning.",
+      );
     } catch (validationError) {
       setError(
         validationError instanceof Error
@@ -278,7 +280,9 @@ export function AdminTournamentPoolsPage() {
     try {
       await adminTournamentPoolService.reopen(workspace.tournament.id);
       await refresh(workspace.tournament.id);
-      setMessage("Poules rouvertes : vous pouvez les modifier ou les régénérer.");
+      setMessage(
+        "Poules rouvertes : vous pouvez les modifier ou les régénérer.",
+      );
     } catch (reopenError) {
       setError(
         reopenError instanceof Error
@@ -292,9 +296,7 @@ export function AdminTournamentPoolsPage() {
 
   const dropOnTeam = (targetTeamId: string) => {
     if (!draggedTeamId || draggedTeamId === targetTeamId || !editable) return;
-    setPools((current) =>
-      swapPoolTeams(current, draggedTeamId, targetTeamId),
-    );
+    setPools((current) => swapPoolTeams(current, draggedTeamId, targetTeamId));
     setDraggedTeamId(null);
   };
 
@@ -540,7 +542,8 @@ export function AdminTournamentPoolsPage() {
                           <h2>{poolName(poolIndex)}</h2>
                           <small>
                             {pool.teams.length} équipes · pire duel{" "}
-                            {metric.minimum} · moyenne {metric.average.toFixed(1)}
+                            {metric.minimum} · moyenne{" "}
+                            {metric.average.toFixed(1)}
                           </small>
                         </div>
                       </header>
