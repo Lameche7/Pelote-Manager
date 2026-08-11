@@ -127,7 +127,7 @@ const poolPayload = (pools: PoolDraft[]) => ({
     teams: pool.teams.map((team, index) => ({
       team_id: team.teamId,
       display_order: index,
-      is_locked: pool.isLocked || team.isLocked,
+      is_locked: team.isLocked,
     })),
   })),
 });
