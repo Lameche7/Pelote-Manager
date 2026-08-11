@@ -72,8 +72,13 @@ const playerName = (team: AdminTournamentTeam) =>
 const availabilitySummary = (
   team: AdminTournamentTeam,
   data: AdminTournamentTeamsPayload,
-) =>
-  `${team.availabilitySlotCount}/${data.tournament.availableSlotCount} créneaux · ${team.weekendAvailabilitySlotCount} week-end · minimum ${data.tournament.minimumAvailabilitySlots}`;
+) => {
+  const pool = `Poules ${team.poolAvailabilitySlotCount}/${data.tournament.availablePoolSlotCount}`;
+  if (data.tournament.availableFinalsSlotCount === 0) return pool;
+  return `${pool} · Finale ${team.finalsAvailabilitySlotCount}/${data.tournament.availableFinalsSlotCount}`;
+};
+
+const seriesAnchor = (seriesId: string) => `tournament-series-${seriesId}`;
 
 export function AdminTournamentTeamsPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
@@ -156,6 +161,24 @@ export function AdminTournamentTeamsPage() {
     return result;
   }, [data]);
 
+  const teamsBySeries = useMemo(() => {
+    const grouped = new Map<string, AdminTournamentTeam[]>();
+    for (const series of data?.series ?? []) grouped.set(series.id, []);
+    for (const team of data?.teams ?? []) {
+      const current = grouped.get(team.seriesId) ?? [];
+      current.push(team);
+      grouped.set(team.seriesId, current);
+    }
+    for (const teams of grouped.values()) {
+      teams.sort((left, right) =>
+        playerName(left).localeCompare(playerName(right), "fr", {
+          sensitivity: "base",
+        }),
+      );
+    }
+    return grouped;
+  }, [data]);
+
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
     setLoading(true);
@@ -194,6 +217,11 @@ export function AdminTournamentTeamsPage() {
         await adminTournamentTeamService.getDatedAvailability(team.id);
       setEditingId(team.id);
       setDraft(teamToDraft(team, availabilitySlots));
+      window.setTimeout(() => {
+        document
+          .querySelector(".admin-tournament-team-form")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -256,6 +284,13 @@ export function AdminTournamentTeamsPage() {
     }
   };
 
+  const jumpToSeries = (seriesId: string) => {
+    document.getElementById(seriesAnchor(seriesId))?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   if (loading && tournaments.length === 0) {
     return (
       <section className="admin-page admin-tournament-teams">
@@ -271,8 +306,9 @@ export function AdminTournamentTeamsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Équipes & inscriptions</h1>
           <p className="admin-page__lead">
-            Gérez les inscriptions, corrigez les équipes et leurs disponibilités
-            avant la génération des poules.
+            Suivez les capacités par série, accédez rapidement au tableau des
+            équipes et corrigez une inscription ou ses disponibilités avant la
+            génération des poules.
           </p>
         </div>
         {editable && (
@@ -346,7 +382,12 @@ export function AdminTournamentTeamsPage() {
           {data && (
             <div className="admin-tournament-teams__series">
               {data.series.map((series) => (
-                <article className="admin-card" key={series.id}>
+                <button
+                  className="admin-card admin-tournament-series-card"
+                  key={series.id}
+                  type="button"
+                  onClick={() => jumpToSeries(series.id)}
+                >
                   <span>{series.enabled ? "Série active" : "Désactivée"}</span>
                   <h2>{series.name}</h2>
                   <strong>
@@ -355,10 +396,39 @@ export function AdminTournamentTeamsPage() {
                   <small>
                     {series.remainingSlots} place
                     {series.remainingSlots > 1 ? "s" : ""} disponible
-                    {series.remainingSlots > 1 ? "s" : ""}
+                    {series.remainingSlots > 1 ? "s" : ""} · Aller au tableau ↓
                   </small>
-                </article>
+                </button>
               ))}
+            </div>
+          )}
+
+          {data && (
+            <div className="admin-card admin-tournament-teams__phase-summary">
+              <div>
+                <span>Phase de poules</span>
+                <strong>
+                  {data.tournament.poolStartsOn} → {data.tournament.poolEndsOn}
+                </strong>
+                <small>
+                  {data.tournament.availablePoolSlotCount} créneaux possibles ·
+                  minimum {data.tournament.minimumAvailabilitySlots} par équipe
+                </small>
+              </div>
+              <div>
+                <span>Phase finale</span>
+                <strong>
+                  {data.tournament.finalsStartsOn && data.tournament.finalsEndsOn
+                    ? `${data.tournament.finalsStartsOn} → ${data.tournament.finalsEndsOn}`
+                    : "Non planifiée"}
+                </strong>
+                <small>
+                  {data.tournament.availableFinalsSlotCount} créneau
+                  {data.tournament.availableFinalsSlotCount > 1 ? "x" : ""}{" "}
+                  possible
+                  {data.tournament.availableFinalsSlotCount > 1 ? "s" : ""}
+                </small>
+              </div>
             </div>
           )}
 
@@ -552,91 +622,126 @@ export function AdminTournamentTeamsPage() {
           )}
 
           {data && (
-            <div className="admin-tournament-team-list">
-              {data.teams.length === 0 ? (
-                <div className="admin-card">
-                  <p>Aucune équipe inscrite pour ce tournoi.</p>
+            <div className="admin-card admin-tournament-team-table-card">
+              <header>
+                <div>
+                  <p className="admin-page__eyebrow">Inscriptions</p>
+                  <h2>Tableau des équipes</h2>
                 </div>
+                <small>{data.teams.length} équipe(s) au total</small>
+              </header>
+
+              {data.teams.length === 0 ? (
+                <p>Aucune équipe inscrite pour ce tournoi.</p>
               ) : (
-                data.teams.map((team) => (
-                  <article
-                    className="admin-card admin-tournament-team-card"
-                    key={team.id}
-                  >
-                    <header>
-                      <div>
-                        <span
-                          className={`admin-tournament-team-status admin-tournament-team-status--${team.status}`}
+                <div className="admin-tournament-team-table-wrap">
+                  <table className="admin-tournament-team-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Équipe</th>
+                        <th scope="col">Contact</th>
+                        <th scope="col">Disponibilités</th>
+                        <th scope="col">Origine</th>
+                        <th scope="col">Statut</th>
+                        <th scope="col">Actions</th>
+                      </tr>
+                    </thead>
+                    {data.series.map((series) => {
+                      const seriesTeams = teamsBySeries.get(series.id) ?? [];
+                      return (
+                        <tbody
+                          id={seriesAnchor(series.id)}
+                          key={series.id}
+                          className="admin-tournament-team-table__series"
                         >
-                          {teamStatusLabels[team.status]}
-                        </span>
-                        <h2>{playerName(team)}</h2>
-                        <p>
-                          {team.seriesName} ·{" "}
-                          {team.submittedBy
-                            ? "Inscription en ligne"
-                            : "Ajout administrateur"}
-                        </p>
-                      </div>
-                      {editable && team.status !== "withdrawn" && (
-                        <button
-                          type="button"
-                          disabled={saving || loadingDraft}
-                          onClick={() => void beginEdit(team)}
-                        >
-                          Modifier
-                        </button>
-                      )}
-                    </header>
-
-                    <dl>
-                      <div>
-                        <dt>Contact</dt>
-                        <dd>
-                          {team.contactEmail}
-                          {team.contactPhone ? ` · ${team.contactPhone}` : ""}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Disponibilités datées</dt>
-                        <dd>{availabilitySummary(team, data)}</dd>
-                      </div>
-                    </dl>
-
-                    {team.comments && (
-                      <p className="admin-tournament-team-card__comments">
-                        {team.comments}
-                      </p>
-                    )}
-
-                    {editable && (
-                      <div className="admin-tournament-team-card__actions">
-                        {team.status !== "accepted" &&
-                          team.status !== "withdrawn" && (
-                            <button
-                              type="button"
-                              disabled={saving || loadingDraft}
-                              onClick={() =>
-                                void changeStatus(team, "accepted")
-                              }
-                            >
-                              Réactiver
-                            </button>
+                          <tr className="admin-tournament-team-table__series-heading">
+                            <th colSpan={6} scope="rowgroup">
+                              <strong>{series.name}</strong>
+                              <span>
+                                {series.acceptedCount}/{series.capacity} inscrites
+                              </span>
+                            </th>
+                          </tr>
+                          {seriesTeams.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="admin-tournament-team-table__empty">
+                                Aucune équipe dans cette série.
+                              </td>
+                            </tr>
+                          ) : (
+                            seriesTeams.map((team) => (
+                              <tr key={team.id}>
+                                <td className="admin-tournament-team-table__team">
+                                  <strong>{playerName(team)}</strong>
+                                  {team.comments && <small>{team.comments}</small>}
+                                </td>
+                                <td>
+                                  <span>{team.contactEmail}</span>
+                                  {team.contactPhone && <small>{team.contactPhone}</small>}
+                                </td>
+                                <td>
+                                  <strong>{availabilitySummary(team, data)}</strong>
+                                  <small>
+                                    Week-end poules :{" "}
+                                    {team.weekendAvailabilitySlotCount}
+                                  </small>
+                                </td>
+                                <td>
+                                  {team.submittedBy ? "En ligne" : "Admin"}
+                                </td>
+                                <td>
+                                  <span
+                                    className={`admin-tournament-team-status admin-tournament-team-status--${team.status}`}
+                                  >
+                                    {teamStatusLabels[team.status]}
+                                  </span>
+                                </td>
+                                <td>
+                                  <div className="admin-tournament-team-table__actions">
+                                    {editable && team.status !== "withdrawn" && (
+                                      <button
+                                        type="button"
+                                        disabled={saving || loadingDraft}
+                                        onClick={() => void beginEdit(team)}
+                                      >
+                                        Modifier
+                                      </button>
+                                    )}
+                                    {editable &&
+                                      team.status !== "accepted" &&
+                                      team.status !== "withdrawn" && (
+                                        <button
+                                          type="button"
+                                          disabled={saving || loadingDraft}
+                                          onClick={() =>
+                                            void changeStatus(team, "accepted")
+                                          }
+                                        >
+                                          Réactiver
+                                        </button>
+                                      )}
+                                    {editable && team.status !== "withdrawn" && (
+                                      <button
+                                        className="admin-tournament-team-card__danger"
+                                        type="button"
+                                        disabled={saving || loadingDraft}
+                                        onClick={() =>
+                                          void changeStatus(team, "withdrawn")
+                                        }
+                                      >
+                                        Retirer
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
                           )}
-                        {team.status !== "withdrawn" && (
-                          <button
-                            className="admin-tournament-team-card__danger"
-                            type="button"
-                            disabled={saving || loadingDraft}
-                            onClick={() => void changeStatus(team, "withdrawn")}
-                          >
-                            Retirer
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </article>
-                ))
+                        </tbody>
+                      );
+                    })}
+                  </table>
+                </div>
               )}
             </div>
           )}
