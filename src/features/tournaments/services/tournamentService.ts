@@ -116,6 +116,8 @@ const knownErrors: Record<string, string> = {
     "Vous n’avez pas sélectionné assez de créneaux disponibles pour la phase de poules.",
   "Tournament weekend availability minimum not reached":
     "Vous n’avez pas sélectionné assez de créneaux le week-end pendant la phase de poules.",
+  "Tournament finals availability minimum not reached":
+    "Vous devez sélectionner au moins 35 créneaux disponibles pour la phase finale.",
   "A player can only belong to one active team per tournament":
     "Un joueur est déjà inscrit dans une autre équipe de ce tournoi.",
   "Tournament registration not found": "Aucune inscription active trouvée.",
