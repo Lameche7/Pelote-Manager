@@ -285,7 +285,9 @@ export function AdminTournamentTeamsPage() {
           (!player.phoneFromMember && !(player.phone ?? "").trim()),
       )
     ) {
-      setError("Renseignez l’e-mail et le téléphone de chacun des deux joueurs.");
+      setError(
+        "Renseignez l’e-mail et le téléphone de chacun des deux joueurs.",
+      );
       return;
     }
     setSaving(true);
@@ -603,8 +605,9 @@ export function AdminTournamentTeamsPage() {
                     teamId={editingId ?? null}
                     player={player}
                     excludedMemberId={
-                      draft.players.find((_, playerIndex) => playerIndex !== index)
-                        ?.memberId ?? null
+                      draft.players.find(
+                        (_, playerIndex) => playerIndex !== index,
+                      )?.memberId ?? null
                     }
                     disabled={saving}
                     onError={setError}
@@ -730,7 +733,9 @@ export function AdminTournamentTeamsPage() {
                                           ? "Avant"
                                           : "Arrière"}
                                       </strong>
-                                      <span>{player.email || "E-mail manquant"}</span>
+                                      <span>
+                                        {player.email || "E-mail manquant"}
+                                      </span>
                                       <small>
                                         {player.phone || "Téléphone manquant"}
                                       </small>
