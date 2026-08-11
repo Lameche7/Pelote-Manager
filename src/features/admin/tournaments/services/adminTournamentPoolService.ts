@@ -47,7 +47,7 @@ const knownErrors: Record<string, string> = {
   Forbidden: "Vous n’avez pas le droit de gérer les poules de ce tournoi.",
   "Tournament not found": "Tournoi introuvable.",
   "Tournament pools are not editable at this stage":
-    "Les poules ne sont modifiables qu’après la fermeture des inscriptions et avant leur validation.",
+    "Les poules ne sont modifiables qu’après la fermeture des inscriptions et avant le planning.",
   "Pending tournament teams must be resolved before pool generation":
     "Il reste des équipes en attente. Validez ou refusez-les avant de générer les poules.",
   "Tournament pool payload is invalid":
@@ -59,9 +59,11 @@ const knownErrors: Record<string, string> = {
   "Every accepted team must belong to exactly one pool":
     "Chaque équipe inscrite doit apparaître une seule fois dans une poule.",
   "Tournament pools are incomplete":
-    "Les poules sont incomplètes ou ne comportent pas toutes 4 ou 5 équipes.",
+    "Les poules sont incomplètes ou ne comportent pas toutes entre 4 et 6 équipes.",
   "Tournament pools cannot be validated at this stage":
     "Les poules ne peuvent pas être validées à cette étape.",
+  "Tournament pools cannot be reopened at this stage":
+    "Les poules ne peuvent plus être rouvertes à cette étape.",
 };
 
 const fail = (error: unknown, fallback: string): never => {
@@ -108,11 +110,9 @@ const mapWorkspace = (value: unknown): TournamentPoolWorkspace => {
       key: String(pool.id),
       seriesId: String(pool.series_id),
       displayOrder: Number(pool.display_order ?? 0),
-      targetSize: Number(pool.target_size) as 4 | 5,
-      isLocked: Boolean(pool.is_locked),
+      targetSize: Number(pool.target_size) as 4 | 5 | 6,
       teams: rows(pool.teams).map((team) => ({
         teamId: String(team.team_id),
-        isLocked: Boolean(team.is_locked),
       })),
     })),
   };
@@ -123,11 +123,9 @@ const poolPayload = (pools: PoolDraft[]) => ({
     series_id: pool.seriesId,
     display_order: pool.displayOrder,
     target_size: pool.teams.length,
-    is_locked: pool.isLocked,
     teams: pool.teams.map((team, index) => ({
       team_id: team.teamId,
       display_order: index,
-      is_locked: team.isLocked,
     })),
   })),
 });
@@ -155,5 +153,12 @@ export const adminTournamentPoolService = {
       target_tournament_id: tournamentId,
     });
     if (error) fail(error, "Impossible de valider les poules.");
+  },
+
+  async reopen(tournamentId: string): Promise<void> {
+    const { error } = await supabase.rpc("admin_reopen_tournament_pools", {
+      target_tournament_id: tournamentId,
+    });
+    if (error) fail(error, "Impossible de rouvrir les poules.");
   },
 };
