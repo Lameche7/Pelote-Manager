@@ -85,6 +85,8 @@ const knownErrors: Record<string, string> = {
     "Le nombre minimum de créneaux de la phase de poules n’est pas atteint.",
   "Tournament weekend availability minimum not reached":
     "Le minimum week-end de la phase de poules n’est pas atteint.",
+  "Tournament finals availability minimum not reached":
+    "Le minimum de 35 créneaux de la phase finale n’est pas atteint.",
   "A player can only belong to one active team per tournament":
     "Un joueur appartient déjà à une autre équipe active de ce tournoi.",
 };
