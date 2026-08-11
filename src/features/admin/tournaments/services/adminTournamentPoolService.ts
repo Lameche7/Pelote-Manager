@@ -141,7 +141,7 @@ const poolPayload = (pools: PoolDraft[]) => ({
 export const adminTournamentPoolService = {
   async get(tournamentId: string): Promise<TournamentPoolWorkspace> {
     const { data, error } = await supabase.rpc(
-      "admin_get_tournament_pool_workspace",
+      "admin_get_tournament_pool_workspace_v2",
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de charger le moteur de poules.");
