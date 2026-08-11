@@ -181,8 +181,7 @@ declare
   item_club_name text;
   item_email text;
   item_phone text;
-  member_row public.club_members;
-  member_club_name text;
+  member_result record;
   normalized_payload jsonb;
   derived_email text;
   derived_phone text;
@@ -223,23 +222,29 @@ begin
       end if;
       seen_member_ids := array_append(seen_member_ids, item_member_id);
 
-      select member, club.name
-      into member_row, member_club_name
+      select
+        member.id,
+        member.first_name,
+        member.last_name,
+        member.email,
+        member.phone,
+        club.name as club_name
+      into member_result
       from public.club_members as member
       join public.clubs as club on club.id = member.club_id
       where member.id = item_member_id
         and member.club_id = target_club_id
         and member.is_active;
 
-      if member_row.id is null then
+      if not found then
         raise exception 'Tournament member is invalid' using errcode = '22023';
       end if;
 
-      item_first_name := btrim(member_row.first_name);
-      item_last_name := btrim(member_row.last_name);
-      item_club_name := btrim(member_club_name);
-      item_email := coalesce(nullif(btrim(member_row.email), ''), item_email);
-      item_phone := coalesce(nullif(btrim(member_row.phone), ''), item_phone);
+      item_first_name := btrim(member_result.first_name);
+      item_last_name := btrim(member_result.last_name);
+      item_club_name := btrim(member_result.club_name);
+      item_email := coalesce(nullif(btrim(member_result.email), ''), item_email);
+      item_phone := coalesce(nullif(btrim(member_result.phone), ''), item_phone);
     end if;
 
     if item_role not in ('front', 'back')
