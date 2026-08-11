@@ -6,6 +6,7 @@ import type {
   AdminTournamentTeamsPayload,
   TournamentAvailabilityRule,
   TournamentAvailabilitySlot,
+  TournamentPhase,
   TournamentSeriesRegistration,
   TournamentTeamPlayer,
   TournamentTeamStatus,
@@ -39,6 +40,10 @@ const mapAvailabilitySlots = (value: unknown): TournamentAvailabilitySlot[] =>
     date: String(slot.play_date ?? slot.date ?? ""),
     startsAt: String(slot.starts_at ?? "").slice(0, 5),
     endsAt: String(slot.ends_at ?? "").slice(0, 5),
+    phase:
+      slot.phase === "pools" || slot.phase === "finals"
+        ? (slot.phase as TournamentPhase)
+        : undefined,
   }));
 
 const mapSeries = (value: unknown): TournamentSeriesRegistration[] =>
@@ -77,9 +82,11 @@ const knownErrors: Record<string, string> = {
   "Tournament availability slots are invalid":
     "Les créneaux sélectionnés ne correspondent plus à la configuration du tournoi.",
   "Tournament availability minimum not reached":
-    "Le nombre minimum de créneaux disponibles n’est pas atteint.",
+    "Le nombre minimum de créneaux de la phase de poules n’est pas atteint.",
   "Tournament weekend availability minimum not reached":
-    "Le nombre minimum de créneaux disponibles le week-end n’est pas atteint.",
+    "Le minimum week-end de la phase de poules n’est pas atteint.",
+  "Tournament finals availability minimum not reached":
+    "Le minimum de 35 créneaux de la phase finale n’est pas atteint.",
   "A player can only belong to one active team per tournament":
     "Un joueur appartient déjà à une autre équipe active de ce tournoi.",
 };
@@ -147,6 +154,8 @@ export const adminTournamentTeamService = {
         {
           slotCount: Number(item.slot_count ?? 0),
           weekendSlotCount: Number(item.weekend_slot_count ?? 0),
+          poolSlotCount: Number(item.pool_slot_count ?? 0),
+          finalsSlotCount: Number(item.finals_slot_count ?? 0),
         },
       ]),
     );
@@ -163,9 +172,23 @@ export const adminTournamentTeamService = {
           availability.minimum_weekend ?? 0,
         ),
         slotDurationMinutes: Number(availability.slot_duration_minutes ?? 60),
+        poolStartsOn: String(availability.pool_starts_on ?? ""),
+        poolEndsOn: String(availability.pool_ends_on ?? ""),
+        finalsStartsOn: availability.finals_starts_on
+          ? String(availability.finals_starts_on)
+          : null,
+        finalsEndsOn: availability.finals_ends_on
+          ? String(availability.finals_ends_on)
+          : null,
         availableSlotCount: Number(availability.available_slot_count ?? 0),
         availableWeekendSlotCount: Number(
           availability.available_weekend_slot_count ?? 0,
+        ),
+        availablePoolSlotCount: Number(
+          availability.available_pool_slot_count ?? 0,
+        ),
+        availableFinalsSlotCount: Number(
+          availability.available_finals_slot_count ?? 0,
         ),
         availableSlots: mapAvailabilitySlots(availability.slots),
       },
@@ -174,6 +197,8 @@ export const adminTournamentTeamService = {
         const datedAvailability = availabilityByTeam.get(String(team.id)) ?? {
           slotCount: 0,
           weekendSlotCount: 0,
+          poolSlotCount: 0,
+          finalsSlotCount: 0,
         };
         return {
           id: String(team.id),
@@ -190,6 +215,8 @@ export const adminTournamentTeamService = {
           availabilityRules: mapAvailability(team.availability_rules),
           availabilitySlotCount: datedAvailability.slotCount,
           weekendAvailabilitySlotCount: datedAvailability.weekendSlotCount,
+          poolAvailabilitySlotCount: datedAvailability.poolSlotCount,
+          finalsAvailabilitySlotCount: datedAvailability.finalsSlotCount,
         };
       }),
     };

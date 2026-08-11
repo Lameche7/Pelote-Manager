@@ -57,9 +57,7 @@
 .admin-tournament-teams__selector select,
 .admin-tournament-team-form input,
 .admin-tournament-team-form select,
-.admin-tournament-team-form textarea,
-.admin-tournament-team-form__availability-row input,
-.admin-tournament-team-form__availability-row select {
+.admin-tournament-team-form textarea {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgb(107 114 128 / 28%);
@@ -88,33 +86,75 @@
   gap: 0.75rem;
 }
 
-.admin-tournament-teams__series article {
+.admin-tournament-series-card {
+  appearance: none;
   display: grid;
   gap: 0.25rem;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
 }
 
-.admin-tournament-teams__series h2,
-.admin-tournament-teams__series span,
-.admin-tournament-teams__series strong,
-.admin-tournament-teams__series small {
+.admin-tournament-series-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.55rem 1.25rem rgb(15 23 42 / 10%);
+}
+
+.admin-tournament-series-card:focus-visible {
+  outline: 3px solid var(--club-accent, #1e5aa8);
+  outline-offset: 2px;
+}
+
+.admin-tournament-series-card h2,
+.admin-tournament-series-card span,
+.admin-tournament-series-card strong,
+.admin-tournament-series-card small {
   margin: 0;
 }
 
-.admin-tournament-teams__series span {
+.admin-tournament-series-card span {
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
   opacity: 0.55;
 }
 
-.admin-tournament-team-form {
+.admin-tournament-teams__phase-summary {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
+.admin-tournament-teams__phase-summary > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-tournament-teams__phase-summary span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.admin-tournament-teams__phase-summary small {
+  opacity: 0.7;
+}
+
+.admin-tournament-team-form {
+  display: grid;
+  gap: 1rem;
+  scroll-margin-top: 1rem;
+}
+
 .admin-tournament-team-form > header,
-.admin-tournament-team-form__availability > header,
-.admin-tournament-team-card > header {
+.admin-tournament-team-table-card > header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -123,23 +163,18 @@
 
 .admin-tournament-team-form > header h2,
 .admin-tournament-team-form > header p,
-.admin-tournament-team-form__availability h3,
-.admin-tournament-team-form__availability p,
-.admin-tournament-team-card h2,
-.admin-tournament-team-card p {
+.admin-tournament-team-table-card > header h2,
+.admin-tournament-team-table-card > header p {
   margin: 0;
 }
 
 .admin-tournament-team-form button,
-.admin-tournament-team-card button {
+.admin-tournament-team-table button {
   cursor: pointer;
 }
 
 .admin-tournament-team-form > header > button,
-.admin-tournament-team-form__availability header button,
-.admin-tournament-team-form__availability-row button,
-.admin-tournament-team-card > header button,
-.admin-tournament-team-card__actions button {
+.admin-tournament-team-table__actions button {
   border: 1px solid rgb(107 114 128 / 25%);
   border-radius: 0.65rem;
   padding: 0.55rem 0.75rem;
@@ -181,52 +216,107 @@
   font-weight: 800;
 }
 
-.admin-tournament-team-form__availability {
+.admin-tournament-team-table-card {
   display: grid;
-  gap: 0.65rem;
-  padding: 0.85rem;
-  border-radius: 0.85rem;
-  background: rgb(107 114 128 / 5%);
+  gap: 0.9rem;
 }
 
-.admin-tournament-team-form__availability header p {
-  margin-top: 0.2rem;
-  font-size: 0.8rem;
-  opacity: 0.7;
+.admin-tournament-team-table-card > header small {
+  opacity: 0.65;
 }
 
-.admin-tournament-team-form__availability-row {
-  display: grid;
-  grid-template-columns: 9rem 9rem 7rem 7rem auto;
-  align-items: center;
-  gap: 0.55rem;
+.admin-tournament-team-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgb(107 114 128 / 15%);
+  border-radius: 0.8rem;
 }
 
-.admin-tournament-team-list {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.admin-tournament-team-card {
-  display: grid;
-  gap: 0.8rem;
-}
-
-.admin-tournament-team-card > header > div {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.admin-tournament-team-card h2 {
-  font-size: 1.15rem;
-}
-
-.admin-tournament-team-card header p {
+.admin-tournament-team-table {
+  width: 100%;
+  min-width: 70rem;
+  border-collapse: collapse;
   font-size: 0.82rem;
-  opacity: 0.7;
+}
+
+.admin-tournament-team-table th,
+.admin-tournament-team-table td {
+  padding: 0.65rem 0.7rem;
+  border-bottom: 1px solid rgb(107 114 128 / 13%);
+  vertical-align: top;
+  text-align: left;
+}
+
+.admin-tournament-team-table > thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: #fff;
+}
+
+.admin-tournament-team-table__series {
+  scroll-margin-top: 1rem;
+}
+
+.admin-tournament-team-table__series-heading th {
+  padding: 0.7rem;
+  background: rgb(107 114 128 / 7%);
+}
+
+.admin-tournament-team-table__series-heading th,
+.admin-tournament-team-table__series-heading strong,
+.admin-tournament-team-table__series-heading span {
+  vertical-align: middle;
+}
+
+.admin-tournament-team-table__series-heading strong {
+  margin-right: 0.65rem;
+  font-size: 0.92rem;
+}
+
+.admin-tournament-team-table__series-heading span {
+  font-size: 0.76rem;
+  opacity: 0.65;
+}
+
+.admin-tournament-team-table td span,
+.admin-tournament-team-table td small,
+.admin-tournament-team-table__team strong,
+.admin-tournament-team-table__team small {
+  display: block;
+}
+
+.admin-tournament-team-table td small,
+.admin-tournament-team-table__team small {
+  margin-top: 0.2rem;
+  opacity: 0.65;
+}
+
+.admin-tournament-team-table__team {
+  min-width: 15rem;
+}
+
+.admin-tournament-team-table__empty {
+  padding: 1rem !important;
+  text-align: center !important;
+  opacity: 0.6;
+}
+
+.admin-tournament-team-table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.admin-tournament-team-table__actions button {
+  padding: 0.38rem 0.55rem;
+  font-size: 0.76rem;
 }
 
 .admin-tournament-team-status {
+  display: inline-block !important;
   width: fit-content;
   border-radius: 999px;
   padding: 0.25rem 0.55rem;
@@ -251,54 +341,6 @@
   background: rgb(178 37 37 / 10%);
 }
 
-.admin-tournament-team-card dl {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.75rem;
-  margin: 0;
-}
-
-.admin-tournament-team-card dl div {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.admin-tournament-team-card dt {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  opacity: 0.55;
-}
-
-.admin-tournament-team-card dd {
-  margin: 0;
-  font-weight: 650;
-}
-
-.admin-tournament-team-card__comments {
-  padding: 0.65rem;
-  border-radius: 0.65rem;
-  background: rgb(107 114 128 / 6%);
-}
-
-.admin-tournament-team-card__rules {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.admin-tournament-team-card__rules span {
-  border-radius: 999px;
-  padding: 0.3rem 0.5rem;
-  font-size: 0.74rem;
-  background: rgb(30 90 168 / 8%);
-}
-
-.admin-tournament-team-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
 .admin-tournament-team-card__danger {
   color: #8b1f1f;
   border-color: rgb(178 37 37 / 28%) !important;
@@ -309,16 +351,14 @@
   .admin-tournament-teams__heading,
   .admin-tournament-teams__selector,
   .admin-tournament-team-form > header,
-  .admin-tournament-team-form__availability > header,
-  .admin-tournament-team-card > header {
+  .admin-tournament-team-table-card > header {
     align-items: stretch;
     flex-direction: column;
   }
 
+  .admin-tournament-teams__phase-summary,
   .admin-tournament-team-form__grid,
-  .admin-tournament-team-form__players,
-  .admin-tournament-team-form__availability-row,
-  .admin-tournament-team-card dl {
+  .admin-tournament-team-form__players {
     grid-template-columns: 1fr;
   }
 }

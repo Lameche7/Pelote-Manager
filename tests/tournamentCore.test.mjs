@@ -117,7 +117,7 @@ test("l'administration Tournois remplace l'écran provisoire", async () => {
   );
   assert.match(page, /Créer un tournoi/);
   assert.match(page, /Séries/);
-  assert.match(page, /Horaires du tournoi/);
+  assert.match(page, /Horaires des créneaux/);
   assert.match(page, /Valider la configuration/);
   assert.match(page, /pools_validated/);
   assert.match(page, /planning_published/);

@@ -40,6 +40,10 @@ export type TournamentSummary = {
   seasonName: string;
   startsOn: string;
   endsOn: string;
+  poolStartsOn: string;
+  poolEndsOn: string;
+  finalsStartsOn: string | null;
+  finalsEndsOn: string | null;
   registrationOpensAt: string;
   registrationClosesAt: string;
   status: TournamentStatus;
@@ -76,8 +80,15 @@ export type TournamentDraft = {
   rules: string;
   startsOn: string;
   endsOn: string;
+  poolStartsOn: string;
+  poolEndsOn: string;
+  finalsStartsOn: string | null;
+  finalsEndsOn: string | null;
   registrationOpensAt: string;
   registrationClosesAt: string;
+  minimumAvailabilitySlots: number;
+  minimumWeekendAvailabilitySlots: number;
+  slotDurationMinutes: number;
 };
 
 export type TournamentDetail = TournamentDraft & {
@@ -101,20 +112,34 @@ const knownErrors: Record<string, string> = {
   "Tournament fields are incomplete":
     "Complétez tous les champs obligatoires du tournoi.",
   "Tournament dates are invalid": "Les dates du tournoi sont incohérentes.",
+  "Tournament phase dates are invalid":
+    "Vérifiez les dates des poules et de la phase finale. La phase finale doit commencer après les poules.",
+  "Tournament availability settings are invalid":
+    "Vérifiez la durée des créneaux et les minima de disponibilités.",
   "Registration dates are invalid":
     "Les dates d’inscription sont incohérentes.",
+  "Open registration window must contain current time":
+    "Pendant que les inscriptions sont ouvertes, leur période doit continuer à inclure la date et l’heure actuelles.",
   "Tournament must fit inside its season":
     "Les dates du tournoi doivent être comprises dans la saison sélectionnée.",
   "Tournament settings are locked at this stage":
-    "Les informations générales sont verrouillées à cette étape du tournoi.",
+    "Les informations générales sont verrouillées depuis la génération des poules.",
   "Tournament configuration is locked at this stage":
-    "La configuration sportive est verrouillée à cette étape du tournoi.",
+    "La configuration sportive est verrouillée depuis la génération des poules.",
+  "Tournament configuration would invalidate existing availability":
+    "Cette modification supprimerait des créneaux déjà choisis par une ou plusieurs équipes. Corrigez d’abord leurs disponibilités ou conservez ces créneaux.",
+  "Tournament availability settings conflict with existing teams":
+    "Le nouveau minimum de disponibilités n’est pas respecté par toutes les équipes déjà inscrites.",
+  "Tournament series capacity conflicts with existing teams":
+    "La capacité d’une série ne peut pas devenir inférieure au nombre d’équipes déjà inscrites, ni être désactivée tant qu’elle contient des équipes actives.",
+  "Tournament series with teams cannot be removed":
+    "Une série contenant déjà des équipes ne peut pas être supprimée.",
   "A resource can only be selected once":
     "Un terrain ne peut être sélectionné qu’une fois.",
   "One or more resources are invalid":
     "Un des terrains sélectionnés n’est plus disponible.",
   "Tournament series are invalid":
-    "Chaque série active doit avoir un nom et une capacité strictement positive.",
+    "Chaque série active doit avoir un nom unique et une capacité strictement positive.",
   "Tournament play windows are invalid":
     "Vérifiez les jours et horaires du tournoi.",
   "Complete resources, series and play windows first":
@@ -161,6 +186,10 @@ const mapSummary = (row: Row): TournamentSummary => ({
   seasonName: String(row.season_name),
   startsOn: String(row.starts_on),
   endsOn: String(row.ends_on),
+  poolStartsOn: String(row.pool_starts_on ?? row.starts_on),
+  poolEndsOn: String(row.pool_ends_on ?? row.ends_on),
+  finalsStartsOn: row.finals_starts_on ? String(row.finals_starts_on) : null,
+  finalsEndsOn: row.finals_ends_on ? String(row.finals_ends_on) : null,
   registrationOpensAt: String(row.registration_opens_at),
   registrationClosesAt: String(row.registration_closes_at),
   status: row.status as TournamentStatus,
@@ -180,8 +209,17 @@ const mapDetail = (value: unknown): TournamentDetail => {
     rules: String(row.rules ?? ""),
     startsOn: String(row.starts_on),
     endsOn: String(row.ends_on),
+    poolStartsOn: String(row.pool_starts_on ?? row.starts_on),
+    poolEndsOn: String(row.pool_ends_on ?? row.ends_on),
+    finalsStartsOn: row.finals_starts_on ? String(row.finals_starts_on) : null,
+    finalsEndsOn: row.finals_ends_on ? String(row.finals_ends_on) : null,
     registrationOpensAt: String(row.registration_opens_at),
     registrationClosesAt: String(row.registration_closes_at),
+    minimumAvailabilitySlots: Number(row.minimum_availability_slots ?? 65),
+    minimumWeekendAvailabilitySlots: Number(
+      row.minimum_weekend_availability_slots ?? 0,
+    ),
+    slotDurationMinutes: Number(row.slot_duration_minutes ?? 60),
     status: row.status as TournamentStatus,
     timezone: String(row.timezone ?? "Europe/Paris"),
     resources: asRows(row.resources).map((resource) => ({
@@ -215,8 +253,15 @@ const draftPayload = (draft: TournamentDraft) => ({
   rules: draft.rules.trim(),
   starts_on: draft.startsOn,
   ends_on: draft.endsOn,
+  pool_starts_on: draft.poolStartsOn,
+  pool_ends_on: draft.poolEndsOn,
+  finals_starts_on: draft.finalsStartsOn ?? "",
+  finals_ends_on: draft.finalsEndsOn ?? "",
   registration_opens_at: draft.registrationOpensAt,
   registration_closes_at: draft.registrationClosesAt,
+  minimum_availability_slots: draft.minimumAvailabilitySlots,
+  minimum_weekend_availability_slots: draft.minimumWeekendAvailabilitySlots,
+  slot_duration_minutes: draft.slotDurationMinutes,
 });
 
 export const tournamentAdminService = {
@@ -271,6 +316,7 @@ export const tournamentAdminService = {
         payload: {
           resource_ids: value.resourceIds,
           series: value.series.map((series, index) => ({
+            id: series.id ?? null,
             name: series.name.trim(),
             display_order: index,
             capacity: series.capacity,

@@ -5,18 +5,20 @@ import test from "node:test";
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 const migrationPath =
-  "../supabase/migrations/20260810170000_admin_tournament_dated_availability.sql";
+  "../supabase/migrations/20260811070000_tournament_admin_phases_and_live_configuration.sql";
 
-test("l'admin lit les compteurs depuis les créneaux datés du tournoi", async () => {
+test("l'admin lit les disponibilités datées séparées entre poules et phase finale", async () => {
   const migration = await read(migrationPath);
 
   assert.match(migration, /admin_get_tournament_dated_availability/);
   assert.match(migration, /public\.tournament_team_availability_slots/);
-  assert.match(migration, /public\.tournament_play_windows/);
+  assert.match(migration, /public\.tournament_generated_slots/);
   assert.match(migration, /minimum_availability_slots/);
   assert.match(migration, /minimum_weekend_availability_slots/);
-  assert.match(migration, /available_slot_count/);
-  assert.match(migration, /weekend_slot_count/);
+  assert.match(migration, /available_pool_slot_count/);
+  assert.match(migration, /available_finals_slot_count/);
+  assert.match(migration, /pool_slot_count/);
+  assert.match(migration, /finals_slot_count/);
   assert.match(migration, /has_club_permission/);
   assert.match(
     migration,
@@ -24,7 +26,7 @@ test("l'admin lit les compteurs depuis les créneaux datés du tournoi", async (
   );
 });
 
-test("le service et l'écran admin n'utilisent plus le nombre de règles historiques comme compteur", async () => {
+test("le service et le tableau admin affichent les compteurs de chaque phase", async () => {
   const [service, page] = await Promise.all([
     read(
       "../src/features/admin/tournaments/services/adminTournamentTeamService.ts",
@@ -35,10 +37,10 @@ test("le service et l'écran admin n'utilisent plus le nombre de règles histori
   ]);
 
   assert.match(service, /admin_get_tournament_dated_availability/);
-  assert.match(service, /availabilitySlotCount/);
-  assert.match(service, /weekendAvailabilitySlotCount/);
-  assert.match(page, /Disponibilités datées/);
-  assert.match(page, /team\.availabilitySlotCount/);
-  assert.match(page, /team\.weekendAvailabilitySlotCount/);
+  assert.match(service, /poolAvailabilitySlotCount/);
+  assert.match(service, /finalsAvailabilitySlotCount/);
+  assert.match(page, /Tableau des équipes/);
+  assert.match(page, /Poules \$\{team\.poolAvailabilitySlotCount\}/);
+  assert.match(page, /Finale \$\{team\.finalsAvailabilitySlotCount\}/);
   assert.doesNotMatch(page, /<dd>\{team\.availabilityRules\.length\}<\/dd>/);
 });

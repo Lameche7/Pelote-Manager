@@ -57,10 +57,15 @@ type TournamentForm = {
   name: string;
   description: string;
   rules: string;
-  startsOn: string;
-  endsOn: string;
+  poolStartsOn: string;
+  poolEndsOn: string;
+  finalsStartsOn: string;
+  finalsEndsOn: string;
   registrationOpensAt: string;
   registrationClosesAt: string;
+  minimumAvailabilitySlots: number;
+  minimumWeekendAvailabilitySlots: number;
+  slotDurationMinutes: number;
 };
 
 type DateTimeParts = {
@@ -139,10 +144,15 @@ const blankForm = (seasonId = ""): TournamentForm => ({
   name: "",
   description: "",
   rules: "",
-  startsOn: "",
-  endsOn: "",
+  poolStartsOn: "",
+  poolEndsOn: "",
+  finalsStartsOn: "",
+  finalsEndsOn: "",
   registrationOpensAt: "",
   registrationClosesAt: "",
+  minimumAvailabilitySlots: 65,
+  minimumWeekendAvailabilitySlots: 0,
+  slotDurationMinutes: 60,
 });
 
 const detailToForm = (detail: TournamentDetail): TournamentForm => ({
@@ -150,10 +160,15 @@ const detailToForm = (detail: TournamentDetail): TournamentForm => ({
   name: detail.name,
   description: detail.description,
   rules: detail.rules,
-  startsOn: detail.startsOn,
-  endsOn: detail.endsOn,
+  poolStartsOn: detail.poolStartsOn,
+  poolEndsOn: detail.poolEndsOn,
+  finalsStartsOn: detail.finalsStartsOn ?? "",
+  finalsEndsOn: detail.finalsEndsOn ?? "",
   registrationOpensAt: toLocalInput(detail.registrationOpensAt),
   registrationClosesAt: toLocalInput(detail.registrationClosesAt),
+  minimumAvailabilitySlots: detail.minimumAvailabilitySlots,
+  minimumWeekendAvailabilitySlots: detail.minimumWeekendAvailabilitySlots,
+  slotDurationMinutes: detail.slotDurationMinutes,
 });
 
 const toDraft = (form: TournamentForm): TournamentDraft => {
@@ -162,19 +177,49 @@ const toDraft = (form: TournamentForm): TournamentDraft => {
       "Renseignez les dates d’ouverture et de fermeture des inscriptions.",
     );
   }
+  if (!form.poolStartsOn || !form.poolEndsOn) {
+    throw new Error("Renseignez les dates de la phase de poules.");
+  }
+  if (Boolean(form.finalsStartsOn) !== Boolean(form.finalsEndsOn)) {
+    throw new Error(
+      "Renseignez les deux dates de la phase finale ou laissez les deux champs vides.",
+    );
+  }
+  if (
+    form.minimumAvailabilitySlots < 0 ||
+    form.minimumWeekendAvailabilitySlots < 0 ||
+    form.minimumWeekendAvailabilitySlots > form.minimumAvailabilitySlots
+  ) {
+    throw new Error("Vérifiez les minima de disponibilités.");
+  }
+  if (form.slotDurationMinutes < 15 || form.slotDurationMinutes > 240) {
+    throw new Error(
+      "La durée d’un créneau doit être comprise entre 15 et 240 minutes.",
+    );
+  }
+
+  const finalsStartsOn = form.finalsStartsOn || null;
+  const finalsEndsOn = form.finalsEndsOn || null;
   return {
     seasonId: form.seasonId,
     name: form.name,
     description: form.description,
     rules: form.rules,
-    startsOn: form.startsOn,
-    endsOn: form.endsOn,
+    startsOn: form.poolStartsOn,
+    endsOn: finalsEndsOn ?? form.poolEndsOn,
+    poolStartsOn: form.poolStartsOn,
+    poolEndsOn: form.poolEndsOn,
+    finalsStartsOn,
+    finalsEndsOn,
     registrationOpensAt: toStoredDateTime(form.registrationOpensAt),
     registrationClosesAt: toStoredDateTime(form.registrationClosesAt),
+    minimumAvailabilitySlots: form.minimumAvailabilitySlots,
+    minimumWeekendAvailabilitySlots: form.minimumWeekendAvailabilitySlots,
+    slotDurationMinutes: form.slotDurationMinutes,
   };
 };
 
-const formatDate = (value: string) =>
+const formatDate = (value: string | null) =>
   value ? new Date(`${value}T12:00:00`).toLocaleDateString("fr-FR") : "—";
 
 const formatDateTime = (value: string) =>
@@ -253,8 +298,12 @@ export function AdminTournamentsPage() {
 
   const editable =
     detail === null ||
-    detail.status === "preparation" ||
-    detail.status === "configuration";
+    [
+      "preparation",
+      "configuration",
+      "registrations_open",
+      "registrations_closed",
+    ].includes(detail.status);
 
   const registrationWindowIsOpen = detail
     ? new Date(detail.registrationOpensAt) <= new Date() &&
@@ -292,7 +341,7 @@ export function AdminTournamentsPage() {
       if (detail) {
         await tournamentAdminService.update(detail.id, draft);
         await openTournament(detail.id);
-        setMessage("Les informations du tournoi ont été enregistrées.");
+        setMessage("Les paramètres du tournoi ont été enregistrés.");
       } else {
         const id = await tournamentAdminService.create(draft);
         await loadList();
@@ -374,8 +423,9 @@ export function AdminTournamentsPage() {
           <p className="admin-page__eyebrow">Administration</p>
           <h1>Tournois</h1>
           <p className="admin-page__lead">
-            Créez le tournoi, verrouillez sa configuration puis laissez Pelote
-            Manager guider son cycle de vie.
+            Préparez les poules et la phase finale. La configuration reste
+            ajustable jusqu’à la génération des poules, avec contrôle des
+            inscriptions déjà enregistrées.
           </p>
         </div>
         <button
@@ -404,8 +454,8 @@ export function AdminTournamentsPage() {
           <span>tournoi{tournaments.length > 1 ? "s" : ""}</span>
         </div>
         <p>
-          Le Pool Engine, le Planning Engine et les résultats seront branchés
-          sur ce noyau lors des prochaines PR.
+          Les disponibilités sont désormais distinguées entre phase de poules et
+          phase finale pour préparer le Pool Engine puis le Planning Engine.
         </p>
       </div>
 
@@ -443,10 +493,18 @@ export function AdminTournamentsPage() {
               </header>
               <dl>
                 <div>
-                  <dt>Période</dt>
+                  <dt>Poules</dt>
                   <dd>
-                    {formatDate(tournament.startsOn)} →{" "}
-                    {formatDate(tournament.endsOn)}
+                    {formatDate(tournament.poolStartsOn)} →{" "}
+                    {formatDate(tournament.poolEndsOn)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Phase finale</dt>
+                  <dd>
+                    {tournament.finalsStartsOn
+                      ? `${formatDate(tournament.finalsStartsOn)} → ${formatDate(tournament.finalsEndsOn)}`
+                      : "Non planifiée"}
                   </dd>
                 </div>
                 <div>
@@ -484,9 +542,20 @@ export function AdminTournamentsPage() {
               </button>
             </header>
 
+            {detail &&
+              ["registrations_open", "registrations_closed"].includes(
+                detail.status,
+              ) && (
+                <p className="tournaments-alert">
+                  Les paramètres restent modifiables. Toute modification qui
+                  supprimerait un créneau déjà choisi ou rendrait une série trop
+                  petite sera automatiquement refusée.
+                </p>
+              )}
+
             <form className="tournament-form" onSubmit={submitGeneral}>
               <section>
-                <h3>1. Informations générales</h3>
+                <h3>1. Informations & inscriptions</h3>
                 <div className="tournament-form__grid">
                   <label>
                     Nom du tournoi
@@ -517,30 +586,6 @@ export function AdminTournamentsPage() {
                         </option>
                       ))}
                     </select>
-                  </label>
-                  <label>
-                    Début du tournoi
-                    <input
-                      required
-                      type="date"
-                      disabled={!editable || saving}
-                      value={form.startsOn}
-                      onChange={(event) =>
-                        setForm({ ...form, startsOn: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label>
-                    Fin du tournoi
-                    <input
-                      required
-                      type="date"
-                      disabled={!editable || saving}
-                      value={form.endsOn}
-                      onChange={(event) =>
-                        setForm({ ...form, endsOn: event.target.value })
-                      }
-                    />
                   </label>
                   <label>
                     Ouverture des inscriptions
@@ -595,15 +640,121 @@ export function AdminTournamentsPage() {
                     }
                   />
                 </label>
+              </section>
+
+              <section>
+                <h3>2. Phases & créneaux</h3>
+                <p>
+                  Le minimum de disponibilités s’applique uniquement aux poules.
+                  Les disponibilités de phase finale sont recueillies en plus.
+                </p>
+                <div className="tournament-form__grid">
+                  <label>
+                    Début des poules
+                    <input
+                      required
+                      type="date"
+                      disabled={!editable || saving}
+                      value={form.poolStartsOn}
+                      onChange={(event) =>
+                        setForm({ ...form, poolStartsOn: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Fin des poules
+                    <input
+                      required
+                      type="date"
+                      disabled={!editable || saving}
+                      value={form.poolEndsOn}
+                      onChange={(event) =>
+                        setForm({ ...form, poolEndsOn: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Début de la phase finale
+                    <input
+                      type="date"
+                      disabled={!editable || saving}
+                      value={form.finalsStartsOn}
+                      onChange={(event) =>
+                        setForm({ ...form, finalsStartsOn: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Fin de la phase finale
+                    <input
+                      type="date"
+                      disabled={!editable || saving}
+                      value={form.finalsEndsOn}
+                      onChange={(event) =>
+                        setForm({ ...form, finalsEndsOn: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Durée d’un créneau (minutes)
+                    <input
+                      required
+                      type="number"
+                      min="15"
+                      max="240"
+                      step="15"
+                      disabled={!editable || saving}
+                      value={form.slotDurationMinutes}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          slotDurationMinutes: Number(event.target.value),
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Minimum de créneaux — poules
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      disabled={!editable || saving}
+                      value={form.minimumAvailabilitySlots}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          minimumAvailabilitySlots: Number(event.target.value),
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Minimum week-end — poules
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      disabled={!editable || saving}
+                      value={form.minimumWeekendAvailabilitySlots}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          minimumWeekendAvailabilitySlots: Number(
+                            event.target.value,
+                          ),
+                        })
+                      }
+                    />
+                  </label>
+                </div>
                 {editable && (
                   <button
                     className="tournaments-primary"
                     type="submit"
                     disabled={saving}
                   >
-                    {detail
-                      ? "Enregistrer les informations"
-                      : "Créer le tournoi"}
+                    {detail ? "Enregistrer les paramètres" : "Créer le tournoi"}
                   </button>
                 )}
               </section>
@@ -614,7 +765,7 @@ export function AdminTournamentsPage() {
                 <section className="tournament-config">
                   <header>
                     <div>
-                      <h3>2. Terrains</h3>
+                      <h3>3. Terrains</h3>
                       <p>
                         Sélectionnez les ressources que le Planning Engine
                         pourra utiliser.
@@ -645,10 +796,10 @@ export function AdminTournamentsPage() {
                 <section className="tournament-config">
                   <header>
                     <div>
-                      <h3>3. Séries</h3>
+                      <h3>4. Séries & capacités</h3>
                       <p>
-                        Une série active doit disposer d’une capacité supérieure
-                        à zéro.
+                        La capacité peut évoluer pendant les inscriptions mais
+                        jamais sous le nombre d’équipes déjà inscrites.
                       </p>
                     </div>
                     {editable && (
@@ -757,10 +908,11 @@ export function AdminTournamentsPage() {
                 <section className="tournament-config">
                   <header>
                     <div>
-                      <h3>4. Horaires du tournoi</h3>
+                      <h3>5. Horaires des créneaux</h3>
                       <p>
-                        Ces plages hebdomadaires seront croisées avec la période
-                        du tournoi par le futur Planning Engine.
+                        Ces plages sont appliquées aux dates de poules et aux
+                        dates de phase finale. Une réduction qui supprimerait un
+                        créneau déjà choisi sera refusée.
                       </p>
                     </div>
                     {editable && (
@@ -883,13 +1035,13 @@ export function AdminTournamentsPage() {
                       disabled={saving}
                       onClick={() => void saveConfiguration()}
                     >
-                      Enregistrer la configuration sportive
+                      Enregistrer terrains, séries et horaires
                     </button>
                   </div>
                 )}
 
                 <section className="tournament-lifecycle">
-                  <h3>5. Cycle du tournoi</h3>
+                  <h3>6. Cycle du tournoi</h3>
                   <div className="tournament-progress">
                     {lifecycleStatuses.map((status) => (
                       <span
@@ -956,8 +1108,8 @@ export function AdminTournamentsPage() {
                     )}
                     {detail.status === "registrations_closed" && (
                       <p>
-                        Prochaine étape : gestion des équipes et des
-                        inscriptions, puis Pool Engine.
+                        Les paramètres restent ajustables jusqu’à la génération
+                        des poules. Prochaine étape : Pool Engine.
                       </p>
                     )}
                     {[
