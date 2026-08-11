@@ -128,7 +128,7 @@ const teamPayload = (draft: AdminTournamentTeamDraft) => ({
 export const adminTournamentTeamService = {
   async get(tournamentId: string): Promise<AdminTournamentTeamsPayload> {
     const [teamsResponse, availabilityResponse] = await Promise.all([
-      supabase.rpc("admin_list_tournament_teams", {
+      supabase.rpc("admin_list_tournament_teams_v2", {
         target_tournament_id: tournamentId,
       }),
       supabase.rpc("admin_get_tournament_dated_availability", {
@@ -246,7 +246,7 @@ export const adminTournamentTeamService = {
     draft: AdminTournamentTeamDraft,
   ): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "admin_save_tournament_team_v2",
+      "admin_save_tournament_team_v3",
       {
         target_tournament_id: tournamentId,
         target_team_id: teamId,
