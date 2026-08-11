@@ -178,12 +178,15 @@ export function TournamentRegistrationForm({
   }, [draft, onError, partnerQuery, tournament.id]);
 
   const partnerRole = draft ? oppositeRole(draft.submitterRole) : "back";
-  const weekendAvailabilityCount =
-    draft?.availabilitySlots.filter((slot) => isWeekendDate(slot.date))
-      .length ?? 0;
+  const poolAvailabilitySlots =
+    draft?.availabilitySlots.filter((slot) => (slot.phase ?? "pools") === "pools") ??
+    [];
+  const weekendAvailabilityCount = poolAvailabilitySlots.filter((slot) =>
+    isWeekendDate(slot.date),
+  ).length;
   const availabilityMinimumReached = Boolean(
     draft &&
-    draft.availabilitySlots.length >= tournament.minimumAvailabilitySlots &&
+    poolAvailabilitySlots.length >= tournament.minimumAvailabilitySlots &&
     weekendAvailabilityCount >= tournament.minimumWeekendAvailabilitySlots,
   );
 
@@ -243,7 +246,7 @@ export function TournamentRegistrationForm({
     if (!draft) return;
     if (!availabilityMinimumReached) {
       onError(
-        `Vous devez cocher au moins ${tournament.minimumAvailabilitySlots} créneaux au total dont ${tournament.minimumWeekendAvailabilitySlots} le week-end.`,
+        `Pour la phase de poules, vous devez cocher au moins ${tournament.minimumAvailabilitySlots} créneaux dont ${tournament.minimumWeekendAvailabilitySlots} le week-end.`,
       );
       return;
     }
