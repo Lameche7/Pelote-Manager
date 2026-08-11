@@ -10,7 +10,9 @@ const migrationPath =
 test("la phase finale exige 35 créneaux dès qu'elle est configurée", async () => {
   const [migration, rules] = await Promise.all([
     read(migrationPath),
-    read("../src/features/tournaments/domain/tournamentAvailabilityRules.ts"),
+    read(
+      "../src/features/tournaments/domain/tournamentAvailabilityRules.ts",
+    ),
   ]);
 
   assert.match(rules, /TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS = 35/);
