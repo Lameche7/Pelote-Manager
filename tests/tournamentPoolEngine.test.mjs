@@ -5,8 +5,8 @@ import {
   buildCompatibilityMap,
   generateOptimizedPools,
   getPoolMetric,
+  movePoolTeam,
   poolSizesFor,
-  setPoolLock,
   swapPoolTeams,
 } from "../.test-dist/src/features/tournaments/domain/poolEngine.js";
 
@@ -15,21 +15,23 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 const migrationPath =
   "../supabase/migrations/20260811103000_add_tournament_pool_engine.sql";
 
-test("les séries sont découpées uniquement en poules de 4 ou 5", () => {
+test("le nombre reel d equipes produit des poules equilibrees de 4 a 6", () => {
   assert.deepEqual(poolSizesFor(8), [4, 4]);
-  assert.deepEqual(poolSizesFor(9), [4, 5]);
-  assert.deepEqual(poolSizesFor(10), [5, 5]);
-  assert.deepEqual(poolSizesFor(24), [4, 4, 4, 4, 4, 4]);
-  assert.deepEqual(poolSizesFor(11), []);
+  assert.deepEqual(poolSizesFor(11), [5, 6]);
+  assert.deepEqual(poolSizesFor(22), [5, 5, 6, 6]);
+  assert.deepEqual(poolSizesFor(23), [5, 6, 6, 6]);
+  assert.deepEqual(poolSizesFor(24), [6, 6, 6, 6]);
+  assert.deepEqual(poolSizesFor(26), [5, 5, 5, 5, 6]);
+  assert.deepEqual(poolSizesFor(7), []);
 });
 
-test("la génération attribue chaque équipe une seule fois", () => {
-  const teams = Array.from({ length: 8 }, (_, index) => ({
+test("la generation attribue chaque equipe une seule fois", () => {
+  const teams = Array.from({ length: 23 }, (_, index) => ({
     id: `team-${index + 1}`,
     seriesId: "series-1",
   }));
   const generated = generateOptimizedPools({
-    series: [{ id: "series-1", name: "1ère série", teams }],
+    series: [{ id: "series-1", name: "1ere serie", teams }],
     pairings: [],
     random: () => 0.42,
     iterationsPerSeries: 0,
@@ -37,12 +39,12 @@ test("la génération attribue chaque équipe une seule fois", () => {
 
   assert.deepEqual(
     generated.map((pool) => pool.teams.length),
-    [4, 4],
+    [5, 6, 6, 6],
   );
   assert.equal(
     new Set(generated.flatMap((pool) => pool.teams.map((team) => team.teamId)))
       .size,
-    8,
+    23,
   );
 });
 
@@ -61,11 +63,7 @@ test("les indicateurs utilisent le duel le plus contraint", () => {
       seriesId: "series-1",
       displayOrder: 0,
       targetSize: 4,
-      isLocked: false,
-      teams: ["a", "b", "c", "d"].map((teamId) => ({
-        teamId,
-        isLocked: false,
-      })),
+      teams: ["a", "b", "c", "d"].map((teamId) => ({ teamId })),
     },
     compatibility,
   );
@@ -75,113 +73,53 @@ test("les indicateurs utilisent le duel le plus contraint", () => {
   assert.equal(metric.average, 119 / 6);
 });
 
-test("une équipe verrouillée ne peut pas être échangée", () => {
+test("deux equipes peuvent etre echangees entre poules de la meme serie", () => {
   const pools = [
     {
       key: "p1",
       seriesId: "s1",
       displayOrder: 0,
       targetSize: 4,
-      isLocked: false,
-      teams: [
-        { teamId: "a", isLocked: true },
-        { teamId: "b", isLocked: false },
-        { teamId: "c", isLocked: false },
-        { teamId: "d", isLocked: false },
-      ],
+      teams: ["a", "b", "c", "d"].map((teamId) => ({ teamId })),
     },
     {
       key: "p2",
       seriesId: "s1",
       displayOrder: 1,
       targetSize: 4,
-      isLocked: false,
-      teams: [
-        { teamId: "e", isLocked: false },
-        { teamId: "f", isLocked: false },
-        { teamId: "g", isLocked: false },
-        { teamId: "h", isLocked: false },
-      ],
+      teams: ["e", "f", "g", "h"].map((teamId) => ({ teamId })),
     },
   ];
 
   const swapped = swapPoolTeams(pools, "a", "e");
-  assert.equal(swapped[0].teams[0].teamId, "a");
-  assert.equal(swapped[1].teams[0].teamId, "e");
+  assert.equal(swapped[0].teams[0].teamId, "e");
+  assert.equal(swapped[1].teams[0].teamId, "a");
 });
 
-test("le verrou de poule ne transforme pas les verrous individuels", () => {
+test("un deplacement direct reste entre 4 et 6 equipes", () => {
   const pools = [
     {
       key: "p1",
       seriesId: "s1",
       displayOrder: 0,
-      targetSize: 4,
-      isLocked: false,
-      teams: [
-        { teamId: "a", isLocked: false },
-        { teamId: "b", isLocked: true },
-        { teamId: "c", isLocked: false },
-        { teamId: "d", isLocked: false },
-      ],
-    },
-  ];
-
-  const locked = setPoolLock(pools, "p1", true);
-  const unlocked = setPoolLock(locked, "p1", false);
-  assert.equal(unlocked[0].teams[0].isLocked, false);
-  assert.equal(unlocked[0].teams[1].isLocked, true);
-});
-
-test("le rééquilibrage d’une poule verrouillée préserve les verrous individuels", () => {
-  const teams = ["a", "b", "c", "d", "e", "f", "g", "h"].map((id) => ({
-    id,
-    seriesId: "s1",
-  }));
-  const existingPools = [
-    {
-      key: "p1",
-      seriesId: "s1",
-      displayOrder: 0,
-      targetSize: 4,
-      isLocked: true,
-      teams: [
-        { teamId: "a", isLocked: false },
-        { teamId: "b", isLocked: true },
-        { teamId: "c", isLocked: false },
-        { teamId: "d", isLocked: false },
-      ],
+      targetSize: 6,
+      teams: ["a", "b", "c", "d", "e", "f"].map((teamId) => ({ teamId })),
     },
     {
       key: "p2",
       seriesId: "s1",
       displayOrder: 1,
       targetSize: 4,
-      isLocked: false,
-      teams: [
-        { teamId: "e", isLocked: false },
-        { teamId: "f", isLocked: false },
-        { teamId: "g", isLocked: false },
-        { teamId: "h", isLocked: false },
-      ],
+      teams: ["g", "h", "i", "j"].map((teamId) => ({ teamId })),
     },
   ];
 
-  const generated = generateOptimizedPools({
-    series: [{ id: "s1", name: "Série", teams }],
-    pairings: [],
-    existingPools,
-    random: () => 0.4,
-    iterationsPerSeries: 10,
-  });
-  const lockedPool = generated.find((pool) => pool.key === "p1");
-  assert.ok(lockedPool);
-  assert.equal(lockedPool.teams[0].isLocked, false);
-  assert.equal(lockedPool.teams[1].isLocked, true);
-  assert.equal(lockedPool.teams[2].isLocked, false);
+  const moved = movePoolTeam(pools, "a", "p2");
+  assert.equal(moved[0].teams.length, 5);
+  assert.equal(moved[1].teams.length, 5);
 });
 
-test("la base sécurise le brouillon puis la validation", async () => {
+test("la base securise la composition 4 5 6 et permet de rouvrir", async () => {
   const migration = await read(migrationPath);
 
   assert.match(migration, /create table public\.tournament_pools/);
@@ -189,25 +127,25 @@ test("la base sécurise le brouillon puis la validation", async () => {
   assert.match(migration, /admin_get_tournament_pool_workspace/);
   assert.match(migration, /admin_save_tournament_pools/);
   assert.match(migration, /admin_validate_tournament_pools/);
-  assert.match(migration, /target_size in \(4, 5\)/);
+  assert.match(migration, /admin_reopen_tournament_pools/);
+  assert.match(migration, /target_size in \(4, 5, 6\)/);
   assert.match(
     migration,
     /Every accepted team must belong to exactly one pool/,
   );
-  assert.match(migration, /status = 'pools_generated'/);
-  assert.match(migration, /status = 'pools_validated'/);
+  assert.doesNotMatch(migration, /is_locked/);
 });
 
-test("l’atelier admin est interactif", async () => {
+test("l atelier admin regenere sans verrous", async () => {
   const page = await read(
     "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx",
   );
 
-  assert.match(page, /Glissez une équipe sur une autre/);
+  assert.match(page, /nombre réel d’équipes/);
+  assert.match(page, /4, 5 ou 6 équipes/);
+  assert.match(page, /Régénérer et rééquilibrer/);
+  assert.match(page, /Rouvrir les poules/);
   assert.match(page, /draggable=/);
-  assert.match(page, /onDragStart/);
-  assert.match(page, /Rééquilibrer les équipes libres/);
-  assert.match(page, /Annuler les modifications/);
-  assert.match(page, /Valider les poules/);
   assert.match(page, /Pire duel/);
+  assert.doesNotMatch(page, /Verrouiller/);
 });
