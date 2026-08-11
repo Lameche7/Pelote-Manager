@@ -34,6 +34,7 @@
     "src/features/auth/domain/accountProfileFinalization.ts",
     "src/features/home/domain/publicEventPresentation.ts",
     "src/features/members/domain/memberRegistration.ts",
+    "src/features/tournaments/domain/planningEngine.ts",
     "src/features/tournaments/domain/poolEngine.ts",
     "supabase/functions/_shared/memberRegistrationCleanup.ts",
     "src/features/platform/budget/platformBudgetForecast.ts",
