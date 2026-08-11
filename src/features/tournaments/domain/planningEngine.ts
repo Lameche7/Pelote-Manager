@@ -254,7 +254,9 @@ const qualityFor = (
   const totalMatches = matches.length;
   const scheduledMatches = assignments.length;
   const completionRate =
-    totalMatches === 0 ? 100 : Math.round((scheduledMatches / totalMatches) * 100);
+    totalMatches === 0
+      ? 100
+      : Math.round((scheduledMatches / totalMatches) * 100);
   const distribution = distributionRate(assignments, matchById, slotById);
   const score = Math.round(completionRate * 0.8 + distribution * 0.2);
   return {
@@ -300,7 +302,8 @@ const buildDiagnostics = (
           severity: "error" as const,
           code: "no_common_availability" as const,
           matchId,
-          message: "Aucun créneau de disponibilité commun pour cette rencontre.",
+          message:
+            "Aucun créneau de disponibilité commun pour cette rencontre.",
         }
       : {
           severity: "error" as const,
@@ -333,7 +336,12 @@ export const validatePlanning = ({
     const slot = slotById.get(assignment.slotId);
     let valid = true;
 
-    if (!match || !slot || seenMatches.has(assignment.matchId) || seenSlots.has(assignment.slotId)) {
+    if (
+      !match ||
+      !slot ||
+      seenMatches.has(assignment.matchId) ||
+      seenSlots.has(assignment.slotId)
+    ) {
       valid = false;
     } else {
       const key = availabilityKey(slot);
@@ -360,7 +368,8 @@ export const validatePlanning = ({
         severity: "error",
         code: "invalid_assignment",
         matchId: assignment.matchId,
-        message: "Cette affectation crée un conflit ou ne respecte pas les disponibilités.",
+        message:
+          "Cette affectation crée un conflit ou ne respecte pas les disponibilités.",
       });
       continue;
     }
@@ -423,13 +432,8 @@ export const generatePlanningProposal = ({
         .map((slot) => ({
           slot,
           score:
-            candidateLoadScore(
-              match,
-              slot,
-              assignments,
-              matchById,
-              slotById,
-            ) + random(),
+            candidateLoadScore(match, slot, assignments, matchById, slotById) +
+            random(),
         }))
         .sort((left, right) => left.score - right.score);
 
@@ -439,7 +443,9 @@ export const generatePlanningProposal = ({
       usedSlots.add(selected.id);
     }
 
-    const scheduled = new Set(assignments.map((assignment) => assignment.matchId));
+    const scheduled = new Set(
+      assignments.map((assignment) => assignment.matchId),
+    );
     const unscheduledMatchIds = matches
       .filter((match) => !scheduled.has(match.id))
       .map((match) => match.id);
@@ -447,7 +453,11 @@ export const generatePlanningProposal = ({
     return {
       assignments,
       unscheduledMatchIds,
-      diagnostics: buildDiagnostics(matches, unscheduledMatchIds, compatibleSlotCount),
+      diagnostics: buildDiagnostics(
+        matches,
+        unscheduledMatchIds,
+        compatibleSlotCount,
+      ),
       quality,
     };
   };
@@ -456,7 +466,8 @@ export const generatePlanningProposal = ({
   for (let index = 1; index < Math.max(1, iterations); index += 1) {
     const candidate = attempt();
     if (proposalIsBetter(candidate, best)) best = candidate;
-    if (best.unscheduledMatchIds.length === 0 && best.quality.score === 100) break;
+    if (best.unscheduledMatchIds.length === 0 && best.quality.score === 100)
+      break;
   }
   return best;
 };
