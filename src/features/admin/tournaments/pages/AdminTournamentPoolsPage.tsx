@@ -18,6 +18,8 @@ import {
   getSeriesClubMetric,
   getSeriesMetric,
   movePoolTeam,
+  poolSizesAreValidFor,
+  poolSizesFor,
   swapPoolTeams,
   type PoolDraft,
 } from "@/features/tournaments/domain/poolEngine";
@@ -36,6 +38,36 @@ const statusLabels: Record<string, string> = {
   completed: "Terminé",
   archived: "Archivé",
   cancelled: "Annulé",
+};
+
+type PoolSizeCounts = {
+  4: number;
+  5: number;
+  6: number;
+};
+
+const emptyPoolSizeCounts = (): PoolSizeCounts => ({ 4: 0, 5: 0, 6: 0 });
+
+const poolSizeCountsFromSizes = (sizes: readonly number[]): PoolSizeCounts => {
+  const result = emptyPoolSizeCounts();
+  for (const size of sizes) {
+    if (size === 4 || size === 5 || size === 6) result[size] += 1;
+  }
+  return result;
+};
+
+const poolSizesFromCounts = (counts: PoolSizeCounts): (4 | 5 | 6)[] => [
+  ...Array.from({ length: Math.max(counts[4], 0) }, () => 4 as const),
+  ...Array.from({ length: Math.max(counts[5], 0) }, () => 5 as const),
+  ...Array.from({ length: Math.max(counts[6], 0) }, () => 6 as const),
+];
+
+const formatPoolSizes = (sizes: readonly number[]) => {
+  const counts = poolSizeCountsFromSizes(sizes);
+  return ([4, 5, 6] as const)
+    .filter((size) => counts[size] > 0)
+    .map((size) => `${counts[size]} × ${size}`)
+    .join(" · ");
 };
 
 const poolName = (index: number) => {
@@ -88,6 +120,9 @@ export function AdminTournamentPoolsPage() {
   );
   const [pools, setPools] = useState<PoolDraft[]>([]);
   const [persistedPools, setPersistedPools] = useState<PoolDraft[]>([]);
+  const [poolSizeCountsBySeries, setPoolSizeCountsBySeries] = useState<
+    Record<string, PoolSizeCounts>
+  >({});
   const [activeSeriesId, setActiveSeriesId] = useState("");
   const [draggedTeamId, setDraggedTeamId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,11 +130,29 @@ export function AdminTournamentPoolsPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  const countsForWorkspace = (
+    loaded: TournamentPoolWorkspace,
+    loadedPools: PoolDraft[],
+  ) =>
+    Object.fromEntries(
+      loaded.series.map((series) => {
+        const seriesPools = loadedPools.filter(
+          (pool) => pool.seriesId === series.id,
+        );
+        const sizes =
+          seriesPools.length > 0
+            ? seriesPools.map((pool) => pool.teams.length)
+            : poolSizesFor(series.acceptedCount);
+        return [series.id, poolSizeCountsFromSizes(sizes)];
+      }),
+    );
+
   const hydrate = (loaded: TournamentPoolWorkspace) => {
     const loadedPools = clonePools(loaded.pools);
     setWorkspace(loaded);
     setPools(loadedPools);
     setPersistedPools(clonePools(loadedPools));
+    setPoolSizeCountsBySeries(countsForWorkspace(loaded, loadedPools));
     setActiveSeriesId((current) =>
       loaded.series.some((series) => series.id === current)
         ? current
@@ -176,6 +229,15 @@ export function AdminTournamentPoolsPage() {
   const activePools = pools
     .filter((pool) => pool.seriesId === activeSeriesId)
     .sort((left, right) => left.displayOrder - right.displayOrder);
+  const activePoolSizeCounts =
+    poolSizeCountsBySeries[activeSeriesId] ?? emptyPoolSizeCounts();
+  const activeRequestedSizes = poolSizesFromCounts(activePoolSizeCounts);
+  const activeDistributionValid = activeSeries
+    ? poolSizesAreValidFor(activeSeries.acceptedCount, activeRequestedSizes)
+    : false;
+  const activeAutomaticSizes = activeSeries
+    ? poolSizesFor(activeSeries.acceptedCount)
+    : [];
 
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
@@ -209,6 +271,14 @@ export function AdminTournamentPoolsPage() {
         })),
     }));
 
+  const autoPoolSizesBySeries = () =>
+    Object.fromEntries(
+      (workspace?.series ?? []).map((series) => [
+        series.id,
+        poolSizesFor(series.acceptedCount),
+      ]),
+    );
+
   const generate = () => {
     if (!workspace || !editable) return;
     setError("");
@@ -221,19 +291,86 @@ export function AdminTournamentPoolsPage() {
     }
 
     try {
+      const sizesBySeries = autoPoolSizesBySeries();
       const generated = generateOptimizedPools({
         series: buildSeriesInputs(),
         pairings: workspace.pairings,
+        poolSizesBySeries: sizesBySeries,
       });
       setPools(generated);
+      setPoolSizeCountsBySeries(
+        Object.fromEntries(
+          Object.entries(sizesBySeries).map(([seriesId, sizes]) => [
+            seriesId,
+            poolSizeCountsFromSizes(sizes),
+          ]),
+        ),
+      );
       setMessage(
-        "Nouvelle proposition : clubs répartis au mieux, puis disponibilités optimisées.",
+        "Nouvelle proposition : poules de 4 privilégiées, clubs répartis au mieux, puis disponibilités optimisées.",
       );
     } catch (generationError) {
       setError(
         generationError instanceof Error
           ? generationError.message
           : "Impossible de générer les poules.",
+      );
+    }
+  };
+
+  const useAutomaticDistribution = () => {
+    if (!activeSeries) return;
+    setPoolSizeCountsBySeries((current) => ({
+      ...current,
+      [activeSeries.id]: poolSizeCountsFromSizes(activeAutomaticSizes),
+    }));
+  };
+
+  const changePoolSizeCount = (size: 4 | 5 | 6, value: number) => {
+    if (!activeSeries) return;
+    setPoolSizeCountsBySeries((current) => ({
+      ...current,
+      [activeSeries.id]: {
+        ...(current[activeSeries.id] ?? emptyPoolSizeCounts()),
+        [size]: Math.max(0, Math.floor(Number.isFinite(value) ? value : 0)),
+      },
+    }));
+  };
+
+  const applyActiveDistribution = () => {
+    if (!workspace || !activeSeries || !editable) return;
+    setError("");
+    setMessage("");
+    if (!activeDistributionValid) {
+      const assigned = activeRequestedSizes.reduce((sum, size) => sum + size, 0);
+      setError(
+        `La répartition choisie représente ${assigned} équipes alors que ${activeSeries.acceptedCount} sont inscrites dans ${activeSeries.name}.`,
+      );
+      return;
+    }
+
+    try {
+      const activeInput = buildSeriesInputs().find(
+        (series) => series.id === activeSeries.id,
+      );
+      if (!activeInput) return;
+      const generated = generateOptimizedPools({
+        series: [activeInput],
+        pairings: workspace.pairings,
+        poolSizesBySeries: { [activeSeries.id]: activeRequestedSizes },
+      });
+      setPools((current) => [
+        ...current.filter((pool) => pool.seriesId !== activeSeries.id),
+        ...generated,
+      ]);
+      setMessage(
+        `${activeSeries.name} : répartition ${formatPoolSizes(activeRequestedSizes)} appliquée et équipes réoptimisées.`,
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Impossible d’appliquer cette répartition.",
       );
     }
   };
@@ -324,7 +461,17 @@ export function AdminTournamentPoolsPage() {
 
   const dropOnPool = (targetPoolKey: string) => {
     if (!draggedTeamId || !editable) return;
-    setPools((current) => movePoolTeam(current, draggedTeamId, targetPoolKey));
+    setPools((current) => {
+      const moved = movePoolTeam(current, draggedTeamId, targetPoolKey);
+      const sizes = moved
+        .filter((pool) => pool.seriesId === activeSeriesId)
+        .map((pool) => pool.teams.length);
+      setPoolSizeCountsBySeries((counts) => ({
+        ...counts,
+        [activeSeriesId]: poolSizeCountsFromSizes(sizes),
+      }));
+      return moved;
+    });
     setDraggedTeamId(null);
   };
 
@@ -343,8 +490,9 @@ export function AdminTournamentPoolsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Poules</h1>
           <p className="admin-page__lead">
-            Le moteur compose des poules de 4, 5 ou 6 équipes en répartissant
-            d’abord au mieux les clubs, puis en optimisant les disponibilités.
+            Le moteur privilégie les poules de 4, puis répartit au mieux les
+            clubs et optimise les disponibilités. L’administrateur peut imposer
+            une autre répartition de poules de 4, 5 ou 6.
           </p>
         </div>
       </header>
@@ -391,15 +539,22 @@ export function AdminTournamentPoolsPage() {
                 {editable && (
                   <button type="button" disabled={saving} onClick={generate}>
                     {pools.length === 0
-                      ? "Générer les poules"
-                      : "Régénérer et rééquilibrer"}
+                      ? "Générer la proposition"
+                      : "Régénérer la proposition auto"}
                   </button>
                 )}
                 {editable && pools.length > 0 && (
                   <button
                     type="button"
                     disabled={saving || !dirty}
-                    onClick={() => setPools(clonePools(persistedPools))}
+                    onClick={() => {
+                      setPools(clonePools(persistedPools));
+                      if (workspace) {
+                        setPoolSizeCountsBySeries(
+                          countsForWorkspace(workspace, persistedPools),
+                        );
+                      }
+                    }}
                   >
                     Annuler les modifications
                   </button>
@@ -518,6 +673,67 @@ export function AdminTournamentPoolsPage() {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {workspace && activeSeries && editable && activeSeries.acceptedCount > 0 && (
+            <div className="admin-card admin-tournament-pools__distribution">
+              <div className="admin-tournament-pools__distribution-copy">
+                <span>Répartition des poules · {activeSeries.name}</span>
+                <strong>
+                  Proposition automatique : {formatPoolSizes(activeAutomaticSizes)}
+                </strong>
+                <small>
+                  Priorité aux poules de 4. Vous pouvez modifier les quantités
+                  ci-dessous avant de réoptimiser cette série.
+                </small>
+              </div>
+
+              <div className="admin-tournament-pools__distribution-controls">
+                {([4, 5, 6] as const).map((size) => (
+                  <label key={size}>
+                    Poules de {size}
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      disabled={saving}
+                      value={activePoolSizeCounts[size]}
+                      onChange={(event) =>
+                        changePoolSizeCount(size, Number(event.target.value))
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+
+              <div className="admin-tournament-pools__distribution-actions">
+                <span
+                  className={
+                    activeDistributionValid
+                      ? "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--valid"
+                      : "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--invalid"
+                  }
+                >
+                  {activeRequestedSizes.reduce((sum, size) => sum + size, 0)} /{" "}
+                  {activeSeries.acceptedCount} équipes
+                </span>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={useAutomaticDistribution}
+                >
+                  Reprendre la proposition
+                </button>
+                <button
+                  className="admin-tournament-pools__primary"
+                  type="button"
+                  disabled={saving || !activeDistributionValid}
+                  onClick={applyActiveDistribution}
+                >
+                  Appliquer cette répartition
+                </button>
+              </div>
             </div>
           )}
 
