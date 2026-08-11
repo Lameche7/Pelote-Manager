@@ -342,7 +342,10 @@ export function AdminTournamentPoolsPage() {
     setError("");
     setMessage("");
     if (!activeDistributionValid) {
-      const assigned = activeRequestedSizes.reduce((sum, size) => sum + size, 0);
+      const assigned = activeRequestedSizes.reduce(
+        (sum, size) => sum + size,
+        0,
+      );
       setError(
         `La répartition choisie représente ${assigned} équipes alors que ${activeSeries.acceptedCount} sont inscrites dans ${activeSeries.name}.`,
       );
@@ -676,66 +679,73 @@ export function AdminTournamentPoolsPage() {
             </div>
           )}
 
-          {workspace && activeSeries && editable && activeSeries.acceptedCount > 0 && (
-            <div className="admin-card admin-tournament-pools__distribution">
-              <div className="admin-tournament-pools__distribution-copy">
-                <span>Répartition des poules · {activeSeries.name}</span>
-                <strong>
-                  Proposition automatique : {formatPoolSizes(activeAutomaticSizes)}
-                </strong>
-                <small>
-                  Priorité aux poules de 4. Vous pouvez modifier les quantités
-                  ci-dessous avant de réoptimiser cette série.
-                </small>
-              </div>
+          {workspace &&
+            activeSeries &&
+            editable &&
+            activeSeries.acceptedCount > 0 && (
+              <div className="admin-card admin-tournament-pools__distribution">
+                <div className="admin-tournament-pools__distribution-copy">
+                  <span>Répartition des poules · {activeSeries.name}</span>
+                  <strong>
+                    Proposition automatique :{" "}
+                    {formatPoolSizes(activeAutomaticSizes)}
+                  </strong>
+                  <small>
+                    Priorité aux poules de 4. Vous pouvez modifier les quantités
+                    ci-dessous avant de réoptimiser cette série.
+                  </small>
+                </div>
 
-              <div className="admin-tournament-pools__distribution-controls">
-                {([4, 5, 6] as const).map((size) => (
-                  <label key={size}>
-                    Poules de {size}
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      disabled={saving}
-                      value={activePoolSizeCounts[size]}
-                      onChange={(event) =>
-                        changePoolSizeCount(size, Number(event.target.value))
-                      }
-                    />
-                  </label>
-                ))}
-              </div>
+                <div className="admin-tournament-pools__distribution-controls">
+                  {([4, 5, 6] as const).map((size) => (
+                    <label key={size}>
+                      Poules de {size}
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        disabled={saving}
+                        value={activePoolSizeCounts[size]}
+                        onChange={(event) =>
+                          changePoolSizeCount(size, Number(event.target.value))
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
 
-              <div className="admin-tournament-pools__distribution-actions">
-                <span
-                  className={
-                    activeDistributionValid
-                      ? "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--valid"
-                      : "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--invalid"
-                  }
-                >
-                  {activeRequestedSizes.reduce((sum, size) => sum + size, 0)} /{" "}
-                  {activeSeries.acceptedCount} équipes
-                </span>
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={useAutomaticDistribution}
-                >
-                  Reprendre la proposition
-                </button>
-                <button
-                  className="admin-tournament-pools__primary"
-                  type="button"
-                  disabled={saving || !activeDistributionValid}
-                  onClick={applyActiveDistribution}
-                >
-                  Appliquer cette répartition
-                </button>
+                <div className="admin-tournament-pools__distribution-actions">
+                  <span
+                    className={
+                      activeDistributionValid
+                        ? "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--valid"
+                        : "admin-tournament-pools__distribution-total admin-tournament-pools__distribution-total--invalid"
+                    }
+                  >
+                    {activeRequestedSizes.reduce(
+                      (sum, size) => sum + size,
+                      0,
+                    )}{" "}
+                    / {activeSeries.acceptedCount} équipes
+                  </span>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={useAutomaticDistribution}
+                  >
+                    Reprendre la proposition
+                  </button>
+                  <button
+                    className="admin-tournament-pools__primary"
+                    type="button"
+                    disabled={saving || !activeDistributionValid}
+                    onClick={applyActiveDistribution}
+                  >
+                    Appliquer cette répartition
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {workspace && activeSeries && activePools.length === 0 && (
             <div className="admin-card admin-tournament-pools__empty">
