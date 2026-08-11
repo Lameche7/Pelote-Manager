@@ -15,7 +15,6 @@ import {
   getPoolMetric,
   getSeriesMetric,
   movePoolTeam,
-  setTeamLock,
   swapPoolTeams,
   type PoolDraft,
 } from "@/features/tournaments/domain/poolEngine";
@@ -57,11 +56,7 @@ const signature = (pools: PoolDraft[]) =>
       seriesId: pool.seriesId,
       displayOrder: pool.displayOrder,
       targetSize: pool.teams.length,
-      isLocked: pool.isLocked,
-      teams: pool.teams.map((team) => ({
-        teamId: team.teamId,
-        isLocked: team.isLocked,
-      })),
+      teams: pool.teams.map((team) => team.teamId),
     })),
   );
 
@@ -96,11 +91,6 @@ export function AdminTournamentPoolsPage() {
         ? current
         : (loaded.series[0]?.id ?? ""),
     );
-  };
-
-  const loadWorkspace = async (tournamentId: string) => {
-    const loaded = await adminTournamentPoolService.get(tournamentId);
-    hydrate(loaded);
   };
 
   const refresh = async (tournamentId: string) => {
@@ -162,7 +152,6 @@ export function AdminTournamentPoolsPage() {
     workspace?.tournament.status === "registrations_closed" ||
     workspace?.tournament.status === "pools_generated";
   const validated = workspace?.tournament.status === "pools_validated";
-
   const activeSeries = workspace?.series.find(
     (series) => series.id === activeSeriesId,
   );
@@ -176,7 +165,8 @@ export function AdminTournamentPoolsPage() {
     setError("");
     setMessage("");
     try {
-      await loadWorkspace(id);
+      const loaded = await adminTournamentPoolService.get(id);
+      hydrate(loaded);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -207,17 +197,15 @@ export function AdminTournamentPoolsPage() {
       );
       return;
     }
+
     try {
       const generated = generateOptimizedPools({
         series: buildSeriesInputs(),
         pairings: workspace.pairings,
-        existingPools: pools,
       });
       setPools(generated);
       setMessage(
-        pools.length === 0
-          ? "Proposition générée. Vous pouvez maintenant l’ajuster avant de l’enregistrer."
-          : "Les équipes non verrouillées ont été rééquilibrées.",
+        "Nouvelle proposition calculée à partir du nombre réel d’équipes acceptées.",
       );
     } catch (generationError) {
       setError(
@@ -236,7 +224,7 @@ export function AdminTournamentPoolsPage() {
     try {
       await adminTournamentPoolService.save(workspace.tournament.id, pools);
       await refresh(workspace.tournament.id);
-      setMessage("Brouillon des poules enregistré.");
+      setMessage("Composition des poules enregistrée.");
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -258,7 +246,7 @@ export function AdminTournamentPoolsPage() {
     }
     if (
       !window.confirm(
-        "Valider définitivement les poules ? Elles seront verrouillées pour passer à la génération des matchs.",
+        "Valider cette composition ? Vous pourrez encore la rouvrir tant que le planning n’a pas été généré.",
       )
     ) {
       return;
@@ -270,9 +258,7 @@ export function AdminTournamentPoolsPage() {
     try {
       await adminTournamentPoolService.validate(workspace.tournament.id);
       await refresh(workspace.tournament.id);
-      setMessage(
-        "Poules validées. Elles sont maintenant prêtes pour les matchs.",
-      );
+      setMessage("Poules validées. Elles restent réouvrables avant le planning.");
     } catch (validationError) {
       setError(
         validationError instanceof Error
@@ -284,27 +270,31 @@ export function AdminTournamentPoolsPage() {
     }
   };
 
-  const togglePoolLock = (poolKey: string) => {
-    if (!editable) return;
-    setPools((current) =>
-      current.map((pool) =>
-        pool.key === poolKey ? { ...pool, isLocked: !pool.isLocked } : pool,
-      ),
-    );
-  };
-
-  const toggleTeamLock = (teamId: string) => {
-    if (!editable) return;
-    const current = pools
-      .flatMap((pool) => pool.teams)
-      .find((team) => team.teamId === teamId);
-    if (!current) return;
-    setPools((value) => setTeamLock(value, teamId, !current.isLocked));
+  const reopen = async () => {
+    if (!workspace || !validated) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      await adminTournamentPoolService.reopen(workspace.tournament.id);
+      await refresh(workspace.tournament.id);
+      setMessage("Poules rouvertes : vous pouvez les modifier ou les régénérer.");
+    } catch (reopenError) {
+      setError(
+        reopenError instanceof Error
+          ? reopenError.message
+          : "Impossible de rouvrir les poules.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const dropOnTeam = (targetTeamId: string) => {
     if (!draggedTeamId || draggedTeamId === targetTeamId || !editable) return;
-    setPools((current) => swapPoolTeams(current, draggedTeamId, targetTeamId));
+    setPools((current) =>
+      swapPoolTeams(current, draggedTeamId, targetTeamId),
+    );
     setDraggedTeamId(null);
   };
 
@@ -329,9 +319,9 @@ export function AdminTournamentPoolsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Poules</h1>
           <p className="admin-page__lead">
-            Générez des poules de 4 ou 5 équipes, optimisez les disponibilités,
-            échangez les équipes par glisser-déposer puis verrouillez votre
-            composition avant de la valider.
+            Le moteur part du nombre réel d’équipes inscrites et compose
+            automatiquement des poules équilibrées de 4, 5 ou 6 équipes avant
+            d’optimiser leurs disponibilités.
           </p>
         </div>
       </header>
@@ -379,7 +369,7 @@ export function AdminTournamentPoolsPage() {
                   <button type="button" disabled={saving} onClick={generate}>
                     {pools.length === 0
                       ? "Générer les poules"
-                      : "Rééquilibrer les équipes libres"}
+                      : "Régénérer et rééquilibrer"}
                   </button>
                 )}
                 {editable && pools.length > 0 && (
@@ -398,7 +388,7 @@ export function AdminTournamentPoolsPage() {
                     disabled={saving || !dirty}
                     onClick={() => void save()}
                   >
-                    Enregistrer le brouillon
+                    Enregistrer la composition
                   </button>
                 )}
                 {workspace.tournament.status === "pools_generated" && (
@@ -409,6 +399,15 @@ export function AdminTournamentPoolsPage() {
                     onClick={() => void validate()}
                   >
                     Valider les poules
+                  </button>
+                )}
+                {validated && (
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void reopen()}
+                  >
+                    Rouvrir les poules
                   </button>
                 )}
               </div>
@@ -422,8 +421,8 @@ export function AdminTournamentPoolsPage() {
                   workspace.tournament.status}
               </strong>
               <span>
-                Fermez les inscriptions avant de générer les poules. Après
-                validation, elles deviennent en lecture seule.
+                Fermez les inscriptions avant de générer les poules. Le moteur
+                utilisera alors uniquement les équipes réellement acceptées.
               </span>
             </div>
           )}
@@ -432,8 +431,8 @@ export function AdminTournamentPoolsPage() {
             <div className="admin-card admin-tournament-pools__notice admin-tournament-pools__notice--success">
               <strong>✅ Poules validées</strong>
               <span>
-                La composition est verrouillée et prête pour la génération des
-                matchs.
+                Cette composition est approuvée, mais elle peut encore être
+                rouverte avant la génération du planning.
               </span>
             </div>
           )}
@@ -477,8 +476,7 @@ export function AdminTournamentPoolsPage() {
                     <strong>{series.name}</strong>
                     <span>
                       {series.acceptedCount} équipes · {seriesPools.length}{" "}
-                      poule
-                      {seriesPools.length > 1 ? "s" : ""}
+                      poule{seriesPools.length > 1 ? "s" : ""}
                     </span>
                     {seriesPools.length > 0 && (
                       <small>
@@ -513,9 +511,10 @@ export function AdminTournamentPoolsPage() {
               <div className="admin-card admin-tournament-pools__help">
                 <strong>{activeSeries?.name}</strong>
                 <span>
-                  Glissez une équipe sur une autre pour les échanger. Un
-                  déplacement direct est possible d’une poule de 5 vers une
-                  poule de 4. Les compteurs de créneaux communs sont recalculés
+                  Les poules sont dimensionnées automatiquement entre 4 et 6
+                  équipes. Glissez une équipe sur une autre pour les échanger,
+                  ou sur une autre poule pour la déplacer si les deux poules
+                  restent dans cette plage. Les indicateurs sont recalculés
                   immédiatement.
                 </span>
               </div>
@@ -525,14 +524,10 @@ export function AdminTournamentPoolsPage() {
                   const metric = getPoolMetric(pool, compatibility);
                   return (
                     <article
-                      className={
-                        pool.isLocked
-                          ? "admin-tournament-pool admin-tournament-pool--locked"
-                          : "admin-tournament-pool"
-                      }
+                      className="admin-tournament-pool"
                       key={pool.key}
                       onDragOver={(event) => {
-                        if (editable && !pool.isLocked) event.preventDefault();
+                        if (editable) event.preventDefault();
                       }}
                       onDrop={(event) => {
                         event.preventDefault();
@@ -545,31 +540,15 @@ export function AdminTournamentPoolsPage() {
                           <h2>{poolName(poolIndex)}</h2>
                           <small>
                             {pool.teams.length} équipes · pire duel{" "}
-                            {metric.minimum} · moyenne{" "}
-                            {metric.average.toFixed(1)}
+                            {metric.minimum} · moyenne {metric.average.toFixed(1)}
                           </small>
                         </div>
-                        {editable && (
-                          <button
-                            type="button"
-                            onClick={() => togglePoolLock(pool.key)}
-                            title={
-                              pool.isLocked
-                                ? "Déverrouiller toute la poule"
-                                : "Conserver toute la poule au prochain rééquilibrage"
-                            }
-                          >
-                            {pool.isLocked ? "🔒 Poule" : "🔓 Poule"}
-                          </button>
-                        )}
                       </header>
 
                       <div className="admin-tournament-pool__teams">
                         {pool.teams.map((assignment) => {
                           const team = teamById.get(assignment.teamId);
                           if (!team) return null;
-                          const effectiveLocked =
-                            pool.isLocked || assignment.isLocked;
                           const opponents = pool.teams
                             .filter(
                               (other) => other.teamId !== assignment.teamId,
@@ -594,19 +573,15 @@ export function AdminTournamentPoolsPage() {
 
                           return (
                             <div
-                              className={
-                                effectiveLocked
-                                  ? "admin-tournament-pool-team admin-tournament-pool-team--locked"
-                                  : "admin-tournament-pool-team"
-                              }
+                              className="admin-tournament-pool-team"
                               key={assignment.teamId}
-                              draggable={Boolean(editable && !effectiveLocked)}
+                              draggable={Boolean(editable)}
                               onDragStart={() =>
                                 setDraggedTeamId(assignment.teamId)
                               }
                               onDragEnd={() => setDraggedTeamId(null)}
                               onDragOver={(event) => {
-                                if (editable && !effectiveLocked) {
+                                if (editable) {
                                   event.preventDefault();
                                   event.stopPropagation();
                                 }
@@ -625,17 +600,6 @@ export function AdminTournamentPoolsPage() {
                                     poules
                                   </small>
                                 </div>
-                                {editable && !pool.isLocked && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      toggleTeamLock(assignment.teamId)
-                                    }
-                                    title="Conserver cette équipe dans sa poule au prochain rééquilibrage"
-                                  >
-                                    {assignment.isLocked ? "🔒" : "🔓"}
-                                  </button>
-                                )}
                               </header>
 
                               <div className="admin-tournament-pool-team__compatibility">
