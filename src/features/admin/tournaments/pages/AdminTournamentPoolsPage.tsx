@@ -18,8 +18,14 @@ import {
   getSeriesClubMetric,
   getSeriesMetric,
   movePoolTeam,
+  poolSizeCountsFor,
+  poolSizePlanIsValid,
+  poolSizesFor,
+  poolSizesFromCounts,
   swapPoolTeams,
   type PoolDraft,
+  type PoolSize,
+  type PoolSizeCounts,
 } from "@/features/tournaments/domain/poolEngine";
 import "./AdminTournamentPoolsPage.css";
 
@@ -80,6 +86,35 @@ const clubMetricLabel = (
     ? "Clubs parfaitement répartis"
     : `Max ${maxTeamsPerClub} équipes d’un même club · ${duplicatePairCount} rapprochement${duplicatePairCount > 1 ? "s" : ""}`;
 
+const formatPoolSizes = (sizes: readonly PoolSize[]) => {
+  const counts = poolSizeCountsFor(sizes);
+  const parts = [
+    counts.four > 0 ? `${counts.four} × 4` : "",
+    counts.five > 0 ? `${counts.five} × 5` : "",
+    counts.six > 0 ? `${counts.six} × 6` : "",
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : "Aucune répartition valide";
+};
+
+const sizePlansFor = (
+  loaded: TournamentPoolWorkspace,
+  drafts: PoolDraft[],
+): Record<string, PoolSizeCounts> =>
+  Object.fromEntries(
+    loaded.series.map((series) => {
+      const seriesPools = drafts
+        .filter((pool) => pool.seriesId === series.id)
+        .sort((left, right) => left.displayOrder - right.displayOrder);
+      const sizes =
+        seriesPools.length > 0
+          ? seriesPools.map((pool) => pool.teams.length as PoolSize)
+          : poolSizesFor(series.acceptedCount);
+      return [series.id, poolSizeCountsFor(sizes)];
+    }),
+  );
+
+const emptyCounts: PoolSizeCounts = { four: 0, five: 0, six: 0 };
+
 export function AdminTournamentPoolsPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -88,6 +123,7 @@ export function AdminTournamentPoolsPage() {
   );
   const [pools, setPools] = useState<PoolDraft[]>([]);
   const [persistedPools, setPersistedPools] = useState<PoolDraft[]>([]);
+  const [sizePlans, setSizePlans] = useState<Record<string, PoolSizeCounts>>({});
   const [activeSeriesId, setActiveSeriesId] = useState("");
   const [draggedTeamId, setDraggedTeamId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,6 +136,7 @@ export function AdminTournamentPoolsPage() {
     setWorkspace(loaded);
     setPools(loadedPools);
     setPersistedPools(clonePools(loadedPools));
+    setSizePlans(sizePlansFor(loaded, loadedPools));
     setActiveSeriesId((current) =>
       loaded.series.some((series) => series.id === current)
         ? current
@@ -176,6 +213,18 @@ export function AdminTournamentPoolsPage() {
   const activePools = pools
     .filter((pool) => pool.seriesId === activeSeriesId)
     .sort((left, right) => left.displayOrder - right.displayOrder);
+  const automaticSizes = activeSeries
+    ? poolSizesFor(activeSeries.acceptedCount)
+    : [];
+  const activePlan = sizePlans[activeSeriesId] ?? emptyCounts;
+  const activePlannedSizes = poolSizesFromCounts(activePlan);
+  const activePlannedTeamCount = activePlannedSizes.reduce(
+    (sum, size) => sum + size,
+    0,
+  );
+  const activePlanValid = activeSeries
+    ? poolSizePlanIsValid(activeSeries.acceptedCount, activePlannedSizes)
+    : false;
 
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
@@ -226,8 +275,9 @@ export function AdminTournamentPoolsPage() {
         pairings: workspace.pairings,
       });
       setPools(generated);
+      setSizePlans(sizePlansFor(workspace, generated));
       setMessage(
-        "Nouvelle proposition : clubs répartis au mieux, puis disponibilités optimisées.",
+        "Nouvelle proposition : poules de 4 privilégiées, clubs répartis au mieux, puis disponibilités optimisées.",
       );
     } catch (generationError) {
       setError(
@@ -236,6 +286,81 @@ export function AdminTournamentPoolsPage() {
           : "Impossible de générer les poules.",
       );
     }
+  };
+
+  const updateActivePlan = (key: keyof PoolSizeCounts, value: string) => {
+    if (!activeSeries) return;
+    const parsed = Math.max(0, Math.floor(Number(value) || 0));
+    setSizePlans((current) => ({
+      ...current,
+      [activeSeries.id]: {
+        ...(current[activeSeries.id] ?? emptyCounts),
+        [key]: parsed,
+      },
+    }));
+  };
+
+  const useAutomaticPlan = () => {
+    if (!activeSeries) return;
+    setSizePlans((current) => ({
+      ...current,
+      [activeSeries.id]: poolSizeCountsFor(automaticSizes),
+    }));
+    setError("");
+    setMessage(
+      `Suggestion moteur chargée pour ${activeSeries.name} : ${formatPoolSizes(automaticSizes)}.`,
+    );
+  };
+
+  const applyActiveSeriesPlan = () => {
+    if (!workspace || !activeSeries || !editable) return;
+    setError("");
+    setMessage("");
+    if (workspace.tournament.pendingCount > 0) {
+      setError(
+        "Traitez les équipes en attente avant de recomposer les poules.",
+      );
+      return;
+    }
+    if (!activePlanValid) {
+      setError(
+        `La répartition doit couvrir exactement les ${activeSeries.acceptedCount} équipes avec des poules de 4, 5 ou 6.`,
+      );
+      return;
+    }
+
+    const seriesInput = buildSeriesInputs().find(
+      (series) => series.id === activeSeries.id,
+    );
+    if (!seriesInput) return;
+
+    try {
+      const generated = generateOptimizedPools({
+        series: [seriesInput],
+        pairings: workspace.pairings,
+        poolSizesBySeries: { [activeSeries.id]: activePlannedSizes },
+      });
+      setPools((current) => [
+        ...current.filter((pool) => pool.seriesId !== activeSeries.id),
+        ...generated,
+      ]);
+      setMessage(
+        `${activeSeries.name} recomposée en ${formatPoolSizes(activePlannedSizes)} ; clubs et disponibilités ont été réoptimisés.`,
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Impossible d’appliquer cette répartition.",
+      );
+    }
+  };
+
+  const restorePersisted = () => {
+    if (!workspace) return;
+    const restored = clonePools(persistedPools);
+    setPools(restored);
+    setSizePlans(sizePlansFor(workspace, restored));
   };
 
   const save = async () => {
@@ -323,8 +448,20 @@ export function AdminTournamentPoolsPage() {
   };
 
   const dropOnPool = (targetPoolKey: string) => {
-    if (!draggedTeamId || !editable) return;
-    setPools((current) => movePoolTeam(current, draggedTeamId, targetPoolKey));
+    if (!draggedTeamId || !editable || !workspace) return;
+    const next = movePoolTeam(pools, draggedTeamId, targetPoolKey);
+    setPools(next);
+    const targetPool = next.find((pool) => pool.key === targetPoolKey);
+    if (targetPool) {
+      const seriesSizes = next
+        .filter((pool) => pool.seriesId === targetPool.seriesId)
+        .sort((left, right) => left.displayOrder - right.displayOrder)
+        .map((pool) => pool.teams.length as PoolSize);
+      setSizePlans((current) => ({
+        ...current,
+        [targetPool.seriesId]: poolSizeCountsFor(seriesSizes),
+      }));
+    }
     setDraggedTeamId(null);
   };
 
@@ -343,8 +480,9 @@ export function AdminTournamentPoolsPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Poules</h1>
           <p className="admin-page__lead">
-            Le moteur compose des poules de 4, 5 ou 6 équipes en répartissant
-            d’abord au mieux les clubs, puis en optimisant les disponibilités.
+            Le moteur privilégie les poules de 4, puis répartit au mieux les
+            clubs et optimise les disponibilités. L’administrateur peut imposer
+            une autre répartition valide en poules de 4, 5 ou 6.
           </p>
         </div>
       </header>
@@ -392,14 +530,14 @@ export function AdminTournamentPoolsPage() {
                   <button type="button" disabled={saving} onClick={generate}>
                     {pools.length === 0
                       ? "Générer les poules"
-                      : "Régénérer et rééquilibrer"}
+                      : "Nouvelle proposition automatique"}
                   </button>
                 )}
                 {editable && pools.length > 0 && (
                   <button
                     type="button"
                     disabled={saving || !dirty}
-                    onClick={() => setPools(clonePools(persistedPools))}
+                    onClick={restorePersisted}
                   >
                     Annuler les modifications
                   </button>
@@ -518,6 +656,105 @@ export function AdminTournamentPoolsPage() {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {workspace && activeSeries && activeSeries.acceptedCount > 0 && (
+            <div className="admin-card admin-tournament-pools__distribution">
+              <div className="admin-tournament-pools__distribution-heading">
+                <div>
+                  <span>Répartition des poules</span>
+                  <strong>{activeSeries.name}</strong>
+                </div>
+                <div>
+                  <small>Suggestion moteur — priorité aux poules de 4</small>
+                  <strong>{formatPoolSizes(automaticSizes)}</strong>
+                </div>
+              </div>
+
+              <div className="admin-tournament-pools__distribution-controls">
+                <label>
+                  Poules de 4
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    disabled={!editable || saving}
+                    value={activePlan.four}
+                    onChange={(event) =>
+                      updateActivePlan("four", event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  Poules de 5
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    disabled={!editable || saving}
+                    value={activePlan.five}
+                    onChange={(event) =>
+                      updateActivePlan("five", event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  Poules de 6
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    disabled={!editable || saving}
+                    value={activePlan.six}
+                    onChange={(event) =>
+                      updateActivePlan("six", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+
+              <div
+                className={
+                  activePlanValid
+                    ? "admin-tournament-pools__distribution-summary"
+                    : "admin-tournament-pools__distribution-summary admin-tournament-pools__distribution-summary--invalid"
+                }
+              >
+                <strong>
+                  {activePlannedTeamCount}/{activeSeries.acceptedCount} équipes
+                  réparties
+                </strong>
+                <span>
+                  {activePlanValid
+                    ? `${activePlannedSizes.length} poule${activePlannedSizes.length > 1 ? "s" : ""} · ${formatPoolSizes(activePlannedSizes)}`
+                    : "Ajustez les compteurs pour couvrir exactement toutes les équipes."}
+                </span>
+              </div>
+
+              {editable && (
+                <div className="admin-tournament-pools__distribution-actions">
+                  <button
+                    type="button"
+                    disabled={saving || automaticSizes.length === 0}
+                    onClick={useAutomaticPlan}
+                  >
+                    Reprendre la suggestion
+                  </button>
+                  <button
+                    className="admin-tournament-pools__primary"
+                    type="button"
+                    disabled={
+                      saving ||
+                      !activePlanValid ||
+                      workspace.tournament.pendingCount > 0
+                    }
+                    onClick={applyActiveSeriesPlan}
+                  >
+                    Appliquer cette répartition
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
