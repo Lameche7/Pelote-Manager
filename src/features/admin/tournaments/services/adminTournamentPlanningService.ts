@@ -18,13 +18,28 @@ export type TournamentPlanningTeam = {
   label: string;
 };
 
+export type TournamentPlanningSeries = {
+  id: string;
+  name: string;
+  color: string;
+  displayOrder: number;
+};
+
 export type TournamentPlanningWorkspace = {
   tournament: {
     id: string;
     name: string;
     status: TournamentStatus;
+    startsOn: string;
+    endsOn: string;
+    poolStartsOn: string;
+    poolEndsOn: string;
+    finalsStartsOn: string | null;
+    finalsEndsOn: string | null;
+    slotDurationMinutes: number;
     minimumRestMinutes: number;
   };
+  series: TournamentPlanningSeries[];
   resources: Array<{
     id: string;
     name: string;
@@ -62,6 +77,10 @@ const knownErrors: Record<string, string> = {
     "Les rencontres doivent être préparées avant d’enregistrer le planning.",
   "Every tournament match must be scheduled exactly once":
     "Toutes les rencontres doivent être planifiées exactement une fois.",
+  "Tournament series colors are invalid":
+    "Une couleur de série est invalide.",
+  "Tournament series colors are locked at this stage":
+    "Les couleurs des séries ne peuvent plus être modifiées sur ce tournoi.",
 };
 
 const fail = (error: unknown, fallback: string): never => {
@@ -89,8 +108,25 @@ const mapWorkspace = (value: unknown): TournamentPlanningWorkspace => {
       id: String(tournament.id ?? ""),
       name: String(tournament.name ?? ""),
       status: tournament.status as TournamentStatus,
+      startsOn: String(tournament.starts_on ?? tournament.pool_starts_on ?? ""),
+      endsOn: String(tournament.ends_on ?? tournament.pool_ends_on ?? ""),
+      poolStartsOn: String(tournament.pool_starts_on ?? tournament.starts_on ?? ""),
+      poolEndsOn: String(tournament.pool_ends_on ?? tournament.ends_on ?? ""),
+      finalsStartsOn: tournament.finals_starts_on
+        ? String(tournament.finals_starts_on)
+        : null,
+      finalsEndsOn: tournament.finals_ends_on
+        ? String(tournament.finals_ends_on)
+        : null,
+      slotDurationMinutes: Number(tournament.slot_duration_minutes ?? 60),
       minimumRestMinutes: Number(tournament.minimum_rest_minutes ?? 0),
     },
+    series: rows(root.series).map((series) => ({
+      id: String(series.id),
+      name: String(series.name ?? "Série"),
+      color: String(series.color ?? "#2563EB"),
+      displayOrder: Number(series.display_order ?? 0),
+    })),
     resources: rows(root.resources).map((resource) => ({
       id: String(resource.id),
       name: String(resource.name ?? ""),
@@ -183,5 +219,23 @@ export const adminTournamentPlanningService = {
       payload: planningPayload(assignments, slots, source),
     });
     if (error) fail(error, "Impossible d’enregistrer le planning du tournoi.");
+  },
+
+  async saveSeriesColors(
+    tournamentId: string,
+    values: Array<{ id: string; color: string }>,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "admin_update_tournament_series_colors",
+      {
+        target_tournament_id: tournamentId,
+        payload: values.map((value) => ({
+          id: value.id,
+          color: value.color.toUpperCase(),
+        })),
+      },
+    );
+    if (error)
+      fail(error, "Impossible d’enregistrer les couleurs des séries.");
   },
 };
