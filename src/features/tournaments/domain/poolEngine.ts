@@ -11,15 +11,13 @@ export type PoolEngineTeam = {
 
 export type PoolDraftTeam = {
   teamId: string;
-  isLocked: boolean;
 };
 
 export type PoolDraft = {
   key: string;
   seriesId: string;
   displayOrder: number;
-  targetSize: 4 | 5;
-  isLocked: boolean;
+  targetSize: 4 | 5 | 6;
   teams: PoolDraftTeam[];
 };
 
@@ -38,7 +36,6 @@ export type SeriesPoolInput = {
 export type GeneratePoolOptions = {
   series: SeriesPoolInput[];
   pairings: PoolCompatibility[];
-  existingPools?: PoolDraft[];
   random?: () => number;
   iterationsPerSeries?: number;
 };
@@ -63,23 +60,24 @@ export const commonSlots = (
   teamBId: string,
 ) => compatibility.get(compatibilityKey(teamAId, teamBId)) ?? 0;
 
-export const poolSizesFor = (teamCount: number): (4 | 5)[] => {
+export const poolSizesFor = (teamCount: number): (4 | 5 | 6)[] => {
   if (teamCount === 0) return [];
   if (teamCount < 4) return [];
 
-  for (
-    let poolCount = Math.floor(teamCount / 4);
-    poolCount >= Math.ceil(teamCount / 5);
-    poolCount -= 1
-  ) {
-    const fiveCount = teamCount - poolCount * 4;
-    if (fiveCount < 0 || fiveCount > poolCount) continue;
-    return Array.from({ length: poolCount }, (_, index) =>
-      index < poolCount - fiveCount ? 4 : 5,
-    );
+  const poolCount = Math.ceil(teamCount / 6);
+  if (poolCount * 4 > teamCount) return [];
+
+  const baseSize = Math.floor(teamCount / poolCount);
+  const largerPoolCount = teamCount % poolCount;
+  if (baseSize < 4 || baseSize > 6 || baseSize + (largerPoolCount > 0 ? 1 : 0) > 6) {
+    return [];
   }
 
-  return [];
+  return Array.from({ length: poolCount }, (_, index) =>
+    index < poolCount - largerPoolCount
+      ? (baseSize as 4 | 5 | 6)
+      : ((baseSize + 1) as 4 | 5 | 6),
+  );
 };
 
 const shuffle = <T>(items: T[], random: () => number) => {
@@ -151,94 +149,27 @@ const metricIsBetter = (candidate: PoolMetric, current: PoolMetric) => {
   return candidate.average > current.average + 0.0001;
 };
 
-const normalizePoolTeams = (pools: PoolDraft[]) =>
-  pools.map((pool) => ({
-    ...pool,
-    targetSize: pool.teams.length as 4 | 5,
-    teams: pool.teams.map((team) => ({ ...team })),
-  }));
-
-const seedSeriesPools = (
-  series: SeriesPoolInput,
-  existingPools: PoolDraft[],
-  random: () => number,
-) => {
-  const knownTeamIds = new Set(series.teams.map((team) => team.id));
-  const current = existingPools
-    .filter((pool) => pool.seriesId === series.id)
-    .sort((left, right) => left.displayOrder - right.displayOrder);
-
-  if (current.length === 0) {
-    const sizes = poolSizesFor(series.teams.length);
-    if (sizes.length === 0 && series.teams.length > 0) {
-      throw new Error(
-        `${series.name} compte ${series.teams.length} équipes : impossible de constituer uniquement des poules de 4 ou 5.`,
-      );
-    }
-
-    const teams = shuffle(series.teams, random);
-    let cursor = 0;
-    return sizes.map((size, index): PoolDraft => {
-      const assigned = teams.slice(cursor, cursor + size);
-      cursor += size;
-      return {
-        key: `generated-${series.id}-${index}`,
-        seriesId: series.id,
-        displayOrder: index,
-        targetSize: size,
-        isLocked: false,
-        teams: assigned.map((team) => ({ teamId: team.id, isLocked: false })),
-      };
-    });
-  }
-
-  const capacity = current.reduce((sum, pool) => sum + pool.targetSize, 0);
-  if (capacity !== series.teams.length) {
+const seedSeriesPools = (series: SeriesPoolInput, random: () => number) => {
+  const sizes = poolSizesFor(series.teams.length);
+  if (sizes.length === 0 && series.teams.length > 0) {
     throw new Error(
-      `${series.name} a changé de nombre d’équipes. Enregistrez une nouvelle génération complète.`,
+      `${series.name} compte ${series.teams.length} équipes : impossible de constituer des poules de 4 à 6 équipes.`,
     );
   }
 
-  const fixedTeamIds = new Set<string>();
-  const seeded = current.map((pool) => ({
-    ...pool,
-    teams: pool.teams
-      .filter((team) => knownTeamIds.has(team.teamId))
-      .filter((team) => {
-        const fixed = pool.isLocked || team.isLocked;
-        if (fixed) fixedTeamIds.add(team.teamId);
-        return fixed;
-      })
-      .map((team) => ({ ...team })),
-  }));
-
-  const availableTeams = shuffle(
-    series.teams.filter((team) => !fixedTeamIds.has(team.id)),
-    random,
-  );
+  const teams = shuffle(series.teams, random);
   let cursor = 0;
-
-  for (const pool of seeded) {
-    const missing = pool.targetSize - pool.teams.length;
-    if (missing < 0) {
-      throw new Error(
-        `La ${series.name} contient trop d’équipes verrouillées.`,
-      );
-    }
-    const additions = availableTeams.slice(cursor, cursor + missing);
-    cursor += missing;
-    pool.teams.push(
-      ...additions.map((team) => ({ teamId: team.id, isLocked: false })),
-    );
-  }
-
-  if (cursor !== availableTeams.length) {
-    throw new Error(
-      `Impossible de rééquilibrer ${series.name} avec ces verrous.`,
-    );
-  }
-
-  return seeded;
+  return sizes.map((size, index): PoolDraft => {
+    const assigned = teams.slice(cursor, cursor + size);
+    cursor += size;
+    return {
+      key: `generated-${series.id}-${index}`,
+      seriesId: series.id,
+      displayOrder: index,
+      targetSize: size,
+      teams: assigned.map((team) => ({ teamId: team.id })),
+    };
+  });
 };
 
 const optimizeSeries = (
@@ -247,21 +178,20 @@ const optimizeSeries = (
   random: () => number,
   iterations: number,
 ) => {
-  let result = normalizePoolTeams(pools);
+  let result = pools.map((pool) => ({
+    ...pool,
+    teams: pool.teams.map((team) => ({ ...team })),
+  }));
   let score = getSeriesMetric(result, compatibility);
 
   for (let iteration = 0; iteration < iterations; iteration += 1) {
-    const movable: Array<{ poolIndex: number; teamIndex: number }> = [];
-    result.forEach((pool, poolIndex) => {
-      if (pool.isLocked) return;
-      pool.teams.forEach((team, teamIndex) => {
-        if (!team.isLocked) movable.push({ poolIndex, teamIndex });
-      });
-    });
+    const positions = result.flatMap((pool, poolIndex) =>
+      pool.teams.map((_, teamIndex) => ({ poolIndex, teamIndex })),
+    );
+    if (positions.length < 2) break;
 
-    if (movable.length < 2) break;
-    const first = movable[Math.floor(random() * movable.length)];
-    const candidates = movable.filter(
+    const first = positions[Math.floor(random() * positions.length)];
+    const candidates = positions.filter(
       (candidate) => candidate.poolIndex !== first.poolIndex,
     );
     if (candidates.length === 0) break;
@@ -289,7 +219,6 @@ const optimizeSeries = (
 export const generateOptimizedPools = ({
   series,
   pairings,
-  existingPools = [],
   random = Math.random,
   iterationsPerSeries = 1_200,
 }: GeneratePoolOptions): PoolDraft[] => {
@@ -297,7 +226,7 @@ export const generateOptimizedPools = ({
   const result: PoolDraft[] = [];
 
   for (const currentSeries of series) {
-    const seeded = seedSeriesPools(currentSeries, existingPools, random);
+    const seeded = seedSeriesPools(currentSeries, random);
     result.push(
       ...optimizeSeries(
         seeded,
@@ -339,20 +268,12 @@ export const swapPoolTeams = (
   const secondPosition = second as { poolIndex: number; teamIndex: number };
   const firstPool = result[firstPosition.poolIndex];
   const secondPool = result[secondPosition.poolIndex];
+
+  if (firstPool.seriesId !== secondPool.seriesId) return result;
+
   const firstTeam = firstPool.teams[firstPosition.teamIndex];
-  const secondTeam = secondPool.teams[secondPosition.teamIndex];
-
-  if (
-    firstPool.seriesId !== secondPool.seriesId ||
-    firstPool.isLocked ||
-    secondPool.isLocked ||
-    firstTeam.isLocked ||
-    secondTeam.isLocked
-  ) {
-    return result;
-  }
-
-  firstPool.teams[firstPosition.teamIndex] = secondTeam;
+  firstPool.teams[firstPosition.teamIndex] =
+    secondPool.teams[secondPosition.teamIndex];
   secondPool.teams[secondPosition.teamIndex] = firstTeam;
   return result;
 };
@@ -371,17 +292,12 @@ export const movePoolTeam = (
     return result;
   }
 
-  const team = sourcePool.teams.find(
-    (candidate) => candidate.teamId === teamId,
-  );
+  const team = sourcePool.teams.find((candidate) => candidate.teamId === teamId);
   if (
     !team ||
-    team.isLocked ||
-    sourcePool.isLocked ||
-    targetPool.isLocked ||
     sourcePool.seriesId !== targetPool.seriesId ||
-    sourcePool.teams.length !== 5 ||
-    targetPool.teams.length !== 4
+    sourcePool.teams.length <= 4 ||
+    targetPool.teams.length >= 6
   ) {
     return result;
   }
@@ -390,30 +306,7 @@ export const movePoolTeam = (
     (candidate) => candidate.teamId !== teamId,
   );
   targetPool.teams.push(team);
-  sourcePool.targetSize = 4;
-  targetPool.targetSize = 5;
+  sourcePool.targetSize = sourcePool.teams.length as 4 | 5 | 6;
+  targetPool.targetSize = targetPool.teams.length as 4 | 5 | 6;
   return result;
 };
-
-export const setPoolLock = (
-  pools: PoolDraft[],
-  poolKey: string,
-  locked: boolean,
-) =>
-  clonePools(pools).map((pool) =>
-    pool.key === poolKey ? { ...pool, isLocked: locked } : pool,
-  );
-
-export const setTeamLock = (
-  pools: PoolDraft[],
-  teamId: string,
-  locked: boolean,
-) =>
-  clonePools(pools).map((pool) => ({
-    ...pool,
-    teams: pool.teams.map((team) =>
-      team.teamId === teamId && !pool.isLocked
-        ? { ...team, isLocked: locked }
-        : team,
-    ),
-  }));
