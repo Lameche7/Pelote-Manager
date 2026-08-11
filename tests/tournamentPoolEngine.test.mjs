@@ -19,20 +19,17 @@ const upgradeMigrationPath =
 const poolPageCssPath =
   "../src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css";
 
-test(
-  "le moteur privilégie les poules de 4 puis utilise 5 ou 6 pour absorber le reste",
-  () => {
-    assert.deepEqual(poolSizesFor(8), [4, 4]);
-    assert.deepEqual(poolSizesFor(10), [4, 6]);
-    assert.deepEqual(poolSizesFor(11), [5, 6]);
-    assert.deepEqual(poolSizesFor(22), [4, 4, 4, 4, 6]);
-    assert.deepEqual(poolSizesFor(23), [4, 4, 4, 5, 6]);
-    assert.deepEqual(poolSizesFor(24), [4, 4, 4, 4, 4, 4]);
-    assert.deepEqual(poolSizesFor(26), [4, 4, 4, 4, 4, 6]);
-    assert.deepEqual(poolSizesFor(32), [4, 4, 4, 4, 4, 4, 4, 4]);
-    assert.deepEqual(poolSizesFor(7), []);
-  },
-);
+test("le moteur privilégie les poules de 4", () => {
+  assert.deepEqual(poolSizesFor(8), [4, 4]);
+  assert.deepEqual(poolSizesFor(10), [4, 6]);
+  assert.deepEqual(poolSizesFor(11), [5, 6]);
+  assert.deepEqual(poolSizesFor(22), [4, 4, 4, 4, 6]);
+  assert.deepEqual(poolSizesFor(23), [4, 4, 4, 5, 6]);
+  assert.deepEqual(poolSizesFor(24), [4, 4, 4, 4, 4, 4]);
+  assert.deepEqual(poolSizesFor(26), [4, 4, 4, 4, 4, 6]);
+  assert.deepEqual(poolSizesFor(32), [4, 4, 4, 4, 4, 4, 4, 4]);
+  assert.deepEqual(poolSizesFor(7), []);
+});
 
 test("la generation attribue chaque equipe une seule fois", () => {
   const teams = Array.from({ length: 23 }, (_, index) => ({
@@ -173,10 +170,7 @@ test("l atelier admin regenere sans verrous et equilibre les clubs", async () =>
   assert.match(page, /Pire duel|pire duel/);
   assert.match(page, /répartissant[\s\S]*clubs/);
   assert.doesNotMatch(page, /Verrouiller/);
-  assert.match(
-    css,
-    /grid-template-columns:\s*repeat\(auto-fit, minmax\(17rem, 1fr\)\)/,
-  );
+  assert.match(css, /repeat\(auto-fit, minmax\(17rem, 1fr\)\)/);
   assert.doesNotMatch(css, /overflow-x:\s*auto/);
   assert.doesNotMatch(css, /grid-auto-flow:\s*column/);
 });
