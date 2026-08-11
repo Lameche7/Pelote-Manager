@@ -209,10 +209,7 @@ const seedSeriesPools = (
         if (fixed) fixedTeamIds.add(team.teamId);
         return fixed;
       })
-      .map((team) => ({
-        ...team,
-        isLocked: pool.isLocked || team.isLocked,
-      })),
+      .map((team) => ({ ...team })),
   }));
 
   const availableTeams = shuffle(
