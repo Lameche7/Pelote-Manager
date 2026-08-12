@@ -33,7 +33,12 @@ const cards: DashboardCard[] = [
     icon: UserRound,
     to: ROUTES.myProfile,
   },
-  { title: "Mes tournois", icon: Trophy },
+  {
+    title: "Mes tournois",
+    description: "Retrouver votre équipe, votre poule et vos prochaines parties.",
+    icon: Trophy,
+    to: ROUTES.myTournaments,
+  },
   { title: "Mes paiements", icon: CreditCard },
   {
     title: "Notifications",
