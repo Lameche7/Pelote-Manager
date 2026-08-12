@@ -78,7 +78,9 @@ function MatchCard({
         <span>{match.startsAt}</span>
       </div>
       <div className="my-tournaments__match-opponent">
-        <span>{highlight ? "Prochaine partie" : isPast ? "Partie jouée" : "À venir"}</span>
+        <span>
+          {highlight ? "Prochaine partie" : isPast ? "Partie jouée" : "À venir"}
+        </span>
         <strong>vs {teamLabel(match.opponentPlayers)}</strong>
       </div>
       <div className="my-tournaments__match-place">
@@ -116,7 +118,9 @@ function TournamentCard({ tournament }: { tournament: MyTournamentOverview }) {
         </div>
         <div className="my-tournaments__statuses">
           <span>{teamStatusLabels[tournament.team.status]}</span>
-          <span>{tournamentStatusLabels[tournament.status] ?? tournament.status}</span>
+          <span>
+            {tournamentStatusLabels[tournament.status] ?? tournament.status}
+          </span>
         </div>
       </header>
 
@@ -125,7 +129,9 @@ function TournamentCard({ tournament }: { tournament: MyTournamentOverview }) {
           <p className="my-tournaments__label">Mon équipe</p>
           <div className="my-tournaments__players">
             {tournament.team.players.map((player) => (
-              <div key={`${player.role}-${player.firstName}-${player.lastName}`}>
+              <div
+                key={`${player.role}-${player.firstName}-${player.lastName}`}
+              >
                 <strong>{playerLabel(player)}</strong>
                 <span>
                   {roleLabels[player.role]}
@@ -145,13 +151,17 @@ function TournamentCard({ tournament }: { tournament: MyTournamentOverview }) {
         <div className="my-tournaments__planning-waiting">
           <strong>Planning en préparation</strong>
           <span>
-            Vos parties apparaîtront ici dès que le club aura publié le planning.
+            Vos parties apparaîtront ici dès que le club aura publié le
+            planning.
           </span>
         </div>
       ) : tournament.matches.length === 0 ? (
         <div className="my-tournaments__planning-waiting">
           <strong>Aucune partie programmée</strong>
-          <span>Le planning publié ne contient pas encore de partie pour votre équipe.</span>
+          <span>
+            Le planning publié ne contient pas encore de partie pour votre
+            équipe.
+          </span>
         </div>
       ) : (
         <section className="my-tournaments__matches" aria-label="Mes parties">
@@ -224,12 +234,16 @@ export function MyTournamentsPage() {
 
   return (
     <UserSpaceShell>
-      <section className="my-tournaments" aria-labelledby="my-tournaments-title">
+      <section
+        className="my-tournaments"
+        aria-labelledby="my-tournaments-title"
+      >
         <header className="my-tournaments__page-header">
           <p className="my-tournaments__eyebrow">Espace personnel</p>
           <h1 id="my-tournaments-title">Mes tournois</h1>
           <p>
-            Retrouvez votre équipe et, dès publication, le calendrier de toutes vos parties.
+            Retrouvez votre équipe et, dès publication, le calendrier de toutes
+            vos parties.
           </p>
         </header>
 
@@ -239,7 +253,11 @@ export function MyTournamentsPage() {
           </p>
         )}
 
-        <div className="my-tournaments__tabs" role="tablist" aria-label="Période des tournois">
+        <div
+          className="my-tournaments__tabs"
+          role="tablist"
+          aria-label="Période des tournois"
+        >
           <button
             type="button"
             role="tab"
@@ -268,7 +286,8 @@ export function MyTournamentsPage() {
                 : "Aucun tournoi dans l’historique"}
             </h2>
             <p>
-              Les tournois auxquels votre équipe est inscrite apparaîtront automatiquement ici.
+              Les tournois auxquels votre équipe est inscrite apparaîtront
+              automatiquement ici.
             </p>
           </div>
         ) : (
