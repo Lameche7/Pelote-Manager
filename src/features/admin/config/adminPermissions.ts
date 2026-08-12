@@ -117,6 +117,11 @@ export const adminNavigation = [
         to: ROUTES.adminTournamentPlanning,
         permission: ADMIN_PERMISSIONS.tournaments,
       },
+      {
+        label: "Publication",
+        to: ROUTES.adminTournamentPublication,
+        permission: ADMIN_PERMISSIONS.tournaments,
+      },
     ],
     permission: ADMIN_PERMISSIONS.tournaments,
   },
