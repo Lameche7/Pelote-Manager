@@ -1,6 +1,9 @@
 import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
-import type { TournamentPlayerRole, TournamentTeamStatus } from "@/features/tournaments/types";
+import type {
+  TournamentPlayerRole,
+  TournamentTeamStatus,
+} from "@/features/tournaments/types";
 
 type Row = Record<string, unknown>;
 
@@ -40,6 +43,7 @@ export type MyTournamentOverview = {
     seriesName: string;
     seriesColor: string;
     poolNumber: number | null;
+    canManageRegistration: boolean;
     players: MyTournamentPlayer[];
   };
   matches: MyTournamentMatch[];
@@ -72,6 +76,7 @@ const mapTournament = (row: Row): MyTournamentOverview => {
         team.pool_number === null || team.pool_number === undefined
           ? null
           : Number(team.pool_number),
+      canManageRegistration: Boolean(team.can_manage_registration),
       players: rows(team.players).map(mapPlayer),
     },
     matches: rows(row.matches).map((match) => ({
@@ -95,10 +100,7 @@ export const myTournamentsService = {
     const { data, error } = await supabase.rpc("get_my_tournaments");
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(
-          error,
-          "Impossible de charger vos tournois.",
-        ),
+        getSupabaseErrorMessage(error, "Impossible de charger vos tournois."),
       );
     }
     return rows(data).map(mapTournament);
