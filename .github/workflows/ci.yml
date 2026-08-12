@@ -21,6 +21,22 @@ jobs:
 
       - run: npm ci
 
+      - name: Formater les fichiers PR77
+        run: >-
+          npx prettier --write
+          src/features/admin/tournaments/pages/AdminTournamentPublicationPage.tsx
+          src/features/admin/tournaments/services/adminTournamentPublicationService.ts
+          tests/tournamentCalendarPublication.test.mjs
+
+      - name: Exporter les fichiers formatés PR77
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr77-prettier
+          path: |
+            src/features/admin/tournaments/pages/AdminTournamentPublicationPage.tsx
+            src/features/admin/tournaments/services/adminTournamentPublicationService.ts
+            tests/tournamentCalendarPublication.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
