@@ -25,22 +25,22 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path("src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx")
           source = path.read_text()
-          old = '''{dayRows
-                                .slice(0, 6)
-                                .map((row) => renderEvent(row, true))}
-                              {dayRows.length > 6 && (
-                                <span className="planning-calendar__more">
-                                  + {dayRows.length - 6} autre
-                                  {dayRows.length - 6 > 1 ? "s" : ""}
-                                </span>
-                              )}'''
-          new = '''{dayRows.map((row) => renderEvent(row, true))}'''
-          if old not in source:
+          pattern = re.compile(
+              r'''\{dayRows\s*\.slice\(0,\s*6\)\s*\.map\(\(row\)\s*=>\s*renderEvent\(row,\s*true\)\)\}\s*\{dayRows\.length\s*>\s*6\s*&&\s*\(\s*<span className="planning-calendar__more">.*?</span>\s*\)\}''',
+              re.S,
+          )
+          source, count = pattern.subn(
+              '{dayRows.map((row) => renderEvent(row, true))}',
+              source,
+              count=1,
+          )
+          if count != 1:
               raise SystemExit("Tournament overview block not found")
-          path.write_text(source.replace(old, new, 1))
+          path.write_text(source)
           PY
           npx prettier --write src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
 
