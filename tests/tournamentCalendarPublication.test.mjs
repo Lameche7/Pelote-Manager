@@ -40,17 +40,26 @@ const router = await readFile(
 );
 
 test("la publication passe par l Event Engine et non par un calendrier parallèle", () => {
-  assert.match(publicationMigration, /create table public\.tournament_match_events/i);
+  assert.match(
+    publicationMigration,
+    /create table public\.tournament_match_events/i,
+  );
   assert.match(publicationMigration, /insert into public\.events/i);
   assert.match(publicationMigration, /insert into public\.event_resources/i);
   assert.match(publicationMigration, /sync_event_occupations/i);
-  assert.doesNotMatch(publicationMigration, /insert into public\.calendar_occupations/i);
+  assert.doesNotMatch(
+    publicationMigration,
+    /insert into public\.calendar_occupations/i,
+  );
 });
 
 test("la publication est atomique et refuse les conflits existants", () => {
   assert.match(publicationMigration, /for update/i);
   assert.match(publicationMigration, /calendar_occupations/i);
-  assert.match(publicationMigration, /Tournament publication conflicts with calendar/);
+  assert.match(
+    publicationMigration,
+    /Tournament publication conflicts with calendar/,
+  );
   assert.match(publicationMigration, /status = 'planning_published'/i);
   assert.match(publicationMigration, /planning_published/);
 });
@@ -80,6 +89,9 @@ test("l administration expose une étape Publication distincte du Planning", () 
   assert.match(page, /Publication du planning/);
   assert.match(page, /Publier .* matchs dans le calendrier/);
   assert.match(page, /Retirer du calendrier pour modifier/);
-  assert.match(routes, /adminTournamentPublication:\s*"\/admin\/tournois\/publication"/);
+  assert.match(
+    routes,
+    /adminTournamentPublication:\s*"\/admin\/tournois\/publication"/,
+  );
   assert.match(router, /AdminTournamentPublicationPage/);
 });
