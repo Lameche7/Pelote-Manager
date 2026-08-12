@@ -21,6 +21,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Formater le CSS planning PR76
+        run: npx prettier --write src/features/admin/tournaments/pages/AdminTournamentPlanningPage.css
+
+      - name: Exporter le CSS formaté planning PR76
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr76-planning-css-prettier
+          path: src/features/admin/tournaments/pages/AdminTournamentPlanningPage.css
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
