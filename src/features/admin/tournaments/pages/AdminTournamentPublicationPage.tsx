@@ -35,9 +35,9 @@ const occupationTypeLabels: Record<string, string> = {
 };
 
 export function AdminTournamentPublicationPage() {
-  const [tournaments, setTournaments] = useState<TournamentPublicationSummary[]>(
-    [],
-  );
+  const [tournaments, setTournaments] = useState<
+    TournamentPublicationSummary[]
+  >([]);
   const [selectedId, setSelectedId] = useState("");
   const [preview, setPreview] = useState<TournamentPublicationPreview | null>(
     null,
@@ -48,7 +48,8 @@ export function AdminTournamentPublicationPage() {
   const [message, setMessage] = useState("");
 
   const loadPreview = async (tournamentId: string) => {
-    const loaded = await adminTournamentPublicationService.preview(tournamentId);
+    const loaded =
+      await adminTournamentPublicationService.preview(tournamentId);
     setPreview(loaded);
   };
 
@@ -78,10 +79,13 @@ export function AdminTournamentPublicationPage() {
         if (!active) return;
         setTournaments(items);
         const preferred =
-          items.find((item) => item.status === "planning_generated") ?? items[0];
+          items.find((item) => item.status === "planning_generated") ??
+          items[0];
         if (!preferred) return;
         setSelectedId(preferred.id);
-        const loaded = await adminTournamentPublicationService.preview(preferred.id);
+        const loaded = await adminTournamentPublicationService.preview(
+          preferred.id,
+        );
         if (active) setPreview(loaded);
       })
       .catch((loadError: unknown) => {
@@ -208,7 +212,10 @@ export function AdminTournamentPublicationPage() {
             bloquantes pour les réservations.
           </p>
         </div>
-        <Link className="admin-tournament-publication__calendar-link" to={ROUTES.reservations}>
+        <Link
+          className="admin-tournament-publication__calendar-link"
+          to={ROUTES.reservations}
+        >
           Voir le calendrier des réservations
         </Link>
       </header>
@@ -235,13 +242,18 @@ export function AdminTournamentPublicationPage() {
             )}
             {tournaments.map((tournament) => (
               <option key={tournament.id} value={tournament.id}>
-                {tournament.name} · {tournament.status === "planning_published" ? "Publié" : "À publier"}
+                {tournament.name} ·{" "}
+                {tournament.status === "planning_published"
+                  ? "Publié"
+                  : "À publier"}
               </option>
             ))}
           </select>
         </label>
         {selectedSummary && (
-          <span className={`admin-tournament-publication__status ${selectedSummary.status === "planning_published" ? "is-published" : ""}`}>
+          <span
+            className={`admin-tournament-publication__status ${selectedSummary.status === "planning_published" ? "is-published" : ""}`}
+          >
             {selectedSummary.status === "planning_published"
               ? "Planning publié"
               : "Planning généré"}
@@ -290,7 +302,8 @@ export function AdminTournamentPublicationPage() {
             <div>
               <h2>{preview.tournament.name}</h2>
               <p>
-                {formatDate(preview.tournament.startsOn)} → {formatDate(preview.tournament.endsOn)}
+                {formatDate(preview.tournament.startsOn)} →{" "}
+                {formatDate(preview.tournament.endsOn)}
               </p>
             </div>
 
@@ -315,8 +328,8 @@ export function AdminTournamentPublicationPage() {
                 <div>
                   {!complete && (
                     <p className="is-error">
-                      Le planning n’est pas complet : toutes les rencontres doivent
-                      être affectées avant publication.
+                      Le planning n’est pas complet : toutes les rencontres
+                      doivent être affectées avant publication.
                     </p>
                   )}
                   {complete && !hasConflicts && (
@@ -351,30 +364,32 @@ export function AdminTournamentPublicationPage() {
                   <h2>Conflits à résoudre</h2>
                   <p>
                     Ces occupations existent déjà dans le calendrier. Le moteur
-                    refuse toute publication partielle : aucun match ne sera publié
-                    tant qu’un conflit subsiste.
+                    refuse toute publication partielle : aucun match ne sera
+                    publié tant qu’un conflit subsiste.
                   </p>
                 </div>
                 <strong>{preview.conflicts.length}</strong>
               </header>
               <div className="admin-tournament-publication__conflict-list">
                 {preview.conflicts.map((conflict) => (
-                  <article
-                    key={`${conflict.matchId}-${conflict.occupationId}`}
-                  >
+                  <article key={`${conflict.matchId}-${conflict.occupationId}`}>
                     <div>
                       <strong>{conflict.matchLabel}</strong>
                       <span>
-                        {formatDate(conflict.playDate)} · {formatTime(conflict.startsAt)}–{formatTime(conflict.endsAt)} · {conflict.resourceName}
+                        {formatDate(conflict.playDate)} ·{" "}
+                        {formatTime(conflict.startsAt)}–
+                        {formatTime(conflict.endsAt)} · {conflict.resourceName}
                       </span>
                     </div>
                     <div>
                       <span className="admin-tournament-publication__occupation-type">
-                        {occupationTypeLabels[conflict.occupationType] ?? conflict.occupationType}
+                        {occupationTypeLabels[conflict.occupationType] ??
+                          conflict.occupationType}
                       </span>
                       <strong>{conflict.occupationTitle}</strong>
                       <small>
-                        {formatDateTime(conflict.occupationStartsAt)} → {formatDateTime(conflict.occupationEndsAt)}
+                        {formatDateTime(conflict.occupationStartsAt)} →{" "}
+                        {formatDateTime(conflict.occupationEndsAt)}
                       </small>
                     </div>
                   </article>
