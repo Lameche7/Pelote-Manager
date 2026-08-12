@@ -51,6 +51,7 @@ import { TournamentsPage } from "@/features/tournaments/pages/TournamentsPage";
 import { TvDisplayPage } from "@/features/tv/pages/TvDisplayPage";
 import { UserSpaceDashboardPage } from "@/features/user-space/dashboard/pages/UserSpaceDashboardPage";
 import { MyProfilePage } from "@/features/user-space/profile/pages/MyProfilePage";
+import { MyTournamentsPage } from "@/features/user-space/tournaments/pages/MyTournamentsPage";
 import { ROUTES, USER_ROLES } from "@/shared/config";
 import { Forbidden } from "@/shared/pages/Forbidden";
 import { NotFound } from "@/shared/pages/NotFound";
@@ -100,6 +101,14 @@ export const routes = [
         element: (
           <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
             <UserSpaceDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.myTournaments,
+        element: (
+          <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
+            <MyTournamentsPage />
           </ProtectedRoute>
         ),
       },
