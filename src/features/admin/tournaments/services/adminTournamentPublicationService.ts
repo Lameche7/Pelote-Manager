@@ -122,7 +122,8 @@ export const adminTournamentPublicationService = {
     const { data, error } = await supabase.rpc(
       "admin_list_tournament_publications",
     );
-    if (error) fail(error, "Impossible de charger les publications de tournois.");
+    if (error)
+      fail(error, "Impossible de charger les publications de tournois.");
     return ((data ?? []) as Row[]).map(mapSummary);
   },
 
