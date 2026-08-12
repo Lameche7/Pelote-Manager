@@ -28,6 +28,11 @@
     padding-top: 0.45rem;
   }
 
+  .planning-calendar-shell:has(.planning-tournament-view) {
+    min-height: 0;
+    grid-template-rows: auto auto;
+  }
+
   .planning-calendar-shell__header,
   .planning-calendar-shell__controls {
     display: contents !important;
@@ -74,6 +79,7 @@
 
   .planning-tournament-view {
     display: grid;
+    align-self: start;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
     align-content: start;
     gap: 0.35rem;
@@ -104,6 +110,15 @@
   .planning-tournament-day {
     min-height: 2.75rem;
     padding: 0.16rem;
+  }
+
+  .planning-tournament-day:not(:has(.planning-event--compact)) {
+    min-height: 2rem;
+    opacity: 0.38;
+  }
+
+  .planning-tournament-day:not(:has(.planning-event--compact)) > header span {
+    display: none;
   }
 
   .planning-tournament-day > header {
