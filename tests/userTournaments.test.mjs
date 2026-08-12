@@ -10,7 +10,10 @@ const migrationPath =
 test("Mes tournois est une projection personnelle sécurisée", async () => {
   const migration = await read(migrationPath);
 
-  assert.match(migration, /create or replace function public\.get_my_tournaments\(\)/);
+  assert.match(
+    migration,
+    /create or replace function public\.get_my_tournaments\(\)/,
+  );
   assert.match(migration, /security definer/);
   assert.match(migration, /current_profile_id uuid := auth\.uid\(\)/);
   assert.match(migration, /profile\.member_id/);
@@ -66,7 +69,10 @@ test("Mon espace active Mes tournois et sa route protégée", async () => {
   assert.match(routes, /myTournaments:\s*"\/mon-espace\/tournois"/);
   assert.match(router, /ROUTES\.myTournaments/);
   assert.match(router, /<MyTournamentsPage \/>/);
-  assert.match(dashboard, /title: "Mes tournois"[\s\S]*to: ROUTES\.myTournaments/);
+  assert.match(
+    dashboard,
+    /title: "Mes tournois"[\s\S]*to: ROUTES\.myTournaments/,
+  );
   assert.match(shell, /to=\{ROUTES\.myTournaments\}/);
   assert.match(page, /Mon équipe/);
   assert.match(page, /Prochaine partie/);
