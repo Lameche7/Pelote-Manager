@@ -33,12 +33,14 @@
     display: contents !important;
   }
 
-  .planning-calendar-shell__header > div {
+  .planning-calendar-shell__header > div:first-child {
     display: none !important;
   }
 
   .planning-calendar-shell__views {
     grid-area: views;
+    display: inline-flex !important;
+    visibility: visible !important;
     justify-self: start;
     margin-left: 0.7rem;
     flex-wrap: nowrap !important;
