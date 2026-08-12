@@ -35,7 +35,8 @@ const cards: DashboardCard[] = [
   },
   {
     title: "Mes tournois",
-    description: "Retrouver votre équipe, votre poule et vos prochaines parties.",
+    description:
+      "Retrouver votre équipe, votre poule et vos prochaines parties.",
     icon: Trophy,
     to: ROUTES.myTournaments,
   },
