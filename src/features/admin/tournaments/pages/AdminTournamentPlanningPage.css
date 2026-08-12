@@ -1,19 +1,43 @@
 .admin-tournament-planning {
   display: grid;
-  gap: 1rem;
+  gap: 0.55rem;
+}
+
+.admin-tournament-planning > .admin-page__header {
+  min-height: 0;
+  margin: 0;
+  padding-block: 0;
+}
+
+.admin-tournament-planning > .admin-page__header .admin-page__eyebrow,
+.admin-tournament-planning > .admin-page__header .admin-page__lead {
+  display: none;
+}
+
+.admin-tournament-planning > .admin-page__header h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.1;
 }
 
 .admin-tournament-planning__alert {
+  position: sticky;
+  top: 0.35rem;
+  z-index: 30;
   margin: 0;
   border: 1px solid rgb(15 61 46 / 22%);
-  border-radius: 0.75rem;
-  padding: 0.8rem 1rem;
-  background: rgb(15 61 46 / 7%);
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.7rem;
+  background: rgb(239 250 246 / 96%);
+  box-shadow: 0 7px 22px rgb(15 23 42 / 12%);
+  backdrop-filter: blur(8px);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .admin-tournament-planning__alert--error {
-  border-color: rgb(178 37 37 / 28%);
-  background: rgb(178 37 37 / 7%);
+  border-color: rgb(178 37 37 / 32%);
+  background: rgb(254 242 242 / 97%);
 }
 
 .admin-tournament-planning button,
@@ -36,32 +60,37 @@
   min-width: 0;
   box-sizing: border-box;
   border: 1px solid rgb(107 114 128 / 28%);
-  border-radius: 0.65rem;
-  padding: 0.62rem 0.7rem;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.58rem;
   background: #fff;
   color: inherit;
 }
 
 .admin-tournament-planning__toolbar {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.65rem;
+  padding: 0.5rem 0.65rem;
 }
 
 .admin-tournament-planning__tournament-select {
   display: grid;
-  gap: 0.35rem;
-  min-width: min(30rem, 100%);
-  font-size: 0.82rem;
+  min-width: min(25rem, 100%);
+  gap: 0;
+  font-size: 0;
   font-weight: 750;
+}
+
+.admin-tournament-planning__tournament-select select {
+  font-size: 0.8rem;
 }
 
 .admin-tournament-planning__toolbar-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.55rem;
+  gap: 0.4rem;
 }
 
 .admin-tournament-planning__toolbar-actions button,
@@ -70,10 +99,11 @@
 .planning-calendar-shell__navigation button,
 .planning-match-editor > header > button {
   border: 1px solid rgb(107 114 128 / 25%);
-  border-radius: 0.65rem;
-  padding: 0.62rem 0.8rem;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.62rem;
   background: #fff;
   color: inherit;
+  font-size: 0.78rem;
   font-weight: 750;
 }
 
@@ -85,32 +115,43 @@
 }
 
 .admin-tournament-planning__metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .admin-tournament-planning__metrics article {
-  display: grid;
-  gap: 0.25rem;
+  display: flex;
+  flex: 1 1 9rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.38rem 0.55rem;
 }
 
 .admin-tournament-planning__metrics span {
-  font-size: 0.72rem;
+  font-size: 0.61rem;
   font-weight: 800;
   text-transform: uppercase;
   opacity: 0.58;
 }
 
 .admin-tournament-planning__metrics strong {
-  font-size: 1.35rem;
+  font-size: 0.92rem;
 }
 
 .planning-series-colors,
 .planning-calendar-shell,
 .planning-match-editor {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.55rem;
+}
+
+.planning-series-colors {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
 }
 
 .planning-series-colors > header,
@@ -119,7 +160,12 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.planning-series-colors > header {
+  flex: 0 0 auto;
+  align-items: center;
 }
 
 .planning-series-colors h2,
@@ -132,56 +178,83 @@
   margin: 0;
 }
 
+.planning-series-colors h2 {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
 .planning-series-colors > header > div,
 .planning-calendar-shell__header > div,
 .planning-match-editor > header > div {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.15rem;
 }
 
-.planning-series-colors p,
+.planning-series-colors p {
+  display: none;
+}
+
 .planning-calendar-shell__header p,
 .planning-match-editor p {
   opacity: 0.67;
 }
 
+.planning-series-colors > header button {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.7rem;
+}
+
 .planning-series-colors__list {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.35rem;
 }
 
 .planning-series-colors__list label {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.3rem;
   border: 1px solid rgb(107 114 128 / 18%);
   border-radius: 999px;
-  padding: 0.35rem 0.65rem 0.35rem 0.4rem;
+  padding: 0.18rem 0.45rem 0.18rem 0.25rem;
   background: rgb(248 250 252 / 85%);
+  font-size: 0.72rem;
 }
 
 .planning-series-colors__list input[type="color"] {
-  width: 2rem;
-  height: 2rem;
+  width: 1.45rem;
+  height: 1.45rem;
   border: 0;
   padding: 0;
   background: transparent;
 }
 
 .planning-series-colors__swatch {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.58rem;
+  height: 0.58rem;
   border-radius: 999px;
   box-shadow: 0 0 0 1px rgb(15 23 42 / 12%);
 }
 
+.admin-tournament-planning__diagnostics {
+  max-height: 5.5rem;
+  overflow: auto;
+  padding: 0.5rem 0.65rem;
+}
+
+.admin-tournament-planning__diagnostics h2 {
+  font-size: 0.8rem;
+}
+
 .admin-tournament-planning__diagnostics ul {
-  margin: 0.75rem 0 0;
-  padding-left: 1.2rem;
+  margin: 0.3rem 0 0;
+  padding-left: 1.05rem;
+  font-size: 0.76rem;
 }
 
 .planning-calendar-shell {
+  min-height: calc(100dvh - 12rem);
   overflow: hidden;
   padding: 0;
 }
@@ -189,26 +262,35 @@
 .planning-calendar-shell__header,
 .planning-calendar-shell__controls,
 .planning-calendar-legend {
-  padding-right: 1rem;
-  padding-left: 1rem;
+  padding-right: 0.7rem;
+  padding-left: 0.7rem;
 }
 
 .planning-calendar-shell__header {
-  padding-top: 1rem;
+  align-items: center;
+  padding-top: 0.55rem;
+}
+
+.planning-calendar-shell__header h2 {
+  font-size: 0.95rem;
+}
+
+.planning-calendar-shell__header p {
+  font-size: 0.72rem;
 }
 
 .planning-calendar-shell__views {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  border-radius: 0.75rem;
-  padding: 0.25rem;
+  gap: 0.25rem;
+  border-radius: 0.65rem;
+  padding: 0.18rem;
   background: rgb(241 245 249 / 90%);
 }
 
 .planning-calendar-shell__views button {
   border-color: transparent;
-  padding: 0.48rem 0.68rem;
+  padding: 0.35rem 0.5rem;
   background: transparent;
 }
 
@@ -223,7 +305,7 @@
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.55rem;
 }
 
 .planning-calendar-shell__navigation,
@@ -231,40 +313,49 @@
   display: flex;
   align-items: end;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.35rem;
+}
+
+.planning-calendar-shell__navigation button {
+  padding: 0.35rem 0.5rem;
 }
 
 .planning-calendar-shell__filters label {
   display: grid;
-  min-width: 10rem;
-  gap: 0.25rem;
-  font-size: 0.72rem;
+  min-width: 8.5rem;
+  gap: 0.15rem;
+  font-size: 0.61rem;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.planning-calendar-shell__filters select {
+  padding: 0.34rem 0.45rem;
+  font-size: 0.74rem;
 }
 
 .planning-calendar-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem 1rem;
+  gap: 0.35rem 0.7rem;
   border-top: 1px solid rgb(107 114 128 / 12%);
   border-bottom: 1px solid rgb(107 114 128 / 12%);
-  padding-top: 0.65rem;
-  padding-bottom: 0.65rem;
+  padding-top: 0.38rem;
+  padding-bottom: 0.38rem;
   background: rgb(248 250 252 / 70%);
 }
 
 .planning-calendar-legend span {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
+  gap: 0.3rem;
+  font-size: 0.7rem;
   font-weight: 750;
 }
 
 .planning-calendar-legend i {
-  width: 0.7rem;
-  height: 0.7rem;
+  width: 0.58rem;
+  height: 0.58rem;
   border-radius: 999px;
 }
 
@@ -272,10 +363,10 @@
   display: grid;
   width: 100%;
   min-width: 0;
-  gap: 0.12rem;
+  gap: 0.1rem;
   border: 0;
-  border-radius: 0.55rem;
-  padding: 0.42rem 0.5rem;
+  border-radius: 0.48rem;
+  padding: 0.34rem 0.42rem;
   text-align: left;
   box-shadow: 0 1px 2px rgb(15 23 42 / 12%);
 }
@@ -293,7 +384,7 @@
 
 .planning-event__series {
   overflow: hidden;
-  font-size: 0.63rem;
+  font-size: 0.58rem;
   font-weight: 850;
   letter-spacing: 0.03em;
   text-overflow: ellipsis;
@@ -304,21 +395,21 @@
 
 .planning-event strong {
   overflow: hidden;
-  font-size: 0.76rem;
-  line-height: 1.2;
+  font-size: 0.7rem;
+  line-height: 1.15;
   text-overflow: ellipsis;
 }
 
 .planning-event small {
   overflow: hidden;
-  font-size: 0.66rem;
+  font-size: 0.61rem;
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0.82;
 }
 
 .planning-event--compact {
-  padding: 0.32rem 0.4rem;
+  padding: 0.26rem 0.34rem;
 }
 
 .planning-event--compact .planning-event__series,
@@ -327,20 +418,21 @@
 }
 
 .planning-event--compact strong {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
 }
 
 .planning-week-scroll,
 .planning-month-scroll {
   width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
+  max-height: calc(100dvh - 18rem);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .planning-week {
   display: grid;
-  min-width: 1120px;
-  grid-template-columns: 5.4rem repeat(7, minmax(9rem, 1fr));
+  min-width: 1040px;
+  grid-template-columns: 4.8rem repeat(7, minmax(8.5rem, 1fr));
   border-top: 1px solid rgb(107 114 128 / 18%);
 }
 
@@ -359,10 +451,15 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: 0.65rem 0.55rem;
+  padding: 0.45rem 0.4rem;
   background: #fff;
   text-align: center;
   text-transform: capitalize;
+  box-shadow: 0 1px 0 rgb(107 114 128 / 12%);
+}
+
+.planning-week__header strong {
+  font-size: 0.72rem;
 }
 
 .planning-week__time-heading {
@@ -377,18 +474,18 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 0.65rem 0.35rem;
+  padding: 0.48rem 0.28rem;
   background: #fff;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
 }
 
 .planning-week__cell {
   display: grid;
   align-content: start;
-  min-height: 7.4rem;
-  gap: 0.35rem;
-  padding: 0.4rem;
+  min-height: 5.6rem;
+  gap: 0.28rem;
+  padding: 0.3rem;
   background: #fff;
 }
 
@@ -409,9 +506,9 @@
 .planning-week__available {
   align-self: center;
   justify-self: center;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  opacity: 0.34;
+  opacity: 0.3;
 }
 
 .planning-week__empty {
@@ -423,26 +520,29 @@
 
 .planning-month {
   display: grid;
-  min-width: 920px;
-  grid-template-columns: repeat(7, minmax(8rem, 1fr));
+  min-width: 880px;
+  grid-template-columns: repeat(7, minmax(7.5rem, 1fr));
 }
 
 .planning-month__weekday {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   border-right: 1px solid rgb(107 114 128 / 14%);
   border-bottom: 1px solid rgb(107 114 128 / 16%);
-  padding: 0.55rem;
-  background: rgb(248 250 252 / 85%);
-  font-size: 0.72rem;
+  padding: 0.42rem;
+  background: rgb(248 250 252 / 96%);
+  font-size: 0.68rem;
   font-weight: 850;
   text-align: center;
   text-transform: uppercase;
 }
 
 .planning-month__day {
-  min-height: 10rem;
+  min-height: 8rem;
   border-right: 1px solid rgb(107 114 128 / 14%);
   border-bottom: 1px solid rgb(107 114 128 / 14%);
-  padding: 0.45rem;
+  padding: 0.35rem;
   background: #fff;
 }
 
@@ -456,42 +556,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.4rem;
-  margin-bottom: 0.4rem;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
 }
 
 .planning-month__day > header span,
 .planning-tournament-day > header span {
   border-radius: 999px;
-  padding: 0.12rem 0.38rem;
+  padding: 0.1rem 0.3rem;
   background: rgb(15 23 42 / 7%);
-  font-size: 0.65rem;
+  font-size: 0.61rem;
   font-weight: 800;
 }
 
 .planning-month__events,
 .planning-tournament-day > div {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .planning-calendar__more {
-  padding: 0.2rem 0.25rem;
-  font-size: 0.68rem;
+  padding: 0.18rem 0.22rem;
+  font-size: 0.64rem;
   font-weight: 750;
   opacity: 0.58;
 }
 
 .planning-tournament-view {
   display: grid;
-  gap: 0.75rem;
-  padding: 0 1rem 1rem;
+  max-height: calc(100dvh - 18rem);
+  gap: 0.55rem;
+  overflow: auto;
+  padding: 0 0.7rem 0.7rem;
+  overscroll-behavior: contain;
 }
 
 .planning-tournament-week {
   overflow: hidden;
   border: 1px solid rgb(107 114 128 / 16%);
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   background: #fff;
 }
 
@@ -499,13 +602,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.55rem 0.7rem;
+  gap: 0.55rem;
+  padding: 0.42rem 0.55rem;
   background: rgb(248 250 252 / 90%);
 }
 
 .planning-tournament-week > header span {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   opacity: 0.66;
 }
 
@@ -515,9 +618,9 @@
 }
 
 .planning-tournament-day {
-  min-height: 7.6rem;
+  min-height: 6.2rem;
   border-right: 1px solid rgb(107 114 128 / 12%);
-  padding: 0.4rem;
+  padding: 0.32rem;
 }
 
 .planning-tournament-day:last-child {
@@ -530,35 +633,35 @@
 }
 
 .planning-tournament-day > header strong {
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   text-transform: capitalize;
 }
 
 .planning-match-editor {
   position: sticky;
-  bottom: 1rem;
-  z-index: 6;
+  bottom: 0.6rem;
+  z-index: 20;
   border: 1px solid rgb(30 90 168 / 22%);
+  padding: 0.65rem;
   box-shadow: 0 18px 45px rgb(15 23 42 / 18%);
 }
 
 .planning-match-editor > header > button {
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
 }
 
 .planning-match-editor label {
   display: grid;
-  gap: 0.35rem;
-  font-size: 0.82rem;
+  gap: 0.25rem;
+  font-size: 0.76rem;
   font-weight: 800;
 }
 
 @media (max-width: 980px) {
   .admin-tournament-planning__toolbar,
-  .planning-series-colors > header,
   .planning-calendar-shell__header,
   .planning-calendar-shell__controls {
     align-items: stretch;
@@ -569,8 +672,13 @@
     justify-content: flex-start;
   }
 
-  .admin-tournament-planning__metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .planning-series-colors {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .planning-series-colors > header {
+    width: 100%;
   }
 
   .planning-calendar-shell__filters {
@@ -578,11 +686,11 @@
   }
 
   .planning-calendar-shell__filters label {
-    flex: 1 1 12rem;
+    flex: 1 1 10rem;
   }
 
   .planning-tournament-week__days {
-    min-width: 850px;
+    min-width: 820px;
   }
 
   .planning-tournament-week {
@@ -591,8 +699,12 @@
 }
 
 @media (max-width: 620px) {
-  .admin-tournament-planning__metrics {
-    grid-template-columns: 1fr;
+  .admin-tournament-planning > .admin-page__header h1 {
+    font-size: 1.15rem;
+  }
+
+  .admin-tournament-planning__metrics article {
+    flex: 1 1 calc(50% - 0.4rem);
   }
 
   .planning-calendar-shell__views,
@@ -605,7 +717,15 @@
     flex: 1 1 auto;
   }
 
+  .planning-calendar-shell,
+  .planning-week-scroll,
+  .planning-month-scroll,
+  .planning-tournament-view {
+    min-height: auto;
+    max-height: none;
+  }
+
   .planning-match-editor {
-    bottom: 0.5rem;
+    bottom: 0.35rem;
   }
 }
