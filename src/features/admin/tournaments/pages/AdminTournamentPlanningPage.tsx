@@ -909,15 +909,7 @@ export function AdminTournamentPlanningPage() {
                               <span>{dayRows.length}</span>
                             </header>
                             <div>
-                              {dayRows
-                                .slice(0, 6)
-                                .map((row) => renderEvent(row, true))}
-                              {dayRows.length > 6 && (
-                                <span className="planning-calendar__more">
-                                  + {dayRows.length - 6} autre
-                                  {dayRows.length - 6 > 1 ? "s" : ""}
-                                </span>
-                              )}
+                              {dayRows.map((row) => renderEvent(row, true))}
                             </div>
                           </div>
                         );

@@ -3,19 +3,15 @@ name: CI
 on:
   pull_request:
     branches: [main]
-
-permissions:
-  contents: write
+  push:
+    branches: [main]
 
 jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - name: Récupérer la branche PR76
+      - name: Récupérer le dépôt
         uses: actions/checkout@v4
-        with:
-          ref: agent/tournament-planning-engine
-          fetch-depth: 0
 
       - name: Configurer Node.js
         uses: actions/setup-node@v4
@@ -25,44 +21,39 @@ jobs:
 
       - run: npm ci
 
-      - name: Afficher une pastille pour chaque match du tournoi complet
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          path = Path("src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx")
-          source = path.read_text()
-          pattern = re.compile(
-              r'''\{dayRows\s*\.slice\(0,\s*6\)\s*\.map\(\(row\)\s*=>\s*renderEvent\(row,\s*true\)\)\}\s*\{dayRows\.length\s*>\s*6\s*&&\s*\(\s*<span className="planning-calendar__more">.*?</span>\s*\)\}''',
-              re.S,
-          )
-          source, count = pattern.subn(
-              '{dayRows.map((row) => renderEvent(row, true))}',
-              source,
-              count=1,
-          )
-          if count != 1:
-              raise SystemExit("Tournament overview block not found")
-          path.write_text(source)
-          PY
-          npx prettier --write src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
-
-      - name: Restaurer la CI standard
-        run: |
-          git fetch origin main
-          git show FETCH_HEAD:.github/workflows/ci.yml > .github/workflows/ci.yml
+      - name: Format workflow
+        run: npx prettier --check .github/workflows/ci.yml
+        continue-on-error: true
+      - name: Format README
+        run: npx prettier --check README.md
+        continue-on-error: true
+      - name: Format package
+        run: npx prettier --check package.json
+        continue-on-error: true
+      - name: Format ignore files
+        run: npx prettier --check .gitignore .prettierignore
+        continue-on-error: true
+      - name: Format migration
+        run: npx prettier --check supabase/migrations/20260728000100_add_profile_role.sql
+        continue-on-error: true
+      - name: Format routes
+        run: npx prettier --check src/app/router/ProtectedRoute.tsx src/app/router/protectedRouteAccess.ts
+        continue-on-error: true
+      - name: Format admin
+        run: npx prettier --check src/features/admin/pages/AdminPage.tsx
+        continue-on-error: true
+      - name: Format infrastructure
+        run: npx prettier --check src/infrastructure/auth/authService.ts src/infrastructure/profile/profileMappers.ts src/infrastructure/profile/profileService.ts src/infrastructure/supabase/database.ts
+        continue-on-error: true
+      - name: Format shared
+        run: npx prettier --check src/shared/config/index.ts src/shared/config/roles.ts src/shared/types/auth.ts src/shared/types/profile.ts
+        continue-on-error: true
+      - name: Format tests
+        run: npx prettier --check tests/protectedRouteAccess.test.mjs tests/roles.test.mjs tsconfig.test.json
+        continue-on-error: true
 
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test
       - run: npm run build
-
-      - name: Enregistrer la vue globale finale
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx .github/workflows/ci.yml
-          git commit -m "style(tournaments): show every match in tournament overview"
-          git push origin HEAD:agent/tournament-planning-engine
