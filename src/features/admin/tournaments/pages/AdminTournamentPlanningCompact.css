@@ -143,6 +143,7 @@
     border-radius: 999px;
     padding: 0;
     box-shadow: 0 0 0 1px rgb(15 23 42 / 14%);
+    transition: transform 120ms ease;
   }
 
   .planning-tournament-view .planning-event--compact > * {
