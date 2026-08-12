@@ -1,0 +1,188 @@
+.admin-tournament-planning__alert--error + .admin-tournament-planning__alert {
+  display: none;
+}
+
+.admin-tournament-planning__diagnostics,
+.planning-calendar-legend {
+  display: none !important;
+}
+
+@media (min-width: 621px) {
+  .planning-calendar-shell__views {
+    flex-wrap: nowrap !important;
+  }
+}
+
+@media (min-width: 1100px) {
+  .planning-calendar-shell {
+    display: grid;
+    min-height: calc(100dvh - 9.5rem);
+    grid-template-areas:
+      "views navigation spacer filters"
+      "calendar calendar calendar calendar";
+    grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+    align-items: center;
+    gap: 0.35rem 0.55rem;
+    padding-top: 0.45rem;
+  }
+
+  .planning-calendar-shell:has(.planning-tournament-view) {
+    min-height: 0;
+    grid-template-rows: auto auto;
+  }
+
+  .planning-calendar-shell__header,
+  .planning-calendar-shell__controls {
+    display: contents !important;
+  }
+
+  .planning-calendar-shell__header > div:first-child {
+    display: none !important;
+  }
+
+  .planning-calendar-shell__views {
+    grid-area: views;
+    display: inline-flex !important;
+    visibility: visible !important;
+    justify-self: start;
+    margin-left: 0.7rem;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+  }
+
+  .planning-calendar-shell__navigation {
+    grid-area: navigation;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+  }
+
+  .planning-calendar-shell__filters {
+    grid-area: filters;
+    justify-self: end;
+    flex-wrap: nowrap !important;
+    padding-right: 0.7rem;
+  }
+
+  .planning-calendar-shell__filters label {
+    min-width: 8rem;
+  }
+
+  .planning-week-scroll,
+  .planning-month-scroll,
+  .planning-tournament-view {
+    grid-area: calendar;
+    min-height: 0;
+    max-height: calc(100dvh - 12rem) !important;
+  }
+
+  .planning-tournament-view {
+    display: grid;
+    align-self: start;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    align-content: start;
+    gap: 0.35rem;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0.15rem 0.55rem 0.55rem !important;
+  }
+
+  .planning-tournament-week {
+    border-radius: 0.45rem;
+  }
+
+  .planning-tournament-week > header {
+    min-height: 0;
+    padding: 0.2rem 0.35rem;
+  }
+
+  .planning-tournament-week > header strong,
+  .planning-tournament-week > header span {
+    font-size: 0.58rem;
+    line-height: 1.05;
+  }
+
+  .planning-tournament-week__days {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .planning-tournament-day {
+    min-height: 2.75rem;
+    padding: 0.16rem;
+  }
+
+  .planning-tournament-day:not(:has(.planning-event--compact)) {
+    min-height: 2rem;
+    opacity: 0.38;
+  }
+
+  .planning-tournament-day:not(:has(.planning-event--compact)) > header span {
+    display: none;
+  }
+
+  .planning-tournament-day > header {
+    align-items: center;
+    gap: 0.1rem;
+    margin-bottom: 0.12rem;
+  }
+
+  .planning-tournament-day > header strong {
+    overflow: hidden;
+    font-size: 0.5rem;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .planning-tournament-day > header span {
+    padding: 0.04rem 0.16rem;
+    font-size: 0.48rem;
+    line-height: 1;
+  }
+
+  .planning-tournament-day > div {
+    display: flex;
+    align-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.13rem;
+  }
+
+  .planning-tournament-view .planning-event--compact {
+    display: block;
+    flex: 0 0 auto;
+    width: 0.58rem;
+    min-width: 0.58rem;
+    height: 0.58rem;
+    min-height: 0.58rem;
+    border-radius: 999px;
+    padding: 0;
+    box-shadow: 0 0 0 1px rgb(15 23 42 / 14%);
+    transition: transform 120ms ease;
+  }
+
+  .planning-tournament-view .planning-event--compact > * {
+    display: none !important;
+  }
+
+  .planning-tournament-view .planning-event--compact:hover,
+  .planning-tournament-view .planning-event--compact:focus-visible {
+    z-index: 2;
+    outline: 2px solid rgb(15 23 42 / 32%);
+    outline-offset: 1px;
+    transform: scale(1.28);
+  }
+
+  .planning-tournament-view .planning-event--selected {
+    outline: 2px solid rgb(15 23 42 / 48%);
+    outline-offset: 1px;
+  }
+
+  .planning-tournament-view .planning-calendar__more {
+    align-self: center;
+    padding: 0 0.12rem;
+    font-size: 0.48rem;
+    line-height: 0.65rem;
+    white-space: nowrap;
+  }
+}
