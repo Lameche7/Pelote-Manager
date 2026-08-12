@@ -207,7 +207,10 @@
 
 .my-tournaments__match {
   display: grid;
-  grid-template-columns: minmax(7rem, 0.8fr) minmax(14rem, 2fr) minmax(8rem, 0.9fr);
+  grid-template-columns: minmax(7rem, 0.8fr) minmax(14rem, 2fr) minmax(
+      8rem,
+      0.9fr
+    );
   align-items: center;
   gap: 0.8rem;
   border: 1px solid rgb(100 116 139 / 16%);
@@ -216,7 +219,11 @@
 }
 
 .my-tournaments__match--next {
-  border-color: color-mix(in srgb, var(--series-color, #2563eb) 38%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--series-color, #2563eb) 38%,
+    transparent
+  );
   background: color-mix(in srgb, var(--series-color, #2563eb) 7%, white);
 }
 
