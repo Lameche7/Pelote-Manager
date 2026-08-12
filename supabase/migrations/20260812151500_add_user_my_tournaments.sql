@@ -73,6 +73,10 @@ begin
           'series_name', series.name,
           'series_color', series.color,
           'pool_number', pool_assignment.pool_number,
+          'can_manage_registration',
+            team.submitted_by = current_profile_id
+            and tournament.status = 'registrations_open'
+            and tournament.registration_closes_at > now(),
           'players', (
             select coalesce(
               jsonb_agg(
