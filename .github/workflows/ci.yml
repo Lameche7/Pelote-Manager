@@ -21,6 +21,35 @@ jobs:
 
       - run: npm ci
 
+      - name: Préparer toutes les pastilles du tournoi complet
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx")
+          source = path.read_text()
+          old = '''{dayRows
+                                .slice(0, 6)
+                                .map((row) => renderEvent(row, true))}
+                              {dayRows.length > 6 && (
+                                <span className="planning-calendar__more">
+                                  + {dayRows.length - 6} autre
+                                  {dayRows.length - 6 > 1 ? "s" : ""}
+                                </span>
+                              )}'''
+          new = '''{dayRows.map((row) => renderEvent(row, true))}'''
+          if old not in source:
+              raise SystemExit("Tournament overview block not found")
+          path.write_text(source.replace(old, new, 1))
+          PY
+          npx prettier --write src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
+
+      - name: Exporter la page Planning complète
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr76-full-tournament-dots
+          path: src/features/admin/tournaments/pages/AdminTournamentPlanningPage.tsx
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
