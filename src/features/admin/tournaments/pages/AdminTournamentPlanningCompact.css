@@ -18,12 +18,11 @@
     display: grid;
     min-height: calc(100dvh - 9.5rem);
     grid-template-areas:
-      "period views navigation filters"
+      "views navigation spacer filters"
       "calendar calendar calendar calendar";
-    grid-template-columns: max-content max-content max-content minmax(
-        18rem,
-        1fr
-      );
+    grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
     align-items: center;
     gap: 0.35rem 0.55rem;
     padding-top: 0.45rem;
@@ -35,28 +34,13 @@
   }
 
   .planning-calendar-shell__header > div {
-    grid-area: period;
-    display: flex !important;
-    align-items: center;
-    min-width: max-content;
-    padding-left: 0.7rem;
-  }
-
-  .planning-calendar-shell__header h2 {
-    display: none;
-  }
-
-  .planning-calendar-shell__header p {
-    margin: 0;
-    font-size: 0.72rem;
-    font-weight: 800;
-    opacity: 0.72;
-    white-space: nowrap;
+    display: none !important;
   }
 
   .planning-calendar-shell__views {
     grid-area: views;
     justify-self: start;
+    margin-left: 0.7rem;
     flex-wrap: nowrap !important;
     white-space: nowrap;
   }
@@ -82,6 +66,7 @@
   .planning-month-scroll,
   .planning-tournament-view {
     grid-area: calendar;
+    min-height: 0;
     max-height: calc(100dvh - 12rem) !important;
   }
 
