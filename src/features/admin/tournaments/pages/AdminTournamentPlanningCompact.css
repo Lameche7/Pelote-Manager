@@ -1,0 +1,88 @@
+.admin-tournament-planning__alert--error + .admin-tournament-planning__alert {
+  display: none;
+}
+
+.admin-tournament-planning__diagnostics,
+.planning-calendar-legend {
+  display: none !important;
+}
+
+@media (min-width: 621px) {
+  .planning-calendar-shell__views {
+    flex-wrap: nowrap !important;
+  }
+}
+
+@media (min-width: 1100px) {
+  .planning-calendar-shell {
+    display: grid;
+    min-height: calc(100dvh - 9.5rem);
+    grid-template-areas:
+      "period views navigation filters"
+      "calendar calendar calendar calendar";
+    grid-template-columns: max-content max-content max-content minmax(18rem, 1fr);
+    align-items: center;
+    gap: 0.35rem 0.55rem;
+    padding-top: 0.45rem;
+  }
+
+  .planning-calendar-shell__header,
+  .planning-calendar-shell__controls {
+    display: contents !important;
+  }
+
+  .planning-calendar-shell__header > div {
+    grid-area: period;
+    display: flex !important;
+    align-items: center;
+    min-width: max-content;
+    padding-left: 0.7rem;
+  }
+
+  .planning-calendar-shell__header h2 {
+    display: none;
+  }
+
+  .planning-calendar-shell__header p {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    opacity: 0.72;
+    white-space: nowrap;
+  }
+
+  .planning-calendar-shell__views {
+    grid-area: views;
+    justify-self: start;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+  }
+
+  .planning-calendar-shell__navigation {
+    grid-area: navigation;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+  }
+
+  .planning-calendar-shell__filters {
+    grid-area: filters;
+    justify-self: end;
+    flex-wrap: nowrap !important;
+    padding-right: 0.7rem;
+  }
+
+  .planning-calendar-shell__filters label {
+    min-width: 8rem;
+  }
+
+  .planning-week-scroll,
+  .planning-month-scroll,
+  .planning-tournament-view {
+    grid-area: calendar;
+    max-height: calc(100dvh - 12rem) !important;
+  }
+
+  .planning-tournament-view {
+    padding-top: 0.1rem;
+  }
+}
