@@ -6,6 +6,7 @@ export const ROUTES = {
   reservations: "/reservations",
   userSpace: "/mon-espace",
   myReservations: "/mes-reservations",
+  myTournaments: "/mon-espace/tournois",
   myProfile: "/mon-espace/profil",
   myNotifications: "/mon-espace/notifications",
   reservationPaymentReturn: "/reservations/paiement",
