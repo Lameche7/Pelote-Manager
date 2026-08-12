@@ -231,7 +231,7 @@ test("l'administrateur peut lire et enregistrer les créneaux datés avec les m�
   assert.match(adminPage, /Enregistrer l’équipe et ses disponibilités/);
 });
 
-test("les pages Tournois exposent consultation publique, inscription compacte et gestion admin", async () => {
+test("les pages Tournois conservent les routes publiques sans onglet principal dédié et la gestion admin", async () => {
   const [
     router,
     navigation,
@@ -257,7 +257,7 @@ test("les pages Tournois exposent consultation publique, inscription compacte et
   assert.match(router, /TournamentsPage/);
   assert.match(router, /TournamentDetailPage/);
   assert.match(router, /AdminTournamentTeamsPage/);
-  assert.match(layout, />\s*Tournois\s*</);
+  assert.doesNotMatch(layout, />\s*Tournois\s*</);
   assert.match(navigation, /Équipes & inscriptions/);
   assert.match(publicPage, /Voir le tournoi/);
   assert.match(detailPage, /Se connecter pour inscrire une équipe/);
