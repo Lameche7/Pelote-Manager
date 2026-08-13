@@ -112,7 +112,10 @@ test("l interface réserve directement et garde la réactivation admin", async (
   assert.match(adminPage, /Paiement en ligne/);
   assert.match(adminPage, /Désactivé — réservation confirmée directement/);
   assert.match(adminPage, /Délai d’annulation/);
-  assert.doesNotMatch(adminPage, /Horaires d’ouverture|Fermetures ponctuelles/);
+  assert.doesNotMatch(
+    adminPage,
+    /Horaires d’ouverture|Fermetures ponctuelles/,
+  );
   assert.match(adminService, /onlinePaymentEnabled/);
   assert.match(adminService, /cancellationNoticeHours/);
 });
