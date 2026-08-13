@@ -211,7 +211,7 @@ export function MyReservationsPage() {
       setMessage(
         result.refundRequired
           ? "La réservation est annulée. Le remboursement devra être traité selon la politique du club."
-          : "La réservation est annulée, le créneau est libre et les licenciés ont été notifiés.",
+          : "La réservation est annulée et le créneau est de nouveau disponible.",
       );
       await load();
     } catch (cancelError: unknown) {
