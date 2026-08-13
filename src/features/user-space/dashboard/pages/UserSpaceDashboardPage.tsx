@@ -47,7 +47,7 @@ const cards: DashboardCard[] = [
     icon: Bell,
     to: ROUTES.myNotifications,
   },
-  { title: "Mon activité", icon: TrendingUp },
+  { title: "Mes Championnats", icon: TrendingUp },
 ];
 
 function Card({ card }: { card: DashboardCard }) {
