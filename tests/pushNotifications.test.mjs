@@ -108,6 +108,20 @@ test("le dispatch Push part des communications et non des modules métier", asyn
   assert.match(sender, /x-pelote-push-secret/);
 });
 
+test("le dispatch tolère la course publication destinataires et expose son diagnostic", async () => {
+  const sender = await read(
+    "../supabase/functions/send-push-notifications/index.ts",
+  );
+
+  assert.match(sender, /for \(let loadAttempt = 0; loadAttempt < 3/);
+  assert.match(sender, /await sleep\(/);
+  assert.match(sender, /reason: "no_delivery_profile"/);
+  assert.match(sender, /reason: "no_active_subscription"/);
+  assert.match(sender, /deliveryCount/);
+  assert.match(sender, /profileCount/);
+  assert.match(sender, /activeSubscriptionCount/);
+});
+
 test("la clé privée VAPID reste exclusivement côté serveur", async () => {
   const [browserService, pushConfig, sender] = await Promise.all([
     read("../src/features/notifications/services/pushNotificationService.ts"),
