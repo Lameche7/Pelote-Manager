@@ -56,6 +56,11 @@ async function getRegistration(): Promise<ServiceWorkerRegistration> {
   return navigator.serviceWorker.ready;
 }
 
+async function getExistingRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) return null;
+  return (await navigator.serviceWorker.getRegistration()) ?? null;
+}
+
 async function loadPushConfig(): Promise<PushConfigResponse> {
   const { data, error } = await supabase.functions.invoke("push-config");
   if (error) {
@@ -100,6 +105,22 @@ async function registerSubscription(
   }
 }
 
+async function disableRegisteredSubscription(
+  subscription: PushSubscription,
+): Promise<void> {
+  const { error } = await supabase.rpc("disable_push_subscription", {
+    target_endpoint: subscription.endpoint,
+  });
+  if (error) {
+    throw new Error(
+      getSupabaseErrorMessage(
+        error,
+        "Les notifications n’ont pas pu être désactivées pour cet appareil.",
+      ),
+    );
+  }
+}
+
 function browserSupportsPush(): boolean {
   return (
     "serviceWorker" in navigator &&
@@ -109,6 +130,23 @@ function browserSupportsPush(): boolean {
 }
 
 export const pushNotificationService = {
+  async syncExistingSubscription(): Promise<void> {
+    if (!browserSupportsPush() || Notification.permission !== "granted") return;
+    const registration = await getExistingRegistration();
+    if (!registration) return;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) await registerSubscription(subscription);
+  },
+
+  async disableForLogout(): Promise<void> {
+    if (!browserSupportsPush()) return;
+    const registration = await getExistingRegistration();
+    if (!registration) return;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return;
+    await disableRegisteredSubscription(subscription);
+  },
+
   async getState(): Promise<PushNotificationState> {
     const supported = browserSupportsPush();
     const isIos = isIosDevice();
@@ -212,18 +250,7 @@ export const pushNotificationService = {
     const subscription = await registration.pushManager.getSubscription();
     if (!subscription) return this.getState();
 
-    const { error } = await supabase.rpc("disable_push_subscription", {
-      target_endpoint: subscription.endpoint,
-    });
-    if (error) {
-      throw new Error(
-        getSupabaseErrorMessage(
-          error,
-          "Les notifications n’ont pas pu être désactivées pour cet appareil.",
-        ),
-      );
-    }
-
+    await disableRegisteredSubscription(subscription);
     await subscription.unsubscribe();
     return this.getState();
   },
