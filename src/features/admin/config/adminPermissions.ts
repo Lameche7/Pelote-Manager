@@ -81,7 +81,18 @@ export const adminNavigation = [
   },
   {
     label: "Réservations",
-    to: ROUTES.adminReservations,
+    children: [
+      {
+        label: "Gestion des réservations",
+        to: ROUTES.adminReservations,
+        permission: ADMIN_PERMISSIONS.reservations,
+      },
+      {
+        label: "Paramètres",
+        to: ROUTES.adminReservationSettings,
+        permission: ADMIN_PERMISSIONS.reservations,
+      },
+    ],
     permission: ADMIN_PERMISSIONS.reservations,
   },
   {

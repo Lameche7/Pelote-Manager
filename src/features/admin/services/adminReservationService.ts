@@ -8,8 +8,10 @@ export type ReservationAdminSettings = {
   defaultDurationMinutes: number;
   bookingStepMinutes: number;
   minimumNoticeMinutes: number;
+  cancellationNoticeHours: number;
   licenseeMaxActiveReservations: number;
   publicMaxActiveReservations: number;
+  onlinePaymentEnabled: boolean;
   paymentMode: "test" | "helloasso";
 };
 
@@ -38,8 +40,10 @@ type SettingsRow = {
   default_duration_minutes: number;
   booking_step_minutes: number;
   minimum_notice_minutes: number;
+  cancellation_notice_hours: number;
   licensee_max_active_reservations: number;
   public_max_active_reservations: number;
+  online_payment_enabled: boolean;
   payment_mode: "test" | "helloasso";
 };
 
@@ -59,8 +63,10 @@ export const adminReservationService = {
       defaultDurationMinutes: row.default_duration_minutes,
       bookingStepMinutes: row.booking_step_minutes,
       minimumNoticeMinutes: row.minimum_notice_minutes,
+      cancellationNoticeHours: row.cancellation_notice_hours,
       licenseeMaxActiveReservations: row.licensee_max_active_reservations,
       publicMaxActiveReservations: row.public_max_active_reservations,
+      onlinePaymentEnabled: row.online_payment_enabled,
       paymentMode: row.payment_mode,
     };
   },
@@ -74,8 +80,10 @@ export const adminReservationService = {
       new_default_duration_minutes: settings.defaultDurationMinutes,
       new_booking_step_minutes: settings.bookingStepMinutes,
       new_minimum_notice_minutes: settings.minimumNoticeMinutes,
+      new_cancellation_notice_hours: settings.cancellationNoticeHours,
       new_licensee_max_active_reservations: settings.licenseeMaxActiveReservations,
       new_public_max_active_reservations: settings.publicMaxActiveReservations,
+      new_online_payment_enabled: settings.onlinePaymentEnabled,
       new_payment_mode: settings.paymentMode,
     });
     if (error) throw error;

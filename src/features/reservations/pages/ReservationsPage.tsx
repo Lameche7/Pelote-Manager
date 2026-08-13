@@ -81,7 +81,6 @@ function SlotCard({
     const openingLabel = slot.bookingOpensAt
       ? formatBookingOpening(slot.bookingOpensAt, timezone)
       : "prochainement";
-
     return (
       <div
         className="reservation-slot reservation-slot--locked"
@@ -109,7 +108,13 @@ function SlotCard({
 function AccountRequiredModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="booking-modal" role="presentation" onMouseDown={onClose}>
-      <section className="booking-modal__panel booking-modal__account-required" role="dialog" aria-modal="true" aria-labelledby="account-required-title" onMouseDown={(event) => event.stopPropagation()}>
+      <section
+        className="booking-modal__panel booking-modal__account-required"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="account-required-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <button type="button" className="booking-modal__close" aria-label="Fermer" onClick={onClose}>×</button>
         <p className="booking-modal__eyebrow">Compte utilisateur</p>
         <h2 id="account-required-title">Réserver un terrain</h2>
@@ -126,33 +131,34 @@ function AccountRequiredModal({ onClose }: { onClose: () => void }) {
 function BookingModal({
   slot,
   resource,
-  isAuthenticated,
   onClose,
   onSuccess,
 }: {
   slot: CalendarSlot;
   resource: ReservableResource;
-  isAuthenticated: boolean;
   onClose: () => void;
   onSuccess: () => Promise<void>;
 }) {
   const [terms, setTerms] = useState<ReservationTerms | null>(null);
+  const [paymentEnabled, setPaymentEnabled] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
-
-    void reservationBookingService
-      .getTerms(slot.startsAt)
-      .then((reservationTerms) => {
-        if (isCurrent) setTerms(reservationTerms);
+    void Promise.all([
+      reservationBookingService.getTerms(slot.startsAt),
+      reservationBookingService.getPaymentConfig(),
+    ])
+      .then(([reservationTerms, paymentConfig]) => {
+        if (!isCurrent) return;
+        setTerms(reservationTerms);
+        setPaymentEnabled(paymentConfig.enabled);
       })
       .catch((error: unknown) => {
         if (isCurrent) setErrorMessage(getBookingErrorMessage(error));
       });
-
     return () => {
       isCurrent = false;
     };
@@ -161,9 +167,7 @@ function BookingModal({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
-
     setIsSubmitting(true);
-
     try {
       await reservationBookingService.create(resource.id, slot.startsAt);
       setIsConfirmed(true);
@@ -185,14 +189,7 @@ function BookingModal({
         aria-labelledby="booking-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className="booking-modal__close"
-          aria-label="Fermer"
-          onClick={onClose}
-        >
-          ×
-        </button>
+        <button type="button" className="booking-modal__close" aria-label="Fermer" onClick={onClose}>×</button>
 
         {isConfirmed ? (
           <div className="booking-modal__success" role="status">
@@ -203,63 +200,46 @@ function BookingModal({
               {fullDateFormatter.format(new Date(slot.startsAt))} à{" "}
               {formatTime(slot.startsAt, resource.timezone)}.
             </p>
-            <button type="button" onClick={onClose}>
-              Retour au calendrier
-            </button>
+            <button type="button" onClick={onClose}>Retour au calendrier</button>
           </div>
         ) : (
           <form onSubmit={(event) => void handleSubmit(event)}>
-            <p className="booking-modal__eyebrow">Confirmation du créneau</p>
+            <p className="booking-modal__eyebrow">Votre réservation</p>
             <h2 id="booking-modal-title">Réserver {resource.name}</h2>
 
             <dl className="booking-modal__summary">
-              <div>
-                <dt>Date</dt>
-                <dd>{fullDateFormatter.format(new Date(slot.startsAt))}</dd>
-              </div>
+              <div><dt>Date</dt><dd>{fullDateFormatter.format(new Date(slot.startsAt))}</dd></div>
               <div>
                 <dt>Horaire</dt>
-                <dd>
-                  {formatTime(slot.startsAt, resource.timezone)} –{" "}
-                  {formatTime(slot.endsAt, resource.timezone)}
-                </dd>
+                <dd>{formatTime(slot.startsAt, resource.timezone)} – {formatTime(slot.endsAt, resource.timezone)}</dd>
               </div>
-              <div>
-                <dt>Tarif</dt>
-                <dd>{terms ? formatPrice(terms.priceCents) : "Calcul en cours…"}</dd>
-              </div>
+              <div><dt>Tarif</dt><dd>{terms ? formatPrice(terms.priceCents) : "Calcul en cours…"}</dd></div>
             </dl>
 
             {terms && (
               <p className="booking-modal__terms">
                 {terms.customerType === "licensee"
-                  ? "Tarif licencié actif validé."
-                  : "Tarif public applicable."}
+                  ? "Profil licencié actif : conditions licencié appliquées."
+                  : "Compte non licencié : conditions public appliquées."}
               </p>
             )}
 
-            {isAuthenticated && (
+            {paymentEnabled === false && (
               <p className="booking-modal__account">
-                La réservation sera rattachée à votre compte connecté.
+                Le paiement en ligne est désactivé : votre réservation sera enregistrée immédiatement.
               </p>
             )}
 
-            {errorMessage && (
-              <div className="booking-modal__error" role="alert">
-                {errorMessage}
-              </div>
-            )}
+            {errorMessage && <div className="booking-modal__error" role="alert">{errorMessage}</div>}
 
             <div className="booking-modal__actions">
-              <button type="button" className="booking-modal__secondary" onClick={onClose}>
-                Annuler
-              </button>
-              <button type="submit" disabled={isSubmitting || !terms}>
+              <button type="button" className="booking-modal__secondary" onClick={onClose}>Annuler</button>
+              <button type="submit" disabled={isSubmitting || !terms || paymentEnabled === null}>
                 {isSubmitting
                   ? "Réservation en cours…"
-                  : terms
-                    ? `Confirmer à ${formatPrice(terms.priceCents)}`
-                    : "Chargement…"}
+                  : paymentEnabled
+                    ? `Confirmer à ${terms ? formatPrice(terms.priceCents) : "…"}`
+                    : "Réserver"}
               </button>
             </div>
           </form>
@@ -286,14 +266,12 @@ export function ReservationsPage() {
   const weekStartValue = toDateInputValue(weekStart);
   const weekEndValue = toDateInputValue(weekEnd);
   const slotsByDay = useMemo(
-    () =>
-      groupSlotsByLocalDate(slots, selectedResource?.timezone ?? "Europe/Paris"),
+    () => groupSlotsByLocalDate(slots, selectedResource?.timezone ?? "Europe/Paris"),
     [slots, selectedResource?.timezone],
   );
 
   useEffect(() => {
     let isCurrent = true;
-
     void reservationCalendarService
       .listResources()
       .then((availableResources) => {
@@ -307,7 +285,6 @@ export function ReservationsPage() {
       .finally(() => {
         if (isCurrent) setIsLoading(false);
       });
-
     return () => {
       isCurrent = false;
     };
@@ -315,18 +292,10 @@ export function ReservationsPage() {
 
   async function loadSlots(): Promise<void> {
     if (!resourceId) return;
-
     setIsLoading(true);
     setErrorMessage(null);
-
     try {
-      setSlots(
-        await reservationCalendarService.listSlots(
-          resourceId,
-          weekStartValue,
-          weekEndValue,
-        ),
-      );
+      setSlots(await reservationCalendarService.listSlots(resourceId, weekStartValue, weekEndValue));
     } catch {
       setErrorMessage("Impossible de charger les disponibilités.");
     } finally {
@@ -344,56 +313,38 @@ export function ReservationsPage() {
         <div>
           <p className="reservation-calendar__eyebrow">Réservations du trinquet</p>
           <h1>Calendrier des disponibilités</h1>
-          <p>Les créneaux s’ouvrent à 8 h, 48 h avant pour le public et 72 h avant pour les licenciés.</p>
+          <p>Les créneaux s’ouvrent à 8 h, 48 h avant pour les non licenciés et 72 h avant pour les licenciés actifs.</p>
         </div>
-
         {resources.length > 1 && (
           <label>
             Terrain
             <select value={resourceId} onChange={(event) => setResourceId(event.target.value)}>
-              {resources.map((resource) => (
-                <option value={resource.id} key={resource.id}>
-                  {resource.name}
-                </option>
-              ))}
+              {resources.map((resource) => <option value={resource.id} key={resource.id}>{resource.name}</option>)}
             </select>
           </label>
         )}
       </div>
 
       <div className="reservation-calendar__toolbar" aria-label="Navigation du calendrier">
-        <button type="button" onClick={() => setAnchorDate(addDays(anchorDate, -7))}>
-          Semaine précédente
-        </button>
-        <button type="button" onClick={() => setAnchorDate(startOfIsoWeek(new Date()))}>
-          Aujourd’hui
-        </button>
-        <strong>
-          {rangeFormatter.format(weekStart)} – {rangeFormatter.format(weekEnd)}
-        </strong>
-        <button type="button" onClick={() => setAnchorDate(addDays(anchorDate, 7))}>
-          Semaine suivante
-        </button>
+        <button type="button" onClick={() => setAnchorDate(addDays(anchorDate, -7))}>Semaine précédente</button>
+        <button type="button" onClick={() => setAnchorDate(startOfIsoWeek(new Date()))}>Aujourd’hui</button>
+        <strong>{rangeFormatter.format(weekStart)} – {rangeFormatter.format(weekEnd)}</strong>
+        <button type="button" onClick={() => setAnchorDate(addDays(anchorDate, 7))}>Semaine suivante</button>
       </div>
 
       {errorMessage && (
-        <div className="reservation-calendar__message reservation-calendar__message--error" role="alert">
-          {errorMessage}
-        </div>
+        <div className="reservation-calendar__message reservation-calendar__message--error" role="alert">{errorMessage}</div>
       )}
 
       {isLoading ? (
         <CalendarSkeleton />
       ) : resources.length === 0 ? (
-        <div className="reservation-calendar__message">
-          Aucun terrain n’est encore ouvert à la réservation.
-        </div>
+        <div className="reservation-calendar__message">Aucun terrain n’est encore ouvert à la réservation.</div>
       ) : (
         <div className="reservation-calendar__grid">
           {weekDays.map((day) => {
             const dayKey = toDateInputValue(day);
             const daySlots = slotsByDay.get(dayKey) ?? [];
-
             return (
               <article className="reservation-calendar__day" key={dayKey}>
                 <h2>{dayFormatter.format(day)}</h2>
@@ -418,23 +369,20 @@ export function ReservationsPage() {
       )}
 
       <div className="reservation-calendar__legend" aria-label="Légende">
-        <span>
-          <i className="reservation-calendar__dot reservation-calendar__dot--available" /> Libre
-        </span>
-        <span>
-          <i className="reservation-calendar__dot reservation-calendar__dot--locked" /> Pas encore ouvert
-        </span>
-        <span>
-          <i className="reservation-calendar__dot reservation-calendar__dot--occupied" /> Occupé
-        </span>
-        <span>
-          <i className="reservation-calendar__dot reservation-calendar__dot--closed" /> Fermé
-        </span>
+        <span><i className="reservation-calendar__dot reservation-calendar__dot--available" /> Libre</span>
+        <span><i className="reservation-calendar__dot reservation-calendar__dot--locked" /> Pas encore ouvert</span>
+        <span><i className="reservation-calendar__dot reservation-calendar__dot--occupied" /> Occupé</span>
+        <span><i className="reservation-calendar__dot reservation-calendar__dot--closed" /> Fermé</span>
       </div>
 
       {selectedSlot && selectedResource && (
         isAuthenticated ? (
-          <BookingModal slot={selectedSlot} resource={selectedResource} isAuthenticated onClose={() => setSelectedSlot(null)} onSuccess={loadSlots} />
+          <BookingModal
+            slot={selectedSlot}
+            resource={selectedResource}
+            onClose={() => setSelectedSlot(null)}
+            onSuccess={loadSlots}
+          />
         ) : (
           <AccountRequiredModal onClose={() => setSelectedSlot(null)} />
         )
