@@ -18,3 +18,58 @@
   background: var(--brand-red);
   box-shadow: 0 0 0 2px rgb(255 255 255 / 16%);
 }
+
+@media (max-width: 62rem) {
+  .app-layout {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app-header {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 1rem;
+  }
+
+  .app-navigation {
+    width: 100%;
+    flex: 1 0 100%;
+    justify-content: safe center;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-navigation::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-main {
+    width: 100%;
+    overflow-x: clip;
+  }
+}
+
+@media (max-width: 40rem) {
+  .app-header {
+    position: sticky;
+    padding: 0.55rem 0.75rem 0.65rem;
+  }
+
+  .app-brand {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .app-navigation {
+    padding-bottom: 0.1rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .app-navigation__link,
+  .app-navigation > .button {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+  }
+}
