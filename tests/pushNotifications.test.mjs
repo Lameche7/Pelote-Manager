@@ -64,6 +64,18 @@ test("le navigateur enregistre et désactive son abonnement via les RPC", async 
   assert.match(service, /Sur iPhone ou iPad/);
 });
 
+test("la connexion resynchronise le Push et la déconnexion désactive l appareil", async () => {
+  const [authProvider, pushService] = await Promise.all([
+    read("../src/app/providers/AuthProvider.tsx"),
+    read("../src/features/notifications/services/pushNotificationService.ts"),
+  ]);
+
+  assert.match(authProvider, /syncExistingSubscription/);
+  assert.match(authProvider, /disableForLogout/);
+  assert.match(pushService, /syncExistingSubscription/);
+  assert.match(pushService, /disableForLogout/);
+});
+
 test("Mon espace propose l activation Push sans supprimer l historique interne", async () => {
   const [page, settings, notificationService] = await Promise.all([
     read("../src/features/notifications/pages/NotificationsPage.tsx"),
