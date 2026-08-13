@@ -42,3 +42,9 @@ test("les permissions filtrent à la fois les routes et le menu", () => {
   assert.match(navigation, /payments\.manage/);
   assert.match(navigation, /pricing\.manage/);
 });
+
+test("les paramètres de réservation sont accessibles depuis le menu", () => {
+  assert.match(router, /reservations\/parametres/);
+  assert.match(navigation, /ROUTES\.adminReservationSettings/);
+  assert.match(navigation, /Gestion des réservations/);
+});
