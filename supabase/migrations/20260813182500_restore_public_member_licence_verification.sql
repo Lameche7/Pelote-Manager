@@ -1,5 +1,5 @@
 -- Registration verifies a club member identity before an Auth account exists.
--- PR38 accidentally required auth.uid() to be present, making every anonymous
+-- PR38 accidentally required an authenticated session, making every anonymous
 -- licence verification return false. Keep the normalized comparison while
 -- exposing only a boolean result to anonymous visitors.
 create or replace function public.find_member_by_licence(
