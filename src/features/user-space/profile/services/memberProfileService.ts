@@ -1,5 +1,14 @@
 import { supabase } from "@/infrastructure/supabase/client";
 
+type MemberProfileRpcRow = {
+  licence_number: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  season: string | null;
+  is_licensed: boolean;
+};
+
 export type MemberProfileDetails = {
   licenceNumber: string;
   season: string;
@@ -9,20 +18,18 @@ export type MemberProfileDetails = {
 };
 
 export const memberProfileService = {
-  async get(memberId: string): Promise<MemberProfileDetails | null> {
-    const { data, error } = await supabase
-      .from("club_members")
-      .select("licence_number, season, first_name, last_name, is_active")
-      .eq("id", memberId)
-      .maybeSingle();
+  async get(_memberId?: string): Promise<MemberProfileDetails | null> {
+    const { data, error } = await supabase.rpc("get_my_member_profile");
     if (error) throw error;
-    return data
+
+    const row = (data as MemberProfileRpcRow[] | null)?.[0];
+    return row
       ? {
-          licenceNumber: data.licence_number,
-          season: data.season,
-          firstName: data.first_name,
-          lastName: data.last_name,
-          isActive: data.is_active,
+          licenceNumber: row.licence_number,
+          season: row.season ?? "—",
+          firstName: row.first_name,
+          lastName: row.last_name,
+          isActive: row.is_active && row.is_licensed,
         }
       : null;
   },
