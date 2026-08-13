@@ -21,14 +21,36 @@ jobs:
 
       - run: npm ci
 
-      - name: Formater le test PR80
-        run: npx prettier --write tests/reservationPolicyV2.test.mjs
-
-      - name: Exporter le test formaté
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr80-reservation-policy-prettier
-          path: tests/reservationPolicyV2.test.mjs
+      - name: Format workflow
+        run: npx prettier --check .github/workflows/ci.yml
+        continue-on-error: true
+      - name: Format README
+        run: npx prettier --check README.md
+        continue-on-error: true
+      - name: Format package
+        run: npx prettier --check package.json
+        continue-on-error: true
+      - name: Format ignore files
+        run: npx prettier --check .gitignore .prettierignore
+        continue-on-error: true
+      - name: Format migration
+        run: npx prettier --check supabase/migrations/20260728000100_add_profile_role.sql
+        continue-on-error: true
+      - name: Format routes
+        run: npx prettier --check src/app/router/ProtectedRoute.tsx src/app/router/protectedRouteAccess.ts
+        continue-on-error: true
+      - name: Format admin
+        run: npx prettier --check src/features/admin/pages/AdminPage.tsx
+        continue-on-error: true
+      - name: Format infrastructure
+        run: npx prettier --check src/infrastructure/auth/authService.ts src/infrastructure/profile/profileMappers.ts src/infrastructure/profile/profileService.ts src/infrastructure/supabase/database.ts
+        continue-on-error: true
+      - name: Format shared
+        run: npx prettier --check src/shared/config/index.ts src/shared/config/roles.ts src/shared/types/auth.ts src/shared/types/profile.ts
+        continue-on-error: true
+      - name: Format tests
+        run: npx prettier --check tests/protectedRouteAccess.test.mjs tests/roles.test.mjs tsconfig.test.json
+        continue-on-error: true
 
       - run: npm run format:check
       - run: npm run typecheck
