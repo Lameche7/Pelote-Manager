@@ -44,7 +44,9 @@ function urlBase64ToUint8Array(value: string): Uint8Array {
 
 async function getRegistration(): Promise<ServiceWorkerRegistration> {
   if (!("serviceWorker" in navigator)) {
-    throw new Error("Les notifications push ne sont pas prises en charge par ce navigateur.");
+    throw new Error(
+      "Les notifications push ne sont pas prises en charge par ce navigateur.",
+    );
   }
 
   return navigator.serviceWorker.ready;
@@ -63,13 +65,17 @@ async function loadPushConfig(): Promise<PushConfigResponse> {
   return (data ?? {}) as PushConfigResponse;
 }
 
-async function registerSubscription(subscription: PushSubscription): Promise<void> {
+async function registerSubscription(
+  subscription: PushSubscription,
+): Promise<void> {
   const serialized = subscription.toJSON();
   const p256dh = serialized.keys?.p256dh;
   const auth = serialized.keys?.auth;
 
   if (!p256dh || !auth) {
-    throw new Error("L’abonnement push fourni par le navigateur est incomplet.");
+    throw new Error(
+      "L’abonnement push fourni par le navigateur est incomplet.",
+    );
   }
 
   const { error } = await supabase.rpc("register_push_subscription", {
@@ -146,7 +152,9 @@ export const pushNotificationService = {
 
   async enable(): Promise<PushNotificationState> {
     if (!browserSupportsPush()) {
-      throw new Error("Les notifications push ne sont pas prises en charge par ce navigateur.");
+      throw new Error(
+        "Les notifications push ne sont pas prises en charge par ce navigateur.",
+      );
     }
 
     if (isIosDevice() && !isStandaloneMode()) {
@@ -157,7 +165,9 @@ export const pushNotificationService = {
 
     const config = await loadPushConfig();
     if (!config.enabled || !config.publicKey) {
-      throw new Error("Les notifications push ne sont pas encore configurées sur Pelote Manager.");
+      throw new Error(
+        "Les notifications push ne sont pas encore configurées sur Pelote Manager.",
+      );
     }
 
     const permission = await Notification.requestPermission();
