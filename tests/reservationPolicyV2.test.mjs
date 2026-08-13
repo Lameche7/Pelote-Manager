@@ -10,6 +10,8 @@ const notificationMigration =
   "../supabase/migrations/20260813091600_notify_released_reservation_slots.sql";
 const projectionMigration =
   "../supabase/migrations/20260813091700_update_my_reservations_projection.sql";
+const resilientCancellationMigration =
+  "../supabase/migrations/20260813091900_make_release_notifications_non_blocking.sql";
 
 test("le paiement en ligne est optionnel et désactivé par défaut", async () => {
   const migration = await read(optionalPaymentMigration);
@@ -66,6 +68,17 @@ test("une annulation notifie les licenciés actifs du club", async () => {
   );
 });
 
+test("un échec de notification ne bloque pas l annulation", async () => {
+  const migration = await read(resilientCancellationMigration);
+
+  assert.match(
+    migration,
+    /perform public\.publish_released_reservation_slot_notification/i,
+  );
+  assert.match(migration, /exception when others/i);
+  assert.match(migration, /return cancelled_reservation/i);
+});
+
 test("Mes réservations distingue les réservations sans paiement", async () => {
   const migration = await read(projectionMigration);
 
@@ -97,8 +110,9 @@ test("l interface réserve directement et garde la réactivation admin", async (
   assert.match(bookingService, /get_online_payment_enabled/);
   assert.match(bookingService, /createDirect/);
   assert.match(adminPage, /Paiement en ligne/);
-  assert.match(adminPage, /Désactivé — réservation directe/);
-  assert.match(adminPage, /Délai d’annulation \(heures avant\)/);
+  assert.match(adminPage, /Désactivé — réservation confirmée directement/);
+  assert.match(adminPage, /Délai d’annulation/);
+  assert.doesNotMatch(adminPage, /Horaires d’ouverture|Fermetures ponctuelles/);
   assert.match(adminService, /onlinePaymentEnabled/);
   assert.match(adminService, /cancellationNoticeHours/);
 });
@@ -106,7 +120,9 @@ test("l interface réserve directement et garde la réactivation admin", async (
 test("Mon profil distingue licence active inactive et non licencié", async () => {
   const [profilePage, profileService] = await Promise.all([
     read("../src/features/user-space/profile/pages/MyProfilePage.tsx"),
-    read("../src/features/user-space/profile/services/memberProfileService.ts"),
+    read(
+      "../src/features/user-space/profile/services/memberProfileService.ts",
+    ),
   ]);
 
   assert.match(profileService, /is_active/);
@@ -123,5 +139,5 @@ test("Mes réservations masque les actions de paiement quand il n est pas requis
 
   assert.match(service, /paymentRequired/);
   assert.match(page, /reservation\.paymentRequired/);
-  assert.match(page, /les licenciés ont été notifiés/);
+  assert.match(page, /le créneau est de nouveau disponible/);
 });
