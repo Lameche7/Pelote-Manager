@@ -40,8 +40,16 @@ const dateTime = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
   minute: "2-digit",
 });
-const reservationDate = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-const reservationTime = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const reservationDate = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const reservationTime = new Intl.DateTimeFormat("fr-FR", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 function isUpcoming(reservation: MyReservation) {
   return new Date(reservation.endsAt).getTime() >= Date.now();
@@ -59,9 +67,11 @@ function ReservationCard({
   onResumePayment: (reservation: MyReservation) => Promise<void>;
 }) {
   const paymentCanResume =
+    reservation.paymentRequired &&
     ["pending", "authorized"].includes(reservation.paymentStatus) &&
     Boolean(reservation.paymentId) &&
-    (!reservation.paymentExpiresAt || new Date(reservation.paymentExpiresAt).getTime() > Date.now());
+    (!reservation.paymentExpiresAt ||
+      new Date(reservation.paymentExpiresAt).getTime() > Date.now());
 
   return (
     <article className="my-reservations__card">
@@ -74,35 +84,63 @@ function ReservationCard({
       </div>
 
       <div className="my-reservations__badges">
-        <span className={`my-reservations__badge my-reservations__badge--${reservation.reservationStatus}`}>
+        <span
+          className={`my-reservations__badge my-reservations__badge--${reservation.reservationStatus}`}
+        >
           {reservationLabels[reservation.reservationStatus]}
         </span>
-        <span className={`my-reservations__badge my-reservations__badge--payment-${reservation.paymentStatus}`}>
-          {paymentLabels[reservation.paymentStatus]}
-        </span>
+        {reservation.paymentRequired && (
+          <span
+            className={`my-reservations__badge my-reservations__badge--payment-${reservation.paymentStatus}`}
+          >
+            {paymentLabels[reservation.paymentStatus]}
+          </span>
+        )}
       </div>
 
       <dl className="my-reservations__details">
-        <div><dt>Date</dt><dd>{reservationDate.format(new Date(reservation.startsAt))}</dd></div>
-        <div><dt>Heure</dt><dd>{reservationTime.format(new Date(reservation.startsAt))}</dd></div>
-        <div><dt>Terrain</dt><dd>{reservation.resourceName}</dd></div>
-        <div><dt>Montant</dt><dd>{money.format(reservation.amountCents / 100)}</dd></div>
-        <div><dt>Statut</dt><dd>{reservationLabels[reservation.reservationStatus]}</dd></div>
         <div>
-          <dt>Fin du créneau</dt>
-          <dd>{new Date(reservation.endsAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</dd>
+          <dt>Date</dt>
+          <dd>{reservationDate.format(new Date(reservation.startsAt))}</dd>
         </div>
         <div>
-          <dt>Annulation en ligne jusqu’au</dt>
+          <dt>Heure</dt>
+          <dd>{reservationTime.format(new Date(reservation.startsAt))}</dd>
+        </div>
+        <div>
+          <dt>Terrain</dt>
+          <dd>{reservation.resourceName}</dd>
+        </div>
+        <div>
+          <dt>Tarif</dt>
+          <dd>{money.format(reservation.amountCents / 100)}</dd>
+        </div>
+        <div>
+          <dt>Statut</dt>
+          <dd>{reservationLabels[reservation.reservationStatus]}</dd>
+        </div>
+        <div>
+          <dt>Fin du créneau</dt>
+          <dd>
+            {new Date(reservation.endsAt).toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </dd>
+        </div>
+        <div>
+          <dt>Annulation possible jusqu’au</dt>
           <dd>{dateTime.format(new Date(reservation.cancellationDeadline))}</dd>
         </div>
       </dl>
 
-      {reservation.paymentStatus === "paid" && reservation.reservationStatus === "cancelled" && (
-        <p className="my-reservations__notice">
-          La réservation est annulée. Le remboursement sera traité selon la politique du club.
-        </p>
-      )}
+      {reservation.paymentRequired &&
+        reservation.paymentStatus === "paid" &&
+        reservation.reservationStatus === "cancelled" && (
+          <p className="my-reservations__notice">
+            La réservation est annulée. Le remboursement sera traité selon la politique du club.
+          </p>
+        )}
 
       <div className="my-reservations__actions">
         {paymentCanResume && (
@@ -144,7 +182,9 @@ export function MyReservationsPage() {
     try {
       setReservations(await myReservationsService.list());
     } catch (loadError: unknown) {
-      setError(loadError instanceof Error ? loadError.message : "Chargement impossible.");
+      setError(
+        loadError instanceof Error ? loadError.message : "Chargement impossible.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +195,10 @@ export function MyReservationsPage() {
   }, []);
 
   const displayed = useMemo(
-    () => reservations.filter((reservation) => (view === "upcoming" ? isUpcoming(reservation) : !isUpcoming(reservation))),
+    () =>
+      reservations.filter((reservation) =>
+        view === "upcoming" ? isUpcoming(reservation) : !isUpcoming(reservation),
+      ),
     [reservations, view],
   );
 
@@ -168,11 +211,13 @@ export function MyReservationsPage() {
       setMessage(
         result.refundRequired
           ? "La réservation est annulée. Le remboursement devra être traité selon la politique du club."
-          : "La réservation est annulée et le créneau est de nouveau disponible.",
+          : "La réservation est annulée, le créneau est libre et les licenciés ont été notifiés.",
       );
       await load();
     } catch (cancelError: unknown) {
-      setError(cancelError instanceof Error ? cancelError.message : "Annulation impossible.");
+      setError(
+        cancelError instanceof Error ? cancelError.message : "Annulation impossible.",
+      );
     } finally {
       setBusyId(null);
     }
@@ -184,62 +229,114 @@ export function MyReservationsPage() {
     try {
       window.location.assign(await myReservationsService.resumePayment(reservation));
     } catch (paymentError: unknown) {
-      setError(paymentError instanceof Error ? paymentError.message : "Paiement indisponible.");
+      setError(
+        paymentError instanceof Error ? paymentError.message : "Paiement indisponible.",
+      );
       setBusyId(null);
     }
   }
 
   return (
-    <UserSpaceShell><section className="my-reservations" aria-labelledby="my-reservations-title">
-      <header>
-        <p className="my-reservations__eyebrow">Espace personnel</p>
-        <h1 id="my-reservations-title">Mes réservations</h1>
-        <p>Consultez vos créneaux, leur paiement et les actions encore disponibles.</p>
-      </header>
+    <UserSpaceShell>
+      <section className="my-reservations" aria-labelledby="my-reservations-title">
+        <header>
+          <p className="my-reservations__eyebrow">Espace personnel</p>
+          <h1 id="my-reservations-title">Mes réservations</h1>
+          <p>Consultez vos créneaux et les actions encore disponibles.</p>
+        </header>
 
-      {error && <p className="my-reservations__alert my-reservations__alert--error" role="alert">{error}</p>}
-      {message && <p className="my-reservations__alert" role="status">{message}</p>}
+        {error && (
+          <p className="my-reservations__alert my-reservations__alert--error" role="alert">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p className="my-reservations__alert" role="status">
+            {message}
+          </p>
+        )}
 
-      <div className="my-reservations__tabs" role="tablist" aria-label="Période des réservations">
-        <button type="button" role="tab" aria-selected={view === "upcoming"} onClick={() => setView("upcoming")}>
-          À venir
-        </button>
-        <button type="button" role="tab" aria-selected={view === "history"} onClick={() => setView("history")}>
-          Historique
-        </button>
-      </div>
-
-      {isLoading ? (
-        <p>Chargement de vos réservations…</p>
-      ) : displayed.length === 0 ? (
-        <div className="my-reservations__empty">
-          <h2>{view === "upcoming" ? "Aucune réservation à venir" : "Aucune réservation passée"}</h2>
-          {view === "upcoming" && <Link to={ROUTES.reservations}>Réserver un créneau</Link>}
+        <div className="my-reservations__tabs" role="tablist" aria-label="Période des réservations">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "upcoming"}
+            onClick={() => setView("upcoming")}
+          >
+            À venir
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "history"}
+            onClick={() => setView("history")}
+          >
+            Historique
+          </button>
         </div>
-      ) : (
-        <div className="my-reservations__grid">
-          {displayed.map((reservation) => (
-            <ReservationCard
-              key={reservation.id}
-              reservation={reservation}
-              busyId={busyId}
-              onCancel={async (reservation) => setPendingCancellation(reservation)}
-              onResumePayment={resumePayment}
-            />
-          ))}
-        </div>
-      )}
 
-      {pendingCancellation && (
-        <div className="cancellation-dialog" role="presentation" onMouseDown={() => setPendingCancellation(null)}>
-          <section role="alertdialog" aria-modal="true" aria-labelledby="cancellation-title" onMouseDown={(event) => event.stopPropagation()}>
-            <p className="my-reservations__eyebrow">Annulation</p>
-            <h2 id="cancellation-title">Voulez-vous vraiment annuler cette réservation ?</h2>
-            <p>{pendingCancellation.resourceName} · {dateTime.format(new Date(pendingCancellation.startsAt))}</p>
-            <div><button type="button" onClick={() => setPendingCancellation(null)}>Retour</button><button type="button" className="my-reservations__danger" onClick={() => { const reservation = pendingCancellation; setPendingCancellation(null); void cancelReservation(reservation); }}>Confirmer</button></div>
-          </section>
-        </div>
-      )}
-    </section></UserSpaceShell>
+        {isLoading ? (
+          <p>Chargement de vos réservations…</p>
+        ) : displayed.length === 0 ? (
+          <div className="my-reservations__empty">
+            <h2>
+              {view === "upcoming"
+                ? "Aucune réservation à venir"
+                : "Aucune réservation passée"}
+            </h2>
+            {view === "upcoming" && <Link to={ROUTES.reservations}>Réserver un créneau</Link>}
+          </div>
+        ) : (
+          <div className="my-reservations__grid">
+            {displayed.map((reservation) => (
+              <ReservationCard
+                key={reservation.id}
+                reservation={reservation}
+                busyId={busyId}
+                onCancel={async (reservation) => setPendingCancellation(reservation)}
+                onResumePayment={resumePayment}
+              />
+            ))}
+          </div>
+        )}
+
+        {pendingCancellation && (
+          <div
+            className="cancellation-dialog"
+            role="presentation"
+            onMouseDown={() => setPendingCancellation(null)}
+          >
+            <section
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="cancellation-title"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <p className="my-reservations__eyebrow">Annulation</p>
+              <h2 id="cancellation-title">Voulez-vous vraiment annuler cette réservation ?</h2>
+              <p>
+                {pendingCancellation.resourceName} ·{" "}
+                {dateTime.format(new Date(pendingCancellation.startsAt))}
+              </p>
+              <p>Le créneau redeviendra disponible et les licenciés du club seront notifiés.</p>
+              <div>
+                <button type="button" onClick={() => setPendingCancellation(null)}>Retour</button>
+                <button
+                  type="button"
+                  className="my-reservations__danger"
+                  onClick={() => {
+                    const reservation = pendingCancellation;
+                    setPendingCancellation(null);
+                    void cancelReservation(reservation);
+                  }}
+                >
+                  Confirmer
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+      </section>
+    </UserSpaceShell>
   );
 }
