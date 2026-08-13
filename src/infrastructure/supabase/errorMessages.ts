@@ -38,7 +38,7 @@ export function getSupabaseErrorMessage(
     return "Le mot de passe ne respecte pas les critères de sécurité.";
   }
   if (normalized.includes("délai d’annulation en ligne est dépassé")) {
-    return "L’annulation n’est plus possible : le délai de 8 heures avant le créneau est dépassé.";
+    return "L’annulation n’est plus possible : le délai autorisé avant le créneau est dépassé.";
   }
   if (code === "42501") {
     return "Vous n’êtes pas autorisé à effectuer cette action.";
