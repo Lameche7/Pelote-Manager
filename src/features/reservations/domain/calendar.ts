@@ -56,9 +56,6 @@ export type ReservableResource = {
 export function startOfIsoWeek(date: Date): Date {
   const result = new Date(date);
   result.setHours(0, 0, 0, 0);
-  const day = result.getDay();
-  const distanceFromMonday = day === 0 ? -6 : 1 - day;
-  result.setDate(result.getDate() + distanceFromMonday);
   return result;
 }
 
@@ -76,8 +73,8 @@ export function toDateInputValue(date: Date): string {
 }
 
 export function buildWeekDays(anchorDate: Date): Date[] {
-  const monday = startOfIsoWeek(anchorDate);
-  return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
+  const firstDay = startOfIsoWeek(anchorDate);
+  return Array.from({ length: 7 }, (_, index) => addDays(firstDay, index));
 }
 
 export function groupSlotsByLocalDate(
