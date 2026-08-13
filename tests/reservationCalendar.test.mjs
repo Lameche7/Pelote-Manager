@@ -8,28 +8,28 @@ import {
   toDateInputValue,
 } from "../.test-dist/src/features/reservations/domain/calendar.js";
 
-test("calcule le lundi d'une semaine ISO", () => {
+test("démarre la fenêtre au jour demandé", () => {
   assert.equal(
     toDateInputValue(startOfIsoWeek(new Date(2026, 6, 28, 12))),
-    "2026-07-27",
+    "2026-07-28",
   );
   assert.equal(
     toDateInputValue(startOfIsoWeek(new Date(2026, 7, 2, 12))),
-    "2026-07-27",
+    "2026-08-02",
   );
 });
 
-test("construit une semaine traversant deux mois", () => {
+test("construit sept jours glissants à partir de la date d'ancrage", () => {
   const days = buildWeekDays(new Date(2026, 6, 30, 12)).map(toDateInputValue);
 
   assert.deepEqual(days, [
-    "2026-07-27",
-    "2026-07-28",
-    "2026-07-29",
     "2026-07-30",
     "2026-07-31",
     "2026-08-01",
     "2026-08-02",
+    "2026-08-03",
+    "2026-08-04",
+    "2026-08-05",
   ]);
 });
 
