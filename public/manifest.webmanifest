@@ -1,0 +1,19 @@
+{
+  "name": "Pelote Manager",
+  "short_name": "Pelote Manager",
+  "description": "Réservations, tournois et informations du club de pelote.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#0f3d2e",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
