@@ -7,6 +7,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-pelote-push-secret",
 };
 
+const sleep = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
 type WebhookPayload = {
   type?: string;
   table?: string;
@@ -131,22 +134,33 @@ Deno.serve(async (request) => {
       );
     }
 
-    const { data: deliveries, error: deliveriesError } = await admin
-      .from("communication_deliveries")
-      .select("id,profile_id_at_publication")
-      .eq("communication_id", communicationId)
-      .not("profile_id_at_publication", "is", null);
+    let typedDeliveries: DeliveryRow[] = [];
+    let profileIds: string[] = [];
 
-    if (deliveriesError) throw deliveriesError;
+    // A publication met d'abord la communication à l'état published puis crée
+    // ses snapshots destinataires dans la même transaction. Le webhook peut
+    // partir très vite : on tolère donc un bref décalage de visibilité.
+    for (let loadAttempt = 0; loadAttempt < 3; loadAttempt += 1) {
+      const { data: deliveries, error: deliveriesError } = await admin
+        .from("communication_deliveries")
+        .select("id,profile_id_at_publication")
+        .eq("communication_id", communicationId)
+        .not("profile_id_at_publication", "is", null);
 
-    const typedDeliveries = (deliveries ?? []) as DeliveryRow[];
-    const profileIds = [
-      ...new Set(
-        typedDeliveries
-          .map((delivery) => delivery.profile_id_at_publication)
-          .filter((profileId): profileId is string => Boolean(profileId)),
-      ),
-    ];
+      if (deliveriesError) throw deliveriesError;
+
+      typedDeliveries = (deliveries ?? []) as DeliveryRow[];
+      profileIds = [
+        ...new Set(
+          typedDeliveries
+            .map((delivery) => delivery.profile_id_at_publication)
+            .filter((profileId): profileId is string => Boolean(profileId)),
+        ),
+      ];
+
+      if (profileIds.length > 0 || loadAttempt === 2) break;
+      await sleep(loadAttempt === 0 ? 250 : 750);
+    }
 
     if (profileIds.length === 0) {
       return Response.json(
@@ -156,6 +170,10 @@ Deno.serve(async (request) => {
           failed: 0,
           invalid: 0,
           recipientsWithPush: 0,
+          deliveryCount: typedDeliveries.length,
+          profileCount: 0,
+          activeSubscriptionCount: 0,
+          reason: "no_delivery_profile",
         },
         { headers: corsHeaders },
       );
@@ -178,6 +196,10 @@ Deno.serve(async (request) => {
           failed: 0,
           invalid: 0,
           recipientsWithPush: 0,
+          deliveryCount: typedDeliveries.length,
+          profileCount: profileIds.length,
+          activeSubscriptionCount: 0,
+          reason: "no_active_subscription",
         },
         { headers: corsHeaders },
       );
@@ -343,6 +365,9 @@ Deno.serve(async (request) => {
         failed,
         invalid,
         recipientsWithPush: typedSubscriptions.length,
+        deliveryCount: typedDeliveries.length,
+        profileCount: profileIds.length,
+        activeSubscriptionCount: typedSubscriptions.length,
       },
       { headers: corsHeaders },
     );
