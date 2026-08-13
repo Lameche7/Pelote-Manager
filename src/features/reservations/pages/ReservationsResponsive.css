@@ -1,0 +1,51 @@
+@media (max-width: 62rem) {
+  .reservation-calendar {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .reservation-calendar__header,
+  .reservation-calendar__toolbar,
+  .reservation-calendar__legend,
+  .reservation-calendar__grid,
+  .reservation-calendar__skeleton {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 48rem) {
+  .reservation-calendar__toolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .reservation-calendar__toolbar button,
+  .reservation-calendar__toolbar strong {
+    min-width: 0;
+  }
+
+  .reservation-calendar__toolbar button {
+    white-space: normal;
+  }
+
+  .reservation-calendar__grid,
+  .reservation-calendar__skeleton {
+    width: 100%;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(82vw, 22rem);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .reservation-calendar__day,
+  .reservation-calendar__skeleton-column {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .reservation-calendar__legend {
+    width: fit-content;
+  }
+}

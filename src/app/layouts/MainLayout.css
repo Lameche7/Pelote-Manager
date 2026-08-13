@@ -18,3 +18,77 @@
   background: var(--brand-red);
   box-shadow: 0 0 0 2px rgb(255 255 255 / 16%);
 }
+
+@media (max-width: 62rem) {
+  .app-layout,
+  .app-main {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .app-header {
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 1rem;
+  }
+
+  .app-navigation {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-navigation::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-main > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 40rem) {
+  .app-header {
+    position: sticky;
+    padding: 0.55rem 0.75rem 0.65rem;
+  }
+
+  .app-brand {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .app-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.2rem;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .app-navigation__link,
+  .app-navigation > .button {
+    flex: 0 0 auto;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .app-navigation__link {
+    padding-inline: 0.55rem;
+  }
+
+  .app-navigation > .button {
+    margin-inline: 0.15rem;
+  }
+}

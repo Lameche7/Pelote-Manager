@@ -1,3 +1,5 @@
+@import "./ReservationsResponsive.css";
+
 .reservation-slot--locked {
   border: 1px solid #a9bdd1;
   color: #26384b;

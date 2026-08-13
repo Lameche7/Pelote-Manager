@@ -6,6 +6,8 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
+import { finalizeAccountProfile } from "@/features/auth/domain/accountProfileFinalization";
+import { pushNotificationService } from "@/features/notifications/services/pushNotificationService";
 import {
   authService as defaultAuthService,
   type AuthService,
@@ -17,7 +19,6 @@ import {
 import { AuthContext, type AuthContextValue } from "@/shared/hooks/useAuth";
 import type { AuthUser } from "@/shared/types/auth";
 import type { UserProfile } from "@/shared/types/profile";
-import { finalizeAccountProfile } from "@/features/auth/domain/accountProfileFinalization";
 
 type AuthProviderProps = PropsWithChildren<{
   service?: AuthService;
@@ -54,6 +55,9 @@ export function AuthProvider({
         );
         if (currentRevision === synchronizationRevision.current) {
           setProfile(currentProfile);
+          void pushNotificationService.syncExistingSubscription().catch(() => {
+            // La session reste valide même si la synchronisation Push échoue.
+          });
         }
       } catch (error) {
         if (currentRevision === synchronizationRevision.current) {
@@ -114,6 +118,8 @@ export function AuthProvider({
   );
 
   const logout = useCallback(async () => {
+    // Ne pas appeler disableForLogout ici : la déconnexion ferme l'accès au
+    // compte mais l'appareil reste abonné jusqu'à une désactivation explicite.
     await service.logout();
     await synchronize(null);
   }, [service, synchronize]);

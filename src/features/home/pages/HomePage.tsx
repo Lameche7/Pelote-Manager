@@ -43,7 +43,7 @@ export function HomePage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
-  const [eventsError, setEventsError] = useState<string | null>(null);
+  const [eventsAvailable, setEventsAvailable] = useState(true);
   const [banners, setBanners] = useState<MemberHomeBanner[]>([]);
   const [branding, setBranding] = useState(clubBrandingService.fallback);
   const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location].filter(Boolean).join(" · ");
@@ -75,12 +75,16 @@ export function HomePage() {
     let active = true;
     setEvents([]);
     setEventsLoading(true);
-    setEventsError(null);
+    setEventsAvailable(true);
     publicEventService.listUpcomingEvents()
-      .then((upcomingEvents) => { if (active) setEvents(upcomingEvents); })
-      .catch((error: unknown) => {
+      .then((upcomingEvents) => {
         if (!active) return;
-        setEventsError(error instanceof Error ? error.message : "Les prochains évènements sont momentanément indisponibles.");
+        setEvents(upcomingEvents);
+      })
+      .catch(() => {
+        if (!active) return;
+        setEvents([]);
+        setEventsAvailable(false);
       })
       .finally(() => { if (active) setEventsLoading(false); });
     return () => { active = false; };
@@ -95,7 +99,8 @@ export function HomePage() {
     return () => { active = false; };
   }, [isAuthenticated, isAuthLoading]);
 
-  const showEventsSection = eventsLoading || eventsError !== null || events.length > 0;
+  const showEventsSection =
+    eventsAvailable && (eventsLoading || events.length > 0);
 
   return (
     <div className="premium-home" style={heroStyle}>
@@ -149,8 +154,7 @@ export function HomePage() {
               <p>Les rendez-vous publiés par le club, mis à jour directement depuis l’espace administration.</p>
             </header>
             {eventsLoading && <p className="premium-home__events-status" role="status">Chargement des prochains évènements…</p>}
-            {eventsError && <p className="premium-home__events-status premium-home__events-status--error" role="alert">{eventsError}</p>}
-            {!eventsLoading && !eventsError && events.length > 0 && (
+            {!eventsLoading && events.length > 0 && (
               <div className="premium-home__event-grid">
                 {events.map((event) => {
                   const cardStyle: PublicEventCardStyle = { "--event-accent": event.typeColor };
