@@ -118,11 +118,6 @@ export function AuthProvider({
   );
 
   const logout = useCallback(async () => {
-    try {
-      await pushNotificationService.disableForLogout();
-    } catch {
-      // La déconnexion doit rester possible si le canal Push est indisponible.
-    }
     await service.logout();
     await synchronize(null);
   }, [service, synchronize]);
