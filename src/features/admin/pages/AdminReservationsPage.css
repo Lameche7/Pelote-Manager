@@ -1,15 +1,20 @@
 .admin-reservations {
-  width: min(100%, 78rem);
+  width: min(100%, 74rem);
   margin-inline: auto;
-  padding: clamp(1rem, 4vw, 3rem);
+  padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+.admin-reservations header {
+  max-width: 48rem;
 }
 
 .admin-reservations header h1 {
   margin: 0.25rem 0;
-  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-size: clamp(1.8rem, 4vw, 2.65rem);
 }
 
 .admin-reservations header p {
+  margin-bottom: 0;
   color: #4b5563;
 }
 
@@ -24,31 +29,116 @@
 .admin-reservations__panel {
   margin-top: 1.25rem;
   border: 1px solid #e5e7eb;
-  border-radius: 0.9rem;
-  padding: 1rem;
+  border-radius: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
   background: #fff;
+  box-shadow: 0 0.4rem 1.4rem rgb(15 23 42 / 0.04);
+}
+
+.admin-reservations__panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-reservations__panel-heading h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.admin-reservations__panel-heading p {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+}
+
+.admin-reservations__payment-state {
+  flex: 0 0 auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.admin-reservations__payment-state--enabled {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
 }
 
 .admin-reservations__form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 0.9rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-.admin-reservations label {
+.admin-reservations__field {
   display: grid;
-  gap: 0.35rem;
-  font-weight: 650;
+  align-content: start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.admin-reservations__field > span {
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.admin-reservations__field > small {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.admin-reservations__field--wide {
+  grid-column: span 2;
 }
 
 .admin-reservations input,
 .admin-reservations select,
 .admin-reservations button {
-  border: 1px solid #d1d5db;
-  border-radius: 0.55rem;
-  padding: 0.65rem 0.75rem;
+  min-width: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  padding: 0.72rem 0.8rem;
   background: #fff;
+  font: inherit;
+}
+
+.admin-reservations input,
+.admin-reservations select {
+  width: 100%;
+}
+
+.admin-reservations input:focus,
+.admin-reservations select:focus {
+  border-color: #2563eb;
+  outline: 3px solid rgb(37 99 235 / 0.12);
+}
+
+.admin-reservations__number-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.admin-reservations__number-field small {
+  min-width: 3.5rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.15;
+}
+
+.admin-reservations__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
 }
 
 .admin-reservations button {
@@ -60,33 +150,15 @@
   opacity: 0.65;
 }
 
-.admin-reservations__resource {
-  max-width: 20rem;
-}
-
-.admin-reservations__inline-form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 0.65rem;
-}
-
-.admin-reservations__list {
-  display: grid;
-  gap: 0.5rem;
-  padding: 0;
-  list-style: none;
-}
-
-.admin-reservations__list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  padding-block: 0.6rem;
+.admin-reservations__save {
+  border-color: #1d4ed8 !important;
+  background: #1d4ed8 !important;
+  color: #fff;
+  font-weight: 750;
 }
 
 .admin-reservations__alert {
+  margin-top: 1rem;
   border: 1px solid #bbf7d0;
   border-radius: 0.7rem;
   padding: 0.8rem;
@@ -100,9 +172,35 @@
   color: #991b1b;
 }
 
-@media (max-width: 40rem) {
-  .admin-reservations__list li {
+@media (max-width: 60rem) {
+  .admin-reservations__form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 42rem) {
+  .admin-reservations__panel-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-reservations__payment-state {
+    align-self: flex-start;
+  }
+
+  .admin-reservations__form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-reservations__field--wide {
+    grid-column: auto;
+  }
+
+  .admin-reservations__actions {
+    justify-content: stretch;
+  }
+
+  .admin-reservations__save {
+    width: 100%;
   }
 }
