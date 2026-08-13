@@ -27,6 +27,7 @@ export type MyReservation = {
   endsAt: string;
   reservationStatus: ReservationStatus;
   paymentStatus: PaymentStatus;
+  paymentRequired: boolean;
   amountCents: number;
   currency: "EUR";
   paymentId: string | null;
@@ -44,6 +45,7 @@ type MyReservationRow = {
   ends_at: string;
   reservation_status: ReservationStatus;
   payment_status: PaymentStatus;
+  payment_required: boolean;
   amount_cents: number;
   currency: "EUR";
   payment_id: string | null;
@@ -61,7 +63,11 @@ export type CancellationResult = {
 export const myReservationsService = {
   async list(): Promise<MyReservation[]> {
     const { data, error } = await supabase.rpc("list_my_reservations");
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger vos réservations."));
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger vos réservations."),
+      );
+    }
 
     return ((data ?? []) as MyReservationRow[]).map((row) => ({
       id: row.id,
@@ -70,6 +76,7 @@ export const myReservationsService = {
       endsAt: row.ends_at,
       reservationStatus: row.reservation_status,
       paymentStatus: row.payment_status,
+      paymentRequired: row.payment_required,
       amountCents: row.amount_cents,
       currency: row.currency,
       paymentId: row.payment_id,
@@ -85,14 +92,18 @@ export const myReservationsService = {
     const { data, error } = await supabase.rpc("cancel_my_reservation", {
       target_reservation_id: reservationId,
     });
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Cette réservation n’a pas pu être annulée."));
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(error, "Cette réservation n’a pas pu être annulée."),
+      );
+    }
 
     const row = (data as Array<{ refund_required: boolean }> | null)?.[0];
     return { refundRequired: Boolean(row?.refund_required) };
   },
 
   async resumePayment(reservation: MyReservation): Promise<string> {
-    if (!reservation.paymentId) {
+    if (!reservation.paymentRequired || !reservation.paymentId) {
       throw new Error("Aucun paiement en attente n’est associé à cette réservation.");
     }
 
@@ -101,7 +112,11 @@ export const myReservationsService = {
     const { data, error } = await supabase.functions.invoke("create-helloasso-checkout", {
       body: { paymentId: reservation.paymentId },
     });
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Le paiement ne peut pas être repris pour le moment."));
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(error, "Le paiement ne peut pas être repris pour le moment."),
+      );
+    }
 
     const checkout = data as { redirectUrl?: string; error?: string } | null;
     if (!checkout?.redirectUrl) {
