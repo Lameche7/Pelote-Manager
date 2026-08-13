@@ -5,7 +5,7 @@ import {
   memberProfileService,
   type MemberProfileDetails,
 } from "@/features/user-space/profile/services/memberProfileService";
-import { CLUB_CONFIG, USER_ROLES } from "@/shared/config";
+import { CLUB_CONFIG } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MyProfilePage.css";
 
@@ -30,13 +30,18 @@ export function MyProfilePage() {
   }, [profile?.memberId]);
 
   if (!profile) return null;
-  const isMember =
-    Boolean(profile.memberId) || profile.role === USER_ROLES.member;
+
   const firstName = member?.firstName || profile.firstName;
   const lastName = member?.lastName || profile.lastName;
-  const displayName =
-    [firstName, lastName].filter(Boolean).join(" ") || profile.displayName;
-  const accountType = isMember ? "Licencié" : "Visiteur";
+  const displayName = [firstName, lastName].filter(Boolean).join(" ") || profile.displayName;
+  const hasLinkedLicence = Boolean(profile.memberId && member);
+  const isActiveLicensee = Boolean(member?.isActive);
+  const accountType = isActiveLicensee
+    ? "Licencié actif"
+    : hasLinkedLicence
+      ? "Licence inactive"
+      : "Utilisateur non licencié";
+
   return (
     <UserSpaceShell>
       <section className="my-profile" aria-labelledby="my-profile-title">
@@ -47,53 +52,32 @@ export function MyProfilePage() {
         </header>
         <div className="my-profile__panel">
           <div className="my-profile__identity">
-            <span>
-              <UserRound aria-hidden="true" />
-            </span>
+            <span><UserRound aria-hidden="true" /></span>
             <div>
               <strong>{displayName || profile.email}</strong>
               <small>{accountType}</small>
             </div>
           </div>
           <dl className="my-profile__details">
+            <div><dt>Nom</dt><dd>{lastName || "—"}</dd></div>
+            <div><dt>Prénom</dt><dd>{firstName || "—"}</dd></div>
             <div>
-              <dt>Nom</dt>
-              <dd>{lastName || "—"}</dd>
-            </div>
-            <div>
-              <dt>Prénom</dt>
-              <dd>{firstName || "—"}</dd>
-            </div>
-            <div>
-              <dt>
-                <Mail aria-hidden="true" /> Adresse email
-              </dt>
+              <dt><Mail aria-hidden="true" /> Adresse email</dt>
               <dd>{profile.email}</dd>
             </div>
             <div>
-              <dt>
-                <BadgeCheck aria-hidden="true" /> Type de compte
-              </dt>
-              <dd>
-                <span className="my-profile__account-type">{accountType}</span>
-              </dd>
+              <dt><BadgeCheck aria-hidden="true" /> Statut réservation</dt>
+              <dd><span className="my-profile__account-type">{accountType}</span></dd>
             </div>
-            {isMember && member && (
+            {hasLinkedLicence && member && (
               <>
+                <div><dt>Numéro de licence</dt><dd>{member.licenceNumber}</dd></div>
                 <div>
-                  <dt>Numéro de licence</dt>
-                  <dd>{member.licenceNumber}</dd>
-                </div>
-                <div>
-                  <dt>
-                    <Building2 aria-hidden="true" /> Club
-                  </dt>
+                  <dt><Building2 aria-hidden="true" /> Club</dt>
                   <dd>{CLUB_CONFIG.name}</dd>
                 </div>
-                <div>
-                  <dt>Saison</dt>
-                  <dd>{member.season}</dd>
-                </div>
+                <div><dt>Saison</dt><dd>{member.season}</dd></div>
+                <div><dt>Licence active</dt><dd>{member.isActive ? "Oui" : "Non"}</dd></div>
               </>
             )}
           </dl>
