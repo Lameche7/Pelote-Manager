@@ -32,6 +32,11 @@ export type StartedPayment = {
   mode: "test" | "helloasso";
 };
 
+export type ReservationPaymentConfig = {
+  enabled: boolean;
+  mode: "test" | "helloasso";
+};
+
 async function releasePendingReservation(
   payment: PaymentReservationRow,
   reason: string,
@@ -41,7 +46,6 @@ async function releasePendingReservation(
     target_reservation_id: payment.reservation_id,
     cancellation_reason: reason,
   });
-
   if (error) return false;
   return data === true;
 }
@@ -64,17 +68,36 @@ export const reservationBookingService = {
     };
   },
 
-  async getPaymentMode(): Promise<"test" | "helloasso"> {
-    const { data, error } = await supabase.rpc("get_payment_mode");
+  async getPaymentConfig(): Promise<ReservationPaymentConfig> {
+    const [{ data: enabled, error: enabledError }, { data: mode, error: modeError }] =
+      await Promise.all([
+        supabase.rpc("get_online_payment_enabled"),
+        supabase.rpc("get_payment_mode"),
+      ]);
+    if (enabledError) throw enabledError;
+    if (modeError) throw modeError;
+    return {
+      enabled: enabled === true,
+      mode: mode === "helloasso" ? "helloasso" : "test",
+    };
+  },
+
+  async createDirect(resourceId: string, startsAt: string): Promise<void> {
+    const { error } = await supabase.rpc("create_reservation", {
+      target_resource_id: resourceId,
+      target_starts_at: startsAt,
+      guest_name: null,
+      guest_email: null,
+      guest_phone: null,
+    });
     if (error) throw error;
-    return data === "helloasso" ? "helloasso" : "test";
   },
 
   async startPayment(
     resourceId: string,
     startsAt: string,
+    mode: "test" | "helloasso",
   ): Promise<StartedPayment> {
-    const mode = await this.getPaymentMode();
     const { data, error } = await supabase.rpc("reserve_for_payment", {
       target_resource_id: resourceId,
       target_starts_at: startsAt,
@@ -141,15 +164,19 @@ export const reservationBookingService = {
     if (error) throw error;
   },
 
-  async create(
-    resourceId: string,
-    startsAt: string,
-  ): Promise<StartedPayment> {
-    const payment = await this.startPayment(resourceId, startsAt);
+  async create(resourceId: string, startsAt: string): Promise<void> {
+    const config = await this.getPaymentConfig();
+
+    if (!config.enabled) {
+      await this.createDirect(resourceId, startsAt);
+      return;
+    }
+
+    const payment = await this.startPayment(resourceId, startsAt, config.mode);
 
     if (payment.mode === "helloasso" && payment.redirectUrl) {
       window.location.assign(payment.redirectUrl);
-      return new Promise<StartedPayment>(() => undefined);
+      return new Promise<void>(() => undefined);
     }
 
     const accepted = window.confirm(
@@ -158,7 +185,7 @@ export const reservationBookingService = {
 
     if (accepted) {
       await this.simulate(payment.paymentId, "paid");
-      return payment;
+      return;
     }
 
     const refused = window.confirm(
