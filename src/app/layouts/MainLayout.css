@@ -20,21 +20,27 @@
 }
 
 @media (max-width: 62rem) {
-  .app-layout {
+  .app-layout,
+  .app-main {
+    min-width: 0;
     width: 100%;
-    overflow-x: hidden;
+    max-width: 100%;
   }
 
   .app-header {
+    min-width: 0;
+    max-width: 100%;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.55rem 1rem;
   }
 
   .app-navigation {
+    min-width: 0;
     width: 100%;
-    flex: 1 0 100%;
-    justify-content: safe center;
+    max-width: 100%;
+    flex: 1 1 100%;
+    justify-content: flex-start;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
@@ -45,9 +51,9 @@
     display: none;
   }
 
-  .app-main {
-    width: 100%;
-    overflow-x: clip;
+  .app-main > * {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 
@@ -63,13 +69,26 @@
   }
 
   .app-navigation {
-    padding-bottom: 0.1rem;
-    scroll-snap-type: x proximity;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.2rem;
+    overflow: visible;
+    padding-bottom: 0;
   }
 
   .app-navigation__link,
   .app-navigation > .button {
     flex: 0 0 auto;
-    scroll-snap-align: center;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .app-navigation__link {
+    padding-inline: 0.55rem;
+  }
+
+  .app-navigation > .button {
+    margin-inline: 0.15rem;
   }
 }
