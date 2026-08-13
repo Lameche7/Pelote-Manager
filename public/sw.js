@@ -44,20 +44,24 @@ self.addEventListener("notificationclick", (event) => {
   ).href;
 
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      const sameOriginClient = clients.find((client) => {
-        try {
-          return new URL(client.url).origin === self.location.origin;
-        } catch {
-          return false;
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        const sameOriginClient = clients.find((client) => {
+          try {
+            return new URL(client.url).origin === self.location.origin;
+          } catch {
+            return false;
+          }
+        });
+
+        if (sameOriginClient) {
+          return sameOriginClient
+            .navigate(targetUrl)
+            .then(() => sameOriginClient.focus());
         }
-      });
 
-      if (sameOriginClient) {
-        return sameOriginClient.navigate(targetUrl).then(() => sameOriginClient.focus());
-      }
-
-      return self.clients.openWindow(targetUrl);
-    }),
+        return self.clients.openWindow(targetUrl);
+      }),
   );
 });
