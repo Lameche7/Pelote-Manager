@@ -29,7 +29,10 @@ test("les abonnements Push sont stockés par profil et par appareil", async () =
   const migration = await read(migrationPath);
 
   assert.match(migration, /create table public\.push_subscriptions/i);
-  assert.match(migration, /profile_id uuid not null references public\.profiles/i);
+  assert.match(
+    migration,
+    /profile_id uuid not null references public\.profiles/i,
+  );
   assert.match(migration, /endpoint text not null unique/i);
   assert.match(migration, /p256dh text not null/i);
   assert.match(migration, /auth text not null/i);
@@ -41,10 +44,7 @@ test("les tentatives Push sont idempotentes par livraison et appareil", async ()
   const migration = await read(migrationPath);
 
   assert.match(migration, /create table public\.push_delivery_attempts/i);
-  assert.match(
-    migration,
-    /unique \(delivery_id, subscription_id\)/i,
-  );
+  assert.match(migration, /unique \(delivery_id, subscription_id\)/i);
   assert.match(migration, /'pending'/);
   assert.match(migration, /'sent'/);
   assert.match(migration, /'failed'/);
@@ -67,7 +67,9 @@ test("le navigateur enregistre et désactive son abonnement via les RPC", async 
 test("Mon espace propose l activation Push sans supprimer l historique interne", async () => {
   const [page, settings, notificationService] = await Promise.all([
     read("../src/features/notifications/pages/NotificationsPage.tsx"),
-    read("../src/features/notifications/components/PushNotificationSettings.tsx"),
+    read(
+      "../src/features/notifications/components/PushNotificationSettings.tsx",
+    ),
     read("../src/features/notifications/services/notificationService.ts"),
   ]);
 
