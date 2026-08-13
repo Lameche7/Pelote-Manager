@@ -69,7 +69,10 @@ test("une annulation notifie les licenciés actifs du club", async () => {
 test("Mes réservations distingue les réservations sans paiement", async () => {
   const migration = await read(projectionMigration);
 
-  assert.match(migration, /drop function if exists public\.list_my_reservations\(\)/i);
+  assert.match(
+    migration,
+    /drop function if exists public\.list_my_reservations\(\)/i,
+  );
   assert.match(migration, /payment_required boolean/i);
   assert.match(migration, /reservation\.payment_required/i);
   assert.match(
@@ -103,9 +106,7 @@ test("l interface réserve directement et garde la réactivation admin", async (
 test("Mon profil distingue licence active inactive et non licencié", async () => {
   const [profilePage, profileService] = await Promise.all([
     read("../src/features/user-space/profile/pages/MyProfilePage.tsx"),
-    read(
-      "../src/features/user-space/profile/services/memberProfileService.ts",
-    ),
+    read("../src/features/user-space/profile/services/memberProfileService.ts"),
   ]);
 
   assert.match(profileService, /is_active/);
