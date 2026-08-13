@@ -96,7 +96,9 @@ export const myReservationsService = {
       const details = [error.code, error.message, error.details, error.hint]
         .filter(Boolean)
         .join(" · ");
-      throw new Error(details || "Cette réservation n’a pas pu être annulée.");
+      throw new Error(
+        `Erreur d’annulation Supabase : ${details || "erreur inconnue"}`,
+      );
     }
 
     const row = (data as Array<{ refund_required: boolean }> | null)?.[0];
