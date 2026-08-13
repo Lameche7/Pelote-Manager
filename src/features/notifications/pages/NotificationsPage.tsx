@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, BellRing, CheckCheck } from "lucide-react";
-import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import { PushNotificationSettings } from "@/features/notifications/components/PushNotificationSettings";
 import {
   notificationService,
   type MemberNotification,
 } from "@/features/notifications/services/notificationService";
+import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import "./NotificationsPage.css";
 
 const priorityLabels = {
@@ -107,6 +108,8 @@ export function NotificationsPage() {
             </button>
           )}
         </header>
+
+        <PushNotificationSettings />
 
         {error && (
           <p className="notifications-page__error" role="alert">
