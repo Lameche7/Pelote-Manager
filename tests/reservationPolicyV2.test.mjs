@@ -112,10 +112,7 @@ test("l interface réserve directement et garde la réactivation admin", async (
   assert.match(adminPage, /Paiement en ligne/);
   assert.match(adminPage, /Désactivé — réservation confirmée directement/);
   assert.match(adminPage, /Délai d’annulation/);
-  assert.doesNotMatch(
-    adminPage,
-    /Horaires d’ouverture|Fermetures ponctuelles/,
-  );
+  assert.doesNotMatch(adminPage, /Horaires d’ouverture|Fermetures ponctuelles/);
   assert.match(adminService, /onlinePaymentEnabled/);
   assert.match(adminService, /cancellationNoticeHours/);
 });
@@ -123,9 +120,7 @@ test("l interface réserve directement et garde la réactivation admin", async (
 test("Mon profil distingue licence active inactive et non licencié", async () => {
   const [profilePage, profileService] = await Promise.all([
     read("../src/features/user-space/profile/pages/MyProfilePage.tsx"),
-    read(
-      "../src/features/user-space/profile/services/memberProfileService.ts",
-    ),
+    read("../src/features/user-space/profile/services/memberProfileService.ts"),
   ]);
 
   assert.match(profileService, /is_active/);
