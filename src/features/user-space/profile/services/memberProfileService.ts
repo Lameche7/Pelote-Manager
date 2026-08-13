@@ -15,11 +15,10 @@ export type MemberProfileDetails = {
   firstName: string;
   lastName: string;
   isActive: boolean;
-  isLicensed: boolean;
 };
 
 export const memberProfileService = {
-  async get(): Promise<MemberProfileDetails | null> {
+  async get(_memberId?: string): Promise<MemberProfileDetails | null> {
     const { data, error } = await supabase.rpc("get_my_member_profile");
     if (error) throw error;
 
@@ -30,8 +29,7 @@ export const memberProfileService = {
           season: row.season ?? "—",
           firstName: row.first_name,
           lastName: row.last_name,
-          isActive: row.is_active,
-          isLicensed: row.is_licensed,
+          isActive: row.is_active && row.is_licensed,
         }
       : null;
   },
