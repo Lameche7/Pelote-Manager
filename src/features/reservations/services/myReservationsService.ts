@@ -93,11 +93,8 @@ export const myReservationsService = {
       target_reservation_id: reservationId,
     });
     if (error) {
-      const details = [error.code, error.message, error.details, error.hint]
-        .filter(Boolean)
-        .join(" · ");
       throw new Error(
-        `Erreur d’annulation Supabase : ${details || "erreur inconnue"}`,
+        getSupabaseErrorMessage(error, "Cette réservation n’a pas pu être annulée."),
       );
     }
 
