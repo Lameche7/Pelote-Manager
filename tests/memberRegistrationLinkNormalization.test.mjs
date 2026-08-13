@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import test from "node:test";
 import { readFile } from "node:fs/promises";
+import test from "node:test";
 
 const migration = await readFile(
   new URL(
@@ -13,15 +13,15 @@ const migration = await readFile(
 test("la liaison finale utilise les mêmes normalisations que la vérification publique", () => {
   assert.match(
     migration,
-    /members\.licence_number_normalized\s*=\s*public\.normalize_member_licence\(licence_number\)/i,
+    /members\.licence_number_normalized\s*=\s*public\.normalize_member_licence\(link_profile_to_member\.licence_number\)/i,
   );
   assert.match(
     migration,
-    /members\.last_name_normalized\s*=\s*public\.normalize_member_identity\(last_name\)/i,
+    /members\.last_name_normalized\s*=\s*public\.normalize_member_identity\(link_profile_to_member\.last_name\)/i,
   );
   assert.match(
     migration,
-    /members\.first_name_normalized\s*=\s*public\.normalize_member_identity\(first_name\)/i,
+    /members\.first_name_normalized\s*=\s*public\.normalize_member_identity\(link_profile_to_member\.first_name\)/i,
   );
   assert.match(
     migration,
