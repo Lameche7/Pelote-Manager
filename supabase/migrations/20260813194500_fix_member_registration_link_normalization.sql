@@ -1,11 +1,38 @@
--- Keep the final member-account link aligned with the public licence verification.
--- The verification RPC already accepts normalized identity values; the link RPC must
--- use the exact same rules so case, accents, spaces, apostrophes and hyphens cannot
--- make step 2 fail after step 1 succeeded.
+-- Keep public member verification and final account linking aligned and unambiguous.
 --
--- PL/pgSQL parameters deliberately share names with table columns in this legacy RPC
--- signature. Always qualify them through the function block label to avoid SQLSTATE
--- 42702 (ambiguous_column) at runtime.
+-- These legacy RPC signatures deliberately use parameter names that are also column
+-- names. Always qualify function parameters through the function name to prevent
+-- PostgreSQL from resolving an unqualified identifier as a table column (or raising
+-- SQLSTATE 42702 in PL/pgSQL).
+
+create or replace function public.find_member_by_licence(
+  licence_number text,
+  last_name text,
+  first_name text,
+  birth_date date
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.club_members as member
+    where member.licence_number_normalized =
+          public.normalize_member_licence(find_member_by_licence.licence_number)
+      and member.last_name_normalized =
+          public.normalize_member_identity(find_member_by_licence.last_name)
+      and member.first_name_normalized =
+          public.normalize_member_identity(find_member_by_licence.first_name)
+      and member.birth_date = find_member_by_licence.birth_date
+  );
+$$;
+
+revoke all on function public.find_member_by_licence(text, text, text, date) from public;
+grant execute on function public.find_member_by_licence(text, text, text, date) to anon, authenticated;
+
 create or replace function public.link_profile_to_member(
   licence_number text,
   last_name text,
@@ -69,7 +96,6 @@ begin
     raise exception 'Current profile not found' using errcode = 'P0002';
   end if;
 
-  -- The profile trigger only allows member_id changes through this controlled RPC.
   perform set_config('app.allow_profile_member_link', 'on', true);
 
   update public.profiles
