@@ -12,6 +12,8 @@ const projectionMigration =
   "../supabase/migrations/20260813091700_update_my_reservations_projection.sql";
 const resilientCancellationMigration =
   "../supabase/migrations/20260813091900_make_release_notifications_non_blocking.sql";
+const qualifiedCancellationMigration =
+  "../supabase/migrations/20260813092100_fix_customer_cancellation_ambiguous_columns.sql";
 
 test("le paiement en ligne est optionnel et désactivé par défaut", async () => {
   const migration = await read(optionalPaymentMigration);
@@ -77,6 +79,23 @@ test("un échec de notification ne bloque pas l annulation", async () => {
   );
   assert.match(migration, /exception when others/i);
   assert.match(migration, /return cancelled_reservation/i);
+});
+
+test("l annulation utilisateur qualifie les colonnes homonymes des OUT parameters", async () => {
+  const migration = await read(qualifiedCancellationMigration);
+
+  assert.match(
+    migration,
+    /where occupation\.reservation_id = target_reservation_id/i,
+  );
+  assert.match(
+    migration,
+    /where payment\.reservation_id = target_reservation_id/i,
+  );
+  assert.doesNotMatch(
+    migration,
+    /where reservation_id = target_reservation_id/i,
+  );
 });
 
 test("Mes réservations distingue les réservations sans paiement", async () => {
