@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import test from "node:test";
 import { readFile } from "node:fs/promises";
+import test from "node:test";
 
 const migration = await readFile(
   new URL(
@@ -49,10 +49,7 @@ test("la liaison finale qualifie tous ses paramètres d'identité", () => {
 });
 
 test("aucune normalisation RPC ne réutilise un paramètre non qualifié", () => {
-  assert.doesNotMatch(
-    migration,
-    /normalize_member_licence\(licence_number\)/i,
-  );
+  assert.doesNotMatch(migration, /normalize_member_licence\(licence_number\)/i);
   assert.doesNotMatch(
     migration,
     /normalize_member_identity\((last_name|first_name)\)/i,
