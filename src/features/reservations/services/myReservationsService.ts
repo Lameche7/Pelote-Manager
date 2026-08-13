@@ -1,4 +1,5 @@
 import { supabase } from "@/infrastructure/supabase/client";
+import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
 export type ReservationStatus =
   | "draft"
@@ -63,7 +64,9 @@ export const myReservationsService = {
   async list(): Promise<MyReservation[]> {
     const { data, error } = await supabase.rpc("list_my_reservations");
     if (error) {
-      throw new Error(error.message || "Impossible de charger vos réservations.");
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger vos réservations."),
+      );
     }
 
     return ((data ?? []) as MyReservationRow[]).map((row) => ({
@@ -111,7 +114,9 @@ export const myReservationsService = {
       body: { paymentId: reservation.paymentId },
     });
     if (error) {
-      throw new Error(error.message || "Le paiement ne peut pas être repris pour le moment.");
+      throw new Error(
+        getSupabaseErrorMessage(error, "Le paiement ne peut pas être repris pour le moment."),
+      );
     }
 
     const checkout = data as { redirectUrl?: string; error?: string } | null;
