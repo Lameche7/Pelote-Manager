@@ -9,10 +9,22 @@ const migrationPath = new URL(
 const migration = await readFile(migrationPath, "utf8");
 
 test("la vérification publique conserve la comparaison normalisée", () => {
-  assert.match(migration, /licence_number_normalized = public\.normalize_member_licence\(licence_number\)/);
-  assert.match(migration, /last_name_normalized = public\.normalize_member_identity\(last_name\)/);
-  assert.match(migration, /first_name_normalized = public\.normalize_member_identity\(first_name\)/);
-  assert.match(migration, /member\.birth_date = find_member_by_licence\.birth_date/);
+  assert.match(
+    migration,
+    /licence_number_normalized = public\.normalize_member_licence\(licence_number\)/,
+  );
+  assert.match(
+    migration,
+    /last_name_normalized = public\.normalize_member_identity\(last_name\)/,
+  );
+  assert.match(
+    migration,
+    /first_name_normalized = public\.normalize_member_identity\(first_name\)/,
+  );
+  assert.match(
+    migration,
+    /member\.birth_date = find_member_by_licence\.birth_date/,
+  );
 });
 
 test("un visiteur peut vérifier son identité avant de créer son compte", () => {
