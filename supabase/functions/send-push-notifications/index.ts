@@ -40,7 +40,10 @@ type AttemptRow = {
 
 const toErrorDetails = (error: unknown) => {
   if (!error || typeof error !== "object") {
-    return { message: "Erreur Web Push inconnue", statusCode: null as number | null };
+    return {
+      message: "Erreur Web Push inconnue",
+      statusCode: null as number | null,
+    };
   }
 
   const candidate = error as { message?: string; statusCode?: number };
@@ -56,7 +59,10 @@ Deno.serve(async (request) => {
   }
 
   if (request.method !== "POST") {
-    return Response.json({ error: "Méthode non autorisée" }, { status: 405, headers: corsHeaders });
+    return Response.json(
+      { error: "Méthode non autorisée" },
+      { status: 405, headers: corsHeaders },
+    );
   }
 
   try {
@@ -79,11 +85,15 @@ Deno.serve(async (request) => {
     }
 
     if (request.headers.get("x-pelote-push-secret") !== webhookSecret) {
-      return Response.json({ error: "Accès refusé" }, { status: 401, headers: corsHeaders });
+      return Response.json(
+        { error: "Accès refusé" },
+        { status: 401, headers: corsHeaders },
+      );
     }
 
     const payload = (await request.json()) as WebhookPayload;
-    const communicationId = payload.communicationId ?? payload.record?.id ?? payload.old_record?.id;
+    const communicationId =
+      payload.communicationId ?? payload.record?.id ?? payload.old_record?.id;
 
     if (!communicationId) {
       throw new Error("Identifiant de communication manquant.");
@@ -102,12 +112,19 @@ Deno.serve(async (request) => {
     if (communicationError) throw communicationError;
     if (!communication || communication.status !== "published") {
       return Response.json(
-        { communicationId, skipped: true, reason: "communication_not_published" },
+        {
+          communicationId,
+          skipped: true,
+          reason: "communication_not_published",
+        },
         { headers: corsHeaders },
       );
     }
 
-    if (communication.expires_at && new Date(communication.expires_at).getTime() <= Date.now()) {
+    if (
+      communication.expires_at &&
+      new Date(communication.expires_at).getTime() <= Date.now()
+    ) {
       return Response.json(
         { communicationId, skipped: true, reason: "communication_expired" },
         { headers: corsHeaders },
@@ -133,7 +150,13 @@ Deno.serve(async (request) => {
 
     if (profileIds.length === 0) {
       return Response.json(
-        { communicationId, sent: 0, failed: 0, invalid: 0, recipientsWithPush: 0 },
+        {
+          communicationId,
+          sent: 0,
+          failed: 0,
+          invalid: 0,
+          recipientsWithPush: 0,
+        },
         { headers: corsHeaders },
       );
     }
@@ -149,7 +172,13 @@ Deno.serve(async (request) => {
     const typedSubscriptions = (subscriptions ?? []) as PushSubscriptionRow[];
     if (typedSubscriptions.length === 0) {
       return Response.json(
-        { communicationId, sent: 0, failed: 0, invalid: 0, recipientsWithPush: 0 },
+        {
+          communicationId,
+          sent: 0,
+          failed: 0,
+          invalid: 0,
+          recipientsWithPush: 0,
+        },
         { headers: corsHeaders },
       );
     }
@@ -163,7 +192,10 @@ Deno.serve(async (request) => {
 
     const attemptsByPair = new Map<string, AttemptRow>();
     for (const attempt of (existingAttempts ?? []) as AttemptRow[]) {
-      attemptsByPair.set(`${attempt.delivery_id}:${attempt.subscription_id}`, attempt);
+      attemptsByPair.set(
+        `${attempt.delivery_id}:${attempt.subscription_id}`,
+        attempt,
+      );
     }
 
     const deliveryByProfile = new Map<string, DeliveryRow>();
@@ -180,7 +212,10 @@ Deno.serve(async (request) => {
           0,
           Math.min(
             86_400,
-            Math.floor((new Date(communication.expires_at).getTime() - Date.now()) / 1000),
+            Math.floor(
+              (new Date(communication.expires_at).getTime() - Date.now()) /
+                1000,
+            ),
           ),
         )
       : 86_400;
@@ -205,7 +240,10 @@ Deno.serve(async (request) => {
 
       const pairKey = `${delivery.id}:${subscription.id}`;
       const existingAttempt = attemptsByPair.get(pairKey);
-      if (existingAttempt?.status === "sent" || existingAttempt?.status === "invalid") {
+      if (
+        existingAttempt?.status === "sent" ||
+        existingAttempt?.status === "invalid"
+      ) {
         continue;
       }
 
@@ -268,7 +306,8 @@ Deno.serve(async (request) => {
         ]);
       } catch (sendError) {
         const details = toErrorDetails(sendError);
-        const isInvalid = details.statusCode === 404 || details.statusCode === 410;
+        const isInvalid =
+          details.statusCode === 404 || details.statusCode === 410;
         if (isInvalid) invalid += 1;
         else failed += 1;
 
@@ -308,7 +347,11 @@ Deno.serve(async (request) => {
       { headers: corsHeaders },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erreur inattendue.";
-    return Response.json({ error: message }, { status: 400, headers: corsHeaders });
+    const message =
+      error instanceof Error ? error.message : "Erreur inattendue.";
+    return Response.json(
+      { error: message },
+      { status: 400, headers: corsHeaders },
+    );
   }
 });
