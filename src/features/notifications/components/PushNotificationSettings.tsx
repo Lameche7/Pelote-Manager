@@ -93,18 +93,25 @@ export function PushNotificationSettings() {
 
         {iosNeedsInstall ? (
           <p>
-            Sur iPhone ou iPad, utilisez <strong>Partager → Sur l’écran d’accueil</strong>,
-            puis ouvrez Pelote Manager depuis l’icône installée. Vous pourrez alors
+            Sur iPhone ou iPad, utilisez{" "}
+            <strong>Partager → Sur l’écran d’accueil</strong>, puis ouvrez
+            Pelote Manager depuis l’icône installée. Vous pourrez alors
             autoriser les notifications.
           </p>
         ) : !state.supported ? (
-          <p>Ce navigateur ne prend pas en charge les notifications Web Push.</p>
+          <p>
+            Ce navigateur ne prend pas en charge les notifications Web Push.
+          </p>
         ) : !state.configured ? (
-          <p>Le canal push est présent mais sa configuration serveur n’est pas encore terminée.</p>
+          <p>
+            Le canal push est présent mais sa configuration serveur n’est pas
+            encore terminée.
+          </p>
         ) : state.subscribed ? (
           <p>
-            Cet appareil recevra les créneaux libérés, informations du club et futures
-            alertes Pelote Manager même lorsque l’application n’est pas ouverte.
+            Cet appareil recevra les créneaux libérés, informations du club et
+            futures alertes Pelote Manager même lorsque l’application n’est pas
+            ouverte.
           </p>
         ) : permissionDenied ? (
           <p>
@@ -120,8 +127,9 @@ export function PushNotificationSettings() {
 
         {!state.isStandalone && !state.isIos && (
           <p className="push-settings__install-hint">
-            <Download aria-hidden="true" /> Vous pouvez aussi installer Pelote Manager
-            depuis le menu de votre navigateur pour l’utiliser comme une application.
+            <Download aria-hidden="true" /> Vous pouvez aussi installer Pelote
+            Manager depuis le menu de votre navigateur pour l’utiliser comme une
+            application.
           </p>
         )}
 
@@ -139,7 +147,11 @@ export function PushNotificationSettings() {
 
       <div className="push-settings__action">
         {state.subscribed ? (
-          <button type="button" disabled={saving} onClick={() => void disable()}>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void disable()}
+          >
             <BellOff aria-hidden="true" />
             {saving ? "Désactivation…" : "Désactiver sur cet appareil"}
           </button>
