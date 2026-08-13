@@ -2,6 +2,10 @@
 -- The verification RPC already accepts normalized identity values; the link RPC must
 -- use the exact same rules so case, accents, spaces, apostrophes and hyphens cannot
 -- make step 2 fail after step 1 succeeded.
+--
+-- PL/pgSQL parameters deliberately share names with table columns in this legacy RPC
+-- signature. Always qualify them through the function block label to avoid SQLSTATE
+-- 42702 (ambiguous_column) at runtime.
 create or replace function public.link_profile_to_member(
   licence_number text,
   last_name text,
@@ -22,10 +26,10 @@ begin
     raise exception 'Authentication required' using errcode = '42501';
   end if;
 
-  if nullif(btrim(licence_number), '') is null
-    or nullif(btrim(last_name), '') is null
-    or nullif(btrim(first_name), '') is null
-    or birth_date is null
+  if nullif(btrim(link_profile_to_member.licence_number), '') is null
+    or nullif(btrim(link_profile_to_member.last_name), '') is null
+    or nullif(btrim(link_profile_to_member.first_name), '') is null
+    or link_profile_to_member.birth_date is null
   then
     raise exception 'Complete member identity is required' using errcode = '22023';
   end if;
@@ -33,9 +37,12 @@ begin
   select members.id
   into target_member_id
   from public.club_members as members
-  where members.licence_number_normalized = public.normalize_member_licence(licence_number)
-    and members.last_name_normalized = public.normalize_member_identity(last_name)
-    and members.first_name_normalized = public.normalize_member_identity(first_name)
+  where members.licence_number_normalized =
+        public.normalize_member_licence(link_profile_to_member.licence_number)
+    and members.last_name_normalized =
+        public.normalize_member_identity(link_profile_to_member.last_name)
+    and members.first_name_normalized =
+        public.normalize_member_identity(link_profile_to_member.first_name)
     and members.birth_date = link_profile_to_member.birth_date
   for update;
 
