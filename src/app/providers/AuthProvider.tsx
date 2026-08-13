@@ -118,6 +118,8 @@ export function AuthProvider({
   );
 
   const logout = useCallback(async () => {
+    // Ne pas appeler disableForLogout ici : la déconnexion ferme l'accès au
+    // compte mais l'appareil reste abonné jusqu'à une désactivation explicite.
     await service.logout();
     await synchronize(null);
   }, [service, synchronize]);
