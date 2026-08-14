@@ -97,12 +97,17 @@ jobs:
             src/features/user-space/tournaments/services/myTournamentsService.ts \
             tests/tournamentResults.test.mjs
 
-      - name: Verify
-        run: |
-          npm run typecheck
-          npm run lint
-          npm test
-          npm run build
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
 
       - name: Commit integration and remove temporary workflow
         run: |
