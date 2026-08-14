@@ -1,0 +1,26 @@
+name: Temporary finals minimum hardening
+
+on:
+  push:
+    branches:
+      - feat/tournament-availability-controls
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node scripts/tmp-harden-finals-minimum.mjs
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "fix(tournaments): valider le minimum de phase finale"
+          git push
