@@ -3,8 +3,7 @@ import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages
 
 export type TournamentRankingMode = "total_points" | "points_per_match";
 export type TournamentGoalAverageMode =
-  | "point_difference"
-  | "point_difference_per_match";
+  "point_difference" | "point_difference_per_match";
 
 export type TournamentRankingTeam = {
   position: number;

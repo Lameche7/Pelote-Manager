@@ -14,7 +14,10 @@ const numberFormatter = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 3,
 });
 
-const valueLabel = (team: TournamentRankingTeam, rankings: TournamentRankingsPayload) =>
+const valueLabel = (
+  team: TournamentRankingTeam,
+  rankings: TournamentRankingsPayload,
+) =>
   rankings.rankingMode === "points_per_match"
     ? numberFormatter.format(team.rankingValue)
     : String(team.rankingPoints);

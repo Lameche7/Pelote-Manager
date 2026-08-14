@@ -44,10 +44,13 @@ export function AdminTournamentResultsPage() {
   const load = useCallback(async () => {
     const loaded = await tournamentResultsAdminService.getWorkspace();
     const rankingEntries = await Promise.all(
-      loaded.map(async (workspace) => [
-        workspace.id,
-        await tournamentRankingService.get(workspace.id),
-      ] as const),
+      loaded.map(
+        async (workspace) =>
+          [
+            workspace.id,
+            await tournamentRankingService.get(workspace.id),
+          ] as const,
+      ),
     );
     setWorkspaces(loaded);
     setRankingsByTournament(Object.fromEntries(rankingEntries));
@@ -134,8 +137,8 @@ export function AdminTournamentResultsPage() {
           <h1>Résultats</h1>
           <p className="admin-page__lead">
             Validez les résultats transmis par les joueurs ou saisissez-les
-            directement. Le classement est recalculé à partir des seuls résultats
-            validés.
+            directement. Le classement est recalculé à partir des seuls
+            résultats validés.
           </p>
         </div>
       </header>

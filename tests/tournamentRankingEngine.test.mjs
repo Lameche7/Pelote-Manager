@@ -44,7 +44,10 @@ test("une projection unique alimente le public et l'administration", async () =>
       read("../src/features/tournaments/components/TournamentRankings.tsx"),
     ]);
 
-  assert.match(migration, /create or replace function public\.get_tournament_rankings/);
+  assert.match(
+    migration,
+    /create or replace function public\.get_tournament_rankings/,
+  );
   assert.match(
     migration,
     /grant execute on function public\.get_tournament_rankings\(uuid\)[\s\S]*to anon, authenticated/,
@@ -53,6 +56,9 @@ test("une projection unique alimente le public et l'administration", async () =>
   assert.match(publicPage, /tournamentRankingService\.get/);
   assert.match(publicPage, /<TournamentRankings rankings=\{rankings\}/);
   assert.match(adminPage, /tournamentRankingService\.get/);
-  assert.match(adminPage, /<TournamentRankings rankings=\{selectedRankings\} compact/);
+  assert.match(
+    adminPage,
+    /<TournamentRankings rankings=\{selectedRankings\} compact/,
+  );
   assert.match(component, /Résultats validés uniquement/);
 });
