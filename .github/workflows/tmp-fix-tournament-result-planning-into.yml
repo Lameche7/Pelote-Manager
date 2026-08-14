@@ -24,22 +24,23 @@ jobs:
 
           migration = Path("supabase/migrations/20260814130000_add_tournament_result_engine.sql")
           text = migration.read_text()
-          old = '''  select planning, resource.timezone
-  into target_planning, target_timezone
-  from public.tournament_match_planning as planning
-  join public.reservable_resources as resource on resource.id = planning.resource_id
-  where planning.match_id = target_match.id;
-'''
-          new = '''  select planning.*
-  into target_planning
-  from public.tournament_match_planning as planning
-  where planning.match_id = target_match.id;
-
-  select resource.timezone
-  into target_timezone
-  from public.reservable_resources as resource
-  where resource.id = target_planning.resource_id;
-'''
+          old = (
+              "  select planning, resource.timezone\n"
+              "  into target_planning, target_timezone\n"
+              "  from public.tournament_match_planning as planning\n"
+              "  join public.reservable_resources as resource on resource.id = planning.resource_id\n"
+              "  where planning.match_id = target_match.id;\n"
+          )
+          new = (
+              "  select planning.*\n"
+              "  into target_planning\n"
+              "  from public.tournament_match_planning as planning\n"
+              "  where planning.match_id = target_match.id;\n\n"
+              "  select resource.timezone\n"
+              "  into target_timezone\n"
+              "  from public.reservable_resources as resource\n"
+              "  where resource.id = target_planning.resource_id;\n"
+          )
           if old not in text:
               raise SystemExit("offending planning INTO block not found")
           text = text.replace(old, new, 1)
@@ -48,7 +49,12 @@ jobs:
           test_file = Path("tests/tournamentResults.test.mjs")
           tests = test_file.read_text()
           anchor = '  assert.match(migration, /target_planning\\.ends_at/);\n'
-          addition = anchor + '''  assert.match(migration, /select planning\\.\\*[\\s\\S]*into target_planning/);\n  assert.match(migration, /select resource\\.timezone[\\s\\S]*into target_timezone/);\n  assert.doesNotMatch(migration, /into target_planning,\\s*target_timezone/);\n'''
+          addition = (
+              anchor
+              + '  assert.match(migration, /select planning\\.\\*[\\s\\S]*into target_planning/);\n'
+              + '  assert.match(migration, /select resource\\.timezone[\\s\\S]*into target_timezone/);\n'
+              + '  assert.doesNotMatch(migration, /into target_planning,\\s*target_timezone/);\n'
+          )
           if 'assert.doesNotMatch(migration, /into target_planning' not in tests:
               if anchor not in tests:
                   raise SystemExit("result timing assertion anchor not found")
