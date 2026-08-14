@@ -95,7 +95,6 @@ jobs:
             src/features/user-space/tournaments/pages/MyTournamentsPage.tsx \
             src/features/user-space/tournaments/pages/MyTournamentResults.css \
             src/features/user-space/tournaments/services/myTournamentsService.ts \
-            supabase/migrations/20260814130000_add_tournament_result_engine.sql \
             tests/tournamentResults.test.mjs
 
       - name: Verify
