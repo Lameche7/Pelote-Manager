@@ -164,22 +164,65 @@ begin
                             else (
                               team_stats.points_for - team_stats.points_against
                             )::numeric
-                          end as goal_average_value
+                          end as goal_average_value,
+                          case
+                            when team_stats.matches_played > 0
+                              then team_stats.points_for::numeric
+                                / team_stats.matches_played
+                            else 0::numeric
+                          end as points_for_per_match,
+                          case
+                            when team_stats.matches_played > 0
+                              then team_stats.wins::numeric
+                                / team_stats.matches_played
+                            else 0::numeric
+                          end as win_percentage
                         from team_stats
-                      ), ranked as (
+                      ), tie_breaks as (
                         select
                           calculated.*,
+                          coalesce((
+                            select count(*)::integer
+                            from public.tournament_matches as direct_match
+                            join public.tournament_match_results as direct_result
+                              on direct_result.match_id = direct_match.id
+                             and direct_result.status = 'validated'
+                            join calculated as opponent
+                              on opponent.team_id = case
+                                when direct_match.team_a_id = calculated.team_id
+                                  then direct_match.team_b_id
+                                else direct_match.team_a_id
+                              end
+                             and opponent.ranking_value = calculated.ranking_value
+                             and opponent.goal_average_value = calculated.goal_average_value
+                            where direct_match.pool_id = pool.id
+                              and calculated.team_id in (
+                                direct_match.team_a_id,
+                                direct_match.team_b_id
+                              )
+                              and direct_result.winner_team_id = calculated.team_id
+                          ), 0) as head_to_head_wins
+                        from calculated
+                      ), ranked as (
+                        select
+                          tie_breaks.*,
                           dense_rank() over (
                             order by
-                              calculated.ranking_value desc,
-                              calculated.goal_average_value desc
+                              tie_breaks.ranking_value desc,
+                              tie_breaks.goal_average_value desc,
+                              tie_breaks.head_to_head_wins desc,
+                              tie_breaks.points_for_per_match desc,
+                              tie_breaks.win_percentage desc
                           )::integer as position,
                           count(*) over (
                             partition by
-                              calculated.ranking_value,
-                              calculated.goal_average_value
+                              tie_breaks.ranking_value,
+                              tie_breaks.goal_average_value,
+                              tie_breaks.head_to_head_wins,
+                              tie_breaks.points_for_per_match,
+                              tie_breaks.win_percentage
                           )::integer as tie_count
-                        from calculated
+                        from tie_breaks
                       )
                       select coalesce(
                         jsonb_agg(
@@ -196,13 +239,17 @@ begin
                             'points_against', ranked.points_against,
                             'point_difference', ranked.point_difference,
                             'goal_average_value', round(ranked.goal_average_value, 3),
+                            'head_to_head_wins', ranked.head_to_head_wins,
+                            'points_for_per_match', round(ranked.points_for_per_match, 3),
+                            'win_percentage', round(ranked.win_percentage * 100, 1),
                             'is_tied', ranked.tie_count > 1
                           )
                           order by
                             ranked.ranking_value desc,
                             ranked.goal_average_value desc,
-                            ranked.points_for desc,
-                            ranked.wins desc,
+                            ranked.head_to_head_wins desc,
+                            ranked.points_for_per_match desc,
+                            ranked.win_percentage desc,
                             ranked.display_order,
                             ranked.team_id
                         ),
