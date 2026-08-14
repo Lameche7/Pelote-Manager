@@ -24,9 +24,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostiquer les vulnérabilités npm
-        run: npm audit --json || true
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
