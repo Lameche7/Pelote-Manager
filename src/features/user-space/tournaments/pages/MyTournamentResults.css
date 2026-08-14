@@ -1,0 +1,46 @@
+.my-tournaments__result-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  margin-top: 0.3rem;
+}
+
+.my-tournaments__result-summary strong {
+  font-size: 1rem;
+}
+
+.my-tournaments__result-summary span {
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.my-tournaments__result-button {
+  justify-self: end;
+  margin-top: 0.45rem;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--series-color, #2563eb);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.my-tournaments__score-editor {
+  grid-column: 1 / -1;
+  padding-top: 0.35rem;
+}
+
+.my-tournaments__match--past:has(.my-tournaments__result-button),
+.my-tournaments__match--past:has(.my-tournaments__score-editor) {
+  opacity: 1;
+}
+
+@media (max-width: 760px) {
+  .my-tournaments__result-button {
+    justify-self: start;
+  }
+}

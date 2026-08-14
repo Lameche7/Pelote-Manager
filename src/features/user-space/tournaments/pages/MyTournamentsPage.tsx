@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Link } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import {
@@ -6,9 +12,15 @@ import {
   type MyTournamentMatch,
   type MyTournamentOverview,
   type MyTournamentPlayer,
+  type MyTournamentSportingRules,
 } from "@/features/user-space/tournaments/services/myTournamentsService";
+import {
+  TournamentScoreEditor,
+  type TournamentScorePayload,
+} from "@/features/tournaments/components/TournamentScoreEditor";
 import { ROUTES } from "@/shared/config";
 import "./MyTournamentsPage.css";
+import "./MyTournamentResults.css";
 
 const tournamentStatusLabels: Record<string, string> = {
   preparation: "Préparation",
@@ -61,14 +73,45 @@ const isTournamentHistory = (tournament: MyTournamentOverview) =>
   ["completed", "archived", "cancelled"].includes(tournament.status) ||
   dateAtNoon(tournament.endsOn).getTime() < Date.now();
 
+const formatResult = (match: MyTournamentMatch) => {
+  if (!match.result) return "";
+  return match.result.score.sets
+    .map((set) => {
+      const mine = match.teamSide === "a" ? set.teamA : set.teamB;
+      const opponent = match.teamSide === "a" ? set.teamB : set.teamA;
+      return `${mine}-${opponent}`;
+    })
+    .join(" · ");
+};
+
 function MatchCard({
   match,
+  rules,
   highlight = false,
+  onResultSaved,
 }: {
   match: MyTournamentMatch;
+  rules: MyTournamentSportingRules;
   highlight?: boolean;
+  onResultSaved: () => Promise<void>;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const isPast = matchDate(match).getTime() < Date.now();
+  const opponent = teamLabel(match.opponentPlayers);
+  const resultLabel = formatResult(match);
+
+  const saveResult = async (score: TournamentScorePayload) => {
+    setSaving(true);
+    try {
+      await myTournamentsService.submitResult(match.id, score);
+      setEditing(false);
+      await onResultSaved();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <article
       className={`my-tournaments__match${highlight ? " my-tournaments__match--next" : ""}${isPast ? " my-tournaments__match--past" : ""}`}
@@ -81,17 +124,57 @@ function MatchCard({
         <span>
           {highlight ? "Prochaine partie" : isPast ? "Partie jouée" : "À venir"}
         </span>
-        <strong>vs {teamLabel(match.opponentPlayers)}</strong>
+        <strong>vs {opponent}</strong>
+        {match.result && (
+          <div className="my-tournaments__result-summary">
+            <strong>{resultLabel}</strong>
+            <span>
+              {match.result.status === "validated"
+                ? "Résultat validé"
+                : "Résultat transmis · validation du club en attente"}
+            </span>
+          </div>
+        )}
       </div>
       <div className="my-tournaments__match-place">
         <strong>{match.resourceName}</strong>
         {match.poolNumber && <span>Poule {match.poolNumber}</span>}
+        {match.canSubmitResult && !editing && (
+          <button
+            className="my-tournaments__result-button"
+            type="button"
+            onClick={() => setEditing(true)}
+          >
+            Saisir le résultat
+          </button>
+        )}
       </div>
+
+      {editing && (
+        <div className="my-tournaments__score-editor">
+          <TournamentScoreEditor
+            rules={rules}
+            teamSide={match.teamSide}
+            leftLabel="Notre équipe"
+            rightLabel={opponent}
+            disabled={saving}
+            submitLabel={saving ? "Enregistrement…" : "Transmettre au club"}
+            onCancel={() => setEditing(false)}
+            onSubmit={saveResult}
+          />
+        </div>
+      )}
     </article>
   );
 }
 
-function TournamentCard({ tournament }: { tournament: MyTournamentOverview }) {
+function TournamentCard({
+  tournament,
+  onResultSaved,
+}: {
+  tournament: MyTournamentOverview;
+  onResultSaved: () => Promise<void>;
+}) {
   const upcomingMatches = tournament.matches.filter(
     (match) => matchDate(match).getTime() >= Date.now(),
   );
@@ -165,7 +248,14 @@ function TournamentCard({ tournament }: { tournament: MyTournamentOverview }) {
         </div>
       ) : (
         <section className="my-tournaments__matches" aria-label="Mes parties">
-          {nextMatch && <MatchCard match={nextMatch} highlight />}
+          {nextMatch && (
+            <MatchCard
+              match={nextMatch}
+              rules={tournament.sportingRules}
+              highlight
+              onResultSaved={onResultSaved}
+            />
+          )}
           {remainingMatches.length > 0 && (
             <details>
               <summary>
@@ -173,7 +263,12 @@ function TournamentCard({ tournament }: { tournament: MyTournamentOverview }) {
               </summary>
               <div className="my-tournaments__match-list">
                 {remainingMatches.map((match) => (
-                  <MatchCard key={match.id} match={match} />
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    rules={tournament.sportingRules}
+                    onResultSaved={onResultSaved}
+                  />
                 ))}
               </div>
             </details>
@@ -197,6 +292,11 @@ export function MyTournamentsPage() {
   const [view, setView] = useState<"current" | "history">("current");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const items = await myTournamentsService.list();
+    setTournaments(items);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -222,6 +322,19 @@ export function MyTournamentsPage() {
     };
   }, []);
 
+  const refreshAfterResult = useCallback(async () => {
+    setError(null);
+    try {
+      await load();
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Impossible d’actualiser vos tournois.",
+      );
+    }
+  }, [load]);
+
   const displayed = useMemo(
     () =>
       tournaments.filter((tournament) =>
@@ -242,8 +355,8 @@ export function MyTournamentsPage() {
           <p className="my-tournaments__eyebrow">Espace personnel</p>
           <h1 id="my-tournaments-title">Mes tournois</h1>
           <p>
-            Retrouvez votre équipe et, dès publication, le calendrier de toutes
-            vos parties.
+            Retrouvez votre équipe, vos parties et transmettez vos résultats au
+            club après chaque rencontre.
           </p>
         </header>
 
@@ -293,7 +406,11 @@ export function MyTournamentsPage() {
         ) : (
           <div className="my-tournaments__grid">
             {displayed.map((tournament) => (
-              <TournamentCard key={tournament.id} tournament={tournament} />
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+                onResultSaved={refreshAfterResult}
+              />
             ))}
           </div>
         )}
