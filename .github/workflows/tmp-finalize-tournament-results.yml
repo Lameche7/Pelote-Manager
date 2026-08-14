@@ -1,0 +1,114 @@
+name: Temporary tournament results integration
+
+on:
+  push:
+    branches: [feature/tournament-results]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/tournament-results
+
+      - name: Apply integration patches
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          page = Path("src/features/user-space/tournaments/pages/MyTournamentsPage.tsx")
+          text = page.read_text()
+          anchor = 'import "./MyTournamentsPage.css";\n'
+          addition = 'import "./MyTournamentsPage.css";\nimport "./MyTournamentResults.css";\n'
+          if 'MyTournamentResults.css' not in text:
+              if anchor not in text:
+                  raise SystemExit("MyTournaments CSS import anchor not found")
+              text = text.replace(anchor, addition, 1)
+          page.write_text(text)
+
+          router = Path("src/app/router.tsx")
+          text = router.read_text()
+          import_anchor = 'import { AdminTournamentPublicationPage } from "@/features/admin/tournaments/pages/AdminTournamentPublicationPage";\n'
+          import_addition = import_anchor + 'import { AdminTournamentResultsPage } from "@/features/admin/tournaments/pages/AdminTournamentResultsPage";\n'
+          if 'AdminTournamentResultsPage' not in text:
+              if import_anchor not in text:
+                  raise SystemExit("router import anchor not found")
+              text = text.replace(import_anchor, import_addition, 1)
+
+          route_anchor = '''          {
+            path: "tournois/publication",
+            element: permitted(
+              ADMIN_PERMISSIONS.tournaments,
+              <AdminTournamentPublicationPage />,
+            ),
+          },
+'''
+          route_addition = route_anchor + '''          {
+            path: "tournois/resultats",
+            element: permitted(
+              ADMIN_PERMISSIONS.tournaments,
+              <AdminTournamentResultsPage />,
+            ),
+          },
+'''
+          if 'path: "tournois/resultats"' not in text:
+              if route_anchor not in text:
+                  raise SystemExit("router route anchor not found")
+              text = text.replace(route_anchor, route_addition, 1)
+          router.write_text(text)
+
+          migration = Path("supabase/migrations/20260814130000_add_tournament_result_engine.sql")
+          text = migration.read_text()
+          old = '''  select planning.*, resource.timezone
+  into target_planning, target_timezone
+'''
+          new = '''  select planning, resource.timezone
+  into target_planning, target_timezone
+'''
+          if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit("planning composite select anchor not found")
+          migration.write_text(text)
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: |
+          npx prettier --write \
+            src/app/router.tsx \
+            src/shared/config/routes.ts \
+            src/features/admin/config/adminPermissions.ts \
+            src/features/admin/tournaments/pages/AdminTournamentResultsPage.tsx \
+            src/features/admin/tournaments/pages/AdminTournamentResultsPage.css \
+            src/features/admin/tournaments/services/tournamentResultsAdminService.ts \
+            src/features/tournaments/components/TournamentScoreEditor.tsx \
+            src/features/tournaments/components/TournamentScoreEditor.css \
+            src/features/user-space/tournaments/pages/MyTournamentsPage.tsx \
+            src/features/user-space/tournaments/pages/MyTournamentResults.css \
+            src/features/user-space/tournaments/services/myTournamentsService.ts \
+            supabase/migrations/20260814130000_add_tournament_result_engine.sql \
+            tests/tournamentResults.test.mjs
+
+      - name: Verify
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Commit integration and remove temporary workflow
+        run: |
+          rm .github/workflows/tmp-finalize-tournament-results.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "feat(tournaments): integrate result workflow"
+          git push origin HEAD:feature/tournament-results
