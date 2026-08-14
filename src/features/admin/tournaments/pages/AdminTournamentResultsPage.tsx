@@ -3,6 +3,11 @@ import {
   TournamentScoreEditor,
   type TournamentScorePayload,
 } from "@/features/tournaments/components/TournamentScoreEditor";
+import { TournamentRankings } from "@/features/tournaments/components/TournamentRankings";
+import {
+  tournamentRankingService,
+  type TournamentRankings as TournamentRankingsPayload,
+} from "@/features/tournaments/services/tournamentRankingService";
 import {
   tournamentResultsAdminService,
   type AdminTournamentResultMatch,
@@ -26,6 +31,9 @@ export function AdminTournamentResultsPage() {
   const [workspaces, setWorkspaces] = useState<
     AdminTournamentResultsWorkspace[]
   >([]);
+  const [rankingsByTournament, setRankingsByTournament] = useState<
+    Record<string, TournamentRankingsPayload | null>
+  >({});
   const [selectedId, setSelectedId] = useState("");
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +43,14 @@ export function AdminTournamentResultsPage() {
 
   const load = useCallback(async () => {
     const loaded = await tournamentResultsAdminService.getWorkspace();
+    const rankingEntries = await Promise.all(
+      loaded.map(async (workspace) => [
+        workspace.id,
+        await tournamentRankingService.get(workspace.id),
+      ] as const),
+    );
     setWorkspaces(loaded);
+    setRankingsByTournament(Object.fromEntries(rankingEntries));
     setSelectedId((current) =>
       current && loaded.some((workspace) => workspace.id === current)
         ? current
@@ -59,6 +74,7 @@ export function AdminTournamentResultsPage() {
     () => workspaces.find((workspace) => workspace.id === selectedId) ?? null,
     [selectedId, workspaces],
   );
+  const selectedRankings = rankingsByTournament[selectedId] ?? null;
 
   const pendingCount =
     selected?.matches.filter(
@@ -76,7 +92,7 @@ export function AdminTournamentResultsPage() {
     try {
       await tournamentResultsAdminService.validate(matchId);
       await load();
-      setMessage("Résultat validé. Il pourra alimenter le classement.");
+      setMessage("Résultat validé. Le classement a été recalculé.");
     } catch (validationError) {
       setError(
         validationError instanceof Error
@@ -96,7 +112,7 @@ export function AdminTournamentResultsPage() {
       await tournamentResultsAdminService.save(matchId, score);
       setEditingMatchId(null);
       await load();
-      setMessage("Résultat enregistré et validé par l’administration.");
+      setMessage("Résultat enregistré. Le classement a été recalculé.");
     } finally {
       setSaving(false);
     }
@@ -118,7 +134,8 @@ export function AdminTournamentResultsPage() {
           <h1>Résultats</h1>
           <p className="admin-page__lead">
             Validez les résultats transmis par les joueurs ou saisissez-les
-            directement. Seuls les résultats validés alimenteront le classement.
+            directement. Le classement est recalculé à partir des seuls résultats
+            validés.
           </p>
         </div>
       </header>
@@ -173,6 +190,12 @@ export function AdminTournamentResultsPage() {
               <span>validés</span>
             </div>
           </div>
+
+          {selectedRankings && (
+            <div className="admin-card">
+              <TournamentRankings rankings={selectedRankings} compact />
+            </div>
+          )}
 
           {selected && (
             <div className="tournament-results-list">
