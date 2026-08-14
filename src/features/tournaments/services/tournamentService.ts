@@ -120,7 +120,7 @@ const knownErrors: Record<string, string> = {
   "Tournament weekend availability minimum not reached":
     "Vous n’avez pas sélectionné assez de créneaux le week-end pendant la phase de poules.",
   "Tournament finals availability minimum not reached":
-    "Vous devez sélectionner au moins 35 créneaux disponibles pour la phase finale.",
+    "Le minimum de créneaux disponibles pour la phase finale n’est pas atteint.",
   "A player can only belong to one active team per tournament":
     "Un joueur est déjà inscrit dans une autre équipe de ce tournoi.",
   "Tournament registration not found": "Aucune inscription active trouvée.",
@@ -167,7 +167,7 @@ export const tournamentService = {
   async getPublic(id: string): Promise<PublicTournamentDetail | null> {
     const [tournamentResult, availabilityResult] = await Promise.all([
       supabase.rpc("get_public_tournament_v2", { target_id: id }),
-      supabase.rpc("get_public_tournament_availability_grid", {
+      supabase.rpc("get_public_tournament_availability_grid_with_finals_minimum", {
         target_tournament_id: id,
       }),
     ]);
@@ -192,6 +192,9 @@ export const tournamentService = {
       minimumAvailabilitySlots: Number(availability.minimum_total ?? 65),
       minimumWeekendAvailabilitySlots: Number(
         availability.minimum_weekend ?? 0,
+      ),
+      minimumFinalsAvailabilitySlots: Number(
+        availability.minimum_finals ?? 35,
       ),
       slotDurationMinutes: Number(availability.slot_duration_minutes ?? 60),
       poolStartsOn: String(availability.pool_starts_on ?? row.starts_on ?? ""),

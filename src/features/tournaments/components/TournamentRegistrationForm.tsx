@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
-import { TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS } from "@/features/tournaments/domain/tournamentAvailabilityRules";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
   MyTournamentRegistration,
@@ -198,7 +197,7 @@ export function TournamentRegistrationForm({
   const finalsMinimumReached =
     tournament.availableFinalsSlotCount === 0 ||
     finalsAvailabilitySlots.length >=
-      TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS;
+      tournament.minimumFinalsAvailabilitySlots;
   const availabilityMinimumReached = Boolean(
     draft && poolMinimumReached && finalsMinimumReached,
   );

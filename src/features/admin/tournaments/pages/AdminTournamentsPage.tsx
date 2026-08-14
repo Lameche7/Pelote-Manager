@@ -67,6 +67,7 @@ type TournamentForm = {
   registrationClosesAt: string;
   minimumAvailabilitySlots: number;
   minimumWeekendAvailabilitySlots: number;
+  minimumFinalsAvailabilitySlots: number;
   slotDurationMinutes: number;
 };
 
@@ -154,6 +155,7 @@ const blankForm = (seasonId = ""): TournamentForm => ({
   registrationClosesAt: "",
   minimumAvailabilitySlots: 65,
   minimumWeekendAvailabilitySlots: 0,
+  minimumFinalsAvailabilitySlots: 35,
   slotDurationMinutes: 60,
 });
 
@@ -187,6 +189,7 @@ const detailToForm = (detail: TournamentDetail): TournamentForm => ({
   registrationClosesAt: toLocalInput(detail.registrationClosesAt),
   minimumAvailabilitySlots: detail.minimumAvailabilitySlots,
   minimumWeekendAvailabilitySlots: detail.minimumWeekendAvailabilitySlots,
+  minimumFinalsAvailabilitySlots: detail.minimumFinalsAvailabilitySlots,
   slotDurationMinutes: detail.slotDurationMinutes,
 });
 
@@ -207,7 +210,8 @@ const toDraft = (form: TournamentForm): TournamentDraft => {
   if (
     form.minimumAvailabilitySlots < 0 ||
     form.minimumWeekendAvailabilitySlots < 0 ||
-    form.minimumWeekendAvailabilitySlots > form.minimumAvailabilitySlots
+    form.minimumWeekendAvailabilitySlots > form.minimumAvailabilitySlots ||
+    form.minimumFinalsAvailabilitySlots < 0
   ) {
     throw new Error("Vérifiez les minima de disponibilités.");
   }
@@ -234,6 +238,7 @@ const toDraft = (form: TournamentForm): TournamentDraft => {
     registrationClosesAt: toStoredDateTime(form.registrationClosesAt),
     minimumAvailabilitySlots: form.minimumAvailabilitySlots,
     minimumWeekendAvailabilitySlots: form.minimumWeekendAvailabilitySlots,
+    minimumFinalsAvailabilitySlots: form.minimumFinalsAvailabilitySlots,
     slotDurationMinutes: form.slotDurationMinutes,
   };
 };
@@ -738,8 +743,8 @@ export function AdminTournamentsPage() {
               <section>
                 <h3>2. Phases & créneaux</h3>
                 <p>
-                  Le minimum de disponibilités s’applique uniquement aux poules.
-                  Les disponibilités de phase finale sont recueillies en plus.
+                  Les minima des poules et de la phase finale sont configurables
+                  séparément.
                 </p>
                 <div className="tournament-form__grid">
                   <label>
@@ -834,6 +839,24 @@ export function AdminTournamentsPage() {
                         setForm({
                           ...form,
                           minimumWeekendAvailabilitySlots: Number(
+                            event.target.value,
+                          ),
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Minimum de créneaux — phase finale
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      disabled={!editable || saving}
+                      value={form.minimumFinalsAvailabilitySlots}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          minimumFinalsAvailabilitySlots: Number(
                             event.target.value,
                           ),
                         })

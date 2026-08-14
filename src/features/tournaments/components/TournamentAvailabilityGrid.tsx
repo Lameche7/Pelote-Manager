@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS } from "@/features/tournaments/domain/tournamentAvailabilityRules";
 import type {
   TournamentAvailabilitySlot,
   TournamentPhase,
@@ -120,6 +119,7 @@ type AvailabilityTournament = {
   availableSlots: TournamentAvailabilitySlot[];
   minimumAvailabilitySlots: number;
   minimumWeekendAvailabilitySlots: number;
+  minimumFinalsAvailabilitySlots: number;
 };
 
 type Props = {
@@ -168,7 +168,7 @@ export function TournamentAvailabilityGrid({
   );
   const finalsMinimumReached =
     !hasFinals ||
-    finalsSelected.length >= TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS;
+    finalsSelected.length >= tournament.minimumFinalsAvailabilitySlots;
   const minimumReached =
     poolSelected.length >= tournament.minimumAvailabilitySlots &&
     poolWeekendCount >= tournament.minimumWeekendAvailabilitySlots &&
@@ -192,6 +192,17 @@ export function TournamentAvailabilityGrid({
     for (const slot of day.slots) {
       if (checked) next.add(slotKey(slot));
       else next.delete(slotKey(slot));
+    }
+    emitKeys(next);
+  };
+
+  const toggleWeek = (week: WeekGroup, checked: boolean) => {
+    const next = new Set(selectedKeys);
+    for (const day of week.days) {
+      for (const slot of day.slots) {
+        if (checked) next.add(slotKey(slot));
+        else next.delete(slotKey(slot));
+      }
     }
     emitKeys(next);
   };
@@ -266,7 +277,7 @@ export function TournamentAvailabilityGrid({
             {admin
               ? "Pour la phase finale, l’équipe doit conserver au moins "
               : "Pour la phase finale, vous devez cocher au moins "}
-            <strong>{TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS}</strong>{" "}
+            <strong>{tournament.minimumFinalsAvailabilitySlots}</strong>{" "}
             créneaux.
           </>
         )}
@@ -291,7 +302,7 @@ export function TournamentAvailabilityGrid({
         {hasFinals && (
           <span>
             Minimum phase finale :{" "}
-            <strong>{TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS}</strong>
+            <strong>{tournament.minimumFinalsAvailabilitySlots}</strong>
           </span>
         )}
       </div>
@@ -307,6 +318,10 @@ export function TournamentAvailabilityGrid({
             const canDuplicate =
               weekIndex < weeks.length - 1 &&
               weeks[weekIndex + 1]?.phase === week.phase;
+            const weekSlots = week.days.flatMap((day) => day.slots);
+            const weekAllSelected =
+              weekSlots.length > 0 &&
+              weekSlots.every((slot) => selectedKeys.has(slotKey(slot)));
             return (
               <article className="tournament-availability-week" key={week.key}>
                 <header>
@@ -316,15 +331,26 @@ export function TournamentAvailabilityGrid({
                       : "Phase finale"}
                     {" · "}Semaine {week.week} — {week.year}
                   </h4>
-                  {canDuplicate && (
+                  <div className="tournament-availability-week__actions">
                     <button
                       type="button"
                       disabled={disabled}
-                      onClick={() => duplicateWeek(weekIndex)}
+                      onClick={() => toggleWeek(week, !weekAllSelected)}
                     >
-                      Dupliquer cette semaine → suivante
+                      {weekAllSelected
+                        ? "Tout décocher la semaine"
+                        : "Tout cocher la semaine"}
                     </button>
-                  )}
+                    {canDuplicate && (
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => duplicateWeek(weekIndex)}
+                      >
+                        Dupliquer cette semaine → suivante
+                      </button>
+                    )}
+                  </div>
                 </header>
 
                 <div className="tournament-availability-week__scroll">

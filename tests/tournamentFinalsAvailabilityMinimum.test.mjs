@@ -5,45 +5,54 @@ import test from "node:test";
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 const migrationPath =
-  "../supabase/migrations/20260811094500_add_finals_availability_minimum.sql";
+  "../supabase/migrations/20260814161500_configure_tournament_finals_availability_minimum.sql";
 
-test("la phase finale exige 35 créneaux dès qu'elle est configurée", async () => {
-  const [migration, rules] = await Promise.all([
+test("le minimum de phase finale est configurable par tournoi", async () => {
+  const [migration, adminPage, grid] = await Promise.all([
     read(migrationPath),
-    read("../src/features/tournaments/domain/tournamentAvailabilityRules.ts"),
+    read("../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx"),
+    read("../src/features/tournaments/components/TournamentAvailabilityGrid.tsx"),
   ]);
 
-  assert.match(rules, /TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS = 35/);
-  assert.match(migration, /selected_finals_count >= 35/);
-  assert.match(migration, /Tournament finals availability minimum not reached/);
-  assert.match(migration, /deferrable initially deferred/);
-});
-
-test("le générateur complète les équipes fictives jusqu'au minimum final", async () => {
-  const migration = await read(migrationPath);
-
-  assert.match(migration, /generate_tournament_test_data_phase_aware_legacy/);
-  assert.match(migration, /available_finals_count < 35/);
   assert.match(
     migration,
-    /missing_finals_count := greatest\(35 - selected_finals_count, 0\)/,
+    /minimum_finals_availability_slots integer not null default 35/,
   );
-  assert.match(migration, /minimum_finals_slots/);
+  assert.match(
+    migration,
+    /selected_finals_count >= target_tournament\.minimum_finals_availability_slots/,
+  );
+  assert.match(migration, /admin_create_tournament_with_finals_minimum/);
+  assert.match(migration, /admin_update_tournament_with_finals_minimum/);
+  assert.match(adminPage, /minimumFinalsAvailabilitySlots: 35/);
+  assert.match(adminPage, /Minimum de créneaux — phase finale/);
+  assert.match(grid, /tournament\.minimumFinalsAvailabilitySlots/);
 });
 
-test("le formulaire et la grille exposent le minimum de 35 créneaux finale", async () => {
-  const [form, grid] = await Promise.all([
-    read(
-      "../src/features/tournaments/components/TournamentRegistrationForm.tsx",
-    ),
-    read(
-      "../src/features/tournaments/components/TournamentAvailabilityGrid.tsx",
-    ),
+test("le générateur de test respecte le minimum final configuré", async () => {
+  const migration = await read(migrationPath);
+
+  assert.match(
+    migration,
+    /available_finals_count < target_tournament\.minimum_finals_availability_slots/,
+  );
+  assert.match(
+    migration,
+    /target_tournament\.minimum_finals_availability_slots - selected_finals_count/,
+  );
+  assert.match(migration, /'minimum_finals_slots'/);
+});
+
+test("utilisateur et admin partagent les contrôles de semaine", async () => {
+  const [grid, registrationForm, adminTeamsPage] = await Promise.all([
+    read("../src/features/tournaments/components/TournamentAvailabilityGrid.tsx"),
+    read("../src/features/tournaments/components/TournamentRegistrationForm.tsx"),
+    read("../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx"),
   ]);
 
-  assert.match(form, /TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS/);
-  assert.match(form, /finalsMinimumReached/);
-  assert.match(form, /phase finale/);
-  assert.match(grid, /TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS/);
-  assert.match(grid, /Minimum phase finale/);
+  assert.match(grid, /Tout cocher la semaine/);
+  assert.match(grid, /Tout décocher la semaine/);
+  assert.match(grid, /Dupliquer cette semaine → suivante/);
+  assert.match(registrationForm, /TournamentAvailabilityGrid/);
+  assert.match(adminTeamsPage, /TournamentAvailabilityGrid/);
 });

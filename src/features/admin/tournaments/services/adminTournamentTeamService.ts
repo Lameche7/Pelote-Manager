@@ -115,7 +115,7 @@ const knownErrors: Record<string, string> = {
   "Tournament weekend availability minimum not reached":
     "Le minimum week-end de la phase de poules n’est pas atteint.",
   "Tournament finals availability minimum not reached":
-    "Le minimum de 35 créneaux de la phase finale n’est pas atteint.",
+    "Le minimum de créneaux de la phase finale n’est pas atteint.",
   "A player can only belong to one active team per tournament":
     "Un joueur appartient déjà à une autre équipe active de ce tournoi.",
 };
@@ -160,9 +160,10 @@ export const adminTournamentTeamService = {
       supabase.rpc("admin_list_tournament_teams_v3", {
         target_tournament_id: tournamentId,
       }),
-      supabase.rpc("admin_get_tournament_dated_availability", {
-        target_tournament_id: tournamentId,
-      }),
+      supabase.rpc(
+        "admin_get_tournament_dated_availability_with_finals_minimum",
+        { target_tournament_id: tournamentId },
+      ),
     ]);
 
     if (teamsResponse.error) {
@@ -203,6 +204,9 @@ export const adminTournamentTeamService = {
         minimumAvailabilitySlots: Number(availability.minimum_total ?? 0),
         minimumWeekendAvailabilitySlots: Number(
           availability.minimum_weekend ?? 0,
+        ),
+        minimumFinalsAvailabilitySlots: Number(
+          availability.minimum_finals ?? 35,
         ),
         slotDurationMinutes: Number(availability.slot_duration_minutes ?? 60),
         poolStartsOn: String(availability.pool_starts_on ?? ""),
