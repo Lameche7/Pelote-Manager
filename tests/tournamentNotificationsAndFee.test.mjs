@@ -16,13 +16,19 @@ test(
       read("../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx"),
     ]);
 
-    assert.match(migration, /registration_fee_cents integer not null default 0/);
+    assert.match(
+      migration,
+      /registration_fee_cents integer not null default 0/,
+    );
     assert.match(
       migration,
       /registration_fee_cents', coalesce\(target_fee_cents, 0\)/,
     );
     assert.match(service, /registrationFeeCents: number/);
-    assert.match(service, /registration_fee_cents: draft\.registrationFeeCents/);
+    assert.match(
+      service,
+      /registration_fee_cents: draft\.registrationFeeCents/,
+    );
     assert.match(page, /Tarif d’inscription par équipe \(€\)/);
     assert.match(page, /registrationFeeCents: Math\.round/);
   },
