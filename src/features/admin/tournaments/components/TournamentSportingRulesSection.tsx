@@ -42,7 +42,8 @@ export function TournamentSportingRulesSection({
             onChange={(event) =>
               onChange({
                 ...rules,
-                matchFormat: event.target.value as TournamentSportingRules["matchFormat"],
+                matchFormat: event.target
+                  .value as TournamentSportingRules["matchFormat"],
               })
             }
           >
@@ -209,11 +210,14 @@ export function TournamentSportingRulesSection({
             onChange={(event) =>
               onChange({
                 ...rules,
-                rankingMode: event.target.value as TournamentSportingRules["rankingMode"],
+                rankingMode: event.target
+                  .value as TournamentSportingRules["rankingMode"],
               })
             }
           >
-            <option value="points_per_match">Points de classement / partie</option>
+            <option value="points_per_match">
+              Points de classement / partie
+            </option>
             <option value="total_points">Total des points de classement</option>
           </select>
         </label>
@@ -226,14 +230,17 @@ export function TournamentSportingRulesSection({
             onChange={(event) =>
               onChange({
                 ...rules,
-                goalAverageMode: event.target.value as TournamentSportingRules["goalAverageMode"],
+                goalAverageMode: event.target
+                  .value as TournamentSportingRules["goalAverageMode"],
               })
             }
           >
             <option value="point_difference_per_match">
               Différence de points / partie
             </option>
-            <option value="point_difference">Différence totale de points</option>
+            <option value="point_difference">
+              Différence totale de points
+            </option>
           </select>
         </label>
       </div>
@@ -249,27 +256,25 @@ export function TournamentSportingRulesSection({
           </>
         ) : (
           <>
-            <strong>Barème calculé :</strong> victoire = {rules.baseWinPoints} pt
-            {rules.baseWinPoints > 1 ? "s" : ""}, +{rules.offensiveBonusPoints} si
-            l’écart est d’au moins {rules.offensiveBonusMargin} points · défaite = {rules.baseLossPoints} pt
-            {rules.baseLossPoints > 1 ? "s" : ""}, +{rules.defensiveBonusPoints} si
-            l’écart est d’au plus {rules.defensiveBonusMargin} points.
+            <strong>Barème calculé :</strong> victoire = {rules.baseWinPoints}{" "}
+            pt
+            {rules.baseWinPoints > 1 ? "s" : ""}, +{rules.offensiveBonusPoints}{" "}
+            si l’écart est d’au moins {rules.offensiveBonusMargin} points ·
+            défaite = {rules.baseLossPoints} pt
+            {rules.baseLossPoints > 1 ? "s" : ""}, +{rules.defensiveBonusPoints}{" "}
+            si l’écart est d’au plus {rules.defensiveBonusMargin} points.
           </>
         )}
       </div>
 
       <p>
-        Le Ranking Engine calculera toujours les points marqués et encaissés,
-        la différence de points, les points de classement et leurs valeurs par
+        Le Ranking Engine calculera toujours les points marqués et encaissés, la
+        différence de points, les points de classement et leurs valeurs par
         partie afin de comparer correctement des poules de tailles différentes.
       </p>
 
       {!disabled && (
-        <button
-          className="tournaments-primary"
-          type="button"
-          onClick={onSave}
-        >
+        <button className="tournaments-primary" type="button" onClick={onSave}>
           Enregistrer les règles sportives
         </button>
       )}

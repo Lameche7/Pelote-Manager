@@ -10,7 +10,10 @@ const migrationPath =
 test("les règles sportives sont structurées et auditées", async () => {
   const migration = await read(migrationPath);
 
-  assert.match(migration, /create table if not exists public\.tournament_sporting_rules/);
+  assert.match(
+    migration,
+    /create table if not exists public\.tournament_sporting_rules/,
+  );
   assert.match(migration, /'single_game'/);
   assert.match(migration, /'best_of_three_sets'/);
   assert.match(migration, /base_win_points integer not null default 3/);
@@ -18,7 +21,10 @@ test("les règles sportives sont structurées et auditées", async () => {
   assert.match(migration, /offensive_bonus_points integer not null default 1/);
   assert.match(migration, /defensive_bonus_points integer not null default 1/);
   assert.match(migration, /ranking_mode public\.tournament_ranking_mode/);
-  assert.match(migration, /goal_average_mode public\.tournament_goal_average_mode/);
+  assert.match(
+    migration,
+    /goal_average_mode public\.tournament_goal_average_mode/,
+  );
   assert.match(migration, /sporting_rules_updated/);
 });
 

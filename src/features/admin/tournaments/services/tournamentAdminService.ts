@@ -72,6 +72,28 @@ export type TournamentResource = TournamentResourceOption & {
   displayOrder: number;
 };
 
+export type TournamentMatchFormat = "single_game" | "best_of_three_sets";
+export type TournamentRankingMode = "total_points" | "points_per_match";
+export type TournamentGoalAverageMode =
+  "point_difference" | "point_difference_per_match";
+
+export type TournamentSportingRules = {
+  tournamentId: string;
+  matchFormat: TournamentMatchFormat;
+  singleGamePoints: number;
+  mainSetPoints: number;
+  decidingSetPoints: number;
+  baseWinPoints: number;
+  baseLossPoints: number;
+  offensiveBonusPoints: number;
+  defensiveBonusPoints: number;
+  offensiveBonusMargin: number;
+  defensiveBonusMargin: number;
+  rankingMode: TournamentRankingMode;
+  goalAverageMode: TournamentGoalAverageMode;
+  updatedAt: string;
+};
+
 export type TournamentDraft = {
   id?: string;
   seasonId: string;
@@ -246,6 +268,26 @@ const mapDetail = (value: unknown): TournamentDetail => {
   };
 };
 
+const mapSportingRules = (value: unknown): TournamentSportingRules => {
+  const row = value as Row;
+  return {
+    tournamentId: String(row.tournament_id),
+    matchFormat: row.match_format as TournamentMatchFormat,
+    singleGamePoints: Number(row.single_game_points ?? 35),
+    mainSetPoints: Number(row.main_set_points ?? 20),
+    decidingSetPoints: Number(row.deciding_set_points ?? 10),
+    baseWinPoints: Number(row.base_win_points ?? 3),
+    baseLossPoints: Number(row.base_loss_points ?? 1),
+    offensiveBonusPoints: Number(row.offensive_bonus_points ?? 1),
+    defensiveBonusPoints: Number(row.defensive_bonus_points ?? 1),
+    offensiveBonusMargin: Number(row.offensive_bonus_margin ?? 10),
+    defensiveBonusMargin: Number(row.defensive_bonus_margin ?? 5),
+    rankingMode: row.ranking_mode as TournamentRankingMode,
+    goalAverageMode: row.goal_average_mode as TournamentGoalAverageMode,
+    updatedAt: String(row.updated_at ?? ""),
+  };
+};
+
 const draftPayload = (draft: TournamentDraft) => ({
   season_id: draft.seasonId,
   name: draft.name.trim(),
@@ -333,6 +375,43 @@ export const tournamentAdminService = {
     );
     if (error)
       fail(error, "Impossible d’enregistrer la configuration du tournoi.");
+  },
+
+  async getSportingRules(id: string): Promise<TournamentSportingRules> {
+    const { data, error } = await supabase.rpc(
+      "admin_get_tournament_sporting_rules",
+      { target_id: id },
+    );
+    if (error)
+      fail(error, "Impossible de charger les règles sportives du tournoi.");
+    return mapSportingRules(data);
+  },
+
+  async saveSportingRules(
+    id: string,
+    rules: TournamentSportingRules,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "admin_save_tournament_sporting_rules",
+      {
+        target_id: id,
+        payload: {
+          match_format: rules.matchFormat,
+          single_game_points: rules.singleGamePoints,
+          main_set_points: rules.mainSetPoints,
+          deciding_set_points: rules.decidingSetPoints,
+          base_win_points: rules.baseWinPoints,
+          base_loss_points: rules.baseLossPoints,
+          offensive_bonus_points: rules.offensiveBonusPoints,
+          defensive_bonus_points: rules.defensiveBonusPoints,
+          offensive_bonus_margin: rules.offensiveBonusMargin,
+          defensive_bonus_margin: rules.defensiveBonusMargin,
+          ranking_mode: rules.rankingMode,
+          goal_average_mode: rules.goalAverageMode,
+        },
+      },
+    );
+    if (error) fail(error, "Impossible d’enregistrer les règles sportives.");
   },
 
   async transition(id: string, status: TournamentStatus): Promise<void> {
