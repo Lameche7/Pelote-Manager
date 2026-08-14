@@ -136,6 +136,7 @@ declare
     35
   );
   previous_minimum integer;
+  active_team_id uuid;
 begin
   if target_minimum < 0 then
     raise exception 'Tournament availability settings are invalid'
@@ -155,6 +156,15 @@ begin
     updated_by = auth.uid(),
     updated_at = now()
   where id = target_id;
+
+  for active_team_id in
+    select team.id
+    from public.tournament_teams as team
+    where team.tournament_id = target_id
+      and team.status in ('pending', 'accepted')
+  loop
+    perform public.assert_tournament_team_finals_availability(active_team_id);
+  end loop;
 
   if previous_minimum is distinct from target_minimum then
     insert into public.tournament_audit_log (
@@ -360,7 +370,7 @@ from public, anon, authenticated;
 revoke all on function public.get_public_tournament_availability_grid_with_finals_minimum(uuid)
 from public, anon, authenticated;
 
- grant execute on function public.admin_get_tournament_with_finals_minimum(uuid)
+grant execute on function public.admin_get_tournament_with_finals_minimum(uuid)
 to authenticated;
 grant execute on function public.admin_create_tournament_with_finals_minimum(jsonb)
 to authenticated;
