@@ -1,0 +1,57 @@
+name: Temporary sporting rules null guard
+
+on:
+  push:
+    branches: [feature/tournament-sporting-rules]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/tournament-sporting-rules
+
+      - name: Guard sporting rules rendering
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("src/features/admin/tournaments/pages/AdminTournamentsPage.tsx")
+          text = path.read_text()
+          old = '''                <TournamentSportingRulesSection
+                  rules={sportingRules!}
+                  disabled={!sportingRules || !sportingRulesEditable || saving}
+                  onChange={setSportingRules}
+                  onSave={() => void saveSportingRules()}
+                />'''
+          new = '''                {sportingRules && (
+                  <TournamentSportingRulesSection
+                    rules={sportingRules}
+                    disabled={!sportingRulesEditable || saving}
+                    onChange={setSportingRules}
+                    onSave={() => void saveSportingRules()}
+                  />
+                )}'''
+          if old not in text:
+              raise SystemExit("sporting rules render anchor not found")
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Verify
+        run: |
+          npm install --package-lock=false
+          npx prettier --write src/features/admin/tournaments/pages/AdminTournamentsPage.tsx
+          npm run typecheck
+          npm test
+
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/admin/tournaments/pages/AdminTournamentsPage.tsx
+          git diff --cached --quiet || git commit -m "fix(tournaments): guard sporting rules loading state"
+          git push origin HEAD:feature/tournament-sporting-rules
