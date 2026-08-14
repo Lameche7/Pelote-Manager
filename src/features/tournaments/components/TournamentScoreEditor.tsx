@@ -94,7 +94,10 @@ export function TournamentScoreEditor({
       (set) => set.left.trim() !== "" || set.right.trim() !== "",
     );
 
-    if (completed.length < minimumRows || completed.some((set) => !set.left || !set.right)) {
+    if (
+      completed.length < minimumRows ||
+      completed.some((set) => !set.left || !set.right)
+    ) {
       setError("Renseignez le score complet de chaque manche jouée.");
       return;
     }
@@ -187,16 +190,18 @@ export function TournamentScoreEditor({
         </button>
       )}
 
-      {rules.matchFormat === "best_of_three_sets" && sets.length === 3 && !initialScore?.sets?.[2] && (
-        <button
-          className="tournament-score-editor__secondary"
-          type="button"
-          disabled={disabled}
-          onClick={() => setSets((current) => current.slice(0, 2))}
-        >
-          Retirer la manche décisive
-        </button>
-      )}
+      {rules.matchFormat === "best_of_three_sets" &&
+        sets.length === 3 &&
+        !initialScore?.sets?.[2] && (
+          <button
+            className="tournament-score-editor__secondary"
+            type="button"
+            disabled={disabled}
+            onClick={() => setSets((current) => current.slice(0, 2))}
+          >
+            Retirer la manche décisive
+          </button>
+        )}
 
       {error && (
         <p className="tournament-score-editor__error" role="alert">

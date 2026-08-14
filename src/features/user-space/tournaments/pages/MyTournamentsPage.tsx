@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Link } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import {
@@ -14,6 +20,7 @@ import {
 } from "@/features/tournaments/components/TournamentScoreEditor";
 import { ROUTES } from "@/shared/config";
 import "./MyTournamentsPage.css";
+import "./MyTournamentResults.css";
 
 const tournamentStatusLabels: Record<string, string> = {
   preparation: "Préparation",

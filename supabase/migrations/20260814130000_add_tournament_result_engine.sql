@@ -349,7 +349,7 @@ begin
       using errcode = 'P0001';
   end if;
 
-  select planning.*, resource.timezone
+  select planning, resource.timezone
   into target_planning, target_timezone
   from public.tournament_match_planning as planning
   join public.reservable_resources as resource on resource.id = planning.resource_id

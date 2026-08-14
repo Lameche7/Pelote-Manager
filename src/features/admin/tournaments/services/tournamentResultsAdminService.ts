@@ -142,7 +142,10 @@ export const tournamentResultsAdminService = {
     });
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(error, "Enregistrement du résultat impossible."),
+        getSupabaseErrorMessage(
+          error,
+          "Enregistrement du résultat impossible.",
+        ),
       );
     }
   },

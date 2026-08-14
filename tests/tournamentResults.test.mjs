@@ -9,7 +9,10 @@ const migrationPath =
 test("le Result Engine conserve le score détaillé et les valeurs de classement", async () => {
   const migration = await read(migrationPath);
 
-  assert.match(migration, /create table if not exists public\.tournament_match_results/);
+  assert.match(
+    migration,
+    /create table if not exists public\.tournament_match_results/,
+  );
   assert.match(migration, /score jsonb not null/);
   assert.match(migration, /team_a_points integer not null/);
   assert.match(migration, /team_b_points integer not null/);
@@ -54,7 +57,10 @@ test("un participant ne peut saisir qu'après la fin prévue de sa partie", asyn
   assert.match(migration, /current_profile_id uuid := auth\.uid\(\)/);
   assert.match(migration, /tournament_profile_can_score_match/);
   assert.match(migration, /target_planning\.ends_at/);
-  assert.match(migration, /> now\(\)[\s\S]*cannot be entered before the scheduled end/);
+  assert.match(
+    migration,
+    /> now\(\)[\s\S]*cannot be entered before the scheduled end/,
+  );
   assert.match(migration, /'pending_validation'/);
 });
 
@@ -79,7 +85,10 @@ test("l'administrateur valide, saisit et corrige les résultats", async () => {
   );
   assert.match(migration, /match_result_validated/);
   assert.match(migration, /match_result_corrected_by_admin/);
-  assert.match(migration, /has_club_permission\(target_club_id, 'tournaments\.manage'\)/);
+  assert.match(
+    migration,
+    /has_club_permission\(target_club_id, 'tournaments\.manage'\)/,
+  );
 });
 
 test("Mes Tournois et le back-office exposent la saisie de résultat", async () => {
@@ -104,7 +113,10 @@ test("Mes Tournois et le back-office exposent la saisie de résultat", async () 
   assert.match(userService, /submit_my_tournament_match_result/);
   assert.match(adminPage, /Valider ce résultat/);
   assert.match(adminPage, /Enregistrer et valider/);
-  assert.match(routes, /adminTournamentResults:\s*"\/admin\/tournois\/resultats"/);
+  assert.match(
+    routes,
+    /adminTournamentResults:\s*"\/admin\/tournois\/resultats"/,
+  );
   assert.match(navigation, /label: "Résultats"/);
   assert.match(router, /<AdminTournamentResultsPage \/>/);
 });

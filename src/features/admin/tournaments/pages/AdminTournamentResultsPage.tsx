@@ -23,9 +23,9 @@ const scoreLabel = (match: AdminTournamentResultMatch) =>
     .join(" · ") ?? "—";
 
 export function AdminTournamentResultsPage() {
-  const [workspaces, setWorkspaces] = useState<AdminTournamentResultsWorkspace[]>(
-    [],
-  );
+  const [workspaces, setWorkspaces] = useState<
+    AdminTournamentResultsWorkspace[]
+  >([]);
   const [selectedId, setSelectedId] = useState("");
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -124,7 +124,10 @@ export function AdminTournamentResultsPage() {
       </header>
 
       {error && (
-        <p className="tournament-results-alert tournament-results-alert--error" role="alert">
+        <p
+          className="tournament-results-alert tournament-results-alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -176,7 +179,10 @@ export function AdminTournamentResultsPage() {
               {selected.matches.map((match) => {
                 const editing = editingMatchId === match.id;
                 return (
-                  <article className="admin-card tournament-result-card" key={match.id}>
+                  <article
+                    className="admin-card tournament-result-card"
+                    key={match.id}
+                  >
                     <header>
                       <div>
                         <span>
@@ -186,7 +192,9 @@ export function AdminTournamentResultsPage() {
                           {match.teamALabel} — {match.teamBLabel}
                         </strong>
                         <small>
-                          {dateFormatter.format(new Date(`${match.playDate}T12:00:00`))}
+                          {dateFormatter.format(
+                            new Date(`${match.playDate}T12:00:00`),
+                          )}
                           {" · "}
                           {match.startsAt} · {match.resourceName}
                         </small>
@@ -195,9 +203,7 @@ export function AdminTournamentResultsPage() {
                         {match.result ? (
                           <>
                             <strong>{scoreLabel(match)}</strong>
-                            <span
-                              data-status={match.result.status}
-                            >
+                            <span data-status={match.result.status}>
                               {match.result.status === "validated"
                                 ? "Validé"
                                 : "À valider"}
@@ -235,7 +241,9 @@ export function AdminTournamentResultsPage() {
                           disabled={saving}
                           onClick={() => setEditingMatchId(match.id)}
                         >
-                          {match.result ? "Corriger le score" : "Saisir le résultat"}
+                          {match.result
+                            ? "Corriger le score"
+                            : "Saisir le résultat"}
                         </button>
                       </div>
                     )}
