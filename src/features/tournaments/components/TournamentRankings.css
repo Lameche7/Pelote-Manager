@@ -1,0 +1,124 @@
+.tournament-rankings {
+  display: grid;
+  gap: 1rem;
+}
+
+.tournament-rankings__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tournament-rankings__heading p,
+.tournament-rankings__heading h2 {
+  margin: 0;
+}
+
+.tournament-rankings__heading p {
+  color: var(--color-text-muted, #667085);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tournament-rankings__heading span {
+  color: var(--color-text-muted, #667085);
+  font-size: 0.9rem;
+}
+
+.tournament-rankings__series,
+.tournament-ranking-series,
+.tournament-ranking-series__pools {
+  display: grid;
+  gap: 1rem;
+}
+
+.tournament-ranking-series > h3 {
+  margin: 0;
+}
+
+.tournament-ranking-pool {
+  overflow: hidden;
+  border: 1px solid var(--color-border, #d0d5dd);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+}
+
+.tournament-ranking-pool > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border, #d0d5dd);
+}
+
+.tournament-ranking-pool > header span {
+  color: var(--color-text-muted, #667085);
+  font-size: 0.88rem;
+}
+
+.tournament-ranking-pool__scroll {
+  overflow-x: auto;
+}
+
+.tournament-ranking-pool table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.tournament-ranking-pool th,
+.tournament-ranking-pool td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--color-border, #eaecf0);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tournament-ranking-pool thead th {
+  color: var(--color-text-muted, #667085);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tournament-ranking-pool tbody th {
+  min-width: 210px;
+  text-align: left;
+}
+
+.tournament-ranking-pool tbody tr:last-child th,
+.tournament-ranking-pool tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tournament-ranking-tie {
+  display: inline-flex;
+  margin-left: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.tournament-rankings__empty,
+.tournament-rankings__note {
+  margin: 0;
+  color: var(--color-text-muted, #667085);
+}
+
+.tournament-rankings__note {
+  font-size: 0.88rem;
+}
+
+.tournament-rankings--compact .tournament-rankings__heading h2 {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .tournament-rankings__heading,
+  .tournament-ranking-pool > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
