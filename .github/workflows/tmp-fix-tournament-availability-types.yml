@@ -1,0 +1,52 @@
+name: Temporary fix tournament availability types
+
+on:
+  push:
+    branches:
+      - feat/tournament-availability-controls
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Patch missing wiring
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const typesPath = 'src/features/tournaments/types.ts';
+          let types = fs.readFileSync(typesPath, 'utf8');
+          const needle = `    minimumAvailabilitySlots: number;\n    minimumWeekendAvailabilitySlots: number;\n    slotDurationMinutes: number;\n    poolStartsOn: string;`;
+          const replacement = `    minimumAvailabilitySlots: number;\n    minimumWeekendAvailabilitySlots: number;\n    minimumFinalsAvailabilitySlots: number;\n    slotDurationMinutes: number;\n    poolStartsOn: string;`;
+          if (!types.includes(needle)) throw new Error('Admin tournament payload type pattern missing');
+          types = types.replace(needle, replacement);
+          fs.writeFileSync(typesPath, types);
+
+          const formPath = 'src/features/tournaments/components/TournamentRegistrationForm.tsx';
+          let form = fs.readFileSync(formPath, 'utf8');
+          const oldText = '${TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS}';
+          if (!form.includes(oldText)) throw new Error('Registration finals minimum pattern missing');
+          form = form.replace(oldText, '${tournament.minimumFinalsAvailabilitySlots}');
+          fs.writeFileSync(formPath, form);
+          NODE
+          npx prettier --write \
+            src/features/tournaments/types.ts \
+            src/features/tournaments/components/TournamentRegistrationForm.tsx
+          rm .github/workflows/tmp-fix-tournament-availability-types.yml
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "fix(tournaments): propager le minimum finale"
+          git push
