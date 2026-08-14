@@ -157,6 +157,23 @@ const blankForm = (seasonId = ""): TournamentForm => ({
   slotDurationMinutes: 60,
 });
 
+const blankSportingRules = (): TournamentSportingRules => ({
+  tournamentId: "",
+  matchFormat: "best_of_three_sets",
+  singleGamePoints: 35,
+  mainSetPoints: 20,
+  decidingSetPoints: 10,
+  baseWinPoints: 3,
+  baseLossPoints: 1,
+  offensiveBonusPoints: 1,
+  defensiveBonusPoints: 1,
+  offensiveBonusMargin: 10,
+  defensiveBonusMargin: 5,
+  rankingMode: "points_per_match",
+  goalAverageMode: "point_difference_per_match",
+  updatedAt: "",
+});
+
 const detailToForm = (detail: TournamentDetail): TournamentForm => ({
   seasonId: detail.seasonId,
   name: detail.name,
@@ -334,7 +351,7 @@ export function AdminTournamentsPage() {
     setResourceIds([]);
     setSeries([]);
     setPlayWindows([]);
-    setSportingRules(null);
+    setSportingRules(blankSportingRules());
     setError("");
     setMessage("");
   };
@@ -363,11 +380,15 @@ export function AdminTournamentsPage() {
         await openTournament(detail.id);
         setMessage("Les paramètres du tournoi ont été enregistrés.");
       } else {
+        if (!sportingRules) {
+          throw new Error("Configurez les règles sportives du tournoi.");
+        }
         const id = await tournamentAdminService.create(draft);
+        await tournamentAdminService.saveSportingRules(id, sportingRules);
         await loadList();
         await openTournament(id);
         setMessage(
-          "Tournoi créé. Configurez maintenant les terrains, séries et horaires.",
+          "Tournoi créé avec ses règles sportives. Configurez maintenant les terrains, séries et horaires.",
         );
       }
       await loadList();
@@ -790,16 +811,35 @@ export function AdminTournamentsPage() {
                     />
                   </label>
                 </div>
-                {editable && (
+                {editable && detail && (
                   <button
                     className="tournaments-primary"
                     type="submit"
                     disabled={saving}
                   >
-                    {detail ? "Enregistrer les paramètres" : "Créer le tournoi"}
+                    Enregistrer les paramètres
                   </button>
                 )}
               </section>
+
+              {!detail && sportingRules && (
+                <TournamentSportingRulesSection
+                  rules={sportingRules}
+                  disabled={saving}
+                  onChange={setSportingRules}
+                  showSaveButton={false}
+                />
+              )}
+
+              {!detail && (
+                <button
+                  className="tournaments-primary"
+                  type="submit"
+                  disabled={saving}
+                >
+                  Créer le tournoi
+                </button>
+              )}
             </form>
 
             {detail && (

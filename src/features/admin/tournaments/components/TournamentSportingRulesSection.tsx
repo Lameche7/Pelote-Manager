@@ -4,7 +4,8 @@ type Props = {
   rules: TournamentSportingRules;
   disabled: boolean;
   onChange: (next: TournamentSportingRules) => void;
-  onSave: () => void;
+  onSave?: () => void;
+  showSaveButton?: boolean;
 };
 
 const numberValue = (value: string) => Number(value || 0);
@@ -14,6 +15,7 @@ export function TournamentSportingRulesSection({
   disabled,
   onChange,
   onSave,
+  showSaveButton = true,
 }: Props) {
   const straightWin = rules.baseWinPoints + rules.offensiveBonusPoints;
   const decidingWin = rules.baseWinPoints;
@@ -273,7 +275,7 @@ export function TournamentSportingRulesSection({
         partie afin de comparer correctement des poules de tailles différentes.
       </p>
 
-      {!disabled && (
+      {!disabled && showSaveButton && (
         <button className="tournaments-primary" type="button" onClick={onSave}>
           Enregistrer les règles sportives
         </button>
