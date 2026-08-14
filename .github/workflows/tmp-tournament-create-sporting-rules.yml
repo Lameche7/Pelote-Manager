@@ -1,0 +1,118 @@
+name: Temporary tournament creation sporting rules update
+
+on:
+  push:
+    branches:
+      - feat/tournament-create-sporting-rules
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/tournament-create-sporting-rules
+
+      - name: Patch tournament creation flow
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          page_path = Path("src/features/admin/tournaments/pages/AdminTournamentsPage.tsx")
+          page = page_path.read_text()
+
+          anchor = '''const detailToForm = (detail: TournamentDetail): TournamentForm => ({\n'''
+          defaults = '''const blankSportingRules = (): TournamentSportingRules => ({\n  tournamentId: "",\n  matchFormat: "best_of_three_sets",\n  singleGamePoints: 35,\n  mainSetPoints: 20,\n  decidingSetPoints: 10,\n  baseWinPoints: 3,\n  baseLossPoints: 1,\n  offensiveBonusPoints: 1,\n  defensiveBonusPoints: 1,\n  offensiveBonusMargin: 10,\n  defensiveBonusMargin: 5,\n  rankingMode: "points_per_match",\n  goalAverageMode: "point_difference_per_match",\n  updatedAt: "",\n});\n\n'''
+          if "const blankSportingRules" not in page:
+              if anchor not in page:
+                  raise SystemExit("detailToForm anchor not found")
+              page = page.replace(anchor, defaults + anchor, 1)
+
+          old_begin = '''  const beginCreate = () => {\n    setDetail(null);\n    setForm(blankForm(activeSeasonId));\n    setResourceIds([]);\n    setSeries([]);\n    setPlayWindows([]);\n    setSportingRules(null);\n'''
+          new_begin = '''  const beginCreate = () => {\n    setDetail(null);\n    setForm(blankForm(activeSeasonId));\n    setResourceIds([]);\n    setSeries([]);\n    setPlayWindows([]);\n    setSportingRules(blankSportingRules());\n'''
+          if old_begin not in page:
+              raise SystemExit("beginCreate block not found")
+          page = page.replace(old_begin, new_begin, 1)
+
+          old_create = '''      } else {\n        const id = await tournamentAdminService.create(draft);\n        await loadList();\n        await openTournament(id);\n        setMessage(\n          "Tournoi créé. Configurez maintenant les terrains, séries et horaires.",\n        );\n      }\n'''
+          new_create = '''      } else {\n        if (!sportingRules) {\n          throw new Error("Configurez les règles sportives du tournoi.");\n        }\n        const id = await tournamentAdminService.create(draft);\n        await tournamentAdminService.saveSportingRules(id, sportingRules);\n        await loadList();\n        await openTournament(id);\n        setMessage(\n          "Tournoi créé avec ses règles sportives. Configurez maintenant les terrains, séries et horaires.",\n        );\n      }\n'''
+          if old_create not in page:
+              raise SystemExit("create flow block not found")
+          page = page.replace(old_create, new_create, 1)
+
+          old_button = '''                {editable && (\n                  <button\n                    className="tournaments-primary"\n                    type="submit"\n                    disabled={saving}\n                  >\n                    {detail ? "Enregistrer les paramètres" : "Créer le tournoi"}\n                  </button>\n                )}\n'''
+          new_button = '''                {editable && detail && (\n                  <button\n                    className="tournaments-primary"\n                    type="submit"\n                    disabled={saving}\n                  >\n                    Enregistrer les paramètres\n                  </button>\n                )}\n'''
+          if old_button not in page:
+              raise SystemExit("general submit button block not found")
+          page = page.replace(old_button, new_button, 1)
+
+          old_form_end = '''              </section>\n            </form>\n\n            {detail && (\n              <>\n                {sportingRules && (\n'''
+          new_form_end = '''              </section>\n\n              {!detail && sportingRules && (\n                <TournamentSportingRulesSection\n                  rules={sportingRules}\n                  disabled={saving}\n                  onChange={setSportingRules}\n                  showSaveButton={false}\n                />\n              )}\n\n              {!detail && (\n                <button\n                  className="tournaments-primary"\n                  type="submit"\n                  disabled={saving}\n                >\n                  Créer le tournoi\n                </button>\n              )}\n            </form>\n\n            {detail && (\n              <>\n                {sportingRules && (\n'''
+          if old_form_end not in page:
+              raise SystemExit("form end anchor not found")
+          page = page.replace(old_form_end, new_form_end, 1)
+          page_path.write_text(page)
+
+          section_path = Path("src/features/admin/tournaments/components/TournamentSportingRulesSection.tsx")
+          section = section_path.read_text()
+          old_props = '''  onChange: (next: TournamentSportingRules) => void;\n  onSave: () => void;\n};\n'''
+          new_props = '''  onChange: (next: TournamentSportingRules) => void;\n  onSave?: () => void;\n  showSaveButton?: boolean;\n};\n'''
+          if old_props not in section:
+              raise SystemExit("sporting rules props block not found")
+          section = section.replace(old_props, new_props, 1)
+
+          old_destructure = '''  onChange,\n  onSave,\n}: Props) {\n'''
+          new_destructure = '''  onChange,\n  onSave,\n  showSaveButton = true,\n}: Props) {\n'''
+          if old_destructure not in section:
+              raise SystemExit("sporting rules destructure block not found")
+          section = section.replace(old_destructure, new_destructure, 1)
+          section = section.replace(
+              '''      {!disabled && (\n        <button className="tournaments-primary" type="button" onClick={onSave}>\n''',
+              '''      {!disabled && showSaveButton && (\n        <button className="tournaments-primary" type="button" onClick={onSave}>\n''',
+              1,
+          )
+          section_path.write_text(section)
+
+          test_path = Path("tests/tournamentSportingRules.test.mjs")
+          tests = test_path.read_text()
+          marker = '''  assert.match(page, /saveSportingRules/);\n  assert.match(service, /getSportingRules/);\n'''
+          replacement = '''  assert.match(page, /saveSportingRules/);\n  assert.match(page, /blankSportingRules/);\n  assert.match(page, /setSportingRules\\(blankSportingRules\\(\\)\\)/);\n  assert.match(\n    page,\n    /tournamentAdminService\\.create\\(draft\\)[\\s\\S]*tournamentAdminService\\.saveSportingRules\\(id, sportingRules\\)/,\n  );\n  assert.match(page, /showSaveButton=\\{false\\}/);\n  assert.match(section, /showSaveButton = true/);\n  assert.match(service, /getSportingRules/);\n'''
+          if marker not in tests:
+              raise SystemExit("sporting rules test marker not found")
+          tests = tests.replace(marker, replacement, 1)
+          test_path.write_text(tests)
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: npx prettier --write src/features/admin/tournaments/pages/AdminTournamentsPage.tsx src/features/admin/tournaments/components/TournamentSportingRulesSection.tsx tests/tournamentSportingRules.test.mjs
+
+      - name: Sporting rules tests
+        run: node --test tests/tournamentSportingRules.test.mjs
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Full tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Commit feature and remove temporary workflow
+        run: |
+          rm .github/workflows/tmp-tournament-create-sporting-rules.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "feat(tournaments): configure sporting rules during creation"
+          git push origin HEAD:feat/tournament-create-sporting-rules
