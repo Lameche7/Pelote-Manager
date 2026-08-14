@@ -1,0 +1,258 @@
+name: Temporary sporting rules integration v4
+
+on:
+  push:
+    branches: [feature/tournament-sporting-rules]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/tournament-sporting-rules
+
+      - name: Patch existing admin files
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def one(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f"anchor missing: {label}")
+              return text.replace(old, new, 1)
+
+          service_path = Path("src/features/admin/tournaments/services/tournamentAdminService.ts")
+          service = service_path.read_text()
+
+          service = one(
+              service,
+              "export type TournamentResource = TournamentResourceOption & {\n  displayOrder: number;\n};\n\nexport type TournamentDraft = {",
+              """export type TournamentResource = TournamentResourceOption & {
+            displayOrder: number;
+          };
+
+          export type TournamentMatchFormat = "single_game" | "best_of_three_sets";
+          export type TournamentRankingMode = "total_points" | "points_per_match";
+          export type TournamentGoalAverageMode =
+            | "point_difference"
+            | "point_difference_per_match";
+
+          export type TournamentSportingRules = {
+            tournamentId: string;
+            matchFormat: TournamentMatchFormat;
+            singleGamePoints: number;
+            mainSetPoints: number;
+            decidingSetPoints: number;
+            baseWinPoints: number;
+            baseLossPoints: number;
+            offensiveBonusPoints: number;
+            defensiveBonusPoints: number;
+            offensiveBonusMargin: number;
+            defensiveBonusMargin: number;
+            rankingMode: TournamentRankingMode;
+            goalAverageMode: TournamentGoalAverageMode;
+            updatedAt: string;
+          };
+
+          export type TournamentDraft = {""".replace("          ", ""),
+              "service types",
+          )
+
+          service = one(
+              service,
+              "const draftPayload = (draft: TournamentDraft) => ({",
+              """const mapSportingRules = (value: unknown): TournamentSportingRules => {
+            const row = value as Row;
+            return {
+              tournamentId: String(row.tournament_id),
+              matchFormat: row.match_format as TournamentMatchFormat,
+              singleGamePoints: Number(row.single_game_points ?? 35),
+              mainSetPoints: Number(row.main_set_points ?? 20),
+              decidingSetPoints: Number(row.deciding_set_points ?? 10),
+              baseWinPoints: Number(row.base_win_points ?? 3),
+              baseLossPoints: Number(row.base_loss_points ?? 1),
+              offensiveBonusPoints: Number(row.offensive_bonus_points ?? 1),
+              defensiveBonusPoints: Number(row.defensive_bonus_points ?? 1),
+              offensiveBonusMargin: Number(row.offensive_bonus_margin ?? 10),
+              defensiveBonusMargin: Number(row.defensive_bonus_margin ?? 5),
+              rankingMode: row.ranking_mode as TournamentRankingMode,
+              goalAverageMode: row.goal_average_mode as TournamentGoalAverageMode,
+              updatedAt: String(row.updated_at ?? ""),
+            };
+          };
+
+          const draftPayload = (draft: TournamentDraft) => ({""".replace("          ", ""),
+              "service mapper",
+          )
+
+          service = one(
+              service,
+              "  async transition(id: string, status: TournamentStatus): Promise<void> {",
+              """  async getSportingRules(id: string): Promise<TournamentSportingRules> {
+            const { data, error } = await supabase.rpc(
+              "admin_get_tournament_sporting_rules",
+              { target_id: id },
+            );
+            if (error)
+              fail(error, "Impossible de charger les règles sportives du tournoi.");
+            return mapSportingRules(data);
+          },
+
+          async saveSportingRules(
+            id: string,
+            rules: TournamentSportingRules,
+          ): Promise<void> {
+            const { error } = await supabase.rpc(
+              "admin_save_tournament_sporting_rules",
+              {
+                target_id: id,
+                payload: {
+                  match_format: rules.matchFormat,
+                  single_game_points: rules.singleGamePoints,
+                  main_set_points: rules.mainSetPoints,
+                  deciding_set_points: rules.decidingSetPoints,
+                  base_win_points: rules.baseWinPoints,
+                  base_loss_points: rules.baseLossPoints,
+                  offensive_bonus_points: rules.offensiveBonusPoints,
+                  defensive_bonus_points: rules.defensiveBonusPoints,
+                  offensive_bonus_margin: rules.offensiveBonusMargin,
+                  defensive_bonus_margin: rules.defensiveBonusMargin,
+                  ranking_mode: rules.rankingMode,
+                  goal_average_mode: rules.goalAverageMode,
+                },
+              },
+            );
+            if (error) fail(error, "Impossible d’enregistrer les règles sportives.");
+          },
+
+          async transition(id: string, status: TournamentStatus): Promise<void> {""".replace("          ", ""),
+              "service methods",
+          )
+
+          service_path.write_text(service)
+
+          page_path = Path("src/features/admin/tournaments/pages/AdminTournamentsPage.tsx")
+          page = page_path.read_text()
+
+          page = one(
+              page,
+              "import {\n  tournamentAdminService,",
+              'import { TournamentSportingRulesSection } from "@/features/admin/tournaments/components/TournamentSportingRulesSection";\nimport {\n  tournamentAdminService,',
+              "component import",
+          )
+          page = one(
+              page,
+              "  type TournamentSeries,\n  type TournamentStatus,",
+              "  type TournamentSeries,\n  type TournamentSportingRules,\n  type TournamentStatus,",
+              "type import",
+          )
+          page = one(
+              page,
+              "  const [playWindows, setPlayWindows] = useState<TournamentPlayWindow[]>([]);\n  const [loading, setLoading] = useState(true);",
+              "  const [playWindows, setPlayWindows] = useState<TournamentPlayWindow[]>([]);\n  const [sportingRules, setSportingRules] =\n    useState<TournamentSportingRules | null>(null);\n  const [loading, setLoading] = useState(true);",
+              "state",
+          )
+          page = one(
+              page,
+              "      const loaded = await tournamentAdminService.get(id);\n      setDetail(loaded);\n      setForm(detailToForm(loaded));\n      setResourceIds(loaded.resources.map((resource) => resource.id));\n      setSeries(loaded.series);\n      setPlayWindows(loaded.playWindows);",
+              "      const [loaded, loadedSportingRules] = await Promise.all([\n        tournamentAdminService.get(id),\n        tournamentAdminService.getSportingRules(id),\n      ]);\n      setDetail(loaded);\n      setForm(detailToForm(loaded));\n      setResourceIds(loaded.resources.map((resource) => resource.id));\n      setSeries(loaded.series);\n      setPlayWindows(loaded.playWindows);\n      setSportingRules(loadedSportingRules);",
+              "open tournament",
+          )
+          page = one(
+              page,
+              "  const registrationWindowIsOpen = detail\n    ? new Date(detail.registrationOpensAt) <= new Date() &&",
+              "  const sportingRulesEditable =\n    detail !== null &&\n    [\n      \"preparation\",\n      \"configuration\",\n      \"registrations_open\",\n      \"registrations_closed\",\n      \"pools_generated\",\n    ].includes(detail.status);\n\n  const registrationWindowIsOpen = detail\n    ? new Date(detail.registrationOpensAt) <= new Date() &&",
+              "editable",
+          )
+
+          reset = "    setPlayWindows([]);\n    setError(\"\");"
+          if page.count(reset) < 2:
+              raise SystemExit("anchor missing: resets")
+          page = page.replace(
+              reset,
+              "    setPlayWindows([]);\n    setSportingRules(null);\n    setError(\"\");",
+              2,
+          )
+
+          page = one(
+              page,
+              "  const transition = async (status: TournamentStatus, success: string) => {",
+              """  const saveSportingRules = async () => {
+            if (!detail || !sportingRules) return;
+            setSaving(true);
+            setError("");
+            setMessage("");
+            try {
+              await tournamentAdminService.saveSportingRules(detail.id, sportingRules);
+              setSportingRules(
+                await tournamentAdminService.getSportingRules(detail.id),
+              );
+              setMessage("Les règles sportives ont été enregistrées.");
+            } catch (saveError) {
+              setError(
+                saveError instanceof Error
+                  ? saveError.message
+                  : "Enregistrement impossible.",
+              );
+            } finally {
+              setSaving(false);
+            }
+          };
+
+          const transition = async (status: TournamentStatus, success: string) => {""".replace("          ", ""),
+              "save sporting rules",
+          )
+
+          pattern = re.compile(
+              r'(\{detail\s*&&\s*\(\s*<>\s*)'
+              r'(<section className="tournament-config">\s*<header>\s*<div>\s*<h3>3\. Terrains</h3>)',
+              re.S,
+          )
+          replacement = r'''\1<TournamentSportingRulesSection
+                    rules={sportingRules!}
+                    disabled={!sportingRules || !sportingRulesEditable || saving}
+                    onChange={setSportingRules}
+                    onSave={() => void saveSportingRules()}
+                  />
+
+                  \2'''
+          page, n = pattern.subn(replacement, page, count=1)
+          if n != 1:
+              raise SystemExit(f"render pattern matched {n} times")
+
+          page = one(page, "<h3>3. Terrains</h3>", "<h3>4. Terrains</h3>", "terrain heading")
+          page = one(page, "<h3>4. Séries & capacités</h3>", "<h3>5. Séries & capacités</h3>", "series heading")
+          page = one(page, "<h3>5. Horaires des créneaux</h3>", "<h3>6. Horaires des créneaux</h3>", "windows heading")
+          page = one(page, "<h3>6. Cycle du tournoi</h3>", "<h3>7. Cycle du tournoi</h3>", "lifecycle heading")
+          page_path.write_text(page)
+          PY
+
+      - name: Install, format and verify
+        run: |
+          npm ci
+          npx prettier --write \
+            src/features/admin/tournaments/services/tournamentAdminService.ts \
+            src/features/admin/tournaments/pages/AdminTournamentsPage.tsx \
+            src/features/admin/tournaments/components/TournamentSportingRulesSection.tsx \
+            tests/tournamentSportingRules.test.mjs \
+            supabase/migrations/20260814114500_add_tournament_sporting_rules.sql
+          npm run typecheck
+          npm test
+
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/admin/tournaments/services/tournamentAdminService.ts \
+            src/features/admin/tournaments/pages/AdminTournamentsPage.tsx \
+            src/features/admin/tournaments/components/TournamentSportingRulesSection.tsx \
+            tests/tournamentSportingRules.test.mjs \
+            supabase/migrations/20260814114500_add_tournament_sporting_rules.sql
+          git diff --cached --quiet || git commit -m "feat(tournaments): integrate sporting rules admin"
+          git push origin HEAD:feature/tournament-sporting-rules
