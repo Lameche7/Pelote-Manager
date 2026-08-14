@@ -383,12 +383,38 @@ export function AdminTournamentsPage() {
         if (!sportingRules) {
           throw new Error("Configurez les règles sportives du tournoi.");
         }
+        if (resourceIds.length === 0) {
+          throw new Error("Sélectionnez au moins un terrain.");
+        }
+        const activeSeries = series.filter((item) => item.enabled);
+        if (
+          activeSeries.length === 0 ||
+          activeSeries.some((item) => !item.name.trim() || item.capacity <= 0)
+        ) {
+          throw new Error(
+            "Configurez au moins une série active avec un nom et une capacité positive.",
+          );
+        }
+        if (
+          playWindows.length === 0 ||
+          playWindows.some(
+            (item) =>
+              !item.opensAt || !item.closesAt || item.opensAt >= item.closesAt,
+          )
+        ) {
+          throw new Error("Configurez au moins une plage horaire valide.");
+        }
         const id = await tournamentAdminService.create(draft);
         await tournamentAdminService.saveSportingRules(id, sportingRules);
+        await tournamentAdminService.saveConfiguration(id, {
+          resourceIds,
+          series,
+          playWindows,
+        });
         await loadList();
         await openTournament(id);
         setMessage(
-          "Tournoi créé avec ses règles sportives. Configurez maintenant les terrains, séries et horaires.",
+          "Tournoi créé avec ses règles sportives, terrains, séries et horaires.",
         );
       }
       await loadList();
@@ -616,7 +642,11 @@ export function AdminTournamentsPage() {
                 </p>
               )}
 
-            <form className="tournament-form" onSubmit={submitGeneral}>
+            <form
+              id="tournament-general-form"
+              className="tournament-form"
+              onSubmit={submitGeneral}
+            >
               <section>
                 <h3>1. Informations & inscriptions</h3>
                 <div className="tournament-form__grid">
@@ -830,411 +860,409 @@ export function AdminTournamentsPage() {
                   showSaveButton={false}
                 />
               )}
+            </form>
 
-              {!detail && (
+            {detail && sportingRules && (
+              <TournamentSportingRulesSection
+                rules={sportingRules}
+                disabled={!sportingRulesEditable || saving}
+                onChange={setSportingRules}
+                onSave={() => void saveSportingRules()}
+              />
+            )}
+
+            <section className="tournament-config">
+              <header>
+                <div>
+                  <h3>4. Terrains</h3>
+                  <p>
+                    Sélectionnez les ressources que le Planning Engine pourra
+                    utiliser.
+                  </p>
+                </div>
+              </header>
+              <div className="tournament-resource-list">
+                {options.resources.map((resource) => (
+                  <label key={resource.id}>
+                    <input
+                      type="checkbox"
+                      disabled={!editable || saving}
+                      checked={resourceIds.includes(resource.id)}
+                      onChange={(event) =>
+                        setResourceIds((current) =>
+                          event.target.checked
+                            ? [...current, resource.id]
+                            : current.filter((id) => id !== resource.id),
+                        )
+                      }
+                    />
+                    <span>{resource.name}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            <section className="tournament-config">
+              <header>
+                <div>
+                  <h3>5. Séries & capacités</h3>
+                  <p>
+                    La capacité peut évoluer pendant les inscriptions mais
+                    jamais sous le nombre d’équipes déjà inscrites.
+                  </p>
+                </div>
+                {editable && (
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      setSeries((current) => [
+                        ...current,
+                        {
+                          name: "",
+                          capacity: 16,
+                          enabled: true,
+                          displayOrder: current.length,
+                        },
+                      ])
+                    }
+                  >
+                    + Ajouter une série
+                  </button>
+                )}
+              </header>
+              <div className="tournament-repeat-list">
+                {series.map((item, index) => (
+                  <div
+                    className="tournament-repeat-row"
+                    key={item.id ?? `series-${index}`}
+                  >
+                    <input
+                      aria-label={`Nom série ${index + 1}`}
+                      placeholder="Ex. 1ère Série"
+                      disabled={!editable || saving}
+                      value={item.name}
+                      onChange={(event) =>
+                        setSeries((current) =>
+                          current.map((seriesItem, itemIndex) =>
+                            itemIndex === index
+                              ? { ...seriesItem, name: event.target.value }
+                              : seriesItem,
+                          ),
+                        )
+                      }
+                    />
+                    <label>
+                      Capacité
+                      <input
+                        type="number"
+                        min="0"
+                        disabled={!editable || saving}
+                        value={item.capacity}
+                        onChange={(event) =>
+                          setSeries((current) =>
+                            current.map((seriesItem, itemIndex) =>
+                              itemIndex === index
+                                ? {
+                                    ...seriesItem,
+                                    capacity: Number(event.target.value),
+                                  }
+                                : seriesItem,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+                    <label className="tournament-check">
+                      <input
+                        type="checkbox"
+                        disabled={!editable || saving}
+                        checked={item.enabled}
+                        onChange={(event) =>
+                          setSeries((current) =>
+                            current.map((seriesItem, itemIndex) =>
+                              itemIndex === index
+                                ? {
+                                    ...seriesItem,
+                                    enabled: event.target.checked,
+                                  }
+                                : seriesItem,
+                            ),
+                          )
+                        }
+                      />
+                      Active
+                    </label>
+                    {editable && (
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() =>
+                          setSeries((current) =>
+                            current.filter(
+                              (_, itemIndex) => itemIndex !== index,
+                            ),
+                          )
+                        }
+                      >
+                        Retirer
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {series.length === 0 && <p>Aucune série configurée.</p>}
+              </div>
+            </section>
+
+            <section className="tournament-config">
+              <header>
+                <div>
+                  <h3>6. Horaires des créneaux</h3>
+                  <p>
+                    Ces plages sont appliquées aux dates de poules et aux dates
+                    de phase finale. Une réduction qui supprimerait un créneau
+                    déjà choisi sera refusée.
+                  </p>
+                </div>
+                {editable && (
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      setPlayWindows((current) => [
+                        ...current,
+                        {
+                          weekday: 1,
+                          opensAt: "18:00",
+                          closesAt: "22:00",
+                          displayOrder: current.length,
+                        },
+                      ])
+                    }
+                  >
+                    + Ajouter une plage
+                  </button>
+                )}
+              </header>
+              <div className="tournament-repeat-list">
+                {playWindows.map((item, index) => (
+                  <div
+                    className="tournament-repeat-row tournament-repeat-row--window"
+                    key={item.id ?? `window-${index}`}
+                  >
+                    <select
+                      aria-label={`Jour plage ${index + 1}`}
+                      disabled={!editable || saving}
+                      value={item.weekday}
+                      onChange={(event) =>
+                        setPlayWindows((current) =>
+                          current.map((windowItem, itemIndex) =>
+                            itemIndex === index
+                              ? {
+                                  ...windowItem,
+                                  weekday: Number(event.target.value),
+                                }
+                              : windowItem,
+                          ),
+                        )
+                      }
+                    >
+                      {weekdays.map((weekday) => (
+                        <option key={weekday.value} value={weekday.value}>
+                          {weekday.label}
+                        </option>
+                      ))}
+                    </select>
+                    <label>
+                      Début
+                      <input
+                        type="time"
+                        disabled={!editable || saving}
+                        value={item.opensAt}
+                        onChange={(event) =>
+                          setPlayWindows((current) =>
+                            current.map((windowItem, itemIndex) =>
+                              itemIndex === index
+                                ? {
+                                    ...windowItem,
+                                    opensAt: event.target.value,
+                                  }
+                                : windowItem,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+                    <label>
+                      Fin
+                      <input
+                        type="time"
+                        disabled={!editable || saving}
+                        value={item.closesAt}
+                        onChange={(event) =>
+                          setPlayWindows((current) =>
+                            current.map((windowItem, itemIndex) =>
+                              itemIndex === index
+                                ? {
+                                    ...windowItem,
+                                    closesAt: event.target.value,
+                                  }
+                                : windowItem,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+                    {editable && (
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() =>
+                          setPlayWindows((current) =>
+                            current.filter(
+                              (_, itemIndex) => itemIndex !== index,
+                            ),
+                          )
+                        }
+                      >
+                        Retirer
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {playWindows.length === 0 && (
+                  <p>Aucune plage horaire configurée.</p>
+                )}
+              </div>
+            </section>
+
+            {detail && editable && (
+              <div className="tournament-config-save">
+                <button
+                  className="tournaments-primary"
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void saveConfiguration()}
+                >
+                  Enregistrer terrains, séries et horaires
+                </button>
+              </div>
+            )}
+
+            {!detail && (
+              <div className="tournament-config-save">
                 <button
                   className="tournaments-primary"
                   type="submit"
+                  form="tournament-general-form"
                   disabled={saving}
                 >
                   Créer le tournoi
                 </button>
-              )}
-            </form>
+              </div>
+            )}
 
             {detail && (
-              <>
-                {sportingRules && (
-                  <TournamentSportingRulesSection
-                    rules={sportingRules}
+              <section className="tournament-lifecycle">
+                <h3>7. Cycle du tournoi</h3>
+                <div className="tournament-progress">
+                  {lifecycleStatuses.map((status) => (
+                    <span
+                      className={detail.status === status ? "is-current" : ""}
+                      key={status}
+                    >
+                      {statusLabels[status]}
+                    </span>
+                  ))}
+                </div>
 
-                    disabled={!sportingRulesEditable || saving}
-
-                    onChange={setSportingRules}
-
-                    onSave={() => void saveSportingRules()}
-                  />
-                )}
-
-                <section className="tournament-config">
-                  <header>
-                    <div>
-                      <h3>4. Terrains</h3>
-                      <p>
-                        Sélectionnez les ressources que le Planning Engine
-                        pourra utiliser.
-                      </p>
-                    </div>
-                  </header>
-                  <div className="tournament-resource-list">
-                    {options.resources.map((resource) => (
-                      <label key={resource.id}>
-                        <input
-                          type="checkbox"
-                          disabled={!editable || saving}
-                          checked={resourceIds.includes(resource.id)}
-                          onChange={(event) =>
-                            setResourceIds((current) =>
-                              event.target.checked
-                                ? [...current, resource.id]
-                                : current.filter((id) => id !== resource.id),
-                            )
-                          }
-                        />
-                        <span>{resource.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="tournament-config">
-                  <header>
-                    <div>
-                      <h3>5. Séries & capacités</h3>
-                      <p>
-                        La capacité peut évoluer pendant les inscriptions mais
-                        jamais sous le nombre d’équipes déjà inscrites.
-                      </p>
-                    </div>
-                    {editable && (
-                      <button
-                        type="button"
-                        disabled={saving}
-                        onClick={() =>
-                          setSeries((current) => [
-                            ...current,
-                            {
-                              name: "",
-                              capacity: 16,
-                              enabled: true,
-                              displayOrder: current.length,
-                            },
-                          ])
-                        }
-                      >
-                        + Ajouter une série
-                      </button>
-                    )}
-                  </header>
-                  <div className="tournament-repeat-list">
-                    {series.map((item, index) => (
-                      <div
-                        className="tournament-repeat-row"
-                        key={item.id ?? `series-${index}`}
-                      >
-                        <input
-                          aria-label={`Nom série ${index + 1}`}
-                          placeholder="Ex. 1ère Série"
-                          disabled={!editable || saving}
-                          value={item.name}
-                          onChange={(event) =>
-                            setSeries((current) =>
-                              current.map((seriesItem, itemIndex) =>
-                                itemIndex === index
-                                  ? { ...seriesItem, name: event.target.value }
-                                  : seriesItem,
-                              ),
-                            )
-                          }
-                        />
-                        <label>
-                          Capacité
-                          <input
-                            type="number"
-                            min="0"
-                            disabled={!editable || saving}
-                            value={item.capacity}
-                            onChange={(event) =>
-                              setSeries((current) =>
-                                current.map((seriesItem, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...seriesItem,
-                                        capacity: Number(event.target.value),
-                                      }
-                                    : seriesItem,
-                                ),
-                              )
-                            }
-                          />
-                        </label>
-                        <label className="tournament-check">
-                          <input
-                            type="checkbox"
-                            disabled={!editable || saving}
-                            checked={item.enabled}
-                            onChange={(event) =>
-                              setSeries((current) =>
-                                current.map((seriesItem, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...seriesItem,
-                                        enabled: event.target.checked,
-                                      }
-                                    : seriesItem,
-                                ),
-                              )
-                            }
-                          />
-                          Active
-                        </label>
-                        {editable && (
-                          <button
-                            type="button"
-                            disabled={saving}
-                            onClick={() =>
-                              setSeries((current) =>
-                                current.filter(
-                                  (_, itemIndex) => itemIndex !== index,
-                                ),
-                              )
-                            }
-                          >
-                            Retirer
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    {series.length === 0 && <p>Aucune série configurée.</p>}
-                  </div>
-                </section>
-
-                <section className="tournament-config">
-                  <header>
-                    <div>
-                      <h3>6. Horaires des créneaux</h3>
-                      <p>
-                        Ces plages sont appliquées aux dates de poules et aux
-                        dates de phase finale. Une réduction qui supprimerait un
-                        créneau déjà choisi sera refusée.
-                      </p>
-                    </div>
-                    {editable && (
-                      <button
-                        type="button"
-                        disabled={saving}
-                        onClick={() =>
-                          setPlayWindows((current) => [
-                            ...current,
-                            {
-                              weekday: 1,
-                              opensAt: "18:00",
-                              closesAt: "22:00",
-                              displayOrder: current.length,
-                            },
-                          ])
-                        }
-                      >
-                        + Ajouter une plage
-                      </button>
-                    )}
-                  </header>
-                  <div className="tournament-repeat-list">
-                    {playWindows.map((item, index) => (
-                      <div
-                        className="tournament-repeat-row tournament-repeat-row--window"
-                        key={item.id ?? `window-${index}`}
-                      >
-                        <select
-                          aria-label={`Jour plage ${index + 1}`}
-                          disabled={!editable || saving}
-                          value={item.weekday}
-                          onChange={(event) =>
-                            setPlayWindows((current) =>
-                              current.map((windowItem, itemIndex) =>
-                                itemIndex === index
-                                  ? {
-                                      ...windowItem,
-                                      weekday: Number(event.target.value),
-                                    }
-                                  : windowItem,
-                              ),
-                            )
-                          }
-                        >
-                          {weekdays.map((weekday) => (
-                            <option key={weekday.value} value={weekday.value}>
-                              {weekday.label}
-                            </option>
-                          ))}
-                        </select>
-                        <label>
-                          Début
-                          <input
-                            type="time"
-                            disabled={!editable || saving}
-                            value={item.opensAt}
-                            onChange={(event) =>
-                              setPlayWindows((current) =>
-                                current.map((windowItem, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...windowItem,
-                                        opensAt: event.target.value,
-                                      }
-                                    : windowItem,
-                                ),
-                              )
-                            }
-                          />
-                        </label>
-                        <label>
-                          Fin
-                          <input
-                            type="time"
-                            disabled={!editable || saving}
-                            value={item.closesAt}
-                            onChange={(event) =>
-                              setPlayWindows((current) =>
-                                current.map((windowItem, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...windowItem,
-                                        closesAt: event.target.value,
-                                      }
-                                    : windowItem,
-                                ),
-                              )
-                            }
-                          />
-                        </label>
-                        {editable && (
-                          <button
-                            type="button"
-                            disabled={saving}
-                            onClick={() =>
-                              setPlayWindows((current) =>
-                                current.filter(
-                                  (_, itemIndex) => itemIndex !== index,
-                                ),
-                              )
-                            }
-                          >
-                            Retirer
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    {playWindows.length === 0 && (
-                      <p>Aucune plage horaire configurée.</p>
-                    )}
-                  </div>
-                </section>
-
-                {editable && (
-                  <div className="tournament-config-save">
+                <div className="tournament-lifecycle__actions">
+                  {detail.status === "preparation" && (
                     <button
                       className="tournaments-primary"
                       type="button"
                       disabled={saving}
-                      onClick={() => void saveConfiguration()}
+                      onClick={() =>
+                        void transition(
+                          "configuration",
+                          "Configuration validée. Le tournoi est prêt pour les inscriptions.",
+                        )
+                      }
                     >
-                      Enregistrer terrains, séries et horaires
+                      Valider la configuration
                     </button>
-                  </div>
-                )}
-
-                <section className="tournament-lifecycle">
-                  <h3>7. Cycle du tournoi</h3>
-                  <div className="tournament-progress">
-                    {lifecycleStatuses.map((status) => (
-                      <span
-                        className={detail.status === status ? "is-current" : ""}
-                        key={status}
-                      >
-                        {statusLabels[status]}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="tournament-lifecycle__actions">
-                    {detail.status === "preparation" && (
-                      <button
-                        className="tournaments-primary"
-                        type="button"
-                        disabled={saving}
-                        onClick={() =>
-                          void transition(
-                            "configuration",
-                            "Configuration validée. Le tournoi est prêt pour les inscriptions.",
-                          )
-                        }
-                      >
-                        Valider la configuration
-                      </button>
-                    )}
-                    {detail.status === "configuration" && (
-                      <>
-                        <p>
-                          Les inscriptions s’ouvriront automatiquement le{" "}
-                          <strong>
-                            {formatDateTime(detail.registrationOpensAt)}
-                          </strong>
-                          .
-                        </p>
-                        <button
-                          type="button"
-                          disabled={saving || !registrationWindowIsOpen}
-                          onClick={() =>
-                            void transition(
-                              "registrations_open",
-                              "Les inscriptions sont ouvertes.",
-                            )
-                          }
-                        >
-                          Ouvrir les inscriptions maintenant
-                        </button>
-                      </>
-                    )}
-                    {detail.status === "registrations_open" && (
-                      <button
-                        type="button"
-                        disabled={saving}
-                        onClick={() =>
-                          void transition(
-                            "registrations_closed",
-                            "Les inscriptions sont fermées.",
-                          )
-                        }
-                      >
-                        Fermer les inscriptions
-                      </button>
-                    )}
-                    {detail.status === "registrations_closed" && (
+                  )}
+                  {detail.status === "configuration" && (
+                    <>
                       <p>
-                        Les paramètres restent ajustables jusqu’à la génération
-                        des poules. Prochaine étape : Pool Engine.
+                        Les inscriptions s’ouvriront automatiquement le{" "}
+                        <strong>
+                          {formatDateTime(detail.registrationOpensAt)}
+                        </strong>
+                        .
                       </p>
-                    )}
-                    {[
-                      "preparation",
-                      "configuration",
-                      "registrations_open",
-                      "registrations_closed",
-                    ].includes(detail.status) && (
                       <button
-                        className="tournament-danger"
                         type="button"
-                        disabled={saving}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              "Annuler ce tournoi ? Les données resteront conservées dans l’historique.",
-                            )
-                          ) {
-                            void transition(
-                              "cancelled",
-                              "Le tournoi a été annulé.",
-                            );
-                          }
-                        }}
+                        disabled={saving || !registrationWindowIsOpen}
+                        onClick={() =>
+                          void transition(
+                            "registrations_open",
+                            "Les inscriptions sont ouvertes.",
+                          )
+                        }
                       >
-                        Annuler le tournoi
+                        Ouvrir les inscriptions maintenant
                       </button>
-                    )}
-                  </div>
-                </section>
-              </>
+                    </>
+                  )}
+                  {detail.status === "registrations_open" && (
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() =>
+                        void transition(
+                          "registrations_closed",
+                          "Les inscriptions sont fermées.",
+                        )
+                      }
+                    >
+                      Fermer les inscriptions
+                    </button>
+                  )}
+                  {detail.status === "registrations_closed" && (
+                    <p>
+                      Les paramètres restent ajustables jusqu’à la génération
+                      des poules. Prochaine étape : Pool Engine.
+                    </p>
+                  )}
+                  {[
+                    "preparation",
+                    "configuration",
+                    "registrations_open",
+                    "registrations_closed",
+                  ].includes(detail.status) && (
+                    <button
+                      className="tournament-danger"
+                      type="button"
+                      disabled={saving}
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            "Annuler ce tournoi ? Les données resteront conservées dans l’historique.",
+                          )
+                        ) {
+                          void transition(
+                            "cancelled",
+                            "Le tournoi a été annulé.",
+                          );
+                        }
+                      }}
+                    >
+                      Annuler le tournoi
+                    </button>
+                  )}
+                </div>
+              </section>
             )}
           </div>
         </div>

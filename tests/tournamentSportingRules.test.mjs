@@ -77,3 +77,18 @@ test("l'administration expose les deux formats, les bonus et le classement par p
   assert.match(service, /getSportingRules/);
   assert.match(service, /saveSportingRules/);
 });
+
+test("la création du tournoi inclut aussi terrains, séries et horaires", async () => {
+  const page = await read(
+    "../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx",
+  );
+
+  assert.match(page, /<h3>4\. Terrains<\/h3>/);
+  assert.match(page, /<h3>5\. Séries & capacités<\/h3>/);
+  assert.match(page, /<h3>6\. Horaires des créneaux<\/h3>/);
+  assert.match(page, /form="tournament-general-form"/);
+  assert.match(page, /saveConfiguration\(id, \{/);
+  assert.match(page, /Sélectionnez au moins un terrain/);
+  assert.match(page, /Configurez au moins une série active/);
+  assert.match(page, /Configurez au moins une plage horaire valide/);
+});
