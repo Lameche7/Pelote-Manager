@@ -67,6 +67,8 @@ test("utilisateur et admin partagent les contrôles de semaine", async () => {
   assert.match(grid, /Tout cocher la semaine/);
   assert.match(grid, /Tout décocher la semaine/);
   assert.match(grid, /Dupliquer cette semaine → suivante/);
+  assert.match(grid, /const canDuplicate = weekIndex < weeks\.length - 1/);
+  assert.doesNotMatch(grid, /source\.phase !== target\.phase/);
   assert.match(registrationForm, /TournamentAvailabilityGrid/);
   assert.match(adminTeamsPage, /TournamentAvailabilityGrid/);
 });
