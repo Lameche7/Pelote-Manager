@@ -8,12 +8,13 @@ const migrationPath =
   "../supabase/migrations/20260814161500_configure_tournament_finals_availability_minimum.sql";
 
 test("le minimum de phase finale est configurable par tournoi", async () => {
-  const [migration, adminPage, grid] = await Promise.all([
+  const [migration, adminPage, grid, types] = await Promise.all([
     read(migrationPath),
     read("../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx"),
     read(
       "../src/features/tournaments/components/TournamentAvailabilityGrid.tsx",
     ),
+    read("../src/features/tournaments/types.ts"),
   ]);
 
   assert.match(
@@ -33,6 +34,7 @@ test("le minimum de phase finale est configurable par tournoi", async () => {
   assert.match(adminPage, /minimumFinalsAvailabilitySlots: 35/);
   assert.match(adminPage, /Minimum de créneaux — phase finale/);
   assert.match(grid, /tournament\.minimumFinalsAvailabilitySlots/);
+  assert.match(types, /minimumFinalsAvailabilitySlots: number/);
 });
 
 test("le générateur de test respecte le minimum final configuré", async () => {
