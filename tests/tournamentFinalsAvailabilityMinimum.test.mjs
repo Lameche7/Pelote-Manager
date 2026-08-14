@@ -26,6 +26,10 @@ test("le minimum de phase finale est configurable par tournoi", async () => {
   );
   assert.match(migration, /admin_create_tournament_with_finals_minimum/);
   assert.match(migration, /admin_update_tournament_with_finals_minimum/);
+  assert.match(
+    migration,
+    /perform public\.assert_tournament_team_finals_availability\(active_team_id\)/,
+  );
   assert.match(adminPage, /minimumFinalsAvailabilitySlots: 35/);
   assert.match(adminPage, /Minimum de créneaux — phase finale/);
   assert.match(grid, /tournament\.minimumFinalsAvailabilitySlots/);
