@@ -804,12 +804,17 @@ export function AdminTournamentsPage() {
 
             {detail && (
               <>
-                <TournamentSportingRulesSection
-                  rules={sportingRules!}
-                  disabled={!sportingRules || !sportingRulesEditable || saving}
-                  onChange={setSportingRules}
-                  onSave={() => void saveSportingRules()}
-                />
+                {sportingRules && (
+                  <TournamentSportingRulesSection
+                    rules={sportingRules}
+
+                    disabled={!sportingRulesEditable || saving}
+
+                    onChange={setSportingRules}
+
+                    onSave={() => void saveSportingRules()}
+                  />
+                )}
 
                 <section className="tournament-config">
                   <header>
