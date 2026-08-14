@@ -1,0 +1,48 @@
+name: Temporary format ranking engine
+
+on:
+  push:
+    branches:
+      - feat/tournament-ranking-engine
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/tournament-ranking-engine
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format ranking files
+        run: >-
+          npx prettier --write
+          src/features/admin/tournaments/pages/AdminTournamentResultsPage.tsx
+          src/features/tournaments/components/TournamentRankings.tsx
+          src/features/tournaments/services/tournamentRankingService.ts
+          tests/tournamentRankingEngine.test.mjs
+
+      - name: Commit formatting and remove temporary workflow
+        run: |
+          rm .github/workflows/tmp-format-ranking.yml
+          git config user.name "Lameche7"
+          git config user.email "alain.guem@gmail.com"
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "chore: format ranking engine changes"
+          git push origin HEAD:feat/tournament-ranking-engine
