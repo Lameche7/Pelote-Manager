@@ -210,7 +210,7 @@ export function TournamentAvailabilityGrid({
   const duplicateWeek = (sourceIndex: number) => {
     const source = weeks[sourceIndex];
     const target = weeks[sourceIndex + 1];
-    if (!source || !target || source.phase !== target.phase) return;
+    if (!source || !target) return;
 
     const selectedPatterns = new Set(
       source.days.flatMap((day) =>
@@ -315,9 +315,7 @@ export function TournamentAvailabilityGrid({
       ) : (
         <div className="tournament-availability-grid__weeks">
           {weeks.map((week, weekIndex) => {
-            const canDuplicate =
-              weekIndex < weeks.length - 1 &&
-              weeks[weekIndex + 1]?.phase === week.phase;
+            const canDuplicate = weekIndex < weeks.length - 1;
             const weekSlots = week.days.flatMap((day) => day.slots);
             const weekAllSelected =
               weekSlots.length > 0 &&
