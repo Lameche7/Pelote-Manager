@@ -24,11 +24,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostiquer le format du scanner de secrets
-        run: |
-          npx prettier --write scripts/security/check-secrets.mjs
-          git diff -- scripts/security/check-secrets.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
