@@ -13,6 +13,11 @@ dist-ssr
 .test-dist
 *.local
 
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
