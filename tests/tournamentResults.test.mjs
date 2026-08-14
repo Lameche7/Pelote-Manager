@@ -30,7 +30,18 @@ test("la validation du score suit les règles sportives configurées", async () 
   assert.match(migration, /rules\.deciding_set_points/);
   assert.match(migration, /rules\.offensive_bonus_points/);
   assert.match(migration, /rules\.defensive_bonus_points/);
-  assert.match(migration, /winner.*target_points[\s\S]*strictement en dessous/i);
+  assert.match(
+    migration,
+    /le vainqueur atteint exactement[\s\S]*strictement en dessous/i,
+  );
+  assert.match(
+    migration,
+    /team_a_value = target_points and team_b_value < target_points/,
+  );
+  assert.match(
+    migration,
+    /team_b_value = target_points and team_a_value < target_points/,
+  );
 });
 
 test("un participant ne peut saisir qu'après la fin prévue de sa partie", async () => {
