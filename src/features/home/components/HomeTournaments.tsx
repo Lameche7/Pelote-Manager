@@ -86,7 +86,10 @@ export function HomeTournaments() {
   if (loading && currentTournaments.length === 0) return null;
 
   return (
-    <section className="home-tournaments" aria-labelledby="home-tournaments-title">
+    <section
+      className="home-tournaments"
+      aria-labelledby="home-tournaments-title"
+    >
       <div className="home-tournaments__inner">
         <header className="home-tournaments__heading">
           <p className="section-kicker">Compétitions</p>
@@ -134,12 +137,17 @@ export function HomeTournaments() {
                   <div>
                     <dt>Tournoi</dt>
                     <dd>
-                      {formatDate(tournament.startsOn)} → {formatDate(tournament.endsOn)}
+                      {formatDate(tournament.startsOn)} →{" "}
+                      {formatDate(tournament.endsOn)}
                     </dd>
                   </div>
                   <div>
                     <dt>Séries</dt>
-                    <dd>{tournament.series.map((series) => series.name).join(" · ")}</dd>
+                    <dd>
+                      {tournament.series
+                        .map((series) => series.name)
+                        .join(" · ")}
+                    </dd>
                   </div>
                 </dl>
 
