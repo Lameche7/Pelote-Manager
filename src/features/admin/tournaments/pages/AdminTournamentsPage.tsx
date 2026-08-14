@@ -65,6 +65,7 @@ type TournamentForm = {
   finalsEndsOn: string;
   registrationOpensAt: string;
   registrationClosesAt: string;
+  registrationFeeEuros: number;
   minimumAvailabilitySlots: number;
   minimumWeekendAvailabilitySlots: number;
   minimumFinalsAvailabilitySlots: number;
@@ -153,6 +154,7 @@ const blankForm = (seasonId = ""): TournamentForm => ({
   finalsEndsOn: "",
   registrationOpensAt: "",
   registrationClosesAt: "",
+  registrationFeeEuros: 0,
   minimumAvailabilitySlots: 65,
   minimumWeekendAvailabilitySlots: 0,
   minimumFinalsAvailabilitySlots: 35,
@@ -187,6 +189,7 @@ const detailToForm = (detail: TournamentDetail): TournamentForm => ({
   finalsEndsOn: detail.finalsEndsOn ?? "",
   registrationOpensAt: toLocalInput(detail.registrationOpensAt),
   registrationClosesAt: toLocalInput(detail.registrationClosesAt),
+  registrationFeeEuros: detail.registrationFeeCents / 100,
   minimumAvailabilitySlots: detail.minimumAvailabilitySlots,
   minimumWeekendAvailabilitySlots: detail.minimumWeekendAvailabilitySlots,
   minimumFinalsAvailabilitySlots: detail.minimumFinalsAvailabilitySlots,
@@ -206,6 +209,12 @@ const toDraft = (form: TournamentForm): TournamentDraft => {
     throw new Error(
       "Renseignez les deux dates de la phase finale ou laissez les deux champs vides.",
     );
+  }
+  if (
+    !Number.isFinite(form.registrationFeeEuros) ||
+    form.registrationFeeEuros < 0
+  ) {
+    throw new Error("Le tarif d’inscription doit être positif ou nul.");
   }
   if (
     form.minimumAvailabilitySlots < 0 ||
@@ -236,6 +245,7 @@ const toDraft = (form: TournamentForm): TournamentDraft => {
     finalsEndsOn,
     registrationOpensAt: toStoredDateTime(form.registrationOpensAt),
     registrationClosesAt: toStoredDateTime(form.registrationClosesAt),
+    registrationFeeCents: Math.round(form.registrationFeeEuros * 100),
     minimumAvailabilitySlots: form.minimumAvailabilitySlots,
     minimumWeekendAvailabilitySlots: form.minimumWeekendAvailabilitySlots,
     minimumFinalsAvailabilitySlots: form.minimumFinalsAvailabilitySlots,
@@ -334,6 +344,9 @@ export function AdminTournamentsPage() {
       "registrations_open",
       "registrations_closed",
     ].includes(detail.status);
+
+  const registrationFeeEditable =
+    detail === null || ["preparation", "configuration"].includes(detail.status);
 
   const sportingRulesEditable =
     detail !== null &&
@@ -643,7 +656,8 @@ export function AdminTournamentsPage() {
                 <p className="tournaments-alert">
                   Les paramètres restent modifiables. Toute modification qui
                   supprimerait un créneau déjà choisi ou rendrait une série trop
-                  petite sera automatiquement refusée.
+                  petite sera automatiquement refusée. Le tarif d’inscription est
+                  désormais verrouillé.
                 </p>
               )}
 
@@ -711,6 +725,23 @@ export function AdminTournamentsPage() {
                         setForm({
                           ...form,
                           registrationClosesAt: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Tarif d’inscription par équipe (€)
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      disabled={!registrationFeeEditable || saving}
+                      value={form.registrationFeeEuros}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          registrationFeeEuros: Number(event.target.value),
                         })
                       }
                     />
@@ -1208,7 +1239,7 @@ export function AdminTournamentsPage() {
                       onClick={() =>
                         void transition(
                           "configuration",
-                          "Configuration validée. Le tournoi est prêt pour les inscriptions.",
+                          "Configuration validée. Le tournoi a été annoncé aux licenciés et est prêt pour les inscriptions.",
                         )
                       }
                     >
@@ -1222,7 +1253,8 @@ export function AdminTournamentsPage() {
                         <strong>
                           {formatDateTime(detail.registrationOpensAt)}
                         </strong>
-                        .
+                        . Une seconde notification sera envoyée aux licenciés à
+                        l’ouverture.
                       </p>
                       <button
                         type="button"
@@ -1230,7 +1262,7 @@ export function AdminTournamentsPage() {
                         onClick={() =>
                           void transition(
                             "registrations_open",
-                            "Les inscriptions sont ouvertes.",
+                            "Les inscriptions sont ouvertes et les licenciés ont été notifiés.",
                           )
                         }
                       >
