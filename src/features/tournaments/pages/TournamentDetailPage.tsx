@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { TournamentRankings } from "@/features/tournaments/components/TournamentRankings";
 import { TournamentRegistrationForm } from "@/features/tournaments/components/TournamentRegistrationForm";
+import {
+  tournamentRankingService,
+  type TournamentRankings as TournamentRankingsPayload,
+} from "@/features/tournaments/services/tournamentRankingService";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
   MyTournamentRegistration,
@@ -39,6 +44,9 @@ export function TournamentDetailPage() {
   const [tournament, setTournament] = useState<PublicTournamentDetail | null>(
     null,
   );
+  const [rankings, setRankings] = useState<TournamentRankingsPayload | null>(
+    null,
+  );
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,8 +54,12 @@ export function TournamentDetailPage() {
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
-    const publicTournament = await tournamentService.getPublic(tournamentId);
+    const [publicTournament, loadedRankings] = await Promise.all([
+      tournamentService.getPublic(tournamentId),
+      tournamentRankingService.get(tournamentId),
+    ]);
     setTournament(publicTournament);
+    setRankings(publicTournament ? loadedRankings : null);
     if (!publicTournament) {
       setRegistration(null);
       return;
@@ -210,6 +222,12 @@ export function TournamentDetailPage() {
           ))}
         </div>
       </section>
+
+      {rankings && (
+        <section className="public-tournament-panel">
+          <TournamentRankings rankings={rankings} />
+        </section>
+      )}
 
       <section
         className="public-tournament-panel public-registration-panel"
