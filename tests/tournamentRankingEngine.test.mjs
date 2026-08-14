@@ -17,7 +17,7 @@ test("le Ranking Engine ne consomme que les résultats validés", async () => {
   assert.match(migration, /team_b_points/);
 });
 
-test("le classement respecte les modes configurés sans forcer le départage final", async () => {
+test("le classement applique tous les départages sportifs dans l'ordre", async () => {
   const migration = await read(migrationPath);
 
   assert.match(migration, /rules\.ranking_mode = 'points_per_match'/);
@@ -25,9 +25,12 @@ test("le classement respecte les modes configurés sans forcer le départage fin
     migration,
     /rules\.goal_average_mode = 'point_difference_per_match'/,
   );
+  assert.match(migration, /head_to_head_wins/);
+  assert.match(migration, /points_for_per_match/);
+  assert.match(migration, /win_percentage/);
   assert.match(
     migration,
-    /dense_rank\(\) over \([\s\S]*ranking_value desc,[\s\S]*goal_average_value desc/,
+    /dense_rank\(\) over \([\s\S]*ranking_value desc,[\s\S]*goal_average_value desc,[\s\S]*head_to_head_wins desc,[\s\S]*points_for_per_match desc,[\s\S]*win_percentage desc/,
   );
   assert.match(migration, /'is_tied', ranked\.tie_count > 1/);
 });
@@ -53,6 +56,9 @@ test("une projection unique alimente le public et l'administration", async () =>
     /grant execute on function public\.get_tournament_rankings\(uuid\)[\s\S]*to anon, authenticated/,
   );
   assert.match(service, /supabase\.rpc\("get_tournament_rankings"/);
+  assert.match(service, /headToHeadWins/);
+  assert.match(service, /pointsForPerMatch/);
+  assert.match(service, /winPercentage/);
   assert.match(publicPage, /tournamentRankingService\.get/);
   assert.match(publicPage, /<TournamentRankings rankings=\{rankings\}/);
   assert.match(adminPage, /tournamentRankingService\.get/);
@@ -61,4 +67,7 @@ test("une projection unique alimente le public et l'administration", async () =>
     /<TournamentRankings rankings=\{selectedRankings\} compact/,
   );
   assert.match(component, /Résultats validés uniquement/);
+  assert.match(component, /confrontation directe/);
+  assert.match(component, /points marqués par partie/);
+  assert.match(component, /pourcentage de victoires/);
 });
