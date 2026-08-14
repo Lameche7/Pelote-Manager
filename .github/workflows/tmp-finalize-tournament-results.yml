@@ -103,7 +103,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Tests
+      - name: Result tests
+        run: node --test tests/tournamentResults.test.mjs
+
+      - name: All tests
         run: npm test
 
       - name: Build
