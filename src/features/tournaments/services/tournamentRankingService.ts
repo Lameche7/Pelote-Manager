@@ -3,7 +3,8 @@ import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages
 
 export type TournamentRankingMode = "total_points" | "points_per_match";
 export type TournamentGoalAverageMode =
-  "point_difference" | "point_difference_per_match";
+  | "point_difference"
+  | "point_difference_per_match";
 
 export type TournamentRankingTeam = {
   position: number;
@@ -18,6 +19,9 @@ export type TournamentRankingTeam = {
   pointsAgainst: number;
   pointDifference: number;
   goalAverageValue: number;
+  headToHeadWins: number;
+  pointsForPerMatch: number;
+  winPercentage: number;
   isTied: boolean;
 };
 
@@ -83,6 +87,9 @@ const mapRankings = (value: unknown): TournamentRankings | null => {
           pointsAgainst: Number(team.points_against ?? 0),
           pointDifference: Number(team.point_difference ?? 0),
           goalAverageValue: Number(team.goal_average_value ?? 0),
+          headToHeadWins: Number(team.head_to_head_wins ?? 0),
+          pointsForPerMatch: Number(team.points_for_per_match ?? 0),
+          winPercentage: Number(team.win_percentage ?? 0),
           isTied: Boolean(team.is_tied),
         })),
       })),
