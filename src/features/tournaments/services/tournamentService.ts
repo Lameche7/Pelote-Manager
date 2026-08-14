@@ -167,9 +167,12 @@ export const tournamentService = {
   async getPublic(id: string): Promise<PublicTournamentDetail | null> {
     const [tournamentResult, availabilityResult] = await Promise.all([
       supabase.rpc("get_public_tournament_v2", { target_id: id }),
-      supabase.rpc("get_public_tournament_availability_grid_with_finals_minimum", {
-        target_tournament_id: id,
-      }),
+      supabase.rpc(
+        "get_public_tournament_availability_grid_with_finals_minimum",
+        {
+          target_tournament_id: id,
+        },
+      ),
     ]);
 
     if (tournamentResult.error)
@@ -193,9 +196,7 @@ export const tournamentService = {
       minimumWeekendAvailabilitySlots: Number(
         availability.minimum_weekend ?? 0,
       ),
-      minimumFinalsAvailabilitySlots: Number(
-        availability.minimum_finals ?? 35,
-      ),
+      minimumFinalsAvailabilitySlots: Number(availability.minimum_finals ?? 35),
       slotDurationMinutes: Number(availability.slot_duration_minutes ?? 60),
       poolStartsOn: String(availability.pool_starts_on ?? row.starts_on ?? ""),
       poolEndsOn: String(availability.pool_ends_on ?? row.ends_on ?? ""),

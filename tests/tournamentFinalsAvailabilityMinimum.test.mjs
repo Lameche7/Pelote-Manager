@@ -11,7 +11,9 @@ test("le minimum de phase finale est configurable par tournoi", async () => {
   const [migration, adminPage, grid] = await Promise.all([
     read(migrationPath),
     read("../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx"),
-    read("../src/features/tournaments/components/TournamentAvailabilityGrid.tsx"),
+    read(
+      "../src/features/tournaments/components/TournamentAvailabilityGrid.tsx",
+    ),
   ]);
 
   assert.match(
@@ -45,9 +47,15 @@ test("le générateur de test respecte le minimum final configuré", async () =>
 
 test("utilisateur et admin partagent les contrôles de semaine", async () => {
   const [grid, registrationForm, adminTeamsPage] = await Promise.all([
-    read("../src/features/tournaments/components/TournamentAvailabilityGrid.tsx"),
-    read("../src/features/tournaments/components/TournamentRegistrationForm.tsx"),
-    read("../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx"),
+    read(
+      "../src/features/tournaments/components/TournamentAvailabilityGrid.tsx",
+    ),
+    read(
+      "../src/features/tournaments/components/TournamentRegistrationForm.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
+    ),
   ]);
 
   assert.match(grid, /Tout cocher la semaine/);

@@ -196,8 +196,7 @@ export function TournamentRegistrationForm({
   );
   const finalsMinimumReached =
     tournament.availableFinalsSlotCount === 0 ||
-    finalsAvailabilitySlots.length >=
-      tournament.minimumFinalsAvailabilitySlots;
+    finalsAvailabilitySlots.length >= tournament.minimumFinalsAvailabilitySlots;
   const availabilityMinimumReached = Boolean(
     draft && poolMinimumReached && finalsMinimumReached,
   );
