@@ -77,8 +77,8 @@ export function HomePage() {
   useEffect(() => {
     let active = true;
     const loadBranding = () => {
-      clubBrandingService
-        .getPublicBranding()
+      const brandingRequest = clubBrandingService.getPublicBranding();
+      brandingRequest
         .then((value) => {
           if (active) setBranding(value);
         })
