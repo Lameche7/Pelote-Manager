@@ -127,7 +127,7 @@ export function TournamentRankings({ rankings, compact = false }: Props) {
       ) && (
         <p className="tournament-rankings__note">
           Le signe = indique une égalité sur les deux critères configurés. Le
-          départage sportif final sera appliqué séparément avant qualification.
+          départage sportif final doit encore être défini avant qualification.
         </p>
       )}
     </section>
