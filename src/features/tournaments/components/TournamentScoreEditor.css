@@ -1,0 +1,96 @@
+.tournament-score-editor {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border, #dbe2ea);
+  border-radius: 0.9rem;
+  background: var(--color-surface, #fff);
+}
+
+.tournament-score-editor__heading,
+.tournament-score-editor__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.tournament-score-editor__heading strong:first-child,
+.tournament-score-editor__row input:first-child {
+  justify-self: end;
+}
+
+.tournament-score-editor__heading strong:last-child,
+.tournament-score-editor__row input:last-child {
+  justify-self: start;
+}
+
+.tournament-score-editor__row input {
+  width: 5rem;
+  padding: 0.55rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 0.6rem;
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+
+.tournament-score-editor__row span,
+.tournament-score-editor__heading span {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.tournament-score-editor__secondary {
+  justify-self: center;
+  border: 0;
+  background: transparent;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+
+.tournament-score-editor__error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.tournament-score-editor__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.tournament-score-editor__actions button {
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.65rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  cursor: pointer;
+}
+
+.tournament-score-editor__actions button[type="submit"] {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 700;
+}
+
+.tournament-score-editor button:disabled,
+.tournament-score-editor input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 640px) {
+  .tournament-score-editor__heading,
+  .tournament-score-editor__row {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.4rem;
+  }
+
+  .tournament-score-editor__row input {
+    width: 4.25rem;
+  }
+}
