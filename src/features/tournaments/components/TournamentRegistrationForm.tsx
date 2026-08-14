@@ -270,7 +270,7 @@ export function TournamentRegistrationForm({
     }
     if (!finalsMinimumReached) {
       onError(
-        `Pour la phase finale, vous devez cocher au moins ${TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS} créneaux.`,
+        `Pour la phase finale, vous devez cocher au moins ${tournament.minimumFinalsAvailabilitySlots} créneaux.`,
       );
       return;
     }
