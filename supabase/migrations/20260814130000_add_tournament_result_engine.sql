@@ -349,11 +349,15 @@ begin
       using errcode = 'P0001';
   end if;
 
-  select planning, resource.timezone
-  into target_planning, target_timezone
+  select planning.*
+  into target_planning
   from public.tournament_match_planning as planning
-  join public.reservable_resources as resource on resource.id = planning.resource_id
   where planning.match_id = target_match.id;
+
+  select resource.timezone
+  into target_timezone
+  from public.reservable_resources as resource
+  where resource.id = target_planning.resource_id;
 
   if target_planning.match_id is null then
     raise exception 'Tournament match is not scheduled' using errcode = 'P0001';
