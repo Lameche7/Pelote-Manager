@@ -2,14 +2,15 @@ name: Temporary tournament results integration
 
 on:
   push:
-    branches: [feature/tournament-results]
+    branches:
+      - feature/tournament-results
 
 permissions:
   contents: write
 
 jobs:
   integrate:
-    if: github.actor != 'github-actions[bot]'
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,22 +41,24 @@ jobs:
                   raise SystemExit("router import anchor not found")
               text = text.replace(import_anchor, import_addition, 1)
 
-          route_anchor = '''          {
-            path: "tournois/publication",
-            element: permitted(
-              ADMIN_PERMISSIONS.tournaments,
-              <AdminTournamentPublicationPage />,
-            ),
-          },
-'''
-          route_addition = route_anchor + '''          {
-            path: "tournois/resultats",
-            element: permitted(
-              ADMIN_PERMISSIONS.tournaments,
-              <AdminTournamentResultsPage />,
-            ),
-          },
-'''
+          route_anchor = (
+              '          {\n'
+              '            path: "tournois/publication",\n'
+              '            element: permitted(\n'
+              '              ADMIN_PERMISSIONS.tournaments,\n'
+              '              <AdminTournamentPublicationPage />,\n'
+              '            ),\n'
+              '          },\n'
+          )
+          route_addition = route_anchor + (
+              '          {\n'
+              '            path: "tournois/resultats",\n'
+              '            element: permitted(\n'
+              '              ADMIN_PERMISSIONS.tournaments,\n'
+              '              <AdminTournamentResultsPage />,\n'
+              '            ),\n'
+              '          },\n'
+          )
           if 'path: "tournois/resultats"' not in text:
               if route_anchor not in text:
                   raise SystemExit("router route anchor not found")
@@ -64,12 +67,8 @@ jobs:
 
           migration = Path("supabase/migrations/20260814130000_add_tournament_result_engine.sql")
           text = migration.read_text()
-          old = '''  select planning.*, resource.timezone
-  into target_planning, target_timezone
-'''
-          new = '''  select planning, resource.timezone
-  into target_planning, target_timezone
-'''
+          old = '  select planning.*, resource.timezone\n  into target_planning, target_timezone\n'
+          new = '  select planning, resource.timezone\n  into target_planning, target_timezone\n'
           if old in text:
               text = text.replace(old, new, 1)
           elif new not in text:
