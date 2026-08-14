@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { TournamentSportingRulesSection } from "@/features/admin/tournaments/components/TournamentSportingRulesSection";
 import {
   tournamentAdminService,
   type TournamentDetail,
@@ -6,6 +7,7 @@ import {
   type TournamentOptions,
   type TournamentPlayWindow,
   type TournamentSeries,
+  type TournamentSportingRules,
   type TournamentStatus,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
@@ -239,6 +241,8 @@ export function AdminTournamentsPage() {
   const [resourceIds, setResourceIds] = useState<string[]>([]);
   const [series, setSeries] = useState<TournamentSeries[]>([]);
   const [playWindows, setPlayWindows] = useState<TournamentPlayWindow[]>([]);
+  const [sportingRules, setSportingRules] =
+    useState<TournamentSportingRules | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -252,12 +256,16 @@ export function AdminTournamentsPage() {
     setSaving(true);
     setError("");
     try {
-      const loaded = await tournamentAdminService.get(id);
+      const [loaded, loadedSportingRules] = await Promise.all([
+        tournamentAdminService.get(id),
+        tournamentAdminService.getSportingRules(id),
+      ]);
       setDetail(loaded);
       setForm(detailToForm(loaded));
       setResourceIds(loaded.resources.map((resource) => resource.id));
       setSeries(loaded.series);
       setPlayWindows(loaded.playWindows);
+      setSportingRules(loadedSportingRules);
     } catch (openError) {
       setError(
         openError instanceof Error
@@ -305,6 +313,16 @@ export function AdminTournamentsPage() {
       "registrations_closed",
     ].includes(detail.status);
 
+  const sportingRulesEditable =
+    detail !== null &&
+    [
+      "preparation",
+      "configuration",
+      "registrations_open",
+      "registrations_closed",
+      "pools_generated",
+    ].includes(detail.status);
+
   const registrationWindowIsOpen = detail
     ? new Date(detail.registrationOpensAt) <= new Date() &&
       new Date(detail.registrationClosesAt) > new Date()
@@ -316,6 +334,7 @@ export function AdminTournamentsPage() {
     setResourceIds([]);
     setSeries([]);
     setPlayWindows([]);
+    setSportingRules(null);
     setError("");
     setMessage("");
   };
@@ -326,6 +345,7 @@ export function AdminTournamentsPage() {
     setResourceIds([]);
     setSeries([]);
     setPlayWindows([]);
+    setSportingRules(null);
     setError("");
     setMessage("");
   };
@@ -376,6 +396,28 @@ export function AdminTournamentsPage() {
       await openTournament(detail.id);
       await loadList();
       setMessage("Configuration sportive enregistrée.");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Enregistrement impossible.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSportingRules = async () => {
+    if (!detail || !sportingRules) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      await tournamentAdminService.saveSportingRules(detail.id, sportingRules);
+      setSportingRules(
+        await tournamentAdminService.getSportingRules(detail.id),
+      );
+      setMessage("Les règles sportives ont été enregistrées.");
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -762,10 +804,22 @@ export function AdminTournamentsPage() {
 
             {detail && (
               <>
+                {sportingRules && (
+                  <TournamentSportingRulesSection
+                    rules={sportingRules}
+
+                    disabled={!sportingRulesEditable || saving}
+
+                    onChange={setSportingRules}
+
+                    onSave={() => void saveSportingRules()}
+                  />
+                )}
+
                 <section className="tournament-config">
                   <header>
                     <div>
-                      <h3>3. Terrains</h3>
+                      <h3>4. Terrains</h3>
                       <p>
                         Sélectionnez les ressources que le Planning Engine
                         pourra utiliser.
@@ -796,7 +850,7 @@ export function AdminTournamentsPage() {
                 <section className="tournament-config">
                   <header>
                     <div>
-                      <h3>4. Séries & capacités</h3>
+                      <h3>5. Séries & capacités</h3>
                       <p>
                         La capacité peut évoluer pendant les inscriptions mais
                         jamais sous le nombre d’équipes déjà inscrites.
@@ -908,7 +962,7 @@ export function AdminTournamentsPage() {
                 <section className="tournament-config">
                   <header>
                     <div>
-                      <h3>5. Horaires des créneaux</h3>
+                      <h3>6. Horaires des créneaux</h3>
                       <p>
                         Ces plages sont appliquées aux dates de poules et aux
                         dates de phase finale. Une réduction qui supprimerait un
@@ -1041,7 +1095,7 @@ export function AdminTournamentsPage() {
                 )}
 
                 <section className="tournament-lifecycle">
-                  <h3>6. Cycle du tournoi</h3>
+                  <h3>7. Cycle du tournoi</h3>
                   <div className="tournament-progress">
                     {lifecycleStatuses.map((status) => (
                       <span
