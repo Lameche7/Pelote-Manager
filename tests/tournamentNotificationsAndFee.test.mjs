@@ -12,7 +12,9 @@ test(
   async () => {
     const [migration, service, page] = await Promise.all([
       read(migrationPath),
-      read("../src/features/admin/tournaments/services/tournamentAdminService.ts"),
+      read(
+        "../src/features/admin/tournaments/services/tournamentAdminService.ts",
+      ),
       read("../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx"),
     ]);
 
