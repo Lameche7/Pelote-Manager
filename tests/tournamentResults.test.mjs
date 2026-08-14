@@ -57,6 +57,12 @@ test("un participant ne peut saisir qu'après la fin prévue de sa partie", asyn
   assert.match(migration, /current_profile_id uuid := auth\.uid\(\)/);
   assert.match(migration, /tournament_profile_can_score_match/);
   assert.match(migration, /target_planning\.ends_at/);
+  assert.match(migration, /select planning\.\*[\s\S]*into target_planning/);
+  assert.match(
+    migration,
+    /select resource\.timezone[\s\S]*into target_timezone/,
+  );
+  assert.doesNotMatch(migration, /into target_planning,\s*target_timezone/);
   assert.match(
     migration,
     /> now\(\)[\s\S]*cannot be entered before the scheduled end/,
