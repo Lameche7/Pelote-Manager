@@ -4,6 +4,7 @@ import type {
   TournamentPlayerRole,
   TournamentTeamStatus,
 } from "@/features/tournaments/types";
+import type { TournamentScorePayload } from "@/features/tournaments/components/TournamentScoreEditor";
 
 type Row = Record<string, unknown>;
 
@@ -17,6 +18,25 @@ export type MyTournamentPlayer = {
   role: TournamentPlayerRole;
 };
 
+export type MyTournamentSportingRules = {
+  matchFormat: "single_game" | "best_of_three_sets";
+  singleGamePoints: number;
+  mainSetPoints: number;
+  decidingSetPoints: number;
+};
+
+export type MyTournamentResult = {
+  id: string;
+  status: "pending_validation" | "validated";
+  score: TournamentScorePayload;
+  teamASets: number;
+  teamBSets: number;
+  teamAPoints: number;
+  teamBPoints: number;
+  teamARankingPoints: number;
+  teamBRankingPoints: number;
+};
+
 export type MyTournamentMatch = {
   id: string;
   playDate: string;
@@ -24,6 +44,9 @@ export type MyTournamentMatch = {
   endsAt: string;
   resourceName: string;
   poolNumber: number | null;
+  teamSide: "a" | "b";
+  canSubmitResult: boolean;
+  result: MyTournamentResult | null;
   opponentTeamId: string;
   opponentPlayers: MyTournamentPlayer[];
 };
@@ -36,6 +59,7 @@ export type MyTournamentOverview = {
   endsOn: string;
   registrationClosesAt: string;
   planningPublished: boolean;
+  sportingRules: MyTournamentSportingRules;
   team: {
     id: string;
     status: TournamentTeamStatus;
@@ -56,6 +80,42 @@ const mapPlayer = (row: Row): MyTournamentPlayer => ({
   role: row.role as TournamentPlayerRole,
 });
 
+const mapScore = (value: unknown): TournamentScorePayload => {
+  const score = (value ?? {}) as Row;
+  return {
+    sets: rows(score.sets).map((set) => ({
+      teamA: Number(set.team_a ?? 0),
+      teamB: Number(set.team_b ?? 0),
+    })),
+  };
+};
+
+const mapResult = (value: unknown): MyTournamentResult | null => {
+  if (!value || typeof value !== "object") return null;
+  const result = value as Row;
+  return {
+    id: String(result.id ?? ""),
+    status: result.status as MyTournamentResult["status"],
+    score: mapScore(result.score),
+    teamASets: Number(result.team_a_sets ?? 0),
+    teamBSets: Number(result.team_b_sets ?? 0),
+    teamAPoints: Number(result.team_a_points ?? 0),
+    teamBPoints: Number(result.team_b_points ?? 0),
+    teamARankingPoints: Number(result.team_a_ranking_points ?? 0),
+    teamBRankingPoints: Number(result.team_b_ranking_points ?? 0),
+  };
+};
+
+const mapSportingRules = (value: unknown): MyTournamentSportingRules => {
+  const rules = (value ?? {}) as Row;
+  return {
+    matchFormat: rules.match_format as MyTournamentSportingRules["matchFormat"],
+    singleGamePoints: Number(rules.single_game_points ?? 35),
+    mainSetPoints: Number(rules.main_set_points ?? 20),
+    decidingSetPoints: Number(rules.deciding_set_points ?? 10),
+  };
+};
+
 const mapTournament = (row: Row): MyTournamentOverview => {
   const team = (row.team ?? {}) as Row;
   return {
@@ -66,6 +126,7 @@ const mapTournament = (row: Row): MyTournamentOverview => {
     endsOn: String(row.ends_on ?? ""),
     registrationClosesAt: String(row.registration_closes_at ?? ""),
     planningPublished: Boolean(row.planning_published),
+    sportingRules: mapSportingRules(row.sporting_rules),
     team: {
       id: String(team.id ?? ""),
       status: team.status as TournamentTeamStatus,
@@ -89,6 +150,9 @@ const mapTournament = (row: Row): MyTournamentOverview => {
         match.pool_number === null || match.pool_number === undefined
           ? null
           : Number(match.pool_number),
+      teamSide: match.team_side === "b" ? "b" : "a",
+      canSubmitResult: Boolean(match.can_submit_result),
+      result: mapResult(match.result),
       opponentTeamId: String(match.opponent_team_id ?? ""),
       opponentPlayers: rows(match.opponent_players).map(mapPlayer),
     })),
@@ -104,5 +168,25 @@ export const myTournamentsService = {
       );
     }
     return rows(data).map(mapTournament);
+  },
+
+  async submitResult(
+    matchId: string,
+    score: TournamentScorePayload,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("submit_my_tournament_match_result", {
+      target_match_id: matchId,
+      score_payload: {
+        sets: score.sets.map((set) => ({
+          team_a: set.teamA,
+          team_b: set.teamB,
+        })),
+      },
+    });
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible d’enregistrer le résultat."),
+      );
+    }
   },
 };
