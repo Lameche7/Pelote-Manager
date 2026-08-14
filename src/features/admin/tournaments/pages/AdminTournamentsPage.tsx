@@ -656,8 +656,8 @@ export function AdminTournamentsPage() {
                 <p className="tournaments-alert">
                   Les paramètres restent modifiables. Toute modification qui
                   supprimerait un créneau déjà choisi ou rendrait une série trop
-                  petite sera automatiquement refusée. Le tarif d’inscription est
-                  désormais verrouillé.
+                  petite sera automatiquement refusée. Le tarif d’inscription
+                  est désormais verrouillé.
                 </p>
               )}
 
