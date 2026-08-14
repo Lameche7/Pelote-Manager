@@ -116,6 +116,13 @@
   opacity: 0.55;
 }
 
+.tournament-availability-week__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
 .tournament-availability-week__scroll {
   overflow-x: auto;
 }
@@ -204,5 +211,9 @@
   .tournament-availability-grid__heading > strong,
   .tournament-availability-week button {
     width: fit-content;
+  }
+
+  .tournament-availability-week__actions {
+    justify-content: flex-start;
   }
 }

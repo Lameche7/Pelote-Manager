@@ -110,6 +110,7 @@ export type TournamentDraft = {
   registrationClosesAt: string;
   minimumAvailabilitySlots: number;
   minimumWeekendAvailabilitySlots: number;
+  minimumFinalsAvailabilitySlots: number;
   slotDurationMinutes: number;
 };
 
@@ -241,6 +242,9 @@ const mapDetail = (value: unknown): TournamentDetail => {
     minimumWeekendAvailabilitySlots: Number(
       row.minimum_weekend_availability_slots ?? 0,
     ),
+    minimumFinalsAvailabilitySlots: Number(
+      row.minimum_finals_availability_slots ?? 35,
+    ),
     slotDurationMinutes: Number(row.slot_duration_minutes ?? 60),
     status: row.status as TournamentStatus,
     timezone: String(row.timezone ?? "Europe/Paris"),
@@ -303,6 +307,7 @@ const draftPayload = (draft: TournamentDraft) => ({
   registration_closes_at: draft.registrationClosesAt,
   minimum_availability_slots: draft.minimumAvailabilitySlots,
   minimum_weekend_availability_slots: draft.minimumWeekendAvailabilitySlots,
+  minimum_finals_availability_slots: draft.minimumFinalsAvailabilitySlots,
   slot_duration_minutes: draft.slotDurationMinutes,
 });
 
@@ -320,26 +325,31 @@ export const tournamentAdminService = {
   },
 
   async get(id: string): Promise<TournamentDetail> {
-    const { data, error } = await supabase.rpc("admin_get_tournament", {
-      target_id: id,
-    });
+    const { data, error } = await supabase.rpc(
+      "admin_get_tournament_with_finals_minimum",
+      { target_id: id },
+    );
     if (error) fail(error, "Impossible de charger le tournoi.");
     return mapDetail(data);
   },
 
   async create(draft: TournamentDraft): Promise<string> {
-    const { data, error } = await supabase.rpc("admin_create_tournament", {
-      payload: draftPayload(draft),
-    });
+    const { data, error } = await supabase.rpc(
+      "admin_create_tournament_with_finals_minimum",
+      { payload: draftPayload(draft) },
+    );
     if (error) fail(error, "Impossible de créer le tournoi.");
     return String(data);
   },
 
   async update(id: string, draft: TournamentDraft): Promise<void> {
-    const { error } = await supabase.rpc("admin_update_tournament", {
-      target_id: id,
-      payload: draftPayload(draft),
-    });
+    const { error } = await supabase.rpc(
+      "admin_update_tournament_with_finals_minimum",
+      {
+        target_id: id,
+        payload: draftPayload(draft),
+      },
+    );
     if (error) fail(error, "Impossible de modifier le tournoi.");
   },
 

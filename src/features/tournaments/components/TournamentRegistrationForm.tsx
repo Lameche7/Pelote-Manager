@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
-import { TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS } from "@/features/tournaments/domain/tournamentAvailabilityRules";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
   MyTournamentRegistration,
@@ -197,8 +196,7 @@ export function TournamentRegistrationForm({
   );
   const finalsMinimumReached =
     tournament.availableFinalsSlotCount === 0 ||
-    finalsAvailabilitySlots.length >=
-      TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS;
+    finalsAvailabilitySlots.length >= tournament.minimumFinalsAvailabilitySlots;
   const availabilityMinimumReached = Boolean(
     draft && poolMinimumReached && finalsMinimumReached,
   );
@@ -272,7 +270,7 @@ export function TournamentRegistrationForm({
     }
     if (!finalsMinimumReached) {
       onError(
-        `Pour la phase finale, vous devez cocher au moins ${TOURNAMENT_FINALS_MINIMUM_AVAILABILITY_SLOTS} créneaux.`,
+        `Pour la phase finale, vous devez cocher au moins ${tournament.minimumFinalsAvailabilitySlots} créneaux.`,
       );
       return;
     }

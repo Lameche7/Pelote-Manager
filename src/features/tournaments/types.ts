@@ -100,6 +100,7 @@ export type PublicTournamentDetail = PublicTournamentSummary & {
   availableSlots: TournamentAvailabilitySlot[];
   minimumAvailabilitySlots: number;
   minimumWeekendAvailabilitySlots: number;
+  minimumFinalsAvailabilitySlots: number;
   slotDurationMinutes: number;
   poolStartsOn: string;
   poolEndsOn: string;
@@ -178,6 +179,7 @@ export type AdminTournamentTeamsPayload = {
     registrationClosesAt: string;
     minimumAvailabilitySlots: number;
     minimumWeekendAvailabilitySlots: number;
+    minimumFinalsAvailabilitySlots: number;
     slotDurationMinutes: number;
     poolStartsOn: string;
     poolEndsOn: string;
