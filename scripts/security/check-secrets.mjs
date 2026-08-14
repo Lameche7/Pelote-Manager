@@ -81,7 +81,9 @@ function looksLikeLiteralSecret(value) {
     return false;
   }
 
-  return !placeholderFragments.some((fragment) => normalized.includes(fragment));
+  return !placeholderFragments.some((fragment) =>
+    normalized.includes(fragment),
+  );
 }
 
 export function isForbiddenEnvPath(filePath) {
@@ -159,7 +161,9 @@ export function scanRepository(rootDir = process.cwd()) {
 
 function printReport(findings) {
   if (findings.length === 0) {
-    console.log("Secret scan: aucun secret évident détecté dans les fichiers suivis.");
+    console.log(
+      "Secret scan: aucun secret évident détecté dans les fichiers suivis.",
+    );
     return;
   }
 
