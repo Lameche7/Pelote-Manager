@@ -82,6 +82,9 @@ export function TournamentRankings({ rankings, compact = false }: Props) {
                             <th scope="col">Pts</th>
                             <th scope="col">{rankingTitle}</th>
                             <th scope="col">{goalAverageTitle}</th>
+                            <th scope="col" title="Victoires entre équipes encore à égalité">CD</th>
+                            <th scope="col">Pour / partie</th>
+                            <th scope="col">% G</th>
                             <th scope="col">Pour</th>
                             <th scope="col">Contre</th>
                           </tr>
@@ -94,7 +97,7 @@ export function TournamentRankings({ rankings, compact = false }: Props) {
                                 {team.isTied && (
                                   <span
                                     className="tournament-ranking-tie"
-                                    title="Égalité sur les critères de classement configurés"
+                                    title="Égalité absolue après tous les critères sportifs"
                                   >
                                     =
                                   </span>
@@ -107,6 +110,9 @@ export function TournamentRankings({ rankings, compact = false }: Props) {
                               <td>{team.rankingPoints}</td>
                               <td>{valueLabel(team, rankings)}</td>
                               <td>{goalAverageLabel(team, rankings)}</td>
+                              <td>{team.headToHeadWins}</td>
+                              <td>{numberFormatter.format(team.pointsForPerMatch)}</td>
+                              <td>{numberFormatter.format(team.winPercentage)} %</td>
                               <td>{team.pointsFor}</td>
                               <td>{team.pointsAgainst}</td>
                             </tr>
@@ -122,14 +128,11 @@ export function TournamentRankings({ rankings, compact = false }: Props) {
         </div>
       )}
 
-      {rankings.series.some((series) =>
-        series.pools.some((pool) => pool.teams.some((team) => team.isTied)),
-      ) && (
-        <p className="tournament-rankings__note">
-          Le signe = indique une égalité sur les deux critères configurés. Le
-          départage sportif final doit encore être défini avant qualification.
-        </p>
-      )}
+      <p className="tournament-rankings__note">
+        Départage : critère principal → goal-average → confrontation directe →
+        points marqués par partie → pourcentage de victoires. Le signe = indique
+        une égalité absolue restante.
+      </p>
     </section>
   );
 }
