@@ -82,7 +82,12 @@ export function TournamentRankings({ rankings, compact = false }: Props) {
                             <th scope="col">Pts</th>
                             <th scope="col">{rankingTitle}</th>
                             <th scope="col">{goalAverageTitle}</th>
-                            <th scope="col" title="Victoires entre équipes encore à égalité">CD</th>
+                            <th
+                              scope="col"
+                              title="Victoires entre équipes encore à égalité"
+                            >
+                              CD
+                            </th>
                             <th scope="col">Pour / partie</th>
                             <th scope="col">% G</th>
                             <th scope="col">Pour</th>
@@ -111,8 +116,12 @@ export function TournamentRankings({ rankings, compact = false }: Props) {
                               <td>{valueLabel(team, rankings)}</td>
                               <td>{goalAverageLabel(team, rankings)}</td>
                               <td>{team.headToHeadWins}</td>
-                              <td>{numberFormatter.format(team.pointsForPerMatch)}</td>
-                              <td>{numberFormatter.format(team.winPercentage)} %</td>
+                              <td>
+                                {numberFormatter.format(team.pointsForPerMatch)}
+                              </td>
+                              <td>
+                                {numberFormatter.format(team.winPercentage)} %
+                              </td>
                               <td>{team.pointsFor}</td>
                               <td>{team.pointsAgainst}</td>
                             </tr>
