@@ -108,6 +108,7 @@ export type TournamentDraft = {
   finalsEndsOn: string | null;
   registrationOpensAt: string;
   registrationClosesAt: string;
+  registrationFeeCents: number;
   minimumAvailabilitySlots: number;
   minimumWeekendAvailabilitySlots: number;
   minimumFinalsAvailabilitySlots: number;
@@ -139,6 +140,10 @@ const knownErrors: Record<string, string> = {
     "Vérifiez les dates des poules et de la phase finale. La phase finale doit commencer après les poules.",
   "Tournament availability settings are invalid":
     "Vérifiez la durée des créneaux et les minima de disponibilités.",
+  "Tournament registration fee is invalid":
+    "Le tarif d’inscription doit être un montant positif ou nul.",
+  "Tournament registration fee is locked after registrations open":
+    "Le tarif d’inscription ne peut plus être modifié après l’ouverture des inscriptions.",
   "Registration dates are invalid":
     "Les dates d’inscription sont incohérentes.",
   "Open registration window must contain current time":
@@ -238,6 +243,7 @@ const mapDetail = (value: unknown): TournamentDetail => {
     finalsEndsOn: row.finals_ends_on ? String(row.finals_ends_on) : null,
     registrationOpensAt: String(row.registration_opens_at),
     registrationClosesAt: String(row.registration_closes_at),
+    registrationFeeCents: Number(row.registration_fee_cents ?? 0),
     minimumAvailabilitySlots: Number(row.minimum_availability_slots ?? 65),
     minimumWeekendAvailabilitySlots: Number(
       row.minimum_weekend_availability_slots ?? 0,
@@ -305,6 +311,7 @@ const draftPayload = (draft: TournamentDraft) => ({
   finals_ends_on: draft.finalsEndsOn ?? "",
   registration_opens_at: draft.registrationOpensAt,
   registration_closes_at: draft.registrationClosesAt,
+  registration_fee_cents: draft.registrationFeeCents,
   minimum_availability_slots: draft.minimumAvailabilitySlots,
   minimum_weekend_availability_slots: draft.minimumWeekendAvailabilitySlots,
   minimum_finals_availability_slots: draft.minimumFinalsAvailabilitySlots,
