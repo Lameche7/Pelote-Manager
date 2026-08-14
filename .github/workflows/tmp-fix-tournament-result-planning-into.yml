@@ -65,8 +65,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Format changed files
-        run: npx prettier --write supabase/migrations/20260814130000_add_tournament_result_engine.sql tests/tournamentResults.test.mjs
+      - name: Format result test
+        run: npx prettier --write tests/tournamentResults.test.mjs
 
       - name: Result tests
         run: node --test tests/tournamentResults.test.mjs
