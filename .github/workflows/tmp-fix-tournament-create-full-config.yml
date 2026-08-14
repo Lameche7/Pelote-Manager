@@ -16,5 +16,230 @@ jobs:
         with:
           ref: fix/tournament-create-full-config
           fetch-depth: 0
-      - name: Probe
-        run: echo ok
+
+      - name: Patch full tournament creation flow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          page_path = Path('src/features/admin/tournaments/pages/AdminTournamentsPage.tsx')
+          page = page_path.read_text(encoding='utf-8')
+
+          old = '<form className="tournament-form" onSubmit={submitGeneral}>'
+          new = '<form\n              id="tournament-general-form"\n              className="tournament-form"\n              onSubmit={submitGeneral}\n            >'
+          if old not in page:
+              raise SystemExit('form marker not found')
+          page = page.replace(old, new, 1)
+
+          old_else = '''      } else {
+        if (!sportingRules) {
+          throw new Error("Configurez les règles sportives du tournoi.");
+        }
+        const id = await tournamentAdminService.create(draft);
+        await tournamentAdminService.saveSportingRules(id, sportingRules);
+        await loadList();
+        await openTournament(id);
+        setMessage(
+          "Tournoi créé avec ses règles sportives. Configurez maintenant les terrains, séries et horaires.",
+        );
+      }'''
+          new_else = '''      } else {
+        if (!sportingRules) {
+          throw new Error("Configurez les règles sportives du tournoi.");
+        }
+        if (resourceIds.length === 0) {
+          throw new Error("Sélectionnez au moins un terrain.");
+        }
+        const activeSeries = series.filter((item) => item.enabled);
+        if (
+          activeSeries.length === 0 ||
+          activeSeries.some((item) => !item.name.trim() || item.capacity <= 0)
+        ) {
+          throw new Error(
+            "Configurez au moins une série active avec un nom et une capacité positive.",
+          );
+        }
+        if (
+          playWindows.length === 0 ||
+          playWindows.some(
+            (item) =>
+              !item.opensAt || !item.closesAt || item.opensAt >= item.closesAt,
+          )
+        ) {
+          throw new Error("Configurez au moins une plage horaire valide.");
+        }
+        const id = await tournamentAdminService.create(draft);
+        await tournamentAdminService.saveSportingRules(id, sportingRules);
+        await tournamentAdminService.saveConfiguration(id, {
+          resourceIds,
+          series,
+          playWindows,
+        });
+        await loadList();
+        await openTournament(id);
+        setMessage(
+          "Tournoi créé avec ses règles sportives, terrains, séries et horaires.",
+        );
+      }'''
+          if old_else not in page:
+              raise SystemExit('creation block not found')
+          page = page.replace(old_else, new_else, 1)
+
+          old_block = '''              {!detail && (
+                <button
+                  className="tournaments-primary"
+                  type="submit"
+                  disabled={saving}
+                >
+                  Créer le tournoi
+                </button>
+              )}
+            </form>
+
+            {detail && (
+              <>
+                {sportingRules && (
+                  <TournamentSportingRulesSection
+                    rules={sportingRules}
+
+                    disabled={!sportingRulesEditable || saving}
+
+                    onChange={setSportingRules}
+
+                    onSave={() => void saveSportingRules()}
+                  />
+                )}
+
+                <section className="tournament-config">'''
+          new_block = '''            </form>
+
+            {detail && sportingRules && (
+              <TournamentSportingRulesSection
+                rules={sportingRules}
+                disabled={!sportingRulesEditable || saving}
+                onChange={setSportingRules}
+                onSave={() => void saveSportingRules()}
+              />
+            )}
+
+            <section className="tournament-config">'''
+          if old_block not in page:
+              raise SystemExit('detail wrapper start not found')
+          page = page.replace(old_block, new_block, 1)
+
+          old_save_lifecycle = '''                {editable && (
+                  <div className="tournament-config-save">
+                    <button
+                      className="tournaments-primary"
+                      type="button"
+                      disabled={saving}
+                      onClick={() => void saveConfiguration()}
+                    >
+                      Enregistrer terrains, séries et horaires
+                    </button>
+                  </div>
+                )}
+
+                <section className="tournament-lifecycle">
+                  <h3>7. Cycle du tournoi</h3>'''
+          new_save_lifecycle = '''            {detail && editable && (
+              <div className="tournament-config-save">
+                <button
+                  className="tournaments-primary"
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void saveConfiguration()}
+                >
+                  Enregistrer terrains, séries et horaires
+                </button>
+              </div>
+            )}
+
+            {!detail && (
+              <div className="tournament-config-save">
+                <button
+                  className="tournaments-primary"
+                  type="submit"
+                  form="tournament-general-form"
+                  disabled={saving}
+                >
+                  Créer le tournoi
+                </button>
+              </div>
+            )}
+
+            {detail && (
+              <section className="tournament-lifecycle">
+                <h3>7. Cycle du tournoi</h3>'''
+          if old_save_lifecycle not in page:
+              raise SystemExit('save/lifecycle marker not found')
+          page = page.replace(old_save_lifecycle, new_save_lifecycle, 1)
+
+          old_tail = '''                </section>
+              </>
+            )}
+          </div>'''
+          new_tail = '''              </section>
+            )}
+          </div>'''
+          if old_tail not in page:
+              raise SystemExit('detail wrapper tail not found')
+          page = page.replace(old_tail, new_tail, 1)
+          page_path.write_text(page, encoding='utf-8')
+
+          test_path = Path('tests/tournamentSportingRules.test.mjs')
+          test = test_path.read_text(encoding='utf-8')
+          marker = '  assert.match(service, /saveSportingRules/);\n});\n'
+          addition = '''  assert.match(service, /saveSportingRules/);
+});
+
+test("la création du tournoi inclut aussi terrains, séries et horaires", async () => {
+  const page = await read(
+    "../src/features/admin/tournaments/pages/AdminTournamentsPage.tsx",
+  );
+
+  assert.match(page, /<h3>4\\. Terrains<\\/h3>/);
+  assert.match(page, /<h3>5\\. Séries & capacités<\\/h3>/);
+  assert.match(page, /<h3>6\\. Horaires des créneaux<\\/h3>/);
+  assert.match(page, /form="tournament-general-form"/);
+  assert.match(page, /saveConfiguration\\(id, \\{/);
+  assert.match(page, /Sélectionnez au moins un terrain/);
+  assert.match(page, /Configurez au moins une série active/);
+  assert.match(page, /Configurez au moins une plage horaire valide/);
+});
+'''
+          if marker not in test:
+              raise SystemExit('test marker not found')
+          test = test.replace(marker, addition, 1)
+          test_path.write_text(test, encoding='utf-8')
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: npx prettier --write src/features/admin/tournaments/pages/AdminTournamentsPage.tsx tests/tournamentSportingRules.test.mjs
+
+      - name: Sporting rules tests
+        run: node --test tests/tournamentSportingRules.test.mjs
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Full tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Commit fix and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/tmp-fix-tournament-create-full-config.yml
+          git add src/features/admin/tournaments/pages/AdminTournamentsPage.tsx tests/tournamentSportingRules.test.mjs
+          git commit -m "fix(tournaments): inclure toute la configuration à la création"
+          git push origin HEAD:fix/tournament-create-full-config
