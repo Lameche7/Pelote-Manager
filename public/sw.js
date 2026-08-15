@@ -38,10 +38,19 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const targetUrl = new URL(
-    event.notification.data?.url || DEFAULT_NOTIFICATION_URL,
-    self.location.origin,
-  ).href;
+  let destination = event.notification.data?.url || DEFAULT_NOTIFICATION_URL;
+  const communicationTag = event.notification.tag || "";
+  if (
+    destination === DEFAULT_NOTIFICATION_URL &&
+    communicationTag.startsWith("communication:")
+  ) {
+    const communicationId = communicationTag.slice("communication:".length);
+    if (communicationId) {
+      destination = `${DEFAULT_NOTIFICATION_URL}?communication=${encodeURIComponent(communicationId)}`;
+    }
+  }
+
+  const targetUrl = new URL(destination, self.location.origin).href;
 
   event.waitUntil(
     self.clients
