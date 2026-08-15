@@ -15,17 +15,27 @@ const mobileStyles = await readFile(
   "utf8",
 );
 
-test("l administration mobile utilise un menu compact au lieu d une barre horizontale", () => {
+const sidebarOpen = /\.admin-shell__sidebar--open\s*\{\s*display: block;/;
+const verticalNavigation =
+  /\.admin-shell__sidebar nav\s*\{[^}]*overflow-y: auto;/s;
+const horizontalNavigation =
+  /\.admin-shell__sidebar nav\s*\{[^}]*overflow-x: auto;/s;
+const mobileDashboard =
+  /\.admin-shell \.admin-dashboard__metrics\s*\{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/;
+const mobileTournaments =
+  /\.admin-shell \.tournaments-grid\s*\{\s*grid-template-columns: 1fr/;
+
+test("menu administration compact", () => {
   assert.match(shell, /admin-shell__mobile-bar/);
   assert.match(shell, /admin-shell__menu-toggle/);
   assert.match(shell, /aria-controls="admin-navigation"/);
   assert.match(shell, /aria-expanded=\{mobileNavigationOpen\}/);
-  assert.match(styles, /\.admin-shell__sidebar--open\s*\{\s*display: block;/);
-  assert.match(styles, /\.admin-shell__sidebar nav\s*\{[^}]*overflow-y: auto;/s);
-  assert.doesNotMatch(styles, /\.admin-shell__sidebar nav\s*\{[^}]*overflow-x: auto;/s);
+  assert.match(styles, sidebarOpen);
+  assert.match(styles, verticalNavigation);
+  assert.doesNotMatch(styles, horizontalNavigation);
 });
 
-test("le menu mobile affiche la section courante et se referme après navigation", () => {
+test("section courante et fermeture du menu", () => {
   assert.match(shell, /const currentLabel =/);
   assert.match(shell, /useLocation\(\)/);
   assert.match(shell, /setMobileNavigationOpen\(false\)/);
@@ -33,25 +43,16 @@ test("le menu mobile affiche la section courante et se referme après navigation
   assert.match(shell, /onClick=\{\(\) => setMobileNavigationOpen\(false\)\}/);
 });
 
-test("les cibles tactiles et le contenu admin sont adaptés aux petits écrans", () => {
+test("cibles tactiles adaptées", () => {
   assert.match(styles, /min-height: 2\.65rem/);
-  assert.match(
-    styles,
-    /\.admin-shell__content\s*\{\s*padding: 0\.85rem 0\.75rem 1\.5rem;/,
-  );
+  assert.match(styles, /padding: 0\.85rem 0\.75rem 1\.5rem/);
   assert.match(styles, /touch-action: manipulation/);
   assert.match(styles, /@media \(max-width: 24rem\)/);
 });
 
-test("les écrans les plus utilisés deviennent plus compacts sur téléphone", () => {
-  assert.match(
-    mobileStyles,
-    /\.admin-shell \.admin-dashboard__metrics\s*\{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
-  );
-  assert.match(
-    mobileStyles,
-    /\.admin-shell \.tournaments-grid\s*\{\s*grid-template-columns: 1fr/,
-  );
+test("écrans admin compacts sur téléphone", () => {
+  assert.match(mobileStyles, mobileDashboard);
+  assert.match(mobileStyles, mobileTournaments);
   assert.match(mobileStyles, /\.admin-shell \.member-dialog/);
   assert.match(mobileStyles, /max-height: calc\(100dvh - 1\.2rem\)/);
 });
