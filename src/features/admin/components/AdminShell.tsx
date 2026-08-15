@@ -13,6 +13,7 @@ import {
 } from "@/features/admin/access/AdminAccessProvider";
 import { ROUTES } from "@/shared/config";
 import "./AdminShell.css";
+import "./AdminMobileExperience.css";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `admin-shell__link${isActive ? " admin-shell__link--active" : ""}`;
