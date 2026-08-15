@@ -96,7 +96,8 @@ export function TournamentDetailPage() {
   }, [authLoading, load]);
 
   useEffect(() => {
-    if (loading || !tournament || window.location.hash !== "#inscription") return;
+    if (loading || !tournament || window.location.hash !== "#inscription")
+      return;
     const frame = window.requestAnimationFrame(() => {
       document
         .getElementById("inscription")
@@ -266,7 +267,8 @@ export function TournamentDetailPage() {
               <span>
                 Vous pouvez revenir ici et modifier votre équipe ou vos
                 disponibilités autant de fois que nécessaire jusqu’à la clôture
-                des inscriptions le {formatDateTime(tournament.registrationClosesAt)}.
+                des inscriptions le{" "}
+                {formatDateTime(tournament.registrationClosesAt)}.
               </span>
             ) : (
               <span>
