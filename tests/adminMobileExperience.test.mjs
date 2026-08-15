@@ -10,6 +10,10 @@ const styles = await readFile(
   "src/features/admin/components/AdminShell.css",
   "utf8",
 );
+const mobileStyles = await readFile(
+  "src/features/admin/components/AdminMobileExperience.css",
+  "utf8",
+);
 
 test("l administration mobile utilise un menu compact au lieu d une barre horizontale", () => {
   assert.match(shell, /admin-shell__mobile-bar/);
@@ -31,7 +35,23 @@ test("le menu mobile affiche la section courante et se referme après navigation
 
 test("les cibles tactiles et le contenu admin sont adaptés aux petits écrans", () => {
   assert.match(styles, /min-height: 2\.65rem/);
-  assert.match(styles, /\.admin-shell__content\s*\{\s*padding: 0\.85rem 0\.75rem 1\.5rem;/);
+  assert.match(
+    styles,
+    /\.admin-shell__content\s*\{\s*padding: 0\.85rem 0\.75rem 1\.5rem;/,
+  );
   assert.match(styles, /touch-action: manipulation/);
   assert.match(styles, /@media \(max-width: 24rem\)/);
+});
+
+test("les écrans les plus utilisés deviennent plus compacts sur téléphone", () => {
+  assert.match(
+    mobileStyles,
+    /\.admin-shell \.admin-dashboard__metrics\s*\{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
+  );
+  assert.match(
+    mobileStyles,
+    /\.admin-shell \.tournaments-grid\s*\{\s*grid-template-columns: 1fr/,
+  );
+  assert.match(mobileStyles, /\.admin-shell \.member-dialog/);
+  assert.match(mobileStyles, /max-height: calc\(100dvh - 1\.2rem\)/);
 });
