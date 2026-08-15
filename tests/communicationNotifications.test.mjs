@@ -95,7 +95,7 @@ test("l’administration et l’espace licencié utilisent uniquement les RPC pr
     assert.match(adminService, new RegExp(`supabase\\.rpc\\(\"${rpc}\"`));
   }
   for (const rpc of [
-    "list_my_notifications",
+    "list_my_notifications_v2",
     "count_my_unread_notifications",
     "mark_my_notification_read",
     "list_my_home_banners",
