@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, BellRing, CheckCheck } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PushNotificationSettings } from "@/features/notifications/components/PushNotificationSettings";
 import {
   notificationService,
   type MemberNotification,
 } from "@/features/notifications/services/notificationService";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import { ROUTES } from "@/shared/config";
 import "./NotificationsPage.css";
 
 const priorityLabels = {
@@ -15,10 +17,13 @@ const priorityLabels = {
 } as const;
 
 export function NotificationsPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [notifications, setNotifications] = useState<MemberNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const requestedCommunicationId = searchParams.get("communication");
 
   const load = async () => {
     setNotifications(await notificationService.listMyNotifications());
@@ -35,6 +40,29 @@ export function NotificationsPage() {
       )
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (loading || !requestedCommunicationId) return;
+
+    const notification = notifications.find(
+      (item) => item.communicationId === requestedCommunicationId,
+    );
+
+    if (!notification?.actionUrl) {
+      navigate(ROUTES.myNotifications, { replace: true });
+      return;
+    }
+
+    if (!notification.readAt) {
+      void notificationService.markRead(notification.deliveryId, true);
+    }
+    navigate(notification.actionUrl, { replace: true });
+  }, [
+    loading,
+    navigate,
+    notifications,
+    requestedCommunicationId,
+  ]);
 
   const unreadCount = useMemo(
     () =>
@@ -164,6 +192,22 @@ export function NotificationsPage() {
                           "fr-FR",
                         )}
                       </small>
+                    )}
+                    {notification.actionUrl && notification.isActive && (
+                      <Link
+                        className="button button--primary"
+                        to={notification.actionUrl}
+                        onClick={() => {
+                          if (!notification.readAt) {
+                            void notificationService.markRead(
+                              notification.deliveryId,
+                              true,
+                            );
+                          }
+                        }}
+                      >
+                        Voir le tournoi et l’inscription
+                      </Link>
                     )}
                   </div>
                   <div className="member-notification__action">
