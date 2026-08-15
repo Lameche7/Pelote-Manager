@@ -14,6 +14,7 @@ export type MemberNotification = {
   expiresAt: string | null;
   readAt: string | null;
   isActive: boolean;
+  actionUrl: string | null;
 };
 
 export type MemberHomeBanner = {
@@ -37,7 +38,7 @@ const notifyChanged = () => {
 
 export const notificationService = {
   async listMyNotifications(): Promise<MemberNotification[]> {
-    const { data, error } = await supabase.rpc("list_my_notifications");
+    const { data, error } = await supabase.rpc("list_my_notifications_v2");
     if (error) fail(error, "Impossible de charger vos notifications.");
     return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
       deliveryId: String(row.delivery_id),
@@ -49,6 +50,7 @@ export const notificationService = {
       expiresAt: row.expires_at as string | null,
       readAt: row.read_at as string | null,
       isActive: Boolean(row.is_active),
+      actionUrl: (row.action_url as string | null) ?? null,
     }));
   },
 
