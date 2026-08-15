@@ -95,6 +95,16 @@ export function TournamentDetailPage() {
     };
   }, [authLoading, load]);
 
+  useEffect(() => {
+    if (loading || !tournament || window.location.hash !== "#inscription") return;
+    const frame = window.requestAnimationFrame(() => {
+      document
+        .getElementById("inscription")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, tournament]);
+
   const teamsBySeries = useMemo(() => {
     const map = new Map<string, PublicTournamentDetail["teams"]>();
     for (const team of tournament?.teams ?? []) {
@@ -133,6 +143,8 @@ export function TournamentDetailPage() {
   }
 
   const canEditRegistration = tournament.canRegister && isAuthenticated;
+  const registrationConfirmed =
+    registration?.status === "accepted" || registration?.status === "pending";
 
   return (
     <section className="public-tournaments public-tournament-detail">
@@ -246,6 +258,24 @@ export function TournamentDetailPage() {
             </span>
           )}
         </div>
+
+        {registrationConfirmed && (
+          <div className="public-tournaments__success" role="status">
+            <strong>✓ Votre équipe est bien inscrite au tournoi.</strong>{" "}
+            {tournament.canRegister ? (
+              <span>
+                Vous pouvez revenir ici et modifier votre équipe ou vos
+                disponibilités autant de fois que nécessaire jusqu’à la clôture
+                des inscriptions le {formatDateTime(tournament.registrationClosesAt)}.
+              </span>
+            ) : (
+              <span>
+                Les inscriptions sont maintenant clôturées : votre équipe reste
+                inscrite, mais ses disponibilités ne sont plus modifiables.
+              </span>
+            )}
+          </div>
+        )}
 
         {!tournament.canRegister && (
           <p>
