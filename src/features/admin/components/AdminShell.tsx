@@ -43,16 +43,20 @@ function AdminShellContent() {
     );
   if (!access) return <Navigate to={ROUTES.forbidden} replace />;
 
-  const visibleLinks = adminNavigation.flatMap((item) => {
-    if (!isEnabled(item)) return [];
+  const visibleLinks: Array<{ label: string; to: string }> = [];
+  adminNavigation.forEach((item) => {
+    if (!isEnabled(item)) return;
     if ("children" in item) {
-      return item.children
-        .filter((child) => isEnabled(child) && hasPermission(child.permission))
-        .map((child) => ({ label: child.label, to: child.to }));
+      item.children.forEach((child) => {
+        if (isEnabled(child) && hasPermission(child.permission)) {
+          visibleLinks.push({ label: child.label, to: child.to });
+        }
+      });
+      return;
     }
-    return hasPermission(item.permission)
-      ? [{ label: item.label, to: item.to }]
-      : [];
+    if (hasPermission(item.permission)) {
+      visibleLinks.push({ label: item.label, to: item.to });
+    }
   });
 
   const currentLabel =
