@@ -57,12 +57,7 @@ export function NotificationsPage() {
       void notificationService.markRead(notification.deliveryId, true);
     }
     navigate(notification.actionUrl, { replace: true });
-  }, [
-    loading,
-    navigate,
-    notifications,
-    requestedCommunicationId,
-  ]);
+  }, [loading, navigate, notifications, requestedCommunicationId]);
 
   const unreadCount = useMemo(
     () =>
