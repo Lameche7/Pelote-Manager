@@ -1,0 +1,118 @@
+@media (max-width: 50rem) {
+  .admin-shell .admin-dashboard__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .admin-shell .admin-dashboard__metric {
+    gap: 0.28rem;
+  }
+
+  .admin-shell .admin-dashboard__metric > strong {
+    font-size: 1.7rem;
+  }
+
+  .admin-shell .admin-dashboard__metric > small {
+    min-height: 0;
+    font-size: 0.72rem;
+  }
+
+  .admin-shell .admin-dashboard__panel > header {
+    gap: 0.65rem;
+  }
+
+  .admin-shell .admin-dashboard__compact-list strong {
+    overflow: visible;
+    text-overflow: initial;
+    white-space: normal;
+  }
+
+  .admin-shell .admin-dashboard__watch li span {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .admin-shell .tournaments-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-shell .tournament-card dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-shell .tournament-card dl div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .admin-shell .tournaments-heading .tournaments-primary,
+  .admin-shell .tournaments-empty .tournaments-primary {
+    width: 100%;
+  }
+
+  .admin-shell .tournament-editor__panel {
+    padding: 0.75rem;
+  }
+
+  .admin-shell .tournament-editor__header {
+    top: -0.75rem;
+    margin: -0.75rem -0.75rem 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .admin-shell .tournament-form,
+  .admin-shell .tournament-config,
+  .admin-shell .tournament-lifecycle {
+    padding: 0.85rem;
+    border-radius: 0.85rem;
+  }
+
+  .admin-shell .members-actions {
+    width: 100%;
+  }
+
+  .admin-shell .members-actions > .button,
+  .admin-shell .members-actions > button {
+    min-height: 2.7rem;
+  }
+
+  .admin-shell .member-table {
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .admin-shell .member-dialog {
+    width: min(100%, calc(100vw - 1.2rem));
+    max-height: calc(100dvh - 1.2rem);
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .admin-shell .member-dialog footer {
+    position: sticky;
+    bottom: -1rem;
+    margin: 1rem -1rem -1rem;
+    padding: 0.8rem 1rem 1rem;
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+  }
+}
+
+@media (max-width: 28rem) {
+  .admin-shell .admin-dashboard__metric > small {
+    display: none;
+  }
+
+  .admin-shell .admin-dashboard__metric > span {
+    font-size: 0.82rem;
+    line-height: 1.25;
+  }
+
+  .admin-shell .tournament-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-shell .tournament-card dl div:first-child {
+    grid-column: auto;
+  }
+}
