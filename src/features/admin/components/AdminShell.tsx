@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import {
-  Navigate,
-  NavLink,
-  Outlet,
-  useLocation,
-} from "react-router-dom";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { adminNavigation } from "@/features/admin/config/adminPermissions";
 import {
   AdminAccessProvider,
@@ -52,9 +47,7 @@ function AdminShellContent() {
     if (!isEnabled(item)) return [];
     if ("children" in item) {
       return item.children
-        .filter(
-          (child) => isEnabled(child) && hasPermission(child.permission),
-        )
+        .filter((child) => isEnabled(child) && hasPermission(child.permission))
         .map((child) => ({ label: child.label, to: child.to }));
     }
     return hasPermission(item.permission)
