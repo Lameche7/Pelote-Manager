@@ -11,8 +11,14 @@ const migration = await readFile(
 );
 
 test("la publication du planning déclenche une notification joueurs", () => {
-  assert.match(migration, /old\.status is distinct from 'planning_generated'/);
-  assert.match(migration, /new\.status is distinct from 'planning_published'/);
+  assert.match(
+    migration,
+    /old\.status is distinct from 'planning_generated'/,
+  );
+  assert.match(
+    migration,
+    /new\.status is distinct from 'planning_published'/,
+  );
   assert.match(migration, /'planning_published'/);
   assert.match(migration, /Planning publié : /);
 });
@@ -20,7 +26,10 @@ test("la publication du planning déclenche une notification joueurs", () => {
 test("la notification cible uniquement les participants réellement planifiés", () => {
   assert.match(migration, /from public\.tournament_team_players as player/);
   assert.match(migration, /from public\.tournament_matches as match/);
-  assert.match(migration, /player\.team_id in \(match\.team_a_id, match\.team_b_id\)/);
+  assert.match(
+    migration,
+    /player\.team_id in \(match\.team_a_id, match\.team_b_id\)/,
+  );
 });
 
 test("les joueurs extérieurs avec un compte Pelote Manager restent éligibles", () => {
@@ -36,7 +45,10 @@ test("le clic ouvre Mes tournois et aucune notification historique n'est rejoué
     migration,
     /tournament_event\.event_kind = 'planning_published' then '\/mon-espace\/tournois'/,
   );
-  assert.doesNotMatch(migration, /insert[\s\S]*from public\.tournaments[\s\S]*where[\s\S]*status = 'planning_published'/i);
+  assert.doesNotMatch(
+    migration,
+    /insert[\s\S]*from public\.tournaments[\s\S]*where[\s\S]*status = 'planning_published'/i,
+  );
 });
 
 test("une panne du moteur de notification ne bloque pas la publication", () => {
