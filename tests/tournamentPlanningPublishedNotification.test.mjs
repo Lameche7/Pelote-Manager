@@ -11,14 +11,8 @@ const migration = await readFile(
 );
 
 test("la publication du planning déclenche une notification joueurs", () => {
-  assert.match(
-    migration,
-    /old\.status is distinct from 'planning_generated'/,
-  );
-  assert.match(
-    migration,
-    /new\.status is distinct from 'planning_published'/,
-  );
+  assert.match(migration, /old\.status is distinct from 'planning_generated'/);
+  assert.match(migration, /new\.status is distinct from 'planning_published'/);
   assert.match(migration, /'planning_published'/);
   assert.match(migration, /Planning publié : /);
 });
