@@ -12,10 +12,7 @@ const migration = await readFile(
 
 test("le rappel du dernier jour est planifié et idempotent", () => {
   assert.match(migration, /create extension if not exists pg_cron/);
-  assert.match(
-    migration,
-    /pelote-manager-tournament-last-day-reminders/,
-  );
+  assert.match(migration, /pelote-manager-tournament-last-day-reminders/);
   assert.match(migration, /'\*\/15 \* \* \* \*'/);
   assert.match(migration, /local_now::time < time '13:00'/);
   assert.match(
@@ -35,10 +32,7 @@ test("les inscrits reçoivent un rappel de modification", () => {
     migration,
     /target_audience = 'registered'[\s\S]*team\.status in \('pending', 'accepted'\)/,
   );
-  assert.match(
-    migration,
-    /Vérifiez votre équipe et vos disponibilités/,
-  );
+  assert.match(migration, /Vérifiez votre équipe et vos disponibilités/);
 });
 
 test("les licenciés non inscrits reçoivent un dernier appel s il reste de la place", () => {
