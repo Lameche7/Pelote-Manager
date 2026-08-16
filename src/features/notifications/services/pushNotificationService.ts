@@ -17,6 +17,37 @@ type PushConfigResponse = {
   publicKey?: string | null;
 };
 
+const LAST_PUSH_ENDPOINT_STORAGE_KEY = "pelote-manager:push:last-endpoint";
+
+function readLastPushEndpoint(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(LAST_PUSH_ENDPOINT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function rememberLastPushEndpoint(endpoint: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LAST_PUSH_ENDPOINT_STORAGE_KEY, endpoint);
+  } catch {
+    // Le Push reste fonctionnel même si le stockage local est indisponible.
+  }
+}
+
+function forgetLastPushEndpoint(endpoint: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.localStorage.getItem(LAST_PUSH_ENDPOINT_STORAGE_KEY) === endpoint) {
+      window.localStorage.removeItem(LAST_PUSH_ENDPOINT_STORAGE_KEY);
+    }
+  } catch {
+    // Rien à nettoyer si le stockage local est indisponible.
+  }
+}
+
 function isIosDevice(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 }
@@ -87,12 +118,14 @@ async function registerSubscription(
     );
   }
 
-  const { error } = await supabase.rpc("register_push_subscription", {
+  const previousEndpoint = readLastPushEndpoint();
+  const { error } = await supabase.rpc("register_push_subscription_v2", {
     target_endpoint: subscription.endpoint,
     target_p256dh: p256dh,
     target_auth: auth,
     target_user_agent: navigator.userAgent,
     target_platform: platformLabel(),
+    target_previous_endpoint: previousEndpoint,
   });
 
   if (error) {
@@ -103,6 +136,8 @@ async function registerSubscription(
       ),
     );
   }
+
+  rememberLastPushEndpoint(subscription.endpoint);
 }
 
 async function disableRegisteredSubscription(
@@ -252,6 +287,7 @@ export const pushNotificationService = {
 
     await disableRegisteredSubscription(subscription);
     await subscription.unsubscribe();
+    forgetLastPushEndpoint(subscription.endpoint);
     return this.getState();
   },
 };
