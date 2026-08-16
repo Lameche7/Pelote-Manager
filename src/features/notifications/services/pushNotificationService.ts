@@ -40,7 +40,9 @@ function rememberLastPushEndpoint(endpoint: string): void {
 function forgetLastPushEndpoint(endpoint: string): void {
   if (typeof window === "undefined") return;
   try {
-    if (window.localStorage.getItem(LAST_PUSH_ENDPOINT_STORAGE_KEY) === endpoint) {
+    if (
+      window.localStorage.getItem(LAST_PUSH_ENDPOINT_STORAGE_KEY) === endpoint
+    ) {
       window.localStorage.removeItem(LAST_PUSH_ENDPOINT_STORAGE_KEY);
     }
   } catch {
