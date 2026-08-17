@@ -60,11 +60,13 @@ export function TournamentDetailPage() {
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
-    const [publicTournament, loadedRankings, loadedResults] = await Promise.all([
-      tournamentService.getPublic(tournamentId),
-      tournamentRankingService.get(tournamentId),
-      tournamentResultsService.get(tournamentId),
-    ]);
+    const [publicTournament, loadedRankings, loadedResults] = await Promise.all(
+      [
+        tournamentService.getPublic(tournamentId),
+        tournamentRankingService.get(tournamentId),
+        tournamentResultsService.get(tournamentId),
+      ],
+    );
     setTournament(publicTournament);
     setRankings(publicTournament ? loadedRankings : null);
     setResults(publicTournament ? loadedResults : null);
@@ -249,7 +251,9 @@ export function TournamentDetailPage() {
                               <strong>
                                 {player.firstName} {player.lastName}
                               </strong>
-                              {player.clubName && <small>{player.clubName}</small>}
+                              {player.clubName && (
+                                <small>{player.clubName}</small>
+                              )}
                             </span>
                           ))}
                         </div>
