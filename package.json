@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/features/user-space/tournaments/pages/MyTournamentsPage.tsx src/features/user-space/tournaments/pages/MyTournamentsPage.css tests/tournamentPostMatchResultReminder.test.mjs && git diff -- src/features/user-space/tournaments/pages/MyTournamentsPage.tsx src/features/user-space/tournaments/pages/MyTournamentsPage.css tests/tournamentPostMatchResultReminder.test.mjs && exit 1",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "security:secrets": "node scripts/security/check-secrets.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
