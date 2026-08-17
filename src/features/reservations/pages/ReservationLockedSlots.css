@@ -37,17 +37,9 @@
 }
 
 .reservation-slot--tournament {
-  border-color: color-mix(
-    in srgb,
-    var(--tournament-series-color) 46%,
-    #d7dde1
-  );
+  border-color: color-mix(in srgb, var(--tournament-series-color) 46%, #d7dde1);
   color: #27323a;
-  background: color-mix(
-    in srgb,
-    var(--tournament-series-color) 10%,
-    white
-  );
+  background: color-mix(in srgb, var(--tournament-series-color) 10%, white);
 }
 
 .reservation-slot--tournament::before {
