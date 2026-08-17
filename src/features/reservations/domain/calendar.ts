@@ -7,6 +7,8 @@ export type CalendarSlot = {
   status: CalendarSlotStatus;
   bookingOpensAt: string | null;
   bookedByName: string | null;
+  occupationType?: string | null;
+  displayColor?: string | null;
 };
 
 export type CalendarOccupation = {

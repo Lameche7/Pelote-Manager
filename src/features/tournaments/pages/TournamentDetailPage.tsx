@@ -2,10 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TournamentRankings } from "@/features/tournaments/components/TournamentRankings";
 import { TournamentRegistrationForm } from "@/features/tournaments/components/TournamentRegistrationForm";
+import { TournamentResultsBoard } from "@/features/tournaments/components/TournamentResultsBoard";
 import {
   tournamentRankingService,
   type TournamentRankings as TournamentRankingsPayload,
 } from "@/features/tournaments/services/tournamentRankingService";
+import {
+  tournamentResultsService,
+  type PublicTournamentResults,
+} from "@/features/tournaments/services/tournamentResultsService";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
   MyTournamentRegistration,
@@ -47,6 +52,7 @@ export function TournamentDetailPage() {
   const [rankings, setRankings] = useState<TournamentRankingsPayload | null>(
     null,
   );
+  const [results, setResults] = useState<PublicTournamentResults | null>(null);
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,18 +60,22 @@ export function TournamentDetailPage() {
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
-    const [publicTournament, loadedRankings] = await Promise.all([
-      tournamentService.getPublic(tournamentId),
-      tournamentRankingService.get(tournamentId),
-    ]);
+    const [publicTournament, loadedRankings, loadedResults] = await Promise.all(
+      [
+        tournamentService.getPublic(tournamentId),
+        tournamentRankingService.get(tournamentId),
+        tournamentResultsService.get(tournamentId),
+      ],
+    );
     setTournament(publicTournament);
     setRankings(publicTournament ? loadedRankings : null);
+    setResults(publicTournament ? loadedResults : null);
     if (!publicTournament) {
       setRegistration(null);
       return;
     }
 
-    if (isAuthenticated) {
+    if (isAuthenticated && !loadedResults) {
       setRegistration(await tournamentService.getMine(tournamentId));
     } else {
       setRegistration(null);
@@ -96,7 +106,12 @@ export function TournamentDetailPage() {
   }, [authLoading, load]);
 
   useEffect(() => {
-    if (loading || !tournament || window.location.hash !== "#inscription")
+    if (
+      loading ||
+      !tournament ||
+      results ||
+      window.location.hash !== "#inscription"
+    )
       return;
     const frame = window.requestAnimationFrame(() => {
       document
@@ -104,7 +119,7 @@ export function TournamentDetailPage() {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [loading, tournament]);
+  }, [loading, results, tournament]);
 
   const teamsBySeries = useMemo(() => {
     const map = new Map<string, PublicTournamentDetail["teams"]>();
@@ -153,30 +168,6 @@ export function TournamentDetailPage() {
         ← Tous les tournois
       </Link>
 
-      <header className="public-tournament-detail__hero">
-        <div>
-          <p>Tournoi</p>
-          <h1>{tournament.name}</h1>
-          {tournament.description && <span>{tournament.description}</span>}
-        </div>
-        <dl>
-          <div>
-            <dt>Période</dt>
-            <dd>
-              {formatDate(tournament.startsOn)} →{" "}
-              {formatDate(tournament.endsOn)}
-            </dd>
-          </div>
-          <div>
-            <dt>Inscriptions</dt>
-            <dd>
-              {formatDateTime(tournament.registrationOpensAt)} →{" "}
-              {formatDateTime(tournament.registrationClosesAt)}
-            </dd>
-          </div>
-        </dl>
-      </header>
-
       {error && (
         <p className="public-tournaments__error" role="alert">
           {error}
@@ -188,126 +179,167 @@ export function TournamentDetailPage() {
         </p>
       )}
 
-      {tournament.rules && (
-        <section className="public-tournament-panel">
-          <h2>Règlement & informations</h2>
-          <p className="public-tournament-preline">{tournament.rules}</p>
-        </section>
-      )}
+      {results ? (
+        <>
+          <header className="public-tournament-detail__sports-header">
+            <div>
+              <p>Résultats & classements</p>
+              <h1>{tournament.name}</h1>
+            </div>
+          </header>
+          <TournamentResultsBoard results={results} rankings={rankings} />
+        </>
+      ) : (
+        <>
+          <header className="public-tournament-detail__hero">
+            <div>
+              <p>Tournoi</p>
+              <h1>{tournament.name}</h1>
+              {tournament.description && <span>{tournament.description}</span>}
+            </div>
+            <dl>
+              <div>
+                <dt>Période</dt>
+                <dd>
+                  {formatDate(tournament.startsOn)} →{" "}
+                  {formatDate(tournament.endsOn)}
+                </dd>
+              </div>
+              <div>
+                <dt>Inscriptions</dt>
+                <dd>
+                  {formatDateTime(tournament.registrationOpensAt)} →{" "}
+                  {formatDateTime(tournament.registrationClosesAt)}
+                </dd>
+              </div>
+            </dl>
+          </header>
 
-      <section className="public-tournament-panel public-tournament-panel--teams">
-        <div className="public-tournament-panel__compact-heading">
-          <h2>Équipes inscrites</h2>
-          <span>{tournament.teamCount} équipe(s) validée(s)</span>
-        </div>
-        <div className="public-tournament-series-list">
-          {tournament.series.map((series) => (
-            <article key={series.id} className="public-tournament-series">
-              <header>
-                <div>
-                  <h3>{series.name}</h3>
-                  <span>
-                    {series.acceptedCount}/{series.capacity}
-                  </span>
-                </div>
-                <strong>{series.remainingSlots} libre(s)</strong>
-              </header>
-              {(teamsBySeries.get(series.id) ?? []).length === 0 ? (
-                <p className="public-team-list__empty">Aucune équipe.</p>
-              ) : (
-                <div className="public-team-list">
-                  {(teamsBySeries.get(series.id) ?? []).map((team) => (
-                    <div className="public-team" key={team.id}>
-                      {team.players.map((player) => (
-                        <span key={`${team.id}-${player.role}`}>
-                          <small>{playerRoleLabels[player.role]}</small>
-                          <strong>
-                            {player.firstName} {player.lastName}
-                          </strong>
-                          {player.clubName && <small>{player.clubName}</small>}
-                        </span>
+          {tournament.rules && (
+            <section className="public-tournament-panel">
+              <h2>Règlement & informations</h2>
+              <p className="public-tournament-preline">{tournament.rules}</p>
+            </section>
+          )}
+
+          <section className="public-tournament-panel public-tournament-panel--teams">
+            <div className="public-tournament-panel__compact-heading">
+              <h2>Équipes inscrites</h2>
+              <span>{tournament.teamCount} équipe(s) validée(s)</span>
+            </div>
+            <div className="public-tournament-series-list">
+              {tournament.series.map((series) => (
+                <article key={series.id} className="public-tournament-series">
+                  <header>
+                    <div>
+                      <h3>{series.name}</h3>
+                      <span>
+                        {series.acceptedCount}/{series.capacity}
+                      </span>
+                    </div>
+                    <strong>{series.remainingSlots} libre(s)</strong>
+                  </header>
+                  {(teamsBySeries.get(series.id) ?? []).length === 0 ? (
+                    <p className="public-team-list__empty">Aucune équipe.</p>
+                  ) : (
+                    <div className="public-team-list">
+                      {(teamsBySeries.get(series.id) ?? []).map((team) => (
+                        <div className="public-team" key={team.id}>
+                          {team.players.map((player) => (
+                            <span key={`${team.id}-${player.role}`}>
+                              <small>{playerRoleLabels[player.role]}</small>
+                              <strong>
+                                {player.firstName} {player.lastName}
+                              </strong>
+                              {player.clubName && (
+                                <small>{player.clubName}</small>
+                              )}
+                            </span>
+                          ))}
+                        </div>
                       ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
 
-      {rankings && (
-        <section className="public-tournament-panel">
-          <TournamentRankings rankings={rankings} />
-        </section>
-      )}
-
-      <section
-        className="public-tournament-panel public-registration-panel"
-        id="inscription"
-      >
-        <div className="public-registration-panel__heading">
-          <div>
-            <p>Votre équipe</p>
-            <h2>Inscription</h2>
-          </div>
-          {registration && (
-            <span
-              className={`public-registration-status public-registration-status--${registration.status}`}
-            >
-              {registrationStatusLabels[registration.status]}
-            </span>
+          {rankings && (
+            <section className="public-tournament-panel">
+              <TournamentRankings rankings={rankings} />
+            </section>
           )}
-        </div>
 
-        {registrationConfirmed && (
-          <div className="public-tournaments__success" role="status">
-            <strong>✓ Votre équipe est bien inscrite au tournoi.</strong>{" "}
-            {tournament.canRegister ? (
-              <span>
-                Vous pouvez revenir ici et modifier votre équipe ou vos
-                disponibilités autant de fois que nécessaire jusqu’à la clôture
-                des inscriptions le{" "}
-                {formatDateTime(tournament.registrationClosesAt)}.
-              </span>
-            ) : (
-              <span>
-                Les inscriptions sont maintenant clôturées : votre équipe reste
-                inscrite, mais ses disponibilités ne sont plus modifiables.
-              </span>
+          <section
+            className="public-tournament-panel public-registration-panel"
+            id="inscription"
+          >
+            <div className="public-registration-panel__heading">
+              <div>
+                <p>Votre équipe</p>
+                <h2>Inscription</h2>
+              </div>
+              {registration && (
+                <span
+                  className={`public-registration-status public-registration-status--${registration.status}`}
+                >
+                  {registrationStatusLabels[registration.status]}
+                </span>
+              )}
+            </div>
+
+            {registrationConfirmed && (
+              <div className="public-tournaments__success" role="status">
+                <strong>✓ Votre équipe est bien inscrite au tournoi.</strong>{" "}
+                {tournament.canRegister ? (
+                  <span>
+                    Vous pouvez revenir ici et modifier votre équipe ou vos
+                    disponibilités autant de fois que nécessaire jusqu’à la
+                    clôture des inscriptions le{" "}
+                    {formatDateTime(tournament.registrationClosesAt)}.
+                  </span>
+                ) : (
+                  <span>
+                    Les inscriptions sont maintenant clôturées : votre équipe
+                    reste inscrite, mais ses disponibilités ne sont plus
+                    modifiables.
+                  </span>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {!tournament.canRegister && (
-          <p>
-            Les inscriptions sont actuellement fermées. Les équipes déjà
-            validées restent consultables ci-dessus.
-          </p>
-        )}
+            {!tournament.canRegister && (
+              <p>
+                Les inscriptions sont actuellement fermées. Les équipes déjà
+                validées restent consultables ci-dessus.
+              </p>
+            )}
 
-        {tournament.canRegister && !isAuthenticated && (
-          <div className="public-registration-login">
-            <p>
-              Un compte Pelote Manager est nécessaire pour créer ou modifier une
-              inscription.
-            </p>
-            <Link className="button button--primary" to={ROUTES.login}>
-              Se connecter pour inscrire une équipe
-            </Link>
-          </div>
-        )}
+            {tournament.canRegister && !isAuthenticated && (
+              <div className="public-registration-login">
+                <p>
+                  Un compte Pelote Manager est nécessaire pour créer ou modifier
+                  une inscription.
+                </p>
+                <Link className="button button--primary" to={ROUTES.login}>
+                  Se connecter pour inscrire une équipe
+                </Link>
+              </div>
+            )}
 
-        {canEditRegistration && (
-          <TournamentRegistrationForm
-            tournament={tournament}
-            registration={registration}
-            onReload={load}
-            onMessage={setMessage}
-            onError={setError}
-          />
-        )}
-      </section>
+            {canEditRegistration && (
+              <TournamentRegistrationForm
+                tournament={tournament}
+                registration={registration}
+                onReload={load}
+                onMessage={setMessage}
+                onError={setError}
+              />
+            )}
+          </section>
+        </>
+      )}
     </section>
   );
 }
