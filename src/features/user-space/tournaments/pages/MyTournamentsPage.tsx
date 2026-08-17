@@ -230,8 +230,7 @@ function TournamentCard({
   );
   const upcomingMatches = tournament.matches.filter(
     (match) =>
-      !actionRequiredIds.has(match.id) &&
-      matchStartsAt(match).getTime() > now,
+      !actionRequiredIds.has(match.id) && matchStartsAt(match).getTime() > now,
   );
   const nextMatch = currentMatch ?? upcomingMatches[0] ?? null;
   const promotedIds = new Set([
@@ -439,7 +438,8 @@ export function MyTournamentsPage() {
     () =>
       displayed.reduce(
         (count, tournament) =>
-          count + tournament.matches.filter((match) => match.canSubmitResult).length,
+          count +
+          tournament.matches.filter((match) => match.canSubmitResult).length,
         0,
       ),
     [displayed],
