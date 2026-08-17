@@ -22,6 +22,8 @@ type SlotRow = {
   status: "available" | "occupied" | "locked";
   booking_opens_at: string | null;
   booked_by_name: string | null;
+  occupation_type: string | null;
+  display_color: string | null;
 };
 
 export const reservationCalendarService = {
@@ -32,7 +34,10 @@ export const reservationCalendarService = {
       .eq("is_active", true)
       .order("name");
 
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les terrains."));
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger les terrains."),
+      );
 
     return ((data ?? []) as ResourceRow[]).map((resource) => ({
       id: resource.id,
@@ -47,13 +52,16 @@ export const reservationCalendarService = {
     fromDate: string,
     toDate: string,
   ): Promise<CalendarSlot[]> {
-    const { data, error } = await supabase.rpc("list_available_slots", {
+    const { data, error } = await supabase.rpc("list_available_slots_v2", {
       target_resource_id: resourceId,
       range_start: fromDate,
       range_end: toDate,
     });
 
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger le calendrier."));
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger le calendrier."),
+      );
 
     return ((data ?? []) as SlotRow[]).map((slot) => ({
       resourceId: slot.resource_id,
@@ -62,6 +70,8 @@ export const reservationCalendarService = {
       status: slot.status,
       bookingOpensAt: slot.booking_opens_at,
       bookedByName: slot.booked_by_name,
+      occupationType: slot.occupation_type,
+      displayColor: slot.display_color,
     }));
   },
 
@@ -76,7 +86,10 @@ export const reservationCalendarService = {
       range_end: rangeEnd,
     });
 
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les occupations."));
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger les occupations."),
+      );
 
     return ((data ?? []) as CalendarOccupationRow[]).map(
       mapCalendarOccupation,
