@@ -16,7 +16,10 @@ test(
 
     assert.match(migration, /register_push_subscription_v2/i);
     assert.match(migration, /target_previous_endpoint text default null/i);
-    assert.match(migration, /previous_endpoint is distinct from current_endpoint/i);
+    assert.match(
+      migration,
+      /previous_endpoint is distinct from current_endpoint/i,
+    );
     assert.match(
       migration,
       /subscription\.profile_id = actor_id[\s\S]*subscription\.endpoint = previous_endpoint[\s\S]*subscription\.is_active/i,
