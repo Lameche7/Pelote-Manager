@@ -35,3 +35,32 @@
   background: #3f6688;
   box-shadow: 0 0 0 0.22rem rgb(63 102 136 / 14%);
 }
+
+.reservation-slot--tournament {
+  border-color: color-mix(
+    in srgb,
+    var(--tournament-series-color) 46%,
+    #d7dde1
+  );
+  color: #27323a;
+  background: color-mix(
+    in srgb,
+    var(--tournament-series-color) 10%,
+    white
+  );
+}
+
+.reservation-slot--tournament::before {
+  background: var(--tournament-series-color);
+}
+
+.reservation-slot--tournament span {
+  color: var(--tournament-series-color);
+  opacity: 1;
+  font-weight: 850;
+}
+
+.reservation-slot--tournament small {
+  color: #4f5b63;
+  line-height: 1.25;
+}
