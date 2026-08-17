@@ -111,9 +111,12 @@ const mapResults = (value: unknown): PublicTournamentResults | null => {
 
 export const tournamentResultsService = {
   async get(tournamentId: string): Promise<PublicTournamentResults | null> {
-    const { data, error } = await supabase.rpc("get_public_tournament_results", {
-      target_tournament_id: tournamentId,
-    });
+    const { data, error } = await supabase.rpc(
+      "get_public_tournament_results",
+      {
+        target_tournament_id: tournamentId,
+      },
+    );
     if (error) {
       throw new Error(
         getSupabaseErrorMessage(
