@@ -77,6 +77,6 @@ test("Mon espace active Mes tournois et sa route protégée", async () => {
   assert.match(page, /Mon équipe/);
   assert.match(page, /Prochaine partie/);
   assert.match(page, /Planning en préparation/);
-  assert.match(page, /Toutes mes parties/);
+  assert.match(page, /Toutes mes autres parties/);
   assert.match(service, /get_my_tournaments/);
 });

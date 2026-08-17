@@ -5,7 +5,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import {
   myTournamentsService,
@@ -60,8 +60,10 @@ const shortDate = new Intl.DateTimeFormat("fr-FR", {
 const roleLabels = { front: "Avant", back: "Arrière" } as const;
 
 const dateAtNoon = (value: string) => new Date(`${value}T12:00:00`);
-const matchDate = (match: MyTournamentMatch) =>
+const matchStartsAt = (match: MyTournamentMatch) =>
   new Date(`${match.playDate}T${match.startsAt || "00:00"}:00`);
+const matchEndsAt = (match: MyTournamentMatch) =>
+  new Date(`${match.playDate}T${match.endsAt || match.startsAt || "00:00"}:00`);
 
 const playerLabel = (player: MyTournamentPlayer) =>
   `${player.firstName} ${player.lastName}`.trim();
@@ -88,18 +90,38 @@ function MatchCard({
   match,
   rules,
   highlight = false,
+  actionRequired = false,
+  focused = false,
   onResultSaved,
 }: {
   match: MyTournamentMatch;
   rules: MyTournamentSportingRules;
   highlight?: boolean;
+  actionRequired?: boolean;
+  focused?: boolean;
   onResultSaved: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const isPast = matchDate(match).getTime() < Date.now();
+  const now = Date.now();
+  const startsAt = matchStartsAt(match).getTime();
+  const endsAt = matchEndsAt(match).getTime();
+  const isPast = endsAt < now;
+  const isInProgress = startsAt <= now && endsAt >= now;
   const opponent = teamLabel(match.opponentPlayers);
   const resultLabel = formatResult(match);
+
+  useEffect(() => {
+    if (!focused) return;
+
+    window.setTimeout(() => {
+      document
+        .getElementById(`tournament-match-${match.id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 0);
+
+    if (match.canSubmitResult) setEditing(true);
+  }, [focused, match.canSubmitResult, match.id]);
 
   const saveResult = async (score: TournamentScorePayload) => {
     setSaving(true);
@@ -112,19 +134,35 @@ function MatchCard({
     }
   };
 
+  const statusLabel = actionRequired
+    ? "Résultat à saisir"
+    : isInProgress
+      ? "Partie en cours"
+      : highlight
+        ? "Prochaine partie"
+        : isPast
+          ? "Partie jouée"
+          : "À venir";
+
   return (
     <article
-      className={`my-tournaments__match${highlight ? " my-tournaments__match--next" : ""}${isPast ? " my-tournaments__match--past" : ""}`}
+      id={`tournament-match-${match.id}`}
+      className={`my-tournaments__match${highlight ? " my-tournaments__match--next" : ""}${actionRequired ? " my-tournaments__match--action" : ""}${focused ? " my-tournaments__match--focused" : ""}${isPast && !actionRequired ? " my-tournaments__match--past" : ""}`}
     >
       <div className="my-tournaments__match-date">
         <strong>{shortDate.format(dateAtNoon(match.playDate))}</strong>
-        <span>{match.startsAt}</span>
+        <span>
+          {match.startsAt} – {match.endsAt}
+        </span>
       </div>
       <div className="my-tournaments__match-opponent">
-        <span>
-          {highlight ? "Prochaine partie" : isPast ? "Partie jouée" : "À venir"}
-        </span>
+        <span>{statusLabel}</span>
         <strong>vs {opponent}</strong>
+        {actionRequired && !editing && (
+          <span className="my-tournaments__result-hint">
+            La partie est terminée : transmettez maintenant le score au club.
+          </span>
+        )}
         {match.result && (
           <div className="my-tournaments__result-summary">
             <strong>{resultLabel}</strong>
@@ -145,7 +183,7 @@ function MatchCard({
             type="button"
             onClick={() => setEditing(true)}
           >
-            Saisir le résultat
+            Saisir le score
           </button>
         )}
       </div>
@@ -170,18 +208,41 @@ function MatchCard({
 
 function TournamentCard({
   tournament,
+  focusMatchId,
   onResultSaved,
 }: {
   tournament: MyTournamentOverview;
+  focusMatchId: string | null;
   onResultSaved: () => Promise<void>;
 }) {
-  const upcomingMatches = tournament.matches.filter(
-    (match) => matchDate(match).getTime() >= Date.now(),
+  const now = Date.now();
+  const actionRequiredMatches = tournament.matches.filter(
+    (match) => match.canSubmitResult,
   );
-  const nextMatch = upcomingMatches[0] ?? null;
-  const remainingMatches = nextMatch
-    ? tournament.matches.filter((match) => match.id !== nextMatch.id)
-    : tournament.matches;
+  const actionRequiredIds = new Set(
+    actionRequiredMatches.map((match) => match.id),
+  );
+  const currentMatch = tournament.matches.find(
+    (match) =>
+      !actionRequiredIds.has(match.id) &&
+      matchStartsAt(match).getTime() <= now &&
+      matchEndsAt(match).getTime() >= now,
+  );
+  const upcomingMatches = tournament.matches.filter(
+    (match) =>
+      !actionRequiredIds.has(match.id) && matchStartsAt(match).getTime() > now,
+  );
+  const nextMatch = currentMatch ?? upcomingMatches[0] ?? null;
+  const promotedIds = new Set([
+    ...actionRequiredMatches.map((match) => match.id),
+    ...(nextMatch ? [nextMatch.id] : []),
+  ]);
+  const remainingMatches = tournament.matches.filter(
+    (match) => !promotedIds.has(match.id),
+  );
+  const focusedInRemaining = remainingMatches.some(
+    (match) => match.id === focusMatchId,
+  );
   const style = {
     "--series-color": tournament.team.seriesColor,
   } as CSSProperties;
@@ -248,18 +309,43 @@ function TournamentCard({
         </div>
       ) : (
         <section className="my-tournaments__matches" aria-label="Mes parties">
+          {actionRequiredMatches.length > 0 && (
+            <div className="my-tournaments__action-block">
+              <div className="my-tournaments__action-heading">
+                <strong>
+                  {actionRequiredMatches.length === 1
+                    ? "Score à transmettre"
+                    : `${actionRequiredMatches.length} scores à transmettre`}
+                </strong>
+                <span>À faire avant de passer à vos prochaines parties.</span>
+              </div>
+              {actionRequiredMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  rules={tournament.sportingRules}
+                  actionRequired
+                  focused={match.id === focusMatchId}
+                  onResultSaved={onResultSaved}
+                />
+              ))}
+            </div>
+          )}
+
           {nextMatch && (
             <MatchCard
               match={nextMatch}
               rules={tournament.sportingRules}
               highlight
+              focused={nextMatch.id === focusMatchId}
               onResultSaved={onResultSaved}
             />
           )}
+
           {remainingMatches.length > 0 && (
-            <details>
+            <details open={focusedInRemaining || undefined}>
               <summary>
-                Toutes mes parties ({tournament.matches.length})
+                Toutes mes autres parties ({remainingMatches.length})
               </summary>
               <div className="my-tournaments__match-list">
                 {remainingMatches.map((match) => (
@@ -267,6 +353,7 @@ function TournamentCard({
                     key={match.id}
                     match={match}
                     rules={tournament.sportingRules}
+                    focused={match.id === focusMatchId}
                     onResultSaved={onResultSaved}
                   />
                 ))}
@@ -288,6 +375,8 @@ function TournamentCard({
 }
 
 export function MyTournamentsPage() {
+  const [searchParams] = useSearchParams();
+  const focusMatchId = searchParams.get("match");
   const [tournaments, setTournaments] = useState<MyTournamentOverview[]>([]);
   const [view, setView] = useState<"current" | "history">("current");
   const [isLoading, setIsLoading] = useState(true);
@@ -345,6 +434,17 @@ export function MyTournamentsPage() {
     [tournaments, view],
   );
 
+  const actionRequiredCount = useMemo(
+    () =>
+      displayed.reduce(
+        (count, tournament) =>
+          count +
+          tournament.matches.filter((match) => match.canSubmitResult).length,
+        0,
+      ),
+    [displayed],
+  );
+
   return (
     <UserSpaceShell>
       <section
@@ -389,6 +489,19 @@ export function MyTournamentsPage() {
           </button>
         </div>
 
+        {view === "current" && actionRequiredCount > 0 && (
+          <div className="my-tournaments__global-action" role="status">
+            <strong>
+              {actionRequiredCount === 1
+                ? "1 score est à saisir"
+                : `${actionRequiredCount} scores sont à saisir`}
+            </strong>
+            <span>
+              Les parties terminées à renseigner sont affichées en premier.
+            </span>
+          </div>
+        )}
+
         {isLoading ? (
           <p>Chargement de vos tournois…</p>
         ) : displayed.length === 0 ? (
@@ -409,6 +522,7 @@ export function MyTournamentsPage() {
               <TournamentCard
                 key={tournament.id}
                 tournament={tournament}
+                focusMatchId={focusMatchId}
                 onResultSaved={refreshAfterResult}
               />
             ))}

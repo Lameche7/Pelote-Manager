@@ -57,6 +57,20 @@
   box-shadow: 0 1px 4px rgb(15 23 42 / 12%);
 }
 
+.my-tournaments__global-action {
+  display: grid;
+  gap: 0.15rem;
+  border: 1px solid rgb(180 83 9 / 28%);
+  border-radius: 0.85rem;
+  padding: 0.8rem 1rem;
+  background: rgb(245 158 11 / 9%);
+}
+
+.my-tournaments__global-action span {
+  font-size: 0.82rem;
+  opacity: 0.72;
+}
+
 .my-tournaments__grid {
   display: grid;
   gap: 1rem;
@@ -205,6 +219,25 @@
   margin: 0 1rem 0.9rem 1.2rem;
 }
 
+.my-tournaments__action-block {
+  display: grid;
+  gap: 0.45rem;
+  border-radius: 0.85rem;
+  padding: 0.55rem;
+  background: rgb(245 158 11 / 8%);
+}
+
+.my-tournaments__action-heading {
+  display: grid;
+  gap: 0.08rem;
+  padding: 0.1rem 0.2rem;
+}
+
+.my-tournaments__action-heading span {
+  font-size: 0.76rem;
+  opacity: 0.68;
+}
+
 .my-tournaments__match {
   display: grid;
   grid-template-columns: minmax(7rem, 0.8fr) minmax(14rem, 2fr) minmax(
@@ -227,6 +260,18 @@
   background: color-mix(in srgb, var(--series-color, #2563eb) 7%, white);
 }
 
+.my-tournaments__match--action {
+  border-color: rgb(180 83 9 / 38%);
+  background: #fff;
+  box-shadow: 0 5px 18px rgb(180 83 9 / 8%);
+}
+
+.my-tournaments__match--focused {
+  outline: 3px solid
+    color-mix(in srgb, var(--series-color, #2563eb) 22%, transparent);
+  outline-offset: 2px;
+}
+
 .my-tournaments__match--past {
   opacity: 0.58;
 }
@@ -245,8 +290,28 @@
   opacity: 0.58;
 }
 
+.my-tournaments__match-opponent .my-tournaments__result-hint {
+  margin-top: 0.15rem;
+  font-weight: 650;
+  opacity: 0.78;
+}
+
 .my-tournaments__match-place {
   text-align: right;
+}
+
+.my-tournaments__result-button {
+  cursor: pointer;
+  justify-self: end;
+  margin-top: 0.35rem;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.72rem;
+  background: var(--club-accent, #1e5aa8);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
 }
 
 .my-tournaments__matches details {
@@ -325,5 +390,9 @@
 
   .my-tournaments__match-place {
     text-align: left;
+  }
+
+  .my-tournaments__result-button {
+    justify-self: start;
   }
 }

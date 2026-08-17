@@ -114,7 +114,7 @@ test("Mes Tournois et le back-office exposent la saisie de résultat", async () 
       read("../src/app/router.tsx"),
     ]);
 
-  assert.match(userPage, /Saisir le résultat/);
+  assert.match(userPage, /Saisir le score/);
   assert.match(userPage, /Transmettre au club/);
   assert.match(userService, /submit_my_tournament_match_result/);
   assert.match(adminPage, /Valider ce résultat/);
