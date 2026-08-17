@@ -62,13 +62,15 @@
   height: 0.72rem;
   border-radius: 999px;
   background: var(--series-color);
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--series-color) 15%, transparent);
+  box-shadow: 0 0 0 0.2rem
+    color-mix(in srgb, var(--series-color) 15%, transparent);
 }
 
 .tournament-results-board__series-tab--active {
   border-color: var(--series-color);
   background: color-mix(in srgb, var(--series-color) 10%, white);
-  box-shadow: 0 0.5rem 1.4rem color-mix(in srgb, var(--series-color) 12%, transparent);
+  box-shadow: 0 0.5rem 1.4rem
+    color-mix(in srgb, var(--series-color) 12%, transparent);
 }
 
 .tournament-results-board__pools {
