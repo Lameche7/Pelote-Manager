@@ -52,9 +52,7 @@ test("le classement public est volontairement compact", async () => {
 test("le calendrier récupère et applique la couleur de série", async () => {
   const [migration, service, page, styles] = await Promise.all([
     read(migrationPath),
-    read(
-      "../src/features/reservations/services/reservationCalendarService.ts",
-    ),
+    read("../src/features/reservations/services/reservationCalendarService.ts"),
     read("../src/features/reservations/pages/ReservationsPage.tsx"),
     read("../src/features/reservations/pages/ReservationLockedSlots.css"),
   ]);
