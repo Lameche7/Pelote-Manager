@@ -18,9 +18,8 @@ const metric = (value: number) =>
     : value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 
 const scoreLabel = (match: PublicTournamentResultMatch) =>
-  match.score?.sets
-    .map((set) => `${set.teamA}–${set.teamB}`)
-    .join("  ·  ") ?? "";
+  match.score?.sets.map((set) => `${set.teamA}–${set.teamB}`).join("  ·  ") ??
+  "";
 
 const matchState = (match: PublicTournamentResultMatch) => {
   if (match.resultStatus === "validated") return "validated";
@@ -73,7 +72,9 @@ export function TournamentResultsBoard({
   const rankingLabel =
     rankings?.rankingMode === "points_per_match" ? "Pts/m" : "Pts";
   const goalAverageLabel =
-    rankings?.goalAverageMode === "point_difference_per_match" ? "+/−/m" : "+/−";
+    rankings?.goalAverageMode === "point_difference_per_match"
+      ? "+/−/m"
+      : "+/−";
 
   return (
     <div
@@ -174,7 +175,8 @@ export function TournamentResultsBoard({
                 <h3>Classement</h3>
                 {!rankingPool || rankingPool.teams.length === 0 ? (
                   <p className="tournament-results-board__empty">
-                    Le classement apparaîtra dès que les résultats seront validés.
+                    Le classement apparaîtra dès que les résultats seront
+                    validés.
                   </p>
                 ) : (
                   <div className="tournament-pool-ranking-scroll">
