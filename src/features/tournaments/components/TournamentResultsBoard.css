@@ -1,3 +1,33 @@
+.public-tournament-detail__sports-header {
+  display: flex;
+  align-items: center;
+  min-height: 5rem;
+  border-left: 0.35rem solid var(--active-series, var(--brand-green, #0f3d2e));
+  border-radius: 0.95rem;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  box-shadow: 0 0.55rem 1.6rem rgb(15 23 42 / 5%);
+}
+
+.public-tournament-detail__sports-header p,
+.public-tournament-detail__sports-header h1 {
+  margin: 0;
+}
+
+.public-tournament-detail__sports-header p {
+  margin-bottom: 0.12rem;
+  color: #69767d;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.public-tournament-detail__sports-header h1 {
+  font-size: clamp(1.45rem, 4vw, 2.1rem);
+  line-height: 1.1;
+}
+
 .tournament-results-board {
   display: grid;
   gap: 1rem;
