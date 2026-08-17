@@ -267,11 +267,8 @@
 }
 
 .my-tournaments__match--focused {
-  outline: 3px solid color-mix(
-    in srgb,
-    var(--series-color, #2563eb) 22%,
-    transparent
-  );
+  outline: 3px solid
+    color-mix(in srgb, var(--series-color, #2563eb) 22%, transparent);
   outline-offset: 2px;
 }
 
