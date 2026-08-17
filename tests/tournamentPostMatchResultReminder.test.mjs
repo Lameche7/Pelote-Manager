@@ -15,10 +15,7 @@ test("un rappel de saisie est publié après la fin d une partie sans résultat"
   assert.match(migration, /result_entry_due/);
   assert.match(migration, /planning\.ends_at/);
   assert.match(migration, /not exists[\s\S]*tournament_match_results/i);
-  assert.match(
-    migration,
-    /pelote-manager-tournament-result-entry-reminders/,
-  );
+  assert.match(migration, /pelote-manager-tournament-result-entry-reminders/);
   assert.match(migration, /'\*\/5 \* \* \* \*'/);
 });
 
