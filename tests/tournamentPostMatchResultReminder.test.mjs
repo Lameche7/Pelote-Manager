@@ -6,6 +6,8 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 const migrationPath =
   "../supabase/migrations/20260817193000_add_tournament_post_match_result_reminders.sql";
+const archiveFixMigrationPath =
+  "../supabase/migrations/20260818211000_fix_tournament_result_reminder_archive.sql";
 const pagePath =
   "../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx";
 
@@ -46,8 +48,10 @@ test("Mes tournois affiche les scores à saisir avant la prochaine partie", asyn
 
 test("le rappel devient inactif dès qu un résultat est enregistré", async () => {
   const migration = await read(migrationPath);
+  const archiveFixMigration = await read(archiveFixMigrationPath);
 
   assert.match(migration, /archive_tournament_result_entry_reminders/);
   assert.match(migration, /after insert on public\.tournament_match_results/);
-  assert.match(migration, /status = 'archived'/);
+  assert.match(archiveFixMigration, /status = 'archived'/);
+  assert.match(archiveFixMigration, /archived_at = now\(\)/);
 });
