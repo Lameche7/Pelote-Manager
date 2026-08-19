@@ -2,10 +2,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
 export type GeneralQualificationStatus =
-  | "not_configured"
-  | "provisional_qualifier"
-  | "cutoff_tie"
-  | "outside";
+  "not_configured" | "provisional_qualifier" | "cutoff_tie" | "outside";
 
 export type TournamentGeneralRankingTeam = {
   position: number;
