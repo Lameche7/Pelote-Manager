@@ -53,9 +53,7 @@ type Row = Record<string, unknown>;
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 
-const mapGeneralRankings = (
-  value: unknown,
-): TournamentGeneralRankings | null => {
+const mapGeneralRankings = (value: unknown): TournamentGeneralRankings | null => {
   if (!value || typeof value !== "object") return null;
   const root = value as Row;
 
@@ -64,7 +62,9 @@ const mapGeneralRankings = (
     tournamentName: String(root.tournament_name ?? ""),
     status: String(root.status ?? ""),
     rankingMode:
-      root.ranking_mode === "total_points" ? "total_points" : "points_per_match",
+      root.ranking_mode === "total_points"
+        ? "total_points"
+        : "points_per_match",
     goalAverageMode:
       root.goal_average_mode === "point_difference"
         ? "point_difference"
