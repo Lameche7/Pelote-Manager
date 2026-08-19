@@ -167,7 +167,7 @@ create or replace function public.tournament_general_ranking_rows(
   target_series_id uuid
 )
 returns table (
-  position integer,
+  "position" integer,
   team_id uuid,
   team_label text,
   pool_number integer,
