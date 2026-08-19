@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { TournamentRankings } from "@/features/tournaments/services/tournamentRankingService";
+import {
+  tournamentGeneralRankingService,
+  type TournamentGeneralRankingSeries,
+  type TournamentGeneralRankings,
+} from "@/features/tournaments/services/tournamentGeneralRankingService";
 import type {
   PublicTournamentResultMatch,
   PublicTournamentResults,
@@ -32,6 +37,17 @@ const matchState = (match: PublicTournamentResultMatch) => {
   return "upcoming";
 };
 
+const qualificationLabel = (
+  series: TournamentGeneralRankingSeries,
+  status: TournamentGeneralRankingSeries["teams"][number]["qualificationStatus"],
+) => {
+  if (status === "not_configured") return "À configurer";
+  if (status === "cutoff_tie") return "Égalité à départager";
+  if (status === "outside") return "Hors zone";
+  if (series.validatedMatches === series.totalMatches) return "Qualifié";
+  return "Qualifié provisoire";
+};
+
 export function TournamentResultsBoard({
   results,
   rankings,
@@ -42,12 +58,29 @@ export function TournamentResultsBoard({
   const [selectedSeriesId, setSelectedSeriesId] = useState(
     () => results.series[0]?.id ?? "",
   );
+  const [generalRankings, setGeneralRankings] =
+    useState<TournamentGeneralRankings | null>(null);
 
   useEffect(() => {
     if (!results.series.some((series) => series.id === selectedSeriesId)) {
       setSelectedSeriesId(results.series[0]?.id ?? "");
     }
   }, [results.series, selectedSeriesId]);
+
+  useEffect(() => {
+    let active = true;
+    tournamentGeneralRankingService
+      .get(results.tournamentId)
+      .then((value) => {
+        if (active) setGeneralRankings(value);
+      })
+      .catch(() => {
+        if (active) setGeneralRankings(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [results.tournamentId]);
 
   const selectedSeries = useMemo(
     () =>
@@ -58,6 +91,9 @@ export function TournamentResultsBoard({
   );
 
   const rankingSeries = rankings?.series.find(
+    (series) => series.id === selectedSeries?.id,
+  );
+  const generalSeries = generalRankings?.series.find(
     (series) => series.id === selectedSeries?.id,
   );
 
@@ -103,6 +139,82 @@ export function TournamentResultsBoard({
           </button>
         ))}
       </nav>
+
+      {generalSeries && (
+        <section className="tournament-pool-results">
+          <header className="tournament-pool-results__heading">
+            <div>
+              <p>{selectedSeries.name}</p>
+              <h2>Classement général</h2>
+            </div>
+            <span>
+              {generalSeries.validatedMatches}/{generalSeries.totalMatches}{" "}
+              résultat(s)
+            </span>
+          </header>
+
+          <div className="tournament-pool-results__ranking">
+            {generalSeries.qualifierCount > 0 ? (
+              <p>
+                Les {generalSeries.qualifierCount} premières équipes du
+                classement général accèdent à la phase finale.
+              </p>
+            ) : (
+              <p>
+                Le nombre d’équipes qualifiées pour la phase finale n’est pas
+                encore configuré.
+              </p>
+            )}
+
+            {generalSeries.cutoffTie && (
+              <p className="tournament-results-board__empty">
+                Une égalité parfaite touche actuellement la limite de
+                qualification : elle devra être départagée avant la génération
+                du tableau final.
+              </p>
+            )}
+
+            <div className="tournament-pool-ranking-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cl.</th>
+                    <th>Équipe</th>
+                    <th>Poule</th>
+                    <th>MJ</th>
+                    <th>{rankingLabel}</th>
+                    <th>{goalAverageLabel}</th>
+                    <th>Qualification</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generalSeries.teams.map((team) => (
+                    <tr key={team.teamId}>
+                      <td>
+                        <strong>{team.position}</strong>
+                      </td>
+                      <td>{team.teamLabel}</td>
+                      <td>{team.poolNumber}</td>
+                      <td>{team.matchesPlayed}</td>
+                      <td>{metric(team.rankingValue)}</td>
+                      <td>
+                        {team.goalAverageValue > 0 ? "+" : ""}
+                        {metric(team.goalAverageValue)}
+                      </td>
+                      <td>
+                        {qualificationLabel(
+                          generalSeries,
+                          team.qualificationStatus,
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="tournament-results-board__pools">
         {selectedSeries.pools.map((pool) => {
@@ -172,7 +284,7 @@ export function TournamentResultsBoard({
               </div>
 
               <div className="tournament-pool-results__ranking">
-                <h3>Classement</h3>
+                <h3>Classement de la poule</h3>
                 {!rankingPool || rankingPool.teams.length === 0 ? (
                   <p className="tournament-results-board__empty">
                     Le classement apparaîtra dès que les résultats seront
