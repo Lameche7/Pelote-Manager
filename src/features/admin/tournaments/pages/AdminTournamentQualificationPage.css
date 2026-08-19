@@ -1,0 +1,151 @@
+.tournament-qualification-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.qualification-alert {
+  margin: 0;
+  border: 1px solid rgb(22 163 74 / 25%);
+  border-radius: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: rgb(22 163 74 / 7%);
+}
+
+.qualification-alert--error {
+  border-color: rgb(185 28 28 / 25%);
+  background: rgb(185 28 28 / 7%);
+}
+
+.qualification-selector label,
+.qualification-series__count {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 750;
+}
+
+.qualification-selector select,
+.qualification-series__count input {
+  min-height: 2.65rem;
+  border: 1px solid rgb(100 116 139 / 28%);
+  border-radius: 0.7rem;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.qualification-series-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.qualification-series {
+  display: grid;
+  gap: 1rem;
+}
+
+.qualification-series > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.qualification-series > header p,
+.qualification-series > header h2 {
+  margin: 0;
+}
+
+.qualification-series > header p {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.qualification-series > header span {
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  background: rgb(15 23 42 / 5%);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.qualification-series__count {
+  max-width: 22rem;
+}
+
+.qualification-series__count small,
+.qualification-series__empty {
+  opacity: 0.65;
+}
+
+.qualification-preview {
+  display: grid;
+  gap: 1rem;
+  border-top: 1px solid rgb(100 116 139 / 16%);
+  padding-top: 1rem;
+}
+
+.qualification-preview h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+}
+
+.qualification-preview__numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.55rem;
+}
+
+.qualification-preview__numbers span {
+  display: grid;
+  gap: 0.05rem;
+  border-radius: 0.75rem;
+  padding: 0.7rem;
+  background: rgb(15 23 42 / 4%);
+  font-size: 0.75rem;
+}
+
+.qualification-preview__numbers strong {
+  font-size: 1.15rem;
+}
+
+.qualification-pairings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.4rem;
+}
+
+.qualification-pairings span {
+  border: 1px solid rgb(100 116 139 / 16%);
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.qualification-save {
+  cursor: pointer;
+  justify-self: start;
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.72rem 1rem;
+  background: var(--club-accent, #1e5aa8);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+}
+
+.qualification-save:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+@media (max-width: 760px) {
+  .qualification-series > header {
+    flex-direction: column;
+  }
+}
