@@ -45,9 +45,12 @@ export const tournamentQualificationAdminService = {
   },
 
   async getShape(tournamentId: string): Promise<TournamentFinalStageShape[]> {
-    const { data, error } = await supabase.rpc("get_tournament_final_stage_shape", {
-      target_tournament_id: tournamentId,
-    });
+    const { data, error } = await supabase.rpc(
+      "get_tournament_final_stage_shape",
+      {
+        target_tournament_id: tournamentId,
+      },
+    );
 
     if (error) {
       throw new Error(
