@@ -54,9 +54,7 @@ export const finalStageSeedOrder = (bracketSize: number): number[] => {
   if (bracketSize === 4) return [1, 4, 2, 3];
   if (bracketSize === 8) return [1, 8, 4, 5, 3, 6, 7, 2];
   if (bracketSize === 16) {
-    return [
-      1, 16, 8, 9, 4, 13, 5, 12, 3, 14, 6, 11, 7, 10, 2, 15,
-    ];
+    return [1, 16, 8, 9, 4, 13, 5, 12, 3, 14, 6, 11, 7, 10, 2, 15];
   }
 
   const previous = finalStageSeedOrder(bracketSize / 2);
@@ -82,11 +80,7 @@ export const buildFinalStagePlan = (qualifierCount: number): FinalStagePlan => {
   const preliminaryByMainSeed = new Map<number, FinalStagePreliminaryMatch>();
 
   if (hasPreliminaryRound) {
-    for (
-      let seed = directEntryCount + 1;
-      seed <= mainBracketSize;
-      seed += 1
-    ) {
+    for (let seed = directEntryCount + 1; seed <= mainBracketSize; seed += 1) {
       const preliminary = {
         matchIndex: preliminaryMatches.length + 1,
         seedA: seed,
