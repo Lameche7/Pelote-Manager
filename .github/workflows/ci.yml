@@ -55,12 +55,6 @@ jobs:
         run: npx prettier --check tests/protectedRouteAccess.test.mjs tests/roles.test.mjs tsconfig.test.json
         continue-on-error: true
 
-      - name: Diagnostic Prettier qualifications
-        run: |
-          npx prettier --write src/features/admin/tournaments/pages/AdminTournamentQualificationPage.tsx src/features/tournaments/services/tournamentGeneralRankingService.ts src/features/user-space/tournaments/pages/MyTournamentsPage.tsx tests/tournamentFinalQualification.test.mjs
-          git diff -- src/features/admin/tournaments/pages/AdminTournamentQualificationPage.tsx src/features/tournaments/services/tournamentGeneralRankingService.ts src/features/user-space/tournaments/pages/MyTournamentsPage.tsx tests/tournamentFinalQualification.test.mjs
-          git checkout -- src/features/admin/tournaments/pages/AdminTournamentQualificationPage.tsx src/features/tournaments/services/tournamentGeneralRankingService.ts src/features/user-space/tournaments/pages/MyTournamentsPage.tsx tests/tournamentFinalQualification.test.mjs
-
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
