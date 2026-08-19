@@ -51,6 +51,24 @@ export type MyTournamentMatch = {
   opponentPlayers: MyTournamentPlayer[];
 };
 
+export type MyTournamentQualification = {
+  status:
+    | "not_configured"
+    | "qualified"
+    | "eliminated"
+    | "provisional"
+    | "possible"
+    | "must_win";
+  currentPosition: number;
+  qualifierCount: number;
+  remainingMatches: number;
+  bestPossiblePosition: number | null;
+  worstPossiblePosition: number | null;
+  minimumWinMargin: number | null;
+  dependsOnOthers: boolean;
+  message: string;
+};
+
 export type MyTournamentOverview = {
   id: string;
   name: string;
@@ -70,6 +88,7 @@ export type MyTournamentOverview = {
     canManageRegistration: boolean;
     players: MyTournamentPlayer[];
   };
+  qualification: MyTournamentQualification | null;
   matches: MyTournamentMatch[];
 };
 
@@ -116,6 +135,31 @@ const mapSportingRules = (value: unknown): MyTournamentSportingRules => {
   };
 };
 
+const mapQualification = (row: Row): MyTournamentQualification => ({
+  status: String(
+    row.status ?? "possible",
+  ) as MyTournamentQualification["status"],
+  currentPosition: Number(row.current_position ?? 0),
+  qualifierCount: Number(row.qualifier_count ?? 0),
+  remainingMatches: Number(row.remaining_matches ?? 0),
+  bestPossiblePosition:
+    row.best_possible_position === null ||
+    row.best_possible_position === undefined
+      ? null
+      : Number(row.best_possible_position),
+  worstPossiblePosition:
+    row.worst_possible_position === null ||
+    row.worst_possible_position === undefined
+      ? null
+      : Number(row.worst_possible_position),
+  minimumWinMargin:
+    row.minimum_win_margin === null || row.minimum_win_margin === undefined
+      ? null
+      : Number(row.minimum_win_margin),
+  dependsOnOthers: Boolean(row.depends_on_others),
+  message: String(row.message ?? ""),
+});
+
 const mapTournament = (row: Row): MyTournamentOverview => {
   const team = (row.team ?? {}) as Row;
   return {
@@ -140,6 +184,7 @@ const mapTournament = (row: Row): MyTournamentOverview => {
       canManageRegistration: Boolean(team.can_manage_registration),
       players: rows(team.players).map(mapPlayer),
     },
+    qualification: null,
     matches: rows(row.matches).map((match) => ({
       id: String(match.id),
       playDate: String(match.play_date ?? ""),
@@ -161,13 +206,46 @@ const mapTournament = (row: Row): MyTournamentOverview => {
 
 export const myTournamentsService = {
   async list(): Promise<MyTournamentOverview[]> {
-    const { data, error } = await supabase.rpc("get_my_tournaments");
-    if (error) {
+    const [tournamentsResponse, qualificationResponse] = await Promise.all([
+      supabase.rpc("get_my_tournaments"),
+      supabase.rpc("get_my_tournament_qualification_scenarios"),
+    ]);
+
+    if (tournamentsResponse.error) {
       throw new Error(
-        getSupabaseErrorMessage(error, "Impossible de charger vos tournois."),
+        getSupabaseErrorMessage(
+          tournamentsResponse.error,
+          "Impossible de charger vos tournois.",
+        ),
       );
     }
-    return rows(data).map(mapTournament);
+
+    if (qualificationResponse.error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          qualificationResponse.error,
+          "Impossible de calculer votre situation de qualification.",
+        ),
+      );
+    }
+
+    const qualificationByTeam = new Map<string, MyTournamentQualification>();
+    for (const scenario of rows(qualificationResponse.data)) {
+      const key = `${String(scenario.tournament_id ?? "")}:${String(
+        scenario.team_id ?? "",
+      )}`;
+      qualificationByTeam.set(key, mapQualification(scenario));
+    }
+
+    return rows(tournamentsResponse.data).map((row) => {
+      const tournament = mapTournament(row);
+      return {
+        ...tournament,
+        qualification:
+          qualificationByTeam.get(`${tournament.id}:${tournament.team.id}`) ??
+          null,
+      };
+    });
   },
 
   async submitResult(

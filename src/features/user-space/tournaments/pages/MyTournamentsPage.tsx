@@ -246,6 +246,7 @@ function TournamentCard({
   const style = {
     "--series-color": tournament.team.seriesColor,
   } as CSSProperties;
+  const qualification = tournament.qualification;
 
   return (
     <article className="my-tournaments__card" style={style}>
@@ -290,6 +291,39 @@ function TournamentCard({
           <strong>{tournament.team.poolNumber ?? "—"}</strong>
         </div>
       </div>
+
+      {qualification && qualification.qualifierCount > 0 && (
+        <div
+          className={`my-tournaments__qualification my-tournaments__qualification--${qualification.status}`}
+          role="status"
+        >
+          <div className="my-tournaments__qualification-heading">
+            <div>
+              <p className="my-tournaments__label">Course à la qualification</p>
+              <strong>
+                {qualification.currentPosition}
+                <sup>e</sup> au général · {qualification.qualifierCount}{" "}
+                qualifiés
+              </strong>
+            </div>
+            <span>
+              {qualification.remainingMatches} partie
+              {qualification.remainingMatches > 1 ? "s" : ""} restante
+              {qualification.remainingMatches > 1 ? "s" : ""}
+            </span>
+          </div>
+          <p>{qualification.message}</p>
+          {qualification.bestPossiblePosition !== null &&
+            qualification.worstPossiblePosition !== null && (
+              <small>
+                Selon le score de votre prochaine partie : classement possible
+                entre {qualification.bestPossiblePosition}
+                <sup>e</sup> et {qualification.worstPossiblePosition}
+                <sup>e</sup>.
+              </small>
+            )}
+        </div>
+      )}
 
       {!tournament.planningPublished ? (
         <div className="my-tournaments__planning-waiting">
