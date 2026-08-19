@@ -12,7 +12,7 @@ export type FinalStageEncouragementState =
 
 const messages: Record<
   FinalStageEncouragementState,
-  Record<FinalStageRound, readonly string[]>
+  Record<FinalStageRound, readonly string[]>,
 > = {
   pre_match: {
     preliminary: [
