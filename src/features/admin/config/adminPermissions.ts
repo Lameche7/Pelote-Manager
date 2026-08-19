@@ -124,6 +124,11 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.tournaments,
       },
       {
+        label: "Qualifications",
+        to: ROUTES.adminTournamentQualification,
+        permission: ADMIN_PERMISSIONS.tournaments,
+      },
+      {
         label: "Planning",
         to: ROUTES.adminTournamentPlanning,
         permission: ADMIN_PERMISSIONS.tournaments,
