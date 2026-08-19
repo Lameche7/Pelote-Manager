@@ -11,6 +11,15 @@ export type TournamentSeriesQualification = {
   finalsQualifierCount: number;
 };
 
+export type TournamentFinalStageShape = {
+  seriesId: string;
+  seriesName: string;
+  qualifierCount: number;
+  mainBracketSize: number;
+  directQualifiers: number;
+  preliminaryMatches: number;
+};
+
 export const tournamentQualificationAdminService = {
   async get(tournamentId: string): Promise<Map<string, number>> {
     const { data, error } = await supabase.rpc(
@@ -33,6 +42,30 @@ export const tournamentQualificationAdminService = {
         Number(row.finals_qualifier_count ?? 0),
       ]),
     );
+  },
+
+  async getShape(tournamentId: string): Promise<TournamentFinalStageShape[]> {
+    const { data, error } = await supabase.rpc("get_tournament_final_stage_shape", {
+      target_tournament_id: tournamentId,
+    });
+
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de calculer la forme de la phase finale.",
+        ),
+      );
+    }
+
+    return rows(data).map((row) => ({
+      seriesId: String(row.series_id ?? ""),
+      seriesName: String(row.series_name ?? "Série"),
+      qualifierCount: Number(row.qualifier_count ?? 0),
+      mainBracketSize: Number(row.main_bracket_size ?? 0),
+      directQualifiers: Number(row.direct_qualifiers ?? 0),
+      preliminaryMatches: Number(row.preliminary_matches ?? 0),
+    }));
   },
 
   async save(
