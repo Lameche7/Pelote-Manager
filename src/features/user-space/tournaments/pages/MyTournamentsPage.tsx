@@ -302,7 +302,8 @@ function TournamentCard({
               <p className="my-tournaments__label">Course à la qualification</p>
               <strong>
                 {qualification.currentPosition}
-                <sup>e</sup> au général · {qualification.qualifierCount} qualifiés
+                <sup>e</sup> au général · {qualification.qualifierCount}{" "}
+                qualifiés
               </strong>
             </div>
             <span>
