@@ -5,11 +5,15 @@ import {
   type TournamentDetail,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
-import { tournamentQualificationAdminService } from "@/features/admin/tournaments/services/tournamentQualificationAdminService";
+import {
+  tournamentQualificationAdminService,
+} from "@/features/admin/tournaments/services/tournamentQualificationAdminService";
 import "./AdminTournamentQualificationPage.css";
 
 const sideLabel = (
-  side: ReturnType<typeof buildFinalStagePlan>["firstRoundMatches"][number]["sideA"],
+  side: ReturnType<
+    typeof buildFinalStagePlan
+  >["firstRoundMatches"][number]["sideA"],
 ) =>
   side.kind === "seed"
     ? `N°${side.seed}`
@@ -32,7 +36,8 @@ export function AdminTournamentQualificationPage() {
         setTournaments(items);
         const first =
           items.find(
-            (item) => !["completed", "archived", "cancelled"].includes(item.status),
+            (item) =>
+              !["completed", "archived", "cancelled"].includes(item.status),
           ) ?? items[0];
         if (first) setSelectedId(first.id);
       })
@@ -161,7 +166,10 @@ export function AdminTournamentQualificationPage() {
       </header>
 
       {error && (
-        <p className="qualification-alert qualification-alert--error" role="alert">
+        <p
+          className="qualification-alert qualification-alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -199,10 +207,14 @@ export function AdminTournamentQualificationPage() {
           {activeSeries.map((series) => {
             const seriesId = series.id ?? "";
             const qualifierCount = counts[seriesId] ?? 0;
-            const plan = qualifierCount >= 2 ? buildFinalStagePlan(qualifierCount) : null;
+            const plan =
+              qualifierCount >= 2 ? buildFinalStagePlan(qualifierCount) : null;
 
             return (
-              <section className="admin-card qualification-series" key={seriesId}>
+              <section
+                className="admin-card qualification-series"
+                key={seriesId}
+              >
                 <header>
                   <div>
                     <p>Série</p>
@@ -271,7 +283,8 @@ export function AdminTournamentQualificationPage() {
                       <div className="qualification-pairings">
                         {plan.firstRoundMatches.map((match) => (
                           <span key={match.matchIndex}>
-                            {sideLabel(match.sideA)} vs {sideLabel(match.sideB)}
+                            {sideLabel(match.sideA)} vs{" "}
+                            {sideLabel(match.sideB)}
                           </span>
                         ))}
                       </div>
