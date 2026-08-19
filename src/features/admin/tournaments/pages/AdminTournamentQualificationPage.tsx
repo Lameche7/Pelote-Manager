@@ -5,9 +5,7 @@ import {
   type TournamentDetail,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
-import {
-  tournamentQualificationAdminService,
-} from "@/features/admin/tournaments/services/tournamentQualificationAdminService";
+import { tournamentQualificationAdminService } from "@/features/admin/tournaments/services/tournamentQualificationAdminService";
 import "./AdminTournamentQualificationPage.css";
 
 const sideLabel = (
@@ -283,8 +281,7 @@ export function AdminTournamentQualificationPage() {
                       <div className="qualification-pairings">
                         {plan.firstRoundMatches.map((match) => (
                           <span key={match.matchIndex}>
-                            {sideLabel(match.sideA)} vs{" "}
-                            {sideLabel(match.sideB)}
+                            {sideLabel(match.sideA)} vs {sideLabel(match.sideB)}
                           </span>
                         ))}
                       </div>
