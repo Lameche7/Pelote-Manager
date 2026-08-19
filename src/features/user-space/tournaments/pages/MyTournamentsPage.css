@@ -199,6 +199,66 @@
   font-size: 1.45rem;
 }
 
+.my-tournaments__qualification {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 1rem 0.9rem 1.2rem;
+  border: 1px solid rgb(37 99 235 / 20%);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  background: rgb(37 99 235 / 5%);
+}
+
+.my-tournaments__qualification--qualified {
+  border-color: rgb(22 163 74 / 24%);
+  background: rgb(22 163 74 / 7%);
+}
+
+.my-tournaments__qualification--must_win {
+  border-color: rgb(220 38 38 / 25%);
+  background: rgb(220 38 38 / 7%);
+}
+
+.my-tournaments__qualification--eliminated {
+  border-color: rgb(100 116 139 / 25%);
+  background: rgb(100 116 139 / 7%);
+}
+
+.my-tournaments__qualification-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.my-tournaments__qualification-heading > div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.my-tournaments__qualification-heading > span {
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem;
+  background: rgb(255 255 255 / 72%);
+  font-size: 0.72rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.my-tournaments__qualification p,
+.my-tournaments__qualification small {
+  margin: 0;
+}
+
+.my-tournaments__qualification > p {
+  font-weight: 680;
+  line-height: 1.4;
+}
+
+.my-tournaments__qualification small {
+  opacity: 0.68;
+}
+
 .my-tournaments__planning-waiting {
   display: grid;
   gap: 0.15rem;
@@ -364,7 +424,8 @@
 }
 
 @media (max-width: 760px) {
-  .my-tournaments__card-header {
+  .my-tournaments__card-header,
+  .my-tournaments__qualification-heading {
     flex-direction: column;
   }
 
