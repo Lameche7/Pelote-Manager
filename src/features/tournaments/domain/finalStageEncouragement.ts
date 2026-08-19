@@ -1,18 +1,12 @@
 export type FinalStageRound =
-  | "preliminary"
-  | "round_of_16"
-  | "quarterfinal"
-  | "semifinal"
-  | "final";
+  "preliminary" | "round_of_16" | "quarterfinal" | "semifinal" | "final";
 
 export type FinalStageEncouragementState =
-  | "pre_match"
-  | "qualified"
-  | "eliminated";
+  "pre_match" | "qualified" | "eliminated";
 
 const messages: Record<
   FinalStageEncouragementState,
-  Record<FinalStageRound, readonly string[]>,
+  Record<FinalStageRound, readonly string[]>
 > = {
   pre_match: {
     preliminary: [
