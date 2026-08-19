@@ -84,7 +84,7 @@ export const buildFinalStagePlan = (qualifierCount: number): FinalStagePlan => {
       const preliminary = {
         matchIndex: preliminaryMatches.length + 1,
         seedA: seed,
-        seedB: qualifierCount + 1 - seed,
+        seedB: qualifierCount + directEntryCount + 1 - seed,
       };
       preliminaryMatches.push(preliminary);
       preliminaryByMainSeed.set(seed, preliminary);
