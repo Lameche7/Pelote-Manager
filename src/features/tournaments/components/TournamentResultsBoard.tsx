@@ -284,7 +284,7 @@ export function TournamentResultsBoard({
               </div>
 
               <div className="tournament-pool-results__ranking">
-                <h3>Classement de la poule</h3>
+                <h3>Classement</h3>
                 {!rankingPool || rankingPool.teams.length === 0 ? (
                   <p className="tournament-results-board__empty">
                     Le classement apparaîtra dès que les résultats seront
