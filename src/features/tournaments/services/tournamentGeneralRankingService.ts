@@ -53,7 +53,9 @@ type Row = Record<string, unknown>;
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 
-const mapGeneralRankings = (value: unknown): TournamentGeneralRankings | null => {
+const mapGeneralRankings = (
+  value: unknown,
+): TournamentGeneralRankings | null => {
   if (!value || typeof value !== "object") return null;
   const root = value as Row;
 
