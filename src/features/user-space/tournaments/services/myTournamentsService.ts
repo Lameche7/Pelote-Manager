@@ -136,7 +136,9 @@ const mapSportingRules = (value: unknown): MyTournamentSportingRules => {
 };
 
 const mapQualification = (row: Row): MyTournamentQualification => ({
-  status: String(row.status ?? "possible") as MyTournamentQualification["status"],
+  status: String(
+    row.status ?? "possible",
+  ) as MyTournamentQualification["status"],
   currentPosition: Number(row.current_position ?? 0),
   qualifierCount: Number(row.qualifier_count ?? 0),
   remainingMatches: Number(row.remaining_matches ?? 0),
