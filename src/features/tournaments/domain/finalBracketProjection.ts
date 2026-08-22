@@ -95,9 +95,7 @@ export const buildFinalBracketProjectedMatches = ({
       return { teamId: match.teamBId, teamLabel: match.teamBLabel };
     }
     const seed = seeds.find((item) => item.teamId === match.winnerTeamId);
-    return seed
-      ? { teamId: seed.teamId, teamLabel: seed.teamLabel }
-      : null;
+    return seed ? { teamId: seed.teamId, teamLabel: seed.teamLabel } : null;
   };
 
   const seedSide = (seedNumber: number): FinalBracketProjectionSide => {
