@@ -11,6 +11,36 @@ type Row = Record<string, unknown>;
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 
+const resultSubmissionErrors: Record<string, string> = {
+  "Tournament result cannot be entered before the scheduled end":
+    "Le score pourra être saisi après l’heure de fin prévue de la partie.",
+  "Tournament result has already been submitted":
+    "Un résultat a déjà été transmis pour cette partie.",
+  "Tournament set score is invalid":
+    "Le score d’une manche est invalide. Les deux équipes doivent avoir des scores différents.",
+  "Tournament set score does not match sporting rules":
+    "Le score ne respecte pas le format prévu pour cette partie.",
+  "A single-game result must contain exactly one score":
+    "Cette partie se joue en une seule manche.",
+  "A best-of-three result must contain two or three sets":
+    "Renseignez deux manches, ou trois si une manche décisive a été jouée.",
+  "A two-set result must be a straight victory":
+    "Avec deux manches saisies, la même équipe doit avoir gagné les deux.",
+  "A three-set result must finish two sets to one":
+    "Une partie en trois manches doit se terminer par deux manches à une.",
+  "A deciding set is only allowed after one set each":
+    "La manche décisive n’est possible que si les équipes ont gagné une manche chacune.",
+};
+
+const resultSubmissionErrorMessage = (error: unknown): string => {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = String((error as { message?: unknown }).message ?? "");
+    if (resultSubmissionErrors[message]) return resultSubmissionErrors[message];
+  }
+
+  return getSupabaseErrorMessage(error, "Impossible d’enregistrer le résultat.");
+};
+
 export type MyTournamentPlayer = {
   firstName: string;
   lastName: string;
@@ -262,9 +292,7 @@ export const myTournamentsService = {
       },
     });
     if (error) {
-      throw new Error(
-        getSupabaseErrorMessage(error, "Impossible d’enregistrer le résultat."),
-      );
+      throw new Error(resultSubmissionErrorMessage(error));
     }
   },
 };

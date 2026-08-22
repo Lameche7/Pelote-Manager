@@ -117,6 +117,8 @@ test("Mes Tournois et le back-office exposent la saisie de résultat", async () 
   assert.match(userPage, /Saisir le score/);
   assert.match(userPage, /Transmettre au club/);
   assert.match(userService, /submit_my_tournament_match_result/);
+  assert.match(userService, /resultSubmissionErrorMessage/);
+  assert.match(userService, /Le score ne respecte pas le format prévu/);
   assert.match(adminPage, /Valider ce résultat/);
   assert.match(adminPage, /Enregistrer et valider/);
   assert.match(
