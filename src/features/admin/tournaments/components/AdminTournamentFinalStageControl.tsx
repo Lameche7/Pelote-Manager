@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { generatePlanningProposal } from "@/features/tournaments/domain/planningEngine";
+import {
+  generatePlanningProposal,
+  validatePlanning,
+  type PlanningAssignment,
+  type PlanningMatch,
+  type PlanningSlot,
+} from "@/features/tournaments/domain/planningEngine";
 import {
   tournamentFinalStageAdminService,
   type TournamentFinalMatch,
+  type TournamentFinalPlanningWorkspace,
   type TournamentFinalSeriesState,
   type TournamentFinalStageState,
 } from "@/features/admin/tournaments/services/tournamentFinalStageAdminService";
@@ -27,6 +34,19 @@ const shortDate = new Intl.DateTimeFormat("fr-FR", {
 
 const formatDate = (value: string | null) =>
   value ? shortDate.format(new Date(`${value}T12:00:00`)) : "";
+
+const slotAvailabilityKey = (slot: {
+  date: string;
+  startsAt: string;
+  endsAt: string;
+}) => `${slot.date}|${slot.startsAt}|${slot.endsAt}`;
+
+const assignmentSignature = (assignments: PlanningAssignment[]) =>
+  JSON.stringify(
+    [...assignments]
+      .sort((left, right) => left.matchId.localeCompare(right.matchId))
+      .map((assignment) => [assignment.matchId, assignment.slotId]),
+  );
 
 const currentMatches = (series: TournamentFinalSeriesState) => {
   if (series.currentRoundNumber === null) return [];
@@ -82,6 +102,14 @@ export function AdminTournamentFinalStageControl({
   tournamentId: string;
 }) {
   const [stage, setStage] = useState<TournamentFinalStageState | null>(null);
+  const [manualWorkspace, setManualWorkspace] =
+    useState<TournamentFinalPlanningWorkspace | null>(null);
+  const [manualAssignments, setManualAssignments] = useState<
+    PlanningAssignment[]
+  >([]);
+  const [savedManualAssignments, setSavedManualAssignments] = useState<
+    PlanningAssignment[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -146,12 +174,12 @@ export function AdminTournamentFinalStageControl({
   const unresolved = current.filter(
     ({ match }) => match.resultStatus !== "validated",
   );
+  const hasPublished = unresolved.some(({ match }) => match.published);
   const canPublish =
     unresolved.length > 0 &&
     unresolved.every(({ match }) => match.planned) &&
     unresolved.some(({ match }) => !match.published);
-  const canPlan =
-    unresolved.length > 0 && unresolved.some(({ match }) => !match.published);
+  const canPlan = unresolved.length > 0 && !hasPublished;
   const canAdvance =
     stage?.series.some((series) => {
       const matches = currentMatches(series);
@@ -171,6 +199,28 @@ export function AdminTournamentFinalStageControl({
         matches[0]?.resultStatus === "validated"
       );
     });
+
+  const manualTeamById = useMemo(
+    () =>
+      new Map((manualWorkspace?.teams ?? []).map((team) => [team.id, team])),
+    [manualWorkspace?.teams],
+  );
+  const manualAvailabilityByTeam = useMemo(
+    () =>
+      new Map(
+        (manualWorkspace?.availability ?? []).map((team) => [
+          team.teamId,
+          new Set(team.slots.map(slotAvailabilityKey)),
+        ]),
+      ),
+    [manualWorkspace?.availability],
+  );
+  const manualComplete =
+    Boolean(manualWorkspace?.matches.length) &&
+    manualAssignments.length === manualWorkspace?.matches.length;
+  const manualDirty =
+    assignmentSignature(manualAssignments) !==
+    assignmentSignature(savedManualAssignments);
 
   const run = async (action: () => Promise<string>) => {
     setBusy(true);
@@ -192,6 +242,7 @@ export function AdminTournamentFinalStageControl({
 
   const generate = () =>
     run(async () => {
+      setManualWorkspace(null);
       const count =
         await tournamentFinalStageAdminService.generate(tournamentId);
       return `Phase finale générée : ${count} première${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""} créée${count > 1 ? "s" : ""}.`;
@@ -199,6 +250,7 @@ export function AdminTournamentFinalStageControl({
 
   const plan = () =>
     run(async () => {
+      setManualWorkspace(null);
       const workspace =
         await tournamentFinalStageAdminService.getPlanning(tournamentId);
       const proposal = generatePlanningProposal({
@@ -226,15 +278,139 @@ export function AdminTournamentFinalStageControl({
       return `Planning du tour enregistré : ${count} partie${count > 1 ? "s" : ""} planifiée${count > 1 ? "s" : ""}.`;
     });
 
+  const openManualPlanning = async () => {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const workspace =
+        await tournamentFinalStageAdminService.getPlanning(tournamentId);
+      setManualWorkspace(workspace);
+      setManualAssignments(workspace.planning);
+      setSavedManualAssignments(workspace.planning);
+      setMessage(
+        "Mode manuel ouvert : choisissez un créneau commun pour chaque partie, puis enregistrez.",
+      );
+    } catch (planningError) {
+      setError(
+        planningError instanceof Error
+          ? planningError.message
+          : "Impossible d’ouvrir le planning manuel.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const compatibleSlots = (match: PlanningMatch): PlanningSlot[] => {
+    if (!manualWorkspace) return [];
+    const teamA =
+      manualAvailabilityByTeam.get(match.teamAId) ?? new Set<string>();
+    const teamB =
+      manualAvailabilityByTeam.get(match.teamBId) ?? new Set<string>();
+    return manualWorkspace.slots
+      .filter((slot) => {
+        const key = slotAvailabilityKey(slot);
+        return teamA.has(key) && teamB.has(key);
+      })
+      .sort((left, right) =>
+        `${left.date}|${left.startsAt}|${left.resourceName}`.localeCompare(
+          `${right.date}|${right.startsAt}|${right.resourceName}`,
+        ),
+      );
+  };
+
+  const changeManualSlot = (match: PlanningMatch, slotId: string) => {
+    if (!manualWorkspace) return;
+    const next = [
+      ...manualAssignments.filter(
+        (assignment) => assignment.matchId !== match.id,
+      ),
+      ...(slotId ? [{ matchId: match.id, slotId }] : []),
+    ];
+    const validation = validatePlanning({
+      matches: manualWorkspace.matches,
+      slots: manualWorkspace.slots,
+      availability: manualWorkspace.availability,
+      assignments: next,
+      minimumRestMinutes: manualWorkspace.tournament.minimumRestMinutes,
+    });
+    if (!validation.valid) {
+      setError(
+        validation.diagnostics[0]?.message ?? "Déplacement impossible.",
+      );
+      return;
+    }
+    setManualAssignments(next);
+    setError("");
+    setMessage("Modification valide. Enregistrez pour la conserver.");
+  };
+
+  const saveManualPlanning = async () => {
+    if (!manualWorkspace || !manualComplete) {
+      setError("Toutes les parties du tour doivent avoir un créneau.");
+      return;
+    }
+    const validation = validatePlanning({
+      matches: manualWorkspace.matches,
+      slots: manualWorkspace.slots,
+      availability: manualWorkspace.availability,
+      assignments: manualAssignments,
+      minimumRestMinutes: manualWorkspace.tournament.minimumRestMinutes,
+    });
+    if (!validation.valid) {
+      setError(
+        validation.diagnostics[0]?.message ?? "Le planning est invalide.",
+      );
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const count = await tournamentFinalStageAdminService.savePlanning(
+        tournamentId,
+        manualAssignments,
+        manualWorkspace.slots,
+        "manual",
+      );
+      setSavedManualAssignments(manualAssignments);
+      setManualWorkspace(null);
+      await load();
+      setMessage(
+        `Planning manuel enregistré : ${count} partie${count > 1 ? "s" : ""} planifiée${count > 1 ? "s" : ""}.`,
+      );
+    } catch (planningError) {
+      setError(
+        planningError instanceof Error
+          ? planningError.message
+          : "Impossible d’enregistrer le planning manuel.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const publish = () =>
     run(async () => {
+      setManualWorkspace(null);
       const count =
         await tournamentFinalStageAdminService.publish(tournamentId);
-      return `Tour publié : ${count} partie${count > 1 ? "s" : ""} ajoutée${count > 1 ? "s" : ""} au calendrier.`;
+      return `Tour publié : ${count} partie${count > 1 ? "s" : ""} ajoutée${count > 1 ? "s" : ""} au calendrier. Les joueurs concernés sont notifiés.`;
+    });
+
+  const unpublish = () =>
+    run(async () => {
+      setManualWorkspace(null);
+      const count =
+        await tournamentFinalStageAdminService.unpublish(tournamentId);
+      return `${count} partie${count > 1 ? "s" : ""} retirée${count > 1 ? "s" : ""} du calendrier. Vous pouvez maintenant modifier le planning puis republier.`;
     });
 
   const advance = () =>
     run(async () => {
+      setManualWorkspace(null);
       const count =
         await tournamentFinalStageAdminService.advance(tournamentId);
       if (count === 0) {
@@ -363,6 +539,69 @@ export function AdminTournamentFinalStageControl({
             })}
           </div>
 
+          {manualWorkspace && (
+            <section className="final-stage-manual-planner">
+              <header>
+                <div>
+                  <p>Planning du tour</p>
+                  <h3>Modification manuelle</h3>
+                </div>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setManualWorkspace(null)}
+                >
+                  Fermer
+                </button>
+              </header>
+
+              <div className="final-stage-manual-list">
+                {manualWorkspace.matches.map((match) => {
+                  const assignment = manualAssignments.find(
+                    (item) => item.matchId === match.id,
+                  );
+                  const teamA =
+                    manualTeamById.get(match.teamAId)?.label ?? "Équipe A";
+                  const teamB =
+                    manualTeamById.get(match.teamBId)?.label ?? "Équipe B";
+                  const slots = compatibleSlots(match);
+                  return (
+                    <label key={match.id} className="final-stage-manual-match">
+                      <span>
+                        <strong>{teamA}</strong> — <strong>{teamB}</strong>
+                      </span>
+                      <select
+                        value={assignment?.slotId ?? ""}
+                        disabled={busy}
+                        onChange={(event) =>
+                          changeManualSlot(match, event.target.value)
+                        }
+                      >
+                        <option value="">Choisir un créneau…</option>
+                        {slots.map((slot) => (
+                          <option key={slot.id} value={slot.id}>
+                            {formatDate(slot.date)} · {slot.startsAt.slice(0, 5)} ·{" "}
+                            {slot.resourceName}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                })}
+              </div>
+
+              <div className="final-stage-actions">
+                <button
+                  type="button"
+                  disabled={busy || !manualComplete || !manualDirty}
+                  onClick={() => void saveManualPlanning()}
+                >
+                  Enregistrer le planning manuel
+                </button>
+              </div>
+            </section>
+          )}
+
           {finalsComplete ? (
             <p className="final-stage-control__complete">
               🏆 Toutes les finales ont un résultat validé. La phase finale est
@@ -371,15 +610,33 @@ export function AdminTournamentFinalStageControl({
           ) : (
             <div className="final-stage-actions">
               {canPlan && (
+                <>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void plan()}
+                  >
+                    Proposer le planning du tour
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void openManualPlanning()}
+                  >
+                    Planifier / modifier manuellement
+                  </button>
+                </>
+              )}
+              {hasPublished && (
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => void plan()}
+                  onClick={() => void unpublish()}
                 >
-                  Proposer le planning du tour
+                  Retirer du calendrier pour modifier
                 </button>
               )}
-              {canPublish && (
+              {canPublish && !manualWorkspace && (
                 <button
                   type="button"
                   disabled={busy}
