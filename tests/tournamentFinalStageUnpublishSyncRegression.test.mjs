@@ -7,17 +7,11 @@ const migration = new URL(
   import.meta.url,
 );
 
-test(
-  "le retrait final synchronise l Event Engine avec l UUID de l événement",
-  async () => {
-    const sql = await readFile(migration, "utf8");
+test("le retrait final synchronise Event Engine avec l UUID", async () => {
+  const sql = await readFile(migration, "utf8");
 
-    assert.match(sql, /admin_unpublish_tournament_final_round/);
-    assert.match(
-      sql,
-      /archived_at = coalesce\(event\.archived_at, now\(\)\)/,
-    );
-    assert.match(sql, /sync_event_occupations\(item\.event_id\)/);
-    assert.doesNotMatch(sql, /sync_event_occupations\(saved_event\)/);
-  },
-);
+  assert.match(sql, /admin_unpublish_tournament_final_round/);
+  assert.match(sql, /archived_at = coalesce\(event\.archived_at, now\(\)\)/);
+  assert.match(sql, /sync_event_occupations\(item\.event_id\)/);
+  assert.doesNotMatch(sql, /sync_event_occupations\(saved_event\)/);
+});
