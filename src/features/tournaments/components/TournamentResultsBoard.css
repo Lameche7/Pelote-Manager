@@ -265,7 +265,7 @@
   font-size: 0.78rem;
   line-height: 1.2;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: pre-line;
 }
 
 .tournament-final-match__team > b {
@@ -527,7 +527,7 @@
   }
 
   .tournament-final-match__team > strong {
-    white-space: normal;
+    white-space: pre-line;
   }
 
   .tournament-result-match {
