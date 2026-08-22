@@ -18,6 +18,8 @@ const notificationMigration =
   "../supabase/migrations/20260822103000_final_stage_notifications_and_replanning.sql";
 const notificationIsolationMigration =
   "../supabase/migrations/20260822103100_isolate_final_stage_notification_failures.sql";
+const unpublishArchiveFixMigration =
+  "../supabase/migrations/20260822103200_fix_final_stage_unpublish_archived_at.sql";
 
 test("la génération réelle reprend exactement le seeding déjà validé", () => {
   assert.deepEqual(
@@ -132,6 +134,17 @@ test("l admin peut retirer, déplacer et republier le tour courant", async () =>
   assert.match(component, /Planifier \/ modifier manuellement/);
   assert.match(component, /Retirer du calendrier pour modifier/);
   assert.match(component, /validatePlanning/);
+});
+
+test("le retrait d un tour archive aussi la date de l événement", async () => {
+  const migration = await read(unpublishArchiveFixMigration);
+  assert.match(migration, /admin_unpublish_tournament_final_round/);
+  assert.match(migration, /publication_status = 'archived'/);
+  assert.match(
+    migration,
+    /archived_at = coalesce\(event\.archived_at, now\(\)\)/,
+  );
+  assert.match(migration, /sync_event_occupations/);
 });
 
 test("un grand tableau dispose aussi de son encouragement stable", () => {
