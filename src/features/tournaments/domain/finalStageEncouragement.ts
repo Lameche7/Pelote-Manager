@@ -1,5 +1,10 @@
 export type FinalStageRound =
-  "preliminary" | "round_of_16" | "quarterfinal" | "semifinal" | "final";
+  | "preliminary"
+  | "round_of_32"
+  | "round_of_16"
+  | "quarterfinal"
+  | "semifinal"
+  | "final";
 
 export type FinalStageEncouragementState =
   "pre_match" | "qualified" | "eliminated";
@@ -13,6 +18,10 @@ const messages: Record<
       "Rien à perdre, tout à aller chercher.",
       "Le tableau commence maintenant. Fais parler ton jeu.",
       "Un point après l’autre. Le prochain est le seul qui compte.",
+    ],
+    round_of_32: [
+      "Le tableau est lancé. Installe ton jeu dès le premier point.",
+      "Un grand tableau se traverse un match après l’autre.",
     ],
     round_of_16: [
       "Le tableau commence ici. Fais parler ton jeu.",
@@ -40,6 +49,10 @@ const messages: Record<
       "Barrage franchi. Un tour de plus, le travail continue.",
       "Première marche franchie. Garde le même cap.",
     ],
+    round_of_32: [
+      "Premier tour franchi. Le tableau se resserre, garde ton cap.",
+      "Une étape de plus. Reste fidèle à ce qui t’a fait gagner.",
+    ],
     round_of_16: [
       "Un tour de plus. Le travail continue.",
       "Qualification acquise. Reste dans ton rythme.",
@@ -61,6 +74,10 @@ const messages: Record<
     preliminary: [
       "Le tournoi s’arrête ici, pas le progrès. Chaque match nourrit le suivant.",
       "Une défaite ferme un tableau, jamais le chemin.",
+    ],
+    round_of_32: [
+      "Le tableau s’arrête tôt, mais ce match peut faire avancer le prochain.",
+      "Une journée ne définit pas ton jeu. Garde ce qu’elle t’apprend.",
     ],
     round_of_16: [
       "Ce résultat ne résume pas ton tournoi. Garde ce qui te fera avancer.",
