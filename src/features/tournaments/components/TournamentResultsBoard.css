@@ -33,6 +33,36 @@
   gap: 1rem;
 }
 
+.tournament-results-board__views {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.25rem;
+  border: 1px solid #dfe5e8;
+  border-radius: 0.85rem;
+  padding: 0.25rem;
+  background: #f4f6f7;
+}
+
+.tournament-results-board__view-tab {
+  min-height: 2.55rem;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  color: #59656c;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.tournament-results-board__view-tab--active {
+  color: #111827;
+  background: #fff;
+  box-shadow: 0 0.25rem 0.75rem rgb(15 23 42 / 8%);
+}
+
 .tournament-results-board__series {
   display: flex;
   gap: 0.55rem;
@@ -71,6 +101,220 @@
   background: color-mix(in srgb, var(--series-color) 10%, white);
   box-shadow: 0 0.5rem 1.4rem
     color-mix(in srgb, var(--series-color) 12%, transparent);
+}
+
+.tournament-final-stage {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--active-series) 24%, #dfe5e8);
+  border-radius: 1.15rem;
+  background: #fff;
+  box-shadow: 0 0.8rem 2rem rgb(15 23 42 / 6%);
+}
+
+.tournament-final-stage__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--active-series) 18%, #e5e7eb);
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--active-series) 7%, white);
+}
+
+.tournament-final-stage__heading p,
+.tournament-final-stage__heading h2 {
+  margin: 0;
+}
+
+.tournament-final-stage__heading p {
+  color: var(--active-series);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tournament-final-stage__heading h2 {
+  margin-top: 0.08rem;
+  font-size: 1.35rem;
+}
+
+.tournament-final-stage__heading > span {
+  border-radius: 999px;
+  padding: 0.38rem 0.62rem;
+  color: #55616a;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.tournament-final-bracket-scroll {
+  overflow-x: auto;
+  padding: 1rem;
+  scrollbar-width: thin;
+}
+
+.tournament-final-bracket {
+  display: grid;
+  min-width: max-content;
+  grid-auto-columns: minmax(15.5rem, 17rem);
+  grid-auto-flow: column;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.tournament-final-round {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.65rem;
+}
+
+.tournament-final-round > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-height: 2.1rem;
+  border-bottom: 0.18rem solid
+    color-mix(in srgb, var(--active-series) 55%, #dfe5e8);
+  padding: 0.15rem 0.15rem 0.5rem;
+}
+
+.tournament-final-round > header strong {
+  font-size: 0.88rem;
+}
+
+.tournament-final-round > header span {
+  color: #77838a;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.tournament-final-round__matches {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 0.75rem;
+}
+
+.tournament-final-match {
+  display: grid;
+  gap: 0.55rem;
+  border: 1px solid #e1e6e9;
+  border-left: 0.25rem solid var(--active-series);
+  border-radius: 0.8rem;
+  padding: 0.65rem;
+  background: #fff;
+  box-shadow: 0 0.35rem 1rem rgb(15 23 42 / 5%);
+}
+
+.tournament-final-match--validated {
+  background: color-mix(in srgb, var(--active-series) 4%, white);
+}
+
+.tournament-final-match--placeholder {
+  min-height: 6rem;
+  align-content: center;
+  border-left-color: #cbd5db;
+  color: #7b878d;
+  background: #f8fafb;
+  box-shadow: none;
+  text-align: center;
+}
+
+.tournament-final-match--placeholder > strong {
+  color: #536168;
+  font-size: 0.82rem;
+}
+
+.tournament-final-match--placeholder > span {
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.tournament-final-match__teams {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tournament-final-match__team {
+  display: grid;
+  min-height: 2rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.42rem;
+  border-radius: 0.5rem;
+  padding: 0.34rem 0.4rem;
+}
+
+.tournament-final-match__team > span {
+  min-width: 2rem;
+  border-radius: 999px;
+  padding: 0.18rem 0.32rem;
+  color: #657178;
+  background: #eff2f4;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.tournament-final-match__team > strong {
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tournament-final-match__team > b {
+  color: var(--active-series);
+  font-size: 0.9rem;
+}
+
+.tournament-final-match__team--winner {
+  background: color-mix(in srgb, var(--active-series) 10%, white);
+}
+
+.tournament-final-match__footer {
+  min-height: 1.5rem;
+  border-top: 1px solid #edf0f2;
+  padding-top: 0.42rem;
+  color: #69767d;
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.tournament-final-match__footer strong {
+  color: #182127;
+  font-size: 0.78rem;
+}
+
+.tournament-final-seeds {
+  border-top: 1px solid #edf0f2;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.tournament-final-seeds summary {
+  color: #4f5b63;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.tournament-final-seeds > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.tournament-final-seeds > div > span {
+  border: 1px solid #e2e7ea;
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.7rem;
 }
 
 .tournament-results-board__pools {
@@ -258,6 +502,34 @@
 }
 
 @media (max-width: 680px) {
+  .tournament-results-board__views {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tournament-results-board__view-tab {
+    padding-inline: 0.45rem;
+    font-size: 0.75rem;
+  }
+
+  .tournament-final-stage__heading {
+    align-items: flex-start;
+  }
+
+  .tournament-final-bracket-scroll {
+    padding: 0.8rem;
+  }
+
+  .tournament-final-bracket {
+    grid-auto-columns: minmax(14rem, 15rem);
+    gap: 0.75rem;
+  }
+
+  .tournament-final-match__team > strong {
+    white-space: normal;
+  }
+
   .tournament-result-match {
     grid-template-columns: 1fr;
     gap: 0.4rem;
