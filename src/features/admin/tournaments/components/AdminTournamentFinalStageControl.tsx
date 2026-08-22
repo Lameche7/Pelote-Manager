@@ -336,9 +336,7 @@ export function AdminTournamentFinalStageControl({
       minimumRestMinutes: manualWorkspace.tournament.minimumRestMinutes,
     });
     if (!validation.valid) {
-      setError(
-        validation.diagnostics[0]?.message ?? "Déplacement impossible.",
-      );
+      setError(validation.diagnostics[0]?.message ?? "Déplacement impossible.");
       return;
     }
     setManualAssignments(next);
@@ -580,8 +578,8 @@ export function AdminTournamentFinalStageControl({
                         <option value="">Choisir un créneau…</option>
                         {slots.map((slot) => (
                           <option key={slot.id} value={slot.id}>
-                            {formatDate(slot.date)} · {slot.startsAt.slice(0, 5)} ·{" "}
-                            {slot.resourceName}
+                            {formatDate(slot.date)} ·{" "}
+                            {slot.startsAt.slice(0, 5)} · {slot.resourceName}
                           </option>
                         ))}
                       </select>
