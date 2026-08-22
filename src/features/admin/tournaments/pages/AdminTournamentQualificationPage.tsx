@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildFinalStagePlan } from "@/features/tournaments/domain/finalStageEngine";
+import { AdminTournamentFinalStageControl } from "@/features/admin/tournaments/components/AdminTournamentFinalStageControl";
 import {
   tournamentAdminService,
   type TournamentDetail,
@@ -312,6 +313,10 @@ export function AdminTournamentQualificationPage() {
             >
               {saving ? "Enregistrement…" : "Enregistrer les qualifications"}
             </button>
+          )}
+
+          {selectedId && (
+            <AdminTournamentFinalStageControl tournamentId={selectedId} />
           )}
         </div>
       )}
