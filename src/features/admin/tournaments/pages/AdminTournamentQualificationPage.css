@@ -276,6 +276,75 @@
   opacity: 0.68;
 }
 
+.final-stage-manual-planner {
+  display: grid;
+  gap: 0.8rem;
+  border: 1px solid rgb(30 90 168 / 22%);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  background: rgb(30 90 168 / 4%);
+}
+
+.final-stage-manual-planner > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.final-stage-manual-planner > header p,
+.final-stage-manual-planner > header h3 {
+  margin: 0;
+}
+
+.final-stage-manual-planner > header p {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.final-stage-manual-planner > header button {
+  cursor: pointer;
+  border: 1px solid rgb(100 116 139 / 24%);
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.7rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-weight: 750;
+}
+
+.final-stage-manual-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.final-stage-manual-match {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(15rem, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.7rem;
+  padding: 0.65rem;
+  background: #fff;
+}
+
+.final-stage-manual-match > span {
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.final-stage-manual-match select {
+  min-height: 2.45rem;
+  border: 1px solid rgb(100 116 139 / 28%);
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.6rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
 .final-stage-actions {
   display: flex;
   flex-wrap: wrap;
@@ -293,11 +362,13 @@
 @media (max-width: 760px) {
   .qualification-series > header,
   .final-stage-control__header,
-  .final-stage-series > header {
+  .final-stage-series > header,
+  .final-stage-manual-planner > header {
     flex-direction: column;
   }
 
-  .final-stage-match__teams {
+  .final-stage-match__teams,
+  .final-stage-manual-match {
     grid-template-columns: 1fr;
   }
 
