@@ -24,6 +24,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic format PR119
+        run: |
+          npx prettier --write src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx src/features/tournaments/components/TournamentResultsBoard.tsx
+          git diff -- src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx src/features/tournaments/components/TournamentResultsBoard.tsx
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
