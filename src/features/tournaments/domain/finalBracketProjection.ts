@@ -104,14 +104,20 @@ export const buildFinalBracketProjectedMatches = ({
     return unresolvedSide(`${match.teamALabel}\nou ${match.teamBLabel}`);
   };
 
+  const previousRoundSide = (
+    round: string,
+    displayOrder: number,
+  ): FinalBracketProjectionSide =>
+    resolvedWinner(round, displayOrder) ??
+    directMatchAlternatives(round, displayOrder);
+
   const firstRoundSide = (
     source: FinalStageSeedSource,
   ): FinalBracketProjectionSide => {
     if (source.kind === "seed") return seedSide(source.seed);
-    const displayOrder = source.preliminaryMatchIndex - 1;
-    return (
-      resolvedWinner("preliminary", displayOrder) ??
-      directMatchAlternatives("preliminary", displayOrder)
+    return previousRoundSide(
+      "preliminary",
+      source.preliminaryMatchIndex - 1,
     );
   };
 
@@ -150,8 +156,8 @@ export const buildFinalBracketProjectedMatches = ({
         round,
         roundNumber: roundIndex + 1,
         displayOrder,
-        sideA: resolvedWinner(previousRound, previousA) ?? unresolvedSide(""),
-        sideB: resolvedWinner(previousRound, previousB) ?? unresolvedSide(""),
+        sideA: previousRoundSide(previousRound, previousA),
+        sideB: previousRoundSide(previousRound, previousB),
       });
     }
   }
