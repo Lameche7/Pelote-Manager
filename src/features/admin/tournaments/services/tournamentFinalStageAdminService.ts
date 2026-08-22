@@ -40,7 +40,7 @@ const knownErrors: Record<string, string> = {
   "Tournament finals planning match is invalid":
     "Une partie de phase finale n’est plus disponible.",
   "Published tournament finals match is locked":
-    "Une partie déjà publiée ne peut plus être déplacée depuis cet écran.",
+    "Une partie déjà publiée doit d’abord être retirée du calendrier avant d’être déplacée.",
   "Tournament finals planning resource is invalid":
     "Un terrain utilisé n’est pas autorisé pour ce tournoi.",
   "Tournament finals planning slot is invalid":
@@ -53,6 +53,8 @@ const knownErrors: Record<string, string> = {
     "Planifiez toutes les parties du tour actuel avant de les publier.",
   "Tournament finals publication conflicts with calendar":
     "Un créneau de phase finale est désormais occupé dans le calendrier.",
+  "No published tournament finals matches are ready for replanning":
+    "Aucune partie publiée du tour actuel ne peut être retirée du calendrier.",
 };
 
 const fail = (error: unknown, fallback: string): never => {
@@ -352,6 +354,16 @@ export const tournamentFinalStageAdminService = {
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de publier le tour de phase finale.");
+    return Number(data ?? 0);
+  },
+
+  async unpublish(tournamentId: string): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_unpublish_tournament_final_round",
+      { target_tournament_id: tournamentId },
+    );
+    if (error)
+      fail(error, "Impossible de retirer le tour du calendrier pour le modifier.");
     return Number(data ?? 0);
   },
 };
