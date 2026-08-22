@@ -41,9 +41,14 @@ security definer
 set search_path = ''
 as $$
 declare
-  target_match_id uuid := coalesce(new.match_id, old.match_id);
+  target_match_id uuid;
   target_match public.tournament_matches;
 begin
+  target_match_id := case
+    when tg_op = 'DELETE' then old.match_id
+    else new.match_id
+  end;
+
   select match.*
   into target_match
   from public.tournament_matches as match
@@ -61,7 +66,11 @@ begin
       using errcode = 'P0001';
   end if;
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+
+  return new;
 end;
 $$;
 
