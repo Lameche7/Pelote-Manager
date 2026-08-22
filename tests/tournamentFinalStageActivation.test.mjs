@@ -14,6 +14,8 @@ const hardeningMigration =
   "../supabase/migrations/20260822101000_harden_tournament_final_stage_activation.sql";
 const exposureMigration =
   "../supabase/migrations/20260822102000_expose_tournament_final_matches.sql";
+const notificationMigration =
+  "../supabase/migrations/20260822103000_final_stage_notifications_and_replanning.sql";
 
 test("la génération réelle reprend exactement le seeding déjà validé", () => {
   assert.deepEqual(
@@ -90,6 +92,35 @@ test("les espaces admin et joueur acceptent les matchs sans poule", async () => 
   assert.match(myService, /finalRound: string \| null/);
   assert.match(myPage, /getFinalStageEncouragement/);
   assert.match(myPage, /Barrage/);
+});
+
+test("publication et rappels couvrent réellement les phases finales", async () => {
+  const migration = await read(notificationMigration);
+  assert.match(migration, /final_round_published/);
+  assert.match(migration, /tournament_final_match_publication_notification/);
+  assert.match(migration, /left join public\.tournament_pools/);
+  assert.match(migration, /publish_tournament_match_day_reminder/);
+  assert.match(migration, /publish_tournament_match_result_reminder/);
+  assert.match(migration, /tournament_final_round_label/);
+});
+
+test("l admin peut retirer, déplacer et republier le tour courant", async () => {
+  const [migration, service, component] = await Promise.all([
+    read(notificationMigration),
+    read(
+      "../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
+    ),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx",
+    ),
+  ]);
+  assert.match(migration, /admin_unpublish_tournament_final_round/);
+  assert.match(migration, /publication_status = 'archived'/);
+  assert.match(migration, /sync_event_occupations/);
+  assert.match(service, /admin_unpublish_tournament_final_round/);
+  assert.match(component, /Planifier \/ modifier manuellement/);
+  assert.match(component, /Retirer du calendrier pour modifier/);
+  assert.match(component, /validatePlanning/);
 });
 
 test("un grand tableau dispose aussi de son encouragement stable", () => {
