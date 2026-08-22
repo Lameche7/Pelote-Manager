@@ -41,25 +41,6 @@ const roundKeyForBracketSize = (bracketSize: number) => {
   return `round_of_${bracketSize}`;
 };
 
-const winnerSourcePrefix = (round: string) => {
-  if (round === "preliminary") return "Vainqueur du barrage";
-  if (round === "semifinal") return "Vainqueur de la demi-finale";
-  if (round === "quarterfinal") return "Vainqueur du quart de finale";
-  if (round === "round_of_16") return "Vainqueur du 1/8 de finale";
-  if (round === "round_of_32") return "Vainqueur du 1/16 de finale";
-  return "Vainqueur du match";
-};
-
-const numberedWinnerSourceLabel = (round: string, displayOrder: number) => {
-  const number = displayOrder + 1;
-  if (round === "preliminary") return `Vainqueur barrage ${number}`;
-  if (round === "semifinal") return `Vainqueur demi-finale ${number}`;
-  if (round === "quarterfinal") return `Vainqueur quart de finale ${number}`;
-  if (round === "round_of_16") return `Vainqueur 1/8 de finale ${number}`;
-  if (round === "round_of_32") return `Vainqueur 1/16 de finale ${number}`;
-  return `Vainqueur du match ${number}`;
-};
-
 const unresolvedSide = (teamLabel: string): FinalBracketProjectionSide => ({
   teamId: "",
   teamLabel,
@@ -90,10 +71,6 @@ export const buildFinalBracketProjectedMatches = ({
       match,
     ]),
   );
-  const projectedByRoundAndOrder = new Map<
-    string,
-    FinalBracketProjectedMatch
-  >();
 
   const resolvedWinner = (
     round: string,
@@ -118,36 +95,24 @@ export const buildFinalBracketProjectedMatches = ({
       : unresolvedSide("Équipe qualifiée");
   };
 
-  const explicitWinnerSourceLabel = (
+  const directMatchAlternatives = (
     round: string,
     displayOrder: number,
-  ): string => {
-    const key = `${round}:${displayOrder}`;
-    const actualMatch = actualByRoundAndOrder.get(key);
-    if (actualMatch) {
-      return `${winnerSourcePrefix(round)} : ${actualMatch.teamALabel} – ${actualMatch.teamBLabel}`;
-    }
-
-    const projectedMatch = projectedByRoundAndOrder.get(key);
-    if (projectedMatch) {
-      return `${winnerSourcePrefix(round)} : ${projectedMatch.sideA.teamLabel} – ${projectedMatch.sideB.teamLabel}`;
-    }
-
-    return numberedWinnerSourceLabel(round, displayOrder);
+  ): FinalBracketProjectionSide => {
+    const match = actualByRoundAndOrder.get(`${round}:${displayOrder}`);
+    if (!match) return unresolvedSide("");
+    return unresolvedSide(`${match.teamALabel}\nou ${match.teamBLabel}`);
   };
-
-  const winnerSourceSide = (
-    round: string,
-    displayOrder: number,
-  ): FinalBracketProjectionSide =>
-    resolvedWinner(round, displayOrder) ??
-    unresolvedSide(explicitWinnerSourceLabel(round, displayOrder));
 
   const firstRoundSide = (
     source: FinalStageSeedSource,
   ): FinalBracketProjectionSide => {
     if (source.kind === "seed") return seedSide(source.seed);
-    return winnerSourceSide("preliminary", source.preliminaryMatchIndex - 1);
+    const displayOrder = source.preliminaryMatchIndex - 1;
+    return (
+      resolvedWinner("preliminary", displayOrder) ??
+      directMatchAlternatives("preliminary", displayOrder)
+    );
   };
 
   const mainRounds: string[] = [];
@@ -158,16 +123,11 @@ export const buildFinalBracketProjectedMatches = ({
   }
 
   const projected: FinalBracketProjectedMatch[] = [];
-  const addProjectedMatch = (match: FinalBracketProjectedMatch) => {
-    projected.push(match);
-    projectedByRoundAndOrder.set(`${match.round}:${match.displayOrder}`, match);
-  };
-
   const firstRound = mainRounds[0];
   if (firstRound) {
     plan.firstRoundMatches.forEach((match, index) => {
       if (actualByRoundAndOrder.has(`${firstRound}:${index}`)) return;
-      addProjectedMatch({
+      projected.push({
         round: firstRound,
         roundNumber: 1,
         displayOrder: index,
@@ -186,12 +146,14 @@ export const buildFinalBracketProjectedMatches = ({
       if (actualByRoundAndOrder.has(`${round}:${displayOrder}`)) continue;
       const previousA = displayOrder * 2;
       const previousB = previousA + 1;
-      addProjectedMatch({
+      projected.push({
         round,
         roundNumber: roundIndex + 1,
         displayOrder,
-        sideA: winnerSourceSide(previousRound, previousA),
-        sideB: winnerSourceSide(previousRound, previousB),
+        sideA:
+          resolvedWinner(previousRound, previousA) ?? unresolvedSide(""),
+        sideB:
+          resolvedWinner(previousRound, previousB) ?? unresolvedSide(""),
       });
     }
   }
