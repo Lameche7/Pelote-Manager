@@ -76,3 +76,38 @@ test("les tours suivants restent vides tant que leurs vainqueurs ne sont pas con
   assert.equal(final?.sideA.teamLabel, "");
   assert.equal(final?.sideB.teamLabel, "");
 });
+
+test("un 1/8 réel non joué affiche aussi ses deux équipes possibles au tour suivant", () => {
+  const seeds16 = Array.from({ length: 16 }, (_, index) => ({
+    seed: index + 1,
+    teamId: `team-${index + 1}`,
+    teamLabel: `Équipe ${index + 1}`,
+  }));
+  const roundOf16Matches = Array.from({ length: 8 }, (_, index) => ({
+    round: "round_of_16",
+    displayOrder: index,
+    teamAId: `round16-a-${index}`,
+    teamALabel: `1/8 ${index + 1} A`,
+    teamBId: `round16-b-${index}`,
+    teamBLabel: `1/8 ${index + 1} B`,
+    winnerTeamId: null,
+  }));
+
+  const projected = buildFinalBracketProjectedMatches({
+    qualifierCount: 16,
+    seeds: seeds16,
+    actualMatches: roundOf16Matches,
+  });
+
+  const firstQuarterfinal = projected.find(
+    (match) => match.round === "quarterfinal" && match.displayOrder === 0,
+  );
+  const firstSemifinal = projected.find(
+    (match) => match.round === "semifinal" && match.displayOrder === 0,
+  );
+
+  assert.equal(firstQuarterfinal?.sideA.teamLabel, "1/8 1 A\nou 1/8 1 B");
+  assert.equal(firstQuarterfinal?.sideB.teamLabel, "1/8 2 A\nou 1/8 2 B");
+  assert.equal(firstSemifinal?.sideA.teamLabel, "");
+  assert.equal(firstSemifinal?.sideB.teamLabel, "");
+});
