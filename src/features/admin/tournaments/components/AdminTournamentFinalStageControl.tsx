@@ -545,8 +545,8 @@ export function AdminTournamentFinalStageControl({
             <p className="qualification-alert" role="status">
               <strong>✓ Planning du tour enregistré.</strong> Vérifiez les
               créneaux ci-dessus puis publiez le tour pour l’ajouter au
-              calendrier et notifier les joueurs. Si nécessaire, utilisez
-              « Modifier le planning » avant publication.
+              calendrier et notifier les joueurs. Si nécessaire, utilisez «
+              Modifier le planning » avant publication.
             </p>
           )}
 
