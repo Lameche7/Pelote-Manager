@@ -1,7 +1,7 @@
 import {
   buildFinalStagePlan,
   type FinalStageSeedSource,
-} from "./finalStageEngine";
+} from "./finalStageEngine.js";
 
 export type FinalBracketProjectionSeed = {
   seed: number;
