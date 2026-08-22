@@ -16,6 +16,8 @@ const exposureMigration =
   "../supabase/migrations/20260822102000_expose_tournament_final_matches.sql";
 const notificationMigration =
   "../supabase/migrations/20260822103000_final_stage_notifications_and_replanning.sql";
+const notificationIsolationMigration =
+  "../supabase/migrations/20260822103100_isolate_final_stage_notification_failures.sql";
 
 test("la génération réelle reprend exactement le seeding déjà validé", () => {
   assert.deepEqual(
@@ -102,6 +104,15 @@ test("publication et rappels couvrent réellement les phases finales", async () 
   assert.match(migration, /publish_tournament_match_day_reminder/);
   assert.match(migration, /publish_tournament_match_result_reminder/);
   assert.match(migration, /tournament_final_round_label/);
+});
+
+test("une panne de notification ne bloque jamais la publication finale", async () => {
+  const migration = await read(notificationIsolationMigration);
+  assert.match(migration, /notify_tournament_final_match_publication/);
+  assert.match(migration, /exception when others then/);
+  assert.match(migration, /target_match\.team_a_id/);
+  assert.match(migration, /target_match\.team_b_id/);
+  assert.match(migration, /return new/);
 });
 
 test("l admin peut retirer, déplacer et republier le tour courant", async () => {
