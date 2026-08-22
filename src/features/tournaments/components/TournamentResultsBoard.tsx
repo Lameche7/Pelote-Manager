@@ -145,7 +145,6 @@ function FinalMatchCard({
               : "tournament-final-match__team"
           }
         >
-          {match.seedA && <span>N°{match.seedA}</span>}
           <strong>{match.teamALabel}</strong>
           {winnerA && <b aria-label="Qualifié">✓</b>}
         </div>
@@ -156,7 +155,6 @@ function FinalMatchCard({
               : "tournament-final-match__team"
           }
         >
-          {match.seedB && <span>N°{match.seedB}</span>}
           <strong>{match.teamBLabel}</strong>
           {winnerB && <b aria-label="Qualifié">✓</b>}
         </div>
@@ -240,19 +238,6 @@ function TournamentFinalBracket({
           })}
         </div>
       </div>
-
-      {series.finalSeeds.length > 0 && (
-        <details className="tournament-final-seeds">
-          <summary>Voir les têtes de série</summary>
-          <div>
-            {series.finalSeeds.map((seed) => (
-              <span key={seed.seed}>
-                <strong>N°{seed.seed}</strong> {seed.teamLabel}
-              </span>
-            ))}
-          </div>
-        </details>
-      )}
     </section>
   );
 }
