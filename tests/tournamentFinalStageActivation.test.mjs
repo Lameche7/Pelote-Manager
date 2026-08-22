@@ -16,9 +16,10 @@ const exposureMigration =
   "../supabase/migrations/20260822102000_expose_tournament_final_matches.sql";
 
 test("la génération réelle reprend exactement le seeding déjà validé", () => {
-  assert.deepEqual(finalStageSeedOrder(16), [
-    1, 16, 8, 9, 4, 13, 5, 12, 3, 14, 6, 11, 7, 10, 2, 15,
-  ]);
+  assert.deepEqual(
+    finalStageSeedOrder(16),
+    [1, 16, 8, 9, 4, 13, 5, 12, 3, 14, 6, 11, 7, 10, 2, 15],
+  );
   const plan = buildFinalStagePlan(24);
   assert.equal(plan.directEntryCount, 8);
   assert.deepEqual(
@@ -53,7 +54,10 @@ test("la base ne génère jamais les finales avant validation complète des poul
 test("les matchs finaux utilisent uniquement les créneaux et disponibilités finals", async () => {
   const migration = await read(activationMigration);
   assert.match(migration, /generated\.phase = 'finals'/);
-  assert.match(migration, /Tournament finals planning violates team availability/);
+  assert.match(
+    migration,
+    /Tournament finals planning violates team availability/,
+  );
   assert.match(migration, /admin_save_tournament_final_planning/);
   assert.match(migration, /admin_publish_tournament_final_round/);
   assert.match(migration, /sync_event_occupations/);
