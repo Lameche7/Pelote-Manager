@@ -131,7 +131,9 @@ test("l admin peut retirer, déplacer et republier le tour courant", async () =>
   assert.match(migration, /publication_status = 'archived'/);
   assert.match(migration, /sync_event_occupations/);
   assert.match(service, /admin_unpublish_tournament_final_round/);
-  assert.match(component, /Planifier \/ modifier manuellement/);
+  assert.match(component, /Planifier manuellement/);
+  assert.match(component, /Modifier le planning/);
+  assert.match(component, /Publier le tour et notifier les joueurs/);
   assert.match(component, /Retirer du calendrier pour modifier/);
   assert.match(component, /validatePlanning/);
 });

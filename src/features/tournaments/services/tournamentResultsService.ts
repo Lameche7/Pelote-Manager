@@ -24,6 +24,35 @@ export type PublicTournamentResultMatch = {
   teamBSets: number | null;
 };
 
+export type PublicTournamentFinalSeed = {
+  seed: number;
+  teamId: string;
+  teamLabel: string;
+};
+
+export type PublicTournamentFinalMatch = {
+  id: string;
+  round: string;
+  roundNumber: number;
+  displayOrder: number;
+  seedA: number | null;
+  seedB: number | null;
+  teamAId: string;
+  teamALabel: string;
+  teamBId: string;
+  teamBLabel: string;
+  published: boolean;
+  playDate: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  resourceName: string | null;
+  resultStatus: "pending_validation" | "validated" | null;
+  winnerTeamId: string | null;
+  score: PublicTournamentScore | null;
+  teamASets: number | null;
+  teamBSets: number | null;
+};
+
 export type PublicTournamentResultPool = {
   id: string;
   number: number;
@@ -35,6 +64,10 @@ export type PublicTournamentResultSeries = {
   name: string;
   color: string;
   displayOrder: number;
+  qualifierCount: number;
+  finalsGenerated: boolean;
+  finalSeeds: PublicTournamentFinalSeed[];
+  finalMatches: PublicTournamentFinalMatch[];
   pools: PublicTournamentResultPool[];
 };
 
@@ -49,6 +82,14 @@ type Row = Record<string, unknown>;
 
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
+
+const nullableString = (value: unknown) =>
+  value === null || value === undefined || value === "" ? null : String(value);
+
+const resultStatus = (
+  value: unknown,
+): "pending_validation" | "validated" | null =>
+  value === "validated" || value === "pending_validation" ? value : null;
 
 const mapScore = (value: unknown): PublicTournamentScore | null => {
   if (!value || typeof value !== "object") return null;
@@ -73,6 +114,47 @@ const mapResults = (value: unknown): PublicTournamentResults | null => {
       name: String(series.name ?? "Série"),
       color: String(series.color ?? "#2563EB"),
       displayOrder: Number(series.display_order ?? 0),
+      qualifierCount: Number(series.qualifier_count ?? 0),
+      finalsGenerated: Boolean(series.finals_generated),
+      finalSeeds: rows(series.final_seeds).map((seed) => ({
+        seed: Number(seed.seed ?? 0),
+        teamId: String(seed.team_id ?? ""),
+        teamLabel: String(seed.team_label ?? "Équipe"),
+      })),
+      finalMatches: rows(series.final_matches).map((match) => ({
+        id: String(match.id ?? ""),
+        round: String(match.round ?? ""),
+        roundNumber: Number(match.round_number ?? 0),
+        displayOrder: Number(match.display_order ?? 0),
+        seedA:
+          match.seed_a === null || match.seed_a === undefined
+            ? null
+            : Number(match.seed_a),
+        seedB:
+          match.seed_b === null || match.seed_b === undefined
+            ? null
+            : Number(match.seed_b),
+        teamAId: String(match.team_a_id ?? ""),
+        teamALabel: String(match.team_a_label ?? "Équipe A"),
+        teamBId: String(match.team_b_id ?? ""),
+        teamBLabel: String(match.team_b_label ?? "Équipe B"),
+        published: Boolean(match.published),
+        playDate: nullableString(match.play_date),
+        startsAt: nullableString(match.starts_at)?.slice(0, 5) ?? null,
+        endsAt: nullableString(match.ends_at)?.slice(0, 5) ?? null,
+        resourceName: nullableString(match.resource_name),
+        resultStatus: resultStatus(match.result_status),
+        winnerTeamId: nullableString(match.winner_team_id),
+        score: mapScore(match.score),
+        teamASets:
+          match.team_a_sets === null || match.team_a_sets === undefined
+            ? null
+            : Number(match.team_a_sets),
+        teamBSets:
+          match.team_b_sets === null || match.team_b_sets === undefined
+            ? null
+            : Number(match.team_b_sets),
+      })),
       pools: rows(series.pools).map((pool) => ({
         id: String(pool.id ?? ""),
         number: Number(pool.number ?? 0),
@@ -89,11 +171,7 @@ const mapResults = (value: unknown): PublicTournamentResults | null => {
           scheduledStartAt: String(match.scheduled_start_at ?? ""),
           scheduledEndAt: String(match.scheduled_end_at ?? ""),
           resourceName: String(match.resource_name ?? ""),
-          resultStatus:
-            match.result_status === "validated" ||
-            match.result_status === "pending_validation"
-              ? match.result_status
-              : null,
+          resultStatus: resultStatus(match.result_status),
           score: mapScore(match.score),
           teamASets:
             match.team_a_sets === null || match.team_a_sets === undefined
