@@ -35,10 +35,13 @@ export type MyTournamentResult = {
   teamBPoints: number;
   teamARankingPoints: number;
   teamBRankingPoints: number;
+  winnerTeamId: string | null;
 };
 
 export type MyTournamentMatch = {
   id: string;
+  phase: "pools" | "finals";
+  finalRound: string | null;
   playDate: string;
   startsAt: string;
   endsAt: string;
@@ -122,6 +125,9 @@ const mapResult = (value: unknown): MyTournamentResult | null => {
     teamBPoints: Number(result.team_b_points ?? 0),
     teamARankingPoints: Number(result.team_a_ranking_points ?? 0),
     teamBRankingPoints: Number(result.team_b_ranking_points ?? 0),
+    winnerTeamId: result.winner_team_id
+      ? String(result.winner_team_id)
+      : null,
   };
 };
 
@@ -187,6 +193,8 @@ const mapTournament = (row: Row): MyTournamentOverview => {
     qualification: null,
     matches: rows(row.matches).map((match) => ({
       id: String(match.id),
+      phase: match.phase === "finals" ? "finals" : "pools",
+      finalRound: match.final_round ? String(match.final_round) : null,
       playDate: String(match.play_date ?? ""),
       startsAt: String(match.starts_at ?? "").slice(0, 5),
       endsAt: String(match.ends_at ?? "").slice(0, 5),
