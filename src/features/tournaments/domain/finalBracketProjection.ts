@@ -65,7 +65,11 @@ export const buildFinalBracketProjectedMatches = ({
   seeds: FinalBracketProjectionSeed[];
   actualMatches: FinalBracketProjectionActualMatch[];
 }): FinalBracketProjectedMatch[] => {
-  if (!Number.isInteger(qualifierCount) || qualifierCount < 2 || seeds.length === 0) {
+  if (
+    !Number.isInteger(qualifierCount) ||
+    qualifierCount < 2 ||
+    seeds.length === 0
+  ) {
     return [];
   }
 
