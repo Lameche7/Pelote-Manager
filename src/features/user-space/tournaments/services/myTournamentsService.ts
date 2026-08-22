@@ -125,9 +125,7 @@ const mapResult = (value: unknown): MyTournamentResult | null => {
     teamBPoints: Number(result.team_b_points ?? 0),
     teamARankingPoints: Number(result.team_a_ranking_points ?? 0),
     teamBRankingPoints: Number(result.team_b_ranking_points ?? 0),
-    winnerTeamId: result.winner_team_id
-      ? String(result.winner_team_id)
-      : null,
+    winnerTeamId: result.winner_team_id ? String(result.winner_team_id) : null,
   };
 };
 
