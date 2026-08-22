@@ -92,7 +92,8 @@ export function AdminTournamentFinalStageControl({
       setStage(null);
       return;
     }
-    const loaded = await tournamentFinalStageAdminService.getState(tournamentId);
+    const loaded =
+      await tournamentFinalStageAdminService.getState(tournamentId);
     setStage(loaded);
   }, [tournamentId]);
 
@@ -126,10 +127,10 @@ export function AdminTournamentFinalStageControl({
     () =>
       Boolean(
         stage &&
-          stage.finalsStartsOn &&
-          stage.finalsEndsOn &&
-          stage.series.length > 0 &&
-          stage.series.every(seriesReadyForGeneration),
+        stage.finalsStartsOn &&
+        stage.finalsEndsOn &&
+        stage.series.length > 0 &&
+        stage.series.every(seriesReadyForGeneration),
       ),
     [stage],
   );
@@ -191,7 +192,8 @@ export function AdminTournamentFinalStageControl({
 
   const generate = () =>
     run(async () => {
-      const count = await tournamentFinalStageAdminService.generate(tournamentId);
+      const count =
+        await tournamentFinalStageAdminService.generate(tournamentId);
       return `Phase finale générée : ${count} première${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""} créée${count > 1 ? "s" : ""}.`;
     });
 
@@ -226,13 +228,15 @@ export function AdminTournamentFinalStageControl({
 
   const publish = () =>
     run(async () => {
-      const count = await tournamentFinalStageAdminService.publish(tournamentId);
+      const count =
+        await tournamentFinalStageAdminService.publish(tournamentId);
       return `Tour publié : ${count} partie${count > 1 ? "s" : ""} ajoutée${count > 1 ? "s" : ""} au calendrier.`;
     });
 
   const advance = () =>
     run(async () => {
-      const count = await tournamentFinalStageAdminService.advance(tournamentId);
+      const count =
+        await tournamentFinalStageAdminService.advance(tournamentId);
       if (count === 0) {
         return "Aucun nouveau tour à créer : vérifiez que tous les résultats du tour courant sont validés.";
       }
@@ -260,7 +264,10 @@ export function AdminTournamentFinalStageControl({
       </header>
 
       {error && (
-        <p className="qualification-alert qualification-alert--error" role="alert">
+        <p
+          className="qualification-alert qualification-alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -327,7 +334,9 @@ export function AdminTournamentFinalStageControl({
                     <div>
                       <p>{series.seriesName}</p>
                       <h3>
-                        {currentRound ? roundLabel(currentRound) : "Phase finale"}
+                        {currentRound
+                          ? roundLabel(currentRound)
+                          : "Phase finale"}
                       </h3>
                     </div>
                     <span>{series.qualifierCount} qualifiés</span>
@@ -362,7 +371,11 @@ export function AdminTournamentFinalStageControl({
           ) : (
             <div className="final-stage-actions">
               {canPlan && (
-                <button type="button" disabled={busy} onClick={() => void plan()}>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void plan()}
+                >
                   Proposer le planning du tour
                 </button>
               )}
