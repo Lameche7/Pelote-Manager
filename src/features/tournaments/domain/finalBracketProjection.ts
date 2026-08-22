@@ -150,10 +150,8 @@ export const buildFinalBracketProjectedMatches = ({
         round,
         roundNumber: roundIndex + 1,
         displayOrder,
-        sideA:
-          resolvedWinner(previousRound, previousA) ?? unresolvedSide(""),
-        sideB:
-          resolvedWinner(previousRound, previousB) ?? unresolvedSide(""),
+        sideA: resolvedWinner(previousRound, previousA) ?? unresolvedSide(""),
+        sideB: resolvedWinner(previousRound, previousB) ?? unresolvedSide(""),
       });
     }
   }
