@@ -37,14 +37,15 @@ test("chaque série publique expose son tableau final complet", async () => {
   assert.match(service, /finalMatches: PublicTournamentFinalMatch\[\]/);
 });
 
-test("le public peut basculer entre tableau final et poules", async () => {
+test("le public peut basculer entre tableau final et poules sans afficher les têtes de série", async () => {
   const board = await read(resultsBoard);
 
   assert.match(board, /Tableau final/);
   assert.match(board, /Poules & classements/);
   assert.match(board, /Tableau des phases finales/);
   assert.match(board, /Horaire à venir/);
-  assert.match(board, /Voir les têtes de série/);
+  assert.doesNotMatch(board, /Voir les têtes de série/);
+  assert.doesNotMatch(board, /N°\{match\.seed[AB]\}/);
   assert.match(board, /hasFinalStage \? "finals" : "pools"/);
 });
 
