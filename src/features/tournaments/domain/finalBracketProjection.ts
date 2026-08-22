@@ -115,10 +115,7 @@ export const buildFinalBracketProjectedMatches = ({
     source: FinalStageSeedSource,
   ): FinalBracketProjectionSide => {
     if (source.kind === "seed") return seedSide(source.seed);
-    return previousRoundSide(
-      "preliminary",
-      source.preliminaryMatchIndex - 1,
-    );
+    return previousRoundSide("preliminary", source.preliminaryMatchIndex - 1);
   };
 
   const mainRounds: string[] = [];
