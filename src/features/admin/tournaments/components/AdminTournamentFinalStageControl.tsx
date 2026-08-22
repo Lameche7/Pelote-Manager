@@ -175,11 +175,15 @@ export function AdminTournamentFinalStageControl({
     ({ match }) => match.resultStatus !== "validated",
   );
   const hasPublished = unresolved.some(({ match }) => match.published);
-  const canPublish =
+  const planningReady =
     unresolved.length > 0 &&
     unresolved.every(({ match }) => match.planned) &&
-    unresolved.some(({ match }) => !match.published);
-  const canPlan = unresolved.length > 0 && !hasPublished;
+    !hasPublished;
+  const canPlan =
+    unresolved.length > 0 &&
+    !hasPublished &&
+    unresolved.some(({ match }) => !match.planned);
+  const canPublish = planningReady;
   const canAdvance =
     stage?.series.some((series) => {
       const matches = currentMatches(series);
@@ -275,7 +279,7 @@ export function AdminTournamentFinalStageControl({
         proposal.assignments,
         workspace.slots,
       );
-      return `Planning du tour enregistré : ${count} partie${count > 1 ? "s" : ""} planifiée${count > 1 ? "s" : ""}.`;
+      return `Planning du tour enregistré : ${count} partie${count > 1 ? "s" : ""} planifiée${count > 1 ? "s" : ""}. Étape suivante : publiez le tour.`;
     });
 
   const openManualPlanning = async () => {
@@ -377,7 +381,7 @@ export function AdminTournamentFinalStageControl({
       setManualWorkspace(null);
       await load();
       setMessage(
-        `Planning manuel enregistré : ${count} partie${count > 1 ? "s" : ""} planifiée${count > 1 ? "s" : ""}.`,
+        `Planning manuel enregistré : ${count} partie${count > 1 ? "s" : ""} planifiée${count > 1 ? "s" : ""}. Étape suivante : publiez le tour.`,
       );
     } catch (planningError) {
       setError(
@@ -537,6 +541,15 @@ export function AdminTournamentFinalStageControl({
             })}
           </div>
 
+          {planningReady && !manualWorkspace && (
+            <p className="qualification-alert" role="status">
+              <strong>✓ Planning du tour enregistré.</strong> Vérifiez les
+              créneaux ci-dessus puis publiez le tour pour l’ajouter au
+              calendrier et notifier les joueurs. Si nécessaire, utilisez
+              « Modifier le planning » avant publication.
+            </p>
+          )}
+
           {manualWorkspace && (
             <section className="final-stage-manual-planner">
               <header>
@@ -614,16 +627,25 @@ export function AdminTournamentFinalStageControl({
                     disabled={busy}
                     onClick={() => void plan()}
                   >
-                    Proposer le planning du tour
+                    Proposer automatiquement un planning
                   </button>
                   <button
                     type="button"
                     disabled={busy}
                     onClick={() => void openManualPlanning()}
                   >
-                    Planifier / modifier manuellement
+                    Planifier manuellement
                   </button>
                 </>
+              )}
+              {planningReady && !manualWorkspace && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void openManualPlanning()}
+                >
+                  Modifier le planning
+                </button>
               )}
               {hasPublished && (
                 <button
@@ -640,7 +662,7 @@ export function AdminTournamentFinalStageControl({
                   disabled={busy}
                   onClick={() => void publish()}
                 >
-                  Publier le tour
+                  Publier le tour et notifier les joueurs
                 </button>
               )}
               {canAdvance && (
