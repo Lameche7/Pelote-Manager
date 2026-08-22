@@ -323,7 +323,8 @@ export const tournamentFinalStageAdminService = {
       "admin_get_tournament_final_planning_workspace",
       { target_tournament_id: tournamentId },
     );
-    if (error) fail(error, "Impossible de charger le planning de phase finale.");
+    if (error)
+      fail(error, "Impossible de charger le planning de phase finale.");
     return mapPlanningWorkspace(data);
   },
 
@@ -340,7 +341,8 @@ export const tournamentFinalStageAdminService = {
         payload: planningPayload(assignments, slots, source),
       },
     );
-    if (error) fail(error, "Impossible d’enregistrer le planning de phase finale.");
+    if (error)
+      fail(error, "Impossible d’enregistrer le planning de phase finale.");
     return Number(data ?? 0);
   },
 
