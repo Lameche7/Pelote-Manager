@@ -31,7 +31,9 @@ export type AdminTournamentResultMatch = {
   endsAt: string;
   resourceName: string;
   seriesName: string;
-  poolNumber: number;
+  phase: "pools" | "finals";
+  finalRound: string | null;
+  poolNumber: number | null;
   teamALabel: string;
   teamBLabel: string;
   result: AdminTournamentMatchResult | null;
@@ -95,7 +97,12 @@ const mapWorkspace = (row: Row): AdminTournamentResultsWorkspace => {
       endsAt: String(match.ends_at ?? "").slice(0, 5),
       resourceName: String(match.resource_name ?? ""),
       seriesName: String(match.series_name ?? ""),
-      poolNumber: Number(match.pool_number ?? 0),
+      phase: match.phase === "finals" ? "finals" : "pools",
+      finalRound: match.final_round ? String(match.final_round) : null,
+      poolNumber:
+        match.pool_number === null || match.pool_number === undefined
+          ? null
+          : Number(match.pool_number),
       teamALabel: String(match.team_a_label ?? "Équipe A"),
       teamBLabel: String(match.team_b_label ?? "Équipe B"),
       result: mapResult(match.result),

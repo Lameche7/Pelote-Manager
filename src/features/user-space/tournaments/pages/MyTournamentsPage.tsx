@@ -15,6 +15,10 @@ import {
   type MyTournamentSportingRules,
 } from "@/features/user-space/tournaments/services/myTournamentsService";
 import {
+  getFinalStageEncouragement,
+  type FinalStageRound,
+} from "@/features/tournaments/domain/finalStageEncouragement";
+import {
   TournamentScoreEditor,
   type TournamentScorePayload,
 } from "@/features/tournaments/components/TournamentScoreEditor";
@@ -43,6 +47,29 @@ const teamStatusLabels = {
   rejected: "Refusée",
   withdrawn: "Retirée",
 } as const;
+
+const finalRoundLabels: Record<string, string> = {
+  preliminary: "Barrage",
+  round_of_32: "1/16 de finale",
+  round_of_16: "1/8 de finale",
+  quarterfinal: "Quart de finale",
+  semifinal: "Demi-finale",
+  final: "Finale",
+};
+
+const encouragementRounds = new Set<FinalStageRound>([
+  "preliminary",
+  "round_of_32",
+  "round_of_16",
+  "quarterfinal",
+  "semifinal",
+  "final",
+]);
+
+const asEncouragementRound = (value: string | null): FinalStageRound | null =>
+  value && encouragementRounds.has(value as FinalStageRound)
+    ? (value as FinalStageRound)
+    : null;
 
 const longDate = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
@@ -88,6 +115,7 @@ const formatResult = (match: MyTournamentMatch) => {
 
 function MatchCard({
   match,
+  teamId,
   rules,
   highlight = false,
   actionRequired = false,
@@ -95,6 +123,7 @@ function MatchCard({
   onResultSaved,
 }: {
   match: MyTournamentMatch;
+  teamId: string;
   rules: MyTournamentSportingRules;
   highlight?: boolean;
   actionRequired?: boolean;
@@ -110,6 +139,26 @@ function MatchCard({
   const isInProgress = startsAt <= now && endsAt >= now;
   const opponent = teamLabel(match.opponentPlayers);
   const resultLabel = formatResult(match);
+  const finalRound =
+    match.phase === "finals" ? asEncouragementRound(match.finalRound) : null;
+  const encouragement = (() => {
+    if (!finalRound) return null;
+    if (!match.result) {
+      return getFinalStageEncouragement({
+        round: finalRound,
+        state: "pre_match",
+        stableKey: match.id,
+      });
+    }
+    if (match.result.status !== "validated" || !match.result.winnerTeamId) {
+      return null;
+    }
+    return getFinalStageEncouragement({
+      round: finalRound,
+      state: match.result.winnerTeamId === teamId ? "qualified" : "eliminated",
+      stableKey: match.id,
+    });
+  })();
 
   useEffect(() => {
     if (!focused) return;
@@ -158,6 +207,11 @@ function MatchCard({
       <div className="my-tournaments__match-opponent">
         <span>{statusLabel}</span>
         <strong>vs {opponent}</strong>
+        {encouragement && (
+          <span className="my-tournaments__encouragement">
+            “{encouragement}”
+          </span>
+        )}
         {actionRequired && !editing && (
           <span className="my-tournaments__result-hint">
             La partie est terminée : transmettez maintenant le score au club.
@@ -176,7 +230,13 @@ function MatchCard({
       </div>
       <div className="my-tournaments__match-place">
         <strong>{match.resourceName}</strong>
-        {match.poolNumber && <span>Poule {match.poolNumber}</span>}
+        {match.phase === "finals" ? (
+          <span>
+            {finalRoundLabels[match.finalRound ?? ""] ?? "Phase finale"}
+          </span>
+        ) : (
+          match.poolNumber && <span>Poule {match.poolNumber}</span>
+        )}
         {match.canSubmitResult && !editing && (
           <button
             className="my-tournaments__result-button"
@@ -357,6 +417,7 @@ function TournamentCard({
                 <MatchCard
                   key={match.id}
                   match={match}
+                  teamId={tournament.team.id}
                   rules={tournament.sportingRules}
                   actionRequired
                   focused={match.id === focusMatchId}
@@ -369,6 +430,7 @@ function TournamentCard({
           {nextMatch && (
             <MatchCard
               match={nextMatch}
+              teamId={tournament.team.id}
               rules={tournament.sportingRules}
               highlight
               focused={nextMatch.id === focusMatchId}
@@ -386,6 +448,7 @@ function TournamentCard({
                   <MatchCard
                     key={match.id}
                     match={match}
+                    teamId={tournament.team.id}
                     rules={tournament.sportingRules}
                     focused={match.id === focusMatchId}
                     onResultSaved={onResultSaved}

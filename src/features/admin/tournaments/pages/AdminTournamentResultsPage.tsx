@@ -22,6 +22,20 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
 });
 
+const roundLabels: Record<string, string> = {
+  preliminary: "Barrage",
+  round_of_32: "1/16 de finale",
+  round_of_16: "1/8 de finale",
+  quarterfinal: "Quart de finale",
+  semifinal: "Demi-finale",
+  final: "Finale",
+};
+
+const matchStageLabel = (match: AdminTournamentResultMatch) =>
+  match.phase === "finals"
+    ? (roundLabels[match.finalRound ?? ""] ?? "Phase finale")
+    : `Poule ${match.poolNumber ?? "—"}`;
+
 const scoreLabel = (match: AdminTournamentResultMatch) =>
   match.result?.score.sets
     .map((set) => `${set.teamA}-${set.teamB}`)
@@ -95,7 +109,7 @@ export function AdminTournamentResultsPage() {
     try {
       await tournamentResultsAdminService.validate(matchId);
       await load();
-      setMessage("Résultat validé. Le classement a été recalculé.");
+      setMessage("Résultat validé.");
     } catch (validationError) {
       setError(
         validationError instanceof Error
@@ -115,7 +129,7 @@ export function AdminTournamentResultsPage() {
       await tournamentResultsAdminService.save(matchId, score);
       setEditingMatchId(null);
       await load();
-      setMessage("Résultat enregistré. Le classement a été recalculé.");
+      setMessage("Résultat enregistré.");
     } finally {
       setSaving(false);
     }
@@ -137,8 +151,8 @@ export function AdminTournamentResultsPage() {
           <h1>Résultats</h1>
           <p className="admin-page__lead">
             Validez les résultats transmis par les joueurs ou saisissez-les
-            directement. Le classement est recalculé à partir des seuls
-            résultats validés.
+            directement. Les résultats de poule alimentent les classements ; les
+            résultats de phase finale déterminent le tour suivant.
           </p>
         </div>
       </header>
@@ -212,7 +226,7 @@ export function AdminTournamentResultsPage() {
                     <header>
                       <div>
                         <span>
-                          {match.seriesName} · Poule {match.poolNumber}
+                          {match.seriesName} · {matchStageLabel(match)}
                         </span>
                         <strong>
                           {match.teamALabel} — {match.teamBLabel}
@@ -241,7 +255,7 @@ export function AdminTournamentResultsPage() {
                       </div>
                     </header>
 
-                    {match.result && (
+                    {match.result && match.phase === "pools" && (
                       <p className="tournament-result-card__calculation">
                         Points de classement calculés : {match.teamALabel}{" "}
                         <strong>{match.result.teamARankingPoints}</strong> ·{" "}
