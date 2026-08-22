@@ -208,7 +208,9 @@ function MatchCard({
         <span>{statusLabel}</span>
         <strong>vs {opponent}</strong>
         {encouragement && (
-          <span className="my-tournaments__encouragement">“{encouragement}”</span>
+          <span className="my-tournaments__encouragement">
+            “{encouragement}”
+          </span>
         )}
         {actionRequired && !editing && (
           <span className="my-tournaments__result-hint">
@@ -229,7 +231,9 @@ function MatchCard({
       <div className="my-tournaments__match-place">
         <strong>{match.resourceName}</strong>
         {match.phase === "finals" ? (
-          <span>{finalRoundLabels[match.finalRound ?? ""] ?? "Phase finale"}</span>
+          <span>
+            {finalRoundLabels[match.finalRound ?? ""] ?? "Phase finale"}
+          </span>
         ) : (
           match.poolNumber && <span>Poule {match.poolNumber}</span>
         )}
