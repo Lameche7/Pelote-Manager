@@ -24,11 +24,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Diagnostiquer Prettier phases finales
-        run: |
-          npx prettier --write src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts src/features/user-space/tournaments/pages/MyTournamentsPage.tsx src/features/user-space/tournaments/services/myTournamentsService.ts tests/tournamentFinalStageActivation.test.mjs
-          git diff -- src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts src/features/user-space/tournaments/pages/MyTournamentsPage.tsx src/features/user-space/tournaments/services/myTournamentsService.ts tests/tournamentFinalStageActivation.test.mjs
-
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
