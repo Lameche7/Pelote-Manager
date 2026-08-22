@@ -363,7 +363,10 @@ export const tournamentFinalStageAdminService = {
       { target_tournament_id: tournamentId },
     );
     if (error)
-      fail(error, "Impossible de retirer le tour du calendrier pour le modifier.");
+      fail(
+        error,
+        "Impossible de retirer le tour du calendrier pour le modifier.",
+      );
     return Number(data ?? 0);
   },
 };
