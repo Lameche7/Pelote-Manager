@@ -147,10 +147,7 @@ export const buildFinalBracketProjectedMatches = ({
     source: FinalStageSeedSource,
   ): FinalBracketProjectionSide => {
     if (source.kind === "seed") return seedSide(source.seed);
-    return winnerSourceSide(
-      "preliminary",
-      source.preliminaryMatchIndex - 1,
-    );
+    return winnerSourceSide("preliminary", source.preliminaryMatchIndex - 1);
   };
 
   const mainRounds: string[] = [];
@@ -163,10 +160,7 @@ export const buildFinalBracketProjectedMatches = ({
   const projected: FinalBracketProjectedMatch[] = [];
   const addProjectedMatch = (match: FinalBracketProjectedMatch) => {
     projected.push(match);
-    projectedByRoundAndOrder.set(
-      `${match.round}:${match.displayOrder}`,
-      match,
-    );
+    projectedByRoundAndOrder.set(`${match.round}:${match.displayOrder}`, match);
   };
 
   const firstRound = mainRounds[0];
