@@ -113,7 +113,11 @@ const finalRoundBlueprint = (qualifierCount: number) => {
   return rounds;
 };
 
-function FinalMatchCard({ match }: { match: PublicTournamentFinalMatch | null }) {
+function FinalMatchCard({
+  match,
+}: {
+  match: PublicTournamentFinalMatch | null;
+}) {
   if (!match) {
     return (
       <article className="tournament-final-match tournament-final-match--placeholder">
@@ -479,8 +483,8 @@ export function TournamentResultsBoard({
                     </div>
                     {rankingPool && (
                       <span>
-                        {rankingPool.validatedMatches}/{rankingPool.totalMatches}{" "}
-                        résultat(s)
+                        {rankingPool.validatedMatches}/
+                        {rankingPool.totalMatches} résultat(s)
                       </span>
                     )}
                   </header>
