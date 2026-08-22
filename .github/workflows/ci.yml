@@ -24,6 +24,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic format projection finale
+        run: |
+          npx prettier --write src/features/tournaments/domain/finalBracketProjection.ts
+          git diff -- src/features/tournaments/domain/finalBracketProjection.ts
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
