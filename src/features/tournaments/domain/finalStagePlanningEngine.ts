@@ -185,7 +185,9 @@ export const buildFinalStagePlanningNodes = ({
       teamALabel: actual?.teamALabel ?? null,
       teamBId: actual?.teamBId ?? null,
       teamBLabel: actual?.teamBLabel ?? null,
-      locked: Boolean(actual?.published || actual?.resultStatus === "validated"),
+      locked: Boolean(
+        actual?.published || actual?.resultStatus === "validated",
+      ),
     });
   };
 
@@ -494,7 +496,9 @@ export const generateFullFinalStagePlanningProposal = ({
     const assignmentByNode = new Map(
       assignments.map((assignment) => [assignment.nodeId, assignment]),
     );
-    const usedSlots = new Set(assignments.map((assignment) => assignment.slotId));
+    const usedSlots = new Set(
+      assignments.map((assignment) => assignment.slotId),
+    );
     const editable = nodes
       .filter((node) => !fixed.has(node.id) && !assignmentByNode.has(node.id))
       .sort((left, right) => {
