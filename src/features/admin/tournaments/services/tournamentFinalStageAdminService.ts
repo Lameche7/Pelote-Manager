@@ -518,7 +518,10 @@ export const tournamentFinalStageAdminService = {
       { target_tournament_id: tournamentId },
     );
     if (error)
-      fail(error, "Impossible de préparer le planning global des phases finales.");
+      fail(
+        error,
+        "Impossible de préparer le planning global des phases finales.",
+      );
     return Number(data ?? 0);
   },
 
@@ -531,7 +534,10 @@ export const tournamentFinalStageAdminService = {
       { target_tournament_id: tournamentId },
     );
     if (error)
-      fail(error, "Impossible de charger le planning global des phases finales.");
+      fail(
+        error,
+        "Impossible de charger le planning global des phases finales.",
+      );
     return mapFullPlanningWorkspace(data);
   },
 
@@ -548,7 +554,10 @@ export const tournamentFinalStageAdminService = {
       },
     );
     if (error)
-      fail(error, "Impossible d’enregistrer le planning global des phases finales.");
+      fail(
+        error,
+        "Impossible d’enregistrer le planning global des phases finales.",
+      );
     return Number(data ?? 0);
   },
 
