@@ -37,6 +37,8 @@
     "src/features/tournaments/domain/finalBracketProjection.ts",
     "src/features/tournaments/domain/finalStageEncouragement.ts",
     "src/features/tournaments/domain/finalStageEngine.ts",
+    "src/features/tournaments/domain/finalStagePlanningEngine.ts",
+    "src/features/tournaments/domain/finalStageFullPlanningEngine.ts",
     "src/features/tournaments/domain/planningCalendar.ts",
     "src/features/tournaments/domain/planningEngine.ts",
     "src/features/tournaments/domain/poolEngine.ts",
