@@ -24,6 +24,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Diagnostic format planning final complet
+        run: |
+          npx prettier --write src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts src/features/tournaments/domain/finalStagePlanningEngine.ts tests/finalStageFullPlanning.test.mjs
+          git diff -- src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts src/features/tournaments/domain/finalStagePlanningEngine.ts tests/finalStageFullPlanning.test.mjs
+
       - name: Format workflow
         run: npx prettier --check .github/workflows/ci.yml
         continue-on-error: true
