@@ -167,10 +167,7 @@ test("la migration persiste toute la grille et synchronise les vrais matchs", as
 
   assert.match(migration, /tournament_final_planning_nodes/);
   assert.match(migration, /admin_prepare_tournament_final_planning_grid/);
-  assert.match(
-    migration,
-    /admin_get_tournament_final_full_planning_workspace/,
-  );
+  assert.match(migration, /admin_get_tournament_final_full_planning_workspace/);
   assert.match(migration, /admin_save_tournament_final_full_planning/);
   assert.match(migration, /sync_tournament_final_planning_node_to_match/);
   assert.match(migration, /tournament_final_match_created_sync_planning/);
