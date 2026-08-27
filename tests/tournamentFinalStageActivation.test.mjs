@@ -117,8 +117,8 @@ test("une panne de notification ne bloque jamais la publication finale", async (
   assert.match(migration, /return new/);
 });
 
-test("l admin peut retirer, déplacer et republier le tour courant", async () => {
-  const [migration, service, component] = await Promise.all([
+test("l admin peut modifier le planning global puis publier le tour jouable", async () => {
+  const [migration, service, component, fullPlanning] = await Promise.all([
     read(notificationMigration),
     read(
       "../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
@@ -126,16 +126,20 @@ test("l admin peut retirer, déplacer et republier le tour courant", async () =>
     read(
       "../src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx",
     ),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+    ),
   ]);
   assert.match(migration, /admin_unpublish_tournament_final_round/);
   assert.match(migration, /publication_status = 'archived'/);
   assert.match(migration, /sync_event_occupations/);
-  assert.match(service, /admin_unpublish_tournament_final_round/);
-  assert.match(component, /Planifier manuellement/);
-  assert.match(component, /Modifier le planning/);
+  assert.match(service, /admin_get_tournament_final_full_planning_workspace/);
+  assert.match(service, /admin_save_tournament_final_full_planning/);
+  assert.match(fullPlanning, /Planning complet des phases finales/);
+  assert.match(fullPlanning, /Modifier manuellement/);
+  assert.match(fullPlanning, /validateFullFinalStagePlanning/);
   assert.match(component, /Publier le tour et notifier les joueurs/);
   assert.match(component, /Retirer du calendrier pour modifier/);
-  assert.match(component, /validatePlanning/);
 });
 
 test("le retrait d un tour archive aussi la date de l événement", async () => {
