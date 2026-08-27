@@ -12,6 +12,8 @@ const resultsBoard =
   "../src/features/tournaments/components/TournamentResultsBoard.tsx";
 const adminControl =
   "../src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx";
+const fullPlanning =
+  "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx";
 
 test("la vue publique reste sportive après le début réel du tournoi", async () => {
   const sql = await read(migration);
@@ -49,13 +51,18 @@ test("le public peut basculer entre tableau final et poules sans afficher les t�
   assert.match(board, /hasFinalStage \? "finals" : "pools"/);
 });
 
-test("un planning final enregistré mène clairement à la publication", async () => {
-  const admin = await read(adminControl);
+test("un planning final global mène clairement à la publication des parties jouables", async () => {
+  const [admin, planner] = await Promise.all([
+    read(adminControl),
+    read(fullPlanning),
+  ]);
 
   assert.match(admin, /const planningReady =/);
   assert.match(admin, /some\(\(\{ match \}\) => !match\.planned\)/);
-  assert.match(admin, /Proposer automatiquement un planning/);
-  assert.match(admin, /Modifier le planning/);
+  assert.match(admin, /AdminTournamentFinalFullPlanning/);
   assert.match(admin, /Publier le tour et notifier les joueurs/);
-  assert.match(admin, /Planning du tour enregistré/);
+  assert.match(planner, /Compléter automatiquement le planning/);
+  assert.match(planner, /Modifier manuellement/);
+  assert.match(planner, /À programmer/);
+  assert.match(planner, /Tous les créneaux Finals sont proposés/);
 });
