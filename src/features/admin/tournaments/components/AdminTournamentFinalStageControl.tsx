@@ -153,10 +153,11 @@ export function AdminTournamentFinalStageControl({
     ({ match }) => match.resultStatus !== "validated",
   );
   const hasPublished = unresolved.some(({ match }) => match.published);
-  const canPublish =
+  const planningReady =
     unresolved.length > 0 &&
     unresolved.every(({ match }) => match.planned) &&
     !hasPublished;
+  const canPublish = planningReady;
   const hasUnplannedCurrentMatches =
     unresolved.length > 0 && unresolved.some(({ match }) => !match.planned);
   const canAdvance =
