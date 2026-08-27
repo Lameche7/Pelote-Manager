@@ -104,7 +104,9 @@ const assignmentsFromWorkspace = (
   });
 
 const assignmentMap = (assignments: FinalStagePlanningAssignment[]) =>
-  new Map(assignments.map((assignment) => [assignment.nodeId, assignment.slotId]));
+  new Map(
+    assignments.map((assignment) => [assignment.nodeId, assignment.slotId]),
+  );
 
 const nodeTitle = (
   node: FinalStagePlanningNode,
@@ -173,10 +175,9 @@ export function AdminTournamentFinalFullPlanning({
     };
   }, [tournamentId, refreshKey]);
 
-  const nodes = useMemo(() => (workspace ? buildNodes(workspace) : []), [workspace]);
-  const nodeById = useMemo(
-    () => new Map(nodes.map((node) => [node.id, node])),
-    [nodes],
+  const nodes = useMemo(
+    () => (workspace ? buildNodes(workspace) : []),
+    [workspace],
   );
   const rowById = useMemo(
     () =>
@@ -188,10 +189,6 @@ export function AdminTournamentFinalFullPlanning({
   const slotById = useMemo(
     () => new Map((workspace?.slots ?? []).map((slot) => [slot.id, slot])),
     [workspace?.slots],
-  );
-  const seriesById = useMemo(
-    () => new Map((workspace?.series ?? []).map((series) => [series.id, series])),
-    [workspace?.series],
   );
   const sortedSlots = useMemo(
     () =>
@@ -279,9 +276,7 @@ export function AdminTournamentFinalFullPlanning({
       });
       const proposedByNode = assignmentMap(proposal.assignments);
       const updates: TournamentFinalFullPlanningUpdate[] = workspace.nodes
-        .filter(
-          (row) => row.resultStatus !== "validated" && !row.published,
-        )
+        .filter((row) => row.resultStatus !== "validated" && !row.published)
         .map((row) => {
           const nodeId = rowNodeId(row);
           const preservedManual = row.source === "manual";
@@ -391,7 +386,9 @@ export function AdminTournamentFinalFullPlanning({
           <h3>Planning complet des phases finales</h3>
         </div>
         <div className="final-stage-full-planning__summary">
-          <strong>{plannedCount}/{nodes.length}</strong>
+          <strong>
+            {plannedCount}/{nodes.length}
+          </strong>
           <span>
             {unplannedCount > 0 ? `${unplannedCount} à programmer` : "Complet"}
           </span>
@@ -399,13 +396,16 @@ export function AdminTournamentFinalFullPlanning({
       </header>
 
       <p className="final-stage-full-planning__hint">
-        Toutes les séries et toutes les étapes partagent les mêmes créneaux Finals.
-        L’automatique place ce qu’il peut avec les disponibilités déclarées ; le
-        reste est conservé « À programmer ».
+        Toutes les séries et toutes les étapes partagent les mêmes créneaux
+        Finals. L’automatique place ce qu’il peut avec les disponibilités
+        déclarées ; le reste est conservé « À programmer ».
       </p>
 
       {error && (
-        <p className="qualification-alert qualification-alert--error" role="alert">
+        <p
+          className="qualification-alert qualification-alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -463,7 +463,11 @@ export function AdminTournamentFinalFullPlanning({
                     <div
                       key={series.id}
                       className="final-stage-full-planning__series"
-                      style={{ "--series-color": series.color } as React.CSSProperties}
+                      style={
+                        {
+                          "--series-color": series.color,
+                        } as React.CSSProperties
+                      }
                     >
                       <strong>{series.name}</strong>
                       <div className="final-stage-full-planning__matches">
@@ -509,7 +513,10 @@ export function AdminTournamentFinalFullPlanning({
                                   value={currentSlotId ?? ""}
                                   disabled={busy}
                                   onChange={(event) =>
-                                    changeManualSlot(node.id, event.target.value)
+                                    changeManualSlot(
+                                      node.id,
+                                      event.target.value,
+                                    )
                                   }
                                 >
                                   <option value="">À programmer</option>
