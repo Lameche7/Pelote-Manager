@@ -56,7 +56,8 @@ export function ReservationSplitPaymentFields({
   }, [resourceId, search]);
 
   function addPlayer(player: ReservationPaymentPlayer) {
-    if (selectedPlayers.length >= 3 || selectedIds.has(player.profileId)) return;
+    if (selectedPlayers.length >= 3 || selectedIds.has(player.profileId))
+      return;
     onChange([...selectedPlayers, player]);
   }
 
