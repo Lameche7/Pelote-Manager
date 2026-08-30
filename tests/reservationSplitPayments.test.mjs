@@ -57,7 +57,10 @@ test("le paiement partagé impose exactement trois autres comptes actifs du club
 
 test("crée quatre parts et rattache chaque paiement à son payeur", () => {
   assert.match(migration, /created_reservation\.price_cents \/ 4/);
-  assert.match(migration, /actor_amount := created_reservation\.price_cents - \(partner_amount \* 3\)/);
+  assert.match(
+    migration,
+    /actor_amount := created_reservation\.price_cents - \(partner_amount \* 3\)/,
+  );
   assert.match(
     migration,
     /payer_profile_id,[\s\S]*actor_id,[\s\S]*actor_amount/,
@@ -88,22 +91,13 @@ test("la réservation partagée n'est confirmée qu'après le paiement de toutes
 });
 
 test("chaque partenaire reçoit un lien Pelote Manager vers sa propre part", () => {
-  assert.match(
-    migration,
-    /Paiement d’une réservation/,
-  );
-  assert.match(
-    migration,
-    /reservation_payment_notification_events/,
-  );
+  assert.match(migration, /Paiement d’une réservation/);
+  assert.match(migration, /reservation_payment_notification_events/);
   assert.match(
     migration,
     /format\('\/reservations\/paiement-part\?paymentId=%s', payment_request\.payment_id\)/,
   );
-  assert.match(
-    migration,
-    /payment\.payer_profile_id = auth\.uid\(\)/,
-  );
+  assert.match(migration, /payment\.payer_profile_id = auth\.uid\(\)/);
 });
 
 test("l'interface propose payer tout ou payer ma part avec trois joueurs", () => {
