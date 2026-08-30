@@ -37,7 +37,8 @@ export function ReservationSharePaymentPage() {
     }
 
     try {
-      const current = await reservationBookingService.getSharePayment(paymentId);
+      const current =
+        await reservationBookingService.getSharePayment(paymentId);
       setPayment(current);
       setError(null);
       setIsLoading(false);
@@ -130,7 +131,11 @@ export function ReservationSharePaymentPage() {
     <section className="payment-return" aria-labelledby="share-payment-title">
       <div
         className={`payment-return__card${
-          paid ? " payment-return__card--success" : expired ? " payment-return__card--error" : ""
+          paid
+            ? " payment-return__card--success"
+            : expired
+              ? " payment-return__card--error"
+              : ""
         }`}
       >
         {paid && <span aria-hidden="true">✓</span>}
@@ -159,17 +164,27 @@ export function ReservationSharePaymentPage() {
         </p>
 
         {result === "back" && !paid && !expired && (
-          <p>Vous avez quitté HelloAsso avant la confirmation. Vous pouvez réessayer.</p>
+          <p>
+            Vous avez quitté HelloAsso avant la confirmation. Vous pouvez
+            réessayer.
+          </p>
         )}
 
         {result === "error" && !paid && !expired && (
-          <p>Le paiement HelloAsso n’a pas abouti. Vous pouvez relancer votre paiement.</p>
+          <p>
+            Le paiement HelloAsso n’a pas abouti. Vous pouvez relancer votre
+            paiement.
+          </p>
         )}
 
         {error && <p role="alert">{error}</p>}
 
         {canPay && (
-          <button type="button" disabled={isPaying} onClick={() => void payShare()}>
+          <button
+            type="button"
+            disabled={isPaying}
+            onClick={() => void payShare()}
+          >
             {isPaying
               ? "Ouverture du paiement…"
               : payment.paymentStatus === "failed" ||
@@ -179,7 +194,7 @@ export function ReservationSharePaymentPage() {
           </button>
         )}
 
-        <Link to={ROUTES.myReservations}>Voir mes réservations</Link>
+        <Link to={ROUTES.myNotifications}>Retour aux notifications</Link>
       </div>
     </section>
   );
