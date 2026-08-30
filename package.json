@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b --pretty false",
     "format": "prettier --write .",
-    "format:check": "prettier --write tests/reservationSplitPayments.test.mjs && git diff -- tests/reservationSplitPayments.test.mjs && prettier --check .",
+    "format:check": "prettier --write tests/reservationSplitPayments.test.mjs && git diff -- tests/reservationSplitPayments.test.mjs && prettier --check . && echo formatting-diagnostic-complete",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "security:secrets": "node scripts/security/check-secrets.mjs",
     "platform:validate-installation-bundle": "node supabase/platform/installation/validatePlatformInstallationBundle.mjs",
