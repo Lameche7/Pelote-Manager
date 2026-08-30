@@ -59,7 +59,11 @@ Deno.serve(async (request) => {
       clientSecret,
     });
 
-    const returnBase = `${applicationUrl}/reservations/paiement?paymentId=${encodeURIComponent(payment.payment_id)}`;
+    const returnPath =
+      payment.payment_plan === "split"
+        ? "/reservations/paiement-part"
+        : "/reservations/paiement";
+    const returnBase = `${applicationUrl}${returnPath}?paymentId=${encodeURIComponent(payment.payment_id)}`;
     const checkout = await createHelloAssoCheckout({
       environment,
       accessToken,
@@ -81,11 +85,14 @@ Deno.serve(async (request) => {
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
-    const { error: registrationError } = await admin.rpc("register_helloasso_checkout", {
-      target_payment_id: payment.payment_id,
-      checkout_intent_id: String(checkout.id),
-      checkout_redirect_url: checkout.redirectUrl,
-    });
+    const { error: registrationError } = await admin.rpc(
+      "register_helloasso_checkout",
+      {
+        target_payment_id: payment.payment_id,
+        checkout_intent_id: String(checkout.id),
+        checkout_redirect_url: checkout.redirectUrl,
+      },
+    );
     if (registrationError) throw registrationError;
 
     return Response.json(
@@ -93,7 +100,11 @@ Deno.serve(async (request) => {
       { headers: corsHeaders },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erreur inattendue.";
-    return Response.json({ error: message }, { status: 400, headers: corsHeaders });
+    const message =
+      error instanceof Error ? error.message : "Erreur inattendue.";
+    return Response.json(
+      { error: message },
+      { status: 400, headers: corsHeaders },
+    );
   }
 });
