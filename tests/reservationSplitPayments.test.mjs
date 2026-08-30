@@ -39,10 +39,7 @@ test("ajoute les paiements partagés", () => {
 });
 
 test("impose trois autres comptes actifs", () => {
-  expectMatch(
-    migration,
-    /array_length\(partner_profile_ids, 1\), 0\) <> 3/,
-  );
+  expectMatch(migration, /array_length\(partner_profile_ids, 1\), 0\) <> 3/);
   expectMatch(migration, /count\(distinct candidate\)[\s\S]*<> 3/);
   expectMatch(migration, /actor_id = any\(partner_profile_ids\)/);
   expectMatch(
