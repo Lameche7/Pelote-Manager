@@ -6,6 +6,10 @@ const migration = readFileSync(
   "supabase/migrations/20260830150000_split_reservation_payments.sql",
   "utf8",
 );
+const timeoutMigration = readFileSync(
+  "supabase/migrations/20260830170000_configurable_split_payment_timeout.sql",
+  "utf8",
+);
 const reservationsPage = readFileSync(
   "src/features/reservations/pages/ReservationsPage.tsx",
   "utf8",
@@ -16,6 +20,14 @@ const playerSelector = readFileSync(
 );
 const sharePaymentPage = readFileSync(
   "src/features/reservations/pages/ReservationSharePaymentPage.tsx",
+  "utf8",
+);
+const adminReservationsPage = readFileSync(
+  "src/features/admin/pages/AdminReservationsPage.tsx",
+  "utf8",
+);
+const adminReservationService = readFileSync(
+  "src/features/admin/services/adminReservationService.ts",
   "utf8",
 );
 const checkoutFunction = readFileSync(
@@ -88,6 +100,29 @@ test("confirme seulement après les quatre paiements", () => {
   expectMatch(
     migration,
     /reservation_row\.payment_plan = 'full'[\s\S]*coalesce\(has_terminal, false\)/,
+  );
+});
+
+test("rend configurable le délai du paiement partagé", () => {
+  expectMatch(
+    timeoutMigration,
+    /add column if not exists split_payment_timeout_minutes integer not null default 45/,
+  );
+  expectMatch(timeoutMigration, /split_payment_timeout_minutes > 0/);
+  expectMatch(
+    timeoutMigration,
+    /settings\.split_payment_timeout_minutes[\s\S]*into strict split_payment_timeout/,
+  );
+  expectMatch(
+    timeoutMigration,
+    /common_expires_at := now\(\) \+ make_interval\(mins => split_payment_timeout\)/,
+  );
+  assert.doesNotMatch(timeoutMigration, /interval '45 minutes'/);
+  expectMatch(adminReservationsPage, /Délai pour régler les 4 parts/);
+  expectMatch(adminReservationsPage, /splitPaymentTimeoutMinutes/);
+  expectMatch(
+    adminReservationService,
+    /new_split_payment_timeout_minutes: settings\.splitPaymentTimeoutMinutes/,
   );
 });
 
