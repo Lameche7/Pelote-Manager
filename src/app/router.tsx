@@ -48,6 +48,7 @@ import { PlatformLoginPage } from "@/features/platform/pages/PlatformLoginPage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
+import { ReservationSharePaymentPage } from "@/features/reservations/pages/ReservationSharePaymentPage";
 import { TournamentDetailPage } from "@/features/tournaments/pages/TournamentDetailPage";
 import { TournamentsPage } from "@/features/tournaments/pages/TournamentsPage";
 import { TvDisplayPage } from "@/features/tv/pages/TvDisplayPage";
@@ -139,6 +140,14 @@ export const routes = [
         ),
       },
       { path: ROUTES.reservationPaymentReturn, element: <PaymentReturnPage /> },
+      {
+        path: ROUTES.reservationSharePayment,
+        element: (
+          <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
+            <ReservationSharePaymentPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: ROUTES.forbidden, element: <Forbidden /> },
       {
         path: ROUTES.admin,

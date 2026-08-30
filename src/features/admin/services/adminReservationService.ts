@@ -13,6 +13,7 @@ export type ReservationAdminSettings = {
   publicMaxActiveReservations: number;
   onlinePaymentEnabled: boolean;
   paymentMode: "test" | "helloasso";
+  splitPaymentTimeoutMinutes: number;
 };
 
 export type OpeningHour = {
@@ -45,6 +46,7 @@ type SettingsRow = {
   public_max_active_reservations: number;
   online_payment_enabled: boolean;
   payment_mode: "test" | "helloasso";
+  split_payment_timeout_minutes: number;
 };
 
 export const adminReservationService = {
@@ -68,6 +70,7 @@ export const adminReservationService = {
       publicMaxActiveReservations: row.public_max_active_reservations,
       onlinePaymentEnabled: row.online_payment_enabled,
       paymentMode: row.payment_mode,
+      splitPaymentTimeoutMinutes: row.split_payment_timeout_minutes,
     };
   },
 
@@ -85,6 +88,7 @@ export const adminReservationService = {
       new_public_max_active_reservations: settings.publicMaxActiveReservations,
       new_online_payment_enabled: settings.onlinePaymentEnabled,
       new_payment_mode: settings.paymentMode,
+      new_split_payment_timeout_minutes: settings.splitPaymentTimeoutMinutes,
     });
     if (error) throw error;
   },

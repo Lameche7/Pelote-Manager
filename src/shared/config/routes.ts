@@ -10,6 +10,7 @@ export const ROUTES = {
   myProfile: "/mon-espace/profil",
   myNotifications: "/mon-espace/notifications",
   reservationPaymentReturn: "/reservations/paiement",
+  reservationSharePayment: "/reservations/paiement-part",
   tournaments: "/tournois",
   admin: "/admin",
   adminClubInformation: "/admin/club/informations",

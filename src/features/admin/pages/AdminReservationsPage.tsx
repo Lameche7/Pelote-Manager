@@ -164,6 +164,29 @@ export function AdminReservationsPage() {
             </label>
           )}
 
+          <label className="admin-reservations__field admin-reservations__field--wide">
+            <span>Délai pour régler les 4 parts</span>
+            <div className="admin-reservations__number-field">
+              <input
+                type="number"
+                min="1"
+                value={settings.splitPaymentTimeoutMinutes}
+                onChange={(event) =>
+                  setSettings({
+                    ...settings,
+                    splitPaymentTimeoutMinutes: Number(event.target.value),
+                  })
+                }
+              />
+              <small>minutes</small>
+            </div>
+            <small>
+              Utilisé uniquement avec « Payer ma part ». Si les 4 parts ne sont
+              pas réglées avant ce délai, la réservation en attente est libérée.
+              Le nouveau délai s’applique aux prochaines réservations.
+            </small>
+          </label>
+
           <label className="admin-reservations__field">
             <span>Anticipation licencié</span>
             <div className="admin-reservations__number-field">
