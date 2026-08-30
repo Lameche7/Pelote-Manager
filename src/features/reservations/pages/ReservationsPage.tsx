@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
 import {
   formatPrice,
   getBookingErrorMessage,
@@ -16,12 +17,16 @@ import {
   type CalendarSlot,
   type ReservableResource,
 } from "@/features/reservations/domain/calendar";
-import { reservationBookingService } from "@/features/reservations/services/reservationBookingService";
+import {
+  reservationBookingService,
+  type ReservationPaymentPlayer,
+} from "@/features/reservations/services/reservationBookingService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./ReservationsPage.css";
 import "./ReservationLockedSlots.css";
+import "./ReservationPaymentChoice.css";
 
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", {
   weekday: "short",
@@ -159,6 +164,12 @@ function BookingModal({
 }) {
   const [terms, setTerms] = useState<ReservationTerms | null>(null);
   const [paymentEnabled, setPaymentEnabled] = useState<boolean | null>(null);
+  const [paymentChoice, setPaymentChoice] = useState<"full" | "split">(
+    "full",
+  );
+  const [selectedPlayers, setSelectedPlayers] = useState<
+    ReservationPaymentPlayer[]
+  >([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -185,6 +196,34 @@ function BookingModal({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+
+    if (paymentEnabled && paymentChoice === "split") {
+      if (selectedPlayers.length !== 3) {
+        setErrorMessage(
+          "Sélectionnez exactement 3 autres joueurs avant de continuer.",
+        );
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const payment = await reservationBookingService.createSplit(
+          resource.id,
+          slot.startsAt,
+          selectedPlayers.map((player) => player.profileId),
+        );
+        window.location.assign(
+          `${ROUTES.reservationSharePayment}?paymentId=${encodeURIComponent(payment.paymentId)}`,
+        );
+      } catch (error) {
+        setErrorMessage(getBookingErrorMessage(error));
+        await onSuccess();
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await reservationBookingService.create(resource.id, slot.startsAt);
@@ -197,6 +236,9 @@ function BookingModal({
       setIsSubmitting(false);
     }
   }
+
+  const partnerShare = terms ? Math.floor(terms.priceCents / 4) : 0;
+  const ownerShare = terms ? terms.priceCents - partnerShare * 3 : 0;
 
   return (
     <div className="booking-modal" role="presentation" onMouseDown={onClose}>
@@ -262,6 +304,48 @@ function BookingModal({
               </p>
             )}
 
+            {paymentEnabled && terms && (
+              <fieldset className="booking-modal__payment-choice">
+                <legend>Comment souhaitez-vous payer ?</legend>
+                <label className="booking-modal__payment-option">
+                  <input
+                    type="radio"
+                    name="payment-choice"
+                    value="full"
+                    checked={paymentChoice === "full"}
+                    onChange={() => {
+                      setPaymentChoice("full");
+                      setSelectedPlayers([]);
+                    }}
+                  />
+                  <strong>Payer la totalité — {formatPrice(terms.priceCents)}</strong>
+                  <small>Vous réglez la réservation pour les 4 joueurs.</small>
+                </label>
+                <label className="booking-modal__payment-option">
+                  <input
+                    type="radio"
+                    name="payment-choice"
+                    value="split"
+                    checked={paymentChoice === "split"}
+                    onChange={() => setPaymentChoice("split")}
+                  />
+                  <strong>Payer ma part — {formatPrice(ownerShare)}</strong>
+                  <small>
+                    Les 3 autres joueurs recevront chacun une demande de{" "}
+                    {formatPrice(partnerShare)}.
+                  </small>
+                </label>
+              </fieldset>
+            )}
+
+            {paymentEnabled && paymentChoice === "split" && (
+              <ReservationSplitPaymentFields
+                resourceId={resource.id}
+                selectedPlayers={selectedPlayers}
+                onChange={setSelectedPlayers}
+              />
+            )}
+
             {paymentEnabled === false && (
               <p className="booking-modal__account">
                 Le paiement en ligne est désactivé : votre réservation sera
@@ -285,12 +369,21 @@ function BookingModal({
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || !terms || paymentEnabled === null}
+                disabled={
+                  isSubmitting ||
+                  !terms ||
+                  paymentEnabled === null ||
+                  (paymentEnabled &&
+                    paymentChoice === "split" &&
+                    selectedPlayers.length !== 3)
+                }
               >
                 {isSubmitting
                   ? "Réservation en cours…"
                   : paymentEnabled
-                    ? `Confirmer à ${terms ? formatPrice(terms.priceCents) : "…"}`
+                    ? paymentChoice === "split"
+                      ? `Continuer — ma part ${formatPrice(ownerShare)}`
+                      : `Payer la totalité — ${terms ? formatPrice(terms.priceCents) : "…"}`
                     : "Réserver"}
               </button>
             </div>
