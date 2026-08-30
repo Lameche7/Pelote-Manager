@@ -78,7 +78,10 @@ export function ReservationSplitPaymentFields({
       </p>
 
       {selectedPlayers.length > 0 && (
-        <div className="split-payment-fields__selected" aria-label="Joueurs sélectionnés">
+        <div
+          className="split-payment-fields__selected"
+          aria-label="Joueurs sélectionnés"
+        >
           {selectedPlayers.map((player) => (
             <button
               type="button"
@@ -102,7 +105,11 @@ export function ReservationSplitPaymentFields({
         />
       </label>
 
-      {error && <p className="split-payment-fields__error" role="alert">{error}</p>}
+      {error && (
+        <p className="split-payment-fields__error" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="split-payment-fields__results" aria-live="polite">
         {isLoading ? (
@@ -116,7 +123,9 @@ export function ReservationSplitPaymentFields({
               <button
                 type="button"
                 key={player.profileId}
-                disabled={selected || (selectedPlayers.length >= 3 && !selected)}
+                disabled={
+                  selected || (selectedPlayers.length >= 3 && !selected)
+                }
                 onClick={() => addPlayer(player)}
               >
                 <span>{player.displayName}</span>
