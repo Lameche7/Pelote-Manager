@@ -131,10 +131,7 @@ export const poolSizesFor = (teamCount: number): PoolSize[] => {
     }
     const rest = poolSizesWithoutThrees(remaining);
     if (rest.length > 0) {
-      return [
-        ...Array.from({ length: threes }, () => 3 as const),
-        ...rest,
-      ];
+      return [...Array.from({ length: threes }, () => 3 as const), ...rest];
     }
   }
 
@@ -146,9 +143,7 @@ export const poolSizesAreValidFor = (
   sizes: readonly number[],
 ): sizes is readonly PoolSize[] =>
   sizes.length > 0 &&
-  sizes.every(
-    (size) => size === 3 || size === 4 || size === 5 || size === 6,
-  ) &&
+  sizes.every((size) => size === 3 || size === 4 || size === 5 || size === 6) &&
   sizes.reduce((sum, size) => sum + size, 0) === teamCount;
 
 const shuffle = <T>(items: T[], random: () => number) => {
