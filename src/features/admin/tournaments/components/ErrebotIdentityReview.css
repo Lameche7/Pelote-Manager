@@ -22,6 +22,11 @@
   align-items: center;
 }
 
+.errebot-identity-review__row-actions > span {
+  font-weight: 750;
+  opacity: 0.72;
+}
+
 .errebot-identity-review__search-row td {
   background: rgb(30 90 168 / 4%);
 }
