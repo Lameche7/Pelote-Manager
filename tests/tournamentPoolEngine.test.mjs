@@ -189,17 +189,17 @@ test("les migrations historiques restent lisibles et PR124 etend la base a 3 4 5
   assert.match(migration, /target_size in \(4, 5, 6\)/);
   assert.doesNotMatch(migration, /is_locked/);
 
-  assert.doesNotMatch(upgradeMigration, /create table public\.tournament_pools/);
+  assert.doesNotMatch(
+    upgradeMigration,
+    /create table public\.tournament_pools/,
+  );
   assert.match(
     upgradeMigration,
     /drop constraint if exists tournament_pools_target_size_check/,
   );
   assert.match(upgradeMigration, /target_size in \(4, 5, 6\)/);
 
-  assert.match(
-    foundationMigration,
-    /target_size in \(3, 4, 5, 6\)/,
-  );
+  assert.match(foundationMigration, /target_size in \(3, 4, 5, 6\)/);
   assert.match(foundationMigration, /admin_save_tournament_pools/);
   assert.match(
     foundationMigration,
