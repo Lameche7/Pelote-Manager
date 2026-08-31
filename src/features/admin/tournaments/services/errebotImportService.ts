@@ -7,6 +7,12 @@ import type {
 } from "../domain/errebotIdentityMatching";
 
 type Row = Record<string, unknown>;
+type SupabaseDiagnosticError = {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+};
 
 const statuses = new Set<ErrebotIdentityMatchStatus>([
   "verified",
@@ -55,11 +61,23 @@ export const errebotImportService = {
       { payload },
     );
     if (error) {
+      const diagnostic = error as SupabaseDiagnosticError;
+      const technicalDetails = [
+        diagnostic.code,
+        diagnostic.message,
+        diagnostic.details,
+        diagnostic.hint,
+      ]
+        .filter((value): value is string => Boolean(value))
+        .join(" · ");
+      const friendlyMessage = getSupabaseErrorMessage(
+        error,
+        "Impossible d’analyser les rapprochements de joueurs Errebot.",
+      );
       throw new Error(
-        getSupabaseErrorMessage(
-          error,
-          "Impossible d’analyser les rapprochements de joueurs Errebot.",
-        ),
+        technicalDetails
+          ? `${friendlyMessage} — Diagnostic : ${technicalDetails}`
+          : friendlyMessage,
       );
     }
     if (!Array.isArray(data)) {
