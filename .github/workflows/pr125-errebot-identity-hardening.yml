@@ -1,0 +1,118 @@
+name: PR125 Errebot identity hardening
+
+on:
+  push:
+    branches:
+      - agent/errebot-import-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/errebot-import-foundation
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Harden RPC validation and conflict priority
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("supabase/migrations/20260831113000_errebot_identity_matching.sql")
+          text = path.read_text(encoding="utf-8")
+
+          old_index = """      or player_index not in (1, 2)\n"""
+          new_index = """      or player_index is null\n      or player_index not in (1, 2)\n"""
+          if text.count(old_index) != 1:
+              raise SystemExit("player index validation anchor not found exactly once")
+          text = text.replace(old_index, new_index)
+
+          old_head = """      elsif exact_count > 1 then
+        match_status := 'conflict';
+        match_reason := 'ambiguous_exact';
+      elsif name_count = 1 then
+"""
+          new_head = """      elsif exact_count > 1 then
+        match_status := 'conflict';
+        match_reason := 'ambiguous_exact';
+      elsif phone_conflict_count > 0 then
+        match_status := 'conflict';
+        match_reason := 'phone_name_conflict';
+      elsif name_count = 1 then
+"""
+          if text.count(old_head) != 1:
+              raise SystemExit("matching priority head anchor not found exactly once")
+          text = text.replace(old_head, new_head)
+
+          old_tail = """      elsif name_count > 1 then
+        match_status := 'conflict';
+        match_reason := 'ambiguous_name';
+      elsif phone_conflict_count > 0 then
+        match_status := 'conflict';
+        match_reason := 'phone_name_conflict';
+      end if;
+"""
+          new_tail = """      elsif name_count > 1 then
+        match_status := 'conflict';
+        match_reason := 'ambiguous_name';
+      end if;
+"""
+          if text.count(old_tail) != 1:
+              raise SystemExit("matching priority tail anchor not found exactly once")
+          text = text.replace(old_tail, new_tail)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Add hardening regression test
+        shell: bash
+        run: |
+          cat >> tests/tournamentErrebotIdentityMatching.test.mjs <<'EOF'
+
+          test("le RPC rejette un index absent et priorise un téléphone déjà attribué", async () => {
+            const migration = await readFile(new URL(migrationPath, import.meta.url), "utf8");
+            assert.match(migration, /or player_index is null/);
+            const phoneConflict = migration.indexOf("elsif phone_conflict_count > 0 then");
+            const uniqueName = migration.indexOf("elsif name_count = 1 then");
+            assert.ok(phoneConflict >= 0);
+            assert.ok(uniqueName >= 0);
+            assert.ok(phoneConflict < uniqueName);
+          });
+          EOF
+
+      - name: Format touched files
+        run: >-
+          npx prettier --write
+          .github/workflows/pr125-errebot-identity-hardening.yml
+          tests/tournamentErrebotIdentityMatching.test.mjs
+
+      - run: npm run security:secrets
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run format:check
+
+      - name: Commit verified hardening and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/pr125-errebot-identity-hardening.yml
+          git add \
+            supabase/migrations/20260831113000_errebot_identity_matching.sql \
+            tests/tournamentErrebotIdentityMatching.test.mjs
+          git commit -m "fix(tournaments): harden Errebot identity matching"
+          git push origin HEAD:agent/errebot-import-foundation
