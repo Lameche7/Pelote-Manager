@@ -1,0 +1,1217 @@
+name: PR125 Errebot identity matching
+
+on:
+  push:
+    branches:
+      - agent/errebot-import-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/errebot-import-foundation
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Add secure Errebot identity matching RPC
+        shell: bash
+        run: |
+          cat > supabase/migrations/20260831113000_errebot_identity_matching.sql <<'EOF'
+          begin;
+
+          -- PR125 — Prévisualisation sécurisée du rapprochement des identités Errebot.
+          --
+          -- Cette étape ne persiste aucune décision. Elle ne fait que comparer les
+          -- identités structurées extraites dans le navigateur avec le registre des
+          -- licenciés et les identités externes déjà vérifiées.
+          --
+          -- Règle de sécurité centrale : prénom + nom + téléphone peuvent produire
+          -- une suggestion, mais jamais une nouvelle vérification automatique.
+          -- Seule une identité externe déjà vérifiée lors d'un rapprochement antérieur
+          -- peut être réutilisée avec le statut verified.
+
+          create or replace function public.admin_preview_errebot_identity_matches(
+            payload jsonb
+          )
+          returns jsonb
+          language plpgsql
+          stable
+          security definer
+          set search_path = ''
+          as $$
+          declare
+            target_club_id uuid := public.admin_current_club_id();
+            item jsonb;
+            result jsonb := '[]'::jsonb;
+            external_key text;
+            team_external_id text;
+            player_index integer;
+            first_name text;
+            last_name text;
+            phone text;
+            first_name_normalized text;
+            last_name_normalized text;
+            phone_normalized text;
+            existing_identity public.tournament_external_player_identities%rowtype;
+            candidate public.club_members%rowtype;
+            candidate_profile_id uuid;
+            candidate_club_name text;
+            exact_count integer;
+            name_count integer;
+            phone_conflict_count integer;
+            match_status text;
+            match_reason text;
+            matched_member_id uuid;
+            matched_profile_id uuid;
+            matched_member_name text;
+            matched_licence_number text;
+            matched_club_id uuid;
+            matched_club_name text;
+            matched_linked_account boolean;
+            matched_member_active boolean;
+          begin
+            if not public.has_club_permission(target_club_id, 'tournaments.manage') then
+              raise exception 'Forbidden' using errcode = '42501';
+            end if;
+
+            if jsonb_typeof(coalesce(payload, 'null'::jsonb)) <> 'array'
+              or jsonb_array_length(payload) > 1000 then
+              raise exception 'Errebot identity matching payload is invalid'
+                using errcode = '22023';
+            end if;
+
+            for item in
+              select value from jsonb_array_elements(payload)
+            loop
+              external_key := btrim(coalesce(item->>'externalKey', ''));
+              team_external_id := btrim(coalesce(item->>'teamExternalId', ''));
+              player_index := nullif(item->>'playerIndex', '')::integer;
+              first_name := btrim(coalesce(item->>'firstName', ''));
+              last_name := btrim(coalesce(item->>'lastName', ''));
+              phone := btrim(coalesce(item->>'phone', ''));
+
+              if external_key = ''
+                or team_external_id = ''
+                or player_index not in (1, 2)
+                or first_name = ''
+                or last_name = '' then
+                raise exception 'Errebot identity matching payload is invalid'
+                  using errcode = '22023';
+              end if;
+
+              first_name_normalized := public.normalize_member_identity(first_name);
+              last_name_normalized := public.normalize_member_identity(last_name);
+              phone_normalized := public.normalize_tournament_phone(phone);
+
+              existing_identity := null;
+              candidate := null;
+              candidate_profile_id := null;
+              candidate_club_name := null;
+              exact_count := 0;
+              name_count := 0;
+              phone_conflict_count := 0;
+              match_status := 'unmatched';
+              match_reason := 'no_match';
+              matched_member_id := null;
+              matched_profile_id := null;
+              matched_member_name := null;
+              matched_licence_number := null;
+              matched_club_id := null;
+              matched_club_name := null;
+              matched_linked_account := false;
+              matched_member_active := false;
+
+              -- Une vérification antérieure est la seule preuve réutilisable sans
+              -- nouvelle intervention humaine. Le téléphone reste ici une partie de
+              -- l'identité externe déjà vérifiée, pas une preuve autonome.
+              if phone_normalized <> '' then
+                select identity.*
+                into existing_identity
+                from public.tournament_external_player_identities as identity
+                where identity.source = 'errebot'
+                  and identity.first_name_normalized = first_name_normalized
+                  and identity.last_name_normalized = last_name_normalized
+                  and identity.phone_normalized = phone_normalized
+                  and identity.status = 'verified'
+                  and identity.profile_id is not null
+                limit 1;
+              end if;
+
+              if existing_identity.id is not null then
+                match_status := 'verified';
+                match_reason := 'reused_verified_identity';
+                matched_member_id := existing_identity.member_id;
+                matched_profile_id := existing_identity.profile_id;
+                matched_linked_account := true;
+
+                if matched_member_id is not null then
+                  select
+                    member.first_name || ' ' || member.last_name,
+                    member.licence_number,
+                    member.club_id,
+                    club.name,
+                    member.is_active
+                  into
+                    matched_member_name,
+                    matched_licence_number,
+                    matched_club_id,
+                    matched_club_name,
+                    matched_member_active
+                  from public.club_members as member
+                  join public.clubs as club on club.id = member.club_id
+                  where member.id = matched_member_id;
+                end if;
+              else
+                if phone_normalized <> '' then
+                  select count(*)::integer
+                  into exact_count
+                  from public.club_members as member
+                  where member.first_name_normalized = first_name_normalized
+                    and member.last_name_normalized = last_name_normalized
+                    and public.normalize_tournament_phone(coalesce(member.phone, '')) = phone_normalized;
+                end if;
+
+                select count(*)::integer
+                into name_count
+                from public.club_members as member
+                where member.first_name_normalized = first_name_normalized
+                  and member.last_name_normalized = last_name_normalized;
+
+                if phone_normalized <> '' then
+                  select count(*)::integer
+                  into phone_conflict_count
+                  from public.club_members as member
+                  where public.normalize_tournament_phone(coalesce(member.phone, '')) = phone_normalized
+                    and (
+                      member.first_name_normalized <> first_name_normalized
+                      or member.last_name_normalized <> last_name_normalized
+                    );
+                end if;
+
+                if exact_count = 1 then
+                  select member.*
+                  into candidate
+                  from public.club_members as member
+                  where member.first_name_normalized = first_name_normalized
+                    and member.last_name_normalized = last_name_normalized
+                    and public.normalize_tournament_phone(coalesce(member.phone, '')) = phone_normalized
+                  limit 1;
+
+                  match_status := case when candidate.is_active then 'suggested' else 'conflict' end;
+                  match_reason := case when candidate.is_active then 'exact_name_phone' else 'inactive_member' end;
+                elsif exact_count > 1 then
+                  match_status := 'conflict';
+                  match_reason := 'ambiguous_exact';
+                elsif name_count = 1 then
+                  select member.*
+                  into candidate
+                  from public.club_members as member
+                  where member.first_name_normalized = first_name_normalized
+                    and member.last_name_normalized = last_name_normalized
+                  limit 1;
+
+                  if not candidate.is_active then
+                    match_status := 'conflict';
+                    match_reason := 'inactive_member';
+                  elsif phone_normalized <> ''
+                    and public.normalize_tournament_phone(coalesce(candidate.phone, '')) <> ''
+                    and public.normalize_tournament_phone(coalesce(candidate.phone, '')) <> phone_normalized then
+                    match_status := 'conflict';
+                    match_reason := 'name_phone_mismatch';
+                  else
+                    match_status := 'suggested';
+                    match_reason := 'unique_name';
+                  end if;
+                elsif name_count > 1 then
+                  match_status := 'conflict';
+                  match_reason := 'ambiguous_name';
+                elsif phone_conflict_count > 0 then
+                  match_status := 'conflict';
+                  match_reason := 'phone_name_conflict';
+                end if;
+
+                if candidate.id is not null then
+                  select profile.id
+                  into candidate_profile_id
+                  from public.profiles as profile
+                  where profile.member_id = candidate.id
+                  limit 1;
+
+                  select club.name
+                  into candidate_club_name
+                  from public.clubs as club
+                  where club.id = candidate.club_id;
+
+                  matched_member_id := candidate.id;
+                  matched_profile_id := candidate_profile_id;
+                  matched_member_name := candidate.first_name || ' ' || candidate.last_name;
+                  matched_licence_number := candidate.licence_number;
+                  matched_club_id := candidate.club_id;
+                  matched_club_name := candidate_club_name;
+                  matched_linked_account := candidate_profile_id is not null;
+                  matched_member_active := candidate.is_active;
+                end if;
+              end if;
+
+              result := result || jsonb_build_array(jsonb_build_object(
+                'externalKey', external_key,
+                'teamExternalId', team_external_id,
+                'playerIndex', player_index,
+                'firstName', first_name,
+                'lastName', last_name,
+                'status', match_status,
+                'reason', match_reason,
+                'externalIdentityId', existing_identity.id,
+                'memberId', matched_member_id,
+                'profileId', matched_profile_id,
+                'memberDisplayName', matched_member_name,
+                'licenceNumber', matched_licence_number,
+                'clubId', matched_club_id,
+                'clubName', matched_club_name,
+                'linkedAccount', matched_linked_account,
+                'memberActive', matched_member_active
+              ));
+            end loop;
+
+            return result;
+          end;
+          $$;
+
+          revoke all on function public.admin_preview_errebot_identity_matches(jsonb)
+          from public, anon;
+          grant execute on function public.admin_preview_errebot_identity_matches(jsonb)
+          to authenticated;
+
+          commit;
+          EOF
+
+      - name: Add Errebot identity matching domain helper
+        shell: bash
+        run: |
+          cat > src/features/admin/tournaments/domain/errebotIdentityMatching.ts <<'EOF'
+          import type { ErrebotTournamentParseResult } from "./errebotParser";
+
+          export type ErrebotIdentityMatchStatus =
+            | "verified"
+            | "suggested"
+            | "conflict"
+            | "unmatched";
+
+          export type ErrebotIdentityMatchRequest = {
+            externalKey: string;
+            teamExternalId: string;
+            playerIndex: 1 | 2;
+            firstName: string;
+            lastName: string;
+            phone: string;
+          };
+
+          export type ErrebotIdentityMatch = {
+            externalKey: string;
+            teamExternalId: string;
+            playerIndex: number;
+            firstName: string;
+            lastName: string;
+            status: ErrebotIdentityMatchStatus;
+            reason: string;
+            externalIdentityId: string | null;
+            memberId: string | null;
+            profileId: string | null;
+            memberDisplayName: string | null;
+            licenceNumber: string | null;
+            clubId: string | null;
+            clubName: string | null;
+            linkedAccount: boolean;
+            memberActive: boolean;
+          };
+
+          export type ErrebotIdentityMatchSummary = Record<
+            ErrebotIdentityMatchStatus,
+            number
+          >;
+
+          export const buildErrebotIdentityMatchPayload = (
+            parsed: ErrebotTournamentParseResult,
+          ): ErrebotIdentityMatchRequest[] =>
+            parsed.teams.flatMap((team) =>
+              team.players.map((player, index) => ({
+                externalKey: `${team.externalId}:${index + 1}`,
+                teamExternalId: team.externalId,
+                playerIndex: (index + 1) as 1 | 2,
+                firstName: player.firstName,
+                lastName: player.lastName,
+                phone: player.phone,
+              })),
+            );
+
+          export const summarizeErrebotIdentityMatches = (
+            matches: ErrebotIdentityMatch[],
+          ): ErrebotIdentityMatchSummary =>
+            matches.reduce<ErrebotIdentityMatchSummary>(
+              (summary, match) => {
+                summary[match.status] += 1;
+                return summary;
+              },
+              { verified: 0, suggested: 0, conflict: 0, unmatched: 0 },
+            );
+
+          export const erreb otIdentityStatusLabel = (
+            status: ErrebotIdentityMatchStatus,
+          ) =>
+            ({
+              verified: "Déjà vérifié",
+              suggested: "Suggestion",
+              conflict: "À contrôler",
+              unmatched: "Non trouvé",
+            })[status];
+
+          export const errebotIdentityReasonLabel = (reason: string) =>
+            ({
+              reused_verified_identity: "Identité Errebot déjà vérifiée lors d’un précédent tournoi",
+              exact_name_phone: "Nom, prénom et téléphone concordent",
+              unique_name: "Un seul licencié porte ce nom et ce prénom",
+              inactive_member: "La fiche licencié correspondante est inactive",
+              ambiguous_exact: "Plusieurs fiches correspondent exactement",
+              name_phone_mismatch: "Le nom correspond mais le téléphone diffère",
+              ambiguous_name: "Plusieurs licenciés portent ce nom et ce prénom",
+              phone_name_conflict: "Le téléphone existe mais sous une autre identité",
+              no_match: "Aucun licencié correspondant n’a été trouvé",
+            })[reason] ?? reason;
+          EOF
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("src/features/admin/tournaments/domain/errebotIdentityMatching.ts")
+          text = path.read_text(encoding="utf-8").replace("erreb otIdentityStatusLabel", "errebotIdentityStatusLabel")
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Add Errebot import service
+        shell: bash
+        run: |
+          cat > src/features/admin/tournaments/services/errebotImportService.ts <<'EOF'
+          import { supabase } from "@/infrastructure/supabase/client";
+          import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
+          import type {
+            ErrebotIdentityMatch,
+            ErrebotIdentityMatchRequest,
+            ErrebotIdentityMatchStatus,
+          } from "../domain/errebotIdentityMatching";
+
+          type Row = Record<string, unknown>;
+
+          const statuses = new Set<ErrebotIdentityMatchStatus>([
+            "verified",
+            "suggested",
+            "conflict",
+            "unmatched",
+          ]);
+
+          const nullableString = (value: unknown) =>
+            value === null || value === undefined || value === ""
+              ? null
+              : String(value);
+
+          const mapMatch = (value: unknown): ErrebotIdentityMatch => {
+            const row = (value ?? {}) as Row;
+            const status = String(row.status ?? "unmatched") as ErrebotIdentityMatchStatus;
+            if (!statuses.has(status)) {
+              throw new Error("Statut de rapprochement Errebot invalide.");
+            }
+            return {
+              externalKey: String(row.externalKey ?? ""),
+              teamExternalId: String(row.teamExternalId ?? ""),
+              playerIndex: Number(row.playerIndex ?? 0),
+              firstName: String(row.firstName ?? ""),
+              lastName: String(row.lastName ?? ""),
+              status,
+              reason: String(row.reason ?? ""),
+              externalIdentityId: nullableString(row.externalIdentityId),
+              memberId: nullableString(row.memberId),
+              profileId: nullableString(row.profileId),
+              memberDisplayName: nullableString(row.memberDisplayName),
+              licenceNumber: nullableString(row.licenceNumber),
+              clubId: nullableString(row.clubId),
+              clubName: nullableString(row.clubName),
+              linkedAccount: Boolean(row.linkedAccount),
+              memberActive: Boolean(row.memberActive),
+            };
+          };
+
+          export const errebotImportService = {
+            async previewIdentityMatches(
+              payload: ErrebotIdentityMatchRequest[],
+            ): Promise<ErrebotIdentityMatch[]> {
+              const { data, error } = await supabase.rpc(
+                "admin_preview_errebot_identity_matches",
+                { payload },
+              );
+              if (error) {
+                throw new Error(
+                  getSupabaseErrorMessage(
+                    error,
+                    "Impossible d’analyser les rapprochements de joueurs Errebot.",
+                  ),
+                );
+              }
+              if (!Array.isArray(data)) {
+                throw new Error("Réponse de rapprochement Errebot invalide.");
+              }
+              return data.map(mapMatch);
+            },
+          };
+          EOF
+
+      - name: Extend Errebot import assistant with matching preview
+        shell: bash
+        run: |
+          cat > src/features/admin/tournaments/pages/AdminTournamentImportPage.tsx <<'EOF'
+          import { useState } from "react";
+          import {
+            buildErrebotIdentityMatchPayload,
+            errebotIdentityReasonLabel,
+            errebotIdentityStatusLabel,
+            summarizeErrebotIdentityMatches,
+            type ErrebotIdentityMatch,
+          } from "@/features/admin/tournaments/domain/errebotIdentityMatching";
+          import {
+            buildErrebotExtractionPreview,
+            formatErrebotFileSize,
+            validateErrebotPdfSelection,
+            type ErrebotExtractionPreview,
+          } from "@/features/admin/tournaments/domain/errebotImportPreview";
+          import {
+            extractErrebotPdfText,
+            sha256File,
+          } from "@/features/admin/tournaments/domain/errebotPdfExtraction";
+          import {
+            parseErrebotTournament,
+            type ErrebotTournamentParseResult,
+          } from "@/features/admin/tournaments/domain/errebotParser";
+          import { errebotImportService } from "@/features/admin/tournaments/services/errebotImportService";
+          import "./AdminTournamentImportPage.css";
+
+          type SelectedPdf = {
+            file: File;
+            hash: string;
+          };
+
+          const steps = [
+            "Fichier",
+            "Contrôle",
+            "Prévisualisation",
+            "Rapprochement",
+          ] as const;
+
+          export function AdminTournamentImportPage() {
+            const [selected, setSelected] = useState<SelectedPdf | null>(null);
+            const [preview, setPreview] = useState<ErrebotExtractionPreview | null>(null);
+            const [parsed, setParsed] = useState<ErrebotTournamentParseResult | null>(
+              null,
+            );
+            const [identityMatches, setIdentityMatches] = useState<
+              ErrebotIdentityMatch[] | null
+            >(null);
+            const [step, setStep] = useState(1);
+            const [busy, setBusy] = useState(false);
+            const [error, setError] = useState("");
+
+            const reset = () => {
+              setSelected(null);
+              setPreview(null);
+              setParsed(null);
+              setIdentityMatches(null);
+              setError("");
+              setStep(1);
+            };
+
+            const selectFile = async (file: File) => {
+              setError("");
+              setPreview(null);
+              setParsed(null);
+              setIdentityMatches(null);
+              const validationError = validateErrebotPdfSelection(file);
+              if (validationError) {
+                setError(validationError);
+                return;
+              }
+
+              setBusy(true);
+              try {
+                const hash = await sha256File(file);
+                setSelected({ file, hash });
+                setStep(2);
+              } catch (cause) {
+                setError(
+                  cause instanceof Error
+                    ? cause.message
+                    : "Impossible de contrôler le fichier PDF.",
+                );
+              } finally {
+                setBusy(false);
+              }
+            };
+
+            const analyse = async () => {
+              if (!selected) return;
+              setBusy(true);
+              setError("");
+              setIdentityMatches(null);
+              try {
+                const extracted = await extractErrebotPdfText(selected.file);
+                const nextPreview = buildErrebotExtractionPreview(
+                  extracted.text,
+                  extracted.pageCount,
+                );
+                if (nextPreview.characterCount === 0) {
+                  setError(
+                    "Aucun texte exploitable n’a été extrait. Le PDF est peut-être scanné sous forme d’image.",
+                  );
+                  return;
+                }
+                const nextParsed = parseErrebotTournament(extracted.text);
+                setPreview(nextPreview);
+                setParsed(nextParsed);
+                setStep(3);
+              } catch (cause) {
+                setError(
+                  cause instanceof Error
+                    ? cause.message
+                    : "Impossible d’extraire le texte du PDF Errebot.",
+                );
+              } finally {
+                setBusy(false);
+              }
+            };
+
+            const analyseIdentityMatches = async () => {
+              if (!parsed || parsed.issues.length > 0) return;
+              const payload = buildErrebotIdentityMatchPayload(parsed);
+              setBusy(true);
+              setError("");
+              try {
+                const matches = await errebotImportService.previewIdentityMatches(payload);
+                if (matches.length !== payload.length) {
+                  throw new Error(
+                    "Le serveur n’a pas retourné un résultat pour chaque joueur Errebot.",
+                  );
+                }
+                setIdentityMatches(matches);
+                setStep(4);
+              } catch (cause) {
+                setError(
+                  cause instanceof Error
+                    ? cause.message
+                    : "Impossible d’analyser les rapprochements de joueurs.",
+                );
+              } finally {
+                setBusy(false);
+              }
+            };
+
+            const matchSummary = identityMatches
+              ? summarizeErrebotIdentityMatches(identityMatches)
+              : null;
+
+            return (
+              <section className="admin-page admin-tournament-import">
+                <header className="admin-page__header">
+                  <div>
+                    <p className="admin-page__eyebrow">Tournois · Errebot</p>
+                    <h1>Importer un tournoi</h1>
+                    <p className="admin-page__lead">
+                      Contrôlez le PDF Errebot, vérifiez sa structure puis préparez le
+                      rapprochement des joueurs avant toute création dans Pelote Manager.
+                    </p>
+                  </div>
+                </header>
+
+                <ol
+                  className="admin-tournament-import__steps"
+                  aria-label="Étapes de l’import"
+                >
+                  {steps.map((label, index) => (
+                    <li key={label} className={step === index + 1 ? "is-active" : ""}>
+                      <span>{index + 1}</span>
+                      {label}
+                    </li>
+                  ))}
+                </ol>
+
+                {error && (
+                  <p className="admin-tournament-import__alert" role="alert">
+                    {error}
+                  </p>
+                )}
+
+                {step === 1 && (
+                  <div className="admin-card admin-tournament-import__card">
+                    <div>
+                      <h2>Choisir le PDF Errebot</h2>
+                      <p>
+                        Le fichier est lu localement. Aucun PDF ni texte extrait n’est
+                        envoyé au serveur pendant ce contrôle.
+                      </p>
+                    </div>
+                    <label className="admin-tournament-import__file">
+                      Fichier PDF
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        disabled={busy}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) void selectFile(file);
+                        }}
+                      />
+                    </label>
+                    <small>20 Mo maximum.</small>
+                  </div>
+                )}
+
+                {step === 2 && selected && (
+                  <div className="admin-card admin-tournament-import__card">
+                    <div>
+                      <h2>Contrôle du fichier</h2>
+                      <p>
+                        L’empreinte permet de reconnaître exactement ce fichier sans
+                        stocker son contenu.
+                      </p>
+                    </div>
+                    <dl className="admin-tournament-import__metadata">
+                      <div>
+                        <dt>Nom</dt>
+                        <dd>{selected.file.name}</dd>
+                      </div>
+                      <div>
+                        <dt>Taille</dt>
+                        <dd>{formatErrebotFileSize(selected.file.size)}</dd>
+                      </div>
+                      <div>
+                        <dt>SHA-256</dt>
+                        <dd className="admin-tournament-import__hash">{selected.hash}</dd>
+                      </div>
+                    </dl>
+                    <div className="admin-tournament-import__actions">
+                      <button type="button" disabled={busy} onClick={reset}>
+                        Changer de fichier
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-tournament-import__primary"
+                        disabled={busy}
+                        onClick={() => void analyse()}
+                      >
+                        {busy ? "Extraction en cours…" : "Extraire et prévisualiser"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && selected && preview && parsed && (
+                  <>
+                    <div className="admin-card admin-tournament-import__summary">
+                      <div>
+                        <strong>{parsed.teams.length}</strong>
+                        <span>équipes</span>
+                      </div>
+                      <div>
+                        <strong>{parsed.pools.length}</strong>
+                        <span>poules</span>
+                      </div>
+                      <div>
+                        <strong>{parsed.poolSize3Count}</strong>
+                        <span>poules de 3</span>
+                      </div>
+                      <div>
+                        <strong>{parsed.fixtures.length}</strong>
+                        <span>matchs</span>
+                      </div>
+                      <div>
+                        <strong>{parsed.emptySlotCount}</strong>
+                        <span>créneaux libres</span>
+                      </div>
+                    </div>
+
+                    <div className="admin-card admin-tournament-import__card">
+                      <div>
+                        <h2>Structure détectée</h2>
+                        <p>
+                          Parser {parsed.parserVersion} · {preview.pageCount} page
+                          {preview.pageCount > 1 ? "s" : ""} · {preview.lineCount} lignes
+                          utiles.
+                        </p>
+                      </div>
+                      <div className="admin-tournament-import__table-wrap">
+                        <table className="admin-tournament-import__table">
+                          <thead>
+                            <tr>
+                              <th>Série</th>
+                              <th>Équipes</th>
+                              <th>Poules</th>
+                              <th>Matchs</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {parsed.series.map((series) => (
+                              <tr key={series.series}>
+                                <td>{series.series}</td>
+                                <td>{series.teamCount}</td>
+                                <td>{series.poolCount}</td>
+                                <td>{series.fixtureCount}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {parsed.issues.length === 0 ? (
+                        <p className="admin-tournament-import__success">
+                          Structure cohérente : chaque équipe appartient à une seule poule
+                          et le calendrier couvre exactement les confrontations attendues.
+                        </p>
+                      ) : (
+                        <div className="admin-tournament-import__issues" role="alert">
+                          <strong>{parsed.issues.length} anomalie(s) détectée(s)</strong>
+                          <ul>
+                            {parsed.issues.slice(0, 10).map((issue, index) => (
+                              <li key={`${issue.code}-${index}`}>{issue.message}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="admin-card admin-tournament-import__card">
+                      <div>
+                        <h2>Prévisualisation de l’extraction</h2>
+                        <p>
+                          Vérifiez que les équipes, poules et informations du tournoi sont
+                          lisibles. Cette zone peut contenir des données personnelles :
+                          elle reste locale et n’est pas enregistrée.
+                        </p>
+                      </div>
+                      <pre className="admin-tournament-import__preview">
+                        {preview.excerpt}
+                      </pre>
+                      {preview.truncated && (
+                        <small>
+                          Aperçu limité aux 80 premières lignes utiles. Le texte complet
+                          reste disponible en mémoire pour l’analyse suivante.
+                        </small>
+                      )}
+                      <p className="admin-tournament-import__privacy-note">
+                        Le rapprochement envoie uniquement le prénom, le nom et le
+                        téléphone structurés de chaque joueur au RPC sécurisé. Le PDF et
+                        son texte extrait restent dans votre navigateur. Une concordance
+                        nouvelle ne sera jamais validée automatiquement.
+                      </p>
+                      <div className="admin-tournament-import__actions">
+                        <button type="button" disabled={busy} onClick={reset}>
+                          Tester un autre PDF
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-tournament-import__primary"
+                          disabled={busy || parsed.issues.length > 0}
+                          onClick={() => void analyseIdentityMatches()}
+                        >
+                          {busy
+                            ? "Rapprochement en cours…"
+                            : "Analyser les rapprochements"}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {step === 4 && identityMatches && matchSummary && (
+                  <>
+                    <div className="admin-card admin-tournament-import__match-summary">
+                      <div>
+                        <strong>{matchSummary.verified}</strong>
+                        <span>déjà vérifiés</span>
+                      </div>
+                      <div>
+                        <strong>{matchSummary.suggested}</strong>
+                        <span>suggestions</span>
+                      </div>
+                      <div>
+                        <strong>{matchSummary.conflict}</strong>
+                        <span>à contrôler</span>
+                      </div>
+                      <div>
+                        <strong>{matchSummary.unmatched}</strong>
+                        <span>non trouvés</span>
+                      </div>
+                    </div>
+
+                    <div className="admin-card admin-tournament-import__card">
+                      <div>
+                        <h2>Rapprochement des joueurs</h2>
+                        <p>
+                          Une identité déjà vérifiée peut être réutilisée. Toutes les
+                          nouvelles concordances restent de simples suggestions jusqu’à
+                          une validation explicite.
+                        </p>
+                      </div>
+                      <div className="admin-tournament-import__table-wrap">
+                        <table className="admin-tournament-import__table admin-tournament-import__matches">
+                          <thead>
+                            <tr>
+                              <th>Équipe</th>
+                              <th>Joueur Errebot</th>
+                              <th>Statut</th>
+                              <th>Correspondance Pelote Manager</th>
+                              <th>Pourquoi</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {identityMatches.map((match) => (
+                              <tr key={match.externalKey}>
+                                <td>#{match.teamExternalId}</td>
+                                <td>
+                                  {match.firstName} {match.lastName}
+                                </td>
+                                <td>
+                                  <span
+                                    className={`admin-tournament-import__match-status is-${match.status}`}
+                                  >
+                                    {errebotIdentityStatusLabel(match.status)}
+                                  </span>
+                                </td>
+                                <td>
+                                  {match.memberDisplayName ? (
+                                    <div className="admin-tournament-import__candidate">
+                                      <strong>{match.memberDisplayName}</strong>
+                                      <span>
+                                        {match.licenceNumber ?? "Licence inconnue"}
+                                        {match.clubName ? ` · ${match.clubName}` : ""}
+                                        {match.linkedAccount ? " · compte lié" : ""}
+                                      </span>
+                                    </div>
+                                  ) : match.profileId ? (
+                                    "Compte Pelote Manager déjà vérifié"
+                                  ) : (
+                                    "—"
+                                  )}
+                                </td>
+                                <td>{errebotIdentityReasonLabel(match.reason)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="admin-tournament-import__privacy-note">
+                        Aucun rapprochement proposé n’a encore été enregistré. L’étape
+                        suivante ajoutera la confirmation explicite des suggestions avant
+                        l’import transactionnel du tournoi.
+                      </p>
+                      <div className="admin-tournament-import__actions">
+                        <button type="button" onClick={() => setStep(3)}>
+                          Retour à la structure
+                        </button>
+                        <button type="button" onClick={reset}>
+                          Tester un autre PDF
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </section>
+            );
+          }
+          EOF
+
+      - name: Extend Errebot import styles
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("src/features/admin/tournaments/pages/AdminTournamentImportPage.css")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace("grid-template-columns: repeat(3, minmax(0, 1fr));", "grid-template-columns: repeat(4, minmax(0, 1fr));", 1)
+          extra = r'''
+
+          .admin-tournament-import__privacy-note {
+            border-radius: 0.75rem;
+            padding: 0.75rem 0.85rem;
+            background: rgb(30 90 168 / 7%);
+            font-size: 0.84rem;
+          }
+
+          .admin-tournament-import__match-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+          }
+
+          .admin-tournament-import__match-summary > div {
+            display: grid;
+            gap: 0.15rem;
+            text-align: center;
+          }
+
+          .admin-tournament-import__match-summary strong {
+            font-size: 1.35rem;
+          }
+
+          .admin-tournament-import__match-summary span {
+            font-size: 0.75rem;
+            opacity: 0.64;
+          }
+
+          .admin-tournament-import__match-status {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 0.28rem 0.55rem;
+            font-size: 0.72rem;
+            font-weight: 850;
+            white-space: nowrap;
+          }
+
+          .admin-tournament-import__match-status.is-verified {
+            color: #166534;
+            background: rgb(22 101 52 / 10%);
+          }
+
+          .admin-tournament-import__match-status.is-suggested {
+            color: #1e5aa8;
+            background: rgb(30 90 168 / 10%);
+          }
+
+          .admin-tournament-import__match-status.is-conflict {
+            color: #92400e;
+            background: rgb(180 83 9 / 12%);
+          }
+
+          .admin-tournament-import__match-status.is-unmatched {
+            color: #4b5563;
+            background: rgb(75 85 99 / 10%);
+          }
+
+          .admin-tournament-import__candidate {
+            display: grid;
+            gap: 0.1rem;
+          }
+
+          .admin-tournament-import__candidate span {
+            font-size: 0.75rem;
+            opacity: 0.68;
+          }
+
+          .admin-tournament-import__matches td {
+            vertical-align: top;
+          }
+
+          @media (max-width: 760px) {
+            .admin-tournament-import__match-summary {
+              grid-template-columns: 1fr 1fr;
+            }
+          }
+          '''
+          path.write_text(text.rstrip() + extra, encoding="utf-8")
+          PY
+
+      - name: Add Errebot identity matching tests
+        shell: bash
+        run: |
+          cat > tests/tournamentErrebotIdentityMatching.test.mjs <<'EOF'
+          import assert from "node:assert/strict";
+          import { readFile } from "node:fs/promises";
+          import test from "node:test";
+          import {
+            buildErrebotIdentityMatchPayload,
+            summarizeErrebotIdentityMatches,
+          } from "../.test-dist/src/features/admin/tournaments/domain/errebotIdentityMatching.js";
+
+          test("le payload de rapprochement contient exactement deux joueurs par équipe", () => {
+            const parsed = {
+              parserVersion: "errebot-pdf-v1",
+              teams: [
+                {
+                  externalId: "100",
+                  series: "1re Série",
+                  players: [
+                    { firstName: "Alice", lastName: "Alpha", phone: "0600000001" },
+                    { firstName: "Bob", lastName: "Bravo", phone: "0600000002" },
+                  ],
+                },
+                {
+                  externalId: "101",
+                  series: "1re Série",
+                  players: [
+                    { firstName: "Chloe", lastName: "Charlie", phone: "0600000003" },
+                    { firstName: "Dan", lastName: "Delta", phone: "0600000004" },
+                  ],
+                },
+              ],
+              pools: [],
+              fixtures: [],
+              emptySlotCount: 0,
+              poolSize3Count: 0,
+              series: [],
+              issues: [],
+            };
+
+            assert.deepEqual(buildErrebotIdentityMatchPayload(parsed), [
+              {
+                externalKey: "100:1",
+                teamExternalId: "100",
+                playerIndex: 1,
+                firstName: "Alice",
+                lastName: "Alpha",
+                phone: "0600000001",
+              },
+              {
+                externalKey: "100:2",
+                teamExternalId: "100",
+                playerIndex: 2,
+                firstName: "Bob",
+                lastName: "Bravo",
+                phone: "0600000002",
+              },
+              {
+                externalKey: "101:1",
+                teamExternalId: "101",
+                playerIndex: 1,
+                firstName: "Chloe",
+                lastName: "Charlie",
+                phone: "0600000003",
+              },
+              {
+                externalKey: "101:2",
+                teamExternalId: "101",
+                playerIndex: 2,
+                firstName: "Dan",
+                lastName: "Delta",
+                phone: "0600000004",
+              },
+            ]);
+          });
+
+          test("le résumé distingue vérifiés suggestions conflits et absents", () => {
+            const base = {
+              externalKey: "100:1",
+              teamExternalId: "100",
+              playerIndex: 1,
+              firstName: "Alice",
+              lastName: "Alpha",
+              reason: "no_match",
+              externalIdentityId: null,
+              memberId: null,
+              profileId: null,
+              memberDisplayName: null,
+              licenceNumber: null,
+              clubId: null,
+              clubName: null,
+              linkedAccount: false,
+              memberActive: false,
+            };
+            const matches = [
+              { ...base, status: "verified" },
+              { ...base, externalKey: "100:2", status: "suggested" },
+              { ...base, externalKey: "101:1", status: "suggested" },
+              { ...base, externalKey: "101:2", status: "conflict" },
+              { ...base, externalKey: "102:1", status: "unmatched" },
+            ];
+            assert.deepEqual(summarizeErrebotIdentityMatches(matches), {
+              verified: 1,
+              suggested: 2,
+              conflict: 1,
+              unmatched: 1,
+            });
+          });
+
+          const migrationPath =
+            "../supabase/migrations/20260831113000_errebot_identity_matching.sql";
+
+          test("le RPC de rapprochement reste une prévisualisation sans écriture", async () => {
+            const migration = await readFile(new URL(migrationPath, import.meta.url), "utf8");
+            assert.match(migration, /admin_preview_errebot_identity_matches/);
+            assert.match(migration, /has_club_permission\(target_club_id, 'tournaments\.manage'\)/);
+            assert.match(migration, /normalize_member_identity/);
+            assert.match(migration, /normalize_tournament_phone/);
+            assert.match(migration, /reused_verified_identity/);
+            assert.match(migration, /exact_name_phone/);
+            assert.match(migration, /match_status := 'suggested'/);
+            assert.match(migration, /phone_name_conflict/);
+            assert.doesNotMatch(
+              migration,
+              /insert into public\.tournament_external_player_identities|update public\.tournament_external_player_identities/,
+            );
+          });
+
+          test("le RPC n'expose ni téléphone ni email dans sa réponse", async () => {
+            const migration = await readFile(new URL(migrationPath, import.meta.url), "utf8");
+            assert.doesNotMatch(migration, /'email'\s*,/);
+            assert.doesNotMatch(migration, /'phone'\s*,/);
+            assert.match(
+              migration,
+              /revoke all on function public\.admin_preview_errebot_identity_matches\(jsonb\)[\s\S]*from public, anon/,
+            );
+            assert.match(
+              migration,
+              /grant execute on function public\.admin_preview_errebot_identity_matches\(jsonb\)[\s\S]*to authenticated/,
+            );
+          });
+          EOF
+
+      - name: Compile identity helper in test build
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("tsconfig.test.json")
+          text = path.read_text(encoding="utf-8")
+          anchor = '    "src/features/admin/tournaments/domain/errebotParser.ts",\n'
+          addition = anchor + '    "src/features/admin/tournaments/domain/errebotIdentityMatching.ts",\n'
+          if text.count(anchor) != 1:
+              raise SystemExit("tsconfig Errebot parser anchor not found exactly once")
+          path.write_text(text.replace(anchor, addition), encoding="utf-8")
+          PY
+
+      - name: Format touched client files
+        run: >-
+          npx prettier --write
+          .github/workflows/pr125-errebot-identity-matching.yml
+          src/features/admin/tournaments/domain/errebotIdentityMatching.ts
+          src/features/admin/tournaments/services/errebotImportService.ts
+          src/features/admin/tournaments/pages/AdminTournamentImportPage.tsx
+          src/features/admin/tournaments/pages/AdminTournamentImportPage.css
+          tests/tournamentErrebotIdentityMatching.test.mjs
+          tsconfig.test.json
+
+      - run: npm run security:secrets
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run format:check
+
+      - name: Commit verified identity matching and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/pr125-errebot-identity-matching.yml
+          git add \
+            supabase/migrations/20260831113000_errebot_identity_matching.sql \
+            src/features/admin/tournaments/domain/errebotIdentityMatching.ts \
+            src/features/admin/tournaments/services/errebotImportService.ts \
+            src/features/admin/tournaments/pages/AdminTournamentImportPage.tsx \
+            src/features/admin/tournaments/pages/AdminTournamentImportPage.css \
+            tests/tournamentErrebotIdentityMatching.test.mjs \
+            tsconfig.test.json
+          git commit -m "feat(tournaments): preview Errebot identity matches"
+          git push origin HEAD:agent/errebot-import-foundation
