@@ -1,7 +1,10 @@
 import type { ErrebotTournamentParseResult } from "./errebotParser.js";
 
 export type ErrebotIdentityMatchStatus =
-  "verified" | "suggested" | "conflict" | "unmatched";
+  | "verified"
+  | "suggested"
+  | "conflict"
+  | "unmatched";
 
 export type ErrebotIdentityMatchRequest = {
   externalKey: string;
@@ -65,7 +68,7 @@ export const errebotIdentityStatusLabel = (
   status: ErrebotIdentityMatchStatus,
 ) =>
   ({
-    verified: "Déjà vérifié",
+    verified: "Vérifié",
     suggested: "Suggestion",
     conflict: "À contrôler",
     unmatched: "Non trouvé",
@@ -75,6 +78,7 @@ export const errebotIdentityReasonLabel = (reason: string) =>
   ({
     reused_verified_identity:
       "Identité Errebot déjà vérifiée lors d’un précédent tournoi",
+    admin_confirmed: "Rapprochement confirmé par un administrateur",
     exact_name_phone: "Nom, prénom et téléphone concordent",
     unique_name: "Un seul licencié porte ce nom et ce prénom",
     inactive_member: "La fiche licencié correspondante est inactive",
