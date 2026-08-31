@@ -108,6 +108,10 @@ const migrationPath =
   "../supabase/migrations/20260831113000_errebot_identity_matching.sql";
 const ambiguityFixMigrationPath =
   "../supabase/migrations/20260831120000_fix_errebot_identity_match_ambiguity.sql";
+const confirmationMigrationPath =
+  "../supabase/migrations/20260831123000_errebot_identity_confirmation.sql";
+const confirmationFixMigrationPath =
+  "../supabase/migrations/20260831123100_fix_errebot_confirmation_variables.sql";
 
 test("le RPC de rapprochement reste une prévisualisation sans écriture", async () => {
   const migration = await readFile(
@@ -193,4 +197,59 @@ test("le correctif SQL désambiguïse toutes les variables d'identité normalis�
     migration,
     /\b(first_name_normalized|last_name_normalized|phone_normalized) text;/,
   );
+});
+
+test("la validation admin accepte un licencié sans compte et trace l'auteur", async () => {
+  const migration = await readFile(
+    new URL(confirmationMigrationPath, import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    migration,
+    /verified_at is not null[\s\S]*member_id is not null or profile_id is not null/,
+  );
+  assert.match(migration, /add column if not exists verified_by uuid/);
+  assert.match(migration, /admin_confirm_errebot_identity_match/);
+  assert.match(migration, /verification_method[\s\S]*'admin_confirmation'/);
+  assert.match(migration, /verified_by = auth\.uid\(\)/);
+  assert.match(
+    migration,
+    /has_club_permission\(target_club_id, 'tournaments\.manage'\)/,
+  );
+});
+
+test("la recherche manuelle Errebot ne renvoie ni email ni téléphone", async () => {
+  const migration = await readFile(
+    new URL(confirmationMigrationPath, import.meta.url),
+    "utf8",
+  );
+  const start = migration.indexOf(
+    "create or replace function public.admin_search_errebot_identity_candidates",
+  );
+  const end = migration.indexOf(
+    "create or replace function public.admin_confirm_errebot_identity_match",
+    start,
+  );
+  assert.ok(start >= 0 && end > start);
+  const searchBlock = migration.slice(start, end);
+  assert.match(searchBlock, /'licenceNumber'/);
+  assert.match(searchBlock, /'clubName'/);
+  assert.doesNotMatch(searchBlock, /'email'\s*,/);
+  assert.doesNotMatch(searchBlock, /'phone'\s*,/);
+});
+
+test("la fonction finale de confirmation désambiguïse les champs bruts", async () => {
+  const migration = await readFile(
+    new URL(confirmationFixMigrationPath, import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /input_first_name text/);
+  assert.match(migration, /input_last_name text/);
+  assert.match(migration, /input_phone text/);
+  assert.match(migration, /first_name = input_first_name/);
+  assert.match(migration, /last_name = input_last_name/);
+  assert.match(migration, /phone = input_phone/);
+  assert.doesNotMatch(migration, /first_name = first_name/);
+  assert.doesNotMatch(migration, /last_name = last_name/);
+  assert.doesNotMatch(migration, /phone = phone/);
 });
