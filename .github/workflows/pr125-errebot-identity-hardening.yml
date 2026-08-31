@@ -29,50 +29,20 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
           path = Path("supabase/migrations/20260831113000_errebot_identity_matching.sql")
           text = path.read_text(encoding="utf-8")
-
-          old_index = """      or player_index not in (1, 2)\n"""
-          new_index = """      or player_index is null\n      or player_index not in (1, 2)\n"""
-          if text.count(old_index) != 1:
+          index_anchor = "      or player_index not in (1, 2)\n"
+          if text.count(index_anchor) != 1:
               raise SystemExit("player index validation anchor not found exactly once")
-          text = text.replace(old_index, new_index)
-
-          old_head = """      elsif exact_count > 1 then
-        match_status := 'conflict';
-        match_reason := 'ambiguous_exact';
-      elsif name_count = 1 then
-"""
-          new_head = """      elsif exact_count > 1 then
-        match_status := 'conflict';
-        match_reason := 'ambiguous_exact';
-      elsif phone_conflict_count > 0 then
-        match_status := 'conflict';
-        match_reason := 'phone_name_conflict';
-      elsif name_count = 1 then
-"""
-          if text.count(old_head) != 1:
-              raise SystemExit("matching priority head anchor not found exactly once")
-          text = text.replace(old_head, new_head)
-
-          old_tail = """      elsif name_count > 1 then
-        match_status := 'conflict';
-        match_reason := 'ambiguous_name';
-      elsif phone_conflict_count > 0 then
-        match_status := 'conflict';
-        match_reason := 'phone_name_conflict';
-      end if;
-"""
-          new_tail = """      elsif name_count > 1 then
-        match_status := 'conflict';
-        match_reason := 'ambiguous_name';
-      end if;
-"""
-          if text.count(old_tail) != 1:
-              raise SystemExit("matching priority tail anchor not found exactly once")
-          text = text.replace(old_tail, new_tail)
-
+          text = text.replace(index_anchor, "      or player_index is null\n      or player_index not in (1, 2)\n")
+          phone_block = "      elsif phone_conflict_count > 0 then\n        match_status := 'conflict';\n        match_reason := 'phone_name_conflict';\n"
+          if text.count(phone_block) != 1:
+              raise SystemExit("phone conflict block not found exactly once")
+          text = text.replace(phone_block, "")
+          unique_name_anchor = "      elsif name_count = 1 then\n"
+          if text.count(unique_name_anchor) != 1:
+              raise SystemExit("unique name anchor not found exactly once")
+          text = text.replace(unique_name_anchor, phone_block + unique_name_anchor)
           path.write_text(text, encoding="utf-8")
           PY
 
