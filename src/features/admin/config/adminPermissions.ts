@@ -114,6 +114,11 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.tournaments,
       },
       {
+        label: "Importer Errebot",
+        to: ROUTES.adminTournamentImport,
+        permission: ADMIN_PERMISSIONS.tournaments,
+      },
+      {
         label: "Équipes & inscriptions",
         to: ROUTES.adminTournamentTeams,
         permission: ADMIN_PERMISSIONS.tournaments,
