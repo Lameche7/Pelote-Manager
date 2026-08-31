@@ -106,6 +106,8 @@ test("le résumé distingue vérifiés suggestions conflits et absents", () => {
 
 const migrationPath =
   "../supabase/migrations/20260831113000_errebot_identity_matching.sql";
+const ambiguityFixMigrationPath =
+  "../supabase/migrations/20260831120000_fix_errebot_identity_match_ambiguity.sql";
 
 test("le RPC de rapprochement reste une prévisualisation sans écriture", async () => {
   const migration = await readFile(
@@ -165,4 +167,30 @@ test("le RPC rejette un index absent et priorise un téléphone déjà attribué
   assert.ok(phoneConflict >= 0);
   assert.ok(uniqueName >= 0);
   assert.ok(phoneConflict < uniqueName);
+});
+
+test("le correctif SQL désambiguïse toutes les variables d'identité normalisées", async () => {
+  const migration = await readFile(
+    new URL(ambiguityFixMigrationPath, import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /input_first_name_normalized text;/);
+  assert.match(migration, /input_last_name_normalized text;/);
+  assert.match(migration, /input_phone_normalized text;/);
+  assert.match(
+    migration,
+    /identity\.first_name_normalized = input_first_name_normalized/,
+  );
+  assert.match(
+    migration,
+    /member\.last_name_normalized = input_last_name_normalized/,
+  );
+  assert.match(
+    migration,
+    /normalize_tournament_phone\(coalesce\(member\.phone, ''\)\) = input_phone_normalized/,
+  );
+  assert.doesNotMatch(
+    migration,
+    /\b(first_name_normalized|last_name_normalized|phone_normalized) text;/,
+  );
 });
