@@ -1,8 +1,7 @@
 import { useState } from "react";
+import { ErrebotIdentityReview } from "@/features/admin/tournaments/components/ErrebotIdentityReview";
 import {
   buildErrebotIdentityMatchPayload,
-  errebotIdentityReasonLabel,
-  errebotIdentityStatusLabel,
   summarizeErrebotIdentityMatches,
   type ErrebotIdentityMatch,
 } from "@/features/admin/tournaments/domain/errebotIdentityMatching";
@@ -357,12 +356,12 @@ export function AdminTournamentImportPage() {
         </>
       )}
 
-      {step === 4 && identityMatches && matchSummary && (
+      {step === 4 && identityMatches && matchSummary && parsed && (
         <>
           <div className="admin-card admin-tournament-import__match-summary">
             <div>
               <strong>{matchSummary.verified}</strong>
-              <span>déjà vérifiés</span>
+              <span>vérifiés</span>
             </div>
             <div>
               <strong>{matchSummary.suggested}</strong>
@@ -378,75 +377,19 @@ export function AdminTournamentImportPage() {
             </div>
           </div>
 
-          <div className="admin-card admin-tournament-import__card">
-            <div>
-              <h2>Rapprochement des joueurs</h2>
-              <p>
-                Une identité déjà vérifiée peut être réutilisée. Toutes les
-                nouvelles concordances restent de simples suggestions jusqu’à
-                une validation explicite.
-              </p>
-            </div>
-            <div className="admin-tournament-import__table-wrap">
-              <table className="admin-tournament-import__table admin-tournament-import__matches">
-                <thead>
-                  <tr>
-                    <th>Équipe</th>
-                    <th>Joueur Errebot</th>
-                    <th>Statut</th>
-                    <th>Correspondance Pelote Manager</th>
-                    <th>Pourquoi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {identityMatches.map((match) => (
-                    <tr key={match.externalKey}>
-                      <td>#{match.teamExternalId}</td>
-                      <td>
-                        {match.firstName} {match.lastName}
-                      </td>
-                      <td>
-                        <span
-                          className={`admin-tournament-import__match-status is-${match.status}`}
-                        >
-                          {errebotIdentityStatusLabel(match.status)}
-                        </span>
-                      </td>
-                      <td>
-                        {match.memberDisplayName ? (
-                          <div className="admin-tournament-import__candidate">
-                            <strong>{match.memberDisplayName}</strong>
-                            <span>
-                              {match.licenceNumber ?? "Licence inconnue"}
-                              {match.clubName ? ` · ${match.clubName}` : ""}
-                              {match.linkedAccount ? " · compte lié" : ""}
-                            </span>
-                          </div>
-                        ) : match.profileId ? (
-                          "Compte Pelote Manager déjà vérifié"
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td>{errebotIdentityReasonLabel(match.reason)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="admin-tournament-import__privacy-note">
-              Aucun rapprochement proposé n’a encore été enregistré. L’étape
-              suivante ajoutera la confirmation explicite des suggestions avant
-              l’import transactionnel du tournoi.
-            </p>
-            <div className="admin-tournament-import__actions">
-              <button type="button" onClick={() => setStep(3)}>
-                Retour à la structure
-              </button>
-              <button type="button" onClick={reset}>
-                Tester un autre PDF
-              </button>
-            </div>
+          <ErrebotIdentityReview
+            matches={identityMatches}
+            requests={buildErrebotIdentityMatchPayload(parsed)}
+            onMatchesChange={setIdentityMatches}
+          />
+
+          <div className="admin-tournament-import__actions">
+            <button type="button" onClick={() => setStep(3)}>
+              Retour à la structure
+            </button>
+            <button type="button" onClick={reset}>
+              Tester un autre PDF
+            </button>
           </div>
         </>
       )}
