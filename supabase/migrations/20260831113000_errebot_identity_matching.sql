@@ -73,6 +73,7 @@ begin
 
     if external_key = ''
       or team_external_id = ''
+      or player_index is null
       or player_index not in (1, 2)
       or first_name = ''
       or last_name = '' then
@@ -183,6 +184,9 @@ begin
       elsif exact_count > 1 then
         match_status := 'conflict';
         match_reason := 'ambiguous_exact';
+      elsif phone_conflict_count > 0 then
+        match_status := 'conflict';
+        match_reason := 'phone_name_conflict';
       elsif name_count = 1 then
         select member.*
         into candidate
@@ -206,9 +210,6 @@ begin
       elsif name_count > 1 then
         match_status := 'conflict';
         match_reason := 'ambiguous_name';
-      elsif phone_conflict_count > 0 then
-        match_status := 'conflict';
-        match_reason := 'phone_name_conflict';
       end if;
 
       if candidate.id is not null then

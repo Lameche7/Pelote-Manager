@@ -151,3 +151,18 @@ test("le RPC n'expose ni téléphone ni email dans sa réponse", async () => {
     /grant execute on function public\.admin_preview_errebot_identity_matches\(jsonb\)[\s\S]*to authenticated/,
   );
 });
+
+test("le RPC rejette un index absent et priorise un téléphone déjà attribué", async () => {
+  const migration = await readFile(
+    new URL(migrationPath, import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /or player_index is null/);
+  const phoneConflict = migration.indexOf(
+    "elsif phone_conflict_count > 0 then",
+  );
+  const uniqueName = migration.indexOf("elsif name_count = 1 then");
+  assert.ok(phoneConflict >= 0);
+  assert.ok(uniqueName >= 0);
+  assert.ok(phoneConflict < uniqueName);
+});
