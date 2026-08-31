@@ -5,7 +5,7 @@
 
 .admin-tournament-import__steps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.65rem;
   margin: 0;
   padding: 0;
@@ -223,4 +223,82 @@
 .admin-tournament-import__issues ul {
   margin: 0.5rem 0 0;
   padding-left: 1.25rem;
+}
+
+.admin-tournament-import__privacy-note {
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  background: rgb(30 90 168 / 7%);
+  font-size: 0.84rem;
+}
+
+.admin-tournament-import__match-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-tournament-import__match-summary > div {
+  display: grid;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.admin-tournament-import__match-summary strong {
+  font-size: 1.35rem;
+}
+
+.admin-tournament-import__match-summary span {
+  font-size: 0.75rem;
+  opacity: 0.64;
+}
+
+.admin-tournament-import__match-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.admin-tournament-import__match-status.is-verified {
+  color: #166534;
+  background: rgb(22 101 52 / 10%);
+}
+
+.admin-tournament-import__match-status.is-suggested {
+  color: #1e5aa8;
+  background: rgb(30 90 168 / 10%);
+}
+
+.admin-tournament-import__match-status.is-conflict {
+  color: #92400e;
+  background: rgb(180 83 9 / 12%);
+}
+
+.admin-tournament-import__match-status.is-unmatched {
+  color: #4b5563;
+  background: rgb(75 85 99 / 10%);
+}
+
+.admin-tournament-import__candidate {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.admin-tournament-import__candidate span {
+  font-size: 0.75rem;
+  opacity: 0.68;
+}
+
+.admin-tournament-import__matches td {
+  vertical-align: top;
+}
+
+@media (max-width: 760px) {
+  .admin-tournament-import__match-summary {
+    grid-template-columns: 1fr 1fr;
+  }
 }
