@@ -13,12 +13,12 @@ do $$
 declare
   constraint_name text;
 begin
-  select constraint.conname
+  select c.conname
   into constraint_name
-  from pg_constraint as constraint
-  where constraint.conrelid = 'public.tournament_external_player_identities'::regclass
-    and constraint.contype = 'c'
-    and pg_get_constraintdef(constraint.oid) ilike '%status <> ''verified''%'
+  from pg_constraint as c
+  where c.conrelid = 'public.tournament_external_player_identities'::regclass
+    and c.contype = 'c'
+    and pg_get_constraintdef(c.oid) ilike '%status <> ''verified''%'
   limit 1;
 
   if constraint_name is not null then
