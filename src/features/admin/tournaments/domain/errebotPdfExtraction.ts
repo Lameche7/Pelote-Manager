@@ -1,3 +1,5 @@
+import { reconstructErrebotPdfRows } from "./errebotPdfLayout";
+
 export type ExtractedErrebotPdf = {
   pageCount: number;
   text: string;
@@ -34,11 +36,24 @@ export const extractErrebotPdfText = async (
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
       const page = await document.getPage(pageNumber);
       const content = await page.getTextContent();
-      const text = content.items
-        .flatMap((item) => ("str" in item ? [item.str] : []))
-        .join(" ")
-        .replace(/[\t ]+/g, " ")
-        .trim();
+      const text = reconstructErrebotPdfRows(
+        content.items.flatMap((item) =>
+          "str" in item && item.str.trim()
+            ? [
+                {
+                  text: item.str,
+
+                  x: item.transform[4],
+
+                  y: item.transform[5],
+
+                  width: item.width,
+                },
+              ]
+            : [],
+        ),
+      );
+
       pages.push(text);
     }
   } finally {

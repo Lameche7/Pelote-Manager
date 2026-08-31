@@ -32,6 +32,8 @@
     "src/features/admin/members/domain/importPreview.ts",
     "src/features/admin/members/domain/importWorkflow.ts",
     "src/features/admin/tournaments/domain/errebotImportPreview.ts",
+    "src/features/admin/tournaments/domain/errebotPdfLayout.ts",
+    "src/features/admin/tournaments/domain/errebotParser.ts",
     "src/features/auth/domain/accountProfileFinalization.ts",
     "src/features/home/domain/publicEventPresentation.ts",
     "src/features/members/domain/memberRegistration.ts",

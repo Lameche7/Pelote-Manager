@@ -9,6 +9,10 @@ import {
   extractErrebotPdfText,
   sha256File,
 } from "@/features/admin/tournaments/domain/errebotPdfExtraction";
+import {
+  parseErrebotTournament,
+  type ErrebotTournamentParseResult,
+} from "@/features/admin/tournaments/domain/errebotParser";
 import "./AdminTournamentImportPage.css";
 
 type SelectedPdf = {
@@ -21,6 +25,9 @@ const steps = ["Fichier", "Contrôle", "Prévisualisation"] as const;
 export function AdminTournamentImportPage() {
   const [selected, setSelected] = useState<SelectedPdf | null>(null);
   const [preview, setPreview] = useState<ErrebotExtractionPreview | null>(null);
+  const [parsed, setParsed] = useState<ErrebotTournamentParseResult | null>(
+    null,
+  );
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -28,6 +35,7 @@ export function AdminTournamentImportPage() {
   const reset = () => {
     setSelected(null);
     setPreview(null);
+    setParsed(null);
     setError("");
     setStep(1);
   };
@@ -35,6 +43,7 @@ export function AdminTournamentImportPage() {
   const selectFile = async (file: File) => {
     setError("");
     setPreview(null);
+    setParsed(null);
     const validationError = validateErrebotPdfSelection(file);
     if (validationError) {
       setError(validationError);
@@ -73,7 +82,9 @@ export function AdminTournamentImportPage() {
         );
         return;
       }
+      const nextParsed = parseErrebotTournament(extracted.text);
       setPreview(nextPreview);
+      setParsed(nextParsed);
       setStep(3);
     } catch (cause) {
       setError(
@@ -182,21 +193,77 @@ export function AdminTournamentImportPage() {
         </div>
       )}
 
-      {step === 3 && selected && preview && (
+      {step === 3 && selected && preview && parsed && (
         <>
           <div className="admin-card admin-tournament-import__summary">
             <div>
-              <strong>{preview.pageCount}</strong>
-              <span>page{preview.pageCount > 1 ? "s" : ""}</span>
+              <strong>{parsed.teams.length}</strong>
+              <span>équipes</span>
             </div>
             <div>
-              <strong>{preview.lineCount}</strong>
-              <span>lignes utiles</span>
+              <strong>{parsed.pools.length}</strong>
+              <span>poules</span>
             </div>
             <div>
-              <strong>{preview.characterCount}</strong>
-              <span>caractères extraits</span>
+              <strong>{parsed.poolSize3Count}</strong>
+              <span>poules de 3</span>
             </div>
+            <div>
+              <strong>{parsed.fixtures.length}</strong>
+              <span>matchs</span>
+            </div>
+            <div>
+              <strong>{parsed.emptySlotCount}</strong>
+              <span>créneaux libres</span>
+            </div>
+          </div>
+
+          <div className="admin-card admin-tournament-import__card">
+            <div>
+              <h2>Structure détectée</h2>
+              <p>
+                Parser {parsed.parserVersion} · {preview.pageCount} page
+                {preview.pageCount > 1 ? "s" : ""} · {preview.lineCount} lignes
+                utiles.
+              </p>
+            </div>
+            <div className="admin-tournament-import__table-wrap">
+              <table className="admin-tournament-import__table">
+                <thead>
+                  <tr>
+                    <th>Série</th>
+                    <th>Équipes</th>
+                    <th>Poules</th>
+                    <th>Matchs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.series.map((series) => (
+                    <tr key={series.series}>
+                      <td>{series.series}</td>
+                      <td>{series.teamCount}</td>
+                      <td>{series.poolCount}</td>
+                      <td>{series.fixtureCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {parsed.issues.length === 0 ? (
+              <p className="admin-tournament-import__success">
+                Structure cohérente : chaque équipe appartient à une seule poule
+                et le calendrier couvre exactement les confrontations attendues.
+              </p>
+            ) : (
+              <div className="admin-tournament-import__issues" role="alert">
+                <strong>{parsed.issues.length} anomalie(s) détectée(s)</strong>
+                <ul>
+                  {parsed.issues.slice(0, 10).map((issue, index) => (
+                    <li key={`${issue.code}-${index}`}>{issue.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="admin-card admin-tournament-import__card">
