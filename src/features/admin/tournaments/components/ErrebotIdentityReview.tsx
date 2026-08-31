@@ -133,7 +133,10 @@ export function ErrebotIdentityReview({
         </p>
       </div>
 
-      <div className="errebot-identity-review__filters" aria-label="Filtrer les joueurs">
+      <div
+        className="errebot-identity-review__filters"
+        aria-label="Filtrer les joueurs"
+      >
         {filterLabels.map((item) => (
           <button
             key={item.value}
@@ -232,7 +235,9 @@ export function ErrebotIdentityReview({
                           <input
                             value={searchText}
                             autoFocus
-                            onChange={(event) => void search(event.target.value)}
+                            onChange={(event) =>
+                              void search(event.target.value)
+                            }
                             placeholder="Nom, prénom ou numéro de licence"
                           />
                         </label>
@@ -256,7 +261,8 @@ export function ErrebotIdentityReview({
                               <span>
                                 <strong>{candidate.displayName}</strong>
                                 <small>
-                                  {candidate.licenceNumber ?? "Licence inconnue"}
+                                  {candidate.licenceNumber ??
+                                    "Licence inconnue"}
                                   {candidate.clubName
                                     ? ` · ${candidate.clubName}`
                                     : ""}
@@ -269,7 +275,9 @@ export function ErrebotIdentityReview({
                                 type="button"
                                 className="admin-tournament-import__primary"
                                 disabled={busyKey === match.externalKey}
-                                onClick={() => void confirm(match, candidate.id)}
+                                onClick={() =>
+                                  void confirm(match, candidate.id)
+                                }
                               >
                                 Associer
                               </button>

@@ -1,10 +1,7 @@
 import type { ErrebotTournamentParseResult } from "./errebotParser.js";
 
 export type ErrebotIdentityMatchStatus =
-  | "verified"
-  | "suggested"
-  | "conflict"
-  | "unmatched";
+  "verified" | "suggested" | "conflict" | "unmatched";
 
 export type ErrebotIdentityMatchRequest = {
   externalKey: string;
