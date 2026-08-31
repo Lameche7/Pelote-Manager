@@ -17,8 +17,12 @@ const migrationPath =
   "../supabase/migrations/20260811103000_add_tournament_pool_engine.sql";
 const upgradeMigrationPath =
   "../supabase/migrations/20260811114500_upgrade_tournament_pool_engine_adaptive.sql";
+const importFoundationMigrationPath =
+  "../supabase/migrations/20260831100000_errebot_import_foundation.sql";
 
-test("la proposition automatique privilegie au maximum les poules de 4", () => {
+test("la proposition automatique privilegie au maximum les poules de 4 et garde les poules de 3 exceptionnelles", () => {
+  assert.deepEqual(poolSizesFor(3), [3]);
+  assert.deepEqual(poolSizesFor(7), [3, 4]);
   assert.deepEqual(poolSizesFor(8), [4, 4]);
   assert.deepEqual(poolSizesFor(10), [4, 6]);
   assert.deepEqual(poolSizesFor(11), [5, 6]);
@@ -27,14 +31,14 @@ test("la proposition automatique privilegie au maximum les poules de 4", () => {
   assert.deepEqual(poolSizesFor(24), [4, 4, 4, 4, 4, 4]);
   assert.deepEqual(poolSizesFor(26), [4, 4, 4, 4, 4, 6]);
   assert.deepEqual(poolSizesFor(32), [4, 4, 4, 4, 4, 4, 4, 4]);
-  assert.deepEqual(poolSizesFor(7), []);
 });
 
-test("une repartition admin doit utiliser 4 5 6 et couvrir toutes les equipes", () => {
+test("une repartition admin doit utiliser 3 4 5 6 et couvrir toutes les equipes", () => {
+  assert.equal(poolSizesAreValidFor(10, [3, 3, 4]), true);
   assert.equal(poolSizesAreValidFor(32, [4, 4, 4, 4, 4, 4, 4, 4]), true);
   assert.equal(poolSizesAreValidFor(32, [5, 5, 5, 5, 6, 6]), true);
   assert.equal(poolSizesAreValidFor(32, [4, 4, 4, 4, 5, 5]), false);
-  assert.equal(poolSizesAreValidFor(32, [3, 5, 6, 6, 6, 6]), false);
+  assert.equal(poolSizesAreValidFor(32, [2, 6, 6, 6, 6, 6]), false);
 });
 
 test("la generation attribue chaque equipe une seule fois avec la proposition auto", () => {
@@ -61,17 +65,17 @@ test("la generation attribue chaque equipe une seule fois avec la proposition au
   );
 });
 
-test("l administrateur peut imposer une repartition valide", () => {
-  const teams = Array.from({ length: 32 }, (_, index) => ({
+test("l administrateur peut imposer une repartition valide avec des poules de 3", () => {
+  const teams = Array.from({ length: 10 }, (_, index) => ({
     id: `team-${index + 1}`,
     seriesId: "series-1",
     clubNames: [],
   }));
   const generated = generateOptimizedPools({
-    series: [{ id: "series-1", name: "3e serie", teams }],
+    series: [{ id: "series-1", name: "1re serie", teams }],
     pairings: [],
     poolSizesBySeries: {
-      "series-1": [5, 5, 5, 5, 6, 6],
+      "series-1": [3, 3, 4],
     },
     random: () => 0.42,
     iterationsPerSeries: 0,
@@ -79,7 +83,7 @@ test("l administrateur peut imposer une repartition valide", () => {
 
   assert.deepEqual(
     generated.map((pool) => pool.teams.length),
-    [5, 5, 5, 5, 6, 6],
+    [3, 3, 4],
   );
 });
 
@@ -150,58 +154,57 @@ test("deux equipes peuvent etre echangees entre poules de la meme serie", () => 
   assert.equal(swapped[1].teams[0].teamId, "a");
 });
 
-test("un deplacement direct reste entre 4 et 6 equipes", () => {
+test("un deplacement direct reste entre 3 et 6 equipes", () => {
   const pools = [
     {
       key: "p1",
       seriesId: "s1",
       displayOrder: 0,
-      targetSize: 6,
-      teams: ["a", "b", "c", "d", "e", "f"].map((teamId) => ({ teamId })),
+      targetSize: 4,
+      teams: ["a", "b", "c", "d"].map((teamId) => ({ teamId })),
     },
     {
       key: "p2",
       seriesId: "s1",
       displayOrder: 1,
-      targetSize: 4,
-      teams: ["g", "h", "i", "j"].map((teamId) => ({ teamId })),
+      targetSize: 5,
+      teams: ["e", "f", "g", "h", "i"].map((teamId) => ({ teamId })),
     },
   ];
 
   const moved = movePoolTeam(pools, "a", "p2");
-  assert.equal(moved[0].teams.length, 5);
-  assert.equal(moved[1].teams.length, 5);
+  assert.equal(moved[0].teams.length, 3);
+  assert.equal(moved[1].teams.length, 6);
 });
 
-test("la base securise la composition 4 5 6 et permet de rouvrir", async () => {
-  const migration = await read(migrationPath);
+test("les migrations historiques restent lisibles et PR124 etend la base a 3 4 5 6", async () => {
+  const [migration, upgradeMigration, foundationMigration] = await Promise.all([
+    read(migrationPath),
+    read(upgradeMigrationPath),
+    read(importFoundationMigrationPath),
+  ]);
 
   assert.match(migration, /create table public\.tournament_pools/);
   assert.match(migration, /create table public\.tournament_pool_teams/);
-  assert.match(migration, /admin_get_tournament_pool_workspace/);
-  assert.match(migration, /admin_save_tournament_pools/);
-  assert.match(migration, /admin_validate_tournament_pools/);
-  assert.match(migration, /admin_reopen_tournament_pools/);
   assert.match(migration, /target_size in \(4, 5, 6\)/);
-  assert.match(
-    migration,
-    /Every accepted team must belong to exactly one pool/,
-  );
   assert.doesNotMatch(migration, /is_locked/);
-});
 
-test("une base ayant deja la premiere version PR70 est mise a niveau sans recreer les tables", async () => {
-  const migration = await read(upgradeMigrationPath);
-
-  assert.doesNotMatch(migration, /create table public\.tournament_pools/);
+  assert.doesNotMatch(upgradeMigration, /create table public\.tournament_pools/);
   assert.match(
-    migration,
+    upgradeMigration,
     /drop constraint if exists tournament_pools_target_size_check/,
   );
-  assert.match(migration, /target_size in \(4, 5, 6\)/);
-  assert.match(migration, /admin_save_tournament_pools/);
-  assert.match(migration, /admin_validate_tournament_pools/);
-  assert.match(migration, /admin_reopen_tournament_pools/);
+  assert.match(upgradeMigration, /target_size in \(4, 5, 6\)/);
+
+  assert.match(
+    foundationMigration,
+    /target_size in \(3, 4, 5, 6\)/,
+  );
+  assert.match(foundationMigration, /admin_save_tournament_pools/);
+  assert.match(
+    foundationMigration,
+    /Every accepted team must belong to exactly one pool/,
+  );
 });
 
 test("l atelier admin propose et laisse choisir la repartition", async () => {
