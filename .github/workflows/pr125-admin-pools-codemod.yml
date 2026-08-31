@@ -1,0 +1,95 @@
+name: PR125 admin pools codemod
+
+on:
+  push:
+    branches:
+      - agent/errebot-import-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/errebot-import-foundation
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Expose three-team pools in admin
+        shell: python
+        run: |
+          from pathlib import Path
+
+          page = Path("src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx")
+          text = page.read_text(encoding="utf-8")
+
+          replacements = [
+              (
+                  "type PoolCounts = {\n  4: number;\n  5: number;\n  6: number;\n};",
+                  "type PoolCounts = {\n  3: number;\n  4: number;\n  5: number;\n  6: number;\n};",
+              ),
+              (
+                  "const emptyPoolCounts = (): PoolCounts => ({ 4: 0, 5: 0, 6: 0 });",
+                  "const emptyPoolCounts = (): PoolCounts => ({ 3: 0, 4: 0, 5: 0, 6: 0 });",
+              ),
+              (
+                  "    if (size === 4 || size === 5 || size === 6) result[size] += 1;",
+                  "    if (size === 3 || size === 4 || size === 5 || size === 6) result[size] += 1;",
+              ),
+              (
+                  "const poolSizesFromCounts = (counts: PoolCounts): (4 | 5 | 6)[] => [\n  ...Array.from({ length: Math.max(counts[4], 0) }, () => 4 as const),",
+                  "const poolSizesFromCounts = (counts: PoolCounts): (3 | 4 | 5 | 6)[] => [\n  ...Array.from({ length: Math.max(counts[3], 0) }, () => 3 as const),\n  ...Array.from({ length: Math.max(counts[4], 0) }, () => 4 as const),",
+              ),
+              ("  return ([4, 5, 6] as const)", "  return ([3, 4, 5, 6] as const)"),
+              (
+                  "  const changePoolSizeCount = (size: 4 | 5 | 6, value: number) => {",
+                  "  const changePoolSizeCount = (size: 3 | 4 | 5 | 6, value: number) => {",
+              ),
+              (
+                  "            une autre répartition de poules de 4, 5 ou 6.",
+                  "            une autre répartition de poules de 3, 4, 5 ou 6.",
+              ),
+              (
+                  "                  {([4, 5, 6] as const).map((size) => (",
+                  "                  {([3, 4, 5, 6] as const).map((size) => (",
+              ),
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected exactly one occurrence, found {count}: {old!r}")
+              text = text.replace(old, new)
+
+          page.write_text(text, encoding="utf-8")
+
+          css = Path("src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css")
+          css_text = css.read_text(encoding="utf-8")
+          old_css = ".admin-tournament-pools__distribution-controls {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(5.5rem, 1fr));"
+          new_css = ".admin-tournament-pools__distribution-controls {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(5.5rem, 1fr));"
+          if css_text.count(old_css) != 1:
+              raise SystemExit("Expected the distribution grid declaration exactly once")
+          css.write_text(css_text.replace(old_css, new_css), encoding="utf-8")
+
+      - run: npm ci
+      - run: npx prettier --write src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run format:check
+
+      - name: Commit the verified change and remove this one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/admin/tournaments/pages/AdminTournamentPoolsPage.tsx src/features/admin/tournaments/pages/AdminTournamentPoolsPage.css
+          git rm .github/workflows/pr125-admin-pools-codemod.yml
+          git commit -m "feat(tournaments): expose three-team pools in admin"
+          git push origin HEAD:agent/errebot-import-foundation
