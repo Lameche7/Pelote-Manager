@@ -55,6 +55,13 @@ jobs:
         run: npx prettier --check tests/protectedRouteAccess.test.mjs tests/roles.test.mjs tsconfig.test.json
         continue-on-error: true
 
+      - name: Diagnostic Prettier PR125
+        run: |
+          npx prettier --write src/features/tournaments/domain/poolEngine.ts tests/tournamentErrebotImportFoundation.test.mjs tests/tournamentPoolEngine.test.mjs
+          git diff -- src/features/tournaments/domain/poolEngine.ts tests/tournamentErrebotImportFoundation.test.mjs tests/tournamentPoolEngine.test.mjs
+          git checkout -- src/features/tournaments/domain/poolEngine.ts tests/tournamentErrebotImportFoundation.test.mjs tests/tournamentPoolEngine.test.mjs
+        continue-on-error: true
+
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
