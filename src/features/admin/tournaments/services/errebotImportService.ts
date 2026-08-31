@@ -7,11 +7,14 @@ import type {
 } from "../domain/errebotIdentityMatching";
 
 type Row = Record<string, unknown>;
-type SupabaseDiagnosticError = {
-  code?: string;
-  message?: string;
-  details?: string;
-  hint?: string;
+
+export type ErrebotIdentityCandidate = {
+  id: string;
+  displayName: string;
+  licenceNumber: string | null;
+  clubName: string | null;
+  linkedAccount: boolean;
+  memberActive: boolean;
 };
 
 const statuses = new Set<ErrebotIdentityMatchStatus>([
@@ -52,6 +55,22 @@ const mapMatch = (value: unknown): ErrebotIdentityMatch => {
   };
 };
 
+const mapCandidate = (value: unknown): ErrebotIdentityCandidate => {
+  const row = (value ?? {}) as Row;
+  return {
+    id: String(row.id ?? ""),
+    displayName: String(row.displayName ?? ""),
+    licenceNumber: nullableString(row.licenceNumber),
+    clubName: nullableString(row.clubName),
+    linkedAccount: Boolean(row.linkedAccount),
+    memberActive: Boolean(row.memberActive),
+  };
+};
+
+const fail = (error: unknown, fallback: string): never => {
+  throw new Error(getSupabaseErrorMessage(error, fallback));
+};
+
 export const errebotImportService = {
   async previewIdentityMatches(
     payload: ErrebotIdentityMatchRequest[],
@@ -60,29 +79,39 @@ export const errebotImportService = {
       "admin_preview_errebot_identity_matches",
       { payload },
     );
-    if (error) {
-      const diagnostic = error as SupabaseDiagnosticError;
-      const technicalDetails = [
-        diagnostic.code,
-        diagnostic.message,
-        diagnostic.details,
-        diagnostic.hint,
-      ]
-        .filter((value): value is string => Boolean(value))
-        .join(" · ");
-      const friendlyMessage = getSupabaseErrorMessage(
-        error,
-        "Impossible d’analyser les rapprochements de joueurs Errebot.",
-      );
-      throw new Error(
-        technicalDetails
-          ? `${friendlyMessage} — Diagnostic : ${technicalDetails}`
-          : friendlyMessage,
-      );
-    }
+    if (error) fail(error, "Impossible d’analyser les rapprochements Errebot.");
     if (!Array.isArray(data)) {
       throw new Error("Réponse de rapprochement Errebot invalide.");
     }
     return data.map(mapMatch);
+  },
+
+  async searchIdentityCandidates(
+    searchText: string,
+  ): Promise<ErrebotIdentityCandidate[]> {
+    const { data, error } = await supabase.rpc(
+      "admin_search_errebot_identity_candidates",
+      { search_text: searchText.trim() },
+    );
+    if (error) fail(error, "Impossible de rechercher les licenciés.");
+    if (!Array.isArray(data)) return [];
+    return data.map(mapCandidate).filter((candidate) => candidate.id);
+  },
+
+  async confirmIdentityMatch(
+    request: ErrebotIdentityMatchRequest,
+    memberId: string,
+  ): Promise<ErrebotIdentityMatch> {
+    const { data, error } = await supabase.rpc(
+      "admin_confirm_errebot_identity_match",
+      {
+        payload: {
+          ...request,
+          memberId,
+        },
+      },
+    );
+    if (error) fail(error, "Impossible de confirmer ce rapprochement.");
+    return mapMatch(data);
   },
 };
