@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   tournamentRescheduleService,
   type TournamentRescheduleFreeSlot,
+  type TournamentRescheduleOption,
   type TournamentRescheduleOptions,
   type TournamentRescheduleSwap,
 } from "@/features/user-space/tournaments/services/tournamentRescheduleService";
@@ -11,6 +12,7 @@ type Props = {
   matchId: string;
   teamId: string;
   onClose: () => void;
+  onCreated?: () => Promise<void> | void;
 };
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -78,9 +80,13 @@ function RequesterWarnings({
 function FreeSlotCard({
   option,
   availabilityUnknown,
+  disabled,
+  onChoose,
 }: {
   option: TournamentRescheduleFreeSlot;
   availabilityUnknown: boolean;
+  disabled: boolean;
+  onChoose: () => void;
 }) {
   return (
     <article className="tournament-reschedule__option">
@@ -106,11 +112,27 @@ function FreeSlotCard({
         option={option}
         availabilityUnknown={availabilityUnknown}
       />
+      <button
+        className="tournament-reschedule__choose"
+        type="button"
+        disabled={disabled}
+        onClick={onChoose}
+      >
+        {disabled ? "Création…" : "Demander ce créneau"}
+      </button>
     </article>
   );
 }
 
-function SwapCard({ option }: { option: TournamentRescheduleSwap }) {
+function SwapCard({
+  option,
+  disabled,
+  onChoose,
+}: {
+  option: TournamentRescheduleSwap;
+  disabled: boolean;
+  onChoose: () => void;
+}) {
   return (
     <article className="tournament-reschedule__option">
       <div className="tournament-reschedule__option-heading">
@@ -147,24 +169,41 @@ function SwapCard({ option }: { option: TournamentRescheduleSwap }) {
         pas de partie supplémentaire le même jour avec cet échange.
       </p>
       <RequesterWarnings option={option} />
+      <button
+        className="tournament-reschedule__choose"
+        type="button"
+        disabled={disabled}
+        onClick={onChoose}
+      >
+        {disabled ? "Création…" : "Demander cet échange"}
+      </button>
     </article>
   );
 }
+
+const optionKey = (option: TournamentRescheduleOption) =>
+  option.kind === "swap"
+    ? `swap:${option.swapMatchId}`
+    : `free:${option.resourceId}:${option.playDate}:${option.startsAt}`;
 
 export function TournamentRescheduleSuggestions({
   matchId,
   teamId,
   onClose,
+  onCreated,
 }: Props) {
   const [options, setOptions] = useState<TournamentRescheduleOptions | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
+  const [savingKey, setSavingKey] = useState("");
+  const [created, setCreated] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setCreated(false);
     setError("");
     tournamentRescheduleService
       .getOptions(matchId, teamId)
@@ -187,6 +226,25 @@ export function TournamentRescheduleSuggestions({
       active = false;
     };
   }, [matchId, teamId]);
+
+  const choose = async (option: TournamentRescheduleOption) => {
+    const key = optionKey(option);
+    setSavingKey(key);
+    setError("");
+    try {
+      await tournamentRescheduleService.createRequest(matchId, teamId, option);
+      setCreated(true);
+      await onCreated?.();
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible de créer la demande de report.",
+      );
+    } finally {
+      setSavingKey("");
+    }
+  };
 
   const freeSlots = options?.freeSlots ?? [];
   const swaps = options?.swaps ?? [];
@@ -230,7 +288,18 @@ export function TournamentRescheduleSuggestions({
         </p>
       )}
 
-      {!loading && !error && options && (
+      {created && (
+        <div className="tournament-reschedule__success" role="status">
+          <strong>Demande créée.</strong>
+          <span>
+            Les autres équipes concernées la retrouveront dans « Reports à
+            traiter ». Aucun match n’est déplacé tant que tous les accords ne
+            sont pas réunis puis appliqués par l’organisation.
+          </span>
+        </div>
+      )}
+
+      {!loading && !created && options && (
         <>
           {availabilityIncomplete && !swapsEnabled && (
             <p className="tournament-reschedule__policy" role="status">
@@ -291,6 +360,8 @@ export function TournamentRescheduleSuggestions({
                         key={`${option.resourceId}-${option.playDate}-${option.startsAt}`}
                         option={option}
                         availabilityUnknown={availabilityIncomplete}
+                        disabled={Boolean(savingKey)}
+                        onChoose={() => void choose(option)}
                       />
                     ))}
                   </div>
@@ -314,7 +385,12 @@ export function TournamentRescheduleSuggestions({
                   <h5>Échanges de créneaux</h5>
                   <div className="tournament-reschedule__list">
                     {visibleSwaps.map((option) => (
-                      <SwapCard key={option.swapMatchId} option={option} />
+                      <SwapCard
+                        key={option.swapMatchId}
+                        option={option}
+                        disabled={Boolean(savingKey)}
+                        onChoose={() => void choose(option)}
+                      />
                     ))}
                   </div>
                   {swaps.length > visibleSwaps.length && (
@@ -331,8 +407,8 @@ export function TournamentRescheduleSuggestions({
           )}
 
           <p className="tournament-reschedule__preview-note">
-            Cette étape est une prévisualisation : aucune partie n’est déplacée
-            tant que le circuit d’accord des équipes n’est pas activé.
+            Votre choix crée une demande et fige cette proposition. Aucune partie
+            n’est déplacée à cette étape.
           </p>
         </>
       )}
