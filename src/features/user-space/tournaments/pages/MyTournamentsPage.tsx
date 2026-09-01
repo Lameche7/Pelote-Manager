@@ -597,9 +597,7 @@ export function MyTournamentsPage() {
           </p>
         )}
 
-        <TournamentRescheduleRequestsPanel
-          refreshKey={rescheduleRefreshKey}
-        />
+        <TournamentRescheduleRequestsPanel refreshKey={rescheduleRefreshKey} />
 
         <div
           className="my-tournaments__tabs"

@@ -23,7 +23,8 @@ export type AdminTournamentRescheduleRequest = {
   requesterTeamId: string;
   requesterLabel: string;
   proposalKind: "free_slot" | "swap";
-  status: "pending" | "approved" | "rejected" | "cancelled" | "stale" | "applied";
+  status:
+    "pending" | "approved" | "rejected" | "cancelled" | "stale" | "applied";
   original: {
     playDate: string;
     startsAt: string;

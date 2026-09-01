@@ -407,8 +407,8 @@ export function TournamentRescheduleSuggestions({
           )}
 
           <p className="tournament-reschedule__preview-note">
-            Votre choix crée une demande et fige cette proposition. Aucune partie
-            n’est déplacée à cette étape.
+            Votre choix crée une demande et fige cette proposition. Aucune
+            partie n’est déplacée à cette étape.
           </p>
         </>
       )}

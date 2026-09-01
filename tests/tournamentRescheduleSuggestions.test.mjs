@@ -171,8 +171,14 @@ test("un tournoi Errebot sans disponibilités importées ne propose jamais d'éc
 });
 
 test("une demande fige uniquement une proposition encore valide sans déplacer le planning", () => {
-  assert.match(requestMigration, /create table if not exists public\.tournament_reschedule_requests/);
-  assert.match(requestMigration, /create table if not exists public\.tournament_reschedule_approvals/);
+  assert.match(
+    requestMigration,
+    /create table if not exists public\.tournament_reschedule_requests/,
+  );
+  assert.match(
+    requestMigration,
+    /create table if not exists public\.tournament_reschedule_approvals/,
+  );
   assert.match(
     requestMigration,
     /public\.get_my_tournament_reschedule_options\(\s*target_match_id,\s*requester_team_id\s*\)/s,
@@ -180,13 +186,22 @@ test("une demande fige uniquement une proposition encore valide sans déplacer l
   assert.match(requestMigration, /proposal_snapshot/);
   assert.match(requestMigration, /proposal is no longer available/);
   assert.match(requestMigration, /where status in \('pending', 'approved'\)/);
-  assert.doesNotMatch(requestMigration, /update public\.tournament_match_planning/);
-  assert.doesNotMatch(requestMigration, /delete from public\.tournament_match_planning/);
+  assert.doesNotMatch(
+    requestMigration,
+    /update public\.tournament_match_planning/,
+  );
+  assert.doesNotMatch(
+    requestMigration,
+    /delete from public\.tournament_match_planning/,
+  );
 });
 
 test("un accord vaut pour une équipe et toutes les équipes concernées doivent répondre", () => {
   assert.match(requestMigration, /primary key \(request_id, team_id\)/);
-  assert.match(requestMigration, /array\[requester_team_id, opponent_team_id\]/);
+  assert.match(
+    requestMigration,
+    /array\[requester_team_id, opponent_team_id\]/,
+  );
   assert.match(requestMigration, /swap_team_a_id/);
   assert.match(requestMigration, /swap_team_b_id/);
   assert.match(
@@ -211,7 +226,10 @@ test("les équipes sans compte relié restent visibles et ne sont jamais auto-va
   assert.match(requestMigration, /'app_actor_count'/);
   assert.match(requestsPanel, /aucun\s+compte Pelote Manager relié/);
   assert.match(adminPage, /aucun compte relié/);
-  assert.match(adminPage, /ne considère pas ces équipes comme ayant donné\s+leur accord/);
+  assert.match(
+    adminPage,
+    /ne considère pas ces équipes comme ayant donné\s+leur accord/,
+  );
 });
 
 test("Mes tournois permet de créer et traiter une demande sans appliquer encore le déplacement", () => {

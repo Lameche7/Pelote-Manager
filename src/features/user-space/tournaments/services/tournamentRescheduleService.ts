@@ -9,8 +9,7 @@ const rows = (value: unknown): Row[] =>
 const time = (value: unknown) => String(value ?? "").slice(0, 5);
 
 export type TournamentReschedulePreference =
-  | "recommended"
-  | "requester_compromise";
+  "recommended" | "requester_compromise";
 
 export type TournamentRescheduleAvailabilitySource =
   | "unknown_from_errebot"
@@ -69,8 +68,7 @@ export type TournamentRescheduleSwap = {
 };
 
 export type TournamentRescheduleOption =
-  | TournamentRescheduleFreeSlot
-  | TournamentRescheduleSwap;
+  TournamentRescheduleFreeSlot | TournamentRescheduleSwap;
 
 export type TournamentRescheduleOptions = {
   match: TournamentRescheduleMatchSummary;
@@ -93,12 +91,7 @@ export type TournamentRescheduleOptions = {
 };
 
 export type TournamentRescheduleRequestStatus =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "cancelled"
-  | "stale"
-  | "applied";
+  "pending" | "approved" | "rejected" | "cancelled" | "stale" | "applied";
 
 export type TournamentRescheduleApproval = {
   teamId: string;
@@ -396,7 +389,8 @@ export const tournamentRescheduleService = {
         target_decision: decision,
       },
     );
-    if (error) fail(error, "Impossible d’enregistrer la réponse de votre équipe.");
+    if (error)
+      fail(error, "Impossible d’enregistrer la réponse de votre équipe.");
     return requestStatus(data);
   },
 

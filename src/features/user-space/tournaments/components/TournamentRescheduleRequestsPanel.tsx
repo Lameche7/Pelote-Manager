@@ -66,7 +66,9 @@ function RequestCard({
           <strong>{statusLabels[request.status]}</strong>
         </div>
         <span>
-          {request.proposalKind === "swap" ? "Échange de matchs" : "Créneau libre"}
+          {request.proposalKind === "swap"
+            ? "Échange de matchs"
+            : "Créneau libre"}
         </span>
       </header>
 
@@ -83,7 +85,8 @@ function RequestCard({
         <div>
           <small>Proposition</small>
           <strong>
-            {dateLabel(proposal.playDate)} · {proposal.startsAt}–{proposal.endsAt}
+            {dateLabel(proposal.playDate)} · {proposal.startsAt}–
+            {proposal.endsAt}
           </strong>
           <span>{proposal.resourceName}</span>
         </div>
@@ -99,7 +102,8 @@ function RequestCard({
           <strong>Échange proposé</strong>
           <span>
             {proposal.swapTeamALabel} / {proposal.swapTeamBLabel} prendraient le
-            créneau initial du match demandeur : {dateLabel(proposal.swapMovesToPlayDate)} ·{" "}
+            créneau initial du match demandeur :{" "}
+            {dateLabel(proposal.swapMovesToPlayDate)} ·{" "}
             {proposal.swapMovesToStartsAt}–{proposal.swapMovesToEndsAt} ·{" "}
             {proposal.swapMovesToResourceName}.
           </span>
@@ -123,9 +127,9 @@ function RequestCard({
 
       {missingActors.length > 0 && request.status === "pending" && (
         <p className="tournament-reschedule-requests__warning" role="status">
-          {missingActors.map((approval) => approval.teamLabel).join(", ")} : aucun
-          compte Pelote Manager relié à cette équipe. L’organisation devra la
-          contacter hors application avant toute suite.
+          {missingActors.map((approval) => approval.teamLabel).join(", ")} :
+          aucun compte Pelote Manager relié à cette équipe. L’organisation devra
+          la contacter hors application avant toute suite.
         </p>
       )}
 
@@ -264,11 +268,17 @@ export function TournamentRescheduleRequestsPanel({
   };
 
   const current = useMemo(
-    () => requests.filter((request) => ["pending", "approved"].includes(request.status)),
+    () =>
+      requests.filter((request) =>
+        ["pending", "approved"].includes(request.status),
+      ),
     [requests],
   );
   const history = useMemo(
-    () => requests.filter((request) => !["pending", "approved"].includes(request.status)),
+    () =>
+      requests.filter(
+        (request) => !["pending", "approved"].includes(request.status),
+      ),
     [requests],
   );
 

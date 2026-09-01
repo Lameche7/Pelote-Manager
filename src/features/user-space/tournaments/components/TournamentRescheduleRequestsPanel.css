@@ -191,7 +191,9 @@
   font-weight: 700;
 }
 
-.tournament-reschedule-requests details > .tournament-reschedule-requests__list {
+.tournament-reschedule-requests
+  details
+  > .tournament-reschedule-requests__list {
   margin-top: 0.75rem;
 }
 

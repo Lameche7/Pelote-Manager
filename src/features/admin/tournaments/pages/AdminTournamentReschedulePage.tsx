@@ -14,14 +14,15 @@ const shortDate = new Intl.DateTimeFormat("fr-FR", {
 const dateLabel = (value: string) =>
   shortDate.format(new Date(`${value}T12:00:00`));
 
-const statusLabels: Record<AdminTournamentRescheduleRequest["status"], string> = {
-  pending: "Accords en cours",
-  approved: "Prêt à appliquer",
-  rejected: "Refusé",
-  cancelled: "Annulé",
-  stale: "Expiré",
-  applied: "Appliqué",
-};
+const statusLabels: Record<AdminTournamentRescheduleRequest["status"], string> =
+  {
+    pending: "Accords en cours",
+    approved: "Prêt à appliquer",
+    rejected: "Refusé",
+    cancelled: "Annulé",
+    stale: "Expiré",
+    applied: "Appliqué",
+  };
 
 const decisionLabels = {
   pending: "En attente",
@@ -30,7 +31,9 @@ const decisionLabels = {
 } as const;
 
 export function AdminTournamentReschedulePage() {
-  const [requests, setRequests] = useState<AdminTournamentRescheduleRequest[]>([]);
+  const [requests, setRequests] = useState<AdminTournamentRescheduleRequest[]>(
+    [],
+  );
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -60,18 +63,27 @@ export function AdminTournamentReschedulePage() {
   }, []);
 
   const active = useMemo(
-    () => requests.filter((request) => ["pending", "approved"].includes(request.status)),
+    () =>
+      requests.filter((request) =>
+        ["pending", "approved"].includes(request.status),
+      ),
     [requests],
   );
   const history = useMemo(
-    () => requests.filter((request) => !["pending", "approved"].includes(request.status)),
+    () =>
+      requests.filter(
+        (request) => !["pending", "approved"].includes(request.status),
+      ),
     [requests],
   );
   const visible = showHistory ? requests : active;
-  const readyCount = active.filter((request) => request.status === "approved").length;
+  const readyCount = active.filter(
+    (request) => request.status === "approved",
+  ).length;
   const blockedCount = active.filter((request) =>
     request.approvals.some(
-      (approval) => approval.decision === "pending" && approval.appActorCount === 0,
+      (approval) =>
+        approval.decision === "pending" && approval.appActorCount === 0,
     ),
   ).length;
 
@@ -167,8 +179,8 @@ export function AdminTournamentReschedulePage() {
                 <div>
                   <small>Créneau demandé</small>
                   <strong>
-                    {dateLabel(request.target.playDate)} · {request.target.startsAt}–
-                    {request.target.endsAt}
+                    {dateLabel(request.target.playDate)} ·{" "}
+                    {request.target.startsAt}–{request.target.endsAt}
                   </strong>
                   <span>{request.target.resourceName}</span>
                 </div>
@@ -178,8 +190,9 @@ export function AdminTournamentReschedulePage() {
                 <div className="admin-reschedules__swap">
                   <strong>Échange avec un autre match</strong>
                   <span>
-                    {request.swap.teamALabel} / {request.swap.teamBLabel} seraient
-                    déplacés vers {dateLabel(request.swap.returnPlayDate)} ·{" "}
+                    {request.swap.teamALabel} / {request.swap.teamBLabel}{" "}
+                    seraient déplacés vers{" "}
+                    {dateLabel(request.swap.returnPlayDate)} ·{" "}
                     {request.swap.returnStartsAt}–{request.swap.returnEndsAt} ·{" "}
                     {request.swap.returnResourceName}.
                   </span>
@@ -213,16 +226,18 @@ export function AdminTournamentReschedulePage() {
               {missingActors.length > 0 && (
                 <p className="admin-reschedules__warning">
                   À contacter hors application :{" "}
-                  {missingActors.map((approval) => approval.teamLabel).join(", ")}.
-                  Pelote Manager ne considère pas ces équipes comme ayant donné
-                  leur accord.
+                  {missingActors
+                    .map((approval) => approval.teamLabel)
+                    .join(", ")}
+                  . Pelote Manager ne considère pas ces équipes comme ayant
+                  donné leur accord.
                 </p>
               )}
 
               {request.status === "approved" && (
                 <p className="admin-reschedules__ready">
-                  Tous les accords sont réunis. L’application transactionnelle du
-                  report sera activée dans l’étape suivante de la PR127.
+                  Tous les accords sont réunis. L’application transactionnelle
+                  du report sera activée dans l’étape suivante de la PR127.
                 </p>
               )}
             </article>
