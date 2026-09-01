@@ -60,7 +60,10 @@ test("le fichier de disponibilités Errebot accepte CSV ou TSV et calcule la fin
 });
 
 test("le parseur refuse les en-têtes incomplets et les doublons", () => {
-  const missing = parseErrebotAvailabilityImport("Equipe;Date\n100;24/08/2026", 60);
+  const missing = parseErrebotAvailabilityImport(
+    "Equipe;Date\n100;24/08/2026",
+    60,
+  );
   assert.equal(missing.rows.length, 0);
   assert.equal(missing.issues.length, 1);
 
@@ -103,10 +106,16 @@ test("les échanges Errebot restent bloqués jusqu'à la couverture complète", 
     migration,
     /coverage_complete := accepted_team_count > 0 and known_team_count = accepted_team_count/,
   );
-  assert.match(migration, /restrict_swaps := is_errebot_import and not coverage_complete/);
+  assert.match(
+    migration,
+    /restrict_swaps := is_errebot_import and not coverage_complete/,
+  );
   assert.match(migration, /'partial_from_errebot'/);
   assert.match(migration, /'errebot_imported'/);
-  assert.match(migration, /jsonb_set\(result, '\{swaps\}', '\[\]'::jsonb, true\)/);
+  assert.match(
+    migration,
+    /jsonb_set\(result, '\{swaps\}', '\[\]'::jsonb, true\)/,
+  );
 });
 
 test("le back-office expose prévisualisation puis import dans Équipes & inscriptions", () => {
@@ -114,7 +123,10 @@ test("le back-office expose prévisualisation puis import dans Équipes & inscri
   assert.match(service, /admin_preview_errebot_availability_import/);
   assert.match(service, /admin_import_errebot_availability/);
   assert.match(component, /Disponibilités des équipes/);
-  assert.match(component, /Cette opération ne modifie ni les matchs ni le planning publié/);
+  assert.match(
+    component,
+    /Cette opération ne modifie ni les matchs ni le planning publié/,
+  );
   assert.match(component, /Prévisualisation/);
   assert.match(component, /Importer \$\{preview\.rowCount\} créneaux/);
   assert.match(teamsPage, /AdminErrebotAvailabilityImport/);
