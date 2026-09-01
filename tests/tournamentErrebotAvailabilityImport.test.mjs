@@ -209,7 +209,10 @@ test("l import différé reste administratif et ne modifie jamais le planning", 
     poolMigration,
     /insert into public\.tournament_match_planning/,
   );
-  assert.doesNotMatch(poolMigration, /update public\.tournament_match_planning/);
+  assert.doesNotMatch(
+    poolMigration,
+    /update public\.tournament_match_planning/,
+  );
   assert.doesNotMatch(
     poolMigration,
     /delete from public\.tournament_match_planning/,
