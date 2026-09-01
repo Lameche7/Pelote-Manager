@@ -200,6 +200,39 @@ export function AdminTournamentPublicationPage() {
     }
   };
 
+  const resolveConflictingTournament = async (
+    tournamentId: string,
+    tournamentName: string,
+  ) => {
+    if (!preview) return;
+    const selectedTournamentId = preview.tournament.id;
+    const confirmed = window.confirm(
+      `Retirer « ${tournamentName} » du calendrier pour libérer ses créneaux ?\n\nLe tournoi et ses matchs seront conservés. Seules ses occupations publiées seront retirées du calendrier.`,
+    );
+    if (!confirmed) return;
+
+    setPublishing(true);
+    setError("");
+    setMessage("");
+    try {
+      const count =
+        await adminTournamentPublicationService.unpublish(tournamentId);
+      await refresh(selectedTournamentId);
+      setMessage(
+        `${count} matchs de « ${tournamentName} » ont été retirés du calendrier. Les conflits ont été recalculés.`,
+      );
+    } catch (unpublishError) {
+      setError(
+        unpublishError instanceof Error
+          ? unpublishError.message
+          : "Impossible de retirer le tournoi en conflit du calendrier.",
+      );
+      await loadPreview(selectedTournamentId).catch(() => undefined);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   return (
     <section className="admin-page admin-tournament-publication">
       <header className="admin-page__header admin-tournament-publication__header">
@@ -391,6 +424,25 @@ export function AdminTournamentPublicationPage() {
                         {formatDateTime(conflict.occupationStartsAt)} →{" "}
                         {formatDateTime(conflict.occupationEndsAt)}
                       </small>
+                      {conflict.conflictTournamentId &&
+                        conflict.conflictTournamentName &&
+                        conflict.conflictTournamentStatus ===
+                          "planning_published" && (
+                          <button
+                            type="button"
+                            className="admin-tournament-publication__resolve-conflict"
+                            disabled={publishing}
+                            onClick={() =>
+                              void resolveConflictingTournament(
+                                conflict.conflictTournamentId!,
+                                conflict.conflictTournamentName!,
+                              )
+                            }
+                          >
+                            Retirer « {conflict.conflictTournamentName} » du
+                            calendrier
+                          </button>
+                        )}
                     </div>
                   </article>
                 ))}
