@@ -72,5 +72,5 @@ test("une projection unique alimente le public et l'administration", async () =>
   assert.match(component, /Résultats validés uniquement/);
   assert.match(component, /confrontation directe/);
   assert.match(component, /points marqués par partie/);
-  assert.match(component, /pourcentage de victoires/);
+  assert.match(component, /pourcentage de\s+victoires/);
 });
