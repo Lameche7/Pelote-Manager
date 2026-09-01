@@ -47,6 +47,14 @@ export type TournamentPublicationPreview = {
   conflicts: TournamentPublicationConflict[];
 };
 
+export type TournamentPriorityPublicationResult = {
+  publishedCount: number;
+  cancelledReservationCount: number;
+  displacedTournamentCount: number;
+  archivedEventCount: number;
+  cancelledBlockCount: number;
+};
+
 const knownErrors: Record<string, string> = {
   Forbidden: "Vous n’avez pas le droit de publier ce tournoi.",
   "Tournament not found": "Tournoi introuvable.",
@@ -128,6 +136,19 @@ const mapPreview = (value: unknown): TournamentPublicationPreview => {
   };
 };
 
+const mapPriorityPublication = (
+  value: unknown,
+): TournamentPriorityPublicationResult => {
+  const row = (value ?? {}) as Row;
+  return {
+    publishedCount: Number(row.published_count ?? 0),
+    cancelledReservationCount: Number(row.cancelled_reservation_count ?? 0),
+    displacedTournamentCount: Number(row.displaced_tournament_count ?? 0),
+    archivedEventCount: Number(row.archived_event_count ?? 0),
+    cancelledBlockCount: Number(row.cancelled_block_count ?? 0),
+  };
+};
+
 export const adminTournamentPublicationService = {
   async list(): Promise<TournamentPublicationSummary[]> {
     const { data, error } = await supabase.rpc(
@@ -154,6 +175,18 @@ export const adminTournamentPublicationService = {
     );
     if (error) fail(error, "Impossible de publier le planning du tournoi.");
     return Number(data ?? 0);
+  },
+
+  async publishPriority(
+    tournamentId: string,
+  ): Promise<TournamentPriorityPublicationResult> {
+    const { data, error } = await supabase.rpc(
+      "admin_publish_tournament_planning_priority",
+      { target_tournament_id: tournamentId },
+    );
+    if (error)
+      fail(error, "Impossible de publier le tournoi avec priorité calendrier.");
+    return mapPriorityPublication(data);
   },
 
   async unpublish(tournamentId: string): Promise<number> {
