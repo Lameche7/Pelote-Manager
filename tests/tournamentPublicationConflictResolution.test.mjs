@@ -31,6 +31,7 @@ test("le preview identifie seulement un tournoi Pelote Manager à l'origine du c
   assert.match(migration, /tournament_match_events/);
   assert.match(migration, /calendar_occupation_id = occupation\.id/);
   assert.match(migration, /conflicting_tournament\.club_id = target_club_id/);
+  assert.match(migration, /conflicting_tournament\.id <> target_tournament\.id/);
 });
 
 test("le service mappe la source tournoi sans rendre les autres conflits actionnables", () => {
