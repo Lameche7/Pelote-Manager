@@ -228,7 +228,7 @@ test("les équipes sans compte relié restent visibles et ne sont jamais auto-va
   assert.match(adminPage, /aucun compte relié/);
   assert.match(
     adminPage,
-    /ne considère pas ces équipes comme ayant donné\s+leur accord/,
+    /ne considère pas ces équipes comme ayant\s+donné leur accord/,
   );
 });
 
@@ -241,7 +241,7 @@ test("Mes tournois permet de créer et traiter une demande sans appliquer encore
   assert.match(myTournamentsPage, /TournamentRescheduleRequestsPanel/);
   assert.match(component, /Demander ce créneau/);
   assert.match(component, /Demander cet échange/);
-  assert.match(component, /Aucune partie\s+n’est déplacée à cette étape/);
+  assert.match(component, /Aucun match\s+n’est déplacé/);
   assert.match(requestsPanel, /Accepter/);
   assert.match(requestsPanel, /Refuser/);
   assert.match(requestsPanel, /Tous les accords sont réunis/);
