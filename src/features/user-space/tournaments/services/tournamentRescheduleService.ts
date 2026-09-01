@@ -9,13 +9,10 @@ const rows = (value: unknown): Row[] =>
 const time = (value: unknown) => String(value ?? "").slice(0, 5);
 
 export type TournamentReschedulePreference =
-  | "recommended"
-  | "requester_compromise";
+  "recommended" | "requester_compromise";
 
 export type TournamentRescheduleAvailabilitySource =
-  | "unknown_from_errebot"
-  | "declared"
-  | "not_required";
+  "unknown_from_errebot" | "declared" | "not_required";
 
 export type TournamentRescheduleMatchSummary = {
   id: string;
@@ -209,8 +206,7 @@ export const tournamentRescheduleService = {
         swapsEnabled: policy.swaps_enabled !== false,
         availabilitySource: availabilitySource(policy.availability_source),
         swapRestrictionReason:
-          policy.swap_restriction_reason ===
-          "errebot_availability_not_imported"
+          policy.swap_restriction_reason === "errebot_availability_not_imported"
             ? "errebot_availability_not_imported"
             : null,
       },

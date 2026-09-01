@@ -231,10 +231,11 @@ export function TournamentRescheduleSuggestions({
         <>
           {availabilityUnknown && !swapsEnabled && (
             <p className="tournament-reschedule__policy" role="status">
-              Errebot n’a pas fourni les créneaux choisis par les équipes lors de
-              l’inscription. Ces disponibilités sont donc inconnues : les
-              échanges de matchs sont désactivés et seuls les créneaux réellement
-              libres sont proposés, sous réserve d’accord des deux équipes.
+              Errebot n’a pas fourni les créneaux choisis par les équipes lors
+              de l’inscription. Ces disponibilités sont donc inconnues : les
+              échanges de matchs sont désactivés et seuls les créneaux
+              réellement libres sont proposés, sous réserve d’accord des deux
+              équipes.
             </p>
           )}
 

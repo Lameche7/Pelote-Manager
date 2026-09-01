@@ -130,7 +130,10 @@ test("un tournoi Errebot sans disponibilités importées ne propose jamais d'éc
     errebotRestrictionMigration,
     /restrict_swaps := is_errebot_import and not has_imported_availability/,
   );
-  assert.match(errebotRestrictionMigration, /'swaps_enabled', not restrict_swaps/);
+  assert.match(
+    errebotRestrictionMigration,
+    /'swaps_enabled', not restrict_swaps/,
+  );
   assert.match(
     errebotRestrictionMigration,
     /'availability_source'.*'unknown_from_errebot'/s,
@@ -158,7 +161,10 @@ test("Mes tournois expose une prévisualisation sans permettre encore de déplac
   assert.match(component, /Échanges de créneaux/);
   assert.match(component, /Errebot n’a pas fourni les créneaux choisis/);
   assert.match(component, /échanges de matchs sont désactivés/);
-  assert.match(component, /seuls les créneaux réellement\s+libres sont proposés/);
+  assert.match(
+    component,
+    /seuls les créneaux réellement\s+libres sont proposés/,
+  );
   assert.match(component, /Aucun\s+temps de repos minimum/);
   assert.match(component, /protège les équipes qui ne demandent pas le report/);
   assert.match(component, /Cette étape est une prévisualisation/);
