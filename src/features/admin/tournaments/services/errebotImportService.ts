@@ -5,6 +5,10 @@ import type {
   ErrebotIdentityMatchRequest,
   ErrebotIdentityMatchStatus,
 } from "../domain/errebotIdentityMatching";
+import type {
+  ErrebotTournamentImportPayload,
+  ErrebotTournamentImportResult,
+} from "../domain/errebotTransactionalImport";
 
 type Row = Record<string, unknown>;
 
@@ -67,6 +71,38 @@ const mapCandidate = (value: unknown): ErrebotIdentityCandidate => {
   };
 };
 
+const mapImportResult = (value: unknown): ErrebotTournamentImportResult => {
+  const row = (value ?? {}) as Row;
+  const summary = (row.summary ?? {}) as Row;
+  const result: ErrebotTournamentImportResult = {
+    importId: String(row.importId ?? ""),
+    tournamentId: String(row.tournamentId ?? ""),
+    alreadyImported: Boolean(row.alreadyImported),
+    summary: {
+      teamCount: Number(summary.teamCount ?? 0),
+      poolCount: Number(summary.poolCount ?? 0),
+      matchCount: Number(summary.matchCount ?? 0),
+      verifiedPlayerCount:
+        summary.verifiedPlayerCount === undefined
+          ? undefined
+          : Number(summary.verifiedPlayerCount),
+      externalPlayerCount:
+        summary.externalPlayerCount === undefined
+          ? undefined
+          : Number(summary.externalPlayerCount),
+      sourceScoreCount:
+        summary.sourceScoreCount === undefined
+          ? undefined
+          : Number(summary.sourceScoreCount),
+    },
+  };
+
+  if (!result.importId || !result.tournamentId) {
+    throw new Error("Réponse d’import Errebot invalide.");
+  }
+  return result;
+};
+
 const fail = (error: unknown, fallback: string): never => {
   throw new Error(getSupabaseErrorMessage(error, fallback));
 };
@@ -113,5 +149,16 @@ export const errebotImportService = {
     );
     if (error) fail(error, "Impossible de confirmer ce rapprochement.");
     return mapMatch(data);
+  },
+
+  async importTournament(
+    payload: ErrebotTournamentImportPayload,
+  ): Promise<ErrebotTournamentImportResult> {
+    const { data, error } = await supabase.rpc(
+      "admin_import_errebot_tournament",
+      { payload },
+    );
+    if (error) fail(error, "Impossible d’importer le tournoi Errebot.");
+    return mapImportResult(data);
   },
 };
