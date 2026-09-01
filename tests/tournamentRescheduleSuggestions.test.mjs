@@ -110,6 +110,7 @@ test("les occupations, chevauchements et disponibilités déclarées des autres 
 test("Mes tournois expose une prévisualisation sans permettre encore de déplacer une partie", () => {
   assert.match(service, /get_my_tournament_reschedule_options/);
   assert.match(service, /requesterTeamId/);
+  assert.match(myTournamentsPage, /canRequestReschedule/);
   assert.match(myTournamentsPage, /Demander un report/);
   assert.match(myTournamentsPage, /TournamentRescheduleSuggestions/);
   assert.match(component, /Créneaux libres/);
