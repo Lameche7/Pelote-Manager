@@ -6,15 +6,10 @@ export type ErrebotImportFileMetadata = {
   hash: string;
 };
 
-export type ErrebotTournamentMatchFormat =
-  | "single_game"
-  | "best_of_three_sets";
-export type ErrebotTournamentRankingMode =
-  | "total_points"
-  | "points_per_match";
+export type ErrebotTournamentMatchFormat = "single_game" | "best_of_three_sets";
+export type ErrebotTournamentRankingMode = "total_points" | "points_per_match";
 export type ErrebotTournamentGoalAverageMode =
-  | "point_difference"
-  | "point_difference_per_match";
+  "point_difference" | "point_difference_per_match";
 
 export type ErrebotTournamentSportingRulesSelection = {
   matchFormat: ErrebotTournamentMatchFormat;

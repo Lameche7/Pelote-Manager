@@ -57,7 +57,10 @@ test("les terrains et la durée du planning sont explicitement reconfigurés", (
 test("le navigateur n'envoie plus de format sportif implicite", () => {
   assert.match(helper, /resourceIds: string\[\]/);
   assert.match(helper, /primaryResourceId: string/);
-  assert.match(helper, /sportingRules: ErrebotTournamentSportingRulesSelection/);
+  assert.match(
+    helper,
+    /sportingRules: ErrebotTournamentSportingRulesSelection/,
+  );
   assert.match(helper, /matchFormat: ErrebotTournamentMatchFormat/);
   assert.match(service, /admin_import_errebot_tournament_configured/);
   assert.match(finalize, /Choisir le format…/);

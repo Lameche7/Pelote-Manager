@@ -75,9 +75,7 @@ export function ErrebotTournamentImportFinalize({
   const [rankingMode, setRankingMode] =
     useState<ErrebotTournamentRankingMode>("points_per_match");
   const [goalAverageMode, setGoalAverageMode] =
-    useState<ErrebotTournamentGoalAverageMode>(
-      "point_difference_per_match",
-    );
+    useState<ErrebotTournamentGoalAverageMode>("point_difference_per_match");
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
@@ -255,7 +253,9 @@ export function ErrebotTournamentImportFinalize({
             <span>format de score</span>
           </div>
           <div>
-            <strong>{result.slotDurationMinutes ?? slotDurationMinutes} min</strong>
+            <strong>
+              {result.slotDurationMinutes ?? slotDurationMinutes} min
+            </strong>
             <span>par créneau</span>
           </div>
         </div>
@@ -421,9 +421,10 @@ export function ErrebotTournamentImportFinalize({
                 ))}
               </select>
               <small>
-                Le PDF Errebot ne fournit pas d’identifiant de terrain par match.
-                Son planning est donc affecté à ce terrain principal ; les autres
-                restent disponibles pour les phases ou ajustements ultérieurs.
+                Le PDF Errebot ne fournit pas d’identifiant de terrain par
+                match. Son planning est donc affecté à ce terrain principal ;
+                les autres restent disponibles pour les phases ou ajustements
+                ultérieurs.
               </small>
             </label>
           </section>
@@ -628,9 +629,9 @@ export function ErrebotTournamentImportFinalize({
       <p className="admin-tournament-import__privacy-note">
         Seules les données structurées nécessaires à la création sont envoyées
         au RPC sécurisé. Le PDF et son texte extrait restent dans le navigateur.
-        Si ce même PDF a déjà été importé, aucun doublon n’est créé : ces options
-        corrigent le tournoi Errebot existant tant que son planning n’est pas
-        publié.
+        Si ce même PDF a déjà été importé, aucun doublon n’est créé : ces
+        options corrigent le tournoi Errebot existant tant que son planning
+        n’est pas publié.
       </p>
 
       <div className="admin-tournament-import__actions">

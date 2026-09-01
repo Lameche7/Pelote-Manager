@@ -80,7 +80,9 @@ const mapImportResult = (value: unknown): ErrebotTournamentImportResult => {
     tournamentId: String(row.tournamentId ?? ""),
     alreadyImported: Boolean(row.alreadyImported),
     optionsApplied:
-      row.optionsApplied === undefined ? undefined : Boolean(row.optionsApplied),
+      row.optionsApplied === undefined
+        ? undefined
+        : Boolean(row.optionsApplied),
     primaryResourceId: nullableString(row.primaryResourceId) ?? undefined,
     resourceCount:
       row.resourceCount === undefined ? undefined : Number(row.resourceCount),
