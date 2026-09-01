@@ -126,9 +126,11 @@ export const parseErrebotAvailabilityImport = (
     const externalTeamId = cells[teamColumn]?.match(/\d+/)?.[0] ?? "";
     const playDate = normalizeDate(cells[dateColumn] ?? "");
     const startsAt = normalizeTime(cells[startColumn] ?? "");
-    const explicitEnd = endColumn >= 0 ? normalizeTime(cells[endColumn] ?? "") : null;
+    const explicitEnd =
+      endColumn >= 0 ? normalizeTime(cells[endColumn] ?? "") : null;
     const endsAt =
-      explicitEnd ?? (startsAt ? addMinutes(startsAt, slotDurationMinutes) : null);
+      explicitEnd ??
+      (startsAt ? addMinutes(startsAt, slotDurationMinutes) : null);
 
     if (!externalTeamId || !playDate || !startsAt || !endsAt) {
       issues.push({
@@ -140,7 +142,10 @@ export const parseErrebotAvailabilityImport = (
 
     const key = `${externalTeamId}|${playDate}|${startsAt}|${endsAt}`;
     if (seen.has(key)) {
-      issues.push({ row: rowNumber, message: "Créneau en doublon dans le fichier." });
+      issues.push({
+        row: rowNumber,
+        message: "Créneau en doublon dans le fichier.",
+      });
       return;
     }
     seen.add(key);

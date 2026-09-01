@@ -20,14 +20,12 @@ export function AdminErrebotAvailabilityImport({
   tournamentId,
   onImported,
 }: Props) {
-  const [context, setContext] = useState<AdminErrebotAvailabilityContext | null>(
-    null,
-  );
+  const [context, setContext] =
+    useState<AdminErrebotAvailabilityContext | null>(null);
   const [items, setItems] = useState<ErrebotAvailabilityImportRow[]>([]);
   const [issues, setIssues] = useState<ErrebotAvailabilityImportIssue[]>([]);
-  const [preview, setPreview] = useState<AdminErrebotAvailabilityPreview | null>(
-    null,
-  );
+  const [preview, setPreview] =
+    useState<AdminErrebotAvailabilityPreview | null>(null);
   const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
@@ -36,9 +34,8 @@ export function AdminErrebotAvailabilityImport({
   const [message, setMessage] = useState("");
 
   const loadContext = async () => {
-    const next = await adminErrebotAvailabilityImportService.getContext(
-      tournamentId,
-    );
+    const next =
+      await adminErrebotAvailabilityImportService.getContext(tournamentId);
     setContext(next);
     return next;
   };
@@ -194,7 +191,8 @@ export function AdminErrebotAvailabilityImport({
       ) : (
         <p className="admin-errebot-availability__status" role="status">
           Tant que la couverture n’est pas complète, les échanges de créneaux
-          restent désactivés. Les reports vers un créneau libre restent possibles.
+          restent désactivés. Les reports vers un créneau libre restent
+          possibles.
         </p>
       )}
 
@@ -239,8 +237,8 @@ export function AdminErrebotAvailabilityImport({
         <div className="admin-errebot-availability__preview">
           <strong>Prévisualisation</strong>
           <p>
-            {preview.rowCount} créneaux reconnus pour {preview.teamCount} équipes.
-            Couverture après import : {preview.knownTeamCountAfter}/
+            {preview.rowCount} créneaux reconnus pour {preview.teamCount}{" "}
+            équipes. Couverture après import : {preview.knownTeamCountAfter}/
             {preview.acceptedTeamCount} équipes.
           </p>
           {preview.errors.length > 0 && (
@@ -268,7 +266,10 @@ export function AdminErrebotAvailabilityImport({
       )}
 
       {error && (
-        <p className="admin-tournament-teams__alert admin-tournament-teams__alert--error" role="alert">
+        <p
+          className="admin-tournament-teams__alert admin-tournament-teams__alert--error"
+          role="alert"
+        >
           {error}
         </p>
       )}

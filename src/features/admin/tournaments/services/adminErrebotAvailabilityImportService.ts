@@ -64,7 +64,9 @@ const fail = (error: unknown, fallback: string): never => {
     if (message === "Tournament is not an Errebot import") {
       throw new Error("Ce tournoi n’est pas issu d’un import Errebot.");
     }
-    if (message === "Tournament availability cannot be imported at this stage") {
+    if (
+      message === "Tournament availability cannot be imported at this stage"
+    ) {
       throw new Error(
         "Les disponibilités ne peuvent plus être importées à cette étape du tournoi.",
       );
@@ -116,7 +118,8 @@ export const adminErrebotAvailabilityImportService = {
       "admin_get_errebot_availability_import_context",
       { target_tournament_id: tournamentId },
     );
-    if (error) fail(error, "Impossible de charger l’import des disponibilités.");
+    if (error)
+      fail(error, "Impossible de charger l’import des disponibilités.");
     return mapContext(data);
   },
 
