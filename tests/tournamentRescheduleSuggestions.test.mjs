@@ -153,6 +153,7 @@ test("Mes tournois expose une prévisualisation sans permettre encore de déplac
   assert.match(service, /get_my_tournament_reschedule_options/);
   assert.match(service, /requesterTeamId/);
   assert.match(service, /swapsEnabled/);
+  assert.match(service, /swapsEnabled: policy\.swaps_enabled !== false/);
   assert.match(service, /unknown_from_errebot/);
   assert.match(myTournamentsPage, /canRequestReschedule/);
   assert.match(myTournamentsPage, /Demander un report/);
