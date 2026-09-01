@@ -31,14 +31,21 @@ const preferenceLabel = (
 
 function RequesterWarnings({
   option,
+  availabilityUnknown = false,
 }: {
   option: TournamentRescheduleFreeSlot | TournamentRescheduleSwap;
+  availabilityUnknown?: boolean;
 }) {
   if (
     option.requesterSameDayPenalty === 0 &&
     !option.requesterOutsideDeclaredAvailability
   ) {
-    return (
+    return availabilityUnknown ? (
+      <span>
+        Les disponibilités d’inscription sont inconnues : ce créneau devra être
+        confirmé par les deux équipes.
+      </span>
+    ) : (
       <span>Aucune contrainte supplémentaire détectée pour votre équipe.</span>
     );
   }
@@ -58,11 +65,23 @@ function RequesterWarnings({
           Ce créneau est hors des disponibilités déclarées de votre équipe.
         </li>
       )}
+      {availabilityUnknown && (
+        <li>
+          Les disponibilités d’inscription n’ont pas été importées : l’accord
+          des deux équipes sera nécessaire.
+        </li>
+      )}
     </ul>
   );
 }
 
-function FreeSlotCard({ option }: { option: TournamentRescheduleFreeSlot }) {
+function FreeSlotCard({
+  option,
+  availabilityUnknown,
+}: {
+  option: TournamentRescheduleFreeSlot;
+  availabilityUnknown: boolean;
+}) {
   return (
     <article className="tournament-reschedule__option">
       <div className="tournament-reschedule__option-heading">
@@ -83,7 +102,10 @@ function FreeSlotCard({ option }: { option: TournamentRescheduleFreeSlot }) {
         déplacement n’augmente pas la charge de parties le même jour pour vos
         adversaires.
       </p>
-      <RequesterWarnings option={option} />
+      <RequesterWarnings
+        option={option}
+        availabilityUnknown={availabilityUnknown}
+      />
     </article>
   );
 }
@@ -168,6 +190,9 @@ export function TournamentRescheduleSuggestions({
 
   const freeSlots = options?.freeSlots ?? [];
   const swaps = options?.swaps ?? [];
+  const swapsEnabled = options?.policy.swapsEnabled ?? true;
+  const availabilityUnknown =
+    options?.policy.availabilitySource === "unknown_from_errebot";
   const visibleFreeSlots = freeSlots.slice(0, 6);
   const visibleSwaps = swaps.slice(0, 6);
 
@@ -204,22 +229,39 @@ export function TournamentRescheduleSuggestions({
 
       {!loading && !error && options && (
         <>
+          {availabilityUnknown && !swapsEnabled && (
+            <p className="tournament-reschedule__policy" role="status">
+              Errebot n’a pas fourni les créneaux choisis par les équipes lors de
+              l’inscription. Ces disponibilités sont donc inconnues : les
+              échanges de matchs sont désactivés et seuls les créneaux réellement
+              libres sont proposés, sous réserve d’accord des deux équipes.
+            </p>
+          )}
+
           <div className="tournament-reschedule__summary">
             <span>
               <strong>{freeSlots.length}</strong> créneau
               {freeSlots.length > 1 ? "x" : ""} libre
               {freeSlots.length > 1 ? "s" : ""}
             </span>
-            <span>
-              <strong>{swaps.length}</strong> échange
-              {swaps.length > 1 ? "s" : ""} possible
-              {swaps.length > 1 ? "s" : ""}
-            </span>
+            {swapsEnabled ? (
+              <span>
+                <strong>{swaps.length}</strong> échange
+                {swaps.length > 1 ? "s" : ""} possible
+                {swaps.length > 1 ? "s" : ""}
+              </span>
+            ) : (
+              <span>
+                <strong>—</strong> échanges désactivés
+              </span>
+            )}
           </div>
 
-          {freeSlots.length === 0 && swaps.length === 0 ? (
+          {freeSlots.length === 0 && (!swapsEnabled || swaps.length === 0) ? (
             <p className="tournament-reschedule__empty">
-              Aucune solution compatible n’a été trouvée pour le moment.
+              {swapsEnabled
+                ? "Aucune solution compatible n’a été trouvée pour le moment."
+                : "Aucun créneau libre compatible n’a été trouvé pour le moment."}
             </p>
           ) : (
             <div className="tournament-reschedule__groups">
@@ -231,6 +273,7 @@ export function TournamentRescheduleSuggestions({
                       <FreeSlotCard
                         key={`${option.resourceId}-${option.playDate}-${option.startsAt}`}
                         option={option}
+                        availabilityUnknown={availabilityUnknown}
                       />
                     ))}
                   </div>
@@ -249,7 +292,7 @@ export function TournamentRescheduleSuggestions({
                 </section>
               )}
 
-              {visibleSwaps.length > 0 && (
+              {swapsEnabled && visibleSwaps.length > 0 && (
                 <section>
                   <h5>Échanges de créneaux</h5>
                   <div className="tournament-reschedule__list">
