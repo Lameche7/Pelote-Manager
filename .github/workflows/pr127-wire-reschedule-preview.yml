@@ -1,0 +1,69 @@
+name: PR127 wire reschedule preview
+
+on:
+  push:
+    branches:
+      - agent/tournament-rescheduling
+    paths:
+      - .github/workflows/pr127-wire-reschedule-preview.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/tournament-rescheduling
+
+      - name: Patch MyTournamentsPage
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/features/user-space/tournaments/pages/MyTournamentsPage.tsx')
+          text = path.read_text()
+
+          old = 'import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";\n'
+          new = old + 'import { TournamentRescheduleSuggestions } from "@/features/user-space/tournaments/components/TournamentRescheduleSuggestions";\n'
+          assert old in text and 'TournamentRescheduleSuggestions' not in text
+          text = text.replace(old, new, 1)
+
+          old = '  const [editing, setEditing] = useState(false);\n  const [saving, setSaving] = useState(false);\n'
+          new = old + '  const [rescheduling, setRescheduling] = useState(false);\n'
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          old = '  const isPast = endsAt < now;\n  const isInProgress = startsAt <= now && endsAt >= now;\n'
+          new = old + '  const canRequestReschedule = !match.result && startsAt > now;\n'
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          old = '''        {match.canSubmitResult && !editing && (\n          <button\n            className="my-tournaments__result-button"\n            type="button"\n            onClick={() => setEditing(true)}\n          >\n            Saisir le score\n          </button>\n        )}\n'''
+          new = old + '''        {canRequestReschedule && !rescheduling && (\n          <button\n            className="my-tournaments__result-button"\n            type="button"\n            onClick={() => setRescheduling(true)}\n          >\n            Demander un report\n          </button>\n        )}\n'''
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          old = '''      {editing && (\n        <div className="my-tournaments__score-editor">\n          <TournamentScoreEditor\n            rules={rules}\n            teamSide={match.teamSide}\n            leftLabel="Notre équipe"\n            rightLabel={opponent}\n            disabled={saving}\n            submitLabel={saving ? "Enregistrement…" : "Transmettre au club"}\n            onCancel={() => setEditing(false)}\n            onSubmit={saveResult}\n          />\n        </div>\n      )}\n'''
+          new = old + '''\n      {rescheduling && (\n        <TournamentRescheduleSuggestions\n          matchId={match.id}\n          teamId={teamId}\n          onClose={() => setRescheduling(false)}\n        />\n      )}\n'''
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          path.write_text(text)
+          PY
+
+      - name: Remove helper workflow
+        run: rm .github/workflows/pr127-wire-reschedule-preview.yml
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/user-space/tournaments/pages/MyTournamentsPage.tsx .github/workflows/pr127-wire-reschedule-preview.yml
+          git commit -m "feat(tournaments): preview reschedule options from my matches"
+          git push origin HEAD:agent/tournament-rescheduling
