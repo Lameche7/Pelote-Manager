@@ -19,6 +19,9 @@ type Props = {
   onImported?: () => Promise<void> | void;
 };
 
+const phaseLabel = (phase: "pools" | "finals") =>
+  phase === "pools" ? "Poules" : "Disponibilités phases finales";
+
 export function AdminErrebotAvailabilityImport({
   tournamentId,
   onImported,
@@ -146,6 +149,7 @@ export function AdminErrebotAvailabilityImport({
       const parsed = await errebotAvailabilityWorkbookService.parse(
         file,
         context.slotDurationMinutes,
+        context.finalsRequired,
       );
       setItems(parsed.rows);
       setDeclarations(parsed.declarations);
@@ -184,9 +188,9 @@ export function AdminErrebotAvailabilityImport({
       return;
     }
     if (
-      context.knownTeamCount > 0 &&
+      (context.poolsKnownTeamCount > 0 || context.finalsKnownTeamCount > 0) &&
       !window.confirm(
-        "Pour les équipes présentes dans le classeur, les disponibilités de poules déjà importées seront remplacées. Le planning actuel restera inchangé. Continuer ?",
+        "Pour les équipes présentes dans le classeur, les disponibilités déjà importées seront remplacées. Aucun match ni tableau final ne sera créé ou modifié. Continuer ?",
       )
     ) {
       return;
@@ -205,11 +209,7 @@ export function AdminErrebotAvailabilityImport({
       await loadContext();
       await onImported?.();
       setMessage(
-        `${result.importedSlotCount} disponibilités de poules importées pour ${result.importedTeamCount} équipes à partir de ${result.sourceSlotCount} créneaux Errebot. Couverture : ${result.knownTeamCount}/${result.acceptedTeamCount} équipes.${
-          result.coverageComplete
-            ? " Les échanges peuvent maintenant être proposés pendant les poules."
-            : " Les échanges restent désactivés tant que toutes les équipes ne sont pas couvertes."
-        }`,
+        `${result.importedSlotCount} disponibilités importées pour ${result.importedTeamCount} équipes. Poules : ${result.poolsKnownTeamCount}/${result.acceptedTeamCount}. Futures phases finales : ${result.finalsKnownTeamCount}/${result.acceptedTeamCount}. Aucun match final Errebot n’a été importé.`,
       );
       setItems([]);
       setDeclarations([]);
@@ -239,24 +239,32 @@ export function AdminErrebotAvailabilityImport({
       <div className="admin-errebot-availability__heading">
         <div>
           <p className="admin-page__eyebrow">Import Errebot</p>
-          <h2>Disponibilités des équipes — poules</h2>
+          <h2>Disponibilités des équipes</h2>
           <p>
-            Déposez directement le classeur Excel Errebot. Pelote Manager lit
-            uniquement l’onglet des poules. L’onglet des phases finales est
-            ignoré : les phases finales seront créées et gérées ensuite par
-            Pelote Manager.
+            Le tournoi Errebot importé reste un tournoi de poules. Le classeur
+            de disponibilités fournit toutefois deux matrices : celle des
+            poules et celle prévue pour les futures phases finales. Pelote
+            Manager conserve ces dernières uniquement pour planifier son propre
+            tableau final une fois les qualifiés connus.
           </p>
         </div>
-        <strong>
-          {context.knownTeamCount}/{context.acceptedTeamCount} équipes
-        </strong>
+        <strong>{context.acceptedTeamCount} équipes</strong>
       </div>
 
-      <p className="admin-errebot-availability__status" role="status">
-        {context.coverageComplete
-          ? "Toutes les équipes ont des disponibilités de poules connues. Les échanges peuvent être recherchés."
-          : "Tant que toutes les équipes ne sont pas couvertes, les échanges restent désactivés et seuls les créneaux libres sont proposés."}
-      </p>
+      <div className="admin-errebot-availability__status" role="status">
+        <strong>
+          Poules : {context.poolsKnownTeamCount}/{context.acceptedTeamCount}
+        </strong>
+        <strong>
+          Futures phases finales : {context.finalsKnownTeamCount}/
+          {context.acceptedTeamCount}
+        </strong>
+        <span>
+          Les disponibilités finales n’importent aucun match Errebot : elles
+          serviront seulement au moteur natif de génération et de planification
+          des phases finales.
+        </span>
+      </div>
 
       <div className="admin-errebot-availability__format">
         <strong>Format Errebot reconnu automatiquement</strong>
@@ -264,10 +272,10 @@ export function AdminErrebotAvailabilityImport({
           Série | ID équipe | Joueur1 | Joueur2 | 21/09/2026 17h30 (27367) | …
         </code>
         <span>
-          Seul l’onglet dont le nom contient « Poule » est exploité. Les
-          colonnes Joueur1/Joueur2 sont ignorées et ne sont jamais envoyées à
-          Supabase. Les dates, heures et identifiants entre parenthèses servent
-          à conserver la grille exacte Errebot.
+          Les onglets Poules et Phases finales sont lus comme matrices de
+          disponibilités. Les colonnes Joueur1/Joueur2 sont ignorées et ne sont
+          jamais envoyées à Supabase. Les dates, heures et identifiants entre
+          parenthèses permettent de conserver les grilles exactes Errebot.
         </span>
       </div>
 
@@ -282,16 +290,18 @@ export function AdminErrebotAvailabilityImport({
       </label>
 
       {fileName && <p>Fichier sélectionné : {fileName}</p>}
-      {checking && <p role="status">Lecture des poules et contrôle…</p>}
+      {checking && (
+        <p role="status">Lecture des deux matrices et contrôle des créneaux…</p>
+      )}
 
       {sheetSummaries.length > 0 && (
         <div className="admin-errebot-availability__preview">
-          <strong>Onglet de poules reconnu</strong>
+          <strong>Onglets de disponibilités reconnus</strong>
           <ul>
             {sheetSummaries.map((sheet) => (
-              <li key={sheet.sheet}>
-                {sheet.sheet} : {sheet.teamCount} équipes, {sheet.slotCount}{" "}
-                disponibilités sur {sheet.sourceSlotCount} créneaux
+              <li key={`${sheet.sheet}-${sheet.phase}`}>
+                {sheet.sheet} — {phaseLabel(sheet.phase)} : {sheet.teamCount}{" "}
+                équipes, {sheet.slotCount} disponibilités
               </li>
             ))}
           </ul>
@@ -318,11 +328,12 @@ export function AdminErrebotAvailabilityImport({
           <strong>Prévisualisation</strong>
           <p>
             {preview.rowCount} disponibilités reconnues pour {preview.teamCount}{" "}
-            équipes sur {preview.sourceSlotCount} créneaux de poules.
+            équipes sur {preview.sourceSlotCount} créneaux source.
           </p>
           <p>
-            Couverture après import : {preview.knownTeamCountAfter}/
-            {preview.acceptedTeamCount} équipes.
+            Poules après import : {preview.poolsKnownTeamCountAfter}/
+            {preview.acceptedTeamCount}. Futures phases finales :{" "}
+            {preview.finalsKnownTeamCountAfter}/{preview.acceptedTeamCount}.
           </p>
           {preview.errors.length > 0 && (
             <ul className="admin-errebot-availability__errors">
