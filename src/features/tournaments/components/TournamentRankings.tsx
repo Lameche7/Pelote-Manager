@@ -90,7 +90,7 @@ export function TournamentRankings({
               <section className="tournament-ranking-series" key={series.id}>
                 <h3>{series.name}</h3>
                 <div className="tournament-ranking-series__pools">
-                  {generalSeries && (
+                  {generalSeries && generalRankings && (
                     <article className="tournament-ranking-pool">
                       <header>
                         <strong>Classement général</strong>
