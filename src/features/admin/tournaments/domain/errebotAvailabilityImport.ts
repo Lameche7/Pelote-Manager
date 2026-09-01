@@ -1,5 +1,13 @@
 export type ErrebotAvailabilityPhase = "pools" | "finals";
 
+export type ErrebotAvailabilitySourceSlot = {
+  phase: ErrebotAvailabilityPhase;
+  playDate: string;
+  startsAt: string;
+  endsAt: string;
+  sourceSlotId: string | null;
+};
+
 export type ErrebotAvailabilityImportRow = {
   externalTeamId: string;
   phase: ErrebotAvailabilityPhase;
@@ -30,6 +38,7 @@ export type ErrebotAvailabilitySheetSummary = {
 export type ErrebotAvailabilityImportParseResult = {
   rows: ErrebotAvailabilityImportRow[];
   declarations: ErrebotAvailabilityDeclaration[];
+  sourceSlots: ErrebotAvailabilitySourceSlot[];
   issues: ErrebotAvailabilityImportIssue[];
   sheets: ErrebotAvailabilitySheetSummary[];
 };
@@ -111,6 +120,7 @@ const parseSlotHeader = (value: unknown, slotDurationMinutes: number) => {
     playDate: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
     startsAt,
     endsAt,
+    sourceSlotId: match[6] ?? null,
   };
 };
 
@@ -132,9 +142,9 @@ const selectedAvailability = (value: unknown) => {
     return false;
   }
 
-  // Les exports Errebot rencontrés utilisent une cellule non vide pour une
-  // disponibilité. On accepte donc X, 1, Oui, V, coche ou tout autre marqueur
-  // non vide, tout en traitant explicitement les valeurs négatives ci-dessus.
+  // Errebot matérialise la disponibilité par une valeur dans la cellule. On
+  // accepte X, 1, Oui, V, une coche ou tout autre marqueur non vide, tout en
+  // traitant explicitement les valeurs négatives ci-dessus.
   return true;
 };
 
@@ -175,10 +185,12 @@ export const parseErrebotAvailabilityWorkbook = (
 ): ErrebotAvailabilityImportParseResult => {
   const rows: ErrebotAvailabilityImportRow[] = [];
   const declarations: ErrebotAvailabilityDeclaration[] = [];
+  const sourceSlots: ErrebotAvailabilitySourceSlot[] = [];
   const issues: ErrebotAvailabilityImportIssue[] = [];
   const sheets: ErrebotAvailabilitySheetSummary[] = [];
   const seenRows = new Set<string>();
   const seenDeclarations = new Set<string>();
+  const seenSourceSlots = new Set<string>();
   const detectedPhases = new Set<ErrebotAvailabilityPhase>();
 
   for (const workbookSheet of workbook) {
@@ -195,6 +207,19 @@ export const parseErrebotAvailabilityWorkbook = (
           "Impossible de trouver la colonne « ID équipe » et les colonnes de créneaux datés.",
       });
       continue;
+    }
+
+    for (const item of header.slotColumns) {
+      const key = `${phase}|${item.slot.playDate}|${item.slot.startsAt}|${item.slot.endsAt}`;
+      if (seenSourceSlots.has(key)) continue;
+      seenSourceSlots.add(key);
+      sourceSlots.push({
+        phase,
+        playDate: item.slot.playDate,
+        startsAt: item.slot.startsAt,
+        endsAt: item.slot.endsAt,
+        sourceSlotId: item.slot.sourceSlotId,
+      });
     }
 
     let teamCount = 0;
@@ -268,5 +293,5 @@ export const parseErrebotAvailabilityWorkbook = (
     issues.push({ row: 0, message: "Aucune équipe Errebot n’a été trouvée." });
   }
 
-  return { rows, declarations, issues, sheets };
+  return { rows, declarations, sourceSlots, issues, sheets };
 };
