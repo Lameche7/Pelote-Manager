@@ -15,10 +15,8 @@ export type AdminErrebotAvailabilityTeam = {
   externalTeamId: string;
   teamId: string;
   label: string;
-  poolsKnown: boolean;
-  poolsSlotCount: number;
-  finalsKnown: boolean;
-  finalsSlotCount: number;
+  availabilityKnown: boolean;
+  slotCount: number;
 };
 
 export type AdminErrebotAvailabilityContext = {
@@ -28,11 +26,7 @@ export type AdminErrebotAvailabilityContext = {
   tournamentStatus: string;
   slotDurationMinutes: number;
   acceptedTeamCount: number;
-  finalsRequired: boolean;
-  poolsKnownTeamCount: number;
-  finalsKnownTeamCount: number;
-  poolsCoverageComplete: boolean;
-  finalsCoverageComplete: boolean;
+  knownTeamCount: number;
   coverageComplete: boolean;
   teams: AdminErrebotAvailabilityTeam[];
 };
@@ -48,15 +42,9 @@ export type AdminErrebotAvailabilityPreview = {
   rowCount: number;
   sourceSlotCount: number;
   teamCount: number;
-  poolTeamCount: number;
-  finalsTeamCount: number;
   acceptedTeamCount: number;
-  poolsKnownTeamCountBefore: number;
-  poolsKnownTeamCountAfter: number;
-  finalsKnownTeamCountBefore: number;
-  finalsKnownTeamCountAfter: number;
-  poolsCoverageCompleteAfter: boolean;
-  finalsCoverageCompleteAfter: boolean;
+  knownTeamCountBefore: number;
+  knownTeamCountAfter: number;
   coverageCompleteAfter: boolean;
   errors: AdminErrebotAvailabilityPreviewError[];
 };
@@ -65,11 +53,8 @@ export type AdminErrebotAvailabilityImportResult = {
   importedTeamCount: number;
   importedSlotCount: number;
   sourceSlotCount: number;
+  knownTeamCount: number;
   acceptedTeamCount: number;
-  poolsKnownTeamCount: number;
-  finalsKnownTeamCount: number;
-  poolsCoverageComplete: boolean;
-  finalsCoverageComplete: boolean;
   coverageComplete: boolean;
 };
 
@@ -108,18 +93,15 @@ const payload = (
 ) => ({
   rows: items.map((item) => ({
     external_team_id: item.externalTeamId,
-    phase: item.phase,
     play_date: item.playDate,
     starts_at: item.startsAt,
     ends_at: item.endsAt,
   })),
   declarations: declarations.map((item) => ({
     external_team_id: item.externalTeamId,
-    phase: item.phase,
     slot_count: item.slotCount,
   })),
   source_slots: sourceSlots.map((item) => ({
-    phase: item.phase,
     play_date: item.playDate,
     starts_at: item.startsAt,
     ends_at: item.endsAt,
@@ -136,20 +118,14 @@ const mapContext = (value: unknown): AdminErrebotAvailabilityContext => {
     tournamentStatus: String(root.tournament_status ?? ""),
     slotDurationMinutes: Number(root.slot_duration_minutes ?? 60),
     acceptedTeamCount: Number(root.accepted_team_count ?? 0),
-    finalsRequired: Boolean(root.finals_required),
-    poolsKnownTeamCount: Number(root.pools_known_team_count ?? 0),
-    finalsKnownTeamCount: Number(root.finals_known_team_count ?? 0),
-    poolsCoverageComplete: Boolean(root.pools_coverage_complete),
-    finalsCoverageComplete: Boolean(root.finals_coverage_complete),
+    knownTeamCount: Number(root.known_team_count ?? 0),
     coverageComplete: Boolean(root.coverage_complete),
     teams: rows(root.teams).map((team) => ({
       externalTeamId: String(team.external_team_id ?? ""),
       teamId: String(team.team_id ?? ""),
       label: String(team.label ?? ""),
-      poolsKnown: Boolean(team.pools_known),
-      poolsSlotCount: Number(team.pools_slot_count ?? 0),
-      finalsKnown: Boolean(team.finals_known),
-      finalsSlotCount: Number(team.finals_slot_count ?? 0),
+      availabilityKnown: Boolean(team.availability_known),
+      slotCount: Number(team.slot_count ?? 0),
     })),
   };
 };
@@ -187,21 +163,9 @@ export const adminErrebotAvailabilityImportService = {
       rowCount: Number(root.row_count ?? 0),
       sourceSlotCount: Number(root.source_slot_count ?? 0),
       teamCount: Number(root.team_count ?? 0),
-      poolTeamCount: Number(root.pool_team_count ?? 0),
-      finalsTeamCount: Number(root.finals_team_count ?? 0),
       acceptedTeamCount: Number(root.accepted_team_count ?? 0),
-      poolsKnownTeamCountBefore: Number(
-        root.pools_known_team_count_before ?? 0,
-      ),
-      poolsKnownTeamCountAfter: Number(root.pools_known_team_count_after ?? 0),
-      finalsKnownTeamCountBefore: Number(
-        root.finals_known_team_count_before ?? 0,
-      ),
-      finalsKnownTeamCountAfter: Number(
-        root.finals_known_team_count_after ?? 0,
-      ),
-      poolsCoverageCompleteAfter: Boolean(root.pools_coverage_complete_after),
-      finalsCoverageCompleteAfter: Boolean(root.finals_coverage_complete_after),
+      knownTeamCountBefore: Number(root.known_team_count_before ?? 0),
+      knownTeamCountAfter: Number(root.known_team_count_after ?? 0),
       coverageCompleteAfter: Boolean(root.coverage_complete_after),
       errors: rows(root.errors).map((item) => ({
         row: Number(item.row ?? 0),
@@ -230,11 +194,8 @@ export const adminErrebotAvailabilityImportService = {
       importedTeamCount: Number(root.imported_team_count ?? 0),
       importedSlotCount: Number(root.imported_slot_count ?? 0),
       sourceSlotCount: Number(root.source_slot_count ?? 0),
+      knownTeamCount: Number(root.known_team_count ?? 0),
       acceptedTeamCount: Number(root.accepted_team_count ?? 0),
-      poolsKnownTeamCount: Number(root.pools_known_team_count ?? 0),
-      finalsKnownTeamCount: Number(root.finals_known_team_count ?? 0),
-      poolsCoverageComplete: Boolean(root.pools_coverage_complete),
-      finalsCoverageComplete: Boolean(root.finals_coverage_complete),
       coverageComplete: Boolean(root.coverage_complete),
     };
   },
