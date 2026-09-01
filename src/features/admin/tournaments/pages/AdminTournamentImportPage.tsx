@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ErrebotIdentityReview } from "@/features/admin/tournaments/components/ErrebotIdentityReview";
+import { ErrebotTournamentImportFinalize } from "@/features/admin/tournaments/components/ErrebotTournamentImportFinalize";
 import {
   buildErrebotIdentityMatchPayload,
   summarizeErrebotIdentityMatches,
@@ -32,6 +33,7 @@ const steps = [
   "Contrôle",
   "Prévisualisation",
   "Rapprochement",
+  "Import",
 ] as const;
 
 export function AdminTournamentImportPage() {
@@ -152,8 +154,8 @@ export function AdminTournamentImportPage() {
           <p className="admin-page__eyebrow">Tournois · Errebot</p>
           <h1>Importer un tournoi</h1>
           <p className="admin-page__lead">
-            Contrôlez le PDF Errebot, vérifiez sa structure puis préparez le
-            rapprochement des joueurs avant toute création dans Pelote Manager.
+            Contrôlez le PDF Errebot, vérifiez sa structure, rapprochez les
+            joueurs puis créez le tournoi natif en une seule transaction.
           </p>
         </div>
       </header>
@@ -383,6 +385,14 @@ export function AdminTournamentImportPage() {
             onMatchesChange={setIdentityMatches}
           />
 
+          {(matchSummary.suggested > 0 || matchSummary.conflict > 0) && (
+            <p className="admin-tournament-import__privacy-note">
+              Vous pouvez continuer sans valider tous les rapprochements : les
+              joueurs laissés en suggestion ou à contrôler seront importés comme
+              externes et pourront être rattachés plus tard.
+            </p>
+          )}
+
           <div className="admin-tournament-import__actions">
             <button type="button" onClick={() => setStep(3)}>
               Retour à la structure
@@ -390,8 +400,28 @@ export function AdminTournamentImportPage() {
             <button type="button" onClick={reset}>
               Tester un autre PDF
             </button>
+            <button
+              type="button"
+              className="admin-tournament-import__primary"
+              onClick={() => setStep(5)}
+            >
+              Préparer l’import
+            </button>
           </div>
         </>
+      )}
+
+      {step === 5 && selected && parsed && (
+        <ErrebotTournamentImportFinalize
+          file={{
+            name: selected.file.name,
+            size: selected.file.size,
+            hash: selected.hash,
+          }}
+          parsed={parsed}
+          onBack={() => setStep(4)}
+          onReset={reset}
+        />
       )}
     </section>
   );
