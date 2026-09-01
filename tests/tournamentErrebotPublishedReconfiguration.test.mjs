@@ -16,6 +16,10 @@ test("un import Errebot déjà publié est retiré du calendrier avant reconfigu
     migration,
     /rename to admin_import_errebot_tournament_configured_core/,
   );
+  assert.match(
+    migration,
+    /revoke all on function public\.admin_import_errebot_tournament_configured_core\(jsonb\)/,
+  );
   assert.match(migration, /existing_tournament_status = 'planning_published'/);
   assert.match(
     migration,
