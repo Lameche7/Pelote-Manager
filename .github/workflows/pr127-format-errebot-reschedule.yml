@@ -1,0 +1,46 @@
+name: PR127 format Errebot reschedule restriction
+
+on:
+  push:
+    branches:
+      - agent/tournament-rescheduling
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/tournament-rescheduling
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: |
+          npx prettier --write src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx
+          npx prettier --write src/features/user-space/tournaments/services/tournamentRescheduleService.ts
+          npx prettier --write tests/tournamentRescheduleSuggestions.test.mjs
+
+      - name: Remove helper workflow
+        run: rm .github/workflows/pr127-format-errebot-reschedule.yml
+
+      - name: Commit formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx src/features/user-space/tournaments/services/tournamentRescheduleService.ts tests/tournamentRescheduleSuggestions.test.mjs .github/workflows/pr127-format-errebot-reschedule.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "style(tournaments): format Errebot reschedule restriction"
+          git push origin HEAD:agent/tournament-rescheduling
