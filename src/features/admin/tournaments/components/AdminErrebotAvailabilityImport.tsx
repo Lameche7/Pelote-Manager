@@ -242,10 +242,10 @@ export function AdminErrebotAvailabilityImport({
           <h2>Disponibilités des équipes</h2>
           <p>
             Le tournoi Errebot importé reste un tournoi de poules. Le classeur
-            de disponibilités fournit toutefois deux matrices : celle des
-            poules et celle prévue pour les futures phases finales. Pelote
-            Manager conserve ces dernières uniquement pour planifier son propre
-            tableau final une fois les qualifiés connus.
+            de disponibilités fournit toutefois deux matrices : celle des poules
+            et celle prévue pour les futures phases finales. Pelote Manager
+            conserve ces dernières uniquement pour planifier son propre tableau
+            final une fois les qualifiés connus.
           </p>
         </div>
         <strong>{context.acceptedTeamCount} équipes</strong>

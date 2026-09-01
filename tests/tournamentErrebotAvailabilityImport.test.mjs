@@ -180,7 +180,10 @@ test("les disponibilités finales Errebot n importent aucune structure finale", 
   assert.match(finalAvailabilityMigration, /finals_known boolean/);
   assert.match(finalAvailabilityMigration, /finals_slot_count integer/);
   assert.match(finalAvailabilityMigration, /source\.phase/);
-  assert.match(finalAvailabilityMigration, /'finals_structure_imported', false/);
+  assert.match(
+    finalAvailabilityMigration,
+    /'finals_structure_imported', false/,
+  );
   assert.doesNotMatch(
     finalAvailabilityMigration,
     /insert into public\.tournament_final_seeds/,
@@ -235,13 +238,19 @@ test("l import des disponibilités ne déplace jamais le planning existant", () 
 });
 
 test("les reports Errebot utilisent la couverture de la phase concernée", () => {
-  assert.match(finalAvailabilityMigration, /target_phase in \('pools', 'finals'\)/);
+  assert.match(
+    finalAvailabilityMigration,
+    /target_phase in \('pools', 'finals'\)/,
+  );
   assert.match(
     finalAvailabilityMigration,
     /when target_phase = 'finals' then state\.finals_known/,
   );
   assert.match(finalAvailabilityMigration, /else state\.pools_known/);
-  assert.match(finalAvailabilityMigration, /restrict_swaps := not coverage_complete/);
+  assert.match(
+    finalAvailabilityMigration,
+    /restrict_swaps := not coverage_complete/,
+  );
 });
 
 test("le back-office explique que l onglet final apporte seulement des disponibilités", () => {
@@ -250,7 +259,10 @@ test("le back-office explique que l onglet final apporte seulement des disponibi
   assert.match(service, /phase: item\.phase/);
   assert.match(service, /finalsKnownTeamCount/);
   assert.doesNotMatch(service, /Joueur1|Joueur2|player1|player2/);
-  assert.match(component, /Le tournoi Errebot importé reste un tournoi de poules/);
+  assert.match(
+    component,
+    /Le tournoi Errebot importé reste un tournoi de poules/,
+  );
   assert.match(component, /Aucun match final Errebot n’a été importé/);
   assert.match(component, /moteur natif de génération et de planification/);
   assert.match(teamsPage, /AdminErrebotAvailabilityImport/);

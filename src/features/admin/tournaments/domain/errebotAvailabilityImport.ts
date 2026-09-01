@@ -283,7 +283,8 @@ export const parseErrebotAvailabilityWorkbook = (
   if (finalsRequired && !detectedPhases.has("finals")) {
     issues.push({
       row: 0,
-      message: "Aucun onglet de disponibilités des phases finales Errebot n’a été reconnu.",
+      message:
+        "Aucun onglet de disponibilités des phases finales Errebot n’a été reconnu.",
     });
   }
   if (declarations.length === 0 && issues.length === 0) {
