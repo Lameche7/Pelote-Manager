@@ -140,7 +140,10 @@ export function TournamentRankings({
                                   {generalValueLabel(team, generalRankings)}
                                 </td>
                                 <td>
-                                  {generalGoalAverageLabel(team, generalRankings)}
+                                  {generalGoalAverageLabel(
+                                    team,
+                                    generalRankings,
+                                  )}
                                 </td>
                                 <td>{team.pointsFor}</td>
                                 <td>{team.pointsAgainst}</td>
@@ -209,7 +212,9 @@ export function TournamentRankings({
                                 <td>{goalAverageLabel(team, rankings)}</td>
                                 <td>{team.headToHeadWins}</td>
                                 <td>
-                                  {numberFormatter.format(team.pointsForPerMatch)}
+                                  {numberFormatter.format(
+                                    team.pointsForPerMatch,
+                                  )}
                                 </td>
                                 <td>
                                   {numberFormatter.format(team.winPercentage)} %
@@ -233,8 +238,9 @@ export function TournamentRankings({
       <p className="tournament-rankings__note">
         Avant le premier résultat, toutes les équipes démarrent à zéro. Ensuite,
         seuls les résultats validés dans Pelote Manager alimentent les
-        classements. Départage : critère principal → goal-average → confrontation
-        directe → points marqués par partie → pourcentage de victoires.
+        classements. Départage : critère principal → goal-average →
+        confrontation directe → points marqués par partie → pourcentage de
+        victoires.
       </p>
     </section>
   );
