@@ -164,7 +164,7 @@ test("Mes tournois expose une prévisualisation sans permettre encore de déplac
   assert.match(component, /échanges de matchs sont désactivés/);
   assert.match(
     component,
-    /seuls les créneaux réellement\s+libres sont proposés/,
+    /seuls les créneaux\s+réellement\s+libres sont proposés/,
   );
   assert.match(component, /Aucun\s+temps de repos minimum/);
   assert.match(component, /protège les équipes qui ne demandent pas le report/);
