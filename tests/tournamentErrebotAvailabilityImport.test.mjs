@@ -98,7 +98,10 @@ test("l'import différé reste administratif, validé et sans mutation du planni
   assert.match(migration, /has_club_permission[\s\S]*tournaments\.manage/);
   assert.match(migration, /errebot_availability_imported/);
   assert.doesNotMatch(migration, /update public\.tournament_match_planning/);
-  assert.doesNotMatch(migration, /delete from public\.tournament_match_planning/);
+  assert.doesNotMatch(
+    migration,
+    /delete from public\.tournament_match_planning/,
+  );
 });
 
 test("les échanges Errebot restent bloqués jusqu'à la couverture complète", () => {
