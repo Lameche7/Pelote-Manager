@@ -74,10 +74,24 @@ const mapCandidate = (value: unknown): ErrebotIdentityCandidate => {
 const mapImportResult = (value: unknown): ErrebotTournamentImportResult => {
   const row = (value ?? {}) as Row;
   const summary = (row.summary ?? {}) as Row;
+  const matchFormat = row.matchFormat;
   const result: ErrebotTournamentImportResult = {
     importId: String(row.importId ?? ""),
     tournamentId: String(row.tournamentId ?? ""),
     alreadyImported: Boolean(row.alreadyImported),
+    optionsApplied:
+      row.optionsApplied === undefined ? undefined : Boolean(row.optionsApplied),
+    primaryResourceId: nullableString(row.primaryResourceId) ?? undefined,
+    resourceCount:
+      row.resourceCount === undefined ? undefined : Number(row.resourceCount),
+    matchFormat:
+      matchFormat === "single_game" || matchFormat === "best_of_three_sets"
+        ? matchFormat
+        : undefined,
+    slotDurationMinutes:
+      row.slotDurationMinutes === undefined
+        ? undefined
+        : Number(row.slotDurationMinutes),
     summary: {
       teamCount: Number(summary.teamCount ?? 0),
       poolCount: Number(summary.poolCount ?? 0),
@@ -155,7 +169,7 @@ export const errebotImportService = {
     payload: ErrebotTournamentImportPayload,
   ): Promise<ErrebotTournamentImportResult> {
     const { data, error } = await supabase.rpc(
-      "admin_import_errebot_tournament",
+      "admin_import_errebot_tournament_configured",
       { payload },
     );
     if (error) fail(error, "Impossible d’importer le tournoi Errebot.");
