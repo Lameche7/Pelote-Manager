@@ -9,7 +9,8 @@ const rows = (value: unknown): Row[] =>
 const time = (value: unknown) => String(value ?? "").slice(0, 5);
 
 export type TournamentReschedulePreference =
-  "recommended" | "requester_compromise";
+  | "recommended"
+  | "requester_compromise";
 
 export type TournamentRescheduleAvailabilitySource =
   | "unknown_from_errebot"
@@ -67,6 +68,10 @@ export type TournamentRescheduleSwap = {
   preference: TournamentReschedulePreference;
 };
 
+export type TournamentRescheduleOption =
+  | TournamentRescheduleFreeSlot
+  | TournamentRescheduleSwap;
+
 export type TournamentRescheduleOptions = {
   match: TournamentRescheduleMatchSummary;
   policy: {
@@ -85,6 +90,41 @@ export type TournamentRescheduleOptions = {
   };
   freeSlots: TournamentRescheduleFreeSlot[];
   swaps: TournamentRescheduleSwap[];
+};
+
+export type TournamentRescheduleRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled"
+  | "stale"
+  | "applied";
+
+export type TournamentRescheduleApproval = {
+  teamId: string;
+  teamLabel: string;
+  decision: "pending" | "approved" | "rejected";
+  isRequester: boolean;
+  canAct: boolean;
+  appActorCount: number;
+  decidedAt: string | null;
+};
+
+export type TournamentRescheduleRequest = {
+  id: string;
+  tournamentId: string;
+  tournamentName: string;
+  matchId: string;
+  requesterTeamId: string;
+  requesterLabel: string;
+  proposalKind: "free_slot" | "swap";
+  status: TournamentRescheduleRequestStatus;
+  match: TournamentRescheduleMatchSummary;
+  proposal: TournamentRescheduleOption;
+  approvals: TournamentRescheduleApproval[];
+  expiresAt: string;
+  createdAt: string;
+  canCancel: boolean;
 };
 
 const mapMatch = (value: unknown): TournamentRescheduleMatchSummary => {
@@ -163,6 +203,75 @@ const availabilitySource = (
   return "not_required";
 };
 
+const requestStatus = (value: unknown): TournamentRescheduleRequestStatus => {
+  if (
+    value === "approved" ||
+    value === "rejected" ||
+    value === "cancelled" ||
+    value === "stale" ||
+    value === "applied"
+  ) {
+    return value;
+  }
+  return "pending";
+};
+
+const mapApproval = (row: Row): TournamentRescheduleApproval => ({
+  teamId: String(row.team_id ?? ""),
+  teamLabel: String(row.team_label ?? "Équipe"),
+  decision:
+    row.decision === "approved" || row.decision === "rejected"
+      ? row.decision
+      : "pending",
+  isRequester: Boolean(row.is_requester),
+  canAct: Boolean(row.can_act),
+  appActorCount: Number(row.app_actor_count ?? 0),
+  decidedAt: row.decided_at ? String(row.decided_at) : null,
+});
+
+const mapRequest = (row: Row): TournamentRescheduleRequest => {
+  const snapshot = (row.proposal_snapshot ?? {}) as Row;
+  const proposal = (snapshot.proposal ?? {}) as Row;
+  const proposalKind = row.proposal_kind === "swap" ? "swap" : "free_slot";
+  return {
+    id: String(row.id ?? ""),
+    tournamentId: String(row.tournament_id ?? ""),
+    tournamentName: String(row.tournament_name ?? ""),
+    matchId: String(row.match_id ?? ""),
+    requesterTeamId: String(row.requester_team_id ?? ""),
+    requesterLabel: String(row.requester_label ?? "Équipe"),
+    proposalKind,
+    status: requestStatus(row.status),
+    match: mapMatch(snapshot.match),
+    proposal:
+      proposalKind === "swap" ? mapSwap(proposal) : mapFreeSlot(proposal),
+    approvals: rows(row.approvals).map(mapApproval),
+    expiresAt: String(row.expires_at ?? ""),
+    createdAt: String(row.created_at ?? ""),
+    canCancel: Boolean(row.can_cancel),
+  };
+};
+
+const optionPayload = (option: TournamentRescheduleOption): Row => {
+  if (option.kind === "swap") {
+    return {
+      kind: option.kind,
+      swap_match_id: option.swapMatchId,
+      resource_id: option.resourceId,
+      play_date: option.playDate,
+      starts_at: option.startsAt,
+      ends_at: option.endsAt,
+    };
+  }
+  return {
+    kind: option.kind,
+    resource_id: option.resourceId,
+    play_date: option.playDate,
+    starts_at: option.startsAt,
+    ends_at: option.endsAt,
+  };
+};
+
 const knownErrors: Record<string, string> = {
   "Tournament match not found": "Cette partie n’existe plus.",
   "Tournament team cannot request this reschedule":
@@ -178,19 +287,26 @@ const knownErrors: Record<string, string> = {
     "Une partie ayant déjà un résultat ne peut plus être reportée.",
   "Tournament match has already started":
     "Une partie commencée ne peut plus être reportée.",
+  "Tournament reschedule proposal is no longer available":
+    "Cette solution n’est plus disponible. Relancez la recherche.",
+  "Tournament match already has an active reschedule request":
+    "Une demande de report est déjà en cours pour cette partie.",
+  "Tournament reschedule request is no longer pending":
+    "Cette demande n’est plus en attente de réponse.",
+  "Tournament team cannot decide this reschedule":
+    "Vous ne pouvez pas répondre au nom de cette équipe.",
+  "Tournament team has already decided this reschedule":
+    "Votre équipe a déjà répondu à cette demande.",
+  "Tournament reschedule request cannot be cancelled":
+    "Cette demande ne peut plus être annulée.",
 };
 
-const fail = (error: unknown): never => {
+const fail = (error: unknown, fallback: string): never => {
   if (error && typeof error === "object" && "message" in error) {
     const message = String((error as { message?: unknown }).message ?? "");
     if (knownErrors[message]) throw new Error(knownErrors[message]);
   }
-  throw new Error(
-    getSupabaseErrorMessage(
-      error,
-      "Impossible de rechercher des solutions de report.",
-    ),
-  );
+  throw new Error(getSupabaseErrorMessage(error, fallback));
 };
 
 export const tournamentRescheduleService = {
@@ -206,7 +322,7 @@ export const tournamentRescheduleService = {
       },
     );
 
-    if (error) fail(error);
+    if (error) fail(error, "Impossible de rechercher des solutions de report.");
 
     const root = (data ?? {}) as Row;
     const policy = (root.policy ?? {}) as Row;
@@ -240,5 +356,55 @@ export const tournamentRescheduleService = {
       freeSlots: rows(root.free_slots).map(mapFreeSlot),
       swaps: rows(root.swaps).map(mapSwap),
     };
+  },
+
+  async createRequest(
+    matchId: string,
+    requesterTeamId: string,
+    option: TournamentRescheduleOption,
+  ): Promise<string> {
+    const { data, error } = await supabase.rpc(
+      "create_my_tournament_reschedule_request",
+      {
+        target_match_id: matchId,
+        requester_team_id: requesterTeamId,
+        proposal: optionPayload(option),
+      },
+    );
+    if (error) fail(error, "Impossible de créer la demande de report.");
+    return String(data ?? "");
+  },
+
+  async listRequests(): Promise<TournamentRescheduleRequest[]> {
+    const { data, error } = await supabase.rpc(
+      "get_my_tournament_reschedule_requests",
+    );
+    if (error) fail(error, "Impossible de charger les demandes de report.");
+    return rows(data).map(mapRequest);
+  },
+
+  async decideRequest(
+    requestId: string,
+    teamId: string,
+    decision: "approved" | "rejected",
+  ): Promise<TournamentRescheduleRequestStatus> {
+    const { data, error } = await supabase.rpc(
+      "decide_my_tournament_reschedule_request",
+      {
+        target_request_id: requestId,
+        acting_team_id: teamId,
+        target_decision: decision,
+      },
+    );
+    if (error) fail(error, "Impossible d’enregistrer la réponse de votre équipe.");
+    return requestStatus(data);
+  },
+
+  async cancelRequest(requestId: string): Promise<void> {
+    const { error } = await supabase.rpc(
+      "cancel_my_tournament_reschedule_request",
+      { target_request_id: requestId },
+    );
+    if (error) fail(error, "Impossible d’annuler cette demande de report.");
   },
 };
