@@ -17,7 +17,10 @@ test("un import Errebot déjà publié est retiré du calendrier avant reconfigu
     /rename to admin_import_errebot_tournament_configured_core/,
   );
   assert.match(migration, /existing_tournament_status = 'planning_published'/);
-  assert.match(migration, /admin_unpublish_tournament_planning\(existing_tournament_id\)/);
+  assert.match(
+    migration,
+    /admin_unpublish_tournament_planning\(existing_tournament_id\)/,
+  );
   assert.match(
     migration,
     /admin_import_errebot_tournament_configured_core\(payload\)/,
@@ -31,10 +34,7 @@ test("un import Errebot déjà publié est retiré du calendrier avant reconfigu
 });
 
 test("les autres états avancés restent verrouillés", () => {
-  assert.match(
-    migration,
-    /existing_tournament_status <> 'planning_generated'/,
-  );
+  assert.match(migration, /existing_tournament_status <> 'planning_generated'/);
   assert.match(
     migration,
     /Imported Errebot tournament options are locked after publication/,
