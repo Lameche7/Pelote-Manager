@@ -6,11 +6,38 @@ export type ErrebotImportFileMetadata = {
   hash: string;
 };
 
+export type ErrebotTournamentMatchFormat =
+  | "single_game"
+  | "best_of_three_sets";
+export type ErrebotTournamentRankingMode =
+  | "total_points"
+  | "points_per_match";
+export type ErrebotTournamentGoalAverageMode =
+  | "point_difference"
+  | "point_difference_per_match";
+
+export type ErrebotTournamentSportingRulesSelection = {
+  matchFormat: ErrebotTournamentMatchFormat;
+  singleGamePoints: number;
+  mainSetPoints: number;
+  decidingSetPoints: number;
+  baseWinPoints: number;
+  baseLossPoints: number;
+  offensiveBonusPoints: number;
+  defensiveBonusPoints: number;
+  offensiveBonusMargin: number;
+  defensiveBonusMargin: number;
+  rankingMode: ErrebotTournamentRankingMode;
+  goalAverageMode: ErrebotTournamentGoalAverageMode;
+};
+
 export type ErrebotTournamentImportSelection = {
   name: string;
   seasonId: string;
-  resourceId: string;
+  resourceIds: string[];
+  primaryResourceId: string;
   slotDurationMinutes: number;
+  sportingRules: ErrebotTournamentSportingRulesSelection;
 };
 
 export type ErrebotTournamentImportPayload = {
@@ -20,7 +47,14 @@ export type ErrebotTournamentImportPayload = {
     hash: string;
     parserVersion: string;
   };
-  tournament: ErrebotTournamentImportSelection;
+  tournament: {
+    name: string;
+    seasonId: string;
+    resourceIds: string[];
+    primaryResourceId: string;
+    slotDurationMinutes: number;
+  };
+  sportingRules: ErrebotTournamentSportingRulesSelection;
   series: Array<{ name: string }>;
   teams: ErrebotTournamentParseResult["teams"];
   pools: ErrebotTournamentParseResult["pools"];
@@ -31,6 +65,11 @@ export type ErrebotTournamentImportResult = {
   importId: string;
   tournamentId: string;
   alreadyImported: boolean;
+  optionsApplied?: boolean;
+  primaryResourceId?: string;
+  resourceCount?: number;
+  matchFormat?: ErrebotTournamentMatchFormat;
+  slotDurationMinutes?: number;
   summary: {
     teamCount: number;
     poolCount: number;
@@ -72,9 +111,11 @@ export const buildErrebotTournamentImportPayload = (
   tournament: {
     name: selection.name.trim(),
     seasonId: selection.seasonId,
-    resourceId: selection.resourceId,
+    resourceIds: selection.resourceIds,
+    primaryResourceId: selection.primaryResourceId,
     slotDurationMinutes: selection.slotDurationMinutes,
   },
+  sportingRules: selection.sportingRules,
   series: parsed.series.map((series) => ({ name: series.series })),
   teams: parsed.teams,
   pools: parsed.pools,
