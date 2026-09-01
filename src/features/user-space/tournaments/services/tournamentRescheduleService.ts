@@ -9,7 +9,13 @@ const rows = (value: unknown): Row[] =>
 const time = (value: unknown) => String(value ?? "").slice(0, 5);
 
 export type TournamentReschedulePreference =
-  "recommended" | "requester_compromise";
+  | "recommended"
+  | "requester_compromise";
+
+export type TournamentRescheduleAvailabilitySource =
+  | "unknown_from_errebot"
+  | "declared"
+  | "not_required";
 
 export type TournamentRescheduleMatchSummary = {
   id: string;
@@ -66,6 +72,9 @@ export type TournamentRescheduleOptions = {
     minimumRestEnforced: boolean;
     requesterMayTakeExtraSameDayMatch: boolean;
     otherTeamsSameDayLoadProtected: boolean;
+    swapsEnabled: boolean;
+    availabilitySource: TournamentRescheduleAvailabilitySource;
+    swapRestrictionReason: "errebot_availability_not_imported" | null;
   };
   freeSlots: TournamentRescheduleFreeSlot[];
   swaps: TournamentRescheduleSwap[];
@@ -133,6 +142,13 @@ const mapSwap = (row: Row): TournamentRescheduleSwap => ({
       : "recommended",
 });
 
+const availabilitySource = (
+  value: unknown,
+): TournamentRescheduleAvailabilitySource => {
+  if (value === "unknown_from_errebot" || value === "declared") return value;
+  return "not_required";
+};
+
 const knownErrors: Record<string, string> = {
   "Tournament match not found": "Cette partie n’existe plus.",
   "Tournament team cannot request this reschedule":
@@ -190,6 +206,13 @@ export const tournamentRescheduleService = {
         otherTeamsSameDayLoadProtected: Boolean(
           policy.other_teams_same_day_load_protected,
         ),
+        swapsEnabled: policy.swaps_enabled !== false,
+        availabilitySource: availabilitySource(policy.availability_source),
+        swapRestrictionReason:
+          policy.swap_restriction_reason ===
+          "errebot_availability_not_imported"
+            ? "errebot_availability_not_imported"
+            : null,
       },
       freeSlots: rows(root.free_slots).map(mapFreeSlot),
       swaps: rows(root.swaps).map(mapSwap),
