@@ -41,22 +41,24 @@ const statusLabels: Record<string, string> = {
 };
 
 type PoolCounts = {
+  3: number;
   4: number;
   5: number;
   6: number;
 };
 
-const emptyPoolCounts = (): PoolCounts => ({ 4: 0, 5: 0, 6: 0 });
+const emptyPoolCounts = (): PoolCounts => ({ 3: 0, 4: 0, 5: 0, 6: 0 });
 
 const poolCountsFromSizes = (sizes: readonly number[]): PoolCounts => {
   const result = emptyPoolCounts();
   for (const size of sizes) {
-    if (size === 4 || size === 5 || size === 6) result[size] += 1;
+    if (size === 3 || size === 4 || size === 5 || size === 6) result[size] += 1;
   }
   return result;
 };
 
-const poolSizesFromCounts = (counts: PoolCounts): (4 | 5 | 6)[] => [
+const poolSizesFromCounts = (counts: PoolCounts): (3 | 4 | 5 | 6)[] => [
+  ...Array.from({ length: Math.max(counts[3], 0) }, () => 3 as const),
   ...Array.from({ length: Math.max(counts[4], 0) }, () => 4 as const),
   ...Array.from({ length: Math.max(counts[5], 0) }, () => 5 as const),
   ...Array.from({ length: Math.max(counts[6], 0) }, () => 6 as const),
@@ -64,7 +66,7 @@ const poolSizesFromCounts = (counts: PoolCounts): (4 | 5 | 6)[] => [
 
 const formatPoolSizes = (sizes: readonly number[]) => {
   const counts = poolCountsFromSizes(sizes);
-  return ([4, 5, 6] as const)
+  return ([3, 4, 5, 6] as const)
     .filter((size) => counts[size] > 0)
     .map((size) => `${counts[size]} × ${size}`)
     .join(" · ");
@@ -330,7 +332,7 @@ export function AdminTournamentPoolsPage() {
     }));
   };
 
-  const changePoolSizeCount = (size: 4 | 5 | 6, value: number) => {
+  const changePoolSizeCount = (size: 3 | 4 | 5 | 6, value: number) => {
     if (!activeSeries) return;
     setPoolCounts((current) => ({
       ...current,
@@ -495,7 +497,7 @@ export function AdminTournamentPoolsPage() {
           <p className="admin-page__lead">
             Le moteur privilégie les poules de 4, puis répartit au mieux les
             clubs et optimise les disponibilités. L’administrateur peut imposer
-            une autre répartition de poules de 4, 5 ou 6.
+            une autre répartition de poules de 3, 4, 5 ou 6.
           </p>
         </div>
       </header>
@@ -697,7 +699,7 @@ export function AdminTournamentPoolsPage() {
                 </div>
 
                 <div className="admin-tournament-pools__distribution-controls">
-                  {([4, 5, 6] as const).map((size) => (
+                  {([3, 4, 5, 6] as const).map((size) => (
                     <label key={size}>
                       Poules de {size}
                       <input

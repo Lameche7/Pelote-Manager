@@ -117,9 +117,7 @@ export function AdminTournamentPublicationPage() {
     preview.matchCount === preview.plannedMatchCount;
   const hasConflicts = (preview?.conflicts.length ?? 0) > 0;
   const canPublish =
-    preview?.tournament.status === "planning_generated" &&
-    complete &&
-    !hasConflicts;
+    preview?.tournament.status === "planning_generated" && complete;
   const isPublished = preview?.tournament.status === "planning_published";
 
   const chooseTournament = async (id: string) => {
@@ -143,8 +141,12 @@ export function AdminTournamentPublicationPage() {
 
   const publish = async () => {
     if (!preview || !canPublish) return;
+
+    const priorityCopy = hasConflicts
+      ? `\n\n${preview.conflicts.length} occupation(s) concurrente(s) seront automatiquement libérées : les réservations concernées seront annulées avec le motif « Priorité tournoi », les autres tournois seront retirés du calendrier et les événements ou blocages seront supplantés.`
+      : "";
     const confirmed = window.confirm(
-      `Publier ${preview.matchCount} matchs de « ${preview.tournament.name} » dans le calendrier des réservations ?\n\nLes terrains concernés seront bloqués aux horaires du planning.`,
+      `Publier ${preview.matchCount} matchs de « ${preview.tournament.name} » dans le calendrier des réservations ?${priorityCopy}\n\nLe tournoi devient prioritaire sur les occupations existantes aux mêmes horaires.`,
     );
     if (!confirmed) return;
 
@@ -152,13 +154,37 @@ export function AdminTournamentPublicationPage() {
     setError("");
     setMessage("");
     try {
-      const count = await adminTournamentPublicationService.publish(
-        preview.tournament.id,
-      );
-      await refresh(preview.tournament.id);
-      setMessage(
-        `${count} matchs publiés. Les créneaux sont maintenant bloqués dans le calendrier des réservations.`,
-      );
+      if (hasConflicts) {
+        const result = await adminTournamentPublicationService.publishPriority(
+          preview.tournament.id,
+        );
+        await refresh(preview.tournament.id);
+        const impacts = [
+          result.cancelledReservationCount > 0
+            ? `${result.cancelledReservationCount} réservation(s) annulée(s)`
+            : "",
+          result.displacedTournamentCount > 0
+            ? `${result.displacedTournamentCount} autre(s) tournoi(s) retiré(s)`
+            : "",
+          result.archivedEventCount > 0
+            ? `${result.archivedEventCount} événement(s) archivé(s)`
+            : "",
+          result.cancelledBlockCount > 0
+            ? `${result.cancelledBlockCount} blocage(s) supplanté(s)`
+            : "",
+        ].filter(Boolean);
+        setMessage(
+          `${result.publishedCount} matchs publiés en priorité.${impacts.length > 0 ? ` ${impacts.join(" · ")}.` : ""}`,
+        );
+      } else {
+        const count = await adminTournamentPublicationService.publish(
+          preview.tournament.id,
+        );
+        await refresh(preview.tournament.id);
+        setMessage(
+          `${count} matchs publiés. Les créneaux sont maintenant bloqués dans le calendrier des réservations.`,
+        );
+      }
     } catch (publishError) {
       setError(
         publishError instanceof Error
@@ -200,6 +226,39 @@ export function AdminTournamentPublicationPage() {
     }
   };
 
+  const resolveConflictingTournament = async (
+    tournamentId: string,
+    tournamentName: string,
+  ) => {
+    if (!preview) return;
+    const selectedTournamentId = preview.tournament.id;
+    const confirmed = window.confirm(
+      `Retirer « ${tournamentName} » du calendrier pour libérer ses créneaux ?\n\nLe tournoi et ses matchs seront conservés. Seules ses occupations publiées seront retirées du calendrier.`,
+    );
+    if (!confirmed) return;
+
+    setPublishing(true);
+    setError("");
+    setMessage("");
+    try {
+      const count =
+        await adminTournamentPublicationService.unpublish(tournamentId);
+      await refresh(selectedTournamentId);
+      setMessage(
+        `${count} matchs de « ${tournamentName} » ont été retirés du calendrier. Les conflits ont été recalculés.`,
+      );
+    } catch (unpublishError) {
+      setError(
+        unpublishError instanceof Error
+          ? unpublishError.message
+          : "Impossible de retirer le tournoi en conflit du calendrier.",
+      );
+      await loadPreview(selectedTournamentId).catch(() => undefined);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   return (
     <section className="admin-page admin-tournament-publication">
       <header className="admin-page__header admin-tournament-publication__header">
@@ -207,9 +266,9 @@ export function AdminTournamentPublicationPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Publication du planning</h1>
           <p className="admin-page__lead">
-            Vérifiez les conflits puis publiez le planning validé dans le
-            calendrier global. Les matchs deviennent alors de vraies occupations
-            bloquantes pour les réservations.
+            Vérifiez les impacts puis publiez le planning validé dans le
+            calendrier global. Un tournoi publié est prioritaire sur les autres
+            occupations aux mêmes horaires.
           </p>
         </div>
         <Link
@@ -287,7 +346,7 @@ export function AdminTournamentPublicationPage() {
               </strong>
             </article>
             <article className="admin-card">
-              <span>Conflits calendrier</span>
+              <span>Impacts calendrier</span>
               <strong className={hasConflicts ? "is-error" : "is-success"}>
                 {preview.conflicts.length}
               </strong>
@@ -334,12 +393,13 @@ export function AdminTournamentPublicationPage() {
                   )}
                   {complete && !hasConflicts && (
                     <p className="is-success">
-                      Aucun conflit détecté. Le planning peut être publié.
+                      Aucun impact détecté. Le planning peut être publié.
                     </p>
                   )}
-                  {hasConflicts && (
+                  {complete && hasConflicts && (
                     <p className="is-error">
-                      Corrigez les conflits ci-dessous avant de publier.
+                      {preview.conflicts.length} occupation(s) seront libérées
+                      automatiquement : le tournoi est prioritaire.
                     </p>
                   )}
                 </div>
@@ -351,7 +411,9 @@ export function AdminTournamentPublicationPage() {
                 >
                   {publishing
                     ? "Publication en cours…"
-                    : `Publier ${preview.matchCount} matchs dans le calendrier`}
+                    : hasConflicts
+                      ? `Publier ${preview.matchCount} matchs en priorité`
+                      : `Publier ${preview.matchCount} matchs dans le calendrier`}
                 </button>
               </div>
             )}
@@ -361,11 +423,12 @@ export function AdminTournamentPublicationPage() {
             <section className="admin-card admin-tournament-publication__conflicts">
               <header>
                 <div>
-                  <h2>Conflits à résoudre</h2>
+                  <h2>Occupations remplacées à la publication</h2>
                   <p>
-                    Ces occupations existent déjà dans le calendrier. Le moteur
-                    refuse toute publication partielle : aucun match ne sera
-                    publié tant qu’un conflit subsiste.
+                    Le tournoi est prioritaire. Ces occupations seront libérées
+                    dans la même transaction juste avant la publication des
+                    matchs. Si la publication échoue, aucune modification ne
+                    sera conservée.
                   </p>
                 </div>
                 <strong>{preview.conflicts.length}</strong>
@@ -391,6 +454,25 @@ export function AdminTournamentPublicationPage() {
                         {formatDateTime(conflict.occupationStartsAt)} →{" "}
                         {formatDateTime(conflict.occupationEndsAt)}
                       </small>
+                      {conflict.conflictTournamentId &&
+                        conflict.conflictTournamentName &&
+                        conflict.conflictTournamentStatus ===
+                          "planning_published" && (
+                          <button
+                            type="button"
+                            className="admin-tournament-publication__resolve-conflict"
+                            disabled={publishing}
+                            onClick={() =>
+                              void resolveConflictingTournament(
+                                conflict.conflictTournamentId!,
+                                conflict.conflictTournamentName!,
+                              )
+                            }
+                          >
+                            Retirer « {conflict.conflictTournamentName} » du
+                            calendrier maintenant
+                          </button>
+                        )}
                     </div>
                   </article>
                 ))}

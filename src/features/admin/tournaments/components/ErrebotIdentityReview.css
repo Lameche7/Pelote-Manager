@@ -1,0 +1,85 @@
+.errebot-identity-review {
+  display: grid;
+  gap: 1rem;
+}
+
+.errebot-identity-review__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.errebot-identity-review__filters button.is-active {
+  border-color: var(--club-accent, #1e5aa8);
+  box-shadow: inset 0 0 0 1px var(--club-accent, #1e5aa8);
+  font-weight: 800;
+}
+
+.errebot-identity-review__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.errebot-identity-review__row-actions > span {
+  font-weight: 750;
+  opacity: 0.72;
+}
+
+.errebot-identity-review__search-row td {
+  background: rgb(30 90 168 / 4%);
+}
+
+.errebot-identity-review__search-panel {
+  display: flex;
+  gap: 0.6rem;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.errebot-identity-review__search-panel label {
+  display: grid;
+  gap: 0.35rem;
+  width: min(100%, 34rem);
+  font-weight: 750;
+}
+
+.errebot-identity-review__search-panel input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.errebot-identity-review__candidates {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+}
+
+.errebot-identity-review__candidates > div {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgb(107 114 128 / 14%);
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
+}
+
+.errebot-identity-review__candidates span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.errebot-identity-review__candidates small {
+  opacity: 0.68;
+}
+
+@media (max-width: 760px) {
+  .errebot-identity-review__search-panel,
+  .errebot-identity-review__candidates > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

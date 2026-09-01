@@ -14,11 +14,13 @@ export type PoolDraftTeam = {
   teamId: string;
 };
 
+export type PoolSize = 3 | 4 | 5 | 6;
+
 export type PoolDraft = {
   key: string;
   seriesId: string;
   displayOrder: number;
-  targetSize: 4 | 5 | 6;
+  targetSize: PoolSize;
   teams: PoolDraftTeam[];
 };
 
@@ -43,7 +45,7 @@ export type SeriesPoolInput = {
 export type GeneratePoolOptions = {
   series: SeriesPoolInput[];
   pairings: PoolCompatibility[];
-  poolSizesBySeries?: Record<string, (4 | 5 | 6)[]>;
+  poolSizesBySeries?: Record<string, PoolSize[]>;
   random?: () => number;
   iterationsPerSeries?: number;
 };
@@ -82,8 +84,7 @@ export const commonSlots = (
   teamBId: string,
 ) => compatibility.get(compatibilityKey(teamAId, teamBId)) ?? 0;
 
-export const poolSizesFor = (teamCount: number): (4 | 5 | 6)[] => {
-  if (teamCount === 0) return [];
+const poolSizesWithoutThrees = (teamCount: number): (4 | 5 | 6)[] => {
   if (teamCount < 4) return [];
 
   let best: { fours: number; fives: number; sixes: number } | null = null;
@@ -116,12 +117,33 @@ export const poolSizesFor = (teamCount: number): (4 | 5 | 6)[] => {
   ];
 };
 
+export const poolSizesFor = (teamCount: number): PoolSize[] => {
+  if (teamCount === 0) return [];
+  if (teamCount < 3) return [];
+
+  const withoutThrees = poolSizesWithoutThrees(teamCount);
+  if (withoutThrees.length > 0) return withoutThrees;
+
+  for (let threes = 1; threes <= Math.floor(teamCount / 3); threes += 1) {
+    const remaining = teamCount - threes * 3;
+    if (remaining === 0) {
+      return Array.from({ length: threes }, () => 3 as const);
+    }
+    const rest = poolSizesWithoutThrees(remaining);
+    if (rest.length > 0) {
+      return [...Array.from({ length: threes }, () => 3 as const), ...rest];
+    }
+  }
+
+  return [];
+};
+
 export const poolSizesAreValidFor = (
   teamCount: number,
   sizes: readonly number[],
-): sizes is readonly (4 | 5 | 6)[] =>
+): sizes is readonly PoolSize[] =>
   sizes.length > 0 &&
-  sizes.every((size) => size === 4 || size === 5 || size === 6) &&
+  sizes.every((size) => size === 3 || size === 4 || size === 5 || size === 6) &&
   sizes.reduce((sum, size) => sum + size, 0) === teamCount;
 
 const shuffle = <T>(items: T[], random: () => number) => {
@@ -268,14 +290,14 @@ const clubMetricIsEqual = (left: PoolClubMetric, right: PoolClubMetric) =>
 const seedSeriesPools = (
   series: SeriesPoolInput,
   random: () => number,
-  requestedSizes?: readonly (4 | 5 | 6)[],
+  requestedSizes?: readonly PoolSize[],
 ) => {
   const sizes = requestedSizes
     ? [...requestedSizes]
     : poolSizesFor(series.teams.length);
   if (!poolSizesAreValidFor(series.teams.length, sizes)) {
     throw new Error(
-      `${series.name} compte ${series.teams.length} équipes : la répartition choisie doit utiliser uniquement des poules de 4, 5 ou 6 et affecter toutes les équipes.`,
+      `${series.name} compte ${series.teams.length} équipes : la répartition choisie doit utiliser uniquement des poules de 3, 4, 5 ou 6 et affecter toutes les équipes.`,
     );
   }
 
@@ -442,7 +464,7 @@ export const movePoolTeam = (
   if (
     !team ||
     sourcePool.seriesId !== targetPool.seriesId ||
-    sourcePool.teams.length <= 4 ||
+    sourcePool.teams.length <= 3 ||
     targetPool.teams.length >= 6
   ) {
     return result;
@@ -452,7 +474,7 @@ export const movePoolTeam = (
     (candidate) => candidate.teamId !== teamId,
   );
   targetPool.teams.push(team);
-  sourcePool.targetSize = sourcePool.teams.length as 4 | 5 | 6;
-  targetPool.targetSize = targetPool.teams.length as 4 | 5 | 6;
+  sourcePool.targetSize = sourcePool.teams.length as PoolSize;
+  targetPool.targetSize = targetPool.teams.length as PoolSize;
   return result;
 };

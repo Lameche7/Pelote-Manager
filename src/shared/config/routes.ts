@@ -21,6 +21,7 @@ export const ROUTES = {
   adminMembers: "/admin/membres",
   adminEvents: "/admin/evenements",
   adminTournaments: "/admin/tournois",
+  adminTournamentImport: "/admin/tournois/importer",
   adminTournamentTeams: "/admin/tournois/equipes",
   adminTournamentPools: "/admin/tournois/poules",
   adminTournamentQualification: "/admin/tournois/qualifications",

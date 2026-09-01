@@ -244,6 +244,15 @@
   font-weight: 800;
 }
 
+.admin-tournament-publication .admin-tournament-publication__resolve-conflict {
+  width: fit-content;
+  margin-top: 0.35rem;
+  border-color: rgb(185 28 28 / 28%);
+  background: #fff;
+  color: #b91c1c;
+  font-size: 0.76rem;
+}
+
 .admin-tournament-publication__empty {
   text-align: center;
 }

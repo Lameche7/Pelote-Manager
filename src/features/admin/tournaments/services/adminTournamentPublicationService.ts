@@ -28,6 +28,9 @@ export type TournamentPublicationConflict = {
   occupationTitle: string;
   occupationStartsAt: string;
   occupationEndsAt: string;
+  conflictTournamentId: string | null;
+  conflictTournamentName: string | null;
+  conflictTournamentStatus: TournamentStatus | null;
 };
 
 export type TournamentPublicationPreview = {
@@ -42,6 +45,14 @@ export type TournamentPublicationPreview = {
   plannedMatchCount: number;
   publishedMatchCount: number;
   conflicts: TournamentPublicationConflict[];
+};
+
+export type TournamentPriorityPublicationResult = {
+  publishedCount: number;
+  cancelledReservationCount: number;
+  displacedTournamentCount: number;
+  archivedEventCount: number;
+  cancelledBlockCount: number;
 };
 
 const knownErrors: Record<string, string> = {
@@ -70,6 +81,9 @@ const fail = (error: unknown, fallback: string): never => {
   }
   throw new Error(getSupabaseErrorMessage(error, fallback));
 };
+
+const nullableString = (value: unknown) =>
+  value === null || value === undefined || value === "" ? null : String(value);
 
 const mapSummary = (row: Row): TournamentPublicationSummary => ({
   id: String(row.id),
@@ -113,7 +127,25 @@ const mapPreview = (value: unknown): TournamentPublicationPreview => {
       occupationTitle: String(conflict.occupation_title ?? "Indisponible"),
       occupationStartsAt: String(conflict.occupation_starts_at),
       occupationEndsAt: String(conflict.occupation_ends_at),
+      conflictTournamentId: nullableString(conflict.conflict_tournament_id),
+      conflictTournamentName: nullableString(conflict.conflict_tournament_name),
+      conflictTournamentStatus: conflict.conflict_tournament_status
+        ? (String(conflict.conflict_tournament_status) as TournamentStatus)
+        : null,
     })),
+  };
+};
+
+const mapPriorityPublication = (
+  value: unknown,
+): TournamentPriorityPublicationResult => {
+  const row = (value ?? {}) as Row;
+  return {
+    publishedCount: Number(row.published_count ?? 0),
+    cancelledReservationCount: Number(row.cancelled_reservation_count ?? 0),
+    displacedTournamentCount: Number(row.displaced_tournament_count ?? 0),
+    archivedEventCount: Number(row.archived_event_count ?? 0),
+    cancelledBlockCount: Number(row.cancelled_block_count ?? 0),
   };
 };
 
@@ -143,6 +175,18 @@ export const adminTournamentPublicationService = {
     );
     if (error) fail(error, "Impossible de publier le planning du tournoi.");
     return Number(data ?? 0);
+  },
+
+  async publishPriority(
+    tournamentId: string,
+  ): Promise<TournamentPriorityPublicationResult> {
+    const { data, error } = await supabase.rpc(
+      "admin_publish_tournament_planning_priority",
+      { target_tournament_id: tournamentId },
+    );
+    if (error)
+      fail(error, "Impossible de publier le tournoi avec priorité calendrier.");
+    return mapPriorityPublication(data);
   },
 
   async unpublish(tournamentId: string): Promise<number> {
