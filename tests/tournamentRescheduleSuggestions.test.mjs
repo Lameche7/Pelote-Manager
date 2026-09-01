@@ -45,15 +45,15 @@ test("le moteur de report est en lecture seule et réservé à l'équipe du joue
   assert.match(migration, /Tournament match is not published/);
   assert.match(migration, /Tournament match already has a result/);
   assert.doesNotMatch(migration, /update public\.tournament_match_planning/);
-  assert.doesNotMatch(migration, /delete from public\.tournament_match_planning/);
+  assert.doesNotMatch(
+    migration,
+    /delete from public\.tournament_match_planning/,
+  );
   assert.match(migration, /commit;\s*$/);
 });
 
 test("un report protège les équipes qui ne sont pas à l'origine de la demande", () => {
-  assert.match(
-    migration,
-    /other_teams_same_day_load_protected', true/,
-  );
+  assert.match(migration, /other_teams_same_day_load_protected', true/);
   assert.match(
     migration,
     /opponent_target_other_matches\s*<= measured\.opponent_original_other_matches/,
@@ -93,7 +93,10 @@ test("les suggestions proposent d'abord les créneaux libres puis les échanges 
 
 test("les occupations, chevauchements et disponibilités déclarées des autres équipes restent protégés", () => {
   assert.match(migration, /public\.calendar_occupations/);
-  assert.match(migration, /occupation\.starts_at < candidate\.absolute_ends_at/);
+  assert.match(
+    migration,
+    /occupation\.starts_at < candidate\.absolute_ends_at/,
+  );
   assert.match(migration, /other_planning\.starts_at < candidate\.ends_at/);
   assert.match(migration, /opponent_declared_available/);
   assert.match(migration, /swap_a_declared_available/);

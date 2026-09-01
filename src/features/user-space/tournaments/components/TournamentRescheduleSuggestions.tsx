@@ -38,7 +38,9 @@ function RequesterWarnings({
     option.requesterSameDayPenalty === 0 &&
     !option.requesterOutsideDeclaredAvailability
   ) {
-    return <span>Aucune contrainte supplémentaire détectée pour votre équipe.</span>;
+    return (
+      <span>Aucune contrainte supplémentaire détectée pour votre équipe.</span>
+    );
   }
 
   return (
@@ -52,7 +54,9 @@ function RequesterWarnings({
         </li>
       )}
       {option.requesterOutsideDeclaredAvailability && (
-        <li>Ce créneau est hors des disponibilités déclarées de votre équipe.</li>
+        <li>
+          Ce créneau est hors des disponibilités déclarées de votre équipe.
+        </li>
       )}
     </ul>
   );
@@ -110,8 +114,9 @@ function SwapCard({ option }: { option: TournamentRescheduleSwap }) {
         <p>
           <strong>Leur match</strong> reprend votre créneau actuel :
           <span>
-            {dateLabel(option.swapMovesToPlayDate)} · {option.swapMovesToStartsAt}
-            –{option.swapMovesToEndsAt} · {option.swapMovesToResourceName}
+            {dateLabel(option.swapMovesToPlayDate)} ·{" "}
+            {option.swapMovesToStartsAt}–{option.swapMovesToEndsAt} ·{" "}
+            {option.swapMovesToResourceName}
           </span>
         </p>
       </div>
@@ -129,7 +134,9 @@ export function TournamentRescheduleSuggestions({
   teamId,
   onClose,
 }: Props) {
-  const [options, setOptions] = useState<TournamentRescheduleOptions | null>(null);
+  const [options, setOptions] = useState<TournamentRescheduleOptions | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -165,10 +172,16 @@ export function TournamentRescheduleSuggestions({
   const visibleSwaps = swaps.slice(0, 6);
 
   return (
-    <div className="tournament-reschedule" role="region" aria-label="Solutions de report">
+    <div
+      className="tournament-reschedule"
+      role="region"
+      aria-label="Solutions de report"
+    >
       <header>
         <div>
-          <span className="tournament-reschedule__eyebrow">Report de partie</span>
+          <span className="tournament-reschedule__eyebrow">
+            Report de partie
+          </span>
           <h4>Solutions possibles</h4>
         </div>
         <button type="button" onClick={onClose}>
@@ -224,9 +237,13 @@ export function TournamentRescheduleSuggestions({
                   {freeSlots.length > visibleFreeSlots.length && (
                     <small>
                       + {freeSlots.length - visibleFreeSlots.length} autre
-                      {freeSlots.length - visibleFreeSlots.length > 1 ? "s" : ""}
-                      {" "}solution
-                      {freeSlots.length - visibleFreeSlots.length > 1 ? "s" : ""}
+                      {freeSlots.length - visibleFreeSlots.length > 1
+                        ? "s"
+                        : ""}{" "}
+                      solution
+                      {freeSlots.length - visibleFreeSlots.length > 1
+                        ? "s"
+                        : ""}
                     </small>
                   )}
                 </section>
@@ -243,8 +260,8 @@ export function TournamentRescheduleSuggestions({
                   {swaps.length > visibleSwaps.length && (
                     <small>
                       + {swaps.length - visibleSwaps.length} autre
-                      {swaps.length - visibleSwaps.length > 1 ? "s" : ""}
-                      {" "}échange
+                      {swaps.length - visibleSwaps.length > 1 ? "s" : ""}{" "}
+                      échange
                       {swaps.length - visibleSwaps.length > 1 ? "s" : ""}
                     </small>
                   )}

@@ -9,8 +9,7 @@ const rows = (value: unknown): Row[] =>
 const time = (value: unknown) => String(value ?? "").slice(0, 5);
 
 export type TournamentReschedulePreference =
-  | "recommended"
-  | "requester_compromise";
+  "recommended" | "requester_compromise";
 
 export type TournamentRescheduleMatchSummary = {
   id: string;
