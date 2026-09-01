@@ -1,20 +1,25 @@
 import { useEffect, useState, type ChangeEvent } from "react";
-import {
-  parseErrebotAvailabilityImport,
-  type ErrebotAvailabilityImportIssue,
-  type ErrebotAvailabilityImportRow,
+import type {
+  ErrebotAvailabilityDeclaration,
+  ErrebotAvailabilityImportIssue,
+  ErrebotAvailabilityImportRow,
+  ErrebotAvailabilitySheetSummary,
 } from "@/features/admin/tournaments/domain/errebotAvailabilityImport";
 import {
   adminErrebotAvailabilityImportService,
   type AdminErrebotAvailabilityContext,
   type AdminErrebotAvailabilityPreview,
 } from "@/features/admin/tournaments/services/adminErrebotAvailabilityImportService";
+import { errebotAvailabilityWorkbookService } from "@/features/admin/tournaments/services/errebotAvailabilityWorkbookService";
 import "./AdminErrebotAvailabilityImport.css";
 
 type Props = {
   tournamentId: string;
   onImported?: () => Promise<void> | void;
 };
+
+const phaseLabel = (phase: "pools" | "finals") =>
+  phase === "pools" ? "Poules" : "Phases finales";
 
 export function AdminErrebotAvailabilityImport({
   tournamentId,
@@ -23,6 +28,12 @@ export function AdminErrebotAvailabilityImport({
   const [context, setContext] =
     useState<AdminErrebotAvailabilityContext | null>(null);
   const [items, setItems] = useState<ErrebotAvailabilityImportRow[]>([]);
+  const [declarations, setDeclarations] = useState<
+    ErrebotAvailabilityDeclaration[]
+  >([]);
+  const [sheetSummaries, setSheetSummaries] = useState<
+    ErrebotAvailabilitySheetSummary[]
+  >([]);
   const [issues, setIssues] = useState<ErrebotAvailabilityImportIssue[]>([]);
   const [preview, setPreview] =
     useState<AdminErrebotAvailabilityPreview | null>(null);
@@ -44,6 +55,8 @@ export function AdminErrebotAvailabilityImport({
     let active = true;
     setLoading(true);
     setItems([]);
+    setDeclarations([]);
+    setSheetSummaries([]);
     setIssues([]);
     setPreview(null);
     setFileName("");
@@ -73,7 +86,10 @@ export function AdminErrebotAvailabilityImport({
     };
   }, [tournamentId]);
 
-  const previewRows = async (nextItems: ErrebotAvailabilityImportRow[]) => {
+  const previewRows = async (
+    nextItems: ErrebotAvailabilityImportRow[],
+    nextDeclarations: ErrebotAvailabilityDeclaration[],
+  ) => {
     setChecking(true);
     setError("");
     setMessage("");
@@ -83,6 +99,7 @@ export function AdminErrebotAvailabilityImport({
         await adminErrebotAvailabilityImportService.preview(
           tournamentId,
           nextItems,
+          nextDeclarations,
         ),
       );
     } catch (cause) {
@@ -104,29 +121,55 @@ export function AdminErrebotAvailabilityImport({
     setError("");
     setMessage("");
     setPreview(null);
+    setItems([]);
+    setDeclarations([]);
+    setSheetSummaries([]);
+    setIssues([]);
+
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
+      setIssues([
+        {
+          row: 0,
+          message:
+            "Sélectionnez directement le classeur .xlsx exporté par Errebot.",
+        },
+      ]);
+      return;
+    }
 
     try {
-      const parsed = parseErrebotAvailabilityImport(
-        await file.text(),
+      const parsed = await errebotAvailabilityWorkbookService.parse(
+        file,
         context.slotDurationMinutes,
+        context.finalsRequired,
       );
       setItems(parsed.rows);
+      setDeclarations(parsed.declarations);
+      setSheetSummaries(parsed.sheets);
       setIssues(parsed.issues);
-      if (parsed.issues.length === 0 && parsed.rows.length > 0) {
-        await previewRows(parsed.rows);
+      if (parsed.issues.length === 0 && parsed.declarations.length > 0) {
+        await previewRows(parsed.rows, parsed.declarations);
       }
     } catch {
       setItems([]);
-      setIssues([{ row: 0, message: "Impossible de lire ce fichier." }]);
+      setDeclarations([]);
+      setSheetSummaries([]);
+      setIssues([
+        {
+          row: 0,
+          message:
+            "Impossible de lire ce classeur Excel. Vérifiez qu’il s’agit bien du fichier .xlsx exporté par Errebot.",
+        },
+      ]);
     }
   };
 
   const apply = async () => {
-    if (!preview?.valid || items.length === 0 || !context) return;
+    if (!preview?.valid || declarations.length === 0 || !context) return;
     if (
-      context.knownTeamCount > 0 &&
+      (context.poolsKnownTeamCount > 0 || context.finalsKnownTeamCount > 0) &&
       !window.confirm(
-        "Les disponibilités déjà importées des équipes présentes dans ce fichier seront remplacées. Continuer ?",
+        "Pour les équipes présentes dans le classeur, les disponibilités de chaque phase importée seront remplacées. Le planning actuel restera inchangé. Continuer ?",
       )
     ) {
       return;
@@ -139,15 +182,23 @@ export function AdminErrebotAvailabilityImport({
       const result = await adminErrebotAvailabilityImportService.apply(
         tournamentId,
         items,
+        declarations,
       );
       await loadContext();
       await onImported?.();
+      const finalsStatus = context.finalsRequired
+        ? ` Phases finales : ${result.finalsKnownTeamCount}/${result.acceptedTeamCount}.`
+        : "";
       setMessage(
-        result.coverageComplete
-          ? `${result.importedSlotCount} créneaux importés. Les ${result.acceptedTeamCount} équipes ont maintenant des disponibilités connues : les échanges peuvent être proposés.`
-          : `${result.importedSlotCount} créneaux importés pour ${result.importedTeamCount} équipes. Couverture actuelle : ${result.knownTeamCount}/${result.acceptedTeamCount} équipes.`,
+        `${result.importedSlotCount} créneaux importés pour ${result.importedTeamCount} équipes. Poules : ${result.poolsKnownTeamCount}/${result.acceptedTeamCount}.${finalsStatus}${
+          result.coverageComplete
+            ? " Les disponibilités nécessaires sont maintenant complètes."
+            : " Les échanges restent protégés pour toute phase encore incomplète."
+        }`,
       );
       setItems([]);
+      setDeclarations([]);
+      setSheetSummaries([]);
       setIssues([]);
       setPreview(null);
       setFileName("");
@@ -174,58 +225,77 @@ export function AdminErrebotAvailabilityImport({
           <p className="admin-page__eyebrow">Import Errebot</p>
           <h2>Disponibilités des équipes</h2>
           <p>
-            Importez à posteriori les créneaux choisis lors des inscriptions.
-            Cette opération ne modifie ni les matchs ni le planning publié.
+            Déposez directement le classeur Excel Errebot. Pelote Manager lit
+            séparément les onglets de poules et de phases finales sans modifier
+            ni les matchs ni le planning publié.
           </p>
         </div>
-        <strong>
-          {context.knownTeamCount}/{context.acceptedTeamCount} équipes
-        </strong>
+        <strong>{context.acceptedTeamCount} équipes</strong>
       </div>
 
-      {context.coverageComplete ? (
-        <p className="admin-errebot-availability__status" role="status">
-          Toutes les équipes ont des disponibilités connues. Un nouvel import
-          peut servir à les corriger.
-        </p>
-      ) : (
-        <p className="admin-errebot-availability__status" role="status">
-          Tant que la couverture n’est pas complète, les échanges de créneaux
-          restent désactivés. Les reports vers un créneau libre restent
-          possibles.
-        </p>
-      )}
+      <div className="admin-errebot-availability__status" role="status">
+        <strong>
+          Poules : {context.poolsKnownTeamCount}/{context.acceptedTeamCount}
+        </strong>
+        {context.finalsRequired && (
+          <strong>
+            Phases finales : {context.finalsKnownTeamCount}/
+            {context.acceptedTeamCount}
+          </strong>
+        )}
+        <span>
+          Les échanges ne sont activés, pour une phase donnée, que lorsque les
+          disponibilités de toutes les équipes y sont connues.
+        </span>
+      </div>
 
       <div className="admin-errebot-availability__format">
-        <strong>Format accepté</strong>
-        <code>N° équipe ; Date ; Heure ; Fin (facultative)</code>
+        <strong>Format Errebot reconnu automatiquement</strong>
+        <code>
+          Série | ID équipe | Joueur1 | Joueur2 | 21/09/2026 17h30 (27367) | …
+        </code>
         <span>
-          Une ligne par créneau choisi. Dates acceptées : 24/08/2026 ou
-          2026-08-24. Si « Fin » manque, Pelote Manager applique la durée du
-          tournoi ({context.slotDurationMinutes} min).
+          Les colonnes Joueur1/Joueur2 sont ignorées et ne sont jamais envoyées
+          à Supabase. Une cellule non vide sous un créneau signifie que l’équipe
+          est disponible ; une cellule vide signifie qu’elle ne l’est pas.
         </span>
       </div>
 
       <label className="admin-errebot-availability__file">
-        Fichier CSV / TSV
+        Classeur Excel Errebot (.xlsx)
         <input
           type="file"
-          accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           disabled={checking || saving}
           onChange={(event) => void chooseFile(event)}
         />
       </label>
 
       {fileName && <p>Fichier sélectionné : {fileName}</p>}
-      {checking && <p role="status">Contrôle des équipes et des créneaux…</p>}
+      {checking && <p role="status">Lecture des onglets et contrôle des créneaux…</p>}
+
+      {sheetSummaries.length > 0 && (
+        <div className="admin-errebot-availability__preview">
+          <strong>Onglets reconnus</strong>
+          <ul>
+            {sheetSummaries.map((sheet) => (
+              <li key={`${sheet.sheet}-${sheet.phase}`}>
+                {sheet.sheet} — {phaseLabel(sheet.phase)} : {sheet.teamCount}{" "}
+                équipes, {sheet.slotCount} disponibilités
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {issues.length > 0 && (
         <div className="admin-errebot-availability__errors" role="alert">
-          <strong>Le fichier doit être corrigé.</strong>
+          <strong>Le classeur doit être contrôlé.</strong>
           <ul>
             {issues.slice(0, 8).map((issue, index) => (
-              <li key={`${issue.row}-${index}`}>
-                {issue.row > 0 ? `Ligne ${issue.row} : ` : ""}
+              <li key={`${issue.sheet ?? "file"}-${issue.row}-${index}`}>
+                {issue.sheet ? `${issue.sheet} — ` : ""}
+                {issue.row > 0 ? `ligne ${issue.row} : ` : ""}
                 {issue.message}
               </li>
             ))}
@@ -237,15 +307,25 @@ export function AdminErrebotAvailabilityImport({
         <div className="admin-errebot-availability__preview">
           <strong>Prévisualisation</strong>
           <p>
-            {preview.rowCount} créneaux reconnus pour {preview.teamCount}{" "}
-            équipes. Couverture après import : {preview.knownTeamCountAfter}/
+            {preview.rowCount} disponibilités reconnues pour {preview.teamCount}{" "}
+            équipes.
+          </p>
+          <p>
+            Poules après import : {preview.poolsKnownTeamCountAfter}/
             {preview.acceptedTeamCount} équipes.
+            {context.finalsRequired && (
+              <>
+                {" "}Phases finales : {preview.finalsKnownTeamCountAfter}/
+                {preview.acceptedTeamCount} équipes.
+              </>
+            )}
           </p>
           {preview.errors.length > 0 && (
             <ul className="admin-errebot-availability__errors">
               {preview.errors.slice(0, 8).map((item, index) => (
                 <li key={`${item.row}-${item.code}-${index}`}>
-                  Ligne {item.row} : {item.message}
+                  {item.row > 0 ? `Ligne ${item.row} : ` : ""}
+                  {item.message}
                 </li>
               ))}
             </ul>
@@ -259,7 +339,7 @@ export function AdminErrebotAvailabilityImport({
             >
               {saving
                 ? "Import en cours…"
-                : `Importer ${preview.rowCount} créneaux`}
+                : `Importer ${preview.rowCount} disponibilités`}
             </button>
           )}
         </div>
