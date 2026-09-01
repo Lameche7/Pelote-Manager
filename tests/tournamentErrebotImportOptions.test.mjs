@@ -41,6 +41,10 @@ test("l'import configuré applique les règles et reste réutilisable sur un fic
   assert.match(migration, /status <> 'planning_generated'/);
   assert.match(migration, /update public\.tournament_sporting_rules/);
   assert.match(migration, /errebot_options_configured/);
+  assert.match(
+    migration,
+    /grant execute on function public\.admin_import_errebot_tournament_configured\(jsonb\)\s+to authenticated/,
+  );
   assert.match(migration, /commit;\s*$/);
 });
 
