@@ -35,6 +35,7 @@ import { AdminTournamentPlanningPage } from "@/features/admin/tournaments/pages/
 import { AdminTournamentPoolsPage } from "@/features/admin/tournaments/pages/AdminTournamentPoolsPage";
 import { AdminTournamentPublicationPage } from "@/features/admin/tournaments/pages/AdminTournamentPublicationPage";
 import { AdminTournamentQualificationPage } from "@/features/admin/tournaments/pages/AdminTournamentQualificationPage";
+import { AdminTournamentReschedulePage } from "@/features/admin/tournaments/pages/AdminTournamentReschedulePage";
 import { AdminTournamentResultsPage } from "@/features/admin/tournaments/pages/AdminTournamentResultsPage";
 import { AdminTournamentTeamsPage } from "@/features/admin/tournaments/pages/AdminTournamentTeamsPage";
 import { AdminTournamentsPage } from "@/features/admin/tournaments/pages/AdminTournamentsPage";
@@ -309,6 +310,13 @@ export const routes = [
             element: permitted(
               ADMIN_PERMISSIONS.tournaments,
               <AdminTournamentPublicationPage />,
+            ),
+          },
+          {
+            path: "tournois/reports",
+            element: permitted(
+              ADMIN_PERMISSIONS.tournaments,
+              <AdminTournamentReschedulePage />,
             ),
           },
           {
