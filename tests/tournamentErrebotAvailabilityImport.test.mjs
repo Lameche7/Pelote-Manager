@@ -10,9 +10,16 @@ const foundationMigration = readFileSync(
   ),
   "utf8",
 );
-const poolMigration = readFileSync(
+const finalAvailabilityMigration = readFileSync(
   new URL(
-    "../supabase/migrations/20260901201500_errebot_pool_availability_only.sql",
+    "../supabase/migrations/20260901203000_errebot_final_availability_for_native_finals.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const nativeFinalPlanningMigration = readFileSync(
+  new URL(
+    "../supabase/migrations/20260827200000_full_final_stage_planning.sql",
     import.meta.url,
   ),
   "utf8",
@@ -46,7 +53,7 @@ const teamsPage = readFileSync(
   "utf8",
 );
 
-test("le classeur Errebot importe uniquement l onglet de poules", () => {
+test("le classeur Errebot lit les disponibilités de poules et de futures finales", () => {
   const parsed = parseErrebotAvailabilityWorkbook(
     [
       {
@@ -75,176 +82,177 @@ test("le classeur Errebot importe uniquement l onglet de poules", () => {
             "05/10/2026 19h30 (27409)",
           ],
           ["1re", 100, "Alice", "Bob", "oui"],
+          ["1re", 101, "Chloé", "David", ""],
         ],
       },
     ],
     60,
+    true,
   );
 
   assert.deepEqual(parsed.issues, []);
   assert.deepEqual(parsed.sourceSlots, [
     {
+      phase: "pools",
       playDate: "2026-09-21",
       startsAt: "17:30",
       endsAt: "18:30",
       sourceSlotId: "27367",
     },
     {
+      phase: "pools",
       playDate: "2026-09-21",
       startsAt: "18:30",
       endsAt: "19:30",
       sourceSlotId: "27368",
     },
+    {
+      phase: "finals",
+      playDate: "2026-10-05",
+      startsAt: "19:30",
+      endsAt: "20:30",
+      sourceSlotId: "27409",
+    },
   ]);
   assert.deepEqual(parsed.declarations, [
-    { externalTeamId: "100", slotCount: 1 },
-    { externalTeamId: "101", slotCount: 1 },
+    { externalTeamId: "100", phase: "pools", slotCount: 1 },
+    { externalTeamId: "101", phase: "pools", slotCount: 1 },
+    { externalTeamId: "100", phase: "finals", slotCount: 1 },
+    { externalTeamId: "101", phase: "finals", slotCount: 0 },
   ]);
-  assert.deepEqual(parsed.rows, [
-    {
-      externalTeamId: "100",
-      playDate: "2026-09-21",
-      startsAt: "17:30",
-      endsAt: "18:30",
-    },
-    {
-      externalTeamId: "101",
-      playDate: "2026-09-21",
-      startsAt: "18:30",
-      endsAt: "19:30",
-    },
-  ]);
-  assert.equal(parsed.sheets.length, 1);
-  assert.equal(parsed.sheets[0].sheet, "Poules");
-  assert.equal(parsed.sheets[0].teamCount, 2);
-  assert.equal(parsed.sheets[0].sourceSlotCount, 2);
+  assert.equal(parsed.rows.length, 3);
+  assert.equal(parsed.sheets.length, 2);
 });
 
-test("une équipe de poule sans créneau coché reste connue à zéro", () => {
+test("une équipe sans créneau final coché reste une disponibilité finale connue à zéro", () => {
   const parsed = parseErrebotAvailabilityWorkbook(
     [
       {
-        sheet: "Poules - disponibilités",
+        sheet: "Poules",
         data: [
           ["ID équipe", "21/09/2026 17h30 (27367)"],
+          [100, "X"],
+        ],
+      },
+      {
+        sheet: "Phases finales",
+        data: [
+          ["ID équipe", "05/10/2026 19h30 (27409)"],
           [100, ""],
         ],
       },
     ],
     60,
+    true,
   );
 
   assert.deepEqual(parsed.issues, []);
-  assert.deepEqual(parsed.rows, []);
-  assert.equal(parsed.sourceSlots.length, 1);
-  assert.deepEqual(parsed.declarations, [
-    { externalTeamId: "100", slotCount: 0 },
-  ]);
+  assert.deepEqual(parsed.declarations[1], {
+    externalTeamId: "100",
+    phase: "finals",
+    slotCount: 0,
+  });
 });
 
-test("le parseur exige seulement un onglet de poules", () => {
-  const missingPools = parseErrebotAvailabilityWorkbook(
+test("le parseur exige la matrice finale car elle sert au futur planning natif", () => {
+  const parsed = parseErrebotAvailabilityWorkbook(
     [
       {
-        sheet: "Phases finales",
+        sheet: "Poules",
         data: [
-          ["ID équipe", "05/10/2026 19h30 (27409)"],
+          ["ID équipe", "21/09/2026 17h30 (27367)"],
           [100, "X"],
         ],
       },
     ],
     60,
+    true,
   );
 
-  assert.match(missingPools.issues[0].message, /poules/i);
+  assert.match(parsed.issues[0].message, /phases finales/i);
 });
 
-test("la grille exacte Errebot remplace seulement la génération native des poules", () => {
-  assert.match(
-    poolMigration,
-    /create table if not exists public\.tournament_import_availability_slots/,
-  );
-  assert.match(poolMigration, /source_slot_id text/);
-  assert.match(
-    poolMigration,
-    /create or replace function public\.tournament_generated_slots/,
-  );
-  assert.match(poolMigration, /source_pool_slots as/);
-  assert.match(poolMigration, /native_phases as/);
-  assert.match(poolMigration, /'finals'::text/);
-  assert.match(poolMigration, /planned_pool_slots as/);
-  assert.match(poolMigration, /normalized_source_slots/);
-});
-
-test("une ancienne tentative d import de finales Errebot est neutralisée", () => {
-  assert.match(
-    poolMigration,
-    /delete from public\.tournament_team_availability_slots as availability[\s\S]*source\.phase = 'finals'/,
-  );
-  assert.match(
-    poolMigration,
-    /delete from public\.tournament_import_availability_slots[\s\S]*where phase = 'finals'/,
-  );
-  assert.match(poolMigration, /'finals_imported', false/);
-});
-
-test("l import différé reste administratif et ne modifie jamais le planning", () => {
+test("les disponibilités finales Errebot n importent aucune structure finale", () => {
   assert.match(
     foundationMigration,
     /create table if not exists public\.tournament_import_team_availability_state/,
   );
-  assert.match(
-    poolMigration,
-    /create or replace function public\.admin_preview_errebot_availability_import/,
+  assert.match(finalAvailabilityMigration, /finals_known boolean/);
+  assert.match(finalAvailabilityMigration, /finals_slot_count integer/);
+  assert.match(finalAvailabilityMigration, /source\.phase/);
+  assert.match(finalAvailabilityMigration, /'finals_structure_imported', false/);
+  assert.doesNotMatch(
+    finalAvailabilityMigration,
+    /insert into public\.tournament_final_seeds/,
   );
+  assert.doesNotMatch(
+    finalAvailabilityMigration,
+    /insert into public\.tournament_final_planning_nodes/,
+  );
+  assert.doesNotMatch(
+    finalAvailabilityMigration,
+    /insert into public\.tournament_matches/,
+  );
+});
+
+test("la grille finale Errebot nourrit le moteur final natif", () => {
   assert.match(
-    poolMigration,
+    finalAvailabilityMigration,
+    /create or replace function public\.tournament_generated_slots/,
+  );
+  assert.match(finalAvailabilityMigration, /source_phases as/);
+  assert.match(finalAvailabilityMigration, /phase = 'finals'/);
+  assert.match(finalAvailabilityMigration, /finals_starts_on = finals_start/);
+  assert.match(finalAvailabilityMigration, /finals_ends_on = finals_end/);
+  assert.match(nativeFinalPlanningMigration, /generated\.phase = 'finals'/);
+  assert.match(
+    nativeFinalPlanningMigration,
+    /public\.tournament_team_availability_slots/,
+  );
+});
+
+test("l import des disponibilités ne déplace jamais le planning existant", () => {
+  assert.match(
+    finalAvailabilityMigration,
     /create or replace function public\.admin_import_errebot_availability/,
   );
-  assert.match(poolMigration, /public\.tournament_import_team_refs/);
-  assert.match(poolMigration, /public\.tournament_team_availability_slots/);
-  assert.match(poolMigration, /has_club_permission[\s\S]*tournaments\.manage/);
-  assert.match(poolMigration, /errebot_pool_availability_imported/);
+  assert.match(
+    finalAvailabilityMigration,
+    /has_club_permission[\s\S]*tournaments\.manage/,
+  );
   assert.doesNotMatch(
-    poolMigration,
+    finalAvailabilityMigration,
     /insert into public\.tournament_match_planning/,
   );
   assert.doesNotMatch(
-    poolMigration,
+    finalAvailabilityMigration,
     /update public\.tournament_match_planning/,
   );
   assert.doesNotMatch(
-    poolMigration,
+    finalAvailabilityMigration,
     /delete from public\.tournament_match_planning/,
   );
 });
 
-test("les échanges Errebot sont débloqués uniquement par la couverture des poules", () => {
-  assert.match(poolMigration, /target_phase = 'pools'/);
+test("les reports Errebot utilisent la couverture de la phase concernée", () => {
+  assert.match(finalAvailabilityMigration, /target_phase in \('pools', 'finals'\)/);
   assert.match(
-    poolMigration,
-    /coverage_complete := accepted_team_count > 0[\s\S]*known_team_count = accepted_team_count/,
+    finalAvailabilityMigration,
+    /when target_phase = 'finals' then state\.finals_known/,
   );
-  assert.match(poolMigration, /restrict_swaps := not coverage_complete/);
-  assert.match(poolMigration, /'partial_from_errebot'/);
-  assert.match(poolMigration, /'errebot_imported'/);
-  assert.match(
-    poolMigration,
-    /jsonb_set\(result, '\{swaps\}', '\[\]'::jsonb, true\)/,
-  );
+  assert.match(finalAvailabilityMigration, /else state\.pools_known/);
+  assert.match(finalAvailabilityMigration, /restrict_swaps := not coverage_complete/);
 });
 
-test("le back-office lit le xlsx Errebot sans importer les phases finales ni les joueurs", () => {
+test("le back-office explique que l onglet final apporte seulement des disponibilités", () => {
   assert.match(workbookService, /read-excel-file\/browser/);
-  assert.doesNotMatch(workbookService, /finalsRequired/);
-  assert.match(service, /external_team_id: item\.externalTeamId/);
-  assert.match(service, /source_slots: sourceSlots\.map/);
-  assert.match(service, /source_slot_id: item\.sourceSlotId/);
-  assert.doesNotMatch(service, /finalsKnown|finalsCoverage|Joueur1|Joueur2/);
-  assert.match(component, /Disponibilités des équipes — poules/);
-  assert.match(component, /uniquement l’onglet des poules/);
-  assert.match(component, /L’onglet des phases finales est[\s\S]*ignoré/);
-  assert.match(component, /Joueur1\/Joueur2 sont ignorées/);
+  assert.match(workbookService, /finalsRequired/);
+  assert.match(service, /phase: item\.phase/);
+  assert.match(service, /finalsKnownTeamCount/);
+  assert.doesNotMatch(service, /Joueur1|Joueur2|player1|player2/);
+  assert.match(component, /Le tournoi Errebot importé reste un tournoi de poules/);
+  assert.match(component, /Aucun match final Errebot n’a été importé/);
+  assert.match(component, /moteur natif de génération et de planification/);
   assert.match(teamsPage, /AdminErrebotAvailabilityImport/);
   assert.match(teamsPage, /onImported=\{reloadSelected\}/);
 });
