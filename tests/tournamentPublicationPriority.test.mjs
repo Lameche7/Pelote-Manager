@@ -31,6 +31,10 @@ test("la publication prioritaire reste transactionnelle et délègue au moteur n
     migration,
     /published_count := public\.admin_publish_tournament_planning\(target_tournament\.id\)/,
   );
+  assert.match(
+    migration,
+    /grant execute on function public\.admin_publish_tournament_planning_priority\(uuid\)\s*to authenticated/,
+  );
   assert.match(migration, /commit;\s*$/i);
 });
 
