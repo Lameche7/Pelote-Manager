@@ -12,7 +12,11 @@ export type TournamentReschedulePreference =
   "recommended" | "requester_compromise";
 
 export type TournamentRescheduleAvailabilitySource =
-  "unknown_from_errebot" | "declared" | "not_required";
+  | "unknown_from_errebot"
+  | "partial_from_errebot"
+  | "errebot_imported"
+  | "declared"
+  | "not_required";
 
 export type TournamentRescheduleMatchSummary = {
   id: string;
@@ -71,7 +75,13 @@ export type TournamentRescheduleOptions = {
     otherTeamsSameDayLoadProtected: boolean;
     swapsEnabled: boolean;
     availabilitySource: TournamentRescheduleAvailabilitySource;
-    swapRestrictionReason: "errebot_availability_not_imported" | null;
+    availabilityKnownTeamCount: number;
+    availabilityTeamCount: number;
+    availabilityCoverageComplete: boolean;
+    swapRestrictionReason:
+      | "errebot_availability_not_imported"
+      | "errebot_availability_incomplete"
+      | null;
   };
   freeSlots: TournamentRescheduleFreeSlot[];
   swaps: TournamentRescheduleSwap[];
@@ -142,7 +152,14 @@ const mapSwap = (row: Row): TournamentRescheduleSwap => ({
 const availabilitySource = (
   value: unknown,
 ): TournamentRescheduleAvailabilitySource => {
-  if (value === "unknown_from_errebot" || value === "declared") return value;
+  if (
+    value === "unknown_from_errebot" ||
+    value === "partial_from_errebot" ||
+    value === "errebot_imported" ||
+    value === "declared"
+  ) {
+    return value;
+  }
   return "not_required";
 };
 
@@ -205,10 +222,20 @@ export const tournamentRescheduleService = {
         ),
         swapsEnabled: policy.swaps_enabled !== false,
         availabilitySource: availabilitySource(policy.availability_source),
+        availabilityKnownTeamCount: Number(
+          policy.availability_known_team_count ?? 0,
+        ),
+        availabilityTeamCount: Number(policy.availability_team_count ?? 0),
+        availabilityCoverageComplete: Boolean(
+          policy.availability_coverage_complete,
+        ),
         swapRestrictionReason:
-          policy.swap_restriction_reason === "errebot_availability_not_imported"
-            ? "errebot_availability_not_imported"
-            : null,
+          policy.swap_restriction_reason === "errebot_availability_incomplete"
+            ? "errebot_availability_incomplete"
+            : policy.swap_restriction_reason ===
+                "errebot_availability_not_imported"
+              ? "errebot_availability_not_imported"
+              : null,
       },
       freeSlots: rows(root.free_slots).map(mapFreeSlot),
       swaps: rows(root.swaps).map(mapSwap),
