@@ -4,6 +4,10 @@ import { TournamentRankings } from "@/features/tournaments/components/Tournament
 import { TournamentRegistrationForm } from "@/features/tournaments/components/TournamentRegistrationForm";
 import { TournamentResultsBoard } from "@/features/tournaments/components/TournamentResultsBoard";
 import {
+  tournamentGeneralRankingService,
+  type TournamentGeneralRankings,
+} from "@/features/tournaments/services/tournamentGeneralRankingService";
+import {
   tournamentRankingService,
   type TournamentRankings as TournamentRankingsPayload,
 } from "@/features/tournaments/services/tournamentRankingService";
@@ -52,6 +56,8 @@ export function TournamentDetailPage() {
   const [rankings, setRankings] = useState<TournamentRankingsPayload | null>(
     null,
   );
+  const [generalRankings, setGeneralRankings] =
+    useState<TournamentGeneralRankings | null>(null);
   const [results, setResults] = useState<PublicTournamentResults | null>(null);
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
@@ -60,15 +66,20 @@ export function TournamentDetailPage() {
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
-    const [publicTournament, loadedRankings, loadedResults] = await Promise.all(
-      [
-        tournamentService.getPublic(tournamentId),
-        tournamentRankingService.get(tournamentId),
-        tournamentResultsService.get(tournamentId),
-      ],
-    );
+    const [
+      publicTournament,
+      loadedRankings,
+      loadedGeneralRankings,
+      loadedResults,
+    ] = await Promise.all([
+      tournamentService.getPublic(tournamentId),
+      tournamentRankingService.get(tournamentId),
+      tournamentGeneralRankingService.get(tournamentId),
+      tournamentResultsService.get(tournamentId),
+    ]);
     setTournament(publicTournament);
     setRankings(publicTournament ? loadedRankings : null);
+    setGeneralRankings(publicTournament ? loadedGeneralRankings : null);
     setResults(publicTournament ? loadedResults : null);
     if (!publicTournament) {
       setRegistration(null);
@@ -222,6 +233,15 @@ export function TournamentDetailPage() {
             </section>
           )}
 
+          {rankings && (
+            <section className="public-tournament-panel">
+              <TournamentRankings
+                rankings={rankings}
+                generalRankings={generalRankings}
+              />
+            </section>
+          )}
+
           <section className="public-tournament-panel public-tournament-panel--teams">
             <div className="public-tournament-panel__compact-heading">
               <h2>Équipes inscrites</h2>
@@ -264,12 +284,6 @@ export function TournamentDetailPage() {
               ))}
             </div>
           </section>
-
-          {rankings && (
-            <section className="public-tournament-panel">
-              <TournamentRankings rankings={rankings} />
-            </section>
-          )}
 
           <section
             className="public-tournament-panel public-registration-panel"
