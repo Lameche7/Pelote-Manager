@@ -1,3 +1,4 @@
+// PR125 — garantit que l'import prépare les classements sans importer de résultats.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
