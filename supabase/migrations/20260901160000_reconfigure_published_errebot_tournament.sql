@@ -1,11 +1,18 @@
 begin;
 
 -- PR125 — permet de corriger les options d'un tournoi Errebot déjà publié.
--- Si le même fichier a déjà créé un tournoi en planning_published, on retire
--- d'abord son planning du calendrier dans la même transaction, puis on réutilise
--- le RPC de configuration existant. Toute erreur annule aussi la dépublication.
+-- On conserve le même contrat RPC côté front. Le coeur défini par la migration
+-- précédente est renommé, puis enveloppé pour retirer automatiquement un planning
+-- déjà publié avant d'appliquer les nouvelles options. Toute erreur annule aussi
+-- la dépublication car l'ensemble reste dans la même transaction PostgreSQL.
 
-create or replace function public.admin_import_errebot_tournament_reconfigurable(
+alter function public.admin_import_errebot_tournament_configured(jsonb)
+rename to admin_import_errebot_tournament_configured_core;
+
+revoke all on function public.admin_import_errebot_tournament_configured_core(jsonb)
+from public, anon, authenticated;
+
+create or replace function public.admin_import_errebot_tournament_configured(
   payload jsonb
 )
 returns jsonb
@@ -60,7 +67,7 @@ begin
     end if;
   end if;
 
-  import_result := public.admin_import_errebot_tournament_configured(payload);
+  import_result := public.admin_import_errebot_tournament_configured_core(payload);
 
   return import_result || jsonb_build_object(
     'planningWasUnpublished', planning_was_unpublished
@@ -68,9 +75,9 @@ begin
 end;
 $$;
 
-revoke all on function public.admin_import_errebot_tournament_reconfigurable(jsonb)
+revoke all on function public.admin_import_errebot_tournament_configured(jsonb)
 from public, anon, authenticated;
-grant execute on function public.admin_import_errebot_tournament_reconfigurable(jsonb)
+grant execute on function public.admin_import_errebot_tournament_configured(jsonb)
 to authenticated;
 
 commit;
