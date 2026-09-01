@@ -84,6 +84,29 @@ test("le classeur Errebot lit directement les onglets poules et phases finales",
   );
 
   assert.deepEqual(parsed.issues, []);
+  assert.deepEqual(parsed.sourceSlots, [
+    {
+      phase: "pools",
+      playDate: "2026-09-21",
+      startsAt: "17:30",
+      endsAt: "18:30",
+      sourceSlotId: "27367",
+    },
+    {
+      phase: "pools",
+      playDate: "2026-09-21",
+      startsAt: "18:30",
+      endsAt: "19:30",
+      sourceSlotId: "27368",
+    },
+    {
+      phase: "finals",
+      playDate: "2026-10-05",
+      startsAt: "19:30",
+      endsAt: "20:30",
+      sourceSlotId: "27409",
+    },
+  ]);
   assert.deepEqual(parsed.declarations, [
     { externalTeamId: "100", phase: "pools", slotCount: 1 },
     { externalTeamId: "101", phase: "pools", slotCount: 1 },
@@ -134,6 +157,7 @@ test("une équipe sans créneau coché reste une disponibilité connue à zéro"
 
   assert.deepEqual(parsed.issues, []);
   assert.deepEqual(parsed.rows, []);
+  assert.equal(parsed.sourceSlots.length, 1);
   assert.deepEqual(parsed.declarations, [
     { externalTeamId: "100", phase: "pools", slotCount: 0 },
   ]);
@@ -155,6 +179,25 @@ test("le parseur exige les deux onglets lorsque les finales sont configurées", 
   );
 
   assert.match(parsed.issues[0].message, /phases finales/i);
+});
+
+test("la grille exacte Errebot remplace la génération native phase par phase", () => {
+  assert.match(
+    phaseMigration,
+    /create table if not exists public\.tournament_import_availability_slots/,
+  );
+  assert.match(phaseMigration, /source_slot_id text/);
+  assert.match(
+    phaseMigration,
+    /create or replace function public\.tournament_generated_slots/,
+  );
+  assert.match(phaseMigration, /source_phases as/);
+  assert.match(
+    phaseMigration,
+    /where not exists \([\s\S]*imported_phase\.phase = native\.phase/,
+  );
+  assert.doesNotMatch(phaseMigration, /finals_not_configured/);
+  assert.match(phaseMigration, /normalized_source_slots/);
 });
 
 test("l'import différé reste administratif et ne modifie jamais le planning", () => {
@@ -212,10 +255,12 @@ test("la couverture Errebot est séparée entre poules et phases finales", () =>
 test("le back-office accepte directement le xlsx Errebot sans transmettre les joueurs", () => {
   assert.match(workbookService, /read-excel-file\/browser/);
   assert.match(service, /external_team_id: item\.externalTeamId/);
-  assert.match(service, /phase: item\.phase/);
+  assert.match(service, /source_slots: sourceSlots\.map/);
+  assert.match(service, /source_slot_id: item\.sourceSlotId/);
   assert.doesNotMatch(service, /Joueur1|Joueur2|player1|player2/);
   assert.match(component, /Classeur Excel Errebot \(\.xlsx\)/);
   assert.match(component, /Joueur1\/Joueur2 sont ignorées/);
+  assert.match(component, /grille exacte Errebot/);
   assert.match(component, /Poules après import/);
   assert.match(component, /Phases finales/);
   assert.match(teamsPage, /AdminErrebotAvailabilityImport/);
