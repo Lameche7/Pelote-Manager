@@ -1,0 +1,51 @@
+name: PR127 format reschedule approvals
+
+on:
+  push:
+    branches:
+      - agent/tournament-rescheduling
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/tournament-rescheduling
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format PR127 approval files
+        run: >-
+          npx prettier --write
+          src/features/admin/tournaments/pages/AdminTournamentReschedulePage.tsx
+          src/features/admin/tournaments/services/adminTournamentRescheduleService.ts
+          src/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel.css
+          src/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel.tsx
+          src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx
+          src/features/user-space/tournaments/pages/MyTournamentsPage.tsx
+          src/features/user-space/tournaments/services/tournamentRescheduleService.ts
+          tests/tournamentRescheduleSuggestions.test.mjs
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/admin/tournaments/pages/AdminTournamentReschedulePage.tsx \
+            src/features/admin/tournaments/services/adminTournamentRescheduleService.ts \
+            src/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel.css \
+            src/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel.tsx \
+            src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx \
+            src/features/user-space/tournaments/pages/MyTournamentsPage.tsx \
+            src/features/user-space/tournaments/services/tournamentRescheduleService.ts \
+            tests/tournamentRescheduleSuggestions.test.mjs
+          git commit -m "style(tournaments): format reschedule approval workflow"
+          git push origin HEAD:agent/tournament-rescheduling
