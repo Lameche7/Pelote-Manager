@@ -112,6 +112,11 @@ export function AdminTournamentReschedulePage() {
         </div>
       </header>
 
+      <p className="admin-reschedules__ready" role="status">
+        Phase de validation : les demandes et les accords sont actifs, mais
+        aucun bouton ne peut encore modifier le planning publié.
+      </p>
+
       <div className="admin-reschedules__toolbar">
         <button
           type="button"
