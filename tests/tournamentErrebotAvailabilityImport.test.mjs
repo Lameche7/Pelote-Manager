@@ -97,7 +97,10 @@ test("l'import différé reste administratif, validé et sans mutation du planni
   assert.match(migration, /public\.tournament_team_availability_slots/);
   assert.match(migration, /has_club_permission[\s\S]*tournaments\.manage/);
   assert.match(migration, /errebot_availability_imported/);
-  assert.doesNotMatch(migration, /insert into public\.tournament_match_planning/);
+  assert.doesNotMatch(
+    migration,
+    /insert into public\.tournament_match_planning/,
+  );
   assert.doesNotMatch(migration, /update public\.tournament_match_planning/);
   assert.doesNotMatch(
     migration,
