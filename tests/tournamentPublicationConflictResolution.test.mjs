@@ -43,5 +43,8 @@ test("l'écran permet de retirer directement un tournoi publié en conflit", () 
   assert.match(page, /resolveConflictingTournament/);
   assert.match(page, /conflictTournamentStatus ===\s*"planning_published"/);
   assert.match(page, /Retirer « \{conflict\.conflictTournamentName\} » du/);
-  assert.match(page, /adminTournamentPublicationService\.unpublish\(tournamentId\)/);
+  assert.match(
+    page,
+    /adminTournamentPublicationService\.unpublish\(tournamentId\)/,
+  );
 });
