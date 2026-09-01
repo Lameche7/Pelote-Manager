@@ -272,7 +272,9 @@ export function AdminErrebotAvailabilityImport({
       </label>
 
       {fileName && <p>Fichier sélectionné : {fileName}</p>}
-      {checking && <p role="status">Lecture des onglets et contrôle des créneaux…</p>}
+      {checking && (
+        <p role="status">Lecture des onglets et contrôle des créneaux…</p>
+      )}
 
       {sheetSummaries.length > 0 && (
         <div className="admin-errebot-availability__preview">
@@ -315,7 +317,8 @@ export function AdminErrebotAvailabilityImport({
             {preview.acceptedTeamCount} équipes.
             {context.finalsRequired && (
               <>
-                {" "}Phases finales : {preview.finalsKnownTeamCountAfter}/
+                {" "}
+                Phases finales : {preview.finalsKnownTeamCountAfter}/
                 {preview.acceptedTeamCount} équipes.
               </>
             )}

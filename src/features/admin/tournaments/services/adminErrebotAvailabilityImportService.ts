@@ -187,12 +187,8 @@ export const adminErrebotAvailabilityImportService = {
       finalsKnownTeamCountAfter: Number(
         root.finals_known_team_count_after ?? 0,
       ),
-      poolsCoverageCompleteAfter: Boolean(
-        root.pools_coverage_complete_after,
-      ),
-      finalsCoverageCompleteAfter: Boolean(
-        root.finals_coverage_complete_after,
-      ),
+      poolsCoverageCompleteAfter: Boolean(root.pools_coverage_complete_after),
+      finalsCoverageCompleteAfter: Boolean(root.finals_coverage_complete_after),
       coverageCompleteAfter: Boolean(root.coverage_complete_after),
       errors: rows(root.errors).map((item) => ({
         row: Number(item.row ?? 0),

@@ -12,10 +12,12 @@ export const errebotAvailabilityWorkbookService = {
     finalsRequired: boolean,
   ): Promise<ErrebotAvailabilityImportParseResult> {
     const workbook = await readExcelFile(file);
-    const sheets: ErrebotAvailabilityWorkbookSheet[] = workbook.map((sheet) => ({
-      sheet: sheet.sheet,
-      data: sheet.data as unknown[][],
-    }));
+    const sheets: ErrebotAvailabilityWorkbookSheet[] = workbook.map(
+      (sheet) => ({
+        sheet: sheet.sheet,
+        data: sheet.data as unknown[][],
+      }),
+    );
 
     return parseErrebotAvailabilityWorkbook(
       sheets,

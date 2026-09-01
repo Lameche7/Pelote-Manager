@@ -138,20 +138,25 @@ const selectedAvailability = (value: unknown) => {
   return true;
 };
 
-const externalTeamId = (value: unknown) => cellText(value).match(/\d+/)?.[0] ?? "";
+const externalTeamId = (value: unknown) =>
+  cellText(value).match(/\d+/)?.[0] ?? "";
 
 const findHeaderRow = (data: unknown[][], slotDurationMinutes: number) => {
   const maximum = Math.min(data.length, 20);
   for (let rowIndex = 0; rowIndex < maximum; rowIndex += 1) {
     const row = data[rowIndex] ?? [];
-    const teamColumn = row.findIndex((value) => TEAM_HEADERS.has(fold(cellText(value))));
+    const teamColumn = row.findIndex((value) =>
+      TEAM_HEADERS.has(fold(cellText(value))),
+    );
     const slotColumns = row
       .map((value, column) => ({
         column,
         slot: parseSlotHeader(value, slotDurationMinutes),
       }))
       .filter(
-        (item): item is {
+        (
+          item,
+        ): item is {
           column: number;
           slot: NonNullable<ReturnType<typeof parseSlotHeader>>;
         } => item.slot !== null,
@@ -195,47 +200,49 @@ export const parseErrebotAvailabilityWorkbook = (
     let teamCount = 0;
     let slotCount = 0;
 
-    workbookSheet.data.slice(header.rowIndex + 1).forEach((sheetRow, offset) => {
-      const rowNumber = header.rowIndex + offset + 2;
-      const teamId = externalTeamId(sheetRow?.[header.teamColumn]);
-      if (!teamId) return;
+    workbookSheet.data
+      .slice(header.rowIndex + 1)
+      .forEach((sheetRow, offset) => {
+        const rowNumber = header.rowIndex + offset + 2;
+        const teamId = externalTeamId(sheetRow?.[header.teamColumn]);
+        if (!teamId) return;
 
-      const declarationKey = `${teamId}|${phase}`;
-      if (seenDeclarations.has(declarationKey)) {
-        issues.push({
-          row: rowNumber,
-          sheet: workbookSheet.sheet,
-          message: `L’équipe Errebot ${teamId} apparaît plusieurs fois dans cet onglet.`,
-        });
-        return;
-      }
-      seenDeclarations.add(declarationKey);
-      teamCount += 1;
+        const declarationKey = `${teamId}|${phase}`;
+        if (seenDeclarations.has(declarationKey)) {
+          issues.push({
+            row: rowNumber,
+            sheet: workbookSheet.sheet,
+            message: `L’équipe Errebot ${teamId} apparaît plusieurs fois dans cet onglet.`,
+          });
+          return;
+        }
+        seenDeclarations.add(declarationKey);
+        teamCount += 1;
 
-      let selectedSlotCount = 0;
-      for (const item of header.slotColumns) {
-        if (!selectedAvailability(sheetRow?.[item.column])) continue;
+        let selectedSlotCount = 0;
+        for (const item of header.slotColumns) {
+          if (!selectedAvailability(sheetRow?.[item.column])) continue;
 
-        const key = `${teamId}|${phase}|${item.slot.playDate}|${item.slot.startsAt}|${item.slot.endsAt}`;
-        if (seenRows.has(key)) continue;
-        seenRows.add(key);
-        selectedSlotCount += 1;
-        slotCount += 1;
-        rows.push({
+          const key = `${teamId}|${phase}|${item.slot.playDate}|${item.slot.startsAt}|${item.slot.endsAt}`;
+          if (seenRows.has(key)) continue;
+          seenRows.add(key);
+          selectedSlotCount += 1;
+          slotCount += 1;
+          rows.push({
+            externalTeamId: teamId,
+            phase,
+            playDate: item.slot.playDate,
+            startsAt: item.slot.startsAt,
+            endsAt: item.slot.endsAt,
+          });
+        }
+
+        declarations.push({
           externalTeamId: teamId,
           phase,
-          playDate: item.slot.playDate,
-          startsAt: item.slot.startsAt,
-          endsAt: item.slot.endsAt,
+          slotCount: selectedSlotCount,
         });
-      }
-
-      declarations.push({
-        externalTeamId: teamId,
-        phase,
-        slotCount: selectedSlotCount,
       });
-    });
 
     sheets.push({
       sheet: workbookSheet.sheet,
