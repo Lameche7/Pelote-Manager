@@ -25,7 +25,6 @@ jobs:
       - run: >-
           npx prettier --write
           src/features/admin/tournaments/services/errebotImportService.ts
-          supabase/migrations/20260901160000_reconfigure_published_errebot_tournament.sql
           tests/tournamentErrebotPublishedReconfiguration.test.mjs
       - name: Commit formatting and remove helper workflow
         run: |
