@@ -3,6 +3,7 @@ import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages
 import type {
   ErrebotAvailabilityDeclaration,
   ErrebotAvailabilityImportRow,
+  ErrebotAvailabilitySourceSlot,
 } from "@/features/admin/tournaments/domain/errebotAvailabilityImport";
 
 type Row = Record<string, unknown>;
@@ -45,6 +46,7 @@ export type AdminErrebotAvailabilityPreviewError = {
 export type AdminErrebotAvailabilityPreview = {
   valid: boolean;
   rowCount: number;
+  sourceSlotCount: number;
   teamCount: number;
   poolTeamCount: number;
   finalsTeamCount: number;
@@ -62,6 +64,7 @@ export type AdminErrebotAvailabilityPreview = {
 export type AdminErrebotAvailabilityImportResult = {
   importedTeamCount: number;
   importedSlotCount: number;
+  sourceSlotCount: number;
   acceptedTeamCount: number;
   poolsKnownTeamCount: number;
   finalsKnownTeamCount: number;
@@ -91,7 +94,7 @@ const fail = (error: unknown, fallback: string): never => {
     }
     if (message === "Errebot availability import is invalid") {
       throw new Error(
-        "Le fichier contient encore des données invalides. Relancez la prévisualisation.",
+        "Le classeur contient encore des données invalides. Relancez la prévisualisation.",
       );
     }
   }
@@ -101,6 +104,7 @@ const fail = (error: unknown, fallback: string): never => {
 const payload = (
   items: ErrebotAvailabilityImportRow[],
   declarations: ErrebotAvailabilityDeclaration[],
+  sourceSlots: ErrebotAvailabilitySourceSlot[],
 ) => ({
   rows: items.map((item) => ({
     external_team_id: item.externalTeamId,
@@ -113,6 +117,13 @@ const payload = (
     external_team_id: item.externalTeamId,
     phase: item.phase,
     slot_count: item.slotCount,
+  })),
+  source_slots: sourceSlots.map((item) => ({
+    phase: item.phase,
+    play_date: item.playDate,
+    starts_at: item.startsAt,
+    ends_at: item.endsAt,
+    source_slot_id: item.sourceSlotId,
   })),
 });
 
@@ -160,19 +171,21 @@ export const adminErrebotAvailabilityImportService = {
     tournamentId: string,
     items: ErrebotAvailabilityImportRow[],
     declarations: ErrebotAvailabilityDeclaration[],
+    sourceSlots: ErrebotAvailabilitySourceSlot[],
   ): Promise<AdminErrebotAvailabilityPreview> {
     const { data, error } = await supabase.rpc(
       "admin_preview_errebot_availability_import",
       {
         target_tournament_id: tournamentId,
-        payload: payload(items, declarations),
+        payload: payload(items, declarations, sourceSlots),
       },
     );
-    if (error) fail(error, "Impossible de contrôler le fichier.");
+    if (error) fail(error, "Impossible de contrôler le classeur.");
     const root = (data ?? {}) as Row;
     return {
       valid: Boolean(root.valid),
       rowCount: Number(root.row_count ?? 0),
+      sourceSlotCount: Number(root.source_slot_count ?? 0),
       teamCount: Number(root.team_count ?? 0),
       poolTeamCount: Number(root.pool_team_count ?? 0),
       finalsTeamCount: Number(root.finals_team_count ?? 0),
@@ -202,12 +215,13 @@ export const adminErrebotAvailabilityImportService = {
     tournamentId: string,
     items: ErrebotAvailabilityImportRow[],
     declarations: ErrebotAvailabilityDeclaration[],
+    sourceSlots: ErrebotAvailabilitySourceSlot[],
   ): Promise<AdminErrebotAvailabilityImportResult> {
     const { data, error } = await supabase.rpc(
       "admin_import_errebot_availability",
       {
         target_tournament_id: tournamentId,
-        payload: payload(items, declarations),
+        payload: payload(items, declarations, sourceSlots),
       },
     );
     if (error) fail(error, "Impossible d’importer les disponibilités.");
@@ -215,6 +229,7 @@ export const adminErrebotAvailabilityImportService = {
     return {
       importedTeamCount: Number(root.imported_team_count ?? 0),
       importedSlotCount: Number(root.imported_slot_count ?? 0),
+      sourceSlotCount: Number(root.source_slot_count ?? 0),
       acceptedTeamCount: Number(root.accepted_team_count ?? 0),
       poolsKnownTeamCount: Number(root.pools_known_team_count ?? 0),
       finalsKnownTeamCount: Number(root.finals_known_team_count ?? 0),
