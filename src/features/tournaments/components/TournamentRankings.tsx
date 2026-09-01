@@ -140,10 +140,7 @@ export function TournamentRankings({
                                   {generalValueLabel(team, generalRankings)}
                                 </td>
                                 <td>
-                                  {generalGoalAverageLabel(
-                                    team,
-                                    generalRankings,
-                                  )}
+                                  {generalGoalAverageLabel(team, generalRankings)}
                                 </td>
                                 <td>{team.pointsFor}</td>
                                 <td>{team.pointsAgainst}</td>
@@ -212,9 +209,7 @@ export function TournamentRankings({
                                 <td>{goalAverageLabel(team, rankings)}</td>
                                 <td>{team.headToHeadWins}</td>
                                 <td>
-                                  {numberFormatter.format(
-                                    team.pointsForPerMatch,
-                                  )}
+                                  {numberFormatter.format(team.pointsForPerMatch)}
                                 </td>
                                 <td>
                                   {numberFormatter.format(team.winPercentage)} %
