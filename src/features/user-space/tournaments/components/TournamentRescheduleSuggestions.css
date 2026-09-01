@@ -1,0 +1,177 @@
+.tournament-reschedule {
+  grid-column: 1 / -1;
+  margin-top: 0.85rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--series-color, #2563eb) 24%, #d8dee9);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--series-color, #2563eb) 4%, #ffffff);
+}
+
+.tournament-reschedule > header,
+.tournament-reschedule__option-heading,
+.tournament-reschedule__summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.tournament-reschedule > header h4,
+.tournament-reschedule__groups h5 {
+  margin: 0;
+}
+
+.tournament-reschedule > header button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tournament-reschedule__eyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5d6470;
+}
+
+.tournament-reschedule__policy,
+.tournament-reschedule__preview-note {
+  margin: 0.8rem 0 0;
+  color: #4c5563;
+  line-height: 1.45;
+}
+
+.tournament-reschedule__summary {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.tournament-reschedule__summary span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e1e6ee;
+}
+
+.tournament-reschedule__groups {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.tournament-reschedule__groups section {
+  min-width: 0;
+}
+
+.tournament-reschedule__list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.55rem;
+}
+
+.tournament-reschedule__option {
+  padding: 0.8rem;
+  border: 1px solid #e1e6ee;
+  border-radius: 0.85rem;
+  background: #ffffff;
+}
+
+.tournament-reschedule__option-heading > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.tournament-reschedule__option-heading span,
+.tournament-reschedule__option p,
+.tournament-reschedule__option li,
+.tournament-reschedule__swap span {
+  color: #596270;
+}
+
+.tournament-reschedule__option p {
+  margin: 0.65rem 0 0;
+  line-height: 1.4;
+}
+
+.tournament-reschedule__option ul {
+  margin: 0.55rem 0 0;
+  padding-left: 1.15rem;
+}
+
+.tournament-reschedule__badge {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tournament-reschedule__badge--recommended {
+  background: #e8f6ed;
+  color: #21613b;
+}
+
+.tournament-reschedule__badge--requester_compromise {
+  background: #fff3d8;
+  color: #79520b;
+}
+
+.tournament-reschedule__swap {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+  border-radius: 0.7rem;
+  background: #f6f8fb;
+}
+
+.tournament-reschedule__swap p {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+}
+
+.tournament-reschedule__error {
+  margin: 0.8rem 0 0;
+  padding: 0.7rem;
+  border-radius: 0.7rem;
+  background: #fff0f0;
+  color: #9d1d1d;
+}
+
+.tournament-reschedule__empty {
+  margin: 0;
+  padding: 0.9rem;
+  border-radius: 0.8rem;
+  background: #ffffff;
+  color: #596270;
+}
+
+.tournament-reschedule__preview-note {
+  padding-top: 0.8rem;
+  border-top: 1px dashed #ccd3de;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .tournament-reschedule {
+    padding: 0.85rem;
+  }
+
+  .tournament-reschedule__option-heading {
+    flex-direction: column;
+  }
+
+  .tournament-reschedule__badge {
+    white-space: normal;
+  }
+}
