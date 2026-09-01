@@ -1,7 +1,4 @@
-export type ErrebotAvailabilityPhase = "pools" | "finals";
-
 export type ErrebotAvailabilitySourceSlot = {
-  phase: ErrebotAvailabilityPhase;
   playDate: string;
   startsAt: string;
   endsAt: string;
@@ -10,7 +7,6 @@ export type ErrebotAvailabilitySourceSlot = {
 
 export type ErrebotAvailabilityImportRow = {
   externalTeamId: string;
-  phase: ErrebotAvailabilityPhase;
   playDate: string;
   startsAt: string;
   endsAt: string;
@@ -18,7 +14,6 @@ export type ErrebotAvailabilityImportRow = {
 
 export type ErrebotAvailabilityDeclaration = {
   externalTeamId: string;
-  phase: ErrebotAvailabilityPhase;
   slotCount: number;
 };
 
@@ -30,9 +25,9 @@ export type ErrebotAvailabilityImportIssue = {
 
 export type ErrebotAvailabilitySheetSummary = {
   sheet: string;
-  phase: ErrebotAvailabilityPhase;
   teamCount: number;
   slotCount: number;
+  sourceSlotCount: number;
 };
 
 export type ErrebotAvailabilityImportParseResult = {
@@ -72,12 +67,7 @@ const cellText = (value: unknown) => {
   return String(value).replace(/\s+/g, " ").trim();
 };
 
-const phaseForSheet = (sheet: string): ErrebotAvailabilityPhase | null => {
-  const normalized = fold(sheet);
-  if (normalized.includes("poule")) return "pools";
-  if (normalized.includes("final")) return "finals";
-  return null;
-};
+const isPoolsSheet = (sheet: string) => fold(sheet).includes("poule");
 
 const normalizeTime = (hours: number, minutes: number) => {
   if (hours > 23 || minutes > 59) return null;
@@ -142,9 +132,6 @@ const selectedAvailability = (value: unknown) => {
     return false;
   }
 
-  // Errebot matérialise la disponibilité par une valeur dans la cellule. On
-  // accepte X, 1, Oui, V, une coche ou tout autre marqueur non vide, tout en
-  // traitant explicitement les valeurs négatives ci-dessus.
   return true;
 };
 
@@ -181,7 +168,6 @@ const findHeaderRow = (data: unknown[][], slotDurationMinutes: number) => {
 export const parseErrebotAvailabilityWorkbook = (
   workbook: ErrebotAvailabilityWorkbookSheet[],
   slotDurationMinutes: number,
-  finalsRequired = true,
 ): ErrebotAvailabilityImportParseResult => {
   const rows: ErrebotAvailabilityImportRow[] = [];
   const declarations: ErrebotAvailabilityDeclaration[] = [];
@@ -191,12 +177,11 @@ export const parseErrebotAvailabilityWorkbook = (
   const seenRows = new Set<string>();
   const seenDeclarations = new Set<string>();
   const seenSourceSlots = new Set<string>();
-  const detectedPhases = new Set<ErrebotAvailabilityPhase>();
+  let poolsSheetFound = false;
 
   for (const workbookSheet of workbook) {
-    const phase = phaseForSheet(workbookSheet.sheet);
-    if (!phase) continue;
-    detectedPhases.add(phase);
+    if (!isPoolsSheet(workbookSheet.sheet)) continue;
+    poolsSheetFound = true;
 
     const header = findHeaderRow(workbookSheet.data, slotDurationMinutes);
     if (!header) {
@@ -210,11 +195,10 @@ export const parseErrebotAvailabilityWorkbook = (
     }
 
     for (const item of header.slotColumns) {
-      const key = `${phase}|${item.slot.playDate}|${item.slot.startsAt}|${item.slot.endsAt}`;
+      const key = `${item.slot.playDate}|${item.slot.startsAt}|${item.slot.endsAt}`;
       if (seenSourceSlots.has(key)) continue;
       seenSourceSlots.add(key);
       sourceSlots.push({
-        phase,
         playDate: item.slot.playDate,
         startsAt: item.slot.startsAt,
         endsAt: item.slot.endsAt,
@@ -232,30 +216,28 @@ export const parseErrebotAvailabilityWorkbook = (
         const teamId = externalTeamId(sheetRow?.[header.teamColumn]);
         if (!teamId) return;
 
-        const declarationKey = `${teamId}|${phase}`;
-        if (seenDeclarations.has(declarationKey)) {
+        if (seenDeclarations.has(teamId)) {
           issues.push({
             row: rowNumber,
             sheet: workbookSheet.sheet,
-            message: `L’équipe Errebot ${teamId} apparaît plusieurs fois dans cet onglet.`,
+            message: `L’équipe Errebot ${teamId} apparaît plusieurs fois dans l’onglet de poules.`,
           });
           return;
         }
-        seenDeclarations.add(declarationKey);
+        seenDeclarations.add(teamId);
         teamCount += 1;
 
         let selectedSlotCount = 0;
         for (const item of header.slotColumns) {
           if (!selectedAvailability(sheetRow?.[item.column])) continue;
 
-          const key = `${teamId}|${phase}|${item.slot.playDate}|${item.slot.startsAt}|${item.slot.endsAt}`;
+          const key = `${teamId}|${item.slot.playDate}|${item.slot.startsAt}|${item.slot.endsAt}`;
           if (seenRows.has(key)) continue;
           seenRows.add(key);
           selectedSlotCount += 1;
           slotCount += 1;
           rows.push({
             externalTeamId: teamId,
-            phase,
             playDate: item.slot.playDate,
             startsAt: item.slot.startsAt,
             endsAt: item.slot.endsAt,
@@ -264,29 +246,22 @@ export const parseErrebotAvailabilityWorkbook = (
 
         declarations.push({
           externalTeamId: teamId,
-          phase,
           slotCount: selectedSlotCount,
         });
       });
 
     sheets.push({
       sheet: workbookSheet.sheet,
-      phase,
       teamCount,
       slotCount,
+      sourceSlotCount: header.slotColumns.length,
     });
   }
 
-  if (!detectedPhases.has("pools")) {
+  if (!poolsSheetFound) {
     issues.push({
       row: 0,
       message: "Aucun onglet de poules Errebot n’a été reconnu.",
-    });
-  }
-  if (finalsRequired && !detectedPhases.has("finals")) {
-    issues.push({
-      row: 0,
-      message: "Aucun onglet de phases finales Errebot n’a été reconnu.",
     });
   }
   if (declarations.length === 0 && issues.length === 0) {
