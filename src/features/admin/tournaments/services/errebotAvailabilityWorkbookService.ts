@@ -9,7 +9,6 @@ export const errebotAvailabilityWorkbookService = {
   async parse(
     file: File,
     slotDurationMinutes: number,
-    finalsRequired: boolean,
   ): Promise<ErrebotAvailabilityImportParseResult> {
     const workbook = await readExcelFile(file);
     const sheets: ErrebotAvailabilityWorkbookSheet[] = workbook.map(
@@ -19,10 +18,6 @@ export const errebotAvailabilityWorkbookService = {
       }),
     );
 
-    return parseErrebotAvailabilityWorkbook(
-      sheets,
-      slotDurationMinutes,
-      finalsRequired,
-    );
+    return parseErrebotAvailabilityWorkbook(sheets, slotDurationMinutes);
   },
 };
