@@ -161,11 +161,7 @@ export function AdminErrebotAvailabilityImport({
         parsed.declarations.length > 0 &&
         parsed.sourceSlots.length > 0
       ) {
-        await previewRows(
-          parsed.rows,
-          parsed.declarations,
-          parsed.sourceSlots,
-        );
+        await previewRows(parsed.rows, parsed.declarations, parsed.sourceSlots);
       }
     } catch {
       setItems([]);
@@ -288,10 +284,10 @@ export function AdminErrebotAvailabilityImport({
         </code>
         <span>
           Les colonnes Joueur1/Joueur2 sont ignorées et ne sont jamais envoyées
-          à Supabase. Les dates, heures et identifiants entre parenthèses servent
-          à reconstruire la grille exacte Errebot. Une cellule non vide sous un
-          créneau signifie que l’équipe est disponible ; une cellule vide
-          signifie qu’elle ne l’est pas.
+          à Supabase. Les dates, heures et identifiants entre parenthèses
+          servent à reconstruire la grille exacte Errebot. Une cellule non vide
+          sous un créneau signifie que l’équipe est disponible ; une cellule
+          vide signifie qu’elle ne l’est pas.
         </span>
       </div>
 
