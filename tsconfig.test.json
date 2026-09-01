@@ -31,6 +31,7 @@
     "src/features/admin/members/domain/csvImport.ts",
     "src/features/admin/members/domain/importPreview.ts",
     "src/features/admin/members/domain/importWorkflow.ts",
+    "src/features/admin/tournaments/domain/errebotAvailabilityImport.ts",
     "src/features/admin/tournaments/domain/errebotImportPreview.ts",
     "src/features/admin/tournaments/domain/errebotPdfLayout.ts",
     "src/features/admin/tournaments/domain/errebotParser.ts",
