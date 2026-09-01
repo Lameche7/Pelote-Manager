@@ -1,0 +1,84 @@
+name: PR127 align partial availability UI
+
+on:
+  push:
+    branches:
+      - agent/tournament-rescheduling
+    paths:
+      - .github/workflows/pr127-align-partial-availability-ui.yml
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/tournament-rescheduling
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Align availability policy UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          service_path = Path("src/features/user-space/tournaments/services/tournamentRescheduleService.ts")
+          service = service_path.read_text()
+          service = service.replace(
+              'export type TournamentRescheduleAvailabilitySource =\n  "unknown_from_errebot" | "declared" | "not_required";',
+              'export type TournamentRescheduleAvailabilitySource =\n  | "unknown_from_errebot"\n  | "partial_from_errebot"\n  | "errebot_imported"\n  | "declared"\n  | "not_required";',
+          )
+          service = service.replace(
+              '    availabilitySource: TournamentRescheduleAvailabilitySource;\n    swapRestrictionReason: "errebot_availability_not_imported" | null;',
+              '    availabilitySource: TournamentRescheduleAvailabilitySource;\n    availabilityKnownTeamCount: number;\n    availabilityTeamCount: number;\n    availabilityCoverageComplete: boolean;\n    swapRestrictionReason:\n      | "errebot_availability_not_imported"\n      | "errebot_availability_incomplete"\n      | null;',
+          )
+          service = service.replace(
+              '  if (value === "unknown_from_errebot" || value === "declared") return value;\n  return "not_required";',
+              '  if (\n    value === "unknown_from_errebot" ||\n    value === "partial_from_errebot" ||\n    value === "errebot_imported" ||\n    value === "declared"\n  ) {\n    return value;\n  }\n  return "not_required";',
+          )
+          service = service.replace(
+              '        availabilitySource: availabilitySource(policy.availability_source),\n        swapRestrictionReason:\n          policy.swap_restriction_reason === "errebot_availability_not_imported"\n            ? "errebot_availability_not_imported"\n            : null,',
+              '        availabilitySource: availabilitySource(policy.availability_source),\n        availabilityKnownTeamCount: Number(\n          policy.availability_known_team_count ?? 0,\n        ),\n        availabilityTeamCount: Number(policy.availability_team_count ?? 0),\n        availabilityCoverageComplete: Boolean(\n          policy.availability_coverage_complete,\n        ),\n        swapRestrictionReason:\n          policy.swap_restriction_reason === "errebot_availability_incomplete"\n            ? "errebot_availability_incomplete"\n            : policy.swap_restriction_reason ===\n                "errebot_availability_not_imported"\n              ? "errebot_availability_not_imported"\n              : null,',
+          )
+          service_path.write_text(service)
+
+          component_path = Path("src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx")
+          component = component_path.read_text()
+          component = component.replace(
+              '  const availabilityUnknown =\n    options?.policy.availabilitySource === "unknown_from_errebot";\n  const visibleFreeSlots',
+              '  const availabilityUnknown =\n    options?.policy.availabilitySource === "unknown_from_errebot";\n  const availabilityPartial =\n    options?.policy.availabilitySource === "partial_from_errebot";\n  const availabilityIncomplete = availabilityUnknown || availabilityPartial;\n  const visibleFreeSlots',
+          )
+          old_message = '''          {availabilityUnknown && !swapsEnabled && (\n            <p className="tournament-reschedule__policy" role="status">\n              Errebot n’a pas fourni les créneaux choisis par les équipes lors\n              de l’inscription. Ces disponibilités sont donc inconnues : les\n              échanges de matchs sont désactivés et seuls les créneaux\n              réellement libres sont proposés, sous réserve d’accord des deux\n              équipes.\n            </p>\n          )}'''
+          new_message = '''          {availabilityIncomplete && !swapsEnabled && (\n            <p className="tournament-reschedule__policy" role="status">\n              {availabilityPartial ? (\n                <>\n                  Les disponibilités Errebot sont encore incomplètes (\n                  {options.policy.availabilityKnownTeamCount}/\n                  {options.policy.availabilityTeamCount} équipes). Les échanges\n                  de matchs restent désactivés jusqu’à couverture complète ;\n                  seuls les créneaux réellement libres sont proposés, sous\n                  réserve d’accord des deux équipes.\n                </>\n              ) : (\n                <>\n                  Errebot n’a pas fourni les créneaux choisis par les équipes\n                  lors de l’inscription. Ces disponibilités sont donc inconnues\n                  : les échanges de matchs sont désactivés et seuls les créneaux\n                  réellement libres sont proposés, sous réserve d’accord des\n                  deux équipes.\n                </>\n              )}\n            </p>\n          )}'''
+          if old_message not in component:
+              raise SystemExit("availability message anchor not found")
+          component = component.replace(old_message, new_message, 1)
+          component = component.replace(
+              '                        availabilityUnknown={availabilityUnknown}',
+              '                        availabilityUnknown={availabilityIncomplete}',
+          )
+          component_path.write_text(component)
+          PY
+          npx prettier --write \
+            src/features/user-space/tournaments/services/tournamentRescheduleService.ts \
+            src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx
+          rm .github/workflows/pr127-align-partial-availability-ui.yml
+
+      - name: Commit alignment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(tournaments): expose partial Errebot availability state" || exit 0
+          git push origin HEAD:agent/tournament-rescheduling
