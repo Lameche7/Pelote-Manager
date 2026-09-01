@@ -16,6 +16,13 @@ const errebotRestrictionMigration = readFileSync(
   ),
   "utf8",
 );
+const requestMigration = readFileSync(
+  new URL(
+    "../supabase/migrations/20260901213000_tournament_reschedule_requests.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const service = readFileSync(
   new URL(
     "../src/features/user-space/tournaments/services/tournamentRescheduleService.ts",
@@ -30,6 +37,20 @@ const component = readFileSync(
   ),
   "utf8",
 );
+const requestsPanel = readFileSync(
+  new URL(
+    "../src/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const adminPage = readFileSync(
+  new URL(
+    "../src/features/admin/tournaments/pages/AdminTournamentReschedulePage.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const myTournamentsPage = readFileSync(
   new URL(
     "../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx",
@@ -38,7 +59,7 @@ const myTournamentsPage = readFileSync(
   "utf8",
 );
 
-test("le moteur de report est en lecture seule et réservé à l'équipe du joueur", () => {
+test("le moteur de suggestion reste en lecture seule et réservé à l'équipe du joueur", () => {
   assert.match(migration, /^begin;/m);
   assert.match(
     migration,
@@ -149,25 +170,70 @@ test("un tournoi Errebot sans disponibilités importées ne propose jamais d'éc
   assert.match(errebotRestrictionMigration, /commit;\s*$/);
 });
 
-test("Mes tournois expose une prévisualisation sans permettre encore de déplacer une partie", () => {
-  assert.match(service, /get_my_tournament_reschedule_options/);
-  assert.match(service, /requesterTeamId/);
-  assert.match(service, /swapsEnabled/);
-  assert.match(service, /swapsEnabled: policy\.swaps_enabled !== false/);
-  assert.match(service, /unknown_from_errebot/);
-  assert.match(myTournamentsPage, /canRequestReschedule/);
-  assert.match(myTournamentsPage, /Demander un report/);
-  assert.match(myTournamentsPage, /TournamentRescheduleSuggestions/);
-  assert.match(component, /Créneaux libres/);
-  assert.match(component, /Échanges de créneaux/);
-  assert.match(component, /Errebot n’a pas fourni les créneaux choisis/);
-  assert.match(component, /échanges de matchs sont désactivés/);
+test("une demande fige uniquement une proposition encore valide sans déplacer le planning", () => {
+  assert.match(requestMigration, /create table if not exists public\.tournament_reschedule_requests/);
+  assert.match(requestMigration, /create table if not exists public\.tournament_reschedule_approvals/);
   assert.match(
-    component,
-    /seuls les créneaux\s+réellement\s+libres sont proposés/,
+    requestMigration,
+    /public\.get_my_tournament_reschedule_options\(\s*target_match_id,\s*requester_team_id\s*\)/s,
   );
-  assert.match(component, /Aucun\s+temps de repos minimum/);
-  assert.match(component, /protège les équipes qui ne demandent pas le report/);
-  assert.match(component, /Cette étape est une prévisualisation/);
-  assert.doesNotMatch(service, /update|delete|insert/i);
+  assert.match(requestMigration, /proposal_snapshot/);
+  assert.match(requestMigration, /proposal is no longer available/);
+  assert.match(requestMigration, /where status in \('pending', 'approved'\)/);
+  assert.doesNotMatch(requestMigration, /update public\.tournament_match_planning/);
+  assert.doesNotMatch(requestMigration, /delete from public\.tournament_match_planning/);
+});
+
+test("un accord vaut pour une équipe et toutes les équipes concernées doivent répondre", () => {
+  assert.match(requestMigration, /primary key \(request_id, team_id\)/);
+  assert.match(requestMigration, /array\[requester_team_id, opponent_team_id\]/);
+  assert.match(requestMigration, /swap_team_a_id/);
+  assert.match(requestMigration, /swap_team_b_id/);
+  assert.match(
+    requestMigration,
+    /case when required_team_id = requester_team_id then 'approved' else 'pending' end/,
+  );
+  assert.match(
+    requestMigration,
+    /not exists \([\s\S]*remaining\.decision = 'pending'[\s\S]*\) then\s*next_status := 'approved'/,
+  );
+  assert.match(
+    requestMigration,
+    /public\.tournament_profile_can_act_for_team\(acting_team_id, auth\.uid\(\)\)/,
+  );
+});
+
+test("les équipes sans compte relié restent visibles et ne sont jamais auto-validées", () => {
+  assert.match(
+    requestMigration,
+    /create or replace function public\.tournament_team_app_actor_count/,
+  );
+  assert.match(requestMigration, /'app_actor_count'/);
+  assert.match(requestsPanel, /aucun\s+compte Pelote Manager relié/);
+  assert.match(adminPage, /aucun compte relié/);
+  assert.match(adminPage, /ne considère pas ces équipes comme ayant donné\s+leur accord/);
+});
+
+test("Mes tournois permet de créer et traiter une demande sans appliquer encore le déplacement", () => {
+  assert.match(service, /create_my_tournament_reschedule_request/);
+  assert.match(service, /get_my_tournament_reschedule_requests/);
+  assert.match(service, /decide_my_tournament_reschedule_request/);
+  assert.match(service, /cancel_my_tournament_reschedule_request/);
+  assert.match(myTournamentsPage, /Demander un report/);
+  assert.match(myTournamentsPage, /TournamentRescheduleRequestsPanel/);
+  assert.match(component, /Demander ce créneau/);
+  assert.match(component, /Demander cet échange/);
+  assert.match(component, /Aucune partie\s+n’est déplacée à cette étape/);
+  assert.match(requestsPanel, /Accepter/);
+  assert.match(requestsPanel, /Refuser/);
+  assert.match(requestsPanel, /Tous les accords sont réunis/);
+});
+
+test("le back-office possède un suivi dédié des reports sans bouton de forçage", () => {
+  assert.match(requestMigration, /admin_list_tournament_reschedule_requests/);
+  assert.match(adminPage, /Reports de parties/);
+  assert.match(adminPage, /Prêt à appliquer/);
+  assert.match(adminPage, /À contacter hors application/);
+  assert.doesNotMatch(adminPage, /Forcer l’accord/);
+  assert.doesNotMatch(adminPage, /Appliquer le report/);
 });
