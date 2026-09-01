@@ -45,7 +45,10 @@ export function ErrebotTournamentImportFinalize({
   onBack,
   onReset,
 }: Props) {
-  const dateRange = useMemo(() => getErrebotTournamentDateRange(parsed), [parsed]);
+  const dateRange = useMemo(
+    () => getErrebotTournamentDateRange(parsed),
+    [parsed],
+  );
   const [options, setOptions] = useState<TournamentOptions | null>(null);
   const [name, setName] = useState(defaultErrebotTournamentName(file.name));
   const [seasonId, setSeasonId] = useState("");
@@ -53,7 +56,9 @@ export function ErrebotTournamentImportFinalize({
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ErrebotTournamentImportResult | null>(null);
+  const [result, setResult] = useState<ErrebotTournamentImportResult | null>(
+    null,
+  );
 
   const eligibleSeasons = useMemo(
     () =>
@@ -125,7 +130,9 @@ export function ErrebotTournamentImportFinalize({
     return (
       <div className="admin-card admin-tournament-import__card errebot-import-finalize">
         <div>
-          <p className="errebot-import-finalize__success-label">Import terminé</p>
+          <p className="errebot-import-finalize__success-label">
+            Import terminé
+          </p>
           <h2>{name}</h2>
           <p>
             {result.alreadyImported
@@ -165,7 +172,8 @@ export function ErrebotTournamentImportFinalize({
           Le planning est importé mais pas encore publié dans le calendrier du
           club. La publication native effectuera son contrôle de conflits avant
           de créer les occupations. Les scores Errebot simples restent conservés
-          comme provenance et ne sont pas transformés artificiellement en manches.
+          comme provenance et ne sont pas transformés artificiellement en
+          manches.
         </p>
 
         <div className="admin-tournament-import__actions">
@@ -189,7 +197,8 @@ export function ErrebotTournamentImportFinalize({
         <h2>Créer le tournoi dans Pelote Manager</h2>
         <p>
           Le fichier est prêt. Choisissez uniquement la saison et le terrain :
-          équipes, joueurs, poules et matchs seront créés ensemble ou pas du tout.
+          équipes, joueurs, poules et matchs seront créés ensemble ou pas du
+          tout.
         </p>
       </div>
 
@@ -204,7 +213,8 @@ export function ErrebotTournamentImportFinalize({
           <strong>{parsed.fixtures.length}</strong> matchs
         </span>
         <span>
-          <strong>{formatDate(dateRange.startsOn)}</strong> → {formatDate(dateRange.endsOn)}
+          <strong>{formatDate(dateRange.startsOn)}</strong> →{" "}
+          {formatDate(dateRange.endsOn)}
         </span>
       </div>
 
@@ -240,7 +250,8 @@ export function ErrebotTournamentImportFinalize({
               )}
               {eligibleSeasons.map((season) => (
                 <option key={season.id} value={season.id}>
-                  {season.name}{season.isActive ? " · active" : ""}
+                  {season.name}
+                  {season.isActive ? " · active" : ""}
                 </option>
               ))}
             </select>
@@ -272,10 +283,10 @@ export function ErrebotTournamentImportFinalize({
       )}
 
       <p className="admin-tournament-import__privacy-note">
-        Seules les données structurées nécessaires à la création sont envoyées au
-        RPC sécurisé. Le PDF et son texte extrait restent dans le navigateur. Le
-        premier joueur de chaque équipe est conservé au poste avant et le second
-        au poste arrière, selon l’ordre de l’export Errebot.
+        Seules les données structurées nécessaires à la création sont envoyées
+        au RPC sécurisé. Le PDF et son texte extrait restent dans le navigateur.
+        Le premier joueur de chaque équipe est conservé au poste avant et le
+        second au poste arrière, selon l’ordre de l’export Errebot.
       </p>
 
       <div className="admin-tournament-import__actions">

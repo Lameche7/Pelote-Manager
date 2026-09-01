@@ -33,8 +33,14 @@ const page = readFileSync(
 
 test("l'import Errebot est une RPC contrôlée et transactionnelle", () => {
   assert.match(migration, /^begin;/m);
-  assert.match(migration, /create or replace function public\.admin_import_errebot_tournament\(payload jsonb\)/);
-  assert.match(migration, /has_club_permission\(target_club_id, 'tournaments\.manage'\)/);
+  assert.match(
+    migration,
+    /create or replace function public\.admin_import_errebot_tournament\(payload jsonb\)/,
+  );
+  assert.match(
+    migration,
+    /has_club_permission\(target_club_id, 'tournaments\.manage'\)/,
+  );
   assert.match(migration, /source_file_hash = input_file_hash/);
   assert.match(migration, /alreadyImported', true/);
   assert.match(migration, /status = 'planning_generated'/);
@@ -44,16 +50,28 @@ test("l'import Errebot est une RPC contrôlée et transactionnelle", () => {
 
 test("l'import conserve la provenance sans inventer de résultats sportifs", () => {
   assert.match(migration, /create table public\.tournament_import_pool_refs/);
-  assert.match(migration, /create table public\.tournament_import_fixture_refs/);
+  assert.match(
+    migration,
+    /create table public\.tournament_import_fixture_refs/,
+  );
   assert.match(migration, /source_score_a/);
   assert.match(migration, /source_score_b/);
-  assert.doesNotMatch(migration, /insert into public\.tournament_match_results/i);
+  assert.doesNotMatch(
+    migration,
+    /insert into public\.tournament_match_results/i,
+  );
   assert.match(migration, /@pelote-manager\.invalid/);
 });
 
 test("les tables de provenance restent privées", () => {
-  assert.match(migration, /tournament_import_pool_refs enable row level security/);
-  assert.match(migration, /tournament_import_fixture_refs enable row level security/);
+  assert.match(
+    migration,
+    /tournament_import_pool_refs enable row level security/,
+  );
+  assert.match(
+    migration,
+    /tournament_import_fixture_refs enable row level security/,
+  );
   assert.match(
     migration,
     /revoke all on table public\.tournament_import_fixture_refs\s+from public, anon, authenticated/,
