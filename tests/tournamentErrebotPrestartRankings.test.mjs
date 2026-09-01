@@ -25,16 +25,28 @@ const rankings = readFileSync(
 );
 
 test("un import Errebot ne transforme jamais ses scores source en résultats natifs", () => {
-  assert.match(correctiveMigration, /Les scores .* restent uniquement de[\s\S]*provenance/i);
-  assert.match(correctiveMigration, /delete from public\.tournament_match_results/);
+  assert.match(
+    correctiveMigration,
+    /Les scores .* restent uniquement de[\s\S]*provenance/i,
+  );
+  assert.match(
+    correctiveMigration,
+    /delete from public\.tournament_match_results/,
+  );
   assert.match(correctiveMigration, /result\.submitted_by is null/);
   assert.match(correctiveMigration, /result\.validated_by is null/);
-  assert.match(correctiveMigration, /drop function if exists public\.sync_errebot_single_game_results/);
+  assert.match(
+    correctiveMigration,
+    /drop function if exists public\.sync_errebot_single_game_results/,
+  );
   assert.doesNotMatch(correctiveMigration, /promotedResultCount/);
 });
 
 test("la page publique charge le classement général avant le début du tournoi", () => {
-  assert.match(detailPage, /tournamentGeneralRankingService\.get\(tournamentId\)/);
+  assert.match(
+    detailPage,
+    /tournamentGeneralRankingService\.get\(tournamentId\)/,
+  );
   assert.match(detailPage, /generalRankings=\{generalRankings\}/);
   assert.ok(
     detailPage.indexOf("<TournamentRankings") <
@@ -45,5 +57,8 @@ test("la page publique charge le classement général avant le début du tournoi
 test("les classements pré-tournoi montrent le général de série puis les poules", () => {
   assert.match(rankings, /Classement général/);
   assert.match(rankings, /Poule \{pool\.number\}/);
-  assert.match(rankings, /Avant le premier résultat, toutes les équipes démarrent à zéro/);
+  assert.match(
+    rankings,
+    /Avant le premier résultat, toutes les équipes démarrent à zéro/,
+  );
 });
