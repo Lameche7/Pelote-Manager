@@ -4,6 +4,7 @@ import type {
   ErrebotAvailabilityImportIssue,
   ErrebotAvailabilityImportRow,
   ErrebotAvailabilitySheetSummary,
+  ErrebotAvailabilitySourceSlot,
 } from "@/features/admin/tournaments/domain/errebotAvailabilityImport";
 import {
   adminErrebotAvailabilityImportService,
@@ -31,6 +32,9 @@ export function AdminErrebotAvailabilityImport({
   const [declarations, setDeclarations] = useState<
     ErrebotAvailabilityDeclaration[]
   >([]);
+  const [sourceSlots, setSourceSlots] = useState<
+    ErrebotAvailabilitySourceSlot[]
+  >([]);
   const [sheetSummaries, setSheetSummaries] = useState<
     ErrebotAvailabilitySheetSummary[]
   >([]);
@@ -56,6 +60,7 @@ export function AdminErrebotAvailabilityImport({
     setLoading(true);
     setItems([]);
     setDeclarations([]);
+    setSourceSlots([]);
     setSheetSummaries([]);
     setIssues([]);
     setPreview(null);
@@ -89,6 +94,7 @@ export function AdminErrebotAvailabilityImport({
   const previewRows = async (
     nextItems: ErrebotAvailabilityImportRow[],
     nextDeclarations: ErrebotAvailabilityDeclaration[],
+    nextSourceSlots: ErrebotAvailabilitySourceSlot[],
   ) => {
     setChecking(true);
     setError("");
@@ -100,13 +106,14 @@ export function AdminErrebotAvailabilityImport({
           tournamentId,
           nextItems,
           nextDeclarations,
+          nextSourceSlots,
         ),
       );
     } catch (cause) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Impossible de contrôler le fichier.",
+          : "Impossible de contrôler le classeur.",
       );
     } finally {
       setChecking(false);
@@ -123,6 +130,7 @@ export function AdminErrebotAvailabilityImport({
     setPreview(null);
     setItems([]);
     setDeclarations([]);
+    setSourceSlots([]);
     setSheetSummaries([]);
     setIssues([]);
 
@@ -145,14 +153,24 @@ export function AdminErrebotAvailabilityImport({
       );
       setItems(parsed.rows);
       setDeclarations(parsed.declarations);
+      setSourceSlots(parsed.sourceSlots);
       setSheetSummaries(parsed.sheets);
       setIssues(parsed.issues);
-      if (parsed.issues.length === 0 && parsed.declarations.length > 0) {
-        await previewRows(parsed.rows, parsed.declarations);
+      if (
+        parsed.issues.length === 0 &&
+        parsed.declarations.length > 0 &&
+        parsed.sourceSlots.length > 0
+      ) {
+        await previewRows(
+          parsed.rows,
+          parsed.declarations,
+          parsed.sourceSlots,
+        );
       }
     } catch {
       setItems([]);
       setDeclarations([]);
+      setSourceSlots([]);
       setSheetSummaries([]);
       setIssues([
         {
@@ -165,7 +183,14 @@ export function AdminErrebotAvailabilityImport({
   };
 
   const apply = async () => {
-    if (!preview?.valid || declarations.length === 0 || !context) return;
+    if (
+      !preview?.valid ||
+      declarations.length === 0 ||
+      sourceSlots.length === 0 ||
+      !context
+    ) {
+      return;
+    }
     if (
       (context.poolsKnownTeamCount > 0 || context.finalsKnownTeamCount > 0) &&
       !window.confirm(
@@ -183,14 +208,15 @@ export function AdminErrebotAvailabilityImport({
         tournamentId,
         items,
         declarations,
+        sourceSlots,
       );
-      await loadContext();
+      const nextContext = await loadContext();
       await onImported?.();
-      const finalsStatus = context.finalsRequired
+      const finalsStatus = nextContext.finalsRequired
         ? ` Phases finales : ${result.finalsKnownTeamCount}/${result.acceptedTeamCount}.`
         : "";
       setMessage(
-        `${result.importedSlotCount} créneaux importés pour ${result.importedTeamCount} équipes. Poules : ${result.poolsKnownTeamCount}/${result.acceptedTeamCount}.${finalsStatus}${
+        `${result.importedSlotCount} disponibilités importées pour ${result.importedTeamCount} équipes à partir de ${result.sourceSlotCount} créneaux Errebot. Poules : ${result.poolsKnownTeamCount}/${result.acceptedTeamCount}.${finalsStatus}${
           result.coverageComplete
             ? " Les disponibilités nécessaires sont maintenant complètes."
             : " Les échanges restent protégés pour toute phase encore incomplète."
@@ -198,6 +224,7 @@ export function AdminErrebotAvailabilityImport({
       );
       setItems([]);
       setDeclarations([]);
+      setSourceSlots([]);
       setSheetSummaries([]);
       setIssues([]);
       setPreview(null);
@@ -218,6 +245,11 @@ export function AdminErrebotAvailabilityImport({
   }
   if (!context?.enabled) return null;
 
+  const showFinals =
+    context.finalsRequired ||
+    context.finalsKnownTeamCount > 0 ||
+    sheetSummaries.some((sheet) => sheet.phase === "finals");
+
   return (
     <section className="admin-card admin-errebot-availability">
       <div className="admin-errebot-availability__heading">
@@ -237,7 +269,7 @@ export function AdminErrebotAvailabilityImport({
         <strong>
           Poules : {context.poolsKnownTeamCount}/{context.acceptedTeamCount}
         </strong>
-        {context.finalsRequired && (
+        {showFinals && (
           <strong>
             Phases finales : {context.finalsKnownTeamCount}/
             {context.acceptedTeamCount}
@@ -256,8 +288,10 @@ export function AdminErrebotAvailabilityImport({
         </code>
         <span>
           Les colonnes Joueur1/Joueur2 sont ignorées et ne sont jamais envoyées
-          à Supabase. Une cellule non vide sous un créneau signifie que l’équipe
-          est disponible ; une cellule vide signifie qu’elle ne l’est pas.
+          à Supabase. Les dates, heures et identifiants entre parenthèses servent
+          à reconstruire la grille exacte Errebot. Une cellule non vide sous un
+          créneau signifie que l’équipe est disponible ; une cellule vide
+          signifie qu’elle ne l’est pas.
         </span>
       </div>
 
@@ -310,12 +344,12 @@ export function AdminErrebotAvailabilityImport({
           <strong>Prévisualisation</strong>
           <p>
             {preview.rowCount} disponibilités reconnues pour {preview.teamCount}{" "}
-            équipes.
+            équipes sur {preview.sourceSlotCount} créneaux source.
           </p>
           <p>
             Poules après import : {preview.poolsKnownTeamCountAfter}/
             {preview.acceptedTeamCount} équipes.
-            {context.finalsRequired && (
+            {(showFinals || preview.finalsTeamCount > 0) && (
               <>
                 {" "}
                 Phases finales : {preview.finalsKnownTeamCountAfter}/
