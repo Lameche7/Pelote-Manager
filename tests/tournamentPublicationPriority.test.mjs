@@ -39,7 +39,10 @@ test("une réservation concurrente est annulée et auditée sans notifier un fau
   assert.match(migration, /Priorité tournoi/);
   assert.match(migration, /cancelled_by_tournament_priority/);
   assert.match(migration, /superseded_by_tournament/);
-  assert.doesNotMatch(migration, /publish_released_reservation_slot_notification/);
+  assert.doesNotMatch(
+    migration,
+    /publish_released_reservation_slot_notification/,
+  );
 });
 
 test("les autres sources calendrier cèdent la place au tournoi", () => {
@@ -52,7 +55,10 @@ test("les autres sources calendrier cèdent la place au tournoi", () => {
 test("l'interface publie en priorité au lieu de bloquer sur les impacts", () => {
   assert.match(service, /admin_publish_tournament_planning_priority/);
   assert.match(service, /publishPriority/);
-  assert.match(page, /preview\?\.tournament\.status === "planning_generated" && complete/);
+  assert.match(
+    page,
+    /preview\?\.tournament\.status === "planning_generated" && complete/,
+  );
   assert.match(page, /Publier \$\{preview\.matchCount\} matchs en priorité/);
   assert.match(page, /Le tournoi est prioritaire/);
 });

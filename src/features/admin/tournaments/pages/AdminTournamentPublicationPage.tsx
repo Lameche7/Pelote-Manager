@@ -427,8 +427,8 @@ export function AdminTournamentPublicationPage() {
                   <p>
                     Le tournoi est prioritaire. Ces occupations seront libérées
                     dans la même transaction juste avant la publication des
-                    matchs. Si la publication échoue, aucune modification ne sera
-                    conservée.
+                    matchs. Si la publication échoue, aucune modification ne
+                    sera conservée.
                   </p>
                 </div>
                 <strong>{preview.conflicts.length}</strong>
