@@ -9,6 +9,27 @@ const migration = readFileSync(
   ),
   "utf8",
 );
+const service = readFileSync(
+  new URL(
+    "../src/features/user-space/tournaments/services/tournamentRescheduleService.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const component = readFileSync(
+  new URL(
+    "../src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const myTournamentsPage = readFileSync(
+  new URL(
+    "../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 test("le moteur de report est en lecture seule et réservé à l'équipe du joueur", () => {
   assert.match(migration, /^begin;/m);
@@ -81,4 +102,17 @@ test("les occupations, chevauchements et disponibilités déclarées des autres 
     migration,
     /grant execute on function public\.get_my_tournament_reschedule_options\(uuid, uuid\)\s*to authenticated/,
   );
+});
+
+test("Mes tournois expose une prévisualisation sans permettre encore de déplacer une partie", () => {
+  assert.match(service, /get_my_tournament_reschedule_options/);
+  assert.match(service, /requesterTeamId/);
+  assert.match(myTournamentsPage, /Demander un report/);
+  assert.match(myTournamentsPage, /TournamentRescheduleSuggestions/);
+  assert.match(component, /Créneaux libres/);
+  assert.match(component, /Échanges de créneaux/);
+  assert.match(component, /Aucun\s+temps de repos minimum/);
+  assert.match(component, /protège les équipes qui ne demandent pas le report/);
+  assert.match(component, /Cette étape est une prévisualisation/);
+  assert.doesNotMatch(service, /update|delete|insert/i);
 });
