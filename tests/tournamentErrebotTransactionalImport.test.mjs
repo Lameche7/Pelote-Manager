@@ -43,6 +43,8 @@ test("l'import Errebot est une RPC contrôlée et transactionnelle", () => {
   );
   assert.match(migration, /source_file_hash = input_file_hash/);
   assert.match(migration, /alreadyImported', true/);
+  assert.match(migration, /expected_fixture_count <> fixture_count/);
+  assert.match(migration, /tournament_pools_are_complete/);
   assert.match(migration, /status = 'planning_generated'/);
   assert.match(migration, /source,\s*updated_at[\s\S]*?'manual'/);
   assert.match(migration, /commit;\s*$/);
