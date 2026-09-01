@@ -9,6 +9,13 @@ const migration = readFileSync(
   ),
   "utf8",
 );
+const legacyMigration = readFileSync(
+  new URL(
+    "../supabase/migrations/20260901143000_errebot_transactional_tournament_import.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const helper = readFileSync(
   new URL(
     "../src/features/admin/tournaments/domain/errebotTransactionalImport.ts",
@@ -80,5 +87,7 @@ test("un PDF déjà importé corrige ses options sans créer de doublon", () => 
     finalize,
     /aucun doublon n’a été créé et les options du tournoi existant ont été mises à jour/,
   );
-  assert.match(migration, /alreadyImported/);
+  assert.match(legacyMigration, /alreadyImported', true/);
+  assert.match(legacyMigration, /source_file_hash = input_file_hash/);
+  assert.match(migration, /admin_import_errebot_tournament\(legacy_payload\)/);
 });
