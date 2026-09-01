@@ -28,6 +28,9 @@ export type TournamentPublicationConflict = {
   occupationTitle: string;
   occupationStartsAt: string;
   occupationEndsAt: string;
+  conflictTournamentId: string | null;
+  conflictTournamentName: string | null;
+  conflictTournamentStatus: TournamentStatus | null;
 };
 
 export type TournamentPublicationPreview = {
@@ -71,6 +74,9 @@ const fail = (error: unknown, fallback: string): never => {
   throw new Error(getSupabaseErrorMessage(error, fallback));
 };
 
+const nullableString = (value: unknown) =>
+  value === null || value === undefined || value === "" ? null : String(value);
+
 const mapSummary = (row: Row): TournamentPublicationSummary => ({
   id: String(row.id),
   name: String(row.name ?? "Tournoi"),
@@ -113,6 +119,11 @@ const mapPreview = (value: unknown): TournamentPublicationPreview => {
       occupationTitle: String(conflict.occupation_title ?? "Indisponible"),
       occupationStartsAt: String(conflict.occupation_starts_at),
       occupationEndsAt: String(conflict.occupation_ends_at),
+      conflictTournamentId: nullableString(conflict.conflict_tournament_id),
+      conflictTournamentName: nullableString(conflict.conflict_tournament_name),
+      conflictTournamentStatus: conflict.conflict_tournament_status
+        ? (String(conflict.conflict_tournament_status) as TournamentStatus)
+        : null,
     })),
   };
 };
