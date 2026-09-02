@@ -49,10 +49,10 @@ export function TournamentRescheduleOpponentContactState({
 
   return (
     <p className="tournament-reschedule__policy" role="status">
-      <strong>{state.opponentLabel}</strong> n’a actuellement aucun compte Pelote
-      Manager relié à cette équipe. Cela n’empêche pas la demande de report :
-      l’organisation devra simplement recueillir son accord hors application
-      avant que le changement puisse être appliqué.
+      <strong>{state.opponentLabel}</strong> n’a actuellement aucun compte
+      Pelote Manager relié à cette équipe. Cela n’empêche pas la demande de
+      report : l’organisation devra simplement recueillir son accord hors
+      application avant que le changement puisse être appliqué.
     </p>
   );
 }
