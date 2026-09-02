@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AdminTournamentPlayerFields } from "@/features/admin/tournaments/components/AdminTournamentPlayerFields";
+import { AdminErrebotAvailabilityImport } from "@/features/admin/tournaments/components/AdminErrebotAvailabilityImport";
 import { adminTournamentTeamService } from "@/features/admin/tournaments/services/adminTournamentTeamService";
 import {
   tournamentAdminService,
@@ -484,6 +485,13 @@ export function AdminTournamentTeamsPage() {
               </div>
             )}
           </div>
+
+          {data && (
+            <AdminErrebotAvailabilityImport
+              tournamentId={selectedId}
+              onImported={reloadSelected}
+            />
+          )}
 
           {data && (
             <div className="admin-tournament-teams__series">

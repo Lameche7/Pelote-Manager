@@ -1,0 +1,68 @@
+.admin-errebot-availability {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-errebot-availability__heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.admin-errebot-availability__heading h2,
+.admin-errebot-availability__heading p {
+  margin-top: 0;
+}
+
+.admin-errebot-availability__heading > strong {
+  white-space: nowrap;
+}
+
+.admin-errebot-availability__status,
+.admin-errebot-availability__format,
+.admin-errebot-availability__preview,
+.admin-errebot-availability__errors {
+  padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 0.75rem;
+}
+
+.admin-errebot-availability__format {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-errebot-availability__format code {
+  overflow-wrap: anywhere;
+}
+
+.admin-errebot-availability__file {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.admin-errebot-availability__file input {
+  max-width: 100%;
+}
+
+.admin-errebot-availability__errors ul,
+ul.admin-errebot-availability__errors {
+  margin-bottom: 0;
+  padding-left: 1.2rem;
+}
+
+.admin-errebot-availability__preview p {
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 700px) {
+  .admin-errebot-availability__heading {
+    display: grid;
+  }
+
+  .admin-errebot-availability__heading > strong {
+    white-space: normal;
+  }
+}

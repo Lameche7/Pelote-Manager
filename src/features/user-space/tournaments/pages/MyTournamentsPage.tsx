@@ -7,6 +7,8 @@ import {
 } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import { TournamentRescheduleRequestsPanel } from "@/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel";
+import { TournamentRescheduleSuggestions } from "@/features/user-space/tournaments/components/TournamentRescheduleSuggestions";
 import {
   myTournamentsService,
   type MyTournamentMatch,
@@ -121,6 +123,7 @@ function MatchCard({
   actionRequired = false,
   focused = false,
   onResultSaved,
+  onRescheduleCreated,
 }: {
   match: MyTournamentMatch;
   teamId: string;
@@ -129,14 +132,17 @@ function MatchCard({
   actionRequired?: boolean;
   focused?: boolean;
   onResultSaved: () => Promise<void>;
+  onRescheduleCreated: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
   const now = Date.now();
   const startsAt = matchStartsAt(match).getTime();
   const endsAt = matchEndsAt(match).getTime();
   const isPast = endsAt < now;
   const isInProgress = startsAt <= now && endsAt >= now;
+  const canRequestReschedule = !match.result && startsAt > now;
   const opponent = teamLabel(match.opponentPlayers);
   const resultLabel = formatResult(match);
   const finalRound =
@@ -246,6 +252,15 @@ function MatchCard({
             Saisir le score
           </button>
         )}
+        {canRequestReschedule && !rescheduling && (
+          <button
+            className="my-tournaments__result-button"
+            type="button"
+            onClick={() => setRescheduling(true)}
+          >
+            Demander un report
+          </button>
+        )}
       </div>
 
       {editing && (
@@ -262,6 +277,15 @@ function MatchCard({
           />
         </div>
       )}
+
+      {rescheduling && (
+        <TournamentRescheduleSuggestions
+          matchId={match.id}
+          teamId={teamId}
+          onClose={() => setRescheduling(false)}
+          onCreated={onRescheduleCreated}
+        />
+      )}
     </article>
   );
 }
@@ -270,10 +294,12 @@ function TournamentCard({
   tournament,
   focusMatchId,
   onResultSaved,
+  onRescheduleCreated,
 }: {
   tournament: MyTournamentOverview;
   focusMatchId: string | null;
   onResultSaved: () => Promise<void>;
+  onRescheduleCreated: () => void;
 }) {
   const now = Date.now();
   const actionRequiredMatches = tournament.matches.filter(
@@ -422,6 +448,7 @@ function TournamentCard({
                   actionRequired
                   focused={match.id === focusMatchId}
                   onResultSaved={onResultSaved}
+                  onRescheduleCreated={onRescheduleCreated}
                 />
               ))}
             </div>
@@ -435,6 +462,7 @@ function TournamentCard({
               highlight
               focused={nextMatch.id === focusMatchId}
               onResultSaved={onResultSaved}
+              onRescheduleCreated={onRescheduleCreated}
             />
           )}
 
@@ -452,6 +480,7 @@ function TournamentCard({
                     rules={tournament.sportingRules}
                     focused={match.id === focusMatchId}
                     onResultSaved={onResultSaved}
+                    onRescheduleCreated={onRescheduleCreated}
                   />
                 ))}
               </div>
@@ -478,6 +507,7 @@ export function MyTournamentsPage() {
   const [view, setView] = useState<"current" | "history">("current");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rescheduleRefreshKey, setRescheduleRefreshKey] = useState(0);
 
   const load = useCallback(async () => {
     const items = await myTournamentsService.list();
@@ -521,6 +551,10 @@ export function MyTournamentsPage() {
     }
   }, [load]);
 
+  const refreshReschedules = useCallback(() => {
+    setRescheduleRefreshKey((value) => value + 1);
+  }, []);
+
   const displayed = useMemo(
     () =>
       tournaments.filter((tournament) =>
@@ -562,6 +596,8 @@ export function MyTournamentsPage() {
             {error}
           </p>
         )}
+
+        <TournamentRescheduleRequestsPanel refreshKey={rescheduleRefreshKey} />
 
         <div
           className="my-tournaments__tabs"
@@ -621,6 +657,7 @@ export function MyTournamentsPage() {
                 tournament={tournament}
                 focusMatchId={focusMatchId}
                 onResultSaved={refreshAfterResult}
+                onRescheduleCreated={refreshReschedules}
               />
             ))}
           </div>
