@@ -1,14 +1,9 @@
-type SupabaseLikeError = {
-  message?: string;
-  code?: string;
-  status?: number;
-};
+type SupabaseLikeError = { message?: string; code?: string; status?: number };
 
 const RATE_LIMIT_MESSAGE =
   "Trop de tentatives ont été effectuées. Merci de patienter quelques minutes avant de réessayer.";
 
-const RESCHEDULE_CREATE_FALLBACK =
-  "Impossible de créer la demande de report.";
+const RESCHEDULE_CREATE_FALLBACK = "Impossible de créer la demande de report.";
 
 /** Prevents infrastructure details and English Supabase errors from reaching users. */
 export function getSupabaseErrorMessage(
