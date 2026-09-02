@@ -3,8 +3,6 @@ type SupabaseLikeError = { message?: string; code?: string; status?: number };
 const RATE_LIMIT_MESSAGE =
   "Trop de tentatives ont été effectuées. Merci de patienter quelques minutes avant de réessayer.";
 
-const RESCHEDULE_CREATE_FALLBACK = "Impossible de créer la demande de report.";
-
 /** Prevents infrastructure details and English Supabase errors from reaching users. */
 export function getSupabaseErrorMessage(
   error: unknown,
@@ -54,15 +52,6 @@ export function getSupabaseErrorMessage(
   if (code === "23505") return "Ces informations sont déjà utilisées.";
   if (code === "23P01") {
     return "Ce créneau vient d’être réservé par une autre personne.";
-  }
-
-  // Diagnostic temporaire PR127. Les RPC Supabase sont appelées directement
-  // depuis le navigateur et ne remontent pas dans les logs runtime Vercel.
-  // Pour la création d'un report, on affiche uniquement code + message : pas
-  // de payload, de hint, de détails SQL ou d'identifiant supplémentaire.
-  if (fallback === RESCHEDULE_CREATE_FALLBACK && message.trim()) {
-    const diagnosticCode = code ? ` [${code}]` : "";
-    return `${fallback} Diagnostic${diagnosticCode} : ${message.trim()}`;
   }
 
   return fallback;
