@@ -6,6 +6,7 @@ import {
   type TournamentRescheduleOptions,
   type TournamentRescheduleSwap,
 } from "@/features/user-space/tournaments/services/tournamentRescheduleService";
+import { TournamentRescheduleOpponentContactState } from "./TournamentRescheduleOpponentContactState";
 import "./TournamentRescheduleSuggestions.css";
 
 type Props = {
@@ -280,6 +281,11 @@ export function TournamentRescheduleSuggestions({
         temps de repos minimum n’est imposé : si une contrainte supplémentaire
         est nécessaire, elle reste du côté de votre équipe.
       </p>
+
+      <TournamentRescheduleOpponentContactState
+        matchId={matchId}
+        teamId={teamId}
+      />
 
       {loading && <p role="status">Recherche des meilleures solutions…</p>}
       {error && (
