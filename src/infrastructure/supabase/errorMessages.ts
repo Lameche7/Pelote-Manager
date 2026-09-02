@@ -40,6 +40,12 @@ export function getSupabaseErrorMessage(
   if (normalized.includes("délai d’annulation en ligne est dépassé")) {
     return "L’annulation n’est plus possible : le délai autorisé avant le créneau est dépassé.";
   }
+  if (code === "PGRST202") {
+    return "Cette fonction vient d’être ajoutée mais n’est pas encore visible par l’API. Rechargez le schéma Supabase puis réessayez.";
+  }
+  if (code === "42883" || code === "42703" || code === "42P01") {
+    return "La base de données n’est pas encore au même niveau que cette version de Pelote Manager. Vérifiez les dernières migrations Supabase puis réessayez.";
+  }
   if (code === "42501") {
     return "Vous n’êtes pas autorisé à effectuer cette action.";
   }
