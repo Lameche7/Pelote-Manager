@@ -20,8 +20,8 @@ Ce document prépare le lancement grandeur nature de Pelote Manager pour le tour
 | Destinataires | organisateurs habilités, participants pour les informations nécessaires au tournoi, prestataires techniques |
 | Sécurité | authentification, RLS Supabase, permissions club, rattachement explicite du compte aux participations, journalisation technique |
 | Sous-traitants techniques | Supabase, Vercel |
-| Contact droits | **À compléter avant ouverture publique** |
-| Adresse officielle du responsable | **À compléter avant ouverture publique** |
+| Contact droits | privacy@pelotemanager.fr |
+| Adresse officielle du responsable | Trinquet Robert Cathala, 1 rue d’Alger, 65100 Lourdes |
 
 ## Durées de conservation à valider avant le 21/09
 
@@ -59,8 +59,8 @@ En cas de suspicion de fuite ou d’accès indu :
 
 ## Checklist avant ouverture du tournoi
 
-- [ ] renseigner l’adresse officielle du siège du PCL ;
-- [ ] renseigner l’adresse email de contact / droits RGPD ;
+- [x] renseigner l’adresse officielle du siège du PCL ;
+- [x] renseigner l’adresse email de contact / droits RGPD ;
 - [ ] valider les durées de conservation ;
 - [ ] nettoyer les tournois de test ;
 - [ ] supprimer les comptes de test non liés après inventaire ;
