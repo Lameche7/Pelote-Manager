@@ -89,12 +89,14 @@ export function MyProfilePage() {
   const lastName = member?.lastName || profile.lastName;
   const displayName =
     [firstName, lastName].filter(Boolean).join(" ") || profile.displayName;
-  const hasLinkedLicence = Boolean(profile.memberId && member);
+  const hasLinkedLicence = Boolean(profile.memberId);
   const isActiveLicensee = Boolean(member?.isActive);
   const accountType = isActiveLicensee
     ? "Licencié actif"
     : hasLinkedLicence
-      ? "Licence inactive"
+      ? member
+        ? "Licence inactive"
+        : "Licence liée"
       : "Utilisateur non licencié";
 
   const updateLicenceIdentity = (

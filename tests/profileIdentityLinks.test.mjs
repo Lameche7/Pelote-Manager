@@ -64,6 +64,6 @@ test("le rattachement de licence n'est proposé que tant qu'aucune licence n'est
   const profilePage = await readFile(profilePageUrl, "utf8");
 
   assert.match(profilePage, /!hasLinkedLicence &&/);
-  assert.match(profilePage, /profile\.memberId && member/);
+  assert.match(profilePage, /Boolean\(profile\.memberId\)/);
   assert.match(profilePage, /Vos participations existantes sont conservées/);
 });
