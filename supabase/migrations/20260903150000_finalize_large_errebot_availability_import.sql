@@ -46,7 +46,10 @@ begin
     'public.admin_import_errebot_availability_compact(uuid,jsonb)'::regprocedure
   );
 
-  if position('select distinct' in function_def) = 0 then
+  if position(
+    E'select distinct\n    selected.team_id'
+    in function_def
+  ) = 0 then
     patched_def := regexp_replace(
       function_def,
       '(insert into public\.tournament_team_availability_slots[[:space:]]*\([[:space:]]*team_id,[[:space:]]*tournament_id,[[:space:]]*play_date,[[:space:]]*starts_at,[[:space:]]*ends_at[[:space:]]*\)[[:space:]]*)select[[:space:]]+',
@@ -119,7 +122,10 @@ begin
     'public.admin_import_errebot_availability(uuid,jsonb)'::regprocedure
   );
 
-  if position('select distinct' in function_def) = 0 then
+  if position(
+    E'select distinct\n    (value->>''team_id'')::uuid'
+    in function_def
+  ) = 0 then
     patched_def := regexp_replace(
       function_def,
       '(insert into public\.tournament_team_availability_slots[[:space:]]*\([[:space:]]*team_id,[[:space:]]*tournament_id,[[:space:]]*play_date,[[:space:]]*starts_at,[[:space:]]*ends_at[[:space:]]*\)[[:space:]]*)select[[:space:]]+',
