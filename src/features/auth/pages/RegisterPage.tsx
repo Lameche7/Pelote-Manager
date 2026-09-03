@@ -371,6 +371,11 @@ export function RegisterPage() {
           <p>
             Vérifiez le tournoi, la série et le partenaire avant de confirmer.
           </p>
+          <p className="register-privacy-hint">
+            <Link to={`${ROUTES.privacy}#participations-importees`}>
+              Pourquoi Pelote Manager connaît déjà mon inscription ?
+            </Link>
+          </p>
           <div className="register-participations__list">
             {candidates.map((candidate) => (
               <article
@@ -457,6 +462,11 @@ export function RegisterPage() {
           {error}
         </p>
       )}
+      <p className="register-legal-note">
+        En créant un compte, vous reconnaissez avoir pris connaissance des{` `}
+        <Link to={ROUTES.terms}>conditions d’utilisation</Link> et de la{` `}
+        <Link to={ROUTES.privacy}>politique de confidentialité</Link>.
+      </p>
       <p className="register-login">
         Déjà un compte ? <Link to={ROUTES.login}>Se connecter</Link>
       </p>

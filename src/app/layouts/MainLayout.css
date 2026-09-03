@@ -92,3 +92,32 @@
     margin-inline: 0.15rem;
   }
 }
+
+.app-footer__meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.app-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem 0.8rem;
+  font-size: 0.78rem;
+}
+
+.app-footer__legal a {
+  color: inherit;
+}
+
+@media (max-width: 40rem) {
+  .app-footer__meta {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .app-footer__legal {
+    justify-content: center;
+  }
+}

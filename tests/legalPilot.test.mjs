@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const read = (path) =>
-  readFile(new URL(`../${path}`, import.meta.url), "utf8");
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("les documents du pilote sont accessibles depuis des routes publiques", async () => {
   const [routes, router] = await Promise.all([
@@ -30,7 +29,13 @@ test("le pied de page rend les documents juridiques visibles", async () => {
 test("la politique explique le rattachement des participations importées", async () => {
   const legalPage = await read("src/features/legal/pages/LegalPage.tsx");
 
-  assert.match(legalPage, /Pourquoi Pelote Manager peut déjà connaître votre inscription/);
+  assert.match(
+    legalPage,
+    /Pourquoi Pelote Manager peut déjà connaître votre inscription/,
+  );
   assert.match(legalPage, /ne constituent jamais une preuve d’identité/);
-  assert.match(legalPage, /confirmez explicitement que la participation est la vôtre/);
+  assert.match(
+    legalPage,
+    /confirmez explicitement que la participation est la vôtre/,
+  );
 });

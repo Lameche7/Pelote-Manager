@@ -41,11 +41,15 @@ export function LegalNoticePage() {
           située à {LEGAL_CONFIG.editorLocation}.
         </p>
         <p>
-          Siège : {LEGAL_CONFIG.registeredOffice || "à compléter avant le pilote public"}.
+          Siège :{" "}
+          {LEGAL_CONFIG.registeredOffice ||
+            "à compléter avant le pilote public"}
+          .
         </p>
         <p>Directeur de la publication : {LEGAL_CONFIG.publicationDirector}.</p>
         <p>
-          Contact : {LEGAL_CONFIG.contactEmail || "à compléter avant le pilote public"}.
+          Contact :{" "}
+          {LEGAL_CONFIG.contactEmail || "à compléter avant le pilote public"}.
         </p>
       </section>
 
@@ -88,8 +92,8 @@ export function PrivacyPage() {
         <h2>Qui est responsable des données ?</h2>
         <p>
           Pour le pilote du tournoi PCL, {LEGAL_CONFIG.editorName} détermine les
-          finalités de gestion du tournoi et des services du club. Pelote Manager
-          est l’outil utilisé pour les mettre en œuvre.
+          finalités de gestion du tournoi et des services du club. Pelote
+          Manager est l’outil utilisé pour les mettre en œuvre.
         </p>
       </section>
 
@@ -97,28 +101,29 @@ export function PrivacyPage() {
         <h2>Données utilisées</h2>
         <p>
           Selon les fonctions utilisées : nom, prénom, adresse email, données de
-          compte, informations de licence lorsque vous choisissez de la rattacher,
-          participations aux tournois, équipe, partenaire, poste, disponibilités,
-          matchs, résultats, demandes de report, réservations, notifications et
-          traces techniques nécessaires à la sécurité du service.
+          compte, informations de licence lorsque vous choisissez de la
+          rattacher, participations aux tournois, équipe, partenaire, poste,
+          disponibilités, matchs, résultats, demandes de report, réservations,
+          notifications et traces techniques nécessaires à la sécurité du
+          service.
         </p>
       </section>
 
       <section id="participations-importees">
         <h2>Pourquoi Pelote Manager peut déjà connaître votre inscription ?</h2>
         <p>
-          Une participation peut avoir été importée depuis les données fournies à
-          l’organisateur du tournoi, y compris lorsque l’inscription a été saisie
-          par votre partenaire ou un responsable d’équipe. Dans ce cas, Pelote
-          Manager recherche uniquement une correspondance sur le nom et le prénom
-          afin de vous proposer la participation à confirmer.
+          Une participation peut avoir été importée depuis les données fournies
+          à l’organisateur du tournoi, y compris lorsque l’inscription a été
+          saisie par votre partenaire ou un responsable d’équipe. Dans ce cas,
+          Pelote Manager recherche uniquement une correspondance sur le nom et
+          le prénom afin de vous proposer la participation à confirmer.
         </p>
         <p>
           Les coordonnées éventuellement présentes dans la source importée ne
-          constituent jamais une preuve d’identité et ne servent pas à vous donner
-          automatiquement des droits sur une équipe. Le rattachement devient
-          effectif lorsque vous confirmez explicitement que la participation est
-          la vôtre.
+          constituent jamais une preuve d’identité et ne servent pas à vous
+          donner automatiquement des droits sur une équipe. Le rattachement
+          devient effectif lorsque vous confirmez explicitement que la
+          participation est la vôtre.
         </p>
       </section>
 
@@ -126,15 +131,15 @@ export function PrivacyPage() {
         <h2>Pourquoi ces données sont-elles traitées ?</h2>
         <p>
           Pour créer et sécuriser votre compte, organiser les tournois et les
-          réservations, publier les plannings et résultats, permettre les actions
-          auxquelles vous avez droit, communiquer les informations utiles et
-          assurer la sécurité et le bon fonctionnement du service.
+          réservations, publier les plannings et résultats, permettre les
+          actions auxquelles vous avez droit, communiquer les informations
+          utiles et assurer la sécurité et le bon fonctionnement du service.
         </p>
         <p>
-          Selon le traitement, la base juridique peut être l’exécution du service
-          ou de l’inscription demandée, l’intérêt légitime du club à organiser et
-          sécuriser son activité, une obligation légale ou, lorsque la loi
-          l’impose, votre consentement.
+          Selon le traitement, la base juridique peut être l’exécution du
+          service ou de l’inscription demandée, l’intérêt légitime du club à
+          organiser et sécuriser son activité, une obligation légale ou, lorsque
+          la loi l’impose, votre consentement.
         </p>
       </section>
 
@@ -143,9 +148,9 @@ export function PrivacyPage() {
         <p>
           Les personnes habilitées du club selon leurs droits d’administration,
           les participants pour les informations nécessaires au déroulement du
-          tournoi, et les prestataires techniques indispensables au fonctionnement
-          de l’application. Les droits d’administration doivent rester limités au
-          besoin réel de chaque responsable.
+          tournoi, et les prestataires techniques indispensables au
+          fonctionnement de l’application. Les droits d’administration doivent
+          rester limités au besoin réel de chaque responsable.
         </p>
       </section>
 
@@ -153,11 +158,11 @@ export function PrivacyPage() {
         <h2>Combien de temps sont-elles conservées ?</h2>
         <p>
           Les durées sont définies selon la finalité de chaque traitement. Avant
-          le lancement du pilote, le club valide notamment la durée de conservation
-          des comptes inactifs, des identités importées non réclamées, des données
-          de tournoi et des journaux techniques. Les résultats sportifs peuvent
-          être conservés plus longtemps lorsqu’ils constituent l’historique de la
-          compétition.
+          le lancement du pilote, le club valide notamment la durée de
+          conservation des comptes inactifs, des identités importées non
+          réclamées, des données de tournoi et des journaux techniques. Les
+          résultats sportifs peuvent être conservés plus longtemps lorsqu’ils
+          constituent l’historique de la compétition.
         </p>
       </section>
 
@@ -172,7 +177,8 @@ export function PrivacyPage() {
         <p>
           Contact données personnelles :{" "}
           {LEGAL_CONFIG.privacyContactEmail ||
-            "à compléter avant l’ouverture publique du tournoi"}.
+            "à compléter avant l’ouverture publique du tournoi"}
+          .
         </p>
         <p>
           Vous pouvez également saisir la CNIL si vous estimez, après nous avoir
@@ -200,10 +206,10 @@ export function TermsPage() {
       <section>
         <h2>Objet du pilote</h2>
         <p>
-          {APP_CONFIG.name} permet notamment de suivre les tournois, réservations,
-          plannings, résultats, notifications et actions proposées aux joueurs. Le
-          pilote vise à vérifier le service en conditions réelles avant son
-          éventuelle diffusion à d’autres clubs.
+          {APP_CONFIG.name} permet notamment de suivre les tournois,
+          réservations, plannings, résultats, notifications et actions proposées
+          aux joueurs. Le pilote vise à vérifier le service en conditions
+          réelles avant son éventuelle diffusion à d’autres clubs.
         </p>
       </section>
 
@@ -213,17 +219,18 @@ export function TermsPage() {
           Chaque compte est personnel. Vous devez fournir une identité exacte,
           protéger vos identifiants et ne pas confirmer une licence ou une
           participation appartenant à une autre personne. Un rattachement à un
-          tournoi ne vaut pas validation d’une licence ni appartenance à un club.
+          tournoi ne vaut pas validation d’une licence ni appartenance à un
+          club.
         </p>
       </section>
 
       <section>
         <h2>Données sportives et décisions du tournoi</h2>
         <p>
-          Les plannings, résultats et classements affichés sont destinés à faciliter
-          l’organisation. En cas d’erreur ou de divergence, la décision officielle
-          de l’organisateur du tournoi reste la référence et les données peuvent
-          être corrigées par les administrateurs habilités.
+          Les plannings, résultats et classements affichés sont destinés à
+          faciliter l’organisation. En cas d’erreur ou de divergence, la
+          décision officielle de l’organisateur du tournoi reste la référence et
+          les données peuvent être corrigées par les administrateurs habilités.
         </p>
       </section>
 
@@ -231,26 +238,29 @@ export function TermsPage() {
         <h2>Disponibilité du service</h2>
         <p>
           Pelote Manager est encore en phase pilote. Le club peut interrompre
-          temporairement une fonction pour maintenance, correction ou sécurité. Les
-          anomalies constatées pendant le tournoi servent à améliorer le service.
+          temporairement une fonction pour maintenance, correction ou sécurité.
+          Les anomalies constatées pendant le tournoi servent à améliorer le
+          service.
         </p>
       </section>
 
       <section>
         <h2>Usage acceptable</h2>
         <p>
-          Il est interdit de tenter d’accéder aux données ou fonctions d’un autre
-          utilisateur, de contourner les contrôles d’accès, d’automatiser des accès
-          abusifs ou de perturber volontairement le fonctionnement de l’application.
+          Il est interdit de tenter d’accéder aux données ou fonctions d’un
+          autre utilisateur, de contourner les contrôles d’accès, d’automatiser
+          des accès abusifs ou de perturber volontairement le fonctionnement de
+          l’application.
         </p>
       </section>
 
       <section>
         <h2>Évolution des conditions</h2>
         <p>
-          Les présentes conditions peuvent évoluer pendant la phase pilote si une
-          modification technique, réglementaire ou organisationnelle l’exige. Une
-          modification importante sera signalée de manière visible aux utilisateurs.
+          Les présentes conditions peuvent évoluer pendant la phase pilote si
+          une modification technique, réglementaire ou organisationnelle
+          l’exige. Une modification importante sera signalée de manière visible
+          aux utilisateurs.
         </p>
       </section>
 
