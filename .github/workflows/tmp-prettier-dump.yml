@@ -1,0 +1,38 @@
+name: Temporary Prettier dump
+
+on:
+  push:
+    branches:
+      - agent/external-identity-account-link
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format auth files
+        run: |
+          npx prettier --write \
+            src/features/auth/pages/LoginPage.tsx \
+            src/features/auth/pages/RegisterPage.tsx \
+            src/features/auth/services/externalParticipationService.ts
+      - name: Dump formatted files
+        run: |
+          for file in \
+            src/features/auth/pages/LoginPage.tsx \
+            src/features/auth/pages/RegisterPage.tsx \
+            src/features/auth/services/externalParticipationService.ts
+          do
+            echo "===FILE:${file}==="
+            base64 -w0 "$file"
+            echo
+            echo "===END:${file}==="
+          done
