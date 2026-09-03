@@ -88,7 +88,9 @@ export const externalParticipationService = {
   },
 
   async listLinked(): Promise<ExternalParticipationCandidate[]> {
-    const { data, error } = await supabase.rpc("get_my_external_participations");
+    const { data, error } = await supabase.rpc(
+      "get_my_external_participations",
+    );
 
     if (error) {
       throw new Error(

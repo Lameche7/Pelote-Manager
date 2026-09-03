@@ -45,6 +45,9 @@ export function MyProfilePage() {
   const [candidates, setCandidates] = useState<
     ExternalParticipationCandidate[]
   >([]);
+  const [linkedParticipations, setLinkedParticipations] = useState<
+    ExternalParticipationCandidate[]
+  >([]);
   const [licenceIdentity, setLicenceIdentity] = useState<MemberIdentity>(
     EMPTY_LICENCE_IDENTITY,
   );
@@ -113,6 +116,7 @@ export function MyProfilePage() {
     setActionError("");
     setActionMessage("");
     setCandidates([]);
+    setLinkedParticipations([]);
 
     if (profileFirstName.length < 2 || profileLastName.length < 2) {
       setActionError(
@@ -123,14 +127,15 @@ export function MyProfilePage() {
 
     setSearchingParticipations(true);
     try {
-      const found = await externalParticipationService.find(
-        profileFirstName,
-        profileLastName,
-      );
+      const [found, linked] = await Promise.all([
+        externalParticipationService.find(profileFirstName, profileLastName),
+        externalParticipationService.listLinked(),
+      ]);
       setCandidates(found);
-      if (found.length === 0) {
+      setLinkedParticipations(linked);
+      if (found.length === 0 && linked.length === 0) {
         setActionMessage(
-          "Aucune nouvelle participation à rattacher n’a été trouvée avec votre nom et votre prénom.",
+          "Aucune participation n’a été trouvée avec votre compte pour le moment.",
         );
       }
     } catch (caught) {
@@ -152,11 +157,13 @@ export function MyProfilePage() {
     setActionMessage("");
     try {
       await externalParticipationService.claim(candidate.externalIdentityId);
+      const linked = await externalParticipationService.listLinked();
       setCandidates((current) =>
         current.filter(
           (item) => item.externalIdentityId !== candidate.externalIdentityId,
         ),
       );
+      setLinkedParticipations(linked);
       setActionMessage(
         `Votre participation au ${candidate.tournamentName} est maintenant rattachée à ce compte.`,
       );
@@ -380,35 +387,73 @@ export function MyProfilePage() {
 
               {searchingParticipations ? (
                 <p role="status">Recherche de vos participations…</p>
-              ) : candidates.length > 0 ? (
-                <div className="my-profile__participations">
-                  {candidates.map((candidate) => (
-                    <article
-                      key={`${candidate.externalIdentityId}-${candidate.tournamentId}-${candidate.teamId}`}
-                    >
-                      <span>Il semblerait que vous participiez au</span>
-                      <strong>{candidate.tournamentName}</strong>
-                      <p>{candidate.seriesName}</p>
-                      <p>{partnerLabel(candidate)}</p>
-                      <small>Poste : {roleLabel(candidate)}</small>
-                      <button
-                        type="button"
-                        disabled={claimingParticipationId !== null}
-                        onClick={() => void claimParticipation(candidate)}
-                      >
-                        {claimingParticipationId ===
-                        candidate.externalIdentityId
-                          ? "Rattachement…"
-                          : "Oui, c’est bien moi"}
-                      </button>
-                    </article>
-                  ))}
-                </div>
               ) : (
-                <p className="my-profile__empty">
-                  Aucune participation non rattachée n’est disponible pour le
-                  moment.
-                </p>
+                <>
+                  {linkedParticipations.length > 0 && (
+                    <div className="my-profile__participation-section">
+                      <h4>Déjà rattachées à votre compte</h4>
+                      <div className="my-profile__participations">
+                        {linkedParticipations.map((candidate) => (
+                          <article
+                            className="my-profile__participation--linked"
+                            key={`linked-${candidate.externalIdentityId}-${candidate.tournamentId}-${candidate.teamId}`}
+                          >
+                            <span>Participation rattachée</span>
+                            <strong>{candidate.tournamentName}</strong>
+                            <p>{candidate.seriesName}</p>
+                            <p>{partnerLabel(candidate)}</p>
+                            <small>Poste : {roleLabel(candidate)}</small>
+                            <b>✓ Rattachée à ce compte</b>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {candidates.length > 0 && (
+                    <div className="my-profile__participation-section">
+                      <h4>Nouvelles participations à confirmer</h4>
+                      <div className="my-profile__participations">
+                        {candidates.map((candidate) => (
+                          <article
+                            key={`${candidate.externalIdentityId}-${candidate.tournamentId}-${candidate.teamId}`}
+                          >
+                            <span>Il semblerait que vous participiez au</span>
+                            <strong>{candidate.tournamentName}</strong>
+                            <p>{candidate.seriesName}</p>
+                            <p>{partnerLabel(candidate)}</p>
+                            <small>Poste : {roleLabel(candidate)}</small>
+                            <button
+                              type="button"
+                              disabled={claimingParticipationId !== null}
+                              onClick={() => void claimParticipation(candidate)}
+                            >
+                              {claimingParticipationId ===
+                              candidate.externalIdentityId
+                                ? "Rattachement…"
+                                : "Oui, c’est bien moi"}
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {linkedParticipations.length > 0 &&
+                    candidates.length === 0 && (
+                      <p className="my-profile__empty">
+                        Toutes les participations trouvées sont déjà rattachées
+                        à votre compte.
+                      </p>
+                    )}
+
+                  {linkedParticipations.length === 0 &&
+                    candidates.length === 0 && (
+                      <p className="my-profile__empty">
+                        Aucune participation n’est disponible pour le moment.
+                      </p>
+                    )}
+                </>
               )}
             </div>
           )}

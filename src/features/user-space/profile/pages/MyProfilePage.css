@@ -300,3 +300,18 @@
     flex-direction: column;
   }
 }
+
+.my-profile__participation-section + .my-profile__participation-section {
+  margin-top: 1rem;
+}
+.my-profile__participation-section h4 {
+  margin: 0 0 0.65rem;
+  color: var(--brand-green);
+}
+.my-profile__participation--linked {
+  border-color: var(--brand-green) !important;
+}
+.my-profile__participation--linked b {
+  color: var(--brand-green);
+  font-size: 0.82rem;
+}

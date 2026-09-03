@@ -67,3 +67,19 @@ test("le rattachement de licence n'est proposé que tant qu'aucune licence n'est
   assert.match(profilePage, /Boolean\(profile\.memberId\)/);
   assert.match(profilePage, /Vos participations existantes sont conservées/);
 });
+
+test("Mon profil distingue les participations déjà rattachées des nouvelles", async () => {
+  const [profilePage, externalParticipationService] = await Promise.all([
+    readFile(profilePageUrl, "utf8"),
+    readFile(externalParticipationServiceUrl, "utf8"),
+  ]);
+
+  assert.match(profilePage, /Déjà rattachées à votre compte/);
+  assert.match(profilePage, /Nouvelles participations à confirmer/);
+  assert.match(
+    profilePage,
+    /Toutes les participations trouvées sont déjà rattachées/,
+  );
+  assert.match(profilePage, /externalParticipationService\.listLinked/);
+  assert.match(externalParticipationService, /get_my_external_participations/);
+});
