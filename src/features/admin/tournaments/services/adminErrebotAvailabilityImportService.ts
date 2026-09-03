@@ -101,7 +101,14 @@ const fail = (error: unknown, fallback: string): never => {
   throw new Error(getSupabaseErrorMessage(error, fallback));
 };
 
-const payload = (
+const sourceSlotKey = (
+  phase: string,
+  playDate: string,
+  startsAt: string,
+  endsAt: string,
+) => `${phase}|${playDate}|${startsAt}|${endsAt}`;
+
+const legacyPayload = (
   items: ErrebotAvailabilityImportRow[],
   declarations: ErrebotAvailabilityDeclaration[],
   sourceSlots: ErrebotAvailabilitySourceSlot[],
@@ -126,6 +133,80 @@ const payload = (
     source_slot_id: item.sourceSlotId,
   })),
 });
+
+const payload = (
+  items: ErrebotAvailabilityImportRow[],
+  declarations: ErrebotAvailabilityDeclaration[],
+  sourceSlots: ErrebotAvailabilitySourceSlot[],
+) => {
+  const sourceIdsBySlot = new Map<string, string>();
+  const seenSourceIds = new Set<string>();
+
+  for (const sourceSlot of sourceSlots) {
+    if (
+      !sourceSlot.sourceSlotId ||
+      seenSourceIds.has(sourceSlot.sourceSlotId)
+    ) {
+      return legacyPayload(items, declarations, sourceSlots);
+    }
+    seenSourceIds.add(sourceSlot.sourceSlotId);
+    sourceIdsBySlot.set(
+      sourceSlotKey(
+        sourceSlot.phase,
+        sourceSlot.playDate,
+        sourceSlot.startsAt,
+        sourceSlot.endsAt,
+      ),
+      sourceSlot.sourceSlotId,
+    );
+  }
+
+  const availabilityByTeam = new Map<
+    string,
+    {
+      external_team_id: string;
+      phase: ErrebotAvailabilityDeclaration["phase"];
+      source_slot_ids: string[];
+    }
+  >();
+
+  for (const declaration of declarations) {
+    const key = `${declaration.externalTeamId}|${declaration.phase}`;
+    availabilityByTeam.set(key, {
+      external_team_id: declaration.externalTeamId,
+      phase: declaration.phase,
+      source_slot_ids: [],
+    });
+  }
+
+  for (const item of items) {
+    const sourceSlotId = sourceIdsBySlot.get(
+      sourceSlotKey(item.phase, item.playDate, item.startsAt, item.endsAt),
+    );
+    const groupKey = `${item.externalTeamId}|${item.phase}`;
+    const group = availabilityByTeam.get(groupKey);
+    if (!sourceSlotId || !group) {
+      return legacyPayload(items, declarations, sourceSlots);
+    }
+    group.source_slot_ids.push(sourceSlotId);
+  }
+
+  return {
+    availability_by_team: Array.from(availabilityByTeam.values()),
+    declarations: declarations.map((item) => ({
+      external_team_id: item.externalTeamId,
+      phase: item.phase,
+      slot_count: item.slotCount,
+    })),
+    source_slots: sourceSlots.map((item) => ({
+      phase: item.phase,
+      play_date: item.playDate,
+      starts_at: item.startsAt,
+      ends_at: item.endsAt,
+      source_slot_id: item.sourceSlotId,
+    })),
+  };
+};
 
 const mapContext = (value: unknown): AdminErrebotAvailabilityContext => {
   const root = (value ?? {}) as Row;
@@ -174,7 +255,7 @@ export const adminErrebotAvailabilityImportService = {
     sourceSlots: ErrebotAvailabilitySourceSlot[],
   ): Promise<AdminErrebotAvailabilityPreview> {
     const { data, error } = await supabase.rpc(
-      "admin_preview_errebot_availability_import",
+      "admin_preview_errebot_availability_import_compact",
       {
         target_tournament_id: tournamentId,
         payload: payload(items, declarations, sourceSlots),
@@ -218,7 +299,7 @@ export const adminErrebotAvailabilityImportService = {
     sourceSlots: ErrebotAvailabilitySourceSlot[],
   ): Promise<AdminErrebotAvailabilityImportResult> {
     const { data, error } = await supabase.rpc(
-      "admin_import_errebot_availability",
+      "admin_import_errebot_availability_compact",
       {
         target_tournament_id: tournamentId,
         payload: payload(items, declarations, sourceSlots),
