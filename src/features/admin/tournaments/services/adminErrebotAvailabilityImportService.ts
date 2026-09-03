@@ -143,7 +143,10 @@ const payload = (
   const seenSourceIds = new Set<string>();
 
   for (const sourceSlot of sourceSlots) {
-    if (!sourceSlot.sourceSlotId || seenSourceIds.has(sourceSlot.sourceSlotId)) {
+    if (
+      !sourceSlot.sourceSlotId ||
+      seenSourceIds.has(sourceSlot.sourceSlotId)
+    ) {
       return legacyPayload(items, declarations, sourceSlots);
     }
     seenSourceIds.add(sourceSlot.sourceSlotId);
