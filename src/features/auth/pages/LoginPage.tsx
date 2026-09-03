@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useFinalizeMemberRegistration } from "@/features/members/hooks/useMemberLookup";
+import { finalizePendingExternalParticipation } from "@/infrastructure/auth/authService";
 
 export function LoginPage() {
   const { isAuthenticated, login, refreshProfile } = useAuth();
@@ -26,8 +27,10 @@ export function LoginPage() {
 
     try {
       await login(email, password);
-      const finalized = await finalization.mutateAsync();
-      if (finalized) await refreshProfile();
+      const memberFinalized = await finalization.mutateAsync();
+      const participationFinalized =
+        await finalizePendingExternalParticipation();
+      if (memberFinalized || participationFinalized) await refreshProfile();
       navigate(ROUTES.home, { replace: true });
     } catch (caughtError) {
       setError(

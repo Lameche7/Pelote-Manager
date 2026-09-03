@@ -8,8 +8,12 @@ import {
   MemberRegistrationError,
   type MemberIdentity,
 } from "@/features/members/services/memberService";
+import {
+  externalParticipationService,
+  type ExternalParticipationCandidate,
+} from "@/features/auth/services/externalParticipationService";
 import { ROUTES } from "@/shared/config";
-import { registerVisitor } from "@/infrastructure/auth/authService";
+import { registerAccount } from "@/infrastructure/auth/authService";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./RegisterPage.css";
 
@@ -33,27 +37,55 @@ const ERROR_MESSAGES = {
   unknown: "Une erreur est survenue. Veuillez réessayer.",
 } as const;
 
+type Journey = "choice" | "member" | "account";
+type AccountStep = "identity" | "participation" | "credentials";
+
+const partnerLabel = (candidate: ExternalParticipationCandidate) => {
+  const name = [candidate.partnerFirstName, candidate.partnerLastName]
+    .filter(Boolean)
+    .join(" ");
+  return name ? `Avec ${name}` : "Partenaire non renseigné";
+};
+
+const roleLabel = (candidate: ExternalParticipationCandidate) =>
+  candidate.role === "back" ? "Arrière" : "Avant";
+
 export function RegisterPage() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const verification = useVerifyMemberIdentity();
   const registration = useRegisterMember();
-  const [journey, setJourney] = useState<"choice" | "member" | "visitor">(
-    "choice",
-  );
-  const [step, setStep] = useState<1 | 2>(1);
-  const [visitorFirstName, setVisitorFirstName] = useState("");
-  const [visitorLastName, setVisitorLastName] = useState("");
+  const [journey, setJourney] = useState<Journey>("choice");
+  const [memberStep, setMemberStep] = useState<1 | 2>(1);
+  const [accountStep, setAccountStep] = useState<AccountStep>("identity");
+  const [accountFirstName, setAccountFirstName] = useState("");
+  const [accountLastName, setAccountLastName] = useState("");
+  const [candidates, setCandidates] = useState<
+    ExternalParticipationCandidate[]
+  >([]);
+  const [selectedCandidate, setSelectedCandidate] =
+    useState<ExternalParticipationCandidate | null>(null);
   const [identity, setIdentity] = useState(EMPTY_IDENTITY);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  const [searchingParticipations, setSearchingParticipations] = useState(false);
+  const [creatingAccount, setCreatingAccount] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (isAuthenticated) return <Navigate to={ROUTES.home} replace />;
 
   const updateIdentity = (field: keyof MemberIdentity, value: string) => {
     setIdentity((current) => ({ ...current, [field]: value }));
+  };
+
+  const resetJourney = () => {
+    setJourney("choice");
+    setMemberStep(1);
+    setAccountStep("identity");
+    setCandidates([]);
+    setSelectedCandidate(null);
+    setError(null);
   };
 
   async function verify(event: React.FormEvent) {
@@ -65,7 +97,7 @@ export function RegisterPage() {
         setError(ERROR_MESSAGES.identity_not_found);
         return;
       }
-      setStep(2);
+      setMemberStep(2);
     } catch (caught) {
       setError(
         caught instanceof MemberRegistrationError
@@ -75,7 +107,7 @@ export function RegisterPage() {
     }
   }
 
-  async function register(event: React.FormEvent) {
+  async function registerMemberAccount(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     if (password.length < 8) {
@@ -105,7 +137,40 @@ export function RegisterPage() {
     }
   }
 
-  async function registerVisitorAccount(event: React.FormEvent) {
+  async function findParticipations(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setSelectedCandidate(null);
+    setSearchingParticipations(true);
+    try {
+      const found = await externalParticipationService.find(
+        accountFirstName,
+        accountLastName,
+      );
+      setCandidates(found);
+      setAccountStep(found.length > 0 ? "participation" : "credentials");
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : ERROR_MESSAGES.unknown,
+      );
+    } finally {
+      setSearchingParticipations(false);
+    }
+  }
+
+  function selectParticipation(candidate: ExternalParticipationCandidate) {
+    setSelectedCandidate(candidate);
+    setAccountStep("credentials");
+    setError(null);
+  }
+
+  function continueWithoutParticipation() {
+    setSelectedCandidate(null);
+    setAccountStep("credentials");
+    setError(null);
+  }
+
+  async function registerGeneralAccount(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     if (password.length < 8) {
@@ -116,12 +181,15 @@ export function RegisterPage() {
       setError("Les mots de passe ne correspondent pas.");
       return;
     }
+
+    setCreatingAccount(true);
     try {
-      const outcome = await registerVisitor({
-        firstName: visitorFirstName,
-        lastName: visitorLastName,
+      const outcome = await registerAccount({
+        firstName: accountFirstName,
+        lastName: accountLastName,
         email,
         password,
+        externalIdentityId: selectedCandidate?.externalIdentityId ?? null,
       });
       navigate(ROUTES.login, {
         replace: true,
@@ -131,10 +199,13 @@ export function RegisterPage() {
       setError(
         caught instanceof Error ? caught.message : ERROR_MESSAGES.unknown,
       );
+    } finally {
+      setCreatingAccount(false);
     }
   }
 
-  const pending = verification.isPending || registration.isPending;
+  const memberPending = verification.isPending || registration.isPending;
+
   return (
     <section className="register-page" aria-labelledby="register-title">
       <header>
@@ -146,11 +217,7 @@ export function RegisterPage() {
           <button
             className="register-header-back"
             type="button"
-            onClick={() => {
-              setJourney("choice");
-              setStep(1);
-              setError(null);
-            }}
+            onClick={resetJourney}
           >
             ← Changer de parcours
           </button>
@@ -159,24 +226,27 @@ export function RegisterPage() {
 
       {journey === "choice" && (
         <div className="register-choice">
-          <h2>Êtes-vous licencié du club ?</h2>
+          <h2>Quelle est votre situation ?</h2>
           <button type="button" onClick={() => setJourney("member")}>
-            <span>🥋</span>
-            <strong>Je suis licencié</strong>
+            <span>🪪</span>
+            <strong>Ma licence est enregistrée dans ce club</strong>
             <small>
-              Je possède une licence FFPB et je souhaite bénéficier
-              automatiquement du tarif licencié.
+              Je rattache mon compte à ma fiche licencié avec mon numéro de
+              licence.
             </small>
           </button>
-          <button type="button" onClick={() => setJourney("visitor")}>
+          <button type="button" onClick={() => setJourney("account")}>
             <span>👤</span>
-            <strong>Je ne suis pas licencié</strong>
-            <small>Je souhaite créer un compte visiteur.</small>
+            <strong>Créer mon compte Pelote Manager</strong>
+            <small>
+              Pelote Manager recherchera aussi les tournois auxquels je
+              participe déjà, même dans un autre club.
+            </small>
           </button>
         </div>
       )}
 
-      {journey === "member" && step === 1 && (
+      {journey === "member" && memberStep === 1 && (
         <form onSubmit={(event) => void verify(event)}>
           <h2>Retrouvez votre licence</h2>
           <p>
@@ -186,45 +256,51 @@ export function RegisterPage() {
           <input
             id="licence"
             value={identity.licenceNumber}
-            onChange={(e) => updateIdentity("licenceNumber", e.target.value)}
+            onChange={(event) =>
+              updateIdentity("licenceNumber", event.target.value)
+            }
             required
-            disabled={pending}
+            disabled={memberPending}
           />
           <label htmlFor="lastName">Nom</label>
           <input
             id="lastName"
             autoComplete="family-name"
             value={identity.lastName}
-            onChange={(e) => updateIdentity("lastName", e.target.value)}
+            onChange={(event) => updateIdentity("lastName", event.target.value)}
             required
-            disabled={pending}
+            disabled={memberPending}
           />
           <label htmlFor="firstName">Prénom</label>
           <input
             id="firstName"
             autoComplete="given-name"
             value={identity.firstName}
-            onChange={(e) => updateIdentity("firstName", e.target.value)}
+            onChange={(event) =>
+              updateIdentity("firstName", event.target.value)
+            }
             required
-            disabled={pending}
+            disabled={memberPending}
           />
           <label htmlFor="birthDate">Date de naissance</label>
           <input
             id="birthDate"
             type="date"
             value={identity.birthDate}
-            onChange={(e) => updateIdentity("birthDate", e.target.value)}
+            onChange={(event) =>
+              updateIdentity("birthDate", event.target.value)
+            }
             required
-            disabled={pending}
+            disabled={memberPending}
           />
-          <button type="submit" disabled={pending}>
+          <button type="submit" disabled={memberPending}>
             {verification.isPending ? "Vérification…" : "Vérifier ma licence"}
           </button>
         </form>
       )}
 
-      {journey === "member" && step === 2 && (
-        <form onSubmit={(event) => void register(event)}>
+      {journey === "member" && memberStep === 2 && (
+        <form onSubmit={(event) => void registerMemberAccount(event)}>
           <h2>Créez vos identifiants</h2>
           <p className="register-success">
             Identité vérifiée. Votre compte sera automatiquement relié à votre
@@ -237,45 +313,116 @@ export function RegisterPage() {
             setEmail={setEmail}
             setPassword={setPassword}
             setConfirmation={setConfirmation}
-            pending={pending}
+            pending={memberPending}
           />
           <div className="register-actions">
             <button
               type="button"
               className="button-back"
-              onClick={() => setStep(1)}
+              onClick={() => setMemberStep(1)}
             >
               Retour
             </button>
-            <button type="submit" disabled={pending}>
+            <button type="submit" disabled={memberPending}>
               {registration.isPending ? "Création…" : "Créer mon compte"}
             </button>
           </div>
         </form>
       )}
 
-      {journey === "visitor" && (
-        <form onSubmit={(event) => void registerVisitorAccount(event)}>
-          <h2>Créer un compte visiteur</h2>
+      {journey === "account" && accountStep === "identity" && (
+        <form onSubmit={(event) => void findParticipations(event)}>
+          <h2>Commençons par votre identité</h2>
           <p>
-            Réservez vos créneaux et retrouvez-les dans votre espace personnel.
+            Nous allons vérifier si votre nom correspond à une participation
+            déjà enregistrée dans un tournoi Pelote Manager.
           </p>
-          <label htmlFor="visitorFirstName">Prénom</label>
+          <label htmlFor="accountFirstName">Prénom</label>
           <input
-            id="visitorFirstName"
+            id="accountFirstName"
             autoComplete="given-name"
-            value={visitorFirstName}
-            onChange={(e) => setVisitorFirstName(e.target.value)}
+            value={accountFirstName}
+            onChange={(event) => setAccountFirstName(event.target.value)}
             required
+            disabled={searchingParticipations}
           />
-          <label htmlFor="visitorLastName">Nom</label>
+          <label htmlFor="accountLastName">Nom</label>
           <input
-            id="visitorLastName"
+            id="accountLastName"
             autoComplete="family-name"
-            value={visitorLastName}
-            onChange={(e) => setVisitorLastName(e.target.value)}
+            value={accountLastName}
+            onChange={(event) => setAccountLastName(event.target.value)}
             required
+            disabled={searchingParticipations}
           />
+          <button type="submit" disabled={searchingParticipations}>
+            {searchingParticipations ? "Recherche…" : "Continuer"}
+          </button>
+        </form>
+      )}
+
+      {journey === "account" && accountStep === "participation" && (
+        <div className="register-participations">
+          <h2>
+            {candidates.length === 1
+              ? "Nous avons peut-être retrouvé votre tournoi"
+              : "Nous avons trouvé plusieurs participations possibles"}
+          </h2>
+          <p>
+            Vérifiez le tournoi, la série et le partenaire avant de confirmer.
+          </p>
+          <div className="register-participations__list">
+            {candidates.map((candidate) => (
+              <article
+                className="register-participation-card"
+                key={`${candidate.externalIdentityId}-${candidate.tournamentId}-${candidate.teamId}`}
+              >
+                <p className="register-participation-card__hint">
+                  Il semblerait que vous participiez au
+                </p>
+                <strong>{candidate.tournamentName}</strong>
+                <span>{candidate.seriesName}</span>
+                <span>{partnerLabel(candidate)}</span>
+                <small>Poste : {roleLabel(candidate)}</small>
+                <button
+                  type="button"
+                  onClick={() => selectParticipation(candidate)}
+                >
+                  Oui, c’est bien moi
+                </button>
+              </article>
+            ))}
+          </div>
+          <div className="register-participations__actions">
+            <button
+              type="button"
+              className="button-back"
+              onClick={() => setAccountStep("identity")}
+            >
+              Modifier mon nom
+            </button>
+            <button type="button" onClick={continueWithoutParticipation}>
+              Aucune ne me correspond
+            </button>
+          </div>
+        </div>
+      )}
+
+      {journey === "account" && accountStep === "credentials" && (
+        <form onSubmit={(event) => void registerGeneralAccount(event)}>
+          <h2>Créez vos identifiants</h2>
+          {selectedCandidate ? (
+            <p className="register-success">
+              Votre participation au {selectedCandidate.tournamentName} sera
+              rattachée à ce compte. Cela ne modifie ni votre licence ni votre
+              club.
+            </p>
+          ) : (
+            <p>
+              Votre compte pourra être rattaché plus tard à une licence ou à de
+              nouvelles participations.
+            </p>
+          )}
           <AccountFields
             email={email}
             password={password}
@@ -283,11 +430,28 @@ export function RegisterPage() {
             setEmail={setEmail}
             setPassword={setPassword}
             setConfirmation={setConfirmation}
-            pending={false}
+            pending={creatingAccount}
           />
-          <button type="submit">Créer mon compte</button>
+          <div className="register-actions">
+            <button
+              type="button"
+              className="button-back"
+              disabled={creatingAccount}
+              onClick={() =>
+                setAccountStep(
+                  candidates.length > 0 ? "participation" : "identity",
+                )
+              }
+            >
+              Retour
+            </button>
+            <button type="submit" disabled={creatingAccount}>
+              {creatingAccount ? "Création…" : "Créer mon compte"}
+            </button>
+          </div>
         </form>
       )}
+
       {error && (
         <p className="register-error" role="alert">
           {error}
@@ -309,6 +473,7 @@ type AccountFieldsProps = {
   setConfirmation: (value: string) => void;
   pending: boolean;
 };
+
 function AccountFields({
   email,
   password,
@@ -326,7 +491,7 @@ function AccountFields({
         type="email"
         autoComplete="email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(event) => setEmail(event.target.value)}
         required
         disabled={pending}
       />
@@ -337,7 +502,7 @@ function AccountFields({
         autoComplete="new-password"
         minLength={8}
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(event) => setPassword(event.target.value)}
         required
         disabled={pending}
       />
@@ -349,7 +514,7 @@ function AccountFields({
         autoComplete="new-password"
         minLength={8}
         value={confirmation}
-        onChange={(e) => setConfirmation(e.target.value)}
+        onChange={(event) => setConfirmation(event.target.value)}
         required
         disabled={pending}
       />

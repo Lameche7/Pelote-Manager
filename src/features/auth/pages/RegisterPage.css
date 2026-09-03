@@ -124,10 +124,14 @@
 }
 @media (max-width: 34rem) {
   .register-page > header,
-  .register-page form {
+  .register-page form,
+  .register-participations {
     padding: 1.35rem;
   }
   .register-steps {
+    grid-template-columns: 1fr;
+  }
+  .register-participations__actions {
     grid-template-columns: 1fr;
   }
 }
@@ -176,4 +180,64 @@
   background: transparent;
   cursor: pointer;
   font-weight: 700;
+}
+.register-participations {
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+}
+.register-participations h2 {
+  margin: 0;
+  color: var(--brand-blue);
+}
+.register-participations > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.register-participations__list {
+  display: grid;
+  gap: 0.85rem;
+}
+.register-participation-card {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.1rem;
+  background: #f8fbf9;
+}
+.register-participation-card__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.register-participation-card strong {
+  color: var(--brand-green);
+  font-size: 1.15rem;
+}
+.register-participation-card span,
+.register-participation-card small {
+  color: var(--muted);
+}
+.register-participation-card button,
+.register-participations__actions button {
+  min-height: 2.8rem;
+  margin-top: 0.55rem;
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+  color: #fff;
+  background: var(--brand-green);
+  font-weight: 800;
+  cursor: pointer;
+}
+.register-participations__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 0.75rem;
+}
+.register-participations__actions .button-back {
+  color: var(--brand-blue);
+  background: #edf2f7;
 }
