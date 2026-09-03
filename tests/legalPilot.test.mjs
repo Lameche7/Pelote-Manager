@@ -33,7 +33,7 @@ test("la politique explique le rattachement des participations importées", asyn
     legalPage,
     /Pourquoi Pelote Manager peut déjà connaître votre inscription/,
   );
-  assert.match(legalPage, /ne constituent jamais une preuve d’identité/);
+  assert.match(legalPage, /ne\s+constituent jamais une preuve d’identité/);
   assert.match(
     legalPage,
     /confirmez explicitement que la participation est la vôtre/,
