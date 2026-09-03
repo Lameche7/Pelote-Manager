@@ -7,7 +7,7 @@ export const LEGAL_CONFIG = {
   editorName: CLUB_CONFIG.name,
   editorType: "Association sportive loi 1901",
   editorLocation: CLUB_CONFIG.location,
-  registeredOffice: "",
+  registeredOffice: "Trinquet Robert Cathala, 1 rue d’Alger, 65100 Lourdes",
   publicationDirector: "Le président du Pelotaris Club Lourdais",
   contactEmail: "",
   privacyContactEmail: "",
