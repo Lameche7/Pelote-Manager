@@ -9,6 +9,6 @@ export const LEGAL_CONFIG = {
   editorLocation: CLUB_CONFIG.location,
   registeredOffice: "Trinquet Robert Cathala, 1 rue d’Alger, 65100 Lourdes",
   publicationDirector: "Le président du Pelotaris Club Lourdais",
-  contactEmail: "",
-  privacyContactEmail: "",
+  contactEmail: "privacy@pelotemanager.fr",
+  privacyContactEmail: "privacy@pelotemanager.fr",
 } as const;
