@@ -47,10 +47,7 @@ test("Mes tournois repose sur le lien de compte commun", async () => {
     /public\.tournament_profile_is_linked_to_team\(\s*team\.id,\s*current_profile_id/,
   );
   assert.doesNotMatch(getMyTournaments, /current_profile_email/);
-  assert.doesNotMatch(
-    getMyTournaments,
-    /lower\(btrim\(player\.email\)\)/,
-  );
+  assert.doesNotMatch(getMyTournaments, /lower\(btrim\(player\.email\)\)/);
 });
 
 test("résultats et reports partagent la même autorité d'identité", async () => {
