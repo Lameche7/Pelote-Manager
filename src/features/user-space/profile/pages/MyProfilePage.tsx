@@ -1,11 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  BadgeCheck,
-  Building2,
-  Mail,
-  Trophy,
-  UserRound,
-} from "lucide-react";
+import { BadgeCheck, Building2, Mail, Trophy, UserRound } from "lucide-react";
 import {
   externalParticipationService,
   type ExternalParticipationCandidate,
@@ -244,7 +238,10 @@ export function MyProfilePage() {
         </header>
 
         {actionError && (
-          <p className="my-profile__alert my-profile__alert--error" role="alert">
+          <p
+            className="my-profile__alert my-profile__alert--error"
+            role="alert"
+          >
             {actionError}
           </p>
         )}
@@ -330,7 +327,9 @@ export function MyProfilePage() {
             <button
               type="button"
               onClick={() => void openParticipations()}
-              disabled={searchingParticipations || claimingParticipationId !== null}
+              disabled={
+                searchingParticipations || claimingParticipationId !== null
+              }
             >
               <Trophy aria-hidden="true" />
               <span>
@@ -395,7 +394,8 @@ export function MyProfilePage() {
                         disabled={claimingParticipationId !== null}
                         onClick={() => void claimParticipation(candidate)}
                       >
-                        {claimingParticipationId === candidate.externalIdentityId
+                        {claimingParticipationId ===
+                        candidate.externalIdentityId
                           ? "Rattachement…"
                           : "Oui, c’est bien moi"}
                       </button>

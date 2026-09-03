@@ -65,8 +65,5 @@ test("le rattachement de licence n'est proposé que tant qu'aucune licence n'est
 
   assert.match(profilePage, /!hasLinkedLicence &&/);
   assert.match(profilePage, /profile\.memberId && member/);
-  assert.match(
-    profilePage,
-    /Vos participations existantes sont conservées/,
-  );
+  assert.match(profilePage, /Vos participations existantes sont conservées/);
 });
