@@ -28,7 +28,8 @@ export function LoginPage() {
     try {
       await login(email, password);
       const memberFinalized = await finalization.mutateAsync();
-      const participationFinalized = await finalizePendingExternalParticipation();
+      const participationFinalized =
+        await finalizePendingExternalParticipation();
       if (memberFinalized || participationFinalized) await refreshProfile();
       navigate(ROUTES.home, { replace: true });
     } catch (caughtError) {

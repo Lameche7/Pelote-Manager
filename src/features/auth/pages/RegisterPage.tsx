@@ -228,7 +228,7 @@ export function RegisterPage() {
         <div className="register-choice">
           <h2>Quelle est votre situation ?</h2>
           <button type="button" onClick={() => setJourney("member")}>
-            <span>🥋</span>
+            <span>🪪</span>
             <strong>Ma licence est enregistrée dans ce club</strong>
             <small>
               Je rattache mon compte à ma fiche licencié avec mon numéro de
@@ -239,8 +239,8 @@ export function RegisterPage() {
             <span>👤</span>
             <strong>Créer mon compte Pelote Manager</strong>
             <small>
-              Pelote Manager recherchera aussi les tournois auxquels je participe
-              déjà, même dans un autre club.
+              Pelote Manager recherchera aussi les tournois auxquels je
+              participe déjà, même dans un autre club.
             </small>
           </button>
         </div>
@@ -334,8 +334,8 @@ export function RegisterPage() {
         <form onSubmit={(event) => void findParticipations(event)}>
           <h2>Commençons par votre identité</h2>
           <p>
-            Nous allons vérifier si votre nom correspond à une participation déjà
-            enregistrée dans un tournoi Pelote Manager.
+            Nous allons vérifier si votre nom correspond à une participation
+            déjà enregistrée dans un tournoi Pelote Manager.
           </p>
           <label htmlFor="accountFirstName">Prénom</label>
           <input
@@ -438,7 +438,9 @@ export function RegisterPage() {
               className="button-back"
               disabled={creatingAccount}
               onClick={() =>
-                setAccountStep(candidates.length > 0 ? "participation" : "identity")
+                setAccountStep(
+                  candidates.length > 0 ? "participation" : "identity",
+                )
               }
             >
               Retour

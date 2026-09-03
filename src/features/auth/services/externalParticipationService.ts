@@ -37,7 +37,8 @@ const mapCandidate = (value: unknown): ExternalParticipationCandidate => {
 };
 
 const claimErrors: Record<string, string> = {
-  "Authentication required": "Connectez-vous pour rattacher cette participation.",
+  "Authentication required":
+    "Connectez-vous pour rattacher cette participation.",
   "Profile required": "Votre profil doit être finalisé avant le rattachement.",
   "External participation not found": "Cette participation n’existe plus.",
   "External participation is no longer available":
