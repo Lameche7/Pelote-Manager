@@ -278,7 +278,9 @@ export const adminErrebotAvailabilityImportService = {
       finalsKnownTeamCountBefore: Number(
         root.finals_known_team_count_before ?? 0,
       ),
-      finalsKnownTeamCountAfter: Number(root.finals_known_team_count_after ?? 0),
+      finalsKnownTeamCountAfter: Number(
+        root.finals_known_team_count_after ?? 0,
+      ),
       poolsCoverageCompleteAfter: Boolean(root.pools_coverage_complete_after),
       finalsCoverageCompleteAfter: Boolean(root.finals_coverage_complete_after),
       coverageCompleteAfter: Boolean(root.coverage_complete_after),
