@@ -7,11 +7,6 @@ import type {
 } from "@/features/admin/tournaments/domain/errebotAvailabilityImport";
 
 type Row = Record<string, unknown>;
-type SupabaseDiagnosticError = {
-  message?: unknown;
-  code?: unknown;
-  status?: unknown;
-};
 
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
@@ -80,8 +75,7 @@ export type AdminErrebotAvailabilityImportResult = {
 
 const fail = (error: unknown, fallback: string): never => {
   if (error && typeof error === "object" && "message" in error) {
-    const diagnostic = error as SupabaseDiagnosticError;
-    const message = String(diagnostic.message ?? "");
+    const message = String((error as { message?: unknown }).message ?? "");
     if (message === "Forbidden") {
       throw new Error("Vous n’avez pas le droit de gérer ce tournoi.");
     }
@@ -103,28 +97,6 @@ const fail = (error: unknown, fallback: string): never => {
         "Le classeur contient encore des données invalides. Relancez la prévisualisation.",
       );
     }
-
-    const normalized = message.toLowerCase();
-    if (
-      String(diagnostic.code ?? "") === "57014" ||
-      normalized.includes("statement timeout")
-    ) {
-      throw new Error(
-        "Le contrôle dépasse encore le temps limite Supabase (57014).",
-      );
-    }
-    if (Number(diagnostic.status) === 413) {
-      throw new Error("La requête de disponibilités est encore trop volumineuse (413). ");
-    }
-
-    const friendly = getSupabaseErrorMessage(error, fallback);
-    if (friendly !== fallback) throw new Error(friendly);
-
-    const code = String(diagnostic.code ?? diagnostic.status ?? "sans code");
-    const conciseMessage = message.replace(/\s+/g, " ").trim().slice(0, 240);
-    throw new Error(
-      `${fallback} Diagnostic ${code}${conciseMessage ? ` : ${conciseMessage}` : ""}`,
-    );
   }
   throw new Error(getSupabaseErrorMessage(error, fallback));
 };
@@ -306,9 +278,7 @@ export const adminErrebotAvailabilityImportService = {
       finalsKnownTeamCountBefore: Number(
         root.finals_known_team_count_before ?? 0,
       ),
-      finalsKnownTeamCountAfter: Number(
-        root.finals_known_team_count_after ?? 0,
-      ),
+      finalsKnownTeamCountAfter: Number(root.finals_known_team_count_after ?? 0),
       poolsCoverageCompleteAfter: Boolean(root.pools_coverage_complete_after),
       finalsCoverageCompleteAfter: Boolean(root.finals_coverage_complete_after),
       coverageCompleteAfter: Boolean(root.coverage_complete_after),
