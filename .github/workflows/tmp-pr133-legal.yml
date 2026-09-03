@@ -1,0 +1,78 @@
+name: Temporary PR133 legal wiring
+
+on:
+  push:
+    branches:
+      - agent/pcl-pilot-compliance
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/pcl-pilot-compliance
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Wire public legal pages
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              file = Path(path)
+              text = file.read_text()
+              if new in text:
+                  return
+              if old not in text:
+                  raise SystemExit(f"Pattern not found in {path}: {old[:80]!r}")
+              file.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              "src/app/router.tsx",
+              'import { LoginPage } from "@/features/auth/pages/LoginPage";\n',
+              'import { LoginPage } from "@/features/auth/pages/LoginPage";\nimport {\n  LegalNoticePage,\n  PrivacyPage,\n  TermsPage,\n} from "@/features/legal/pages/LegalPage";\n',
+          )
+          replace_once(
+              "src/app/router.tsx",
+              '      { path: ROUTES.register, element: <RegisterPage /> },\n',
+              '      { path: ROUTES.register, element: <RegisterPage /> },\n      { path: ROUTES.legalNotice, element: <LegalNoticePage /> },\n      { path: ROUTES.privacy, element: <PrivacyPage /> },\n      { path: ROUTES.terms, element: <TermsPage /> },\n',
+          )
+
+          replace_once(
+              "src/app/layouts/MainLayout.tsx",
+              '        <small>\n          © {new Date().getFullYear()} {APP_CONFIG.name}\n        </small>\n',
+              '        <div className="app-footer__meta">\n          <small>\n            © {new Date().getFullYear()} {APP_CONFIG.name}\n          </small>\n          <nav className="app-footer__legal" aria-label="Informations légales">\n            <Link to={ROUTES.legalNotice}>Mentions légales</Link>\n            <Link to={ROUTES.privacy}>Confidentialité</Link>\n            <Link to={ROUTES.terms}>Conditions d’utilisation</Link>\n          </nav>\n        </div>\n',
+          )
+
+          css = Path("src/app/layouts/MainLayout.css")
+          css_text = css.read_text()
+          footer_css = '''\n\n.app-footer__meta {\n  display: grid;\n  justify-items: end;\n  gap: 0.35rem;\n}\n\n.app-footer__legal {\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: flex-end;\n  gap: 0.35rem 0.8rem;\n  font-size: 0.78rem;\n}\n\n.app-footer__legal a {\n  color: inherit;\n}\n\n@media (max-width: 40rem) {\n  .app-footer__meta {\n    justify-items: center;\n    text-align: center;\n  }\n\n  .app-footer__legal {\n    justify-content: center;\n  }\n}\n'''
+          if ".app-footer__legal" not in css_text:
+              css.write_text(css_text.rstrip() + footer_css)
+
+          replace_once(
+              "src/features/auth/pages/RegisterPage.tsx",
+              '          <p>\n            Vérifiez le tournoi, la série et le partenaire avant de confirmer.\n          </p>\n',
+              '          <p>\n            Vérifiez le tournoi, la série et le partenaire avant de confirmer.\n          </p>\n          <p className="register-privacy-hint">\n            <Link to={`${ROUTES.privacy}#participations-importees`}>\n              Pourquoi Pelote Manager connaît déjà mon inscription ?\n            </Link>\n          </p>\n',
+          )
+          replace_once(
+              "src/features/auth/pages/RegisterPage.tsx",
+              '      <p className="register-login">\n        Déjà un compte ? <Link to={ROUTES.login}>Se connecter</Link>\n      </p>\n',
+              '      <p className="register-legal-note">\n        En créant un compte, vous reconnaissez avoir pris connaissance des{` `}\n        <Link to={ROUTES.terms}>conditions d’utilisation</Link> et de la{` `}\n        <Link to={ROUTES.privacy}>politique de confidentialité</Link>.\n      </p>\n      <p className="register-login">\n        Déjà un compte ? <Link to={ROUTES.login}>Se connecter</Link>\n      </p>\n',
+          )
+          PY
+      - run: npx prettier --write src/app/router.tsx src/app/layouts/MainLayout.tsx src/app/layouts/MainLayout.css src/features/auth/pages/RegisterPage.tsx src/features/legal/pages/LegalPage.tsx src/features/legal/pages/LegalPage.css src/shared/config/legal.ts src/shared/config/index.ts src/shared/config/routes.ts tests/legalPilot.test.mjs docs/pilot-pcl-rgpd.md
+      - name: Commit wiring
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/router.tsx src/app/layouts/MainLayout.tsx src/app/layouts/MainLayout.css src/features/auth/pages/RegisterPage.tsx src/features/legal/pages/LegalPage.tsx src/features/legal/pages/LegalPage.css src/shared/config/legal.ts src/shared/config/index.ts src/shared/config/routes.ts tests/legalPilot.test.mjs docs/pilot-pcl-rgpd.md
+          git diff --cached --quiet || git commit -m "feat(legal): expose pilot information to players"
+          git push
