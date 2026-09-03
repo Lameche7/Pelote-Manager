@@ -36,6 +36,17 @@ const mapCandidate = (value: unknown): ExternalParticipationCandidate => {
   };
 };
 
+const mapCandidates = (value: unknown): ExternalParticipationCandidate[] =>
+  rows(value)
+    .map(mapCandidate)
+    .filter(
+      (candidate) =>
+        candidate.externalIdentityId &&
+        candidate.tournamentId &&
+        candidate.teamId &&
+        candidate.tournamentName,
+    );
+
 const claimErrors: Record<string, string> = {
   "Authentication required":
     "Connectez-vous pour rattacher cette participation.",
@@ -73,15 +84,22 @@ export const externalParticipationService = {
       );
     }
 
-    return rows(data)
-      .map(mapCandidate)
-      .filter(
-        (candidate) =>
-          candidate.externalIdentityId &&
-          candidate.tournamentId &&
-          candidate.teamId &&
-          candidate.tournamentName,
+    return mapCandidates(data);
+  },
+
+  async listLinked(): Promise<ExternalParticipationCandidate[]> {
+    const { data, error } = await supabase.rpc("get_my_external_participations");
+
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de charger vos participations rattachées pour le moment.",
+        ),
       );
+    }
+
+    return mapCandidates(data);
   },
 
   async claim(externalIdentityId: string): Promise<void> {
