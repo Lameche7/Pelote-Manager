@@ -25,7 +25,6 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
           path = Path("src/app/router.tsx")
           text = path.read_text()
           import_anchor = 'import { AdminCommunicationPage } from "@/features/admin/communication/pages/AdminCommunicationPage";\n'
@@ -34,30 +33,15 @@ jobs:
               if import_anchor not in text:
                   raise SystemExit("router import anchor not found")
               text = text.replace(import_anchor, import_anchor + import_line, 1)
-
-          route_anchor = '''          {
-            path: "communication",
-            element: permitted(
-              ADMIN_PERMISSIONS.communication,
-              <AdminCommunicationPage />,
-            ),
-          },
-'''
-          route_block = '''          {
-            path: "championnats/importer",
-            element: permitted(
-              ADMIN_PERMISSIONS.championships,
-              <AdminChampionshipImportPage />,
-            ),
-          },
-'''
+          route_anchor = '          {\n            path: "communication",\n            element: permitted(\n              ADMIN_PERMISSIONS.communication,\n              <AdminCommunicationPage />,\n            ),\n          },\n'
+          route_block = '          {\n            path: "championnats/importer",\n            element: permitted(\n              ADMIN_PERMISSIONS.championships,\n              <AdminChampionshipImportPage />,\n            ),\n          },\n'
           if route_block not in text:
               if route_anchor not in text:
                   raise SystemExit("router route anchor not found")
               text = text.replace(route_anchor, route_block + route_anchor, 1)
           path.write_text(text)
           PY
-      - run: npx prettier --write src/app/router.tsx src/features/admin/config/adminPermissions.ts src/shared/config/routes.ts src/features/admin/championships/domain/championshipSourceImport.ts src/features/admin/championships/services/championshipSourceFileService.ts src/features/admin/championships/pages/AdminChampionshipImportPage.tsx src/features/admin/championships/pages/AdminChampionshipImportPage.css tests/championshipSourceImport.test.mjs tsconfig.test.json
+      - run: npx prettier --write src/app/router.tsx src/features/admin/config/adminPermissions.ts src/shared/config/routes.ts src/features/admin/championships tests/championshipSourceImport.test.mjs tsconfig.test.json
       - name: Commit wiring
         run: |
           if git diff --quiet; then
