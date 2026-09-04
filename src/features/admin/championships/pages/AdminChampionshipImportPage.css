@@ -1,0 +1,126 @@
+.admin-championship-import {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.admin-championship-import__files,
+.admin-championship-import__identity,
+.admin-championship-import__table-card,
+.admin-championship-import__issues,
+.admin-championship-import__status {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-championship-import__file-grid,
+.admin-championship-import__summary,
+.admin-championship-import__identity {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+}
+
+.admin-championship-import__file-grid label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 700;
+}
+
+.admin-championship-import__file-grid input {
+  width: 100%;
+}
+
+.admin-championship-import__file-grid span,
+.admin-championship-import__identity span,
+.admin-championship-import__summary span,
+.admin-championship-import__status span {
+  color: var(--text-muted, #667085);
+  font-size: 0.9rem;
+}
+
+.admin-championship-import__primary {
+  justify-self: start;
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-championship-import__primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-championship-import__summary .admin-card {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.admin-championship-import__summary strong {
+  font-size: 1.65rem;
+}
+
+.admin-championship-import__identity strong {
+  overflow-wrap: anywhere;
+}
+
+.admin-championship-import__table-scroll {
+  overflow-x: auto;
+}
+
+.admin-championship-import table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-championship-import th,
+.admin-championship-import td {
+  padding: 0.7rem 0.65rem;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-championship-import th {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-championship-import__issues ul {
+  margin: 0.55rem 0 0;
+  padding-left: 1.15rem;
+}
+
+.admin-championship-import__issue-group {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 0.7rem;
+}
+
+.admin-championship-import__issue-group--error,
+.admin-championship-import__alert,
+.admin-championship-import__status.is-invalid {
+  border: 1px solid #b42318;
+}
+
+.admin-championship-import__alert {
+  margin: 0;
+  border-radius: 0.7rem;
+  padding: 0.85rem 1rem;
+}
+
+.admin-championship-import__status.is-valid {
+  border: 1px solid #027a48;
+}
+
+@media (max-width: 640px) {
+  .admin-championship-import__summary,
+  .admin-championship-import__file-grid,
+  .admin-championship-import__identity {
+    grid-template-columns: 1fr;
+  }
+}
