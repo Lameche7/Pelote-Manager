@@ -106,10 +106,7 @@ create table public.championship_players (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (source_provider, licence_number),
-  check (
-    (profile_id is null and link_status = 'unlinked')
-    or (profile_id is not null and link_status <> 'unlinked')
-  )
+  check (profile_id is null or link_status <> 'unlinked')
 );
 
 create unique index championship_players_profile_unique
