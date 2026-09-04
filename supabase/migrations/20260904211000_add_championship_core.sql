@@ -51,7 +51,7 @@ create type public.championship_player_link_status as enum (
 create table public.championships (
   id uuid primary key default gen_random_uuid(),
   name text not null check (btrim(name) <> ''),
-  specialty text not null default '' ,
+  specialty text not null default '',
   season_label text not null default '',
   source_provider text not null default 'ffpb' check (btrim(source_provider) <> ''),
   source_external_id text,
@@ -152,7 +152,7 @@ create table public.championship_teams (
   unique (id, division_id),
   foreign key (pool_id, division_id)
     references public.championship_pools (id, division_id)
-    on delete set null
+    on delete restrict
 );
 
 create table public.championship_team_players (
@@ -234,7 +234,7 @@ create table public.championship_matches (
   unique (division_id, source_key),
   foreign key (pool_id, division_id)
     references public.championship_pools (id, division_id)
-    on delete set null,
+    on delete restrict,
   foreign key (team1_id, division_id)
     references public.championship_teams (id, division_id)
     on delete restrict,
