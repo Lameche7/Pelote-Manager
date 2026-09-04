@@ -36,6 +36,6 @@ test("la politique explique le rattachement des participations importées", asyn
   assert.match(legalPage, /ne\s+constituent jamais une preuve d’identité/);
   assert.match(
     legalPage,
-    /confirmez explicitement que la participation est la vôtre/,
+    /confirmez explicitement que la\s+participation est la vôtre/,
   );
 });
