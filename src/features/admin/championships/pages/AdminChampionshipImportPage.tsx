@@ -19,7 +19,9 @@ export function AdminChampionshipImportPage() {
     matches: null,
     engagements: null,
   });
-  const [preview, setPreview] = useState<ChampionshipImportPreview | null>(null);
+  const [preview, setPreview] = useState<ChampionshipImportPreview | null>(
+    null,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -105,7 +107,9 @@ export function AdminChampionshipImportPage() {
               disabled={busy}
               onChange={selectFile("engagements")}
             />
-            <span>{files.engagements?.name ?? "Aucun fichier sélectionné"}</span>
+            <span>
+              {files.engagements?.name ?? "Aucun fichier sélectionné"}
+            </span>
           </label>
         </div>
         <button
@@ -131,7 +135,10 @@ export function AdminChampionshipImportPage() {
             </div>
           </div>
 
-          <div className="admin-championship-import__summary" aria-label="Résumé de l’import">
+          <div
+            className="admin-championship-import__summary"
+            aria-label="Résumé de l’import"
+          >
             <div className="admin-card">
               <strong>{preview.divisions.length}</strong>
               <span>séries</span>
@@ -199,12 +206,15 @@ export function AdminChampionshipImportPage() {
               <h2>3. Contrôles</h2>
               {blockingIssues.length > 0 && (
                 <div className="admin-championship-import__issue-group admin-championship-import__issue-group--error">
-                  <strong>{blockingIssues.length} anomalie(s) bloquante(s)</strong>
+                  <strong>
+                    {blockingIssues.length} anomalie(s) bloquante(s)
+                  </strong>
                   <ul>
                     {blockingIssues.slice(0, 20).map((issue, index) => (
                       <li key={`${issue.source}-${issue.row}-${index}`}>
                         {issueSourceLabel[issue.source]}
-                        {issue.row > 0 ? ` · ligne ${issue.row}` : ""} : {issue.message}
+                        {issue.row > 0 ? ` · ligne ${issue.row}` : ""} :{" "}
+                        {issue.message}
                       </li>
                     ))}
                   </ul>
@@ -217,7 +227,8 @@ export function AdminChampionshipImportPage() {
                     {warnings.slice(0, 20).map((issue, index) => (
                       <li key={`${issue.source}-${issue.row}-${index}`}>
                         {issueSourceLabel[issue.source]}
-                        {issue.row > 0 ? ` · ligne ${issue.row}` : ""} : {issue.message}
+                        {issue.row > 0 ? ` · ligne ${issue.row}` : ""} :{" "}
+                        {issue.message}
                       </li>
                     ))}
                   </ul>
