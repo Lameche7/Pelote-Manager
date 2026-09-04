@@ -170,9 +170,16 @@ export function MainLayout() {
             </span>
           </div>
         </div>
-        <small>
-          © {new Date().getFullYear()} {APP_CONFIG.name}
-        </small>
+        <div className="app-footer__meta">
+          <small>
+            © {new Date().getFullYear()} {APP_CONFIG.name}
+          </small>
+          <nav className="app-footer__legal" aria-label="Informations légales">
+            <Link to={ROUTES.legalNotice}>Mentions légales</Link>
+            <Link to={ROUTES.privacy}>Confidentialité</Link>
+            <Link to={ROUTES.terms}>Conditions d’utilisation</Link>
+          </nav>
+        </div>
       </footer>
     </div>
   );

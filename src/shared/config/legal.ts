@@ -1,0 +1,14 @@
+import { CLUB_CONFIG } from "./club";
+
+export const LEGAL_CONFIG = {
+  pilotLabel: "Pilote Tournoi PCL 2026",
+  pilotStartDate: "21 septembre 2026",
+  lastUpdated: "3 septembre 2026",
+  editorName: CLUB_CONFIG.name,
+  editorType: "Association sportive loi 1901",
+  editorLocation: CLUB_CONFIG.location,
+  registeredOffice: "Trinquet Robert Cathala, 1 rue d’Alger, 65100 Lourdes",
+  publicationDirector: "Le président du Pelotaris Club Lourdais",
+  contactEmail: "privacy@pelotemanager.fr",
+  privacyContactEmail: "privacy@pelotemanager.fr",
+} as const;

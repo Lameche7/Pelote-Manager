@@ -1,0 +1,48 @@
+.legal-page {
+  width: min(100%, 58rem);
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.legal-page__header,
+.legal-page section,
+.legal-page__warning {
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: var(--surface, #fff);
+  box-shadow: 0 0.5rem 1.5rem rgb(15 23 42 / 8%);
+}
+
+.legal-page__header {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.legal-page section {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.legal-page h1,
+.legal-page h2,
+.legal-page p {
+  margin: 0;
+}
+
+.legal-page__warning {
+  border: 1px solid rgb(217 119 6 / 35%);
+  background: rgb(255 251 235);
+}
+
+.legal-page__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  justify-content: center;
+  padding-bottom: 1rem;
+}
+
+.legal-page__links a {
+  font-weight: 700;
+}
