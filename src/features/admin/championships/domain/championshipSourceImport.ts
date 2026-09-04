@@ -120,7 +120,9 @@ const nullableText = (value: unknown) => cellText(value) || null;
 const findHeaderRow = (data: unknown[][], requiredHeaders: string[]) => {
   const maximum = Math.min(data.length, 20);
   for (let index = 0; index < maximum; index += 1) {
-    const normalized = new Set((data[index] ?? []).map((value) => fold(cellText(value))));
+    const normalized = new Set(
+      (data[index] ?? []).map((value) => fold(cellText(value))),
+    );
     if (requiredHeaders.every((header) => normalized.has(header))) return index;
   }
   return -1;
@@ -129,7 +131,11 @@ const findHeaderRow = (data: unknown[][], requiredHeaders: string[]) => {
 const columnMap = (row: unknown[]) =>
   new Map(row.map((value, index) => [fold(cellText(value)), index] as const));
 
-const valueAt = (row: unknown[], columns: Map<string, number>, name: string) => {
+const valueAt = (
+  row: unknown[],
+  columns: Map<string, number>,
+  name: string,
+) => {
   const index = columns.get(name);
   return index === undefined ? null : (row[index] ?? null);
 };
@@ -252,7 +258,8 @@ export const parseChampionshipEngagementRows = (
           source: "engagements",
           row: 0,
           severity: "error",
-          message: "Les colonnes attendues du fichier d’engagements n’ont pas été reconnues.",
+          message:
+            "Les colonnes attendues du fichier d’engagements n’ont pas été reconnues.",
         },
       ],
     };
@@ -290,7 +297,8 @@ export const parseChampionshipEngagementRows = (
         source: "engagements",
         row: rowNumber,
         severity: "error",
-        message: "Un ou plusieurs joueurs n’ont pas pu être lus avec leur numéro de licence.",
+        message:
+          "Un ou plusieurs joueurs n’ont pas pu être lus avec leur numéro de licence.",
       });
       return;
     }
@@ -301,7 +309,9 @@ export const parseChampionshipEngagementRows = (
       specialty,
       category,
       poolCode: nullableText(valueAt(sourceRow, columns, "poule")),
-      sourceRank: parsePositiveInteger(valueAt(sourceRow, columns, "classement equipe")),
+      sourceRank: parsePositiveInteger(
+        valueAt(sourceRow, columns, "classement equipe"),
+      ),
       teamLabel,
       clubName: parsedTeam.clubName,
       teamNumber: parsedTeam.teamNumber,
@@ -354,7 +364,8 @@ export const parseChampionshipMatchRows = (
           source: "matches",
           row: 0,
           severity: "error",
-          message: "Les colonnes attendues du fichier des parties n’ont pas été reconnues.",
+          message:
+            "Les colonnes attendues du fichier des parties n’ont pas été reconnues.",
         },
       ],
     };
@@ -372,12 +383,20 @@ export const parseChampionshipMatchRows = (
     const specialty = cellText(valueAt(sourceRow, columns, "specialite"));
     const category = cellText(valueAt(sourceRow, columns, "categorie"));
     const phase = cellText(valueAt(sourceRow, columns, "phase"));
-    if (!competition || !specialty || !category || !phase || !team1Label || !team2Label) {
+    if (
+      !competition ||
+      !specialty ||
+      !category ||
+      !phase ||
+      !team1Label ||
+      !team2Label
+    ) {
       issues.push({
         source: "matches",
         row: rowNumber,
         severity: "error",
-        message: "Une partie est incomplète : compétition, série, phase ou équipe manquante.",
+        message:
+          "Une partie est incomplète : compétition, série, phase ou équipe manquante.",
       });
       return;
     }
@@ -402,7 +421,8 @@ export const parseChampionshipMatchRows = (
         source: "matches",
         row: rowNumber,
         severity: "warning",
-        message: "Cette partie ressemble à une autre ligne ; son numéro de ligne complète sa clé source.",
+        message:
+          "Cette partie ressemble à une autre ligne ; son numéro de ligne complète sa clé source.",
       });
     }
     sourceKeys.add(sourceKeyBase);
@@ -437,7 +457,9 @@ export const parseChampionshipMatchRows = (
       scoreRaw: score.raw,
       scoreTeam1: score.team1,
       scoreTeam2: score.team2,
-      resultComment: nullableText(valueAt(sourceRow, columns, "commentaire resultat")),
+      resultComment: nullableText(
+        valueAt(sourceRow, columns, "commentaire resultat"),
+      ),
       sourceKey,
       sourceMetadata,
     });
@@ -478,12 +500,18 @@ export const buildChampionshipImportPreview = (
   const matches = matchResult.rows;
 
   const competition = singleValue(
-    [...matches.map((row) => row.competition), ...engagements.map((row) => row.competition)],
+    [
+      ...matches.map((row) => row.competition),
+      ...engagements.map((row) => row.competition),
+    ],
     "Compétition",
     issues,
   );
   const specialty = singleValue(
-    [...matches.map((row) => row.specialty), ...engagements.map((row) => row.specialty)],
+    [
+      ...matches.map((row) => row.specialty),
+      ...engagements.map((row) => row.specialty),
+    ],
     "Spécialité",
     issues,
   );
@@ -537,16 +565,25 @@ export const buildChampionshipImportPreview = (
   }
 
   const categories = Array.from(
-    new Set([...engagements.map((row) => row.category), ...matches.map((row) => row.category)]),
+    new Set([
+      ...engagements.map((row) => row.category),
+      ...matches.map((row) => row.category),
+    ]),
   );
   const divisions = categories.map((name) => {
-    const divisionEngagements = engagements.filter((row) => row.category === name);
+    const divisionEngagements = engagements.filter(
+      (row) => row.category === name,
+    );
     const divisionMatches = matches.filter((row) => row.category === name);
     const pools = new Set(
-      divisionEngagements.map((row) => row.poolCode).filter((code): code is string => Boolean(code)),
+      divisionEngagements
+        .map((row) => row.poolCode)
+        .filter((code): code is string => Boolean(code)),
     );
     const players = new Set(
-      divisionEngagements.flatMap((row) => row.players.map((player) => player.licenceNumber)),
+      divisionEngagements.flatMap((row) =>
+        row.players.map((player) => player.licenceNumber),
+      ),
     );
     return {
       name,
@@ -554,13 +591,14 @@ export const buildChampionshipImportPreview = (
       teamCount: divisionEngagements.length,
       playerCount: players.size,
       matchCount: divisionMatches.length,
-      teamsWithoutPool: divisionEngagements.filter((row) => !row.poolCode).length,
+      teamsWithoutPool: divisionEngagements.filter((row) => !row.poolCode)
+        .length,
     };
   });
 
-  const federationClubs = Array.from(new Set(engagements.map((row) => row.clubName))).sort(
-    (a, b) => a.localeCompare(b, "fr"),
-  );
+  const federationClubs = Array.from(
+    new Set(engagements.map((row) => row.clubName)),
+  ).sort((a, b) => a.localeCompare(b, "fr"));
   const uniquePlayers = Array.from(playersByLicence.values());
 
   return {
@@ -576,6 +614,9 @@ export const buildChampionshipImportPreview = (
     teamCount: engagements.length,
     playerCount: uniquePlayers.length,
     matchCount: matches.length,
-    poolCount: divisions.reduce((total, division) => total + division.poolCount, 0),
+    poolCount: divisions.reduce(
+      (total, division) => total + division.poolCount,
+      0,
+    ),
   };
 };

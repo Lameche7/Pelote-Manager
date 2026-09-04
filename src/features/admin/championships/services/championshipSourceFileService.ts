@@ -52,7 +52,8 @@ const firstWorkbookSheet = async (file: File) => {
     data: sheet.data as unknown[][],
   }));
   const first = sheets.find((sheet) => sheet.data.length > 0);
-  if (!first) throw new Error("Le classeur des parties ne contient aucune donnée.");
+  if (!first)
+    throw new Error("Le classeur des parties ne contient aucune donnée.");
   return first.data;
 };
 
