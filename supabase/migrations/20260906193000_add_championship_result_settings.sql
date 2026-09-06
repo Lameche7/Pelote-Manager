@@ -6,7 +6,13 @@ alter table public.championships
   add constraint championships_result_input_mode_check
     check (result_input_mode is null or result_input_mode in ('points', 'sets')),
   add constraint championships_result_winning_score_check
-    check (result_winning_score is null or result_winning_score between 1 and 999),
+    check (
+      result_winning_score is null
+      or (
+        result_winning_score between 1 and 999
+        and (result_input_mode <> 'sets' or result_winning_score <= 20)
+      )
+    ),
   add constraint championships_result_settings_pair_check
     check ((result_input_mode is null) = (result_winning_score is null));
 
@@ -77,9 +83,11 @@ begin
     raise exception 'Forbidden' using errcode = '42501';
   end if;
 
-  if normalized_mode not in ('points', 'sets')
+  if normalized_mode is null
+    or normalized_mode not in ('points', 'sets')
     or winning_score is null
     or winning_score not between 1 and 999
+    or (normalized_mode = 'sets' and winning_score > 20)
   then
     raise exception 'Invalid championship result settings' using errcode = '22023';
   end if;
