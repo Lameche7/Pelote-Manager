@@ -8,6 +8,11 @@ import type {
   ChampionshipMatchesUpdateFileDescriptor,
   ChampionshipMatchesUpdatePreviewFile,
 } from "@/features/admin/championships/domain/championshipMatchesUpdate";
+import {
+  parseChampionshipStandingRows,
+  type ChampionshipStandingsFileDescriptor,
+  type ChampionshipStandingsPreviewFile,
+} from "@/features/admin/championships/domain/championshipStandingsImport";
 import type { ChampionshipImportFileDescriptor } from "@/features/admin/championships/domain/championshipTransactionalImport";
 
 const decodeCsv = (buffer: ArrayBuffer) => {
@@ -19,7 +24,8 @@ const decodeCsv = (buffer: ArrayBuffer) => {
   }
 };
 
-const parseSemicolonCsv = (text: string) => {
+const parseSeparatedCsv = (text: string) => {
+  const delimiter = text.split(/\r?\n/u)[0]?.includes(";") ? ";" : ",";
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = "";
@@ -32,7 +38,7 @@ const parseSemicolonCsv = (text: string) => {
       index += 1;
     } else if (char === '"') {
       quoted = !quoted;
-    } else if (char === ";" && !quoted) {
+    } else if (char === delimiter && !quoted) {
       row.push(cell);
       cell = "";
     } else if ((char === "\n" || char === "\r") && !quoted) {
@@ -53,14 +59,9 @@ const parseSemicolonCsv = (text: string) => {
 
 const firstWorkbookSheet = async (file: File) => {
   const workbook = await readExcelFile(file);
-  const sheets = workbook.map((sheet) => ({
-    sheet: sheet.sheet,
-    data: sheet.data as unknown[][],
-  }));
-  const first = sheets.find((sheet) => sheet.data.length > 0);
-  if (!first)
-    throw new Error("Le classeur des parties ne contient aucune donnée.");
-  return first.data;
+  const first = workbook.find((sheet) => sheet.data.length > 0);
+  if (!first) throw new Error("Le classeur ne contient aucune donnée.");
+  return first.data as unknown[][];
 };
 
 const sha256 = async (file: File) => {
@@ -79,6 +80,15 @@ const ensureMatchesFile = (file: File) => {
   }
 };
 
+const standingsRows = async (file: File) => {
+  const lower = file.name.toLowerCase();
+  if (lower.endsWith(".xlsx")) return firstWorkbookSheet(file);
+  if (lower.endsWith(".csv")) {
+    return parseSeparatedCsv(decodeCsv(await file.arrayBuffer()));
+  }
+  throw new Error("Le classement officiel doit être un fichier .xlsx ou .csv.");
+};
+
 export const championshipSourceFileService = {
   async parse(
     matchesFile: File,
@@ -93,7 +103,7 @@ export const championshipSourceFileService = {
       firstWorkbookSheet(matchesFile),
       engagementsFile.arrayBuffer(),
     ]);
-    const engagementRows = parseSemicolonCsv(decodeCsv(engagementBuffer));
+    const engagementRows = parseSeparatedCsv(decodeCsv(engagementBuffer));
     return buildChampionshipImportPreview(matchRows, engagementRows);
   },
 
@@ -139,6 +149,10 @@ export const championshipSourceFileService = {
     };
   },
 
+  async parseStandings(file: File): Promise<ChampionshipStandingsPreviewFile> {
+    return parseChampionshipStandingRows(await standingsRows(file));
+  },
+
   async describe(
     matchesFile: File,
     engagementsFile: File,
@@ -173,6 +187,20 @@ export const championshipSourceFileService = {
       fileName: matchesFile.name,
       checksum: await sha256(matchesFile),
       rowCount,
+    };
+  },
+
+  async describeStandings(
+    file: File,
+    rowCount: number,
+    sourceUrl: string | null,
+  ): Promise<ChampionshipStandingsFileDescriptor> {
+    return {
+      kind: "standings",
+      fileName: file.name,
+      checksum: await sha256(file),
+      rowCount,
+      sourceUrl,
     };
   },
 };
