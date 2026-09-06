@@ -61,7 +61,8 @@ const displayScore = (match: MyChampionshipMatch) => {
 };
 
 const resultTone = (match: MyChampionshipMatch) => {
-  if (match.scoreMine === null || match.scoreOpponent === null) return "pending";
+  if (match.scoreMine === null || match.scoreOpponent === null)
+    return "pending";
   if (match.scoreMine > match.scoreOpponent) return "win";
   if (match.scoreMine < match.scoreOpponent) return "loss";
   return "draw";
@@ -129,7 +130,9 @@ function Standings({ championship }: { championship: MyChampionship }) {
       <div className="my-championships__standings-heading">
         <div>
           <p className="my-championships__label">Classement de poule</p>
-          <strong>{championship.poolName ?? `Poule ${championship.poolCode}`}</strong>
+          <strong>
+            {championship.poolName ?? `Poule ${championship.poolCode}`}
+          </strong>
         </div>
         <span>
           {hasOfficialRanks
@@ -203,15 +206,13 @@ function ChampionshipCard({ championship }: { championship: MyChampionship }) {
       return timestamp !== null && timestamp >= now && !match.scoreRaw;
     }) ?? null;
   const lastResult =
-    [...sortedMatches]
-      .reverse()
-      .find((match) => {
-        const timestamp = matchTimestamp(match);
-        return (
-          match.scoreRaw !== null ||
-          (timestamp !== null && timestamp < now && match.status === "played")
-        );
-      }) ?? null;
+    [...sortedMatches].reverse().find((match) => {
+      const timestamp = matchTimestamp(match);
+      return (
+        match.scoreRaw !== null ||
+        (timestamp !== null && timestamp < now && match.status === "played")
+      );
+    }) ?? null;
   const otherMatches = sortedMatches.filter(
     (match) => match.id !== nextMatch?.id && match.id !== lastResult?.id,
   );
@@ -220,12 +221,17 @@ function ChampionshipCard({ championship }: { championship: MyChampionship }) {
     <article className="my-championships__card">
       <header className="my-championships__card-header">
         <div>
-          <p className="my-championships__eyebrow">{championship.seasonLabel}</p>
+          <p className="my-championships__eyebrow">
+            {championship.seasonLabel}
+          </p>
           <h2>{championship.championshipName}</h2>
           <p>{championship.specialty}</p>
         </div>
         <div className="my-championships__header-actions">
-          <span>{statusLabels[championship.championshipStatus] ?? championship.championshipStatus}</span>
+          <span>
+            {statusLabels[championship.championshipStatus] ??
+              championship.championshipStatus}
+          </span>
           {championship.sourceUrl && (
             <a
               href={officialSourceHref(championship.sourceUrl)}
@@ -300,7 +306,9 @@ function ChampionshipCard({ championship }: { championship: MyChampionship }) {
         </summary>
         <div>
           {otherMatches.length > 0 ? (
-            otherMatches.map((match) => <MatchRow key={match.id} match={match} />)
+            otherMatches.map((match) => (
+              <MatchRow key={match.id} match={match} />
+            ))
           ) : (
             <div className="my-championships__empty-block">
               Aucune autre partie à afficher.
@@ -342,7 +350,10 @@ export function MyChampionshipsPage() {
 
   return (
     <UserSpaceShell>
-      <section className="my-championships" aria-labelledby="my-championships-title">
+      <section
+        className="my-championships"
+        aria-labelledby="my-championships-title"
+      >
         <header className="my-championships__page-header">
           <div className="my-championships__page-icon">
             <Trophy aria-hidden="true" />
@@ -351,8 +362,8 @@ export function MyChampionshipsPage() {
             <p className="my-championships__eyebrow">Mon espace</p>
             <h1 id="my-championships-title">Mes championnats</h1>
             <p>
-              Retrouvez vos équipes, vos prochaines parties, vos résultats et
-              la situation de votre poule.
+              Retrouvez vos équipes, vos prochaines parties, vos résultats et la
+              situation de votre poule.
             </p>
           </div>
         </header>

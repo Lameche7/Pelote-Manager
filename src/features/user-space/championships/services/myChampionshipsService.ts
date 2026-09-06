@@ -8,9 +8,7 @@ const rows = (value: unknown): Row[] =>
 const nullableString = (value: unknown) =>
   value === null || value === undefined || value === "" ? null : String(value);
 const nullableNumber = (value: unknown) =>
-  value === null || value === undefined || value === ""
-    ? null
-    : Number(value);
+  value === null || value === undefined || value === "" ? null : Number(value);
 
 export type MyChampionshipPlayer = {
   firstName: string;
@@ -147,6 +145,8 @@ export const myChampionshipsService = {
         ),
       );
     }
-    return rows(data).map(mapChampionship).filter((item) => item.teamId);
+    return rows(data)
+      .map(mapChampionship)
+      .filter((item) => item.teamId);
   },
 };
