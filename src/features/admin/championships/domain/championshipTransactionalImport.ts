@@ -81,12 +81,15 @@ export const extractChampionshipSourceExternalId = (value: string) => {
   if (!clean) return null;
   try {
     const url = new URL(/^https?:\/\//iu.test(clean) ? clean : `https://${clean}`);
-    const fromQuery = url.searchParams.get("id_competition");
-    if (fromQuery?.trim()) return fromQuery.trim();
+    const host = url.hostname.toLowerCase();
+    const fromQuery = url.searchParams.get("id_competition")?.trim();
+    if (fromQuery) return `${host}:competition:${fromQuery}`;
+
+    const routeIdentity = `${url.pathname}${url.search}`.replace(/^\/+|\/+$/gu, "");
+    return routeIdentity ? `${host}:${routeIdentity}` : host;
   } catch {
-    // Le format sera contrôlé par l'appelant ; le repli regex reste utile.
+    return null;
   }
-  return clean.match(/[?&]id_competition=([^&#]+)/iu)?.[1] ?? null;
 };
 
 export const inferChampionshipSeasonLabel = (competition: string) => {
