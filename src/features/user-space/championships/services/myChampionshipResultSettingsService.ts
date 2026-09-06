@@ -11,6 +11,9 @@ export type MyChampionshipResultSettings = {
   winningScore: number | null;
 };
 
+const mapInputMode = (value: unknown): MyChampionshipResultInputMode | null =>
+  value === "points" || value === "sets" ? value : null;
+
 export const myChampionshipResultSettingsService = {
   async list(): Promise<MyChampionshipResultSettings[]> {
     const { data, error } = await supabase.rpc(
@@ -27,17 +30,16 @@ export const myChampionshipResultSettingsService = {
 
     if (!Array.isArray(data)) return [];
     return (data as Row[])
-      .map((row) => ({
-        championshipId: String(row.championship_id ?? ""),
-        inputMode:
-          row.input_mode === "points" || row.input_mode === "sets"
-            ? row.input_mode
-            : null,
-        winningScore:
-          row.winning_score === null || row.winning_score === undefined
-            ? null
-            : Number(row.winning_score),
-      }))
+      .map(
+        (row): MyChampionshipResultSettings => ({
+          championshipId: String(row.championship_id ?? ""),
+          inputMode: mapInputMode(row.input_mode),
+          winningScore:
+            row.winning_score === null || row.winning_score === undefined
+              ? null
+              : Number(row.winning_score),
+        }),
+      )
       .filter((item) => item.championshipId);
   },
 };
