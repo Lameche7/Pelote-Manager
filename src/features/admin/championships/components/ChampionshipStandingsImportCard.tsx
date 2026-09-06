@@ -1,4 +1,5 @@
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
+import { parseChampionshipStandingsClipboard } from "../domain/championshipStandingsClipboard";
 import {
   buildChampionshipStandingsImportPayload,
   type ChampionshipStandingsImportPayload,
@@ -21,8 +22,8 @@ export function ChampionshipStandingsImportCard({
   sourceUrl = null,
   onApplied,
 }: Props) {
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] =
+  const [sourceText, setSourceText] = useState("");
+  const [sourcePreview, setSourcePreview] =
     useState<ChampionshipStandingsPreviewFile | null>(null);
   const [payload, setPayload] =
     useState<ChampionshipStandingsImportPayload | null>(null);
@@ -32,26 +33,41 @@ export function ChampionshipStandingsImportCard({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const selectFile = (event: ChangeEvent<HTMLInputElement>) => {
-    setFile(event.target.files?.[0] ?? null);
-    setFilePreview(null);
+  const resetPreview = () => {
+    setSourcePreview(null);
     setPayload(null);
     setPreview(null);
     setError("");
     setMessage("");
   };
 
+  const pasteFromClipboard = async () => {
+    try {
+      const value = await navigator.clipboard.readText();
+      setSourceText(value);
+      resetPreview();
+    } catch {
+      setError(
+        "Le navigateur n’autorise pas la lecture du presse-papiers. Collez simplement le classement dans la zone ci-dessous avec Ctrl+V.",
+      );
+    }
+  };
+
   const analyse = async () => {
-    if (!file) return;
+    if (!sourceText.trim()) return;
     setBusy(true);
     setError("");
     setMessage("");
     try {
-      const parsed = await championshipSourceFileService.parseStandings(file);
-      setFilePreview(parsed);
+      const parsed = parseChampionshipStandingsClipboard(sourceText);
+      setSourcePreview(parsed);
       if (!parsed.valid) return;
+
+      const snapshot = new File([sourceText], "classement-page-federale.txt", {
+        type: "text/plain;charset=utf-8",
+      });
       const descriptor = await championshipSourceFileService.describeStandings(
-        file,
+        snapshot,
         parsed.standings.length,
         sourceUrl,
       );
@@ -93,8 +109,7 @@ export function ChampionshipStandingsImportCard({
       );
       setPreview(null);
       setPayload(null);
-      setFilePreview(null);
-      setFile(null);
+      setSourcePreview(null);
       await onApplied?.();
     } catch (cause) {
       setError(
@@ -113,36 +128,47 @@ export function ChampionshipStandingsImportCard({
         <p className="admin-page__eyebrow">Classement officiel</p>
         <h2>Importer / actualiser le classement</h2>
         <p>
-          Chargez l’export officiel en .xlsx ou .csv. Pelote Manager rapproche
-          la série, la poule et l’équipe puis affiche les changements avant
-          écriture. Aucun classement n’est recalculé ici.
+          Le site fédéral n’exporte pas le classement. Copiez la page (ou la
+          zone de classement) puis collez-la ici : Pelote Manager reconnaît la
+          série, les poules, les équipes et les chiffres officiels avant de
+          vous montrer les changements. Aucun classement n’est recalculé ici.
         </p>
       </div>
 
       <div className="admin-championships__update-controls">
         <label>
-          Fichier de classement (.xlsx ou .csv)
-          <input
-            type="file"
-            accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-            onChange={selectFile}
+          Classement copié depuis la page fédérale
+          <textarea
+            rows={10}
+            value={sourceText}
+            onChange={(event) => {
+              setSourceText(event.target.value);
+              resetPreview();
+            }}
+            placeholder="Collez ici le classement affiché sur le site de la fédération…"
             disabled={busy}
           />
-          <span>{file?.name ?? "Aucun classement sélectionné"}</span>
+          <span>
+            Astuce : vous pouvez copier toute la page, les lignes inutiles sont
+            ignorées.
+          </span>
         </label>
+        <button type="button" onClick={() => void pasteFromClipboard()} disabled={busy}>
+          Coller depuis le presse-papiers
+        </button>
         <button
           type="button"
           onClick={() => void analyse()}
-          disabled={!file || busy}
+          disabled={!sourceText.trim() || busy}
         >
           {busy ? "Analyse en cours…" : "Comparer le classement"}
         </button>
       </div>
 
-      {filePreview && !filePreview.valid && (
+      {sourcePreview && !sourcePreview.valid && (
         <div className="admin-championships__update-issues" role="alert">
-          <strong>Le fichier ne peut pas encore être utilisé.</strong>
-          {filePreview.issues.map((issue, index) => (
+          <strong>Le classement copié ne peut pas encore être utilisé.</strong>
+          {sourcePreview.issues.map((issue, index) => (
             <p key={`${issue.row}-${index}`}>{issue.message}</p>
           ))}
         </div>
@@ -175,7 +201,7 @@ export function ChampionshipStandingsImportCard({
 
           {preview.alreadyImported && (
             <p className="admin-championships__success">
-              Ce fichier a déjà été appliqué.
+              Ce classement a déjà été appliqué.
             </p>
           )}
 
