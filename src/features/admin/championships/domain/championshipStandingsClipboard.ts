@@ -170,7 +170,7 @@ export const parseChampionshipStandingsClipboard = (
       sourcePayload: {
         "Vic.": String(winsValue),
         "Déf.": String(lossesValue),
-        "Perd.": String(lostValue),
+        "Perd.": String(lost ?? lostValue),
         Points: String(pointsValue),
         "Points / partie": String(pointsPerGame),
         "points marq.": String(scoreForValue),
