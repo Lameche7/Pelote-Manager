@@ -1,8 +1,11 @@
 import readExcelFile from "read-excel-file/browser";
 import {
   buildChampionshipImportPreview,
+  parseChampionshipMatchRows,
+  type ChampionshipImportIssue,
   type ChampionshipImportPreview,
 } from "@/features/admin/championships/domain/championshipSourceImport";
+import type { ChampionshipMatchesFilePreview } from "@/features/admin/championships/domain/championshipMatchUpdate";
 import type { ChampionshipImportFileDescriptor } from "@/features/admin/championships/domain/championshipTransactionalImport";
 
 const decodeCsv = (buffer: ArrayBuffer) => {
@@ -68,6 +71,25 @@ const sha256 = async (file: File) => {
   ).join("");
 };
 
+const oneValue = (
+  values: string[],
+  label: string,
+  issues: ChampionshipImportIssue[],
+) => {
+  const unique = Array.from(new Set(values.filter(Boolean)));
+  if (unique.length === 1) return unique[0];
+  issues.push({
+    source: "matches",
+    row: 0,
+    severity: "error",
+    message:
+      unique.length === 0
+        ? `${label} absente du fichier des parties.`
+        : `Plusieurs valeurs de ${label.toLowerCase()} ont été détectées.`,
+  });
+  return null;
+};
+
 export const championshipSourceFileService = {
   async parse(
     matchesFile: File,
@@ -86,6 +108,32 @@ export const championshipSourceFileService = {
     ]);
     const engagementRows = parseSemicolonCsv(decodeCsv(engagementBuffer));
     return buildChampionshipImportPreview(matchRows, engagementRows);
+  },
+
+  async parseMatches(matchesFile: File): Promise<ChampionshipMatchesFilePreview> {
+    if (!matchesFile.name.toLowerCase().endsWith(".xlsx")) {
+      throw new Error("Le fichier des parties doit être un classeur .xlsx.");
+    }
+    const rows = await firstWorkbookSheet(matchesFile);
+    const result = parseChampionshipMatchRows(rows);
+    const issues = [...result.issues];
+    const competition = oneValue(
+      result.rows.map((row) => row.competition),
+      "Compétition",
+      issues,
+    );
+    const specialty = oneValue(
+      result.rows.map((row) => row.specialty),
+      "Spécialité",
+      issues,
+    );
+    return {
+      valid: !issues.some((issue) => issue.severity === "error"),
+      competition,
+      specialty,
+      matches: result.rows,
+      issues,
+    };
   },
 
   async describe(
@@ -111,5 +159,17 @@ export const championshipSourceFileService = {
         rowCount: preview.teamCount,
       },
     ];
+  },
+
+  async describeMatches(
+    matchesFile: File,
+    preview: ChampionshipMatchesFilePreview,
+  ): Promise<ChampionshipImportFileDescriptor> {
+    return {
+      kind: "matches",
+      fileName: matchesFile.name,
+      checksum: await sha256(matchesFile),
+      rowCount: preview.matches.length,
+    };
   },
 };
