@@ -1,0 +1,60 @@
+name: Temporary PR136 wire
+on:
+  push:
+    branches:
+      - agent/championship-consultation-sync
+permissions:
+  contents: write
+jobs:
+  wire:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/championship-consultation-sync
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Wire routes and list link
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/app/router.tsx')
+          s=p.read_text()
+          s=s.replace('import { AdminChampionshipImportPage } from "@/features/admin/championships/pages/AdminChampionshipImportPage";\n', 'import { AdminChampionshipDetailPage } from "@/features/admin/championships/pages/AdminChampionshipDetailPage";\nimport { AdminChampionshipImportPage } from "@/features/admin/championships/pages/AdminChampionshipImportPage";\n')
+          marker='''          {\n            path: "championnats/importer",\n            element: permitted(\n              ADMIN_PERMISSIONS.championships,\n              <AdminChampionshipImportPage />,\n            ),\n          },\n'''
+          insert=marker+'''          {\n            path: "championnats/:championshipId",\n            element: permitted(\n              ADMIN_PERMISSIONS.championships,\n              <AdminChampionshipDetailPage />,\n            ),\n          },\n'''
+          if marker not in s: raise SystemExit('router marker missing')
+          s=s.replace(marker,insert)
+          p.write_text(s)
+
+          p=Path('src/features/admin/championships/pages/AdminChampionshipsPage.tsx')
+          s=p.read_text()
+          anchor='''              {item.sourceUrl && (\n                <a href={item.sourceUrl} target="_blank" rel="noreferrer">\n                  Ouvrir la source officielle\n                </a>\n              )}\n'''
+          repl='''              <Link to={`/admin/championnats/${item.id}`}>\n                Consulter et actualiser\n              </Link>\n              {item.sourceUrl && (\n                <a href={item.sourceUrl} target="_blank" rel="noreferrer">\n                  Ouvrir la source officielle\n                </a>\n              )}\n'''
+          if anchor not in s: raise SystemExit('list marker missing')
+          s=s.replace(anchor,repl)
+          p.write_text(s)
+
+          p=Path('tsconfig.test.json')
+          s=p.read_text()
+          marker='''    "src/features/admin/championships/domain/championshipSourceImport.ts",\n'''
+          if 'championshipMatchUpdate.ts' not in s:
+            s=s.replace(marker, marker+'    "src/features/admin/championships/domain/championshipMatchUpdate.ts",\n')
+          p.write_text(s)
+          PY
+      - run: npx prettier --write src/app/router.tsx src/shared/config/routes.ts src/features/admin/championships src/features/admin/championships/pages/AdminChampionshipsPage.tsx tsconfig.test.json supabase/migrations/20260906164500_add_championship_consultation_sync.sql
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/router.tsx src/shared/config/routes.ts src/features/admin/championships tsconfig.test.json supabase/migrations/20260906164500_add_championship_consultation_sync.sql
+          git commit -m "feat(championship): wire consultation and update flow" || exit 0
+          git push
