@@ -153,15 +153,20 @@
 
 .my-championships__match {
   display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.85rem;
+}
+
+.my-championships__match-summary {
+  display: grid;
   grid-template-columns: minmax(8rem, 0.8fr) minmax(12rem, 1.5fr) minmax(
       7rem,
       0.7fr
     );
   align-items: center;
   gap: 0.85rem;
-  padding: 0.85rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.85rem;
 }
 
 .my-championships__match--next {
@@ -194,6 +199,137 @@
 
 .my-championships__match-result.is-win strong {
   font-weight: 800;
+}
+
+.my-championships__submission {
+  display: grid;
+  gap: 0.65rem;
+  border-top: 1px solid var(--border-color, #d7dde5);
+  padding-top: 0.7rem;
+}
+
+.my-championships__submission:empty {
+  display: none;
+}
+
+.my-championships__submission-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.7rem;
+  background: rgb(148 163 184 / 10%);
+}
+
+.my-championships__submission-status svg,
+.my-championships__submission-toggle svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.my-championships__submission-status span {
+  display: grid;
+  gap: 0.12rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.my-championships__submission-status.is-confirmed {
+  background: rgb(34 197 94 / 10%);
+}
+
+.my-championships__submission-status.is-conflict {
+  background: rgb(245 158 11 / 12%);
+}
+
+.my-championships__submission-toggle {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.65rem;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.my-championships__submission-form {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: rgb(148 163 184 / 8%);
+}
+
+.my-championships__score-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.my-championships__submission-form label {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.my-championships__submission-form label > span {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.my-championships__submission-form input {
+  min-width: 0;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.6rem;
+  background: var(--surface-elevated, #fff);
+  color: inherit;
+  font: inherit;
+}
+
+.my-championships__submission-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.my-championships__submission-actions button {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.6rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.my-championships__submission-actions button:first-child {
+  background: currentcolor;
+}
+
+.my-championships__submission-actions button:first-child::first-line {
+  color: var(--surface-elevated, #fff);
+}
+
+.my-championships__submission-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.my-championships__submission-form > small {
+  line-height: 1.4;
+  opacity: 0.68;
+}
+
+.my-championships__submission-error {
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .my-championships__standings-wrap {
@@ -303,7 +439,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .my-championships__match {
+  .my-championships__match-summary {
     grid-template-columns: 1fr;
   }
 
@@ -325,7 +461,8 @@
   }
 
   .my-championships__identity-grid,
-  .my-championships__highlights {
+  .my-championships__highlights,
+  .my-championships__score-fields {
     grid-template-columns: 1fr;
   }
 
