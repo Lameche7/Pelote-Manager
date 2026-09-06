@@ -7,7 +7,9 @@
 .admin-championship-import__identity,
 .admin-championship-import__table-card,
 .admin-championship-import__issues,
-.admin-championship-import__status {
+.admin-championship-import__status,
+.admin-championship-import__mapping,
+.admin-championship-import__success {
   display: grid;
   gap: 1rem;
 }
@@ -20,17 +22,30 @@
   gap: 0.9rem;
 }
 
-.admin-championship-import__file-grid label {
+.admin-championship-import__file-grid label,
+.admin-championship-import__source-url,
+.admin-championship-import__mapping label {
   display: grid;
   gap: 0.45rem;
   font-weight: 700;
 }
 
-.admin-championship-import__file-grid input {
+.admin-championship-import__file-grid input,
+.admin-championship-import__source-url input,
+.admin-championship-import__mapping select {
   width: 100%;
 }
 
+.admin-championship-import__source-url input,
+.admin-championship-import__mapping select {
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+}
+
 .admin-championship-import__file-grid span,
+.admin-championship-import__source-url span,
 .admin-championship-import__identity span,
 .admin-championship-import__summary span,
 .admin-championship-import__status span {
@@ -113,8 +128,14 @@
   padding: 0.85rem 1rem;
 }
 
-.admin-championship-import__status.is-valid {
+.admin-championship-import__status.is-valid,
+.admin-championship-import__success {
   border: 1px solid #027a48;
+}
+
+.admin-championship-import__success p,
+.admin-championship-import__success h2 {
+  margin: 0;
 }
 
 @media (max-width: 640px) {
