@@ -12,13 +12,13 @@ import {
 
 type Props = {
   championshipId: string;
-  sourceUrl: string | null;
-  onApplied: () => Promise<void>;
+  sourceUrl?: string | null;
+  onApplied?: () => Promise<void>;
 };
 
 export function ChampionshipStandingsImportCard({
   championshipId,
-  sourceUrl,
+  sourceUrl = null,
   onApplied,
 }: Props) {
   const [file, setFile] = useState<File | null>(null);
@@ -95,7 +95,7 @@ export function ChampionshipStandingsImportCard({
       setPayload(null);
       setFilePreview(null);
       setFile(null);
-      await onApplied();
+      await onApplied?.();
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -130,7 +130,11 @@ export function ChampionshipStandingsImportCard({
           />
           <span>{file?.name ?? "Aucun classement sélectionné"}</span>
         </label>
-        <button type="button" onClick={() => void analyse()} disabled={!file || busy}>
+        <button
+          type="button"
+          onClick={() => void analyse()}
+          disabled={!file || busy}
+        >
           {busy ? "Analyse en cours…" : "Comparer le classement"}
         </button>
       </div>
