@@ -1,0 +1,44 @@
+name: Temporary PR138 format
+
+on:
+  push:
+    branches:
+      - agent/championship-player-results
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/championship-player-results
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format PR138 files
+        run: |
+          npx prettier --write \
+            src/features/user-space/championships/pages/MyChampionshipsPage.tsx \
+            src/features/user-space/championships/pages/MyChampionshipsPage.css \
+            src/features/user-space/championships/services/myChampionshipsService.ts \
+            tests/championshipResultSubmissions.test.mjs
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/features/user-space/championships/pages/MyChampionshipsPage.tsx \
+            src/features/user-space/championships/pages/MyChampionshipsPage.css \
+            src/features/user-space/championships/services/myChampionshipsService.ts \
+            tests/championshipResultSubmissions.test.mjs
+          git commit -m "style(championship): format player result flow"
+          git push
