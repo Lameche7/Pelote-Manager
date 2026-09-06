@@ -8,10 +8,15 @@ import type {
 type RpcResponse = { data: unknown; error: unknown };
 type Row = Record<string, unknown>;
 
-const rpc = supabase.rpc as unknown as (
+type ChampionshipRpc = (
   name: string,
   args?: Record<string, unknown>,
 ) => Promise<RpcResponse>;
+
+// Supabase RPC relies on the client instance as `this`. Binding it here keeps
+// the generated client context while allowing championship RPCs that are not
+// yet present in the generated Database types.
+const rpc = supabase.rpc.bind(supabase) as unknown as ChampionshipRpc;
 
 const mapImportResult = (
   value: unknown,
