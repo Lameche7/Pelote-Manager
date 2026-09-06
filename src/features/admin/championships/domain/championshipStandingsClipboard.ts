@@ -1,0 +1,199 @@
+import type {
+  ChampionshipStandingImportRow,
+  ChampionshipStandingsPreviewFile,
+} from "./championshipStandingsImport";
+
+const fold = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, " ")
+    .trim();
+
+const cleanLine = (value: string) => value.replace(/\s+/gu, " ").trim();
+
+const parseNumber = (value: string) => {
+  const parsed = Number(value.replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const parseInteger = (value: string) => {
+  const parsed = parseNumber(value);
+  return parsed !== null && Number.isInteger(parsed) ? parsed : null;
+};
+
+const parseTeam = (value: string) => {
+  const match = value.match(/^(.*\S)\s+(\d{1,3})$/u);
+  if (!match) return null;
+  return {
+    clubName: match[1].trim(),
+    teamNumber: match[2],
+  };
+};
+
+const isDivisionLine = (value: string) =>
+  /^(?:M\d+\b.*|S[eé]nior\b.*\bS[eé]rie\b.*)$/iu.test(value);
+
+const poolFromLine = (value: string) => {
+  const match = value.match(/^Poule\s+(.+)$/iu);
+  return match?.[1]?.trim() ?? null;
+};
+
+const rankAndTeamFromLine = (value: string) => {
+  const inline = value.match(/^(\d{1,2})\s+(.+\s+\d{1,3})$/u);
+  if (inline) {
+    return { rank: Number(inline[1]), teamLabel: inline[2].trim() };
+  }
+  const teamOnly = value.match(/^(.+\s+\d{1,3})$/u);
+  if (teamOnly && parseTeam(teamOnly[1])) {
+    return { rank: null, teamLabel: teamOnly[1].trim() };
+  }
+  return null;
+};
+
+const numericTokens = (value: string) => {
+  if (!/^-?\d+(?:[.,]\d+)?(?:\s+-?\d+(?:[.,]\d+)?)*$/u.test(value)) {
+    return [];
+  }
+  return value
+    .split(/\s+/u)
+    .map(parseNumber)
+    .filter((entry): entry is number => entry !== null);
+};
+
+export const parseChampionshipStandingsClipboard = (
+  source: string,
+): ChampionshipStandingsPreviewFile => {
+  const lines = source
+    .split(/\r?\n/u)
+    .map(cleanLine)
+    .filter(Boolean);
+  const standings: ChampionshipStandingImportRow[] = [];
+  const issues: ChampionshipStandingsPreviewFile["issues"] = [];
+
+  let division = "";
+  let poolCode = "";
+  let pendingRank: number | null = null;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+
+    if (isDivisionLine(line)) {
+      division = line;
+      pendingRank = null;
+      continue;
+    }
+
+    const nextPool = poolFromLine(line);
+    if (nextPool) {
+      poolCode = nextPool;
+      pendingRank = null;
+      continue;
+    }
+
+    if (/^\d{1,2}$/u.test(line)) {
+      const next = lines[index + 1] ?? "";
+      if (rankAndTeamFromLine(next)) {
+        pendingRank = Number(line);
+        continue;
+      }
+    }
+
+    const teamCandidate = rankAndTeamFromLine(line);
+    if (!teamCandidate) continue;
+
+    const parsedTeam = parseTeam(teamCandidate.teamLabel);
+    const rank = teamCandidate.rank ?? pendingRank;
+    pendingRank = null;
+
+    if (!division || !poolCode || !parsedTeam || !rank || rank <= 0) {
+      issues.push({
+        row: index + 1,
+        severity: "error",
+        message: `Classement incomplet près de « ${teamCandidate.teamLabel} » : série, poule ou rang introuvable.`,
+      });
+      continue;
+    }
+
+    const stats: number[] = [];
+    let cursor = index + 1;
+    for (; cursor < lines.length; cursor += 1) {
+      const candidate = lines[cursor];
+      if (
+        isDivisionLine(candidate) ||
+        poolFromLine(candidate) ||
+        rankAndTeamFromLine(candidate)
+      ) {
+        break;
+      }
+      if (candidate.startsWith("-")) continue;
+      stats.push(...numericTokens(candidate));
+      if (stats.length >= 9) break;
+    }
+
+    if (stats.length < 9) {
+      issues.push({
+        row: index + 1,
+        severity: "error",
+        message: `Les chiffres officiels de ${teamCandidate.teamLabel} n’ont pas été reconnus.`,
+      });
+      continue;
+    }
+
+    const [winsValue, lossesValue, lostValue, pointsValue, pointsPerGame, scoreForValue, scoreAgainstValue, differenceValue, averageDifference] = stats;
+    const wins = parseInteger(String(winsValue));
+    const losses = parseInteger(String(lossesValue));
+    const lost = parseInteger(String(lostValue));
+    const scoreFor = parseInteger(String(scoreForValue));
+    const scoreAgainst = parseInteger(String(scoreAgainstValue));
+    const scoreDifference = parseInteger(String(differenceValue));
+
+    standings.push({
+      row: index + 1,
+      division,
+      divisionNormalized: fold(division),
+      poolCode,
+      teamLabel: teamCandidate.teamLabel,
+      clubName: parsedTeam.clubName,
+      clubNormalized: fold(parsedTeam.clubName),
+      teamNumber: parsedTeam.teamNumber,
+      rank,
+      played:
+        wins !== null && losses !== null ? wins + losses : null,
+      wins,
+      draws: null,
+      losses,
+      points: pointsValue,
+      scoreFor,
+      scoreAgainst,
+      scoreDifference,
+      sourcePayload: {
+        "Vic.": String(winsValue),
+        "Déf.": String(lossesValue),
+        "Perd.": String(lostValue),
+        Points: String(pointsValue),
+        "Points / partie": String(pointsPerGame),
+        "points marq.": String(scoreForValue),
+        "points enc.": String(scoreAgainstValue),
+        "Dif. points": String(differenceValue),
+        "Dif. points moy.": String(averageDifference),
+      },
+    });
+  }
+
+  if (standings.length === 0 && issues.length === 0) {
+    issues.push({
+      row: 0,
+      severity: "error",
+      message:
+        "Aucune ligne de classement n’a été reconnue. Copiez le classement affiché sur la page fédérale, avec le nom de la série et les poules.",
+    });
+  }
+
+  return {
+    standings,
+    issues,
+    valid: standings.length > 0 && !issues.some((issue) => issue.severity === "error"),
+  };
+};
