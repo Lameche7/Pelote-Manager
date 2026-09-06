@@ -310,11 +310,14 @@
 }
 
 .my-championships__submission-actions button:first-child {
-  background: currentcolor;
+  border-color: var(--brand-blue, #0d2b6c);
+  color: #fff;
+  background: var(--brand-blue, #0d2b6c);
 }
 
-.my-championships__submission-actions button:first-child::first-line {
-  color: var(--surface-elevated, #fff);
+.my-championships__submission-actions button:not(:first-child) {
+  color: inherit;
+  background: var(--surface-elevated, #fff);
 }
 
 .my-championships__submission-actions button:disabled {

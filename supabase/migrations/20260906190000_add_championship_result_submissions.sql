@@ -12,7 +12,7 @@ create table public.championship_result_submissions (
   submitted_by uuid references public.profiles (id) on delete set null,
   score_team1 integer not null check (score_team1 between 0 and 200),
   score_team2 integer not null check (score_team2 between 0 and 200),
-  comment text,
+  comment text check (comment is null or char_length(comment) <= 250),
   status public.championship_result_submission_status not null default 'pending',
   official_score_team1 integer check (official_score_team1 is null or official_score_team1 between 0 and 200),
   official_score_team2 integer check (official_score_team2 is null or official_score_team2 between 0 and 200),
@@ -142,12 +142,19 @@ begin
     raise exception 'Championship match not found' using errcode = 'P0002';
   end if;
 
-  if match_row.status = 'cancelled'
+  if match_row.status in ('cancelled', 'forfeit')
     or match_row.score_raw is not null
     or match_row.score_team1 is not null
     or match_row.score_team2 is not null
   then
     raise exception 'Official result already available or match unavailable' using errcode = '22023';
+  end if;
+
+  if coalesce(match_row.agreement_on, match_row.report_on, match_row.scheduled_on)
+      > (now() at time zone 'Europe/Paris')::date
+    and match_row.status <> 'played'
+  then
+    raise exception 'Match has not started' using errcode = '22023';
   end if;
 
   select team.id

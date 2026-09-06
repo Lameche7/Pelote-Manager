@@ -95,7 +95,11 @@ function ResultSubmission({
   onSaved: () => Promise<void>;
 }) {
   const submission = match.submission;
-  const canSubmit = !hasOfficialResult(match) && match.status !== "cancelled";
+  const timestamp = matchTimestamp(match);
+  const canSubmit =
+    !hasOfficialResult(match) &&
+    !["cancelled", "forfeit"].includes(match.status) &&
+    (timestamp === null || timestamp <= Date.now());
   const [editing, setEditing] = useState(false);
   const [scoreMine, setScoreMine] = useState(
     submission?.status === "pending" ? String(submission.scoreMine) : "",
@@ -165,7 +169,7 @@ function ResultSubmission({
         <div className="my-championships__submission-status is-confirmed">
           <CheckCircle2 aria-hidden="true" />
           <span>
-            <strong>Votre résultat a été confirmé.</strong>
+            <strong>La proposition de votre équipe a été confirmée.</strong>
             La mise à jour officielle correspond à votre proposition.
           </span>
         </div>
@@ -175,7 +179,7 @@ function ResultSubmission({
           <AlertTriangle aria-hidden="true" />
           <span>
             <strong>Résultat officiel différent.</strong>
-            Vous aviez proposé {submission.scoreMine} –{" "}
+            Votre équipe avait proposé {submission.scoreMine} –{" "}
             {submission.scoreOpponent}
             {submission.officialScoreMine !== null &&
               submission.officialScoreOpponent !== null &&
