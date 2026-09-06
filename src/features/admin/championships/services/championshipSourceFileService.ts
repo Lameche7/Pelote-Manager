@@ -3,6 +3,7 @@ import {
   buildChampionshipImportPreview,
   type ChampionshipImportPreview,
 } from "@/features/admin/championships/domain/championshipSourceImport";
+import type { ChampionshipImportFileDescriptor } from "@/features/admin/championships/domain/championshipTransactionalImport";
 
 const decodeCsv = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer);
@@ -57,6 +58,13 @@ const firstWorkbookSheet = async (file: File) => {
   return first.data;
 };
 
+const sha256 = async (file: File) => {
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+};
+
 export const championshipSourceFileService = {
   async parse(
     matchesFile: File,
@@ -75,5 +83,30 @@ export const championshipSourceFileService = {
     ]);
     const engagementRows = parseSemicolonCsv(decodeCsv(engagementBuffer));
     return buildChampionshipImportPreview(matchRows, engagementRows);
+  },
+
+  async describe(
+    matchesFile: File,
+    engagementsFile: File,
+    preview: ChampionshipImportPreview,
+  ): Promise<ChampionshipImportFileDescriptor[]> {
+    const [matchesChecksum, engagementsChecksum] = await Promise.all([
+      sha256(matchesFile),
+      sha256(engagementsFile),
+    ]);
+    return [
+      {
+        kind: "matches",
+        fileName: matchesFile.name,
+        checksum: matchesChecksum,
+        rowCount: preview.matchCount,
+      },
+      {
+        kind: "engagements",
+        fileName: engagementsFile.name,
+        checksum: engagementsChecksum,
+        rowCount: preview.teamCount,
+      },
+    ];
   },
 };
