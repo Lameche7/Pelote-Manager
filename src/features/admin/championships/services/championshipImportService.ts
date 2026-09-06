@@ -304,6 +304,11 @@ const fail = (error: unknown, fallback: string): never => {
         "Ce championnat est déjà administré par un autre club Pelote Manager.",
       );
     }
+    if (message === "Championship source is already linked to another championship") {
+      throw new Error(
+        "Cette URL officielle est déjà rattachée à un autre championnat.",
+      );
+    }
     if (message === "Championship player identity conflict") {
       throw new Error(
         "Une licence existe déjà avec une identité différente. L’import est bloqué pour vérification.",
@@ -317,7 +322,7 @@ export const championshipImportService = {
   async importSources(
     payload: ChampionshipTransactionalImportPayload,
   ): Promise<ChampionshipTransactionalImportResult> {
-    const { data, error } = await rpc("admin_import_championship_sources", {
+    const { data, error } = await rpc("admin_import_championship_sources_safe", {
       payload,
     });
     if (error) fail(error, "Impossible d’enregistrer le championnat.");
