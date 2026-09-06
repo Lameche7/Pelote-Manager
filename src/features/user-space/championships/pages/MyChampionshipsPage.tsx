@@ -104,7 +104,7 @@ function ResultSubmission({
     submission?.status === "pending" ? String(submission.scoreOpponent) : "",
   );
   const [comment, setComment] = useState(
-    submission?.status === "pending" ? submission.comment ?? "" : "",
+    submission?.status === "pending" ? (submission.comment ?? "") : "",
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -304,7 +304,7 @@ function MatchRow({
               ? "Résultat officiel"
               : match.submission
                 ? "Résultat proposé"
-                : matchStatusLabels[match.status] ?? match.status}
+                : (matchStatusLabels[match.status] ?? match.status)}
           </span>
         </div>
       </div>
