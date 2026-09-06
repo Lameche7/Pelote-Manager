@@ -34,13 +34,19 @@ test("le rang affiché reste le rang officiel importé", async () => {
   assert.match(sql, /coalesce\(standing\.rank, team\.source_rank\)/);
   assert.match(sql, /coalesce\(pool_standing\.rank, pool_team\.source_rank\)/);
   assert.match(sql, /score_difference/);
-  assert.doesNotMatch(sql, /ranking_points|qualifier_count|minimum_win_margin/i);
+  assert.doesNotMatch(
+    sql,
+    /ranking_points|qualifier_count|minimum_win_margin/i,
+  );
 });
 
 test("le joueur reçoit uniquement ses équipes et leurs rencontres", async () => {
   const sql = await read(migrationUrl);
 
-  assert.match(sql, /create or replace function public\.get_my_championships\(\)/);
+  assert.match(
+    sql,
+    /create or replace function public\.get_my_championships\(\)/,
+  );
   assert.match(sql, /security definer/);
   assert.match(sql, /mine\.team_id in \(match\.team1_id, match\.team2_id\)/);
   assert.match(
