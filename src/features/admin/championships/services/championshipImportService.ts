@@ -16,7 +16,8 @@ type ChampionshipRpc = (
 
 const rpc = supabase.rpc.bind(supabase) as unknown as ChampionshipRpc;
 
-const asRows = (value: unknown) => (Array.isArray(value) ? (value as Row[]) : []);
+const asRows = (value: unknown) =>
+  Array.isArray(value) ? (value as Row[]) : [];
 const nullableString = (value: unknown) =>
   value === null || value === undefined || value === "" ? null : String(value);
 
@@ -354,10 +355,13 @@ export const championshipImportService = {
     championshipId: string,
     payload: ChampionshipMatchesUpdatePayload,
   ): Promise<ChampionshipUpdateApplyResult> {
-    const { data, error } = await rpc("admin_apply_championship_matches_update", {
-      target_id: championshipId,
-      payload,
-    });
+    const { data, error } = await rpc(
+      "admin_apply_championship_matches_update",
+      {
+        target_id: championshipId,
+        payload,
+      },
+    );
     if (error) fail(error, "Impossible d’appliquer la mise à jour.");
     const row = (data ?? {}) as Row;
     const result = {
@@ -367,7 +371,9 @@ export const championshipImportService = {
       summary: mapUpdatePreview({ summary: row.summary }).summary,
     };
     if (!result.championshipId || !result.batchId) {
-      throw new Error("La réponse de mise à jour du championnat est incomplète.");
+      throw new Error(
+        "La réponse de mise à jour du championnat est incomplète.",
+      );
     }
     return result;
   },

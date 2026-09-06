@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   buildChampionshipMatchesUpdatePayload,
@@ -188,9 +183,8 @@ export function AdminChampionshipsPage() {
     setUpdateMessage("");
     setUpdatePreview(null);
     try {
-      const parsed = await championshipSourceFileService.parseMatchesUpdate(
-        updateFile,
-      );
+      const parsed =
+        await championshipSourceFileService.parseMatchesUpdate(updateFile);
       setFilePreview(parsed);
       if (!parsed.valid) return;
       const descriptor =
@@ -370,7 +364,8 @@ export function AdminChampionshipsPage() {
                   disabled={updateBusy}
                 />
                 <span>
-                  {updateFile?.name ?? "Aucun fichier de mise à jour sélectionné"}
+                  {updateFile?.name ??
+                    "Aucun fichier de mise à jour sélectionné"}
                 </span>
               </label>
               <button
@@ -378,7 +373,9 @@ export function AdminChampionshipsPage() {
                 onClick={() => void analyseUpdate()}
                 disabled={!updateFile || updateBusy}
               >
-                {updateBusy ? "Analyse en cours…" : "Comparer avant mise à jour"}
+                {updateBusy
+                  ? "Analyse en cours…"
+                  : "Comparer avant mise à jour"}
               </button>
             </div>
 
@@ -438,21 +435,25 @@ export function AdminChampionshipsPage() {
                 {updatePreview.changes.length > 0 && (
                   <div className="admin-championships__change-list">
                     <h3>Détail des changements</h3>
-                    {updatePreview.changes.slice(0, 100).map((change, index) => (
-                      <div key={`${change.kind}-${index}`}>
-                        <strong>
-                          {change.kind === "new" ? "Nouvelle" : "Modification"}
-                          {" · "}
-                          {change.category} · {change.phase}
-                        </strong>
-                        <span>
-                          {change.team1} {change.team1Number} — {change.team2}{" "}
-                          {change.team2Number}
-                          {change.score ? ` · ${change.score}` : ""}
-                        </span>
-                        <small>{change.fields.join(", ")}</small>
-                      </div>
-                    ))}
+                    {updatePreview.changes
+                      .slice(0, 100)
+                      .map((change, index) => (
+                        <div key={`${change.kind}-${index}`}>
+                          <strong>
+                            {change.kind === "new"
+                              ? "Nouvelle"
+                              : "Modification"}
+                            {" · "}
+                            {change.category} · {change.phase}
+                          </strong>
+                          <span>
+                            {change.team1} {change.team1Number} — {change.team2}{" "}
+                            {change.team2Number}
+                            {change.score ? ` · ${change.score}` : ""}
+                          </span>
+                          <small>{change.fields.join(", ")}</small>
+                        </div>
+                      ))}
                   </div>
                 )}
 
@@ -554,7 +555,9 @@ export function AdminChampionshipsPage() {
                       </td>
                       <td>
                         {formatDateTime(
-                          match.reportOn ?? match.agreementOn ?? match.scheduledOn,
+                          match.reportOn ??
+                            match.agreementOn ??
+                            match.scheduledOn,
                           match.reportTime ??
                             match.agreementTime ??
                             match.scheduledTime,
@@ -565,9 +568,7 @@ export function AdminChampionshipsPage() {
                         <span>{match.team2Label}</span>
                       </td>
                       <td>{match.scoreRaw ?? "—"}</td>
-                      <td>
-                        {match.agreementVenue ?? match.venue ?? "—"}
-                      </td>
+                      <td>{match.agreementVenue ?? match.venue ?? "—"}</td>
                       <td>{matchStatusLabel[match.status] ?? match.status}</td>
                     </tr>
                   ))}
@@ -596,7 +597,8 @@ export function AdminChampionshipsPage() {
                   <ul>
                     {team.players.map((player) => (
                       <li key={player.id}>
-                        {player.firstName} {player.lastName} ({player.licenceNumber})
+                        {player.firstName} {player.lastName} (
+                        {player.licenceNumber})
                         {player.linked ? " · compte lié" : ""}
                       </li>
                     ))}
