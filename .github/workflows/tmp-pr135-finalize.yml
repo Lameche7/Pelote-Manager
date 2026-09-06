@@ -1,0 +1,99 @@
+name: Temporary PR135 finalizer
+
+on:
+  push:
+    branches:
+      - agent/championship-source-import
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/championship-source-import
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Finalize route and migration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          router = Path("src/app/router.tsx")
+          text = router.read_text()
+          import_anchor = 'import { AdminChampionshipImportPage } from "@/features/admin/championships/pages/AdminChampionshipImportPage";\n'
+          import_line = 'import { AdminChampionshipsPage } from "@/features/admin/championships/pages/AdminChampionshipsPage";\n'
+          if import_line not in text:
+              if import_anchor not in text:
+                  raise SystemExit("championship import anchor missing")
+              text = text.replace(import_anchor, import_anchor + import_line, 1)
+
+          route_anchor = '''          {
+            path: "championnats/importer",
+            element: permitted(
+              ADMIN_PERMISSIONS.championships,
+              <AdminChampionshipImportPage />,
+            ),
+          },
+'''
+          list_route = '''          {
+            path: "championnats",
+            element: permitted(
+              ADMIN_PERMISSIONS.championships,
+              <AdminChampionshipsPage />,
+            ),
+          },
+'''
+          if list_route not in text:
+              if route_anchor not in text:
+                  raise SystemExit("championship route anchor missing")
+              text = text.replace(route_anchor, list_route + route_anchor, 1)
+          router.write_text(text)
+
+          migration = Path("supabase/migrations/20260906153500_add_championship_source_import.sql")
+          sql = migration.read_text()
+          function_anchor = """create or replace function public.admin_import_championship_sources(payload jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+"""
+          function_fixed = """create or replace function public.admin_import_championship_sources(payload jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_variable
+declare
+"""
+          if function_fixed not in sql:
+              if function_anchor not in sql:
+                  raise SystemExit("import function anchor missing")
+              sql = sql.replace(function_anchor, function_fixed, 1)
+          old_count = "'divisionCount', (select count(*) from public.championship_divisions where championship_id = championship_id),"
+          new_count = "'divisionCount', (select count(*) from public.championship_divisions as division where division.championship_id = championship_id),"
+          if old_count in sql:
+              sql = sql.replace(old_count, new_count, 1)
+          migration.write_text(sql)
+          PY
+      - run: npx prettier --write src/app/router.tsx src/shared/config/routes.ts src/features/admin/config/adminPermissions.ts src/features/admin/championships tests/championshipSourceImport.test.mjs tsconfig.test.json
+      - name: Commit finalized files
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/router.tsx src/shared/config/routes.ts src/features/admin/config/adminPermissions.ts src/features/admin/championships supabase/migrations/20260906153500_add_championship_source_import.sql tests/championshipSourceImport.test.mjs tsconfig.test.json
+          git commit -m "feat(championship): finalize admin source import"
+          git push
