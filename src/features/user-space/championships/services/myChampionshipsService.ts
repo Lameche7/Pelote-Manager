@@ -32,6 +32,20 @@ export type MyChampionshipStanding = {
   scoreDifference: number;
 };
 
+export type MyChampionshipResultSubmission = {
+  id: string;
+  matchId: string;
+  teamId: string;
+  scoreMine: number;
+  scoreOpponent: number;
+  status: "pending" | "confirmed_official" | "conflict_official";
+  comment: string | null;
+  officialScoreMine: number | null;
+  officialScoreOpponent: number | null;
+  createdAt: string;
+  resolvedAt: string | null;
+};
+
 export type MyChampionshipMatch = {
   id: string;
   phase: string;
@@ -52,6 +66,7 @@ export type MyChampionshipMatch = {
   scoreMine: number | null;
   scoreOpponent: number | null;
   resultComment: string | null;
+  submission: MyChampionshipResultSubmission | null;
 };
 
 export type MyChampionship = {
@@ -74,6 +89,23 @@ export type MyChampionship = {
   poolStandings: MyChampionshipStanding[];
   matches: MyChampionshipMatch[];
 };
+
+const mapSubmission = (row: Row): MyChampionshipResultSubmission => ({
+  id: String(row.id ?? ""),
+  matchId: String(row.match_id ?? ""),
+  teamId: String(row.team_id ?? ""),
+  scoreMine: Number(row.score_mine ?? 0),
+  scoreOpponent: Number(row.score_opponent ?? 0),
+  status:
+    row.status === "confirmed_official" || row.status === "conflict_official"
+      ? row.status
+      : "pending",
+  comment: nullableString(row.comment),
+  officialScoreMine: nullableNumber(row.official_score_mine),
+  officialScoreOpponent: nullableNumber(row.official_score_opponent),
+  createdAt: String(row.created_at ?? ""),
+  resolvedAt: nullableString(row.resolved_at),
+});
 
 const mapChampionship = (row: Row): MyChampionship => ({
   championshipId: String(row.championship_id ?? ""),
@@ -131,22 +163,72 @@ const mapChampionship = (row: Row): MyChampionship => ({
     scoreMine: nullableNumber(match.score_mine),
     scoreOpponent: nullableNumber(match.score_opponent),
     resultComment: nullableString(match.result_comment),
+    submission: null,
   })),
 });
 
 export const myChampionshipsService = {
   async list(): Promise<MyChampionship[]> {
-    const { data, error } = await supabase.rpc("get_my_championships");
-    if (error) {
+    const [championshipsResult, submissionsResult] = await Promise.all([
+      supabase.rpc("get_my_championships"),
+      supabase.rpc("get_my_championship_result_submissions"),
+    ]);
+
+    if (championshipsResult.error) {
       throw new Error(
         getSupabaseErrorMessage(
-          error,
+          championshipsResult.error,
           "Impossible de charger vos championnats.",
         ),
       );
     }
-    return rows(data)
+    if (submissionsResult.error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          submissionsResult.error,
+          "Impossible de charger vos résultats proposés.",
+        ),
+      );
+    }
+
+    const submissions = new Map(
+      rows(submissionsResult.data).map((row) => {
+        const submission = mapSubmission(row);
+        return [submission.matchId, submission] as const;
+      }),
+    );
+
+    return rows(championshipsResult.data)
       .map(mapChampionship)
+      .map((championship) => ({
+        ...championship,
+        matches: championship.matches.map((match) => ({
+          ...match,
+          submission: submissions.get(match.id) ?? null,
+        })),
+      }))
       .filter((item) => item.teamId);
+  },
+
+  async submitResult(
+    matchId: string,
+    scoreMine: number,
+    scoreOpponent: number,
+    comment: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("submit_my_championship_result", {
+      target_match_id: matchId,
+      target_score_mine: scoreMine,
+      target_score_opponent: scoreOpponent,
+      target_comment: comment || null,
+    });
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible d’enregistrer votre résultat.",
+        ),
+      );
+    }
   },
 };
