@@ -1,8 +1,13 @@
 import readExcelFile from "read-excel-file/browser";
 import {
   buildChampionshipImportPreview,
+  parseChampionshipMatchRows,
   type ChampionshipImportPreview,
 } from "@/features/admin/championships/domain/championshipSourceImport";
+import type {
+  ChampionshipMatchesUpdateFileDescriptor,
+  ChampionshipMatchesUpdatePreviewFile,
+} from "@/features/admin/championships/domain/championshipMatchesUpdate";
 import type { ChampionshipImportFileDescriptor } from "@/features/admin/championships/domain/championshipTransactionalImport";
 
 const decodeCsv = (buffer: ArrayBuffer) => {
@@ -68,14 +73,18 @@ const sha256 = async (file: File) => {
   ).join("");
 };
 
+const ensureMatchesFile = (file: File) => {
+  if (!file.name.toLowerCase().endsWith(".xlsx")) {
+    throw new Error("Le fichier des parties doit être un classeur .xlsx.");
+  }
+};
+
 export const championshipSourceFileService = {
   async parse(
     matchesFile: File,
     engagementsFile: File,
   ): Promise<ChampionshipImportPreview> {
-    if (!matchesFile.name.toLowerCase().endsWith(".xlsx")) {
-      throw new Error("Le fichier des parties doit être un classeur .xlsx.");
-    }
+    ensureMatchesFile(matchesFile);
     if (!engagementsFile.name.toLowerCase().endsWith(".csv")) {
       throw new Error("Le fichier des engagements doit être un fichier .csv.");
     }
@@ -86,6 +95,48 @@ export const championshipSourceFileService = {
     ]);
     const engagementRows = parseSemicolonCsv(decodeCsv(engagementBuffer));
     return buildChampionshipImportPreview(matchRows, engagementRows);
+  },
+
+  async parseMatchesUpdate(
+    matchesFile: File,
+  ): Promise<ChampionshipMatchesUpdatePreviewFile> {
+    ensureMatchesFile(matchesFile);
+    const matchRows = await firstWorkbookSheet(matchesFile);
+    const parsed = parseChampionshipMatchRows(matchRows);
+    const first = parsed.rows[0];
+    const issues = [...parsed.issues];
+
+    if (!first) {
+      issues.push({
+        source: "matches",
+        row: 0,
+        severity: "error",
+        message: "Aucune partie n’a été détectée dans le fichier.",
+      });
+    } else {
+      parsed.rows.forEach((match) => {
+        if (
+          match.competition !== first.competition ||
+          match.specialty !== first.specialty
+        ) {
+          issues.push({
+            source: "matches",
+            row: match.row,
+            severity: "error",
+            message:
+              "Le fichier contient plusieurs compétitions ou spécialités différentes.",
+          });
+        }
+      });
+    }
+
+    return {
+      competition: first?.competition ?? null,
+      specialty: first?.specialty ?? null,
+      matches: parsed.rows,
+      issues,
+      valid: !issues.some((issue) => issue.severity === "error"),
+    };
   },
 
   async describe(
@@ -111,5 +162,17 @@ export const championshipSourceFileService = {
         rowCount: preview.teamCount,
       },
     ];
+  },
+
+  async describeMatchesUpdate(
+    matchesFile: File,
+    rowCount: number,
+  ): Promise<ChampionshipMatchesUpdateFileDescriptor> {
+    return {
+      kind: "matches",
+      fileName: matchesFile.name,
+      checksum: await sha256(matchesFile),
+      rowCount,
+    };
   },
 };

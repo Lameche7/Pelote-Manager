@@ -10,26 +10,45 @@
   gap: 1rem;
 }
 
-.admin-championships__primary {
+.admin-championships__primary,
+.admin-championships button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 0;
   border-radius: 0.7rem;
   padding: 0.75rem 1rem;
+  font: inherit;
   font-weight: 800;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.admin-championships__alert {
+.admin-championships button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-championships__alert,
+.admin-championships__update-issues {
   margin: 0;
   border: 1px solid #b42318;
   border-radius: 0.7rem;
   padding: 0.85rem 1rem;
 }
 
-.admin-championships__empty {
+.admin-championships__success {
+  margin: 0;
+  border: 1px solid #0d8a57;
+  border-radius: 0.7rem;
+  padding: 0.85rem 1rem;
+}
+
+.admin-championships__empty,
+.admin-championships__update,
+.admin-championships__consultation {
   display: grid;
-  gap: 0.65rem;
+  gap: 1rem;
 }
 
 .admin-championships__grid {
@@ -43,7 +62,14 @@
   gap: 1rem;
 }
 
-.admin-championships__card-head {
+.admin-championships__card--selected {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.admin-championships__card-head,
+.admin-championships__detail-head,
+.admin-championships__consultation-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -52,12 +78,21 @@
 
 .admin-championships__card-head span,
 .admin-championships__card-head p,
-.admin-championships dt {
+.admin-championships dt,
+.admin-championships__detail-head span,
+.admin-championships__detail-head p,
+.admin-championships__matches-table span,
+.admin-championships__team-grid span,
+.admin-championships__limit-note {
   color: var(--text-muted, #667085);
 }
 
 .admin-championships__card-head h2,
-.admin-championships__card-head p {
+.admin-championships__card-head p,
+.admin-championships__detail-head h2,
+.admin-championships__detail-head p,
+.admin-championships__consultation-head h2,
+.admin-championships__consultation-head p {
   margin: 0.2rem 0 0;
 }
 
@@ -79,9 +114,156 @@
   font-weight: 800;
 }
 
+.admin-championships__card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-championships__update-controls,
+.admin-championships__filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.admin-championships__update-controls label,
+.admin-championships__filters label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.admin-championships__update-controls label span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted, #667085);
+}
+
+.admin-championships__filters select,
+.admin-championships__filters input,
+.admin-championships__update-controls input {
+  min-height: 2.8rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  background: inherit;
+  color: inherit;
+}
+
+.admin-championships__diff {
+  display: grid;
+  gap: 1rem;
+  border-top: 1px solid #e4e7ec;
+  padding-top: 1rem;
+}
+
+.admin-championships__diff-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-championships__diff-kpis div {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+}
+
+.admin-championships__diff-kpis strong {
+  font-size: 1.55rem;
+}
+
+.admin-championships__change-list {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 26rem;
+  overflow: auto;
+}
+
+.admin-championships__change-list h3 {
+  margin: 0;
+}
+
+.admin-championships__change-list > div {
+  display: grid;
+  gap: 0.2rem;
+  border-bottom: 1px solid #e4e7ec;
+  padding: 0.65rem 0;
+}
+
+.admin-championships__change-list small {
+  color: var(--text-muted, #667085);
+}
+
+.admin-championships__matches-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-championships__matches-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 920px;
+}
+
+.admin-championships__matches-table th,
+.admin-championships__matches-table td {
+  border-bottom: 1px solid #e4e7ec;
+  padding: 0.7rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-championships__matches-table td strong,
+.admin-championships__matches-table td span {
+  display: block;
+}
+
+.admin-championships__teams summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.admin-championships__team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.admin-championships__team-grid article {
+  display: grid;
+  gap: 0.3rem;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.75rem;
+  padding: 0.8rem;
+}
+
+.admin-championships__team-grid ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.admin-championships__limit-note {
+  margin: 0;
+}
+
 @media (max-width: 640px) {
   .admin-championships__header,
-  .admin-championships__card-head {
+  .admin-championships__card-head,
+  .admin-championships__detail-head,
+  .admin-championships__consultation-head {
     display: grid;
+  }
+
+  .admin-championships__card dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
