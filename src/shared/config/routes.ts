@@ -34,6 +34,7 @@ export const ROUTES = {
   adminTournamentResults: "/admin/tournois/resultats",
   adminChampionships: "/admin/championnats",
   adminChampionshipImport: "/admin/championnats/importer",
+  adminChampionshipDetail: "/admin/championnats/:championshipId",
   adminCommunication: "/admin/communication",
   adminStatistics: "/admin/statistiques",
   adminSettings: "/admin/parametres",
