@@ -25,7 +25,7 @@ const parseInteger = (value: string) => {
 
 const parseTeam = (value: string) => {
   const match = value.match(/^(.*\S)\s+(\d{1,3})$/u);
-  if (!match) return null;
+  if (!match || !/[A-Za-zÀ-ÖØ-öø-ÿ]/u.test(match[1])) return null;
   return {
     clubName: match[1].trim(),
     teamNumber: match[2],
@@ -42,7 +42,7 @@ const poolFromLine = (value: string) => {
 
 const rankAndTeamFromLine = (value: string) => {
   const inline = value.match(/^(\d{1,2})\s+(.+\s+\d{1,3})$/u);
-  if (inline) {
+  if (inline && parseTeam(inline[2])) {
     return { rank: Number(inline[1]), teamLabel: inline[2].trim() };
   }
   const teamOnly = value.match(/^(.+\s+\d{1,3})$/u);
@@ -159,8 +159,7 @@ export const parseChampionshipStandingsClipboard = (
       clubNormalized: fold(parsedTeam.clubName),
       teamNumber: parsedTeam.teamNumber,
       rank,
-      played:
-        wins !== null && losses !== null ? wins + losses : null,
+      played: wins !== null && losses !== null ? wins + losses : null,
       wins,
       draws: null,
       losses,
