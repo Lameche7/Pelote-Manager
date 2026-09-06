@@ -1,0 +1,87 @@
+.admin-championships {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.admin-championships__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-championships__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.7rem;
+  padding: 0.75rem 1rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-championships__alert {
+  margin: 0;
+  border: 1px solid #b42318;
+  border-radius: 0.7rem;
+  padding: 0.85rem 1rem;
+}
+
+.admin-championships__empty {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-championships__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.admin-championships__card {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-championships__card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-championships__card-head span,
+.admin-championships__card-head p,
+.admin-championships dt {
+  color: var(--text-muted, #667085);
+}
+
+.admin-championships__card-head h2,
+.admin-championships__card-head p {
+  margin: 0.2rem 0 0;
+}
+
+.admin-championships__card dl {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.admin-championships__card dl div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-championships__card dd {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .admin-championships__header,
+  .admin-championships__card-head {
+    display: grid;
+  }
+}

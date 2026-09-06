@@ -8,6 +8,7 @@ export const ADMIN_PERMISSIONS = {
   members: "members.manage",
   events: "events.manage",
   tournaments: "tournaments.manage",
+  championships: "championships.manage",
   communication: "communication.manage",
   statistics: "statistics.read",
   paymentsRead: "payments.read",
@@ -155,6 +156,22 @@ export const adminNavigation = [
       },
     ],
     permission: ADMIN_PERMISSIONS.tournaments,
+  },
+  {
+    label: "Championnats",
+    children: [
+      {
+        label: "Gestion des championnats",
+        to: ROUTES.adminChampionships,
+        permission: ADMIN_PERMISSIONS.championships,
+      },
+      {
+        label: "Importer un championnat",
+        to: ROUTES.adminChampionshipImport,
+        permission: ADMIN_PERMISSIONS.championships,
+      },
+    ],
+    permission: ADMIN_PERMISSIONS.championships,
   },
   {
     label: "Recherche licenciés",
