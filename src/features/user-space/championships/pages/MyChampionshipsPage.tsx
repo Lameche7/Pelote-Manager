@@ -8,6 +8,10 @@ import {
 } from "lucide-react";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import {
+  myChampionshipResultSettingsService,
+  type MyChampionshipResultSettings,
+} from "@/features/user-space/championships/services/myChampionshipResultSettingsService";
+import {
   myChampionshipsService,
   type MyChampionship,
   type MyChampionshipMatch,
@@ -89,17 +93,22 @@ const officialSourceHref = (value: string) =>
 
 function ResultSubmission({
   match,
+  settings,
   onSaved,
 }: {
   match: MyChampionshipMatch;
+  settings: MyChampionshipResultSettings | null;
   onSaved: () => Promise<void>;
 }) {
   const submission = match.submission;
   const timestamp = matchTimestamp(match);
-  const canSubmit =
+  const matchAllowsSubmission =
     !hasOfficialResult(match) &&
     !["cancelled", "forfeit"].includes(match.status) &&
     (timestamp === null || timestamp <= Date.now());
+  const configured =
+    settings?.inputMode !== null && settings?.winningScore !== null;
+  const canSubmit = matchAllowsSubmission && configured;
   const [editing, setEditing] = useState(false);
   const [scoreMine, setScoreMine] = useState(
     submission?.status === "pending" ? String(submission.scoreMine) : "",
@@ -112,20 +121,31 @@ function ResultSubmission({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const isSets = settings?.inputMode === "sets";
+  const winningScore = settings?.winningScore ?? null;
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const mine = Number(scoreMine);
     const opponent = Number(scoreOpponent);
+    if (!configured || winningScore === null) {
+      setError("Le format de résultat n’est pas encore paramétré.");
+      return;
+    }
     if (
       !Number.isInteger(mine) ||
       !Number.isInteger(opponent) ||
       mine < 0 ||
       opponent < 0 ||
-      mine > 200 ||
-      opponent > 200
+      mine === opponent ||
+      Math.max(mine, opponent) !== winningScore ||
+      Math.min(mine, opponent) >= winningScore
     ) {
-      setError("Saisissez deux scores entiers compris entre 0 et 200.");
+      setError(
+        isSets
+          ? `La partie doit avoir un vainqueur à ${winningScore} manche${winningScore > 1 ? "s" : ""}.`
+          : `La partie doit avoir un vainqueur à ${winningScore} point${winningScore > 1 ? "s" : ""}.`,
+      );
       return;
     }
 
@@ -188,6 +208,17 @@ function ResultSubmission({
         </div>
       )}
 
+      {matchAllowsSubmission && !configured && (
+        <div className="my-championships__submission-status is-pending">
+          <AlertTriangle aria-hidden="true" />
+          <span>
+            <strong>Saisie du résultat non paramétrée.</strong>
+            L’administrateur du championnat doit d’abord choisir un score en
+            points ou en manches.
+          </span>
+        </div>
+      )}
+
       {canSubmit && !editing && (
         <button
           type="button"
@@ -201,15 +232,15 @@ function ResultSubmission({
         </button>
       )}
 
-      {canSubmit && editing && (
+      {canSubmit && editing && winningScore !== null && (
         <form className="my-championships__submission-form" onSubmit={submit}>
           <div className="my-championships__score-fields">
             <label>
-              <span>Notre score</span>
+              <span>{isSets ? "Nos manches" : "Nos points"}</span>
               <input
                 type="number"
                 min="0"
-                max="200"
+                max={winningScore}
                 inputMode="numeric"
                 value={scoreMine}
                 onChange={(event) => setScoreMine(event.target.value)}
@@ -217,11 +248,11 @@ function ResultSubmission({
               />
             </label>
             <label>
-              <span>Score adversaire</span>
+              <span>{isSets ? "Manches adverses" : "Points adverses"}</span>
               <input
                 type="number"
                 min="0"
-                max="200"
+                max={winningScore}
                 inputMode="numeric"
                 value={scoreOpponent}
                 onChange={(event) => setScoreOpponent(event.target.value)}
@@ -260,9 +291,10 @@ function ResultSubmission({
             </button>
           </div>
           <small>
-            Cette proposition n’écrase jamais le résultat officiel. Elle sera
-            confirmée ou signalée comme différente lors de la prochaine mise à
-            jour officielle.
+            Format attendu : premier à {winningScore}{" "}
+            {isSets ? "manche(s)" : "point(s)"}. Cette proposition n’écrase
+            jamais le résultat officiel. Elle sera confirmée ou signalée comme
+            différente lors de la prochaine mise à jour officielle.
           </small>
         </form>
       )}
@@ -272,10 +304,12 @@ function ResultSubmission({
 
 function MatchRow({
   match,
+  settings,
   emphasis,
   onResultSaved,
 }: {
   match: MyChampionshipMatch;
+  settings: MyChampionshipResultSettings | null;
   emphasis?: "next" | "last";
   onResultSaved: () => Promise<void>;
 }) {
@@ -312,7 +346,11 @@ function MatchRow({
           </span>
         </div>
       </div>
-      <ResultSubmission match={match} onSaved={onResultSaved} />
+      <ResultSubmission
+        match={match}
+        settings={settings}
+        onSaved={onResultSaved}
+      />
     </article>
   );
 }
@@ -398,9 +436,11 @@ function Standings({ championship }: { championship: MyChampionship }) {
 
 function ChampionshipCard({
   championship,
+  settings,
   onResultSaved,
 }: {
   championship: MyChampionship;
+  settings: MyChampionshipResultSettings | null;
   onResultSaved: () => Promise<void>;
 }) {
   const now = Date.now();
@@ -510,6 +550,7 @@ function ChampionshipCard({
               <p className="my-championships__label">Prochaine partie</p>
               <MatchRow
                 match={nextMatch}
+                settings={settings}
                 emphasis="next"
                 onResultSaved={onResultSaved}
               />
@@ -520,6 +561,7 @@ function ChampionshipCard({
               <p className="my-championships__label">Dernier résultat</p>
               <MatchRow
                 match={lastResult}
+                settings={settings}
                 emphasis="last"
                 onResultSaved={onResultSaved}
               />
@@ -540,6 +582,7 @@ function ChampionshipCard({
               <MatchRow
                 key={match.id}
                 match={match}
+                settings={settings}
                 onResultSaved={onResultSaved}
               />
             ))
@@ -556,20 +599,35 @@ function ChampionshipCard({
 
 export function MyChampionshipsPage() {
   const [championships, setChampionships] = useState<MyChampionship[]>([]);
+  const [resultSettings, setResultSettings] = useState(
+    new Map<string, MyChampionshipResultSettings>(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
-    const items = await myChampionshipsService.list();
+    const [items, settings] = await Promise.all([
+      myChampionshipsService.list(),
+      myChampionshipResultSettingsService.list(),
+    ]);
     setChampionships(items);
+    setResultSettings(
+      new Map(settings.map((item) => [item.championshipId, item] as const)),
+    );
   }, []);
 
   useEffect(() => {
     let active = true;
-    void myChampionshipsService
-      .list()
-      .then((items) => {
-        if (active) setChampionships(items);
+    void Promise.all([
+      myChampionshipsService.list(),
+      myChampionshipResultSettingsService.list(),
+    ])
+      .then(([items, settings]) => {
+        if (!active) return;
+        setChampionships(items);
+        setResultSettings(
+          new Map(settings.map((item) => [item.championshipId, item] as const)),
+        );
       })
       .catch((cause) => {
         if (!active) return;
@@ -627,6 +685,9 @@ export function MyChampionshipsPage() {
               <ChampionshipCard
                 key={`${championship.championshipId}-${championship.teamId}`}
                 championship={championship}
+                settings={
+                  resultSettings.get(championship.championshipId) ?? null
+                }
                 onResultSaved={refresh}
               />
             ))}
