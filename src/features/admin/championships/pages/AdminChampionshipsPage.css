@@ -144,6 +144,7 @@
 
 .admin-championships__filters select,
 .admin-championships__filters input,
+.admin-championships__update-controls select,
 .admin-championships__update-controls input {
   min-height: 2.8rem;
   border: 1px solid #d0d5dd;
@@ -152,6 +153,12 @@
   font: inherit;
   background: inherit;
   color: inherit;
+}
+
+.admin-championships__result-settings-note {
+  margin: 0;
+  color: var(--text-muted, #667085);
+  font-size: 0.92rem;
 }
 
 .admin-championships__diff {
