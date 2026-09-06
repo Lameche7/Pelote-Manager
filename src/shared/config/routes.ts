@@ -10,6 +10,7 @@ export const ROUTES = {
   userSpace: "/mon-espace",
   myReservations: "/mes-reservations",
   myTournaments: "/mon-espace/tournois",
+  myChampionships: "/mon-espace/championnats",
   myProfile: "/mon-espace/profil",
   myNotifications: "/mon-espace/notifications",
   reservationPaymentReturn: "/reservations/paiement",

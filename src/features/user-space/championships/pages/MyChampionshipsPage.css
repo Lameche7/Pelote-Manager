@@ -1,0 +1,335 @@
+.my-championships {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.my-championships__page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.my-championships__page-header h1,
+.my-championships__card h2 {
+  margin: 0;
+}
+
+.my-championships__page-header p,
+.my-championships__card-header p {
+  margin: 0.25rem 0 0;
+}
+
+.my-championships__page-icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.9rem;
+  background: var(--surface-elevated, #fff);
+}
+
+.my-championships__page-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.my-championships__eyebrow,
+.my-championships__label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.68;
+}
+
+.my-championships__list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.my-championships__card {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 1rem;
+  background: var(--surface-elevated, #fff);
+  box-shadow: 0 10px 30px rgb(15 23 42 / 5%);
+}
+
+.my-championships__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.my-championships__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.my-championships__header-actions > span,
+.my-championships__header-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.my-championships__header-actions a svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.my-championships__identity-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.my-championships__identity-grid > div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem;
+  border-radius: 0.8rem;
+  background: rgb(148 163 184 / 10%);
+}
+
+.my-championships__identity-grid span,
+.my-championships__standings-heading span {
+  font-size: 0.8rem;
+  opacity: 0.68;
+}
+
+.my-championships__players {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.my-championships__players > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.my-championships__players > div > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.7rem;
+}
+
+.my-championships__players small {
+  padding: 0.12rem 0.35rem;
+  border-radius: 999px;
+  background: rgb(34 197 94 / 12%);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.my-championships__highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.my-championships__highlights > div {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.my-championships__match {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(12rem, 1.5fr) minmax(
+      7rem,
+      0.7fr
+    );
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.85rem;
+}
+
+.my-championships__match--next {
+  border-width: 2px;
+}
+
+.my-championships__match-date,
+.my-championships__match-main,
+.my-championships__match-result {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.my-championships__match-date span,
+.my-championships__match-main span,
+.my-championships__match-main small,
+.my-championships__match-result span {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.my-championships__match-result {
+  justify-items: end;
+  text-align: right;
+}
+
+.my-championships__match-result strong {
+  font-size: 1.1rem;
+}
+
+.my-championships__match-result.is-win strong {
+  font-weight: 800;
+}
+
+.my-championships__standings-wrap {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.my-championships__standings-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.my-championships__standings-heading > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.my-championships__table-scroll {
+  overflow-x: auto;
+}
+
+.my-championships table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+}
+
+.my-championships th,
+.my-championships td {
+  padding: 0.65rem 0.7rem;
+  border-bottom: 1px solid var(--border-color, #d7dde5);
+  text-align: center;
+}
+
+.my-championships th:nth-child(2),
+.my-championships td:nth-child(2) {
+  text-align: left;
+}
+
+.my-championships td:nth-child(2) {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.my-championships td:nth-child(2) span {
+  font-size: 0.76rem;
+  opacity: 0.66;
+}
+
+.my-championships tbody tr.is-mine {
+  background: rgb(59 130 246 / 8%);
+}
+
+.my-championships__standings-wrap > small {
+  line-height: 1.45;
+  opacity: 0.68;
+}
+
+.my-championships__calendar {
+  border-top: 1px solid var(--border-color, #d7dde5);
+  padding-top: 1rem;
+}
+
+.my-championships__calendar summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.my-championships__calendar summary span {
+  display: grid;
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(148 163 184 / 14%);
+  font-size: 0.8rem;
+}
+
+.my-championships__calendar > div {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+
+.my-championships__state,
+.my-championships__empty-block {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px dashed var(--border-color, #d7dde5);
+  border-radius: 0.85rem;
+}
+
+.my-championships__state.is-error {
+  border-style: solid;
+}
+
+@media (max-width: 900px) {
+  .my-championships__identity-grid,
+  .my-championships__highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-championships__match {
+    grid-template-columns: 1fr;
+  }
+
+  .my-championships__match-result {
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 620px) {
+  .my-championships__card-header,
+  .my-championships__standings-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .my-championships__header-actions {
+    justify-content: flex-start;
+  }
+
+  .my-championships__identity-grid,
+  .my-championships__highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .my-championships__card {
+    padding: 1rem;
+  }
+}

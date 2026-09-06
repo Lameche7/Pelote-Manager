@@ -4,6 +4,7 @@ import {
   CalendarDays,
   LayoutDashboard,
   Trophy,
+  TrendingUp,
   UserRound,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -25,6 +26,9 @@ export function UserSpaceShell({ children }: PropsWithChildren) {
         </NavLink>
         <NavLink to={ROUTES.myTournaments}>
           <Trophy aria-hidden="true" /> Mes tournois
+        </NavLink>
+        <NavLink to={ROUTES.myChampionships}>
+          <TrendingUp aria-hidden="true" /> Mes championnats
         </NavLink>
         <NavLink to={ROUTES.myNotifications}>
           <Bell aria-hidden="true" /> Notifications

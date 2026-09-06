@@ -55,6 +55,7 @@ import { PlatformProviderLayout } from "@/features/platform/auth/PlatformProvide
 import { PlatformDashboardPage } from "@/features/platform/pages/PlatformDashboardPage";
 import { PlatformLoginPage } from "@/features/platform/pages/PlatformLoginPage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
+import { MyChampionshipsPage } from "@/features/user-space/championships/pages/MyChampionshipsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
 import { ReservationSharePaymentPage } from "@/features/reservations/pages/ReservationSharePaymentPage";
@@ -124,6 +125,14 @@ export const routes = [
         element: (
           <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
             <MyTournamentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.myChampionships,
+        element: (
+          <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
+            <MyChampionshipsPage />
           </ProtectedRoute>
         ),
       },
