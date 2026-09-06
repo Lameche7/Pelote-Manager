@@ -53,7 +53,10 @@ export function AdminChampionshipsPage() {
             Suivez les compétitions officielles importées et leurs mises à jour.
           </p>
         </div>
-        <Link className="admin-championships__primary" to={ROUTES.adminChampionshipImport}>
+        <Link
+          className="admin-championships__primary"
+          to={ROUTES.adminChampionshipImport}
+        >
           Importer un championnat
         </Link>
       </header>
@@ -75,7 +78,10 @@ export function AdminChampionshipsPage() {
       {!busy && items.length > 0 && (
         <div className="admin-championships__grid">
           {items.map((item) => (
-            <article className="admin-card admin-championships__card" key={item.id}>
+            <article
+              className="admin-card admin-championships__card"
+              key={item.id}
+            >
               <div className="admin-championships__card-head">
                 <div>
                   <span>{item.seasonLabel || "Saison non précisée"}</span>

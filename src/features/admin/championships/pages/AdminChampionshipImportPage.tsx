@@ -28,7 +28,9 @@ export function AdminChampionshipImportPage() {
   });
   const [sourceUrl, setSourceUrl] = useState("");
   const [localFederationClubName, setLocalFederationClubName] = useState("");
-  const [preview, setPreview] = useState<ChampionshipImportPreview | null>(null);
+  const [preview, setPreview] = useState<ChampionshipImportPreview | null>(
+    null,
+  );
   const [result, setResult] =
     useState<ChampionshipTransactionalImportResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -116,9 +118,9 @@ export function AdminChampionshipImportPage() {
           <p className="admin-page__eyebrow">Championnats · Import</p>
           <h1>Importer un championnat officiel</h1>
           <p className="admin-page__lead">
-            Chargez les fichiers officiels tels quels. Pelote Manager les croise,
-            vérifie les équipes et les licences, puis enregistre le championnat
-            complet en une transaction.
+            Chargez les fichiers officiels tels quels. Pelote Manager les
+            croise, vérifie les équipes et les licences, puis enregistre le
+            championnat complet en une transaction.
           </p>
         </div>
       </header>
@@ -148,8 +150,8 @@ export function AdminChampionshipImportPage() {
             onChange={(event) => setSourceUrl(event.target.value)}
           />
           <span>
-            Facultatif pour le premier import, mais conseillé pour reconnaître la
-            même compétition lors des futures mises à jour.
+            Facultatif pour le premier import, mais conseillé pour reconnaître
+            la même compétition lors des futures mises à jour.
           </span>
         </label>
         <div className="admin-championship-import__file-grid">
@@ -358,17 +360,22 @@ export function AdminChampionshipImportPage() {
           )}
 
           {result && (
-            <div className="admin-card admin-championship-import__success" role="status">
+            <div
+              className="admin-card admin-championship-import__success"
+              role="status"
+            >
               <h2>
                 {result.alreadyImported
                   ? "Ces fichiers avaient déjà été importés."
                   : "Championnat importé avec succès."}
               </h2>
               <p>
-                {result.summary.divisionCount} séries · {result.summary.teamCount}{" "}
-                équipes · {result.summary.playerCount} joueurs · {result.summary.matchCount}{" "}
-                parties. {result.summary.linkedPlayerCount} joueur(s) sont déjà
-                rattachés à un compte Pelote Manager.
+                {result.summary.divisionCount} séries ·{" "}
+                {result.summary.teamCount} équipes ·{" "}
+                {result.summary.playerCount} joueurs ·{" "}
+                {result.summary.matchCount} parties.{" "}
+                {result.summary.linkedPlayerCount} joueur(s) sont déjà rattachés
+                à un compte Pelote Manager.
               </p>
               <Link to={ROUTES.adminChampionships}>
                 Ouvrir la gestion des championnats

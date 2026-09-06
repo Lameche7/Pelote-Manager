@@ -13,7 +13,9 @@ const rpc = supabase.rpc as unknown as (
   args?: Record<string, unknown>,
 ) => Promise<RpcResponse>;
 
-const mapImportResult = (value: unknown): ChampionshipTransactionalImportResult => {
+const mapImportResult = (
+  value: unknown,
+): ChampionshipTransactionalImportResult => {
   const row = (value ?? {}) as Row;
   const summary = (row.summary ?? {}) as Row;
   const result: ChampionshipTransactionalImportResult = {

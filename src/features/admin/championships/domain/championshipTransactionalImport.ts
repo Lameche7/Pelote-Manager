@@ -80,12 +80,17 @@ export const extractChampionshipSourceExternalId = (value: string) => {
   const clean = value.trim();
   if (!clean) return null;
   try {
-    const url = new URL(/^https?:\/\//iu.test(clean) ? clean : `https://${clean}`);
+    const url = new URL(
+      /^https?:\/\//iu.test(clean) ? clean : `https://${clean}`,
+    );
     const host = url.hostname.toLowerCase();
     const fromQuery = url.searchParams.get("id_competition")?.trim();
     if (fromQuery) return `${host}:competition:${fromQuery}`;
 
-    const routeIdentity = `${url.pathname}${url.search}`.replace(/^\/+|\/+$/gu, "");
+    const routeIdentity = `${url.pathname}${url.search}`.replace(
+      /^\/+|\/+$/gu,
+      "",
+    );
     return routeIdentity ? `${host}:${routeIdentity}` : host;
   } catch {
     return null;
@@ -93,10 +98,13 @@ export const extractChampionshipSourceExternalId = (value: string) => {
 };
 
 export const inferChampionshipSeasonLabel = (competition: string) => {
-  const match = competition.match(/\b(20\d{2})(?:\s*[-/]\s*(20\d{2}|\d{2}))?\b/u);
+  const match = competition.match(
+    /\b(20\d{2})(?:\s*[-/]\s*(20\d{2}|\d{2}))?\b/u,
+  );
   if (!match) return "";
   if (!match[2]) return match[1];
-  const end = match[2].length === 2 ? `${match[1].slice(0, 2)}${match[2]}` : match[2];
+  const end =
+    match[2].length === 2 ? `${match[1].slice(0, 2)}${match[2]}` : match[2];
   return `${match[1]}-${end}`;
 };
 
@@ -112,7 +120,9 @@ export const buildChampionshipTransactionalImportPayload = (
     throw new Error("La prévisualisation du championnat n’est pas valide.");
   }
   if (!preview.federationClubs.includes(options.localFederationClubName)) {
-    throw new Error("Le club officiel sélectionné n’existe pas dans cet import.");
+    throw new Error(
+      "Le club officiel sélectionné n’existe pas dans cet import.",
+    );
   }
 
   return {
@@ -139,7 +149,9 @@ export const buildChampionshipTransactionalImportPayload = (
       const team1 = parseChampionshipTeamLabel(match.team1Label);
       const team2 = parseChampionshipTeamLabel(match.team2Label);
       if (!team1 || !team2) {
-        throw new Error(`Une équipe de la ligne ${match.row} n’est pas exploitable.`);
+        throw new Error(
+          `Une équipe de la ligne ${match.row} n’est pas exploitable.`,
+        );
       }
       return {
         category: match.category,

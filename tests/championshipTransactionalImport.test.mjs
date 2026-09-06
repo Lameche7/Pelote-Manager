@@ -24,7 +24,10 @@ test("identifie une compétition avec le domaine fédéral et son identifiant", 
 
 test("déduit la saison lorsqu’elle figure dans le libellé officiel", () => {
   assert.equal(inferChampionshipSeasonLabel("CHAMPIONNAT HIVER 2026"), "2026");
-  assert.equal(inferChampionshipSeasonLabel("CHAMPIONNAT 2026-2027"), "2026-2027");
+  assert.equal(
+    inferChampionshipSeasonLabel("CHAMPIONNAT 2026-2027"),
+    "2026-2027",
+  );
 });
 
 test("prépare les équipes d’une partie sans perdre le club ni le numéro", () => {
@@ -128,7 +131,10 @@ test("la migration conserve l’import en une transaction et ne crée pas de lic
     sql,
     /create or replace function public\.admin_import_championship_sources\(payload jsonb\)/,
   );
-  assert.match(sql, /public\.has_club_permission\(v_target_club_id, 'championships\.manage'\)/);
+  assert.match(
+    sql,
+    /public\.has_club_permission\(v_target_club_id, 'championships\.manage'\)/,
+  );
   assert.match(sql, /insert into public\.championship_import_batches/);
   assert.match(sql, /insert into public\.championship_players/);
   assert.doesNotMatch(sql, /insert into public\.club_members/);
