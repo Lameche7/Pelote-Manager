@@ -1,6 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Trophy } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ExternalLink,
+  Send,
+  Trophy,
+} from "lucide-react";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import {
+  myChampionshipResultSettingsService,
+  type MyChampionshipResultSettings,
+} from "@/features/user-space/championships/services/myChampionshipResultSettingsService";
 import {
   myChampionshipsService,
   type MyChampionship,
@@ -53,30 +63,255 @@ const displayDate = (value: string | null) => {
 const displayTime = (value: string | null) =>
   value ? value.slice(0, 5) : "Horaire à définir";
 
+const hasOfficialResult = (match: MyChampionshipMatch) =>
+  match.scoreRaw !== null ||
+  (match.scoreMine !== null && match.scoreOpponent !== null);
+
 const displayScore = (match: MyChampionshipMatch) => {
-  if (match.scoreMine === null || match.scoreOpponent === null) {
-    return match.scoreRaw ?? "Résultat en attente";
+  if (match.scoreMine !== null && match.scoreOpponent !== null) {
+    return `${match.scoreMine} – ${match.scoreOpponent}`;
   }
-  return `${match.scoreMine} – ${match.scoreOpponent}`;
+  if (match.scoreRaw) return match.scoreRaw;
+  if (match.submission) {
+    return `${match.submission.scoreMine} – ${match.submission.scoreOpponent}`;
+  }
+  return "Résultat en attente";
 };
 
 const resultTone = (match: MyChampionshipMatch) => {
-  if (match.scoreMine === null || match.scoreOpponent === null)
-    return "pending";
-  if (match.scoreMine > match.scoreOpponent) return "win";
-  if (match.scoreMine < match.scoreOpponent) return "loss";
+  const mine = match.scoreMine ?? match.submission?.scoreMine ?? null;
+  const opponent =
+    match.scoreOpponent ?? match.submission?.scoreOpponent ?? null;
+  if (mine === null || opponent === null) return "pending";
+  if (mine > opponent) return "win";
+  if (mine < opponent) return "loss";
   return "draw";
 };
 
 const officialSourceHref = (value: string) =>
   /^https?:\/\//iu.test(value) ? value : `https://${value}`;
 
-function MatchRow({
+function ResultSubmission({
   match,
-  emphasis,
+  settings,
+  onSaved,
 }: {
   match: MyChampionshipMatch;
+  settings: MyChampionshipResultSettings | null;
+  onSaved: () => Promise<void>;
+}) {
+  const submission = match.submission;
+  const timestamp = matchTimestamp(match);
+  const matchAllowsSubmission =
+    !hasOfficialResult(match) &&
+    !["cancelled", "forfeit"].includes(match.status) &&
+    (timestamp === null || timestamp <= Date.now());
+  const configured =
+    settings?.inputMode !== null && settings?.winningScore !== null;
+  const canSubmit = matchAllowsSubmission && configured;
+  const [editing, setEditing] = useState(false);
+  const [scoreMine, setScoreMine] = useState(
+    submission?.status === "pending" ? String(submission.scoreMine) : "",
+  );
+  const [scoreOpponent, setScoreOpponent] = useState(
+    submission?.status === "pending" ? String(submission.scoreOpponent) : "",
+  );
+  const [comment, setComment] = useState(
+    submission?.status === "pending" ? (submission.comment ?? "") : "",
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const isSets = settings?.inputMode === "sets";
+  const winningScore = settings?.winningScore ?? null;
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const mine = Number(scoreMine);
+    const opponent = Number(scoreOpponent);
+    if (!configured || winningScore === null) {
+      setError("Le format de résultat n’est pas encore paramétré.");
+      return;
+    }
+    if (
+      !Number.isInteger(mine) ||
+      !Number.isInteger(opponent) ||
+      mine < 0 ||
+      opponent < 0 ||
+      mine === opponent ||
+      Math.max(mine, opponent) !== winningScore ||
+      Math.min(mine, opponent) >= winningScore
+    ) {
+      setError(
+        isSets
+          ? `La partie doit avoir un vainqueur à ${winningScore} manche${winningScore > 1 ? "s" : ""}.`
+          : `La partie doit avoir un vainqueur à ${winningScore} point${winningScore > 1 ? "s" : ""}.`,
+      );
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      await myChampionshipsService.submitResult(
+        match.id,
+        mine,
+        opponent,
+        comment.trim(),
+      );
+      setEditing(false);
+      await onSaved();
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible d’enregistrer votre résultat.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="my-championships__submission">
+      {submission?.status === "pending" && (
+        <div className="my-championships__submission-status is-pending">
+          <Send aria-hidden="true" />
+          <span>
+            <strong>
+              Résultat proposé : {submission.scoreMine} –{" "}
+              {submission.scoreOpponent}
+            </strong>
+            En attente de confirmation par la source officielle.
+          </span>
+        </div>
+      )}
+      {submission?.status === "confirmed_official" && (
+        <div className="my-championships__submission-status is-confirmed">
+          <CheckCircle2 aria-hidden="true" />
+          <span>
+            <strong>La proposition de votre équipe a été confirmée.</strong>
+            La mise à jour officielle correspond à votre proposition.
+          </span>
+        </div>
+      )}
+      {submission?.status === "conflict_official" && (
+        <div className="my-championships__submission-status is-conflict">
+          <AlertTriangle aria-hidden="true" />
+          <span>
+            <strong>Résultat officiel différent.</strong>
+            Votre équipe avait proposé {submission.scoreMine} –{" "}
+            {submission.scoreOpponent}
+            {submission.officialScoreMine !== null &&
+              submission.officialScoreOpponent !== null &&
+              ` · Source officielle : ${submission.officialScoreMine} – ${submission.officialScoreOpponent}`}
+          </span>
+        </div>
+      )}
+
+      {matchAllowsSubmission && !configured && (
+        <div className="my-championships__submission-status is-pending">
+          <AlertTriangle aria-hidden="true" />
+          <span>
+            <strong>Saisie du résultat non paramétrée.</strong>
+            L’administrateur du championnat doit d’abord choisir un score en
+            points ou en manches.
+          </span>
+        </div>
+      )}
+
+      {canSubmit && !editing && (
+        <button
+          type="button"
+          className="my-championships__submission-toggle"
+          onClick={() => setEditing(true)}
+        >
+          <Send aria-hidden="true" />
+          {submission?.status === "pending"
+            ? "Corriger ma proposition"
+            : "Saisir le résultat"}
+        </button>
+      )}
+
+      {canSubmit && editing && winningScore !== null && (
+        <form className="my-championships__submission-form" onSubmit={submit}>
+          <div className="my-championships__score-fields">
+            <label>
+              <span>{isSets ? "Nos manches" : "Nos points"}</span>
+              <input
+                type="number"
+                min="0"
+                max={winningScore}
+                inputMode="numeric"
+                value={scoreMine}
+                onChange={(event) => setScoreMine(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              <span>{isSets ? "Manches adverses" : "Points adverses"}</span>
+              <input
+                type="number"
+                min="0"
+                max={winningScore}
+                inputMode="numeric"
+                value={scoreOpponent}
+                onChange={(event) => setScoreOpponent(event.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <label className="my-championships__submission-comment">
+            <span>Commentaire facultatif</span>
+            <input
+              type="text"
+              maxLength={250}
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="Ex. partie terminée à 20h15"
+            />
+          </label>
+          {error && (
+            <div className="my-championships__submission-error" role="alert">
+              {error}
+            </div>
+          )}
+          <div className="my-championships__submission-actions">
+            <button type="submit" disabled={saving}>
+              {saving ? "Envoi…" : "Envoyer le résultat"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setError("");
+              }}
+              disabled={saving}
+            >
+              Annuler
+            </button>
+          </div>
+          <small>
+            Format attendu : premier à {winningScore}{" "}
+            {isSets ? "manche(s)" : "point(s)"}. Cette proposition n’écrase
+            jamais le résultat officiel. Elle sera confirmée ou signalée comme
+            différente lors de la prochaine mise à jour officielle.
+          </small>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function MatchRow({
+  match,
+  settings,
+  emphasis,
+  onResultSaved,
+}: {
+  match: MyChampionshipMatch;
+  settings: MyChampionshipResultSettings | null;
   emphasis?: "next" | "last";
+  onResultSaved: () => Promise<void>;
 }) {
   const { date, time } = dateTimeParts(match);
   const place = match.agreementVenue ?? match.venue;
@@ -87,22 +322,35 @@ function MatchRow({
         emphasis ? ` my-championships__match--${emphasis}` : ""
       }`}
     >
-      <div className="my-championships__match-date">
-        <strong>{displayDate(date)}</strong>
-        <span>{displayTime(time)}</span>
+      <div className="my-championships__match-summary">
+        <div className="my-championships__match-date">
+          <strong>{displayDate(date)}</strong>
+          <span>{displayTime(time)}</span>
+        </div>
+        <div className="my-championships__match-main">
+          <span>
+            {match.phase}
+            {match.poolCode ? ` · Poule ${match.poolCode}` : ""}
+          </span>
+          <strong>vs {match.opponentLabel || "Adversaire à définir"}</strong>
+          {place && <small>{place}</small>}
+        </div>
+        <div className={`my-championships__match-result is-${tone}`}>
+          <strong>{displayScore(match)}</strong>
+          <span>
+            {hasOfficialResult(match)
+              ? "Résultat officiel"
+              : match.submission
+                ? "Résultat proposé"
+                : (matchStatusLabels[match.status] ?? match.status)}
+          </span>
+        </div>
       </div>
-      <div className="my-championships__match-main">
-        <span>
-          {match.phase}
-          {match.poolCode ? ` · Poule ${match.poolCode}` : ""}
-        </span>
-        <strong>vs {match.opponentLabel || "Adversaire à définir"}</strong>
-        {place && <small>{place}</small>}
-      </div>
-      <div className={`my-championships__match-result is-${tone}`}>
-        <strong>{displayScore(match)}</strong>
-        <span>{matchStatusLabels[match.status] ?? match.status}</span>
-      </div>
+      <ResultSubmission
+        match={match}
+        settings={settings}
+        onSaved={onResultSaved}
+      />
     </article>
   );
 }
@@ -186,7 +434,15 @@ function Standings({ championship }: { championship: MyChampionship }) {
   );
 }
 
-function ChampionshipCard({ championship }: { championship: MyChampionship }) {
+function ChampionshipCard({
+  championship,
+  settings,
+  onResultSaved,
+}: {
+  championship: MyChampionship;
+  settings: MyChampionshipResultSettings | null;
+  onResultSaved: () => Promise<void>;
+}) {
   const now = Date.now();
   const sortedMatches = useMemo(
     () =>
@@ -203,13 +459,19 @@ function ChampionshipCard({ championship }: { championship: MyChampionship }) {
   const nextMatch =
     sortedMatches.find((match) => {
       const timestamp = matchTimestamp(match);
-      return timestamp !== null && timestamp >= now && !match.scoreRaw;
+      return (
+        timestamp !== null &&
+        timestamp >= now &&
+        !hasOfficialResult(match) &&
+        !match.submission
+      );
     }) ?? null;
   const lastResult =
     [...sortedMatches].reverse().find((match) => {
       const timestamp = matchTimestamp(match);
       return (
-        match.scoreRaw !== null ||
+        hasOfficialResult(match) ||
+        match.submission !== null ||
         (timestamp !== null && timestamp < now && match.status === "played")
       );
     }) ?? null;
@@ -286,13 +548,23 @@ function ChampionshipCard({ championship }: { championship: MyChampionship }) {
           {nextMatch && (
             <div>
               <p className="my-championships__label">Prochaine partie</p>
-              <MatchRow match={nextMatch} emphasis="next" />
+              <MatchRow
+                match={nextMatch}
+                settings={settings}
+                emphasis="next"
+                onResultSaved={onResultSaved}
+              />
             </div>
           )}
           {lastResult && (
             <div>
               <p className="my-championships__label">Dernier résultat</p>
-              <MatchRow match={lastResult} emphasis="last" />
+              <MatchRow
+                match={lastResult}
+                settings={settings}
+                emphasis="last"
+                onResultSaved={onResultSaved}
+              />
             </div>
           )}
         </section>
@@ -307,7 +579,12 @@ function ChampionshipCard({ championship }: { championship: MyChampionship }) {
         <div>
           {otherMatches.length > 0 ? (
             otherMatches.map((match) => (
-              <MatchRow key={match.id} match={match} />
+              <MatchRow
+                key={match.id}
+                match={match}
+                settings={settings}
+                onResultSaved={onResultSaved}
+              />
             ))
           ) : (
             <div className="my-championships__empty-block">
@@ -322,15 +599,35 @@ function ChampionshipCard({ championship }: { championship: MyChampionship }) {
 
 export function MyChampionshipsPage() {
   const [championships, setChampionships] = useState<MyChampionship[]>([]);
+  const [resultSettings, setResultSettings] = useState(
+    new Map<string, MyChampionshipResultSettings>(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const refresh = useCallback(async () => {
+    const [items, settings] = await Promise.all([
+      myChampionshipsService.list(),
+      myChampionshipResultSettingsService.list(),
+    ]);
+    setChampionships(items);
+    setResultSettings(
+      new Map(settings.map((item) => [item.championshipId, item] as const)),
+    );
+  }, []);
+
   useEffect(() => {
     let active = true;
-    void myChampionshipsService
-      .list()
-      .then((items) => {
-        if (active) setChampionships(items);
+    void Promise.all([
+      myChampionshipsService.list(),
+      myChampionshipResultSettingsService.list(),
+    ])
+      .then(([items, settings]) => {
+        if (!active) return;
+        setChampionships(items);
+        setResultSettings(
+          new Map(settings.map((item) => [item.championshipId, item] as const)),
+        );
       })
       .catch((cause) => {
         if (!active) return;
@@ -388,6 +685,10 @@ export function MyChampionshipsPage() {
               <ChampionshipCard
                 key={`${championship.championshipId}-${championship.teamId}`}
                 championship={championship}
+                settings={
+                  resultSettings.get(championship.championshipId) ?? null
+                }
+                onResultSaved={refresh}
               />
             ))}
           </div>

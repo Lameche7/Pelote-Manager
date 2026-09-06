@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
+import { ChampionshipResultSettingsCard } from "@/features/admin/championships/components/ChampionshipResultSettingsCard";
 import {
   buildChampionshipMatchesUpdatePayload,
   type ChampionshipMatchesUpdatePayload,
@@ -343,6 +344,8 @@ export function AdminChampionshipsPage() {
               </strong>
             </div>
           </div>
+
+          <ChampionshipResultSettingsCard championshipId={detail.id} />
 
           <div className="admin-card admin-championships__update">
             <div>
