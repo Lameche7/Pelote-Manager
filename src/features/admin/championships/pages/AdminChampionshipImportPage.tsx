@@ -1,6 +1,13 @@
 import { useState, type ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import type { ChampionshipImportPreview } from "@/features/admin/championships/domain/championshipSourceImport";
+import {
+  buildChampionshipTransactionalImportPayload,
+  type ChampionshipTransactionalImportResult,
+} from "@/features/admin/championships/domain/championshipTransactionalImport";
+import { championshipImportService } from "@/features/admin/championships/services/championshipImportService";
 import { championshipSourceFileService } from "@/features/admin/championships/services/championshipSourceFileService";
+import { ROUTES } from "@/shared/config";
 import "./AdminChampionshipImportPage.css";
 
 type SourceFiles = {
@@ -19,9 +26,11 @@ export function AdminChampionshipImportPage() {
     matches: null,
     engagements: null,
   });
-  const [preview, setPreview] = useState<ChampionshipImportPreview | null>(
-    null,
-  );
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [localFederationClubName, setLocalFederationClubName] = useState("");
+  const [preview, setPreview] = useState<ChampionshipImportPreview | null>(null);
+  const [result, setResult] =
+    useState<ChampionshipTransactionalImportResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,6 +39,8 @@ export function AdminChampionshipImportPage() {
       const file = event.target.files?.[0] ?? null;
       setFiles((current) => ({ ...current, [kind]: file }));
       setPreview(null);
+      setResult(null);
+      setLocalFederationClubName("");
       setError("");
     };
 
@@ -38,6 +49,7 @@ export function AdminChampionshipImportPage() {
     setBusy(true);
     setError("");
     setPreview(null);
+    setResult(null);
     try {
       setPreview(
         await championshipSourceFileService.parse(
@@ -56,6 +68,42 @@ export function AdminChampionshipImportPage() {
     }
   };
 
+  const importChampionship = async () => {
+    if (
+      !preview ||
+      !preview.valid ||
+      !files.matches ||
+      !files.engagements ||
+      !localFederationClubName
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError("");
+    setResult(null);
+    try {
+      const descriptors = await championshipSourceFileService.describe(
+        files.matches,
+        files.engagements,
+        preview,
+      );
+      const payload = buildChampionshipTransactionalImportPayload(preview, {
+        sourceUrl,
+        localFederationClubName,
+        files: descriptors,
+      });
+      setResult(await championshipImportService.importSources(payload));
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible d’enregistrer le championnat.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const blockingIssues =
     preview?.issues.filter((issue) => issue.severity === "error") ?? [];
   const warnings =
@@ -68,8 +116,9 @@ export function AdminChampionshipImportPage() {
           <p className="admin-page__eyebrow">Championnats · Import</p>
           <h1>Importer un championnat officiel</h1>
           <p className="admin-page__lead">
-            Chargez le fichier des parties et le fichier des engagements. Pelote
-            Manager les croise localement avant toute écriture en base.
+            Chargez les fichiers officiels tels quels. Pelote Manager les croise,
+            vérifie les équipes et les licences, puis enregistre le championnat
+            complet en une transaction.
           </p>
         </div>
       </header>
@@ -84,10 +133,25 @@ export function AdminChampionshipImportPage() {
         <div>
           <h2>1. Choisir les deux sources</h2>
           <p>
-            Les coordonnées de responsable éventuellement présentes dans les
-            engagements ne servent jamais à identifier un joueur.
+            Aucune préparation manuelle n’est demandée. Les coordonnées de
+            responsable éventuellement présentes dans les engagements ne servent
+            jamais à identifier un joueur.
           </p>
         </div>
+        <label className="admin-championship-import__source-url">
+          URL de la compétition officielle
+          <input
+            type="url"
+            placeholder="https://lbpb.competition.ffpb.net?id_competition=…"
+            value={sourceUrl}
+            disabled={busy}
+            onChange={(event) => setSourceUrl(event.target.value)}
+          />
+          <span>
+            Facultatif pour le premier import, mais conseillé pour reconnaître la
+            même compétition lors des futures mises à jour.
+          </span>
+        </label>
         <div className="admin-championship-import__file-grid">
           <label>
             Parties (.xlsx)
@@ -118,7 +182,9 @@ export function AdminChampionshipImportPage() {
           disabled={busy || !files.matches || !files.engagements}
           onClick={() => void analyse()}
         >
-          {busy ? "Analyse en cours…" : "Analyser et croiser les fichiers"}
+          {busy && !preview
+            ? "Analyse en cours…"
+            : "Analyser et croiser les fichiers"}
         </button>
       </div>
 
@@ -249,11 +315,66 @@ export function AdminChampionshipImportPage() {
                 : "La validation est bloquée tant que les anomalies ne sont pas corrigées."}
             </strong>
             <span>
-              L’étape suivante enregistrera le lot en une transaction après le
-              choix explicite du club officiel correspondant au club Pelote
-              Manager.
+              Les numéros de licence servent au rattachement sportif. Aucun
+              licencié d’un club adverse n’est créé comme membre de votre club.
             </span>
           </div>
+
+          {preview.valid && (
+            <div className="admin-card admin-championship-import__mapping">
+              <div>
+                <h2>4. Identifier votre club</h2>
+                <p>
+                  Cette confirmation rattache uniquement votre club Pelote
+                  Manager à son nom officiel dans ce championnat.
+                </p>
+              </div>
+              <label>
+                Notre club dans les données officielles
+                <select
+                  value={localFederationClubName}
+                  disabled={busy || Boolean(result)}
+                  onChange={(event) =>
+                    setLocalFederationClubName(event.target.value)
+                  }
+                >
+                  <option value="">Choisir le club…</option>
+                  {preview.federationClubs.map((club) => (
+                    <option value={club} key={club}>
+                      {club}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="admin-championship-import__primary"
+                disabled={busy || !localFederationClubName || Boolean(result)}
+                onClick={() => void importChampionship()}
+              >
+                {busy ? "Enregistrement en cours…" : "Valider l’import complet"}
+              </button>
+            </div>
+          )}
+
+          {result && (
+            <div className="admin-card admin-championship-import__success" role="status">
+              <h2>
+                {result.alreadyImported
+                  ? "Ces fichiers avaient déjà été importés."
+                  : "Championnat importé avec succès."}
+              </h2>
+              <p>
+                {result.summary.divisionCount} séries · {result.summary.teamCount}{" "}
+                équipes · {result.summary.playerCount} joueurs · {result.summary.matchCount}{" "}
+                parties. {result.summary.linkedPlayerCount} joueur(s) sont déjà
+                rattachés à un compte Pelote Manager.
+              </p>
+              <Link to={ROUTES.adminChampionships}>
+                Ouvrir la gestion des championnats
+              </Link>
+            </div>
+          )}
         </>
       )}
     </section>
