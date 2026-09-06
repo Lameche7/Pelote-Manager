@@ -113,10 +113,7 @@ export const championshipMatchIdentity = (
   phase: string,
   team1Label: string,
   team2Label: string,
-) =>
-  [category, phase, team1Label, team2Label]
-    .map(fold)
-    .join("|");
+) => [category, phase, team1Label, team2Label].map(fold).join("|");
 
 const text = (value: string | number | null | undefined) =>
   value === null || value === undefined || value === "" ? "—" : String(value);
@@ -163,8 +160,12 @@ const compareMatch = (
     fields.push({
       kind: "result",
       label: "Résultat",
-      before: [text(existing.scoreRaw), text(existing.resultComment)].join(" · "),
-      after: [text(incoming.scoreRaw), text(incoming.resultComment)].join(" · "),
+      before: [text(existing.scoreRaw), text(existing.resultComment)].join(
+        " · ",
+      ),
+      after: [text(incoming.scoreRaw), text(incoming.resultComment)].join(
+        " · ",
+      ),
     });
   }
 
@@ -240,8 +241,13 @@ export const buildChampionshipMatchesUpdatePreview = (
   if (!file.competition || fold(file.competition) !== fold(championship.name)) {
     issues.push("Le fichier ne correspond pas au championnat ouvert.");
   }
-  if (!file.specialty || fold(file.specialty) !== fold(championship.specialty)) {
-    issues.push("La spécialité du fichier ne correspond pas au championnat ouvert.");
+  if (
+    !file.specialty ||
+    fold(file.specialty) !== fold(championship.specialty)
+  ) {
+    issues.push(
+      "La spécialité du fichier ne correspond pas au championnat ouvert.",
+    );
   }
 
   const existingRows = championship.matches.map((match) => ({
@@ -310,7 +316,8 @@ export const buildChampionshipMatchesUpdatePreview = (
     issues,
     changes,
     newMatches: changes.filter((change) => change.kind === "new").length,
-    updatedMatches: changes.filter((change) => change.kind === "updated").length,
+    updatedMatches: changes.filter((change) => change.kind === "updated")
+      .length,
     resultChanges: changes.filter((change) =>
       change.fields.some((field) => field.kind === "result"),
     ).length,

@@ -18,11 +18,14 @@ type ChampionshipRpc = (
 const rpc = supabase.rpc.bind(supabase) as unknown as ChampionshipRpc;
 
 const array = (value: unknown) => (Array.isArray(value) ? value : []);
-const row = (value: unknown) => (value && typeof value === "object" ? (value as Row) : {});
+const row = (value: unknown) =>
+  value && typeof value === "object" ? (value as Row) : {};
 const nullable = (value: unknown) =>
   value === null || value === undefined || value === "" ? null : String(value);
 
-const mapImportResult = (value: unknown): ChampionshipTransactionalImportResult => {
+const mapImportResult = (
+  value: unknown,
+): ChampionshipTransactionalImportResult => {
   const source = row(value);
   const summary = row(source.summary);
   const result: ChampionshipTransactionalImportResult = {
@@ -236,25 +239,41 @@ const fail = (error: unknown, fallback: string): never => {
   if (message === "Championship import payload is invalid")
     throw new Error("Les données préparées pour l’import sont incomplètes.");
   if (message === "Championship federation club mapping is invalid")
-    throw new Error("Le club officiel choisi ne peut pas être rattaché à ce club Pelote Manager.");
+    throw new Error(
+      "Le club officiel choisi ne peut pas être rattaché à ce club Pelote Manager.",
+    );
   if (message === "Championship source is already managed by another club")
-    throw new Error("Ce championnat est déjà administré par un autre club Pelote Manager.");
+    throw new Error(
+      "Ce championnat est déjà administré par un autre club Pelote Manager.",
+    );
   if (message === "Championship player identity conflict")
-    throw new Error("Une licence existe déjà avec une identité différente. L’import est bloqué pour vérification.");
+    throw new Error(
+      "Une licence existe déjà avec une identité différente. L’import est bloqué pour vérification.",
+    );
   if (message.includes("Championship update source mismatch"))
-    throw new Error("Le fichier sélectionné ne correspond pas à ce championnat.");
+    throw new Error(
+      "Le fichier sélectionné ne correspond pas à ce championnat.",
+    );
   if (message.includes("Championship update division not found"))
-    throw new Error("Une nouvelle série est apparue : réimportez aussi les engagements avant de poursuivre.");
+    throw new Error(
+      "Une nouvelle série est apparue : réimportez aussi les engagements avant de poursuivre.",
+    );
   if (message.includes("Championship update team not found"))
-    throw new Error("Une nouvelle équipe est apparue : réimportez aussi les engagements avant de poursuivre.");
+    throw new Error(
+      "Une nouvelle équipe est apparue : réimportez aussi les engagements avant de poursuivre.",
+    );
   if (message.includes("Championship update match is ambiguous"))
-    throw new Error("Deux rencontres sont impossibles à distinguer automatiquement. Vérification manuelle nécessaire.");
+    throw new Error(
+      "Deux rencontres sont impossibles à distinguer automatiquement. Vérification manuelle nécessaire.",
+    );
   throw new Error(getSupabaseErrorMessage(error, fallback));
 };
 
 export const championshipImportService = {
   async importSources(payload: ChampionshipTransactionalImportPayload) {
-    const { data, error } = await rpc("admin_import_championship_sources", { payload });
+    const { data, error } = await rpc("admin_import_championship_sources", {
+      payload,
+    });
     if (error) fail(error, "Impossible d’enregistrer le championnat.");
     return mapImportResult(data);
   },
@@ -265,7 +284,9 @@ export const championshipImportService = {
     return data.map(mapChampionship).filter((item) => item.id);
   },
   async detail(championshipId: string): Promise<AdminChampionshipDetail> {
-    const { data, error } = await rpc("admin_get_championship_detail", { target_id: championshipId });
+    const { data, error } = await rpc("admin_get_championship_detail", {
+      target_id: championshipId,
+    });
     if (error) fail(error, "Impossible de charger le championnat.");
     return mapDetail(data);
   },
@@ -273,10 +294,13 @@ export const championshipImportService = {
     championshipId: string,
     payload: ChampionshipMatchesUpdatePayload,
   ): Promise<ChampionshipMatchesUpdateResult> {
-    const { data, error } = await rpc("admin_apply_championship_matches_update", {
-      target_id: championshipId,
-      payload,
-    });
+    const { data, error } = await rpc(
+      "admin_apply_championship_matches_update",
+      {
+        target_id: championshipId,
+        payload,
+      },
+    );
     if (error) fail(error, "Impossible d’actualiser le championnat.");
     const source = row(data);
     const summary = row(source.summary);

@@ -104,6 +104,9 @@ export function AdminChampionshipsPage() {
                   <dd>{item.matchCount}</dd>
                 </div>
               </dl>
+              <Link to={`/admin/championnats/${item.id}`}>
+                Consulter et actualiser
+              </Link>
               {item.sourceUrl && (
                 <a href={item.sourceUrl} target="_blank" rel="noreferrer">
                   Ouvrir la source officielle

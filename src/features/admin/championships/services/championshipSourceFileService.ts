@@ -110,7 +110,9 @@ export const championshipSourceFileService = {
     return buildChampionshipImportPreview(matchRows, engagementRows);
   },
 
-  async parseMatches(matchesFile: File): Promise<ChampionshipMatchesFilePreview> {
+  async parseMatches(
+    matchesFile: File,
+  ): Promise<ChampionshipMatchesFilePreview> {
     if (!matchesFile.name.toLowerCase().endsWith(".xlsx")) {
       throw new Error("Le fichier des parties doit être un classeur .xlsx.");
     }

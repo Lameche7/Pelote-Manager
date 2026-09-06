@@ -32,6 +32,7 @@
     "src/features/admin/members/domain/importPreview.ts",
     "src/features/admin/members/domain/importWorkflow.ts",
     "src/features/admin/championships/domain/championshipSourceImport.ts",
+    "src/features/admin/championships/domain/championshipMatchUpdate.ts",
     "src/features/admin/championships/domain/championshipTransactionalImport.ts",
     "src/features/admin/tournaments/domain/errebotAvailabilityImport.ts",
     "src/features/admin/tournaments/domain/errebotImportPreview.ts",
