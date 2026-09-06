@@ -1,0 +1,120 @@
+name: Temporary PR138 refine
+
+on:
+  push:
+    branches:
+      - agent/championship-player-results
+
+permissions:
+  contents: write
+
+jobs:
+  refine:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/championship-player-results
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Refine result safeguards
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          page = Path('src/features/user-space/championships/pages/MyChampionshipsPage.tsx')
+          text = page.read_text()
+          text = text.replace(
+              '  const canSubmit = !hasOfficialResult(match) && match.status !== "cancelled";\n',
+              '  const timestamp = matchTimestamp(match);\n'
+              '  const canSubmit =\n'
+              '    !hasOfficialResult(match) &&\n'
+              '    !["cancelled", "forfeit"].includes(match.status) &&\n'
+              '    (timestamp === null || timestamp <= Date.now());\n',
+          )
+          text = text.replace(
+              '<strong>Votre résultat a été confirmé.</strong>',
+              '<strong>La proposition de votre équipe a été confirmée.</strong>',
+          )
+          text = text.replace('Vous aviez proposé', 'Votre équipe avait proposé')
+          page.write_text(text)
+
+          css = Path('src/features/user-space/championships/pages/MyChampionshipsPage.css')
+          text = css.read_text()
+          text = text.replace(
+              '.my-championships__submission-actions button:first-child {\n'
+              '  background: currentcolor;\n'
+              '}\n\n'
+              '.my-championships__submission-actions button:first-child::first-line {\n'
+              '  color: var(--surface-elevated, #fff);\n'
+              '}\n',
+              '.my-championships__submission-actions button:first-child {\n'
+              '  border-color: var(--brand-blue, #0d2b6c);\n'
+              '  color: #fff;\n'
+              '  background: var(--brand-blue, #0d2b6c);\n'
+              '}\n\n'
+              '.my-championships__submission-actions button:not(:first-child) {\n'
+              '  color: inherit;\n'
+              '  background: var(--surface-elevated, #fff);\n'
+              '}\n',
+          )
+          css.write_text(text)
+
+          migration = Path('supabase/migrations/20260906190000_add_championship_result_submissions.sql')
+          text = migration.read_text()
+          text = text.replace(
+              "  comment text,\n",
+              "  comment text check (comment is null or char_length(comment) <= 250),\n",
+          )
+          text = text.replace(
+              "  if match_row.status = 'cancelled'\n",
+              "  if match_row.status in ('cancelled', 'forfeit')\n",
+          )
+          anchor = "  end if;\n\n  select team.id\n  into my_team_id\n"
+          insert = (
+              "  end if;\n\n"
+              "  if coalesce(match_row.agreement_on, match_row.report_on, match_row.scheduled_on)\n"
+              "      > (now() at time zone 'Europe/Paris')::date\n"
+              "    and match_row.status <> 'played'\n"
+              "  then\n"
+              "    raise exception 'Match has not started' using errcode = '22023';\n"
+              "  end if;\n\n"
+              "  select team.id\n"
+              "  into my_team_id\n"
+          )
+          if anchor not in text:
+              raise SystemExit('migration anchor not found')
+          text = text.replace(anchor, insert, 1)
+          migration.write_text(text)
+
+          tests = Path('tests/championshipResultSubmissions.test.mjs')
+          text = tests.read_text().replace(
+              '/Votre résultat a été confirmé/',
+              '/La proposition de votre équipe a été confirmée/',
+          )
+          tests.write_text(text)
+          PY
+      - name: Format changed client files
+        run: |
+          npx prettier --write \
+            src/features/user-space/championships/pages/MyChampionshipsPage.tsx \
+            src/features/user-space/championships/pages/MyChampionshipsPage.css \
+            tests/championshipResultSubmissions.test.mjs
+      - name: Commit refinements
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/features/user-space/championships/pages/MyChampionshipsPage.tsx \
+            src/features/user-space/championships/pages/MyChampionshipsPage.css \
+            supabase/migrations/20260906190000_add_championship_result_submissions.sql \
+            tests/championshipResultSubmissions.test.mjs
+          git commit -m "fix(championship): harden player result submission"
+          git push
