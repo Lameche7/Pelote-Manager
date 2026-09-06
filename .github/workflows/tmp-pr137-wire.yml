@@ -50,8 +50,7 @@ jobs:
             src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx \
             src/features/user-space/championships/services/myChampionshipsService.ts \
             src/features/user-space/championships/pages/MyChampionshipsPage.tsx \
-            src/features/user-space/championships/pages/MyChampionshipsPage.css \
-            supabase/migrations/20260906183000_add_my_championships.sql
+            src/features/user-space/championships/pages/MyChampionshipsPage.css
       - name: Commit wiring
         run: |
           if git diff --quiet; then
@@ -59,6 +58,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/app/router.tsx src/shared/config/routes.ts src/features/user-space/components/UserSpaceShell.tsx src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx src/features/user-space/championships supabase/migrations/20260906183000_add_my_championships.sql
+          git add src/app/router.tsx src/shared/config/routes.ts src/features/user-space/components/UserSpaceShell.tsx src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx src/features/user-space/championships
           git commit -m "feat(championship): wire player dashboard"
           git push
