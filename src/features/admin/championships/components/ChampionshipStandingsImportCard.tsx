@@ -10,6 +10,7 @@ import {
   championshipStandingsService,
   type ChampionshipStandingsServerPreview,
 } from "../services/championshipStandingsService";
+import "./ChampionshipStandingsImportCard.css";
 
 type ChampionshipDivisionOption = {
   id: string;
