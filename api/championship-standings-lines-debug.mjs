@@ -60,16 +60,6 @@ const htmlToLines = (html) => decodeHtml(
   .map((line) => line.replace(/\s+/gu, " ").trim())
   .filter(Boolean);
 
-const sliceAround = (lines, matcher, radius = 25) => {
-  const index = lines.findIndex((line) => matcher(line));
-  if (index < 0) return { index, lines: [] };
-  return {
-    index,
-    lines: lines.slice(Math.max(0, index - radius), Math.min(lines.length, index + radius + 1))
-      .map((line, offset) => ({ index: Math.max(0, index - radius) + offset, line })),
-  };
-};
-
 export default async function handler(request, response) {
   if (request.method !== "GET") return response.status(405).json({ error: "GET only" });
   try {
@@ -103,18 +93,15 @@ export default async function handler(request, response) {
       },
       body,
     });
-    const rankingHtml = await ranking.text();
-    const lines = htmlToLines(rankingHtml);
-
+    const lines = htmlToLines(await ranking.text());
+    const headerIndex = lines.findIndex((line) => line.includes("Vict.") && line.includes("Points / partie"));
+    const start = Math.max(0, headerIndex - 5);
+    const end = Math.min(lines.length, headerIndex + 190);
     return response.status(200).json({
       status: ranking.status,
       lineCount: lines.length,
-      aroundDef: sliceAround(lines, (line) => line.includes("Déf.")),
-      aroundPerd: sliceAround(lines, (line) => line.includes("Perd.")),
-      aroundPointsPartie: sliceAround(lines, (line) => line.includes("Points / partie")),
-      aroundLourdes: sliceAround(lines, (line) => line.includes("PELOTARI CLUB LOURDAIS"), 40),
-      aroundPoule: sliceAround(lines, (line) => /^Poule\s+1$/iu.test(line), 50),
-      aroundRankHeader: sliceAround(lines, (line) => /classement|rang/iu.test(line), 40),
+      headerIndex,
+      rankingLines: lines.slice(start, end).map((line, offset) => ({ index: start + offset, line })),
     });
   } catch (error) {
     return response.status(500).json({ error: error instanceof Error ? error.message : String(error) });
