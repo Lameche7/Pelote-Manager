@@ -12,6 +12,13 @@ import {
   type MyChampionshipResultSettings,
 } from "@/features/user-space/championships/services/myChampionshipResultSettingsService";
 import {
+  myChampionshipRankingContextService,
+  type MyChampionshipGeneralStanding,
+  type MyChampionshipRankingContext,
+  type MyChampionshipRankingPool,
+  type MyChampionshipRankingStanding,
+} from "@/features/user-space/championships/services/myChampionshipRankingContextService";
+import {
   myChampionshipsService,
   type MyChampionship,
   type MyChampionshipMatch,
@@ -106,8 +113,9 @@ function ResultSubmission({
     !hasOfficialResult(match) &&
     !["cancelled", "forfeit"].includes(match.status) &&
     (timestamp === null || timestamp <= Date.now());
-  const configured =
-    settings?.inputMode !== null && settings?.winningScore !== null;
+  const configured = Boolean(
+    settings?.inputMode && settings.winningScore !== null,
+  );
   const canSubmit = matchAllowsSubmission && configured;
   const [editing, setEditing] = useState(false);
   const [scoreMine, setScoreMine] = useState(
@@ -355,45 +363,53 @@ function MatchRow({
   );
 }
 
-function Standings({ championship }: { championship: MyChampionship }) {
-  if (!championship.poolId) {
-    return (
-      <div className="my-championships__empty-block">
-        Cette équipe n’est pas rattachée à une poule dans la source officielle.
-      </div>
-    );
-  }
-  if (championship.poolStandings.length === 0) {
+type RankingRow = MyChampionshipRankingStanding;
+
+function PoolTable({
+  pool,
+  fallback,
+}: {
+  pool: MyChampionshipRankingPool | null;
+  fallback: MyChampionship;
+}) {
+  const rows: RankingRow[] = pool
+    ? pool.standings
+    : fallback.poolStandings.map((team) => ({
+        teamId: team.teamId,
+        teamLabel: team.teamLabel,
+        clubName: team.clubName,
+        teamNumber: team.teamNumber,
+        officialRank: team.officialRank,
+        officialPoints: team.officialPoints,
+        isMyTeam: team.isMyTeam,
+        played: team.played,
+        wins: team.wins,
+        draws: team.draws,
+        losses: team.losses,
+        scoreFor: team.scoreFor,
+        scoreAgainst: team.scoreAgainst,
+        scoreDifference: team.scoreDifference,
+        hasOfficialStanding: team.statsSource === "official",
+      }));
+
+  if (rows.length === 0) {
     return (
       <div className="my-championships__empty-block">
         Le classement de cette poule n’est pas encore disponible.
       </div>
     );
   }
-  const hasOfficialRanks = championship.poolStandings.some(
-    (team) => team.officialRank !== null,
-  );
+
+  const hasOfficial = rows.some((team) => team.hasOfficialStanding);
   return (
-    <div className="my-championships__standings-wrap">
-      <div className="my-championships__standings-heading">
-        <div>
-          <p className="my-championships__label">Classement de poule</p>
-          <strong>
-            {championship.poolName ?? `Poule ${championship.poolCode}`}
-          </strong>
-        </div>
-        <span>
-          {hasOfficialRanks
-            ? "Rang officiel importé"
-            : "Statistiques de résultats · rang officiel non importé"}
-        </span>
-      </div>
+    <>
       <div className="my-championships__table-scroll">
         <table>
           <thead>
             <tr>
               <th>Rang</th>
               <th>Équipe</th>
+              <th>Pts</th>
               <th>J</th>
               <th>V</th>
               <th>D</th>
@@ -401,7 +417,7 @@ function Standings({ championship }: { championship: MyChampionship }) {
             </tr>
           </thead>
           <tbody>
-            {championship.poolStandings.map((team) => (
+            {rows.map((team) => (
               <tr
                 key={team.teamId}
                 className={team.isMyTeam ? "is-mine" : undefined}
@@ -413,6 +429,7 @@ function Standings({ championship }: { championship: MyChampionship }) {
                   <strong>{team.teamLabel}</strong>
                   <span>{team.clubName}</span>
                 </td>
+                <td>{team.officialPoints ?? "—"}</td>
                 <td>{team.played}</td>
                 <td>{team.wins}</td>
                 <td>{team.losses}</td>
@@ -426,10 +443,246 @@ function Standings({ championship }: { championship: MyChampionship }) {
         </table>
       </div>
       <small>
-        Les statistiques J/V/D et +/- sont calculées à partir des scores
-        importés. Pelote Manager ne recalcule pas le rang officiel avec une
-        règle supposée.
+        {hasOfficial
+          ? "Rang, points et statistiques issus du classement officiel importé. Pelote Manager ne recalcule pas les règles de classement."
+          : "Classement officiel non encore disponible pour cette poule."}
       </small>
+    </>
+  );
+}
+
+const qualificationLabel = (
+  rank: number,
+  context: MyChampionshipRankingContext,
+) => {
+  const { directCutoff, barrageStart, barrageEnd } = context.qualification;
+  if (directCutoff !== null && rank <= directCutoff) {
+    return { key: "direct", label: "Zone de qualification directe" } as const;
+  }
+  if (
+    barrageStart !== null &&
+    barrageEnd !== null &&
+    rank >= barrageStart &&
+    rank <= barrageEnd
+  ) {
+    return { key: "barrage", label: "Zone barrage" } as const;
+  }
+  return { key: "outside", label: "Hors zone de qualification" } as const;
+};
+
+function GeneralTable({
+  context,
+}: {
+  context: MyChampionshipRankingContext;
+}) {
+  const myStanding = context.generalStandings.find((team) => team.isMyTeam);
+  const myZone = myStanding
+    ? qualificationLabel(myStanding.rank, context)
+    : null;
+
+  if (context.generalStandings.length === 0) {
+    return (
+      <div className="my-championships__empty-block">
+        Le classement général officiel à l’issue des poules n’est pas encore
+        disponible.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {myStanding && myZone && (
+        <div
+          className={`my-championships__qualification is-${myZone.key}`}
+          role="status"
+        >
+          <div>
+            <span>Votre situation</span>
+            <strong>
+              {myStanding.rank}e / {context.generalStandings.length}
+            </strong>
+          </div>
+          <p>{myZone.label}</p>
+        </div>
+      )}
+      <div className="my-championships__table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Gén.</th>
+              <th>Équipe</th>
+              <th>Poule</th>
+              <th>Rang poule</th>
+              <th>Pts</th>
+              <th>J</th>
+              <th>V</th>
+              <th>D</th>
+              <th>+/-</th>
+            </tr>
+          </thead>
+          <tbody>
+            {context.generalStandings.map((team) => {
+              const zone = qualificationLabel(team.rank, context);
+              const boundaryClass =
+                team.rank === context.qualification.directCutoff
+                  ? " qualification-boundary-direct"
+                  : team.rank === context.qualification.barrageEnd
+                    ? " qualification-boundary-barrage"
+                    : "";
+              return (
+                <tr
+                  key={team.teamId}
+                  className={`${team.isMyTeam ? "is-mine" : ""} is-${zone.key}${boundaryClass}`.trim()}
+                >
+                  <td>
+                    <strong>{team.rank}</strong>
+                  </td>
+                  <td>
+                    <strong>{team.teamLabel}</strong>
+                    <span>{team.clubName}</span>
+                  </td>
+                  <td>{team.poolCode ?? "—"}</td>
+                  <td>{team.poolRank ?? "—"}</td>
+                  <td>{team.points ?? "—"}</td>
+                  <td>{team.played}</td>
+                  <td>{team.wins}</td>
+                  <td>{team.losses}</td>
+                  <td>
+                    {team.scoreDifference > 0 ? "+" : ""}
+                    {team.scoreDifference}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="my-championships__qualification-legend">
+        {context.qualification.directCutoff !== null && (
+          <span className="is-direct">
+            Qualification directe : 1 à {context.qualification.directCutoff}
+          </span>
+        )}
+        {context.qualification.barrageStart !== null &&
+          context.qualification.barrageEnd !== null && (
+            <span className="is-barrage">
+              Barrage : {context.qualification.barrageStart} à{" "}
+              {context.qualification.barrageEnd}
+            </span>
+          )}
+      </div>
+      <small>
+        Classement général et statistiques issus de la source officielle. Les
+        zones sont déduites uniquement des phases finales officielles déjà
+        publiées.
+      </small>
+    </>
+  );
+}
+
+function Standings({
+  championship,
+  context,
+}: {
+  championship: MyChampionship;
+  context: MyChampionshipRankingContext | null;
+}) {
+  const [view, setView] = useState<"mine" | "pools" | "general">("mine");
+  const myPool = context?.pools.find((pool) => pool.isMyPool) ?? null;
+  const [selectedPoolId, setSelectedPoolId] = useState<string | null>(
+    myPool?.poolId ?? championship.poolId,
+  );
+  const selectedPool =
+    context?.pools.find((pool) => pool.poolId === selectedPoolId) ?? myPool;
+
+  if (!championship.poolId) {
+    return (
+      <div className="my-championships__empty-block">
+        Cette équipe n’est pas rattachée à une poule dans la source officielle.
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-championships__standings-wrap">
+      <div className="my-championships__standings-heading">
+        <div>
+          <p className="my-championships__label">Classements officiels</p>
+          <strong>{championship.divisionName}</strong>
+        </div>
+        <span>Source fédérale</span>
+      </div>
+
+      <div className="my-championships__ranking-tabs" role="tablist">
+        <button
+          type="button"
+          className={view === "mine" ? "is-active" : undefined}
+          onClick={() => setView("mine")}
+        >
+          Ma poule
+        </button>
+        <button
+          type="button"
+          className={view === "pools" ? "is-active" : undefined}
+          onClick={() => setView("pools")}
+          disabled={!context || context.pools.length === 0}
+        >
+          Toutes les poules
+        </button>
+        <button
+          type="button"
+          className={view === "general" ? "is-active" : undefined}
+          onClick={() => setView("general")}
+          disabled={!context}
+        >
+          Classement général
+        </button>
+      </div>
+
+      {view === "mine" && (
+        <div>
+          <div className="my-championships__ranking-subtitle">
+            <strong>
+              {myPool?.poolName ?? `Poule ${championship.poolCode ?? "—"}`}
+            </strong>
+            <span>Votre poule</span>
+          </div>
+          <PoolTable pool={myPool} fallback={championship} />
+        </div>
+      )}
+
+      {view === "pools" && context && (
+        <div>
+          <div className="my-championships__pool-tabs">
+            {context.pools.map((pool) => (
+              <button
+                type="button"
+                key={pool.poolId}
+                className={pool.poolId === selectedPool?.poolId ? "is-active" : undefined}
+                onClick={() => setSelectedPoolId(pool.poolId)}
+              >
+                Poule {pool.poolCode}
+                {pool.isMyPool && <small>Vous</small>}
+              </button>
+            ))}
+          </div>
+          {selectedPool && (
+            <>
+              <div className="my-championships__ranking-subtitle">
+                <strong>
+                  {selectedPool.poolName ?? `Poule ${selectedPool.poolCode}`}
+                </strong>
+                <span>
+                  {selectedPool.isMyPool ? "Votre poule" : "Autre poule de la série"}
+                </span>
+              </div>
+              <PoolTable pool={selectedPool} fallback={championship} />
+            </>
+          )}
+        </div>
+      )}
+
+      {view === "general" && context && <GeneralTable context={context} />}
     </div>
   );
 }
@@ -437,10 +690,12 @@ function Standings({ championship }: { championship: MyChampionship }) {
 function ChampionshipCard({
   championship,
   settings,
+  rankingContext,
   onResultSaved,
 }: {
   championship: MyChampionship;
   settings: MyChampionshipResultSettings | null;
+  rankingContext: MyChampionshipRankingContext | null;
   onResultSaved: () => Promise<void>;
 }) {
   const now = Date.now();
@@ -477,6 +732,9 @@ function ChampionshipCard({
     }) ?? null;
   const otherMatches = sortedMatches.filter(
     (match) => match.id !== nextMatch?.id && match.id !== lastResult?.id,
+  );
+  const generalStanding = rankingContext?.generalStandings.find(
+    (team) => team.isMyTeam,
   );
 
   return (
@@ -520,10 +778,10 @@ function ChampionshipCard({
           <strong>{championship.teamLabel}</strong>
         </div>
         <div>
-          <span>Rang officiel</span>
+          <span>Classement général</span>
           <strong>
-            {championship.officialRank !== null
-              ? `${championship.officialRank}e`
+            {generalStanding
+              ? `${generalStanding.rank}e / ${rankingContext?.generalStandings.length ?? "—"}`
               : "Non importé"}
           </strong>
         </div>
@@ -570,7 +828,7 @@ function ChampionshipCard({
         </section>
       )}
 
-      <Standings championship={championship} />
+      <Standings championship={championship} context={rankingContext} />
 
       <details className="my-championships__calendar">
         <summary>
@@ -602,18 +860,38 @@ export function MyChampionshipsPage() {
   const [resultSettings, setResultSettings] = useState(
     new Map<string, MyChampionshipResultSettings>(),
   );
+  const [rankingContexts, setRankingContexts] = useState(
+    new Map<string, MyChampionshipRankingContext>(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const refresh = useCallback(async () => {
-    const [items, settings] = await Promise.all([
-      myChampionshipsService.list(),
-      myChampionshipResultSettingsService.list(),
-    ]);
+  const applyLoadedData = (
+    items: MyChampionship[],
+    settings: MyChampionshipResultSettings[],
+    contexts: MyChampionshipRankingContext[],
+  ) => {
     setChampionships(items);
     setResultSettings(
       new Map(settings.map((item) => [item.championshipId, item] as const)),
     );
+    setRankingContexts(
+      new Map(
+        contexts.map((item) => [
+          `${item.championshipId}:${item.divisionId}:${item.myTeamId}`,
+          item,
+        ] as const),
+      ),
+    );
+  };
+
+  const refresh = useCallback(async () => {
+    const [items, settings, contexts] = await Promise.all([
+      myChampionshipsService.list(),
+      myChampionshipResultSettingsService.list(),
+      myChampionshipRankingContextService.list(),
+    ]);
+    applyLoadedData(items, settings, contexts);
   }, []);
 
   useEffect(() => {
@@ -621,13 +899,11 @@ export function MyChampionshipsPage() {
     void Promise.all([
       myChampionshipsService.list(),
       myChampionshipResultSettingsService.list(),
+      myChampionshipRankingContextService.list(),
     ])
-      .then(([items, settings]) => {
+      .then(([items, settings, contexts]) => {
         if (!active) return;
-        setChampionships(items);
-        setResultSettings(
-          new Map(settings.map((item) => [item.championshipId, item] as const)),
-        );
+        applyLoadedData(items, settings, contexts);
       })
       .catch((cause) => {
         if (!active) return;
@@ -659,8 +935,8 @@ export function MyChampionshipsPage() {
             <p className="my-championships__eyebrow">Mon espace</p>
             <h1 id="my-championships-title">Mes championnats</h1>
             <p>
-              Retrouvez vos équipes, vos prochaines parties, vos résultats et la
-              situation de votre poule.
+              Retrouvez vos équipes, vos prochaines parties, vos classements de
+              poule et votre situation au classement général.
             </p>
           </div>
         </header>
@@ -687,6 +963,11 @@ export function MyChampionshipsPage() {
                 championship={championship}
                 settings={
                   resultSettings.get(championship.championshipId) ?? null
+                }
+                rankingContext={
+                  rankingContexts.get(
+                    `${championship.championshipId}:${championship.divisionId}:${championship.teamId}`,
+                  ) ?? null
                 }
                 onResultSaved={refresh}
               />
