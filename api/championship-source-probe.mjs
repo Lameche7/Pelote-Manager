@@ -1,4 +1,8 @@
 const ALLOWED_HOSTS = new Set(["lbpb.competition.ffpb.net"]);
+const baseHeaders = {
+  "user-agent": "PeloteManager/1.0 (+https://pelote-manager.vercel.app)",
+  accept: "text/html,application/xhtml+xml,*/*",
+};
 
 const normalizeSourceUrl = (value) => {
   const raw = String(value ?? "").trim();
@@ -8,51 +12,98 @@ const normalizeSourceUrl = (value) => {
   return url;
 };
 
-const federationHeaders = {
-  "user-agent": "PeloteManager/1.0 (+https://pelote-manager.vercel.app)",
-  accept: "text/html,application/xhtml+xml,*/*",
+const cookieFrom = (response) => {
+  const values = typeof response.headers.getSetCookie === "function"
+    ? response.headers.getSetCookie()
+    : [response.headers.get("set-cookie")].filter(Boolean);
+  return values.map((value) => String(value).split(";", 1)[0]).join("; ");
 };
 
-const fetchFederationPage = async (sourceUrl) => {
-  let upstream = await fetch(sourceUrl, { redirect: "follow", headers: federationHeaders });
-  let html = await upstream.text();
-  if (/FFPB_COMPETITION/iu.test(html) && !sourceUrl.pathname.includes("FFPB_COMPETITION")) {
-    const redirectedUrl = new URL("/FFPB_COMPETITION/", sourceUrl.origin);
-    redirectedUrl.search = sourceUrl.search;
-    upstream = await fetch(redirectedUrl, { redirect: "follow", headers: federationHeaders });
-    html = await upstream.text();
-  }
-  return { upstream, html };
+const openSession = async (sourceUrl) => {
+  const bootstrap = await fetch(sourceUrl, { redirect: "follow", headers: baseHeaders });
+  const bootstrapHtml = await bootstrap.text();
+  const firstCookie = cookieFrom(bootstrap);
+  const pageUrl = /FFPB_COMPETITION/iu.test(bootstrapHtml) && !sourceUrl.pathname.includes("FFPB_COMPETITION")
+    ? new URL(`/FFPB_COMPETITION/${sourceUrl.search}`, sourceUrl.origin)
+    : sourceUrl;
+  const page = await fetch(pageUrl, {
+    redirect: "follow",
+    headers: { ...baseHeaders, ...(firstCookie ? { cookie: firstCookie } : {}) },
+  });
+  const html = await page.text();
+  const cookie = [firstCookie, cookieFrom(page)].filter(Boolean).join("; ");
+  const action = html.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1];
+  if (!action) throw new Error("Formulaire WebDev introuvable");
+  return { html, cookie, action: new URL(action, pageUrl.origin) };
 };
 
-const snippet = (text, needle, radius = 2500) => {
-  const index = text.indexOf(needle);
-  if (index < 0) return null;
-  return text.slice(Math.max(0, index - radius), Math.min(text.length, index + radius));
+const selectedDivision = (text) => {
+  const select = text.match(/<select[^>]*id=["']I7["'][\s\S]*?<\/select>/iu)?.[0] ?? "";
+  return select.match(/<option[^>]*selected[^>]*>([^<]+)<\/option>/iu)?.[1] ?? null;
+};
+
+const describe = async (response) => {
+  const text = await response.text();
+  return {
+    status: response.status,
+    type: response.headers.get("content-type"),
+    length: text.length,
+    selectedDivision: selectedDivision(text),
+    hasLescar: text.includes("LESCAR PELOTARI CLUB"),
+    hasBillere: text.includes("BILLERE PELOTARI CLUB"),
+    start: text.slice(0, 600),
+  };
+};
+
+const trial = async (sourceUrl, params) => {
+  const session = await openSession(sourceUrl);
+  const body = new URLSearchParams(params);
+  const result = await fetch(session.action, {
+    method: "POST",
+    redirect: "follow",
+    headers: {
+      ...baseHeaders,
+      "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+      ...(session.cookie ? { cookie: session.cookie } : {}),
+      referer: session.action.toString(),
+      "x-requested-with": "XMLHttpRequest",
+    },
+    body,
+  });
+  return describe(result);
 };
 
 export default async function handler(request, response) {
   if (request.method !== "GET") return response.status(405).json({ error: "Method not allowed" });
   try {
     const sourceUrl = normalizeSourceUrl(request.query?.url);
-    const { html } = await fetchFederationPage(sourceUrl);
-    const scriptPaths = Array.from(html.matchAll(/<script[^>]*src=["']([^"']+)["']/giu), (m) => m[1]);
-    const wanted = scriptPaths.filter((path) => /(?:WDUtil|WDAJAX|WD\.js)/iu.test(path));
-    const scripts = {};
-    for (const path of wanted) {
-      const url = new URL(path, sourceUrl.origin);
-      const result = await fetch(url, { headers: federationHeaders });
-      const body = await result.text();
-      scripts[path] = {
-        length: body.length,
-        pfGetTraitement: snippet(body, "pfGetTraitement"),
-        WD_ACTION: snippet(body, "WD_ACTION_"),
-        AJAXPAGE: snippet(body, "AJAXPAGE"),
-        AJAXEXECUTE: snippet(body, "AJAXEXECUTE"),
-        WD_CONTEXTE: snippet(body, "WD_CONTEXTE_"),
-      };
-    }
-    return response.status(200).json({ scripts });
+    const trials = {};
+    trials.normal = await trial(sourceUrl, {
+      WD_ACTION_: "",
+      WD_BUTTON_CLICK_: "I7",
+      I7: "12",
+    });
+    trials.ajaxNoContext = await trial(sourceUrl, {
+      WD_ACTION_: "AJAXPAGE",
+      EXECUTE: "11",
+      WD_BUTTON_CLICK_: "",
+      I7: "12",
+    });
+    trials.ajaxA1 = await trial(sourceUrl, {
+      WD_ACTION_: "AJAXPAGE",
+      EXECUTE: "11",
+      WD_CONTEXTE_: "A1",
+      WD_BUTTON_CLICK_: "",
+      I7: "12",
+    });
+    trials.ajaxA2 = await trial(sourceUrl, {
+      WD_ACTION_: "AJAXPAGE",
+      EXECUTE: "11",
+      WD_CONTEXTE_: "A2",
+      WD_BUTTON_CLICK_: "",
+      I7: "12",
+    });
+    return response.status(200).json({ trials });
   } catch (error) {
     return response.status(400).json({ error: error instanceof Error ? error.message : "Probe impossible" });
   }
