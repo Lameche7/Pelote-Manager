@@ -40,7 +40,32 @@ const poolFromLine = (value: string) => {
   return match?.[1]?.trim() ?? null;
 };
 
+const isStandingsHeaderLine = (value: string) => {
+  const normalized = fold(value);
+  const markers = [
+    "vict",
+    "def",
+    "perd",
+    "points",
+    "points partie",
+    "points marq",
+    "points enc",
+    "dif points",
+  ];
+  return markers.filter((marker) => normalized.includes(marker)).length >= 4;
+};
+
+const trailingRankFromHeader = (value: string) => {
+  if (!isStandingsHeaderLine(value)) return null;
+  const match = value.match(/(?:^|\s)(\d{1,2})\s*$/u);
+  if (!match) return null;
+  const rank = Number(match[1]);
+  return rank > 0 ? rank : null;
+};
+
 const rankAndTeamFromLine = (value: string) => {
+  if (isStandingsHeaderLine(value)) return null;
+
   const inline = value.match(/^(\d{1,2})\s+(.+\s+\d{1,3})$/u);
   if (inline && parseTeam(inline[2])) {
     return { rank: Number(inline[1]), teamLabel: inline[2].trim() };
@@ -60,6 +85,7 @@ const teamWithFollowingNumber = (lines: string[], index: number) => {
     line.startsWith("-") ||
     isDivisionLine(line) ||
     poolFromLine(line) ||
+    isStandingsHeaderLine(line) ||
     !/[A-Za-zÀ-ÖØ-öø-ÿ]/u.test(line) ||
     !/^\d{1,3}$/u.test(next)
   ) {
@@ -110,6 +136,11 @@ export const parseChampionshipStandingsClipboard = (
       continue;
     }
 
+    if (isStandingsHeaderLine(line)) {
+      pendingRank = trailingRankFromHeader(line) ?? pendingRank;
+      continue;
+    }
+
     if (/^\d{1,2}$/u.test(line)) {
       pendingRank = Number(line);
       continue;
@@ -147,6 +178,7 @@ export const parseChampionshipStandingsClipboard = (
       if (
         isDivisionLine(candidate) ||
         poolFromLine(candidate) ||
+        isStandingsHeaderLine(candidate) ||
         rankAndTeamFromLine(candidate) ||
         teamWithFollowingNumber(lines, cursor)
       ) {
