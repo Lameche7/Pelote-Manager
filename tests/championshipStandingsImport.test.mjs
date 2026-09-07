@@ -6,6 +6,10 @@ const domainUrl = new URL(
   "../src/features/admin/championships/domain/championshipStandingsImport.ts",
   import.meta.url,
 );
+const clipboardUrl = new URL(
+  "../src/features/admin/championships/domain/championshipStandingsClipboard.ts",
+  import.meta.url,
+);
 const sourceServiceUrl = new URL(
   "../src/features/admin/championships/services/championshipSourceFileService.ts",
   import.meta.url,
@@ -43,6 +47,18 @@ test("le parseur de classement accepte les intitulés officiels courants", async
   assert.match(domain, /club num equipe/);
   assert.match(domain, /points/);
   assert.match(domain, /goal-average/);
+});
+
+test("le copier-coller fédéral accepte une série choisie et un numéro d'équipe sur la ligne suivante", async () => {
+  const clipboard = await read(clipboardUrl);
+  const card = await read(cardUrl);
+
+  assert.match(clipboard, /fallbackDivision/);
+  assert.match(clipboard, /teamWithFollowingNumber/);
+  assert.match(clipboard, /wins \+ losses \+ \(lost \?\? 0\)/);
+  assert.match(card, /Série du classement copié/);
+  assert.match(card, /championshipImportService/);
+  assert.match(card, /divisionOptions/);
 });
 
 test("les fichiers de classement xlsx et csv sont acceptés et empreintés", async () => {
