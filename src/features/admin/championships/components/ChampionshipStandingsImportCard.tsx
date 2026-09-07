@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
-import { parseChampionshipStandingsClipboard } from "../domain/championshipStandingsClipboard";
+import { useState } from "react";
 import {
   buildChampionshipStandingsImportPayload,
+  type ChampionshipStandingImportRow,
   type ChampionshipStandingsImportPayload,
   type ChampionshipStandingsPreviewFile,
 } from "../domain/championshipStandingsImport";
-import { championshipImportService } from "../services/championshipImportService";
 import { championshipSourceFileService } from "../services/championshipSourceFileService";
 import {
   championshipStandingsService,
@@ -17,135 +16,117 @@ type ChampionshipDivisionOption = {
   name: string;
 };
 
+type SourceReadResponse = {
+  standings?: ChampionshipStandingImportRow[];
+  warnings?: string[];
+  summary?: {
+    divisionCount?: number;
+    poolCount?: number;
+    teamCount?: number;
+  };
+  error?: string;
+};
+
 type Props = {
   championshipId: string;
-  divisions?: ChampionshipDivisionOption[];
-  sourceUrl?: string | null;
+  divisions: ChampionshipDivisionOption[];
+  sourceUrl: string | null;
   onApplied?: () => Promise<void>;
+};
+
+const officialUrl = (value: string | null) => {
+  if (!value) return null;
+  return /^https?:\/\//iu.test(value) ? value : `https://${value}`;
 };
 
 export function ChampionshipStandingsImportCard({
   championshipId,
-  divisions = [],
-  sourceUrl = null,
+  divisions,
+  sourceUrl,
   onApplied,
 }: Props) {
-  const [sourceText, setSourceText] = useState("");
-  const [divisionOptions, setDivisionOptions] =
-    useState<ChampionshipDivisionOption[]>(divisions);
-  const [effectiveSourceUrl, setEffectiveSourceUrl] =
-    useState<string | null>(sourceUrl);
-  const [selectedDivisionId, setSelectedDivisionId] = useState("");
-  const [sourcePreview, setSourcePreview] =
-    useState<ChampionshipStandingsPreviewFile | null>(null);
   const [payload, setPayload] =
     useState<ChampionshipStandingsImportPayload | null>(null);
   const [preview, setPreview] =
     useState<ChampionshipStandingsServerPreview | null>(null);
+  const [sourceSummary, setSourceSummary] = useState<{
+    divisionCount: number;
+    poolCount: number;
+    teamCount: number;
+  } | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    if (divisions.length > 0) {
-      setDivisionOptions(divisions);
-      setEffectiveSourceUrl(sourceUrl);
-      return;
-    }
-
-    let active = true;
-    void championshipImportService
-      .detail(championshipId)
-      .then((detail) => {
-        if (!active) return;
-        setDivisionOptions(
-          detail.divisions.map((division) => ({
-            id: division.id,
-            name: division.name,
-          })),
-        );
-        setEffectiveSourceUrl(detail.sourceUrl);
-      })
-      .catch(() => {
-        if (active) {
-          setError(
-            "Impossible de charger la liste des séries du championnat.",
-          );
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [championshipId, divisions, sourceUrl]);
-
-  useEffect(() => {
-    if (divisionOptions.length === 1) {
-      setSelectedDivisionId(divisionOptions[0].id);
-    }
-  }, [divisionOptions]);
-
-  const resetPreview = () => {
-    setSourcePreview(null);
-    setPayload(null);
-    setPreview(null);
-    setError("");
-    setMessage("");
-  };
-
-  const pasteFromClipboard = async () => {
-    try {
-      const value = await navigator.clipboard.readText();
-      setSourceText(value);
-      resetPreview();
-    } catch {
-      setError(
-        "Le navigateur n’autorise pas la lecture du presse-papiers. Collez simplement le classement dans la zone ci-dessous avec Ctrl+V.",
-      );
-    }
-  };
-
-  const analyse = async () => {
-    if (!sourceText.trim()) return;
+  const readOfficialStandings = async () => {
+    if (!sourceUrl || divisions.length === 0) return;
     setBusy(true);
     setError("");
     setMessage("");
-    try {
-      const fallbackDivision =
-        divisionOptions.find(
-          (division) => division.id === selectedDivisionId,
-        )?.name ?? "";
-      const parsed = parseChampionshipStandingsClipboard(
-        sourceText,
-        fallbackDivision,
-      );
-      setSourcePreview(parsed);
-      if (!parsed.valid) return;
+    setWarnings([]);
+    setPreview(null);
+    setPayload(null);
 
-      const snapshot = new File([sourceText], "classement-page-federale.txt", {
-        type: "text/plain;charset=utf-8",
+    try {
+      const response = await fetch("/api/championship-standings-source", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sourceUrl,
+          divisions: divisions.map((division) => ({ name: division.name })),
+        }),
       });
+      const data = (await response.json()) as SourceReadResponse;
+      if (!response.ok) {
+        throw new Error(
+          data.error ?? "Impossible de lire le classement sur le site fédéral.",
+        );
+      }
+
+      const standings = Array.isArray(data.standings) ? data.standings : [];
+      if (standings.length === 0) {
+        throw new Error("La fédération n’a renvoyé aucune ligne de classement.");
+      }
+
+      const sourcePreview: ChampionshipStandingsPreviewFile = {
+        standings,
+        issues: [],
+        valid: true,
+      };
+      const snapshot = new File(
+        [JSON.stringify(standings)],
+        "classement-federation.json",
+        { type: "application/json" },
+      );
       const descriptor = await championshipSourceFileService.describeStandings(
         snapshot,
-        parsed.standings.length,
-        effectiveSourceUrl,
+        standings.length,
+        sourceUrl,
       );
       const nextPayload = buildChampionshipStandingsImportPayload(
-        parsed,
+        sourcePreview,
         descriptor,
       );
-      setPayload(nextPayload);
-      setPreview(
-        await championshipStandingsService.preview(
-          championshipId,
-          nextPayload,
-        ),
+      const nextPreview = await championshipStandingsService.preview(
+        championshipId,
+        nextPayload,
       );
+
+      setSourceSummary({
+        divisionCount: Number(data.summary?.divisionCount ?? 0),
+        poolCount: Number(data.summary?.poolCount ?? 0),
+        teamCount: Number(data.summary?.teamCount ?? standings.length),
+      });
+      setWarnings(Array.isArray(data.warnings) ? data.warnings : []);
+      setPayload(nextPayload);
+      setPreview(nextPreview);
     } catch (cause) {
+      setSourceSummary(null);
       setError(
         cause instanceof Error
           ? cause.message
-          : "Impossible d’analyser le classement officiel.",
+          : "Impossible de lire le classement officiel.",
       );
     } finally {
       setBusy(false);
@@ -163,174 +144,152 @@ export function ChampionshipStandingsImportCard({
       );
       setMessage(
         result.alreadyImported
-          ? "Ce classement avait déjà été importé : aucune donnée n’a été dupliquée."
-          : `Classement officiel importé : ${result.summary.newCount} nouvelle(s) ligne(s), ${result.summary.changedCount} mise(s) à jour.`,
+          ? "Le classement officiel est déjà à jour."
+          : `Classement officiel mis à jour : ${result.summary.newCount} nouvelle(s) ligne(s), ${result.summary.changedCount} modification(s).`,
       );
       setPreview(null);
       setPayload(null);
-      setSourcePreview(null);
       await onApplied?.();
     } catch (cause) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Impossible d’importer le classement officiel.",
+          : "Impossible d’appliquer le classement officiel.",
       );
     } finally {
       setBusy(false);
     }
   };
 
+  const sourceHref = officialUrl(sourceUrl);
+
   return (
-    <div className="admin-card admin-championships__update">
-      <div>
-        <p className="admin-page__eyebrow">Classement officiel</p>
-        <h2>Importer / actualiser le classement</h2>
-        <p>
-          Le site fédéral n’exporte pas le classement. Copiez la page (ou une
-          poule complète) puis collez-la ici. Si la copie commence directement
-          à « Poule 1 », choisissez simplement la série concernée ci-dessous.
-          Aucun classement n’est recalculé ici.
-        </p>
-      </div>
-
-      <div className="admin-championships__update-controls">
-        {divisionOptions.length > 1 && (
-          <label>
-            Série du classement copié
-            <select
-              value={selectedDivisionId}
-              onChange={(event) => {
-                setSelectedDivisionId(event.target.value);
-                resetPreview();
-              }}
-              disabled={busy}
-            >
-              <option value="">Détection automatique si le titre est copié</option>
-              {divisionOptions.map((division) => (
-                <option key={division.id} value={division.id}>
-                  {division.name}
-                </option>
-              ))}
-            </select>
-            <span>
-              Utile uniquement si votre copie ne contient pas le nom de la
-              série.
-            </span>
-          </label>
+    <div className="admin-card admin-championships__standings-reader">
+      <div className="admin-championships__standings-reader-head">
+        <div>
+          <p className="admin-page__eyebrow">Classement officiel</p>
+          <h2>Actualiser depuis la fédération</h2>
+          <p>
+            Pelote Manager lit directement la source officielle, parcourt les
+            séries du championnat et compare toutes les poules avant la moindre
+            écriture. Aucun classement n’est recalculé localement.
+          </p>
+        </div>
+        {sourceHref && (
+          <a href={sourceHref} target="_blank" rel="noreferrer">
+            Ouvrir la source officielle
+          </a>
         )}
-
-        <label>
-          Classement copié depuis la page fédérale
-          <textarea
-            rows={10}
-            value={sourceText}
-            onChange={(event) => {
-              setSourceText(event.target.value);
-              resetPreview();
-            }}
-            placeholder="Collez ici le classement affiché sur le site de la fédération…"
-            disabled={busy}
-          />
-          <span>
-            Le numéro d’équipe peut être sur la ligne suivante : Pelote Manager
-            le reconnaît désormais automatiquement.
-          </span>
-        </label>
-        <button
-          type="button"
-          onClick={() => void pasteFromClipboard()}
-          disabled={busy}
-        >
-          Coller depuis le presse-papiers
-        </button>
-        <button
-          type="button"
-          onClick={() => void analyse()}
-          disabled={!sourceText.trim() || busy}
-        >
-          {busy ? "Analyse en cours…" : "Comparer le classement"}
-        </button>
       </div>
 
-      {sourcePreview && !sourcePreview.valid && (
-        <div className="admin-championships__update-issues" role="alert">
-          <strong>Le classement copié ne peut pas encore être utilisé.</strong>
-          {sourcePreview.issues.map((issue, index) => (
-            <p key={`${issue.row}-${index}`}>{issue.message}</p>
+      <div className="admin-championships__standings-actions">
+        <button
+          type="button"
+          className="admin-championships__primary"
+          onClick={() => void readOfficialStandings()}
+          disabled={!sourceUrl || divisions.length === 0 || busy}
+        >
+          {busy ? "Lecture de la fédération…" : "Lire le classement officiel"}
+        </button>
+        <span>
+          {divisions.length} série(s) connue(s) · lecture de toutes les poules
+          publiées
+        </span>
+      </div>
+
+      {!sourceUrl && (
+        <p className="admin-championships__standings-note">
+          Aucune URL officielle n’est enregistrée pour ce championnat.
+        </p>
+      )}
+
+      {sourceSummary && (
+        <div className="admin-championships__standings-summary">
+          <div>
+            <strong>{sourceSummary.divisionCount}</strong>
+            <span>séries lues</span>
+          </div>
+          <div>
+            <strong>{sourceSummary.poolCount}</strong>
+            <span>poules lues</span>
+          </div>
+          <div>
+            <strong>{sourceSummary.teamCount}</strong>
+            <span>équipes classées</span>
+          </div>
+          {preview && (
+            <>
+              <div>
+                <strong>{preview.summary.changedCount}</strong>
+                <span>modifications</span>
+              </div>
+              <div>
+                <strong>{preview.summary.newCount}</strong>
+                <span>nouvelles lignes</span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {warnings.length > 0 && (
+        <div className="admin-championships__standings-warning">
+          <strong>Lecture partielle</strong>
+          <p>{warnings.join(" · ")}</p>
+        </div>
+      )}
+
+      {preview && preview.issues.length > 0 && (
+        <div className="admin-championships__standings-warning">
+          {preview.issues.map((issue, index) => (
+            <p key={`${issue.code}-${index}`}>{issue.message}</p>
           ))}
         </div>
       )}
 
-      {preview && (
-        <div className="admin-championships__diff">
-          <div className="admin-championships__diff-kpis">
-            <div>
-              <strong>{preview.summary.incomingCount}</strong>
-              <span>lignes officielles</span>
-            </div>
-            <div>
-              <strong>{preview.summary.poolCount}</strong>
-              <span>poules</span>
-            </div>
-            <div>
-              <strong>{preview.summary.newCount}</strong>
-              <span>nouvelles</span>
-            </div>
-            <div>
-              <strong>{preview.summary.changedCount}</strong>
-              <span>modifiées</span>
-            </div>
-            <div>
-              <strong>{preview.summary.unchangedCount}</strong>
-              <span>inchangées</span>
-            </div>
+      {preview && preview.changes.length > 0 && (
+        <div className="admin-championships__standings-changes">
+          <div>
+            <h3>Changements détectés</h3>
+            <span>{preview.changes.length} ligne(s) concernée(s)</span>
           </div>
-
-          {preview.alreadyImported && (
-            <p className="admin-championships__success">
-              Ce classement a déjà été appliqué.
-            </p>
-          )}
-
-          {preview.issues.length > 0 && (
-            <div className="admin-championships__update-issues">
-              {preview.issues.map((issue, index) => (
-                <p key={`${issue.code}-${index}`}>{issue.message}</p>
-              ))}
+          {preview.changes.slice(0, 30).map((change, index) => (
+            <div key={`${change.teamLabel}-${index}`}>
+              <strong>
+                Poule {change.poolCode} · {change.teamLabel}
+              </strong>
+              <span>
+                {change.kind === "new"
+                  ? `nouveau rang ${change.rank}`
+                  : `rang ${change.previousRank ?? "—"} → ${change.rank}`}
+              </span>
             </div>
-          )}
-
-          {preview.changes.length > 0 && (
-            <div className="admin-championships__change-list">
-              <h3>Détail des changements</h3>
-              {preview.changes.slice(0, 100).map((change, index) => (
-                <div key={`${change.teamLabel}-${index}`}>
-                  <strong>
-                    Poule {change.poolCode} · {change.teamLabel}
-                  </strong>
-                  <span>
-                    {change.kind === "new"
-                      ? `rang ${change.rank}`
-                      : `rang ${change.previousRank ?? "—"} → ${change.rank}`}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            type="button"
-            className="admin-championships__primary"
-            onClick={() => void apply()}
-            disabled={!preview.valid || preview.alreadyImported || busy}
-          >
-            {busy ? "Import en cours…" : "Appliquer le classement officiel"}
-          </button>
+          ))}
         </div>
       )}
 
-      {error && <p className="admin-championships__alert">{error}</p>}
+      {preview?.alreadyImported && (
+        <p className="admin-championships__success">
+          Ce classement officiel a déjà été appliqué.
+        </p>
+      )}
+
+      {preview && preview.valid && !preview.alreadyImported && (
+        <button
+          type="button"
+          className="admin-championships__apply admin-championships__standings-apply"
+          onClick={() => void apply()}
+          disabled={busy}
+        >
+          {busy ? "Mise à jour…" : "Appliquer le classement officiel"}
+        </button>
+      )}
+
+      {error && (
+        <p className="admin-championships__standings-error" role="alert">
+          {error}
+        </p>
+      )}
       {message && <p className="admin-championships__success">{message}</p>}
     </div>
   );
