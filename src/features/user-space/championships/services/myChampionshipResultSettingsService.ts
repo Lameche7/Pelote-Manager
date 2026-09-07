@@ -30,16 +30,14 @@ export const myChampionshipResultSettingsService = {
 
     if (!Array.isArray(data)) return [];
     return (data as Row[])
-      .map(
-        (row): MyChampionshipResultSettings => ({
-          championshipId: String(row.championship_id ?? ""),
-          inputMode: mapInputMode(row.input_mode),
-          winningScore:
-            row.winning_score === null || row.winning_score === undefined
-              ? null
-              : Number(row.winning_score),
-        }),
-      )
+      .map((row): MyChampionshipResultSettings => ({
+        championshipId: String(row.championship_id ?? ""),
+        inputMode: mapInputMode(row.input_mode),
+        winningScore:
+          row.winning_score === null || row.winning_score === undefined
+            ? null
+            : Number(row.winning_score),
+      }))
       .filter((item) => item.championshipId);
   },
 };

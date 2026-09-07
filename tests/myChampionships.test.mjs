@@ -69,12 +69,19 @@ test("l’espace personnel expose la route Mes championnats", async () => {
   assert.match(shell, /Mes championnats/);
 });
 
-test("l’interface distingue rang officiel et statistiques calculées", async () => {
+test("l’interface expose les classements officiels et la navigation joueur", async () => {
   const page = await read(pageUrl);
 
-  assert.match(page, /Rang officiel importé/);
-  assert.match(page, /rang officiel non importé/);
-  assert.match(page, /Pelote Manager ne recalcule pas le rang officiel/);
+  assert.match(page, /Classements officiels/);
+  assert.match(page, /Ma poule/);
+  assert.match(page, /Toutes les poules/);
+  assert.match(page, /Classement général/);
+  assert.match(page, /Zone de qualification directe/);
+  assert.match(page, /Zone barrage/);
+  assert.match(
+    page,
+    /Pelote Manager ne recalcule pas les règles de classement/,
+  );
   assert.match(page, /Prochaine partie/);
   assert.match(page, /Dernier résultat/);
 });
