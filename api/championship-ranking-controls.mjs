@@ -109,25 +109,16 @@ const postForm = async (action, cookie, values) => {
   };
 };
 
-const controls = (html) => {
-  const result = [];
-  for (const match of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/giu)) {
-    const attrs = match[1];
-    const id = attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null;
-    const text = decodeHtml(match[2].replace(/<[^>]+>/gu, " "))
-      .replace(/\s+/gu, " ")
-      .trim();
-    if (id && /classement|afficher plus/iu.test(text)) result.push({ tag: "button", id, text });
-  }
-  for (const match of html.matchAll(/<input\b([^>]*)>/giu)) {
-    const attrs = match[1];
-    const id = attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null;
-    const value = decodeHtml(
-      attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "",
-    );
-    if (id && /classement/iu.test(value)) result.push({ tag: "input", id, text: value });
-  }
-  return result;
+const htmlToLines = (html) => {
+  const withoutNoise = html
+    .replace(/<script\b[\s\S]*?<\/script>/giu, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/giu, " ")
+    .replace(/<(?:br|\/td|\/tr|\/div|\/p|\/li|\/table)>/giu, "\n")
+    .replace(/<[^>]+>/gu, " ");
+  return decodeHtml(withoutNoise)
+    .split(/\r?\n/gu)
+    .map((line) => line.replace(/\s+/gu, " ").trim())
+    .filter(Boolean);
 };
 
 export default async function handler(request, response) {
@@ -152,22 +143,33 @@ export default async function handler(request, response) {
     const option = categoryOptions(html).find((item) => /Senior 2.me S.rie/iu.test(item.label));
     if (!option) throw new Error("Senior 2 option missing");
 
-    const values = parseFormValues(html);
-    values.set("I7", option.value);
-    values.set("WD_ACTION_", "");
-    values.set("WD_BUTTON_CLICK_", "I54");
-    const ranking = await postForm(action, cookie, values);
+    const poolValues = parseFormValues(html);
+    poolValues.set("I7", option.value);
+    poolValues.set("WD_ACTION_", "");
+    poolValues.set("WD_BUTTON_CLICK_", "I54");
+    const poolRanking = await postForm(action, cookie, poolValues);
 
-    const snippets = [];
-    for (const pattern of ["Classement Général", "Classement Par poule", "Classement Général Final"]) {
-      const index = ranking.html.indexOf(pattern);
-      if (index >= 0) snippets.push(ranking.html.slice(Math.max(0, index - 500), index + 700));
-    }
+    const rankingActionRaw = poolRanking.html.match(
+      /<form[^>]*action=["']([^"']+)["']/iu,
+    )?.[1];
+    if (!rankingActionRaw) throw new Error("ranking form action missing");
+    const rankingAction = new URL(decodeHtml(rankingActionRaw), pageUrl.origin);
+    const generalValues = parseFormValues(poolRanking.html);
+    generalValues.set("WD_ACTION_", "");
+    generalValues.set("WD_BUTTON_CLICK_", "I149");
+    const general = await postForm(rankingAction, poolRanking.cookie, generalValues);
+
+    const lines = htmlToLines(general.html);
+    const headingIndex = lines.findIndex((line) => /Classement Général.*issue des poules/iu.test(line));
+    const teamIndex = lines.findIndex((line) => /PELOTARI|SECTION PALOISE|BILLERE|LESCAR|MORLAAS/iu.test(line));
+    const start = headingIndex >= 0 ? headingIndex : Math.max(0, teamIndex - 20);
 
     return response.status(200).json({
-      ok: ranking.ok,
-      controls: controls(ranking.html),
-      snippets,
+      ok: general.ok,
+      headingIndex,
+      teamIndex,
+      lineCount: lines.length,
+      lines: lines.slice(start, start + 260),
     });
   } catch (error) {
     return response.status(500).json({ error: error instanceof Error ? error.message : String(error) });
