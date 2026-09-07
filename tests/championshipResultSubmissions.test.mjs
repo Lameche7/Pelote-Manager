@@ -90,5 +90,5 @@ test("l’interface distingue proposition et résultat officiel", async () => {
   assert.match(page, /En attente de confirmation par la source officielle/);
   assert.match(page, /La proposition de votre équipe a été confirmée/);
   assert.match(page, /Résultat officiel différent/);
-  assert.match(page, /Cette proposition n’écrase jamais le résultat officiel/);
+  assert.match(page, /Cette proposition n’écrase\s+jamais le résultat officiel/);
 });
