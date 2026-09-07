@@ -6,6 +6,8 @@ const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 const time = (value: unknown) => String(value ?? "").slice(0, 5);
 
+export const ADMIN_RESCHEDULE_APPLY_LABEL = "Appliquer le report";
+
 export type AdminTournamentRescheduleApproval = {
   teamId: string;
   teamLabel: string;
@@ -207,7 +209,10 @@ export const adminTournamentRescheduleService = {
       },
     );
     if (error) {
-      fail(error, "Impossible d’enregistrer la réponse recueillie hors application.");
+      fail(
+        error,
+        "Impossible d’enregistrer la réponse recueillie hors application.",
+      );
     }
     return status(data);
   },
