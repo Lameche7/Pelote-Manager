@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseChampionshipStandingsClipboard } from "../domain/championshipStandingsClipboard";
 import {
   buildChampionshipStandingsImportPayload,
@@ -11,18 +11,26 @@ import {
   type ChampionshipStandingsServerPreview,
 } from "../services/championshipStandingsService";
 
+type ChampionshipDivisionOption = {
+  id: string;
+  name: string;
+};
+
 type Props = {
   championshipId: string;
+  divisions?: ChampionshipDivisionOption[];
   sourceUrl?: string | null;
   onApplied?: () => Promise<void>;
 };
 
 export function ChampionshipStandingsImportCard({
   championshipId,
+  divisions = [],
   sourceUrl = null,
   onApplied,
 }: Props) {
   const [sourceText, setSourceText] = useState("");
+  const [selectedDivisionId, setSelectedDivisionId] = useState("");
   const [sourcePreview, setSourcePreview] =
     useState<ChampionshipStandingsPreviewFile | null>(null);
   const [payload, setPayload] =
@@ -32,6 +40,10 @@ export function ChampionshipStandingsImportCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (divisions.length === 1) setSelectedDivisionId(divisions[0].id);
+  }, [divisions]);
 
   const resetPreview = () => {
     setSourcePreview(null);
@@ -59,7 +71,13 @@ export function ChampionshipStandingsImportCard({
     setError("");
     setMessage("");
     try {
-      const parsed = parseChampionshipStandingsClipboard(sourceText);
+      const fallbackDivision =
+        divisions.find((division) => division.id === selectedDivisionId)?.name ??
+        "";
+      const parsed = parseChampionshipStandingsClipboard(
+        sourceText,
+        fallbackDivision,
+      );
       setSourcePreview(parsed);
       if (!parsed.valid) return;
 
@@ -128,14 +146,39 @@ export function ChampionshipStandingsImportCard({
         <p className="admin-page__eyebrow">Classement officiel</p>
         <h2>Importer / actualiser le classement</h2>
         <p>
-          Le site fédéral n’exporte pas le classement. Copiez la page (ou la
-          zone de classement) puis collez-la ici : Pelote Manager reconnaît la
-          série, les poules, les équipes et les chiffres officiels avant de
-          vous montrer les changements. Aucun classement n’est recalculé ici.
+          Le site fédéral n’exporte pas le classement. Copiez la page (ou une
+          poule complète) puis collez-la ici. Si la copie commence directement
+          à « Poule 1 », choisissez simplement la série concernée ci-dessous.
+          Aucun classement n’est recalculé ici.
         </p>
       </div>
 
       <div className="admin-championships__update-controls">
+        {divisions.length > 1 && (
+          <label>
+            Série du classement copié
+            <select
+              value={selectedDivisionId}
+              onChange={(event) => {
+                setSelectedDivisionId(event.target.value);
+                resetPreview();
+              }}
+              disabled={busy}
+            >
+              <option value="">Détection automatique si le titre est copié</option>
+              {divisions.map((division) => (
+                <option key={division.id} value={division.id}>
+                  {division.name}
+                </option>
+              ))}
+            </select>
+            <span>
+              Utile uniquement si votre copie ne contient pas le nom de la
+              série.
+            </span>
+          </label>
+        )}
+
         <label>
           Classement copié depuis la page fédérale
           <textarea
@@ -149,11 +192,15 @@ export function ChampionshipStandingsImportCard({
             disabled={busy}
           />
           <span>
-            Astuce : vous pouvez copier toute la page, les lignes inutiles sont
-            ignorées.
+            Le numéro d’équipe peut être sur la ligne suivante : Pelote Manager
+            le reconnaît désormais automatiquement.
           </span>
         </label>
-        <button type="button" onClick={() => void pasteFromClipboard()} disabled={busy}>
+        <button
+          type="button"
+          onClick={() => void pasteFromClipboard()}
+          disabled={busy}
+        >
           Coller depuis le presse-papiers
         </button>
         <button
