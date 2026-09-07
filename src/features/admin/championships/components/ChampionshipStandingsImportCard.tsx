@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   buildChampionshipStandingsImportPayload,
+  type ChampionshipGeneralStandingImportRow,
   type ChampionshipStandingImportRow,
   type ChampionshipStandingsImportPayload,
   type ChampionshipStandingsPreviewFile,
@@ -17,12 +18,22 @@ type ChampionshipDivisionOption = {
   name: string;
 };
 
-type SourceReadResponse = {
+type PoolSourceReadResponse = {
   standings?: ChampionshipStandingImportRow[];
   warnings?: string[];
   summary?: {
     divisionCount?: number;
     poolCount?: number;
+    teamCount?: number;
+  };
+  error?: string;
+};
+
+type GeneralSourceReadResponse = {
+  generalStandings?: ChampionshipGeneralStandingImportRow[];
+  warnings?: string[];
+  summary?: {
+    divisionCount?: number;
     teamCount?: number;
   };
   error?: string;
@@ -54,6 +65,7 @@ export function ChampionshipStandingsImportCard({
     divisionCount: number;
     poolCount: number;
     teamCount: number;
+    generalTeamCount: number;
   } | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -70,25 +82,49 @@ export function ChampionshipStandingsImportCard({
     setPayload(null);
 
     try {
-      const response = await fetch("/api/championship-standings-source", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          sourceUrl,
-          divisions: divisions.map((division) => ({ name: division.name })),
-        }),
+      const requestBody = JSON.stringify({
+        sourceUrl,
+        divisions: divisions.map((division) => ({ name: division.name })),
       });
-      const data = (await response.json()) as SourceReadResponse;
-      if (!response.ok) {
+      const [poolResponse, generalResponse] = await Promise.all([
+        fetch("/api/championship-standings-source", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: requestBody,
+        }),
+        fetch("/api/championship-general-standings-source", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: requestBody,
+        }),
+      ]);
+
+      const poolData = (await poolResponse.json()) as PoolSourceReadResponse;
+      const generalData =
+        (await generalResponse.json()) as GeneralSourceReadResponse;
+
+      if (!poolResponse.ok) {
         throw new Error(
-          data.error ?? "Impossible de lire le classement sur le site fédéral.",
+          poolData.error ??
+            "Impossible de lire les classements de poule sur le site fédéral.",
+        );
+      }
+      if (!generalResponse.ok) {
+        throw new Error(
+          generalData.error ??
+            "Impossible de lire le classement général sur le site fédéral.",
         );
       }
 
-      const standings = Array.isArray(data.standings) ? data.standings : [];
-      if (standings.length === 0) {
+      const standings = Array.isArray(poolData.standings)
+        ? poolData.standings
+        : [];
+      const generalStandings = Array.isArray(generalData.generalStandings)
+        ? generalData.generalStandings
+        : [];
+      if (standings.length === 0 || generalStandings.length === 0) {
         throw new Error(
-          "La fédération n’a renvoyé aucune ligne de classement.",
+          "La fédération n’a pas renvoyé tous les classements attendus.",
         );
       }
 
@@ -98,30 +134,37 @@ export function ChampionshipStandingsImportCard({
         valid: true,
       };
       const snapshot = new File(
-        [JSON.stringify(standings)],
-        "classement-federation.json",
+        [JSON.stringify({ standings, generalStandings })],
+        "classements-federation.json",
         { type: "application/json" },
       );
       const descriptor = await championshipSourceFileService.describeStandings(
         snapshot,
-        standings.length,
+        standings.length + generalStandings.length,
         sourceUrl,
       );
       const nextPayload = buildChampionshipStandingsImportPayload(
         sourcePreview,
         descriptor,
       );
-      const nextPreview = await championshipStandingsService.preview(
+      nextPayload.generalStandings = generalStandings;
+      const nextPreview = await championshipStandingsService.previewRankings(
         championshipId,
         nextPayload,
       );
 
       setSourceSummary({
-        divisionCount: Number(data.summary?.divisionCount ?? 0),
-        poolCount: Number(data.summary?.poolCount ?? 0),
-        teamCount: Number(data.summary?.teamCount ?? standings.length),
+        divisionCount: Number(poolData.summary?.divisionCount ?? 0),
+        poolCount: Number(poolData.summary?.poolCount ?? 0),
+        teamCount: Number(poolData.summary?.teamCount ?? standings.length),
+        generalTeamCount: Number(
+          generalData.summary?.teamCount ?? generalStandings.length,
+        ),
       });
-      setWarnings(Array.isArray(data.warnings) ? data.warnings : []);
+      setWarnings([
+        ...(Array.isArray(poolData.warnings) ? poolData.warnings : []),
+        ...(Array.isArray(generalData.warnings) ? generalData.warnings : []),
+      ]);
       setPayload(nextPayload);
       setPreview(nextPreview);
     } catch (cause) {
@@ -129,7 +172,7 @@ export function ChampionshipStandingsImportCard({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Impossible de lire le classement officiel.",
+          : "Impossible de lire les classements officiels.",
       );
     } finally {
       setBusy(false);
@@ -141,14 +184,14 @@ export function ChampionshipStandingsImportCard({
     setBusy(true);
     setError("");
     try {
-      const result = await championshipStandingsService.apply(
+      const result = await championshipStandingsService.applyRankings(
         championshipId,
         payload,
       );
       setMessage(
         result.alreadyImported
-          ? "Le classement officiel est déjà à jour."
-          : `Classement officiel mis à jour : ${result.summary.newCount} nouvelle(s) ligne(s), ${result.summary.changedCount} modification(s).`,
+          ? "Les classements officiels sont déjà à jour."
+          : `Classements officiels mis à jour : ${result.summary.newCount} ligne(s) de poule et ${result.generalSummary.newCount} ligne(s) générales importée(s).`,
       );
       setPreview(null);
       setPayload(null);
@@ -157,7 +200,7 @@ export function ChampionshipStandingsImportCard({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Impossible d’appliquer le classement officiel.",
+          : "Impossible d’appliquer les classements officiels.",
       );
     } finally {
       setBusy(false);
@@ -170,11 +213,11 @@ export function ChampionshipStandingsImportCard({
     <div className="admin-card admin-championships__standings-reader">
       <div className="admin-championships__standings-reader-head">
         <div>
-          <p className="admin-page__eyebrow">Classement officiel</p>
+          <p className="admin-page__eyebrow">Classements officiels</p>
           <h2>Actualiser depuis la fédération</h2>
           <p>
-            Pelote Manager lit directement la source officielle, parcourt les
-            séries du championnat et compare toutes les poules avant la moindre
+            Pelote Manager lit les classements de toutes les poules et le
+            classement général officiel à l’issue des poules avant la moindre
             écriture. Aucun classement n’est recalculé localement.
           </p>
         </div>
@@ -192,11 +235,10 @@ export function ChampionshipStandingsImportCard({
           onClick={() => void readOfficialStandings()}
           disabled={!sourceUrl || divisions.length === 0 || busy}
         >
-          {busy ? "Lecture de la fédération…" : "Lire le classement officiel"}
+          {busy ? "Lecture de la fédération…" : "Lire les classements officiels"}
         </button>
         <span>
-          {divisions.length} série(s) connue(s) · lecture de toutes les poules
-          publiées
+          {divisions.length} série(s) connue(s) · poules + classement général
         </span>
       </div>
 
@@ -218,26 +260,27 @@ export function ChampionshipStandingsImportCard({
           </div>
           <div>
             <strong>{sourceSummary.teamCount}</strong>
-            <span>équipes classées</span>
+            <span>équipes en poules</span>
+          </div>
+          <div>
+            <strong>{sourceSummary.generalTeamCount}</strong>
+            <span>équipes au général</span>
           </div>
           {preview && (
-            <>
-              <div>
-                <strong>{preview.summary.changedCount}</strong>
-                <span>modifications</span>
-              </div>
-              <div>
-                <strong>{preview.summary.newCount}</strong>
-                <span>nouvelles lignes</span>
-              </div>
-            </>
+            <div>
+              <strong>
+                {preview.summary.changedCount +
+                  preview.generalSummary.changedCount}
+              </strong>
+              <span>modifications</span>
+            </div>
           )}
         </div>
       )}
 
       {warnings.length > 0 && (
         <div className="admin-championships__standings-warning">
-          <strong>Lecture partielle</strong>
+          <strong>Information de lecture</strong>
           <p>{warnings.join(" · ")}</p>
         </div>
       )}
@@ -253,7 +296,7 @@ export function ChampionshipStandingsImportCard({
       {preview && preview.changes.length > 0 && (
         <div className="admin-championships__standings-changes">
           <div>
-            <h3>Changements détectés</h3>
+            <h3>Changements de poule détectés</h3>
             <span>{preview.changes.length} ligne(s) concernée(s)</span>
           </div>
           {preview.changes.slice(0, 30).map((change, index) => (
@@ -273,7 +316,7 @@ export function ChampionshipStandingsImportCard({
 
       {preview?.alreadyImported && (
         <p className="admin-championships__success">
-          Ce classement officiel a déjà été appliqué.
+          Ces classements officiels ont déjà été appliqués.
         </p>
       )}
 
@@ -284,7 +327,7 @@ export function ChampionshipStandingsImportCard({
           onClick={() => void apply()}
           disabled={busy}
         >
-          {busy ? "Mise à jour…" : "Appliquer le classement officiel"}
+          {busy ? "Mise à jour…" : "Appliquer les classements officiels"}
         </button>
       )}
 
