@@ -37,11 +37,8 @@ const fetchFederationPage = async (sourceUrl) => {
   return { upstream, html };
 };
 
-const contextAround = (html, marker, radius = 1800) => {
-  const index = html.indexOf(marker);
-  if (index < 0) return null;
-  return html.slice(Math.max(0, index - radius), Math.min(html.length, index + radius));
-};
+const matches = (html, regexp) =>
+  Array.from(html.matchAll(regexp), (match) => match[1]).filter(Boolean);
 
 export default async function handler(request, response) {
   if (request.method !== "GET") {
@@ -51,30 +48,36 @@ export default async function handler(request, response) {
 
   try {
     const sourceUrl = normalizeSourceUrl(request.query?.url);
-    sourceUrl.searchParams.set("I7", "12");
     const { upstream, html } = await fetchFederationPage(sourceUrl);
-    const compact = html.replace(/\s+/gu, " ");
-    const markers = [
-      "Poule 1",
-      "LESCAR PELOTARI CLUB",
-      "BILLERE PELOTARI CLUB",
-      "Senior 2ème Série",
-      "Classement",
-      "Vict.",
-    ];
+    const selectI7 = html.match(/<select[^>]*id=["']I7["'][\s\S]*?<\/select>/iu)?.[0] ?? null;
+    const selectedI7 = selectI7?.match(/<option[^>]*selected[^>]*value=["']([^"']+)["'][^>]*data-wb-valmem=["']([^"']*)["'][^>]*>([^<]+)<\/option>/iu) ?? null;
+    const formAction = html.match(/<form[^>]*action=["']([^"']*)["']/iu)?.[1] ?? null;
+    const hiddenInputs = Array.from(
+      html.matchAll(/<input[^>]*type=["']hidden["'][^>]*name=["']([^"']+)["'][^>]*value=["']([^"']*)["'][^>]*>/giu),
+      (match) => ({ name: match[1], value: match[2] }),
+    ).slice(0, 80);
+    const scripts = matches(html, /<script[^>]*src=["']([^"']+)["']/giu).slice(0, 80);
+    const contexts = matches(html, /WD_CONTEXTE_\s*[:=]\s*["']([^"']+)["']/giu).slice(0, 20);
+    const ajaxTokens = Array.from(
+      new Set(matches(html, /WD_ACTION_|AJAXPAGE|AJAXEXECUTE|WD_CONTEXTE_|EXECUTE/giu)),
+    );
 
     return response.status(200).json({
       ok: upstream.ok,
       status: upstream.status,
       finalUrl: upstream.url,
-      contentType: upstream.headers.get("content-type"),
       length: html.length,
-      markers: Object.fromEntries(
-        markers.map((marker) => [marker, compact.includes(marker)]),
-      ),
-      contexts: Object.fromEntries(
-        markers.map((marker) => [marker, contextAround(html, marker)]),
-      ),
+      formAction,
+      selectedI7: selectedI7
+        ? { value: selectedI7[1], memory: selectedI7[2], label: selectedI7[3] }
+        : null,
+      hiddenInputs,
+      scripts,
+      contexts,
+      ajaxTokens,
+      hasLescar: html.includes("LESCAR PELOTARI CLUB"),
+      hasBillere: html.includes("BILLERE PELOTARI CLUB"),
+      i7Snippet: selectI7,
     });
   } catch (error) {
     return response.status(400).json({
