@@ -51,6 +51,7 @@ export default async function handler(request, response) {
 
   try {
     const sourceUrl = normalizeSourceUrl(request.query?.url);
+    sourceUrl.searchParams.set("I7", "12");
     const { upstream, html } = await fetchFederationPage(sourceUrl);
     const compact = html.replace(/\s+/gu, " ");
     const markers = [
