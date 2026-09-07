@@ -37,6 +37,12 @@ const fetchFederationPage = async (sourceUrl) => {
   return { upstream, html };
 };
 
+const contextAround = (html, marker, radius = 1800) => {
+  const index = html.indexOf(marker);
+  if (index < 0) return null;
+  return html.slice(Math.max(0, index - radius), Math.min(html.length, index + radius));
+};
+
 export default async function handler(request, response) {
   if (request.method !== "GET") {
     response.setHeader("Allow", "GET");
@@ -51,6 +57,7 @@ export default async function handler(request, response) {
       "Poule 1",
       "LESCAR PELOTARI CLUB",
       "BILLERE PELOTARI CLUB",
+      "Senior 2ème Série",
       "Classement",
       "Vict.",
     ];
@@ -64,7 +71,9 @@ export default async function handler(request, response) {
       markers: Object.fromEntries(
         markers.map((marker) => [marker, compact.includes(marker)]),
       ),
-      sample: compact.slice(0, 1800),
+      contexts: Object.fromEntries(
+        markers.map((marker) => [marker, contextAround(html, marker)]),
+      ),
     });
   } catch (error) {
     return response.status(400).json({
