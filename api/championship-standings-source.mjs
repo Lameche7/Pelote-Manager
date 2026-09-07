@@ -245,8 +245,12 @@ const parseStandings = (html, division) => {
     for (; cursor < lines.length; cursor += 1) {
       const candidate = lines[cursor];
       if (poolFromLine(candidate) || teamFromLine(candidate)) break;
-      if (candidate.startsWith("-")) continue;
-      stats.push(...numericTokens(candidate));
+      const numeric = numericTokens(candidate);
+      if (numeric.length > 0) {
+        stats.push(...numeric);
+      } else if (candidate.startsWith("-")) {
+        continue;
+      }
       if (stats.length >= 9) break;
     }
     if (stats.length < 9) continue;
