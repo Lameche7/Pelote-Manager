@@ -12,6 +12,31 @@ const normalizeSourceUrl = (value) => {
   return url;
 };
 
+const federationHeaders = {
+  "user-agent": "PeloteManager/1.0 (+https://pelote-manager.vercel.app)",
+  accept: "text/html,application/xhtml+xml",
+};
+
+const fetchFederationPage = async (sourceUrl) => {
+  let upstream = await fetch(sourceUrl, {
+    redirect: "follow",
+    headers: federationHeaders,
+  });
+  let html = await upstream.text();
+
+  if (/FFPB_COMPETITION/iu.test(html) && !sourceUrl.pathname.includes("FFPB_COMPETITION")) {
+    const redirectedUrl = new URL("/FFPB_COMPETITION/", sourceUrl.origin);
+    redirectedUrl.search = sourceUrl.search;
+    upstream = await fetch(redirectedUrl, {
+      redirect: "follow",
+      headers: federationHeaders,
+    });
+    html = await upstream.text();
+  }
+
+  return { upstream, html };
+};
+
 export default async function handler(request, response) {
   if (request.method !== "GET") {
     response.setHeader("Allow", "GET");
@@ -20,14 +45,7 @@ export default async function handler(request, response) {
 
   try {
     const sourceUrl = normalizeSourceUrl(request.query?.url);
-    const upstream = await fetch(sourceUrl, {
-      redirect: "follow",
-      headers: {
-        "user-agent": "PeloteManager/1.0 (+https://pelote-manager.vercel.app)",
-        accept: "text/html,application/xhtml+xml",
-      },
-    });
-    const html = await upstream.text();
+    const { upstream, html } = await fetchFederationPage(sourceUrl);
     const compact = html.replace(/\s+/gu, " ");
     const markers = [
       "Poule 1",
@@ -46,7 +64,7 @@ export default async function handler(request, response) {
       markers: Object.fromEntries(
         markers.map((marker) => [marker, compact.includes(marker)]),
       ),
-      sample: compact.slice(0, 1200),
+      sample: compact.slice(0, 1800),
     });
   } catch (error) {
     return response.status(400).json({
