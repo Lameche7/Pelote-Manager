@@ -78,7 +78,10 @@ test("l’interface expose les classements officiels et la navigation joueur", a
   assert.match(page, /Classement général/);
   assert.match(page, /Zone de qualification directe/);
   assert.match(page, /Zone barrage/);
-  assert.match(page, /Pelote Manager ne recalcule pas les règles de classement/);
+  assert.match(
+    page,
+    /Pelote Manager ne recalcule pas les règles de classement/,
+  );
   assert.match(page, /Prochaine partie/);
   assert.match(page, /Dernier résultat/);
 });
