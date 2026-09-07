@@ -7,6 +7,8 @@ import {
 
 type Props = {
   championshipId: string;
+  sourceUrl?: string | null;
+  divisions?: Array<{ id: string; name: string }>;
 };
 
 const labelForWinningScore = (mode: ChampionshipResultInputMode) =>
@@ -17,7 +19,11 @@ const hintForWinningScore = (mode: ChampionshipResultInputMode) =>
     ? "Ex. 2 pour une partie gagnée en 2 manches."
     : "Ex. 35 ou 40 selon le championnat.";
 
-export function ChampionshipResultSettingsCard({ championshipId }: Props) {
+export function ChampionshipResultSettingsCard({
+  championshipId,
+  sourceUrl = null,
+  divisions = [],
+}: Props) {
   const [mode, setMode] = useState<ChampionshipResultInputMode>("points");
   const [winningScore, setWinningScore] = useState("35");
   const [configured, setConfigured] = useState(false);
@@ -177,7 +183,11 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
         )}
       </div>
 
-      <ChampionshipStandingsImportCard championshipId={championshipId} />
+      <ChampionshipStandingsImportCard
+        championshipId={championshipId}
+        sourceUrl={sourceUrl}
+        divisions={divisions}
+      />
     </>
   );
 }
