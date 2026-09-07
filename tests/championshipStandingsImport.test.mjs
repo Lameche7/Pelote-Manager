@@ -62,6 +62,29 @@ test("la lecture officielle se fait côté serveur sans copier-coller", async ()
   assert.match(reader, /parseStandings/);
 });
 
+test("le lecteur comprend la structure réelle des lignes de classement WebDev", async () => {
+  const reader = await read(sourceReaderUrl);
+
+  assert.match(reader, /teamFromLine/);
+  assert.match(reader, /\\\(\\d\{5,8\}\\\)/);
+  assert.match(reader, /const numeric = numericTokens\(candidate\)/);
+  assert.match(reader, /if \(numeric\.length > 0\)/);
+  assert.match(reader, /stats\.push\(\.\.\.numeric\)/);
+  assert.match(reader, /"Vict\."/);
+  assert.match(reader, /"Dif\. points"/);
+});
+
+test("le lecteur déplie automatiquement toutes les lignes du classement", async () => {
+  const reader = await read(sourceReaderUrl);
+
+  assert.match(reader, /incompleteLineCounters/);
+  assert.match(reader, /visibleShowMoreButtonIds/);
+  assert.match(reader, /visibility\\s\*:\\s\*hidden/);
+  assert.match(reader, /expandRankingPage/);
+  assert.match(reader, /Afficher plus/);
+  assert.match(reader, /WD_BUTTON_CLICK_", buttonId/);
+});
+
 test("le lecteur refuse une source externe arbitraire", async () => {
   const reader = await read(sourceReaderUrl);
 
