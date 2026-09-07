@@ -202,9 +202,17 @@ const htmlToLines = (html) => {
 
 const poolFromLine = (line) => line.match(/^Poule\s+(.+)$/iu)?.[1]?.trim() ?? null;
 const teamFromLine = (line) => {
-  const match = line.match(/^(.*[A-Za-zÀ-ÖØ-öø-ÿ].*?)\s+(\d{1,3})$/u);
-  if (!match || line.startsWith("-")) return null;
-  return { clubName: match[1].trim(), teamNumber: match[2], teamLabel: `${match[1].trim()} ${match[2]}` };
+  if (line.startsWith("-")) return null;
+  const match = line.match(
+    /^(.*[A-Za-zÀ-ÖØ-öø-ÿ].*?)\s+(\d{1,3})(?=\s+-\s+.*\(\d{5,8}\)|$)/u,
+  );
+  if (!match) return null;
+  const clubName = match[1].trim();
+  return {
+    clubName,
+    teamNumber: match[2],
+    teamLabel: `${clubName} ${match[2]}`,
+  };
 };
 const numericTokens = (line) => {
   if (!/^-?\d+(?:[.,]\d+)?(?:\s+-?\d+(?:[.,]\d+)?)*$/u.test(line)) return [];
@@ -263,7 +271,7 @@ const parseStandings = (html, division) => {
       scoreAgainst: Number.isInteger(scoreAgainst) ? scoreAgainst : null,
       scoreDifference: Number.isInteger(scoreDifference) ? scoreDifference : null,
       sourcePayload: {
-        "Vic.": String(wins),
+        "Vict.": String(wins),
         "Déf.": String(losses),
         "Perd.": String(lost),
         Points: String(points),
@@ -275,6 +283,7 @@ const parseStandings = (html, division) => {
       },
     });
     pendingRank = null;
+    index = cursor;
   }
   return standings;
 };
