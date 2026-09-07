@@ -32,12 +32,15 @@ const decodeHtml = (value) =>
     .replace(/&lt;/giu, "<")
     .replace(/&gt;/giu, ">")
     .replace(/&#(\d+);/gu, (_, code) => String.fromCodePoint(Number(code)))
-    .replace(/&#x([0-9a-f]+);/giu, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)));
+    .replace(/&#x([0-9a-f]+);/giu, (_, code) =>
+      String.fromCodePoint(Number.parseInt(code, 16)),
+    );
 
 const cookieFrom = (response) => {
-  const values = typeof response.headers.getSetCookie === "function"
-    ? response.headers.getSetCookie()
-    : [response.headers.get("set-cookie")].filter(Boolean);
+  const values =
+    typeof response.headers.getSetCookie === "function"
+      ? response.headers.getSetCookie()
+      : [response.headers.get("set-cookie")].filter(Boolean);
   return values.map((value) => String(value).split(";", 1)[0]).join("; ");
 };
 
@@ -53,7 +56,10 @@ const mergeCookies = (...cookies) => {
 };
 
 const actualPageUrl = (sourceUrl, bootstrapHtml) => {
-  if (/FFPB_COMPETITION/iu.test(bootstrapHtml) && !sourceUrl.pathname.includes("FFPB_COMPETITION")) {
+  if (
+    /FFPB_COMPETITION/iu.test(bootstrapHtml) &&
+    !sourceUrl.pathname.includes("FFPB_COMPETITION")
+  ) {
     const next = new URL("/FFPB_COMPETITION/", sourceUrl.origin);
     next.search = sourceUrl.search;
     return next;
@@ -62,7 +68,10 @@ const actualPageUrl = (sourceUrl, bootstrapHtml) => {
 };
 
 const openSession = async (sourceUrl) => {
-  const bootstrap = await fetch(sourceUrl, { redirect: "follow", headers: headersBase });
+  const bootstrap = await fetch(sourceUrl, {
+    redirect: "follow",
+    headers: headersBase,
+  });
   const bootstrapHtml = await bootstrap.text();
   const cookie1 = cookieFrom(bootstrap);
   const pageUrl = actualPageUrl(sourceUrl, bootstrapHtml);
@@ -75,7 +84,8 @@ const openSession = async (sourceUrl) => {
     throw new Error("La page officielle du championnat n’a pas pu être lue.");
   }
   const action = html.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1];
-  if (!action) throw new Error("Le formulaire de la fédération n’a pas été reconnu.");
+  if (!action)
+    throw new Error("Le formulaire de la fédération n’a pas été reconnu.");
   return {
     action: new URL(decodeHtml(action), pageUrl.origin),
     cookie: mergeCookies(cookie1, cookieFrom(page)),
@@ -85,11 +95,14 @@ const openSession = async (sourceUrl) => {
 
 const parseSelects = (html) => {
   const values = new Map();
-  for (const match of html.matchAll(/<select\b[^>]*name=["']([^"']+)["'][^>]*>([\s\S]*?)<\/select>/giu)) {
+  for (const match of html.matchAll(
+    /<select\b[^>]*name=["']([^"']+)["'][^>]*>([\s\S]*?)<\/select>/giu,
+  )) {
     const [, name, body] = match;
-    const selected = body.match(/<option\b[^>]*selected[^>]*value=["']([^"']*)["']/iu)
-      ?? body.match(/<option\b[^>]*value=["']([^"']*)["'][^>]*selected/iu)
-      ?? body.match(/<option\b[^>]*value=["']([^"']*)["']/iu);
+    const selected =
+      body.match(/<option\b[^>]*selected[^>]*value=["']([^"']*)["']/iu) ??
+      body.match(/<option\b[^>]*value=["']([^"']*)["'][^>]*selected/iu) ??
+      body.match(/<option\b[^>]*value=["']([^"']*)["']/iu);
     if (selected) values.set(name, decodeHtml(selected[1]));
   }
   return values;
@@ -101,8 +114,14 @@ const parseFormValues = (html) => {
     const attrs = match[1];
     const name = attrs.match(/\bname=["']([^"']+)["']/iu)?.[1];
     if (!name) continue;
-    const type = (attrs.match(/\btype=["']([^"']+)["']/iu)?.[1] ?? "text").toLowerCase();
-    if ((type === "checkbox" || type === "radio") && !/\bchecked\b/iu.test(attrs)) continue;
+    const type = (
+      attrs.match(/\btype=["']([^"']+)["']/iu)?.[1] ?? "text"
+    ).toLowerCase();
+    if (
+      (type === "checkbox" || type === "radio") &&
+      !/\bchecked\b/iu.test(attrs)
+    )
+      continue;
     const value = attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "";
     values.set(name, decodeHtml(value));
   }
@@ -110,19 +129,30 @@ const parseFormValues = (html) => {
 };
 
 const categoryOptions = (html) => {
-  const select = html.match(/<select\b[^>]*id=["']I7["'][^>]*>([\s\S]*?)<\/select>/iu)?.[1] ?? "";
-  return Array.from(select.matchAll(/<option\b([^>]*)>([\s\S]*?)<\/option>/giu), (match) => {
-    const attrs = match[1];
-    return {
-      value: decodeHtml(attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? ""),
-      memory: decodeHtml(attrs.match(/\bdata-wb-valmem=["']([^"']*)["']/iu)?.[1] ?? ""),
-      label: decodeHtml(match[2].replace(/<[^>]+>/gu, "")).replace(/\s+/gu, " ").trim(),
-      selected: /\bselected\b/iu.test(attrs),
-    };
-  });
+  const select =
+    html.match(
+      /<select\b[^>]*id=["']I7["'][^>]*>([\s\S]*?)<\/select>/iu,
+    )?.[1] ?? "";
+  return Array.from(
+    select.matchAll(/<option\b([^>]*)>([\s\S]*?)<\/option>/giu),
+    (match) => {
+      const attrs = match[1];
+      return {
+        value: decodeHtml(attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? ""),
+        memory: decodeHtml(
+          attrs.match(/\bdata-wb-valmem=["']([^"']*)["']/iu)?.[1] ?? "",
+        ),
+        label: decodeHtml(match[2].replace(/<[^>]+>/gu, ""))
+          .replace(/\s+/gu, " ")
+          .trim(),
+        selected: /\bselected\b/iu.test(attrs),
+      };
+    },
+  );
 };
 
-const selectedCategory = (html) => categoryOptions(html).find((item) => item.selected)?.label ?? null;
+const selectedCategory = (html) =>
+  categoryOptions(html).find((item) => item.selected)?.label ?? null;
 
 const postForm = async (session, values) => {
   const body = new URLSearchParams();
@@ -146,24 +176,30 @@ const postForm = async (session, values) => {
 };
 
 const incompleteLineCounters = (html) =>
-  Array.from(
-    html.matchAll(/>(\d+)\s*\/\s*(\d+)\s+lignes</giu),
-    (match) => ({ shown: Number(match[1]), total: Number(match[2]) }),
-  ).filter((counter) => counter.shown < counter.total);
+  Array.from(html.matchAll(/>(\d+)\s*\/\s*(\d+)\s+lignes</giu), (match) => ({
+    shown: Number(match[1]),
+    total: Number(match[2]),
+  })).filter((counter) => counter.shown < counter.total);
 
 const visibleShowMoreButtonIds = (html) =>
-  Array.from(html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/giu), (match) => {
-    const attrs = match[1];
-    const text = decodeHtml(match[2].replace(/<[^>]+>/gu, " "))
-      .replace(/\s+/gu, " ")
-      .trim();
-    return {
-      id: attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
-      hidden: /visibility\s*:\s*hidden/iu.test(attrs),
-      text,
-    };
-  })
-    .filter((button) => button.id && !button.hidden && /^Afficher plus/iu.test(button.text))
+  Array.from(
+    html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/giu),
+    (match) => {
+      const attrs = match[1];
+      const text = decodeHtml(match[2].replace(/<[^>]+>/gu, " "))
+        .replace(/\s+/gu, " ")
+        .trim();
+      return {
+        id: attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
+        hidden: /visibility\s*:\s*hidden/iu.test(attrs),
+        text,
+      };
+    },
+  )
+    .filter(
+      (button) =>
+        button.id && !button.hidden && /^Afficher plus/iu.test(button.text),
+    )
     .map((button) => button.id);
 
 const expandRankingPage = async (sourceUrl, initialResult) => {
@@ -172,7 +208,9 @@ const expandRankingPage = async (sourceUrl, initialResult) => {
     if (incompleteLineCounters(current.html).length === 0) break;
     const buttonId = visibleShowMoreButtonIds(current.html)[0];
     if (!buttonId) break;
-    const actionRaw = current.html.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1];
+    const actionRaw = current.html.match(
+      /<form[^>]*action=["']([^"']+)["']/iu,
+    )?.[1];
     if (!actionRaw) break;
     const values = parseFormValues(current.html);
     values.set("WD_ACTION_", "");
@@ -193,8 +231,14 @@ const expandRankingPage = async (sourceUrl, initialResult) => {
 
 const requestDivisionPage = async (sourceUrl, divisionName) => {
   const session = await openSession(sourceUrl);
-  const option = categoryOptions(session.html).find((item) => fold(item.label) === fold(divisionName));
-  if (!option) return { html: "", warning: `Série « ${divisionName} » introuvable sur la page officielle.` };
+  const option = categoryOptions(session.html).find(
+    (item) => fold(item.label) === fold(divisionName),
+  );
+  if (!option)
+    return {
+      html: "",
+      warning: `Série « ${divisionName} » introuvable sur la page officielle.`,
+    };
 
   const directValues = parseFormValues(session.html);
   directValues.set("I7", option.value);
@@ -214,9 +258,13 @@ const requestDivisionPage = async (sourceUrl, divisionName) => {
   const changed = await postForm(session, changeValues);
 
   if (changed.ok && /<form/iu.test(changed.html)) {
-    const changedAction = changed.html.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1];
+    const changedAction = changed.html.match(
+      /<form[^>]*action=["']([^"']+)["']/iu,
+    )?.[1];
     const nextSession = {
-      action: changedAction ? new URL(decodeHtml(changedAction), sourceUrl.origin) : session.action,
+      action: changedAction
+        ? new URL(decodeHtml(changedAction), sourceUrl.origin)
+        : session.action,
       cookie: mergeCookies(session.cookie, changed.cookie),
       html: changed.html,
     };
@@ -224,7 +272,10 @@ const requestDivisionPage = async (sourceUrl, divisionName) => {
     rankingValues.set("WD_ACTION_", "");
     rankingValues.set("WD_BUTTON_CLICK_", "I54");
     direct = await postForm(nextSession, rankingValues);
-    if (direct.ok && fold(selectedCategory(direct.html)) === fold(divisionName)) {
+    if (
+      direct.ok &&
+      fold(selectedCategory(direct.html)) === fold(divisionName)
+    ) {
       direct = await expandRankingPage(sourceUrl, direct);
       return { html: direct.html, warning: null };
     }
@@ -248,7 +299,8 @@ const htmlToLines = (html) => {
     .filter(Boolean);
 };
 
-const poolFromLine = (line) => line.match(/^Poule\s+(.+)$/iu)?.[1]?.trim() ?? null;
+const poolFromLine = (line) =>
+  line.match(/^Poule\s+(.+)$/iu)?.[1]?.trim() ?? null;
 const teamFromLine = (line) => {
   if (line.startsWith("-")) return null;
   const match = line.match(
@@ -264,7 +316,10 @@ const teamFromLine = (line) => {
 };
 const numericTokens = (line) => {
   if (!/^-?\d+(?:[.,]\d+)?(?:\s+-?\d+(?:[.,]\d+)?)*$/u.test(line)) return [];
-  return line.split(/\s+/u).map((value) => Number(value.replace(",", "."))).filter(Number.isFinite);
+  return line
+    .split(/\s+/u)
+    .map((value) => Number(value.replace(",", ".")))
+    .filter(Number.isFinite);
 };
 
 const parseStandings = (html, division) => {
@@ -303,7 +358,17 @@ const parseStandings = (html, division) => {
     }
     if (stats.length < 9) continue;
 
-    const [wins, losses, lost, points, pointsPerGame, scoreFor, scoreAgainst, scoreDifference, averageDifference] = stats;
+    const [
+      wins,
+      losses,
+      lost,
+      points,
+      pointsPerGame,
+      scoreFor,
+      scoreAgainst,
+      scoreDifference,
+      averageDifference,
+    ] = stats;
     standings.push({
       row: standings.length + 1,
       division,
@@ -314,14 +379,21 @@ const parseStandings = (html, division) => {
       clubNormalized: fold(team.clubName),
       teamNumber: team.teamNumber,
       rank: pendingRank,
-      played: Number.isInteger(wins) && Number.isInteger(losses) && Number.isInteger(lost) ? wins + losses + lost : null,
+      played:
+        Number.isInteger(wins) &&
+        Number.isInteger(losses) &&
+        Number.isInteger(lost)
+          ? wins + losses + lost
+          : null,
       wins: Number.isInteger(wins) ? wins : null,
       draws: null,
       losses: Number.isInteger(losses) ? losses : null,
       points: Number.isFinite(points) ? points : null,
       scoreFor: Number.isInteger(scoreFor) ? scoreFor : null,
       scoreAgainst: Number.isInteger(scoreAgainst) ? scoreAgainst : null,
-      scoreDifference: Number.isInteger(scoreDifference) ? scoreDifference : null,
+      scoreDifference: Number.isInteger(scoreDifference)
+        ? scoreDifference
+        : null,
       sourcePayload: {
         "Vict.": String(wins),
         "Déf.": String(losses),
@@ -348,10 +420,14 @@ export default async function handler(request, response) {
   try {
     const sourceUrl = normalizeSourceUrl(request.body?.sourceUrl);
     const divisions = Array.isArray(request.body?.divisions)
-      ? request.body.divisions.map((item) => String(item?.name ?? "").trim()).filter(Boolean)
+      ? request.body.divisions
+          .map((item) => String(item?.name ?? "").trim())
+          .filter(Boolean)
       : [];
     if (divisions.length === 0 || divisions.length > 30) {
-      return response.status(400).json({ error: "Aucune série exploitable n’a été fournie." });
+      return response
+        .status(400)
+        .json({ error: "Aucune série exploitable n’a été fournie." });
     }
 
     const standings = [];
@@ -364,7 +440,9 @@ export default async function handler(request, response) {
       }
       const rows = parseStandings(result.html, division);
       if (rows.length === 0) {
-        warnings.push(`Aucun classement publié n’a été reconnu pour « ${division} ».`);
+        warnings.push(
+          `Aucun classement publié n’a été reconnu pour « ${division} ».`,
+        );
         continue;
       }
       standings.push(...rows);
@@ -372,24 +450,31 @@ export default async function handler(request, response) {
 
     if (standings.length === 0) {
       return response.status(422).json({
-        error: "Aucun classement officiel exploitable n’a pu être lu automatiquement.",
+        error:
+          "Aucun classement officiel exploitable n’a pu être lu automatiquement.",
         warnings,
       });
     }
 
-    const pools = new Set(standings.map((row) => `${row.divisionNormalized}:${row.poolCode}`));
+    const pools = new Set(
+      standings.map((row) => `${row.divisionNormalized}:${row.poolCode}`),
+    );
     return response.status(200).json({
       standings,
       warnings,
       summary: {
-        divisionCount: new Set(standings.map((row) => row.divisionNormalized)).size,
+        divisionCount: new Set(standings.map((row) => row.divisionNormalized))
+          .size,
         poolCount: pools.size,
         teamCount: standings.length,
       },
     });
   } catch (error) {
     return response.status(500).json({
-      error: error instanceof Error ? error.message : "Lecture automatique impossible.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Lecture automatique impossible.",
     });
   }
 }

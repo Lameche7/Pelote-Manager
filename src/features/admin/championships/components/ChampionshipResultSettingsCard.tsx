@@ -27,7 +27,9 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
-  const [divisions, setDivisions] = useState<Array<{ id: string; name: string }>>([]);
+  const [divisions, setDivisions] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
 
   useEffect(() => {
     let active = true;
@@ -82,7 +84,9 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
       return;
     }
     if (mode === "sets" && value > 20) {
-      setError("Le nombre de manches à gagner doit être compris entre 1 et 20.");
+      setError(
+        "Le nombre de manches à gagner doit être compris entre 1 et 20.",
+      );
       return;
     }
 
@@ -132,7 +136,8 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
               <select
                 value={mode}
                 onChange={(event) => {
-                  const nextMode = event.target.value as ChampionshipResultInputMode;
+                  const nextMode = event.target
+                    .value as ChampionshipResultInputMode;
                   setMode(nextMode);
                   if (!configured) {
                     setWinningScore(nextMode === "sets" ? "2" : "35");

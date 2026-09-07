@@ -88,7 +88,14 @@ const aliases = {
   points: ["points", "pts", "point"],
   scoreFor: ["pour", "points pour", "score pour", "bp", "+"],
   scoreAgainst: ["contre", "points contre", "score contre", "bc", "-"],
-  difference: ["difference", "différence", "diff", "+/-", "goal average", "goal-average"],
+  difference: [
+    "difference",
+    "différence",
+    "diff",
+    "+/-",
+    "goal average",
+    "goal-average",
+  ],
 } as const;
 
 const findColumn = (headers: string[], names: readonly string[]) => {
@@ -169,7 +176,10 @@ export const parseChampionshipStandingRows = (
   data.slice(headerIndex + 1).forEach((row, offset) => {
     const rowNumber = headerIndex + offset + 2;
     const division = text(valueAt(row, columns.division));
-    const poolCode = text(valueAt(row, columns.pool)).replace(/^poule\s+/iu, "");
+    const poolCode = text(valueAt(row, columns.pool)).replace(
+      /^poule\s+/iu,
+      "",
+    );
     const teamLabel = text(valueAt(row, columns.team));
     const rank = positiveInteger(valueAt(row, columns.rank));
     if (!division && !poolCode && !teamLabel) return;
@@ -190,7 +200,9 @@ export const parseChampionshipStandingRows = (
     const losses = optionalInteger(valueAt(row, columns.losses));
     const scoreFor = optionalInteger(valueAt(row, columns.scoreFor));
     const scoreAgainst = optionalInteger(valueAt(row, columns.scoreAgainst));
-    const providedDifference = optionalInteger(valueAt(row, columns.difference));
+    const providedDifference = optionalInteger(
+      valueAt(row, columns.difference),
+    );
     const scoreDifference =
       providedDifference ??
       (scoreFor !== null && scoreAgainst !== null

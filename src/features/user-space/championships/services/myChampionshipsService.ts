@@ -137,7 +137,8 @@ const mapChampionship = (row: Row): MyChampionship => ({
     teamNumber: String(standing.team_number ?? ""),
     officialRank: nullableNumber(standing.official_rank),
     officialPoints: nullableNumber(standing.official_points),
-    statsSource: standing.stats_source === "official" ? "official" : "calculated",
+    statsSource:
+      standing.stats_source === "official" ? "official" : "calculated",
     isMyTeam: Boolean(standing.is_my_team),
     played: Number(standing.played ?? 0),
     wins: Number(standing.wins ?? 0),

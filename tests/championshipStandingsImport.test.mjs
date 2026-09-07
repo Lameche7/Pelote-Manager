@@ -149,7 +149,10 @@ test("l'espace joueur reçoit les valeurs officielles avec un indicateur de prov
 
   assert.match(migration, /'official_points', pool_standing\.points/);
   assert.match(migration, /'stats_source'/);
-  assert.match(migration, /coalesce\(pool_standing\.played, stats\.played, 0\)/);
+  assert.match(
+    migration,
+    /coalesce\(pool_standing\.played, stats\.played, 0\)/,
+  );
   assert.match(service, /officialPoints/);
   assert.match(service, /statsSource/);
   assert.match(service, /standing\.stats_source === "official"/);

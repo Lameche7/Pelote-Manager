@@ -87,7 +87,9 @@ export function ChampionshipStandingsImportCard({
 
       const standings = Array.isArray(data.standings) ? data.standings : [];
       if (standings.length === 0) {
-        throw new Error("La fédération n’a renvoyé aucune ligne de classement.");
+        throw new Error(
+          "La fédération n’a renvoyé aucune ligne de classement.",
+        );
       }
 
       const sourcePreview: ChampionshipStandingsPreviewFile = {

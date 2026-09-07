@@ -37,7 +37,10 @@ test("seul un administrateur autorisé peut modifier le format", async () => {
     sql,
     /create or replace function public\.admin_update_championship_result_settings/,
   );
-  assert.match(sql, /championship_club_can_manage\(target_id, target_club_id\)/);
+  assert.match(
+    sql,
+    /championship_club_can_manage\(target_id, target_club_id\)/,
+  );
   assert.match(sql, /'result_settings\.updated'/);
 });
 
