@@ -10,6 +10,8 @@ export type AdminTournamentRescheduleApproval = {
   teamId: string;
   teamLabel: string;
   decision: "pending" | "approved" | "rejected";
+  decisionSource: "app" | "offline_admin" | null;
+  decisionNote: string | null;
   isRequester: boolean;
   appActorCount: number;
   decidedAt: string | null;
@@ -24,7 +26,12 @@ export type AdminTournamentRescheduleRequest = {
   requesterLabel: string;
   proposalKind: "free_slot" | "swap";
   status:
-    "pending" | "approved" | "rejected" | "cancelled" | "stale" | "applied";
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "cancelled"
+    | "stale"
+    | "applied";
   original: {
     playDate: string;
     startsAt: string;
@@ -47,8 +54,17 @@ export type AdminTournamentRescheduleRequest = {
     returnResourceName: string;
   };
   approvals: AdminTournamentRescheduleApproval[];
+  staleReason: string | null;
+  appliedAt: string | null;
   expiresAt: string;
   createdAt: string;
+};
+
+export type AdminTournamentRescheduleApplyResult = {
+  status: "applied" | "stale";
+  requestId: string;
+  reason: string | null;
+  appliedAt: string | null;
 };
 
 const status = (value: unknown): AdminTournamentRescheduleRequest["status"] => {
@@ -68,6 +84,14 @@ const approvalDecision = (
   value: unknown,
 ): AdminTournamentRescheduleApproval["decision"] =>
   value === "approved" || value === "rejected" ? value : "pending";
+
+const approvalSource = (
+  value: unknown,
+): AdminTournamentRescheduleApproval["decisionSource"] => {
+  if (value === "offline_admin") return "offline_admin";
+  if (value === "app") return "app";
+  return null;
+};
 
 const mapRequest = (row: Row): AdminTournamentRescheduleRequest => {
   const snapshot = (row.proposal_snapshot ?? {}) as Row;
@@ -113,13 +137,44 @@ const mapRequest = (row: Row): AdminTournamentRescheduleRequest => {
       teamId: String(approval.team_id ?? ""),
       teamLabel: String(approval.team_label ?? "Équipe"),
       decision: approvalDecision(approval.decision),
+      decisionSource: approvalSource(approval.decision_source),
+      decisionNote: approval.decision_note
+        ? String(approval.decision_note)
+        : null,
       isRequester: Boolean(approval.is_requester),
       appActorCount: Number(approval.app_actor_count ?? 0),
       decidedAt: approval.decided_at ? String(approval.decided_at) : null,
     })),
+    staleReason: row.stale_reason ? String(row.stale_reason) : null,
+    appliedAt: row.applied_at ? String(row.applied_at) : null,
     expiresAt: String(row.expires_at ?? ""),
     createdAt: String(row.created_at ?? ""),
   };
+};
+
+const knownErrors: Record<string, string> = {
+  "Tournament reschedule offline contact note is required":
+    "Indiquez comment l’accord ou le refus a été recueilli hors application.",
+  "Tournament reschedule team can answer in the application":
+    "Cette équipe possède maintenant un compte relié : elle doit répondre depuis son espace.",
+  "Tournament reschedule approval is not pending":
+    "Cette équipe a déjà répondu à la demande.",
+  "Tournament reschedule request is no longer pending":
+    "Cette demande n’est plus en attente de réponse.",
+  "Tournament reschedule request is not ready to apply":
+    "Ce report n’est pas encore prêt à être appliqué.",
+  "Tournament reschedule request still misses an approval":
+    "Tous les accords doivent être réunis avant d’appliquer le report.",
+  "Tournament reschedule request not found":
+    "Cette demande de report n’existe plus.",
+};
+
+const fail = (error: unknown, fallback: string): never => {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = String((error as { message?: unknown }).message ?? "");
+    if (knownErrors[message]) throw new Error(knownErrors[message]);
+  }
+  throw new Error(getSupabaseErrorMessage(error, fallback));
 };
 
 export const adminTournamentRescheduleService = {
@@ -131,13 +186,47 @@ export const adminTournamentRescheduleService = {
       { target_tournament_id: tournamentId },
     );
     if (error) {
-      throw new Error(
-        getSupabaseErrorMessage(
-          error,
-          "Impossible de charger les demandes de report.",
-        ),
-      );
+      fail(error, "Impossible de charger les demandes de report.");
     }
     return rows(data).map(mapRequest);
+  },
+
+  async recordOfflineDecision(
+    requestId: string,
+    teamId: string,
+    decision: "approved" | "rejected",
+    note: string,
+  ): Promise<AdminTournamentRescheduleRequest["status"]> {
+    const { data, error } = await supabase.rpc(
+      "admin_record_tournament_reschedule_offline_decision",
+      {
+        target_request_id: requestId,
+        target_team_id: teamId,
+        target_decision: decision,
+        contact_note: note,
+      },
+    );
+    if (error) {
+      fail(error, "Impossible d’enregistrer la réponse recueillie hors application.");
+    }
+    return status(data);
+  },
+
+  async apply(requestId: string): Promise<AdminTournamentRescheduleApplyResult> {
+    const { data, error } = await supabase.rpc(
+      "admin_apply_tournament_reschedule_request",
+      { target_request_id: requestId },
+    );
+    if (error) {
+      fail(error, "Impossible d’appliquer ce report.");
+    }
+
+    const row = (data ?? {}) as Row;
+    return {
+      status: row.status === "applied" ? "applied" : "stale",
+      requestId: String(row.request_id ?? requestId),
+      reason: row.reason ? String(row.reason) : null,
+      appliedAt: row.applied_at ? String(row.applied_at) : null,
+    };
   },
 };
