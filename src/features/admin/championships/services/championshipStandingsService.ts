@@ -21,6 +21,12 @@ export type ChampionshipStandingsServerPreview = {
     unchangedCount: number;
     poolCount: number;
   };
+  generalSummary: {
+    incomingCount: number;
+    newCount: number;
+    changedCount: number;
+    unchangedCount: number;
+  };
   changes: Array<{
     kind: "new" | "changed";
     teamLabel: string;
@@ -34,6 +40,16 @@ export type ChampionshipStandingsServerPreview = {
 const asRows = (value: unknown) =>
   Array.isArray(value) ? (value as Row[]) : [];
 
+const mapCountSummary = (value: unknown) => {
+  const summary = (value ?? {}) as Row;
+  return {
+    incomingCount: Number(summary.incomingCount ?? 0),
+    newCount: Number(summary.newCount ?? 0),
+    changedCount: Number(summary.changedCount ?? 0),
+    unchangedCount: Number(summary.unchangedCount ?? 0),
+  };
+};
+
 const mapPreview = (value: unknown): ChampionshipStandingsServerPreview => {
   const row = (value ?? {}) as Row;
   const summary = (row.summary ?? {}) as Row;
@@ -42,12 +58,10 @@ const mapPreview = (value: unknown): ChampionshipStandingsServerPreview => {
     alreadyImported: Boolean(row.alreadyImported),
     batchId: row.batchId ? String(row.batchId) : null,
     summary: {
-      incomingCount: Number(summary.incomingCount ?? 0),
-      newCount: Number(summary.newCount ?? 0),
-      changedCount: Number(summary.changedCount ?? 0),
-      unchangedCount: Number(summary.unchangedCount ?? 0),
+      ...mapCountSummary(summary),
       poolCount: Number(summary.poolCount ?? 0),
     },
+    generalSummary: mapCountSummary(row.generalSummary),
     changes: asRows(row.changes).map((change) => ({
       kind: change.kind === "new" ? "new" : "changed",
       teamLabel: String(change.teamLabel ?? ""),
@@ -76,6 +90,11 @@ const fail = (error: unknown, fallback: string): never => {
         "Le classement contient des lignes qui ne correspondent pas au championnat importé.",
       );
     }
+    if (message === "Championship rankings import is invalid") {
+      throw new Error(
+        "Les classements de poule ou le classement général ne correspondent pas complètement au championnat importé.",
+      );
+    }
   }
   throw new Error(getSupabaseErrorMessage(error, fallback));
 };
@@ -90,6 +109,18 @@ export const championshipStandingsService = {
       { target_id: championshipId, payload },
     );
     if (error) fail(error, "Impossible d’analyser le classement officiel.");
+    return mapPreview(data);
+  },
+
+  async previewRankings(
+    championshipId: string,
+    payload: ChampionshipStandingsImportPayload,
+  ) {
+    const { data, error } = await rpc(
+      "admin_preview_championship_rankings_import",
+      { target_id: championshipId, payload },
+    );
+    if (error) fail(error, "Impossible d’analyser les classements officiels.");
     return mapPreview(data);
   },
 
@@ -108,6 +139,26 @@ export const championshipStandingsService = {
       batchId: String(row.batchId ?? ""),
       alreadyImported: Boolean(row.alreadyImported),
       summary: mapPreview({ summary: row.summary }).summary,
+      generalSummary: mapCountSummary(row.generalSummary),
+    };
+  },
+
+  async applyRankings(
+    championshipId: string,
+    payload: ChampionshipStandingsImportPayload,
+  ) {
+    const { data, error } = await rpc(
+      "admin_apply_championship_rankings_import",
+      { target_id: championshipId, payload },
+    );
+    if (error) fail(error, "Impossible d’importer les classements officiels.");
+    const row = (data ?? {}) as Row;
+    return {
+      championshipId: String(row.championshipId ?? ""),
+      batchId: String(row.batchId ?? ""),
+      alreadyImported: Boolean(row.alreadyImported),
+      summary: mapPreview({ summary: row.summary }).summary,
+      generalSummary: mapCountSummary(row.generalSummary),
     };
   },
 };
