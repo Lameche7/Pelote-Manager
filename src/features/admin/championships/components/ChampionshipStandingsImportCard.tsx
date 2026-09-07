@@ -5,6 +5,7 @@ import {
   type ChampionshipStandingsImportPayload,
   type ChampionshipStandingsPreviewFile,
 } from "../domain/championshipStandingsImport";
+import { championshipImportService } from "../services/championshipImportService";
 import { championshipSourceFileService } from "../services/championshipSourceFileService";
 import {
   championshipStandingsService,
@@ -30,6 +31,10 @@ export function ChampionshipStandingsImportCard({
   onApplied,
 }: Props) {
   const [sourceText, setSourceText] = useState("");
+  const [divisionOptions, setDivisionOptions] =
+    useState<ChampionshipDivisionOption[]>(divisions);
+  const [effectiveSourceUrl, setEffectiveSourceUrl] =
+    useState<string | null>(sourceUrl);
   const [selectedDivisionId, setSelectedDivisionId] = useState("");
   const [sourcePreview, setSourcePreview] =
     useState<ChampionshipStandingsPreviewFile | null>(null);
@@ -42,8 +47,43 @@ export function ChampionshipStandingsImportCard({
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (divisions.length === 1) setSelectedDivisionId(divisions[0].id);
-  }, [divisions]);
+    if (divisions.length > 0) {
+      setDivisionOptions(divisions);
+      setEffectiveSourceUrl(sourceUrl);
+      return;
+    }
+
+    let active = true;
+    void championshipImportService
+      .detail(championshipId)
+      .then((detail) => {
+        if (!active) return;
+        setDivisionOptions(
+          detail.divisions.map((division) => ({
+            id: division.id,
+            name: division.name,
+          })),
+        );
+        setEffectiveSourceUrl(detail.sourceUrl);
+      })
+      .catch(() => {
+        if (active) {
+          setError(
+            "Impossible de charger la liste des séries du championnat.",
+          );
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [championshipId, divisions, sourceUrl]);
+
+  useEffect(() => {
+    if (divisionOptions.length === 1) {
+      setSelectedDivisionId(divisionOptions[0].id);
+    }
+  }, [divisionOptions]);
 
   const resetPreview = () => {
     setSourcePreview(null);
@@ -72,8 +112,9 @@ export function ChampionshipStandingsImportCard({
     setMessage("");
     try {
       const fallbackDivision =
-        divisions.find((division) => division.id === selectedDivisionId)?.name ??
-        "";
+        divisionOptions.find(
+          (division) => division.id === selectedDivisionId,
+        )?.name ?? "";
       const parsed = parseChampionshipStandingsClipboard(
         sourceText,
         fallbackDivision,
@@ -87,7 +128,7 @@ export function ChampionshipStandingsImportCard({
       const descriptor = await championshipSourceFileService.describeStandings(
         snapshot,
         parsed.standings.length,
-        sourceUrl,
+        effectiveSourceUrl,
       );
       const nextPayload = buildChampionshipStandingsImportPayload(
         parsed,
@@ -154,7 +195,7 @@ export function ChampionshipStandingsImportCard({
       </div>
 
       <div className="admin-championships__update-controls">
-        {divisions.length > 1 && (
+        {divisionOptions.length > 1 && (
           <label>
             Série du classement copié
             <select
@@ -166,7 +207,7 @@ export function ChampionshipStandingsImportCard({
               disabled={busy}
             >
               <option value="">Détection automatique si le titre est copié</option>
-              {divisions.map((division) => (
+              {divisionOptions.map((division) => (
                 <option key={division.id} value={division.id}>
                   {division.name}
                 </option>
