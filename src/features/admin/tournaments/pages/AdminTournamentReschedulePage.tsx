@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ADMIN_RESCHEDULE_APPLY_LABEL,
   adminTournamentRescheduleService,
   type AdminTournamentRescheduleRequest,
 } from "@/features/admin/tournaments/services/adminTournamentRescheduleService";
@@ -34,15 +35,19 @@ const staleReasonLabels: Record<string, string> = {
   request_expired: "La demande a dépassé son délai d’application.",
   tournament_stage_changed: "Le tournoi a changé d’étape.",
   source_planning_changed: "Le créneau d’origine a changé depuis la demande.",
-  swap_planning_changed: "Le match proposé pour l’échange a changé depuis la demande.",
+  swap_planning_changed:
+    "Le match proposé pour l’échange a changé depuis la demande.",
   match_has_result: "La partie possède désormais un résultat.",
-  swap_match_has_result: "Le match proposé pour l’échange possède désormais un résultat.",
+  swap_match_has_result:
+    "Le match proposé pour l’échange possède désormais un résultat.",
   match_unpublished: "La partie n’est plus publiée.",
-  swap_match_unpublished: "Le match proposé pour l’échange n’est plus publié.",
+  swap_match_unpublished:
+    "Le match proposé pour l’échange n’est plus publié.",
   target_slot_invalid: "Le créneau demandé n’est plus disponible dans le tournoi.",
   target_slot_started: "Le créneau demandé a déjà commencé.",
   target_slot_conflict: "Le créneau demandé est désormais occupé.",
-  swap_return_slot_conflict: "Le créneau de retour de l’échange est désormais occupé.",
+  swap_return_slot_conflict:
+    "Le créneau de retour de l’échange est désormais occupé.",
   calendar_conflict: "Une occupation du calendrier est apparue sur le créneau.",
   calendar_or_planning_conflict:
     "Un conflit est apparu au moment de synchroniser le planning et le calendrier.",
@@ -145,7 +150,9 @@ export function AdminTournamentReschedulePage() {
     }
     if (
       decision === "rejected" &&
-      !window.confirm("Enregistrer le refus de cette équipe et clôturer la demande ?")
+      !window.confirm(
+        "Enregistrer le refus de cette équipe et clôturer la demande ?",
+      )
     ) {
       return;
     }
@@ -370,7 +377,7 @@ export function AdminTournamentReschedulePage() {
 
               {missingActors.length > 0 && request.status === "pending" && (
                 <div className="admin-reschedules__offline">
-                  <strong>Réponse à recueillir hors application</strong>
+                  <strong>À contacter hors application</strong>
                   <p>
                     Pelote Manager n’invente aucun accord. Après avoir réellement
                     contacté l’équipe, enregistrez sa réponse et le moyen de
@@ -444,7 +451,7 @@ export function AdminTournamentReschedulePage() {
                   >
                     {busy === `apply:${request.id}`
                       ? "Application…"
-                      : "Appliquer le report"}
+                      : ADMIN_RESCHEDULE_APPLY_LABEL}
                   </button>
                 </div>
               )}
