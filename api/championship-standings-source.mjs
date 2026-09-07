@@ -145,6 +145,52 @@ const postForm = async (session, values) => {
   };
 };
 
+const incompleteLineCounters = (html) =>
+  Array.from(
+    html.matchAll(/>(\d+)\s*\/\s*(\d+)\s+lignes</giu),
+    (match) => ({ shown: Number(match[1]), total: Number(match[2]) }),
+  ).filter((counter) => counter.shown < counter.total);
+
+const visibleShowMoreButtonIds = (html) =>
+  Array.from(html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/giu), (match) => {
+    const attrs = match[1];
+    const text = decodeHtml(match[2].replace(/<[^>]+>/gu, " "))
+      .replace(/\s+/gu, " ")
+      .trim();
+    return {
+      id: attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
+      hidden: /visibility\s*:\s*hidden/iu.test(attrs),
+      text,
+    };
+  })
+    .filter((button) => button.id && !button.hidden && /^Afficher plus/iu.test(button.text))
+    .map((button) => button.id);
+
+const expandRankingPage = async (sourceUrl, initialResult) => {
+  let current = initialResult;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    if (incompleteLineCounters(current.html).length === 0) break;
+    const buttonId = visibleShowMoreButtonIds(current.html)[0];
+    if (!buttonId) break;
+    const actionRaw = current.html.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1];
+    if (!actionRaw) break;
+    const values = parseFormValues(current.html);
+    values.set("WD_ACTION_", "");
+    values.set("WD_BUTTON_CLICK_", buttonId);
+    const next = await postForm(
+      {
+        action: new URL(decodeHtml(actionRaw), sourceUrl.origin),
+        cookie: current.cookie,
+        html: current.html,
+      },
+      values,
+    );
+    if (!next.ok) break;
+    current = next;
+  }
+  return current;
+};
+
 const requestDivisionPage = async (sourceUrl, divisionName) => {
   const session = await openSession(sourceUrl);
   const option = categoryOptions(session.html).find((item) => fold(item.label) === fold(divisionName));
@@ -157,6 +203,7 @@ const requestDivisionPage = async (sourceUrl, divisionName) => {
   let direct = await postForm(session, directValues);
 
   if (direct.ok && fold(selectedCategory(direct.html)) === fold(divisionName)) {
+    direct = await expandRankingPage(sourceUrl, direct);
     return { html: direct.html, warning: null };
   }
 
@@ -178,6 +225,7 @@ const requestDivisionPage = async (sourceUrl, divisionName) => {
     rankingValues.set("WD_BUTTON_CLICK_", "I54");
     direct = await postForm(nextSession, rankingValues);
     if (direct.ok && fold(selectedCategory(direct.html)) === fold(divisionName)) {
+      direct = await expandRankingPage(sourceUrl, direct);
       return { html: direct.html, warning: null };
     }
   }
