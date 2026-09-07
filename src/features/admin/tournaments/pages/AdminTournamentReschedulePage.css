@@ -37,7 +37,9 @@
   color: #172033;
 }
 
-.admin-reschedules__toolbar button {
+.admin-reschedules__toolbar button,
+.admin-reschedules__offline button,
+.admin-reschedules__apply button {
   padding: 0.5rem 0.75rem;
   border: 1px solid #cbd5e1;
   border-radius: 999px;
@@ -49,6 +51,11 @@
 .admin-reschedules__toolbar button[aria-pressed="true"] {
   background: #172033;
   color: #ffffff;
+}
+
+.admin-reschedules button:disabled {
+  cursor: wait;
+  opacity: 0.58;
 }
 
 .admin-reschedules__list {
@@ -67,6 +74,10 @@
 
 .admin-reschedules__card--approved {
   border-color: #a9d7b8;
+}
+
+.admin-reschedules__card--applied {
+  border-color: #86c99f;
 }
 
 .admin-reschedules__card--rejected,
@@ -119,7 +130,9 @@
 }
 
 .admin-reschedules__swap,
-.admin-reschedules__approvals {
+.admin-reschedules__approvals,
+.admin-reschedules__offline,
+.admin-reschedules__apply {
   display: grid;
   gap: 0.55rem;
   padding: 0.75rem;
@@ -150,8 +163,70 @@
   color: #79520b;
 }
 
+.admin-reschedules__offline {
+  background: #fffaf0;
+  border: 1px solid #ead7a9;
+}
+
+.admin-reschedules__offline > p,
+.admin-reschedules__apply > p {
+  margin: 0;
+}
+
+.admin-reschedules__offline-row {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid #eadfca;
+}
+
+.admin-reschedules__offline-row label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-reschedules__offline-row input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.6rem;
+  background: #ffffff;
+  font: inherit;
+}
+
+.admin-reschedules__offline-row > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.admin-reschedules__offline-row button:first-child,
+.admin-reschedules__apply button {
+  border-color: #86c99f;
+  background: #e8f6ed;
+  color: #21613b;
+}
+
+.admin-reschedules__offline-row button:last-child {
+  border-color: #e9b1b1;
+  color: #9d1d1d;
+}
+
+.admin-reschedules__apply {
+  background: #f0f8f3;
+  border: 1px solid #b7ddc3;
+}
+
+.admin-reschedules__apply button {
+  justify-self: start;
+  font-weight: 700;
+}
+
 .admin-reschedules__warning,
 .admin-reschedules__ready,
+.admin-reschedules__success,
+.admin-reschedules__applied,
 .admin-reschedules__error,
 .admin-reschedules__empty {
   margin: 0;
@@ -164,7 +239,9 @@
   color: #714f05;
 }
 
-.admin-reschedules__ready {
+.admin-reschedules__ready,
+.admin-reschedules__success,
+.admin-reschedules__applied {
   background: #e8f6ed;
   color: #21613b;
 }
@@ -206,5 +283,14 @@
 
   .admin-reschedules__approvals > div > span:last-child {
     justify-items: start;
+  }
+
+  .admin-reschedules__offline-row > div {
+    display: grid;
+  }
+
+  .admin-reschedules__offline-row button,
+  .admin-reschedules__apply button {
+    width: 100%;
   }
 }
