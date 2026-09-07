@@ -104,7 +104,10 @@ test("une équipe sans compte peut répondre hors application sans accord forcé
 });
 
 test("le back-office déclenche l'application et affiche l'état obsolète", () => {
-  assert.match(adminService, /ADMIN_RESCHEDULE_APPLY_LABEL = "Appliquer le report"/);
+  assert.match(
+    adminService,
+    /ADMIN_RESCHEDULE_APPLY_LABEL = "Appliquer le report"/,
+  );
   assert.match(adminService, /admin_apply_tournament_reschedule_request/);
   assert.match(
     adminService,

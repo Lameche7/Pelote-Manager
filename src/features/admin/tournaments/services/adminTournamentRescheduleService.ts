@@ -28,12 +28,7 @@ export type AdminTournamentRescheduleRequest = {
   requesterLabel: string;
   proposalKind: "free_slot" | "swap";
   status:
-    | "pending"
-    | "approved"
-    | "rejected"
-    | "cancelled"
-    | "stale"
-    | "applied";
+    "pending" | "approved" | "rejected" | "cancelled" | "stale" | "applied";
   original: {
     playDate: string;
     startsAt: string;
@@ -217,7 +212,9 @@ export const adminTournamentRescheduleService = {
     return status(data);
   },
 
-  async apply(requestId: string): Promise<AdminTournamentRescheduleApplyResult> {
+  async apply(
+    requestId: string,
+  ): Promise<AdminTournamentRescheduleApplyResult> {
     const { data, error } = await supabase.rpc(
       "admin_apply_tournament_reschedule_request",
       { target_request_id: requestId },

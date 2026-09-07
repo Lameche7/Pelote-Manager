@@ -69,7 +69,9 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
       return;
     }
     if (mode === "sets" && value > 20) {
-      setError("Le nombre de manches à gagner doit être compris entre 1 et 20.");
+      setError(
+        "Le nombre de manches à gagner doit être compris entre 1 et 20.",
+      );
       return;
     }
 
@@ -118,7 +120,8 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
             <select
               value={mode}
               onChange={(event) => {
-                const nextMode = event.target.value as ChampionshipResultInputMode;
+                const nextMode = event.target
+                  .value as ChampionshipResultInputMode;
                 setMode(nextMode);
                 if (!configured) {
                   setWinningScore(nextMode === "sets" ? "2" : "35");

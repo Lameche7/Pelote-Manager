@@ -41,9 +41,9 @@ const staleReasonLabels: Record<string, string> = {
   swap_match_has_result:
     "Le match proposé pour l’échange possède désormais un résultat.",
   match_unpublished: "La partie n’est plus publiée.",
-  swap_match_unpublished:
-    "Le match proposé pour l’échange n’est plus publié.",
-  target_slot_invalid: "Le créneau demandé n’est plus disponible dans le tournoi.",
+  swap_match_unpublished: "Le match proposé pour l’échange n’est plus publié.",
+  target_slot_invalid:
+    "Le créneau demandé n’est plus disponible dans le tournoi.",
   target_slot_started: "Le créneau demandé a déjà commencé.",
   target_slot_conflict: "Le créneau demandé est désormais occupé.",
   swap_return_slot_conflict:
@@ -225,8 +225,8 @@ export function AdminTournamentReschedulePage() {
           <h1>Reports de parties</h1>
           <p>
             Suivez les demandes, recueillez si nécessaire une réponse hors
-            application, puis appliquez uniquement les reports acceptés par toutes
-            les équipes concernées.
+            application, puis appliquez uniquement les reports acceptés par
+            toutes les équipes concernées.
           </p>
         </div>
         <div className="admin-reschedules__summary">
@@ -243,8 +243,9 @@ export function AdminTournamentReschedulePage() {
       </header>
 
       <p className="admin-reschedules__ready" role="status">
-        L’application est atomique : planning, éventuel échange, grille finale et
-        calendrier sont modifiés ensemble, ou aucun changement n’est conservé.
+        L’application est atomique : planning, éventuel échange, grille finale
+        et calendrier sont modifiés ensemble, ou aucun changement n’est
+        conservé.
       </p>
 
       <div className="admin-reschedules__toolbar">
@@ -379,9 +380,9 @@ export function AdminTournamentReschedulePage() {
                 <div className="admin-reschedules__offline">
                   <strong>À contacter hors application</strong>
                   <p>
-                    Pelote Manager n’invente aucun accord. Après avoir réellement
-                    contacté l’équipe, enregistrez sa réponse et le moyen de
-                    contact utilisé.
+                    Pelote Manager n’invente aucun accord. Après avoir
+                    réellement contacté l’équipe, enregistrez sa réponse et le
+                    moyen de contact utilisé.
                   </p>
                   {missingActors.map((approval) => {
                     const key = `${request.id}:${approval.teamId}`;
@@ -458,8 +459,8 @@ export function AdminTournamentReschedulePage() {
 
               {request.status === "applied" && (
                 <p className="admin-reschedules__applied" role="status">
-                  Planning et calendrier synchronisés. Les équipes reliées ont été
-                  notifiées du nouveau créneau.
+                  Planning et calendrier synchronisés. Les équipes reliées ont
+                  été notifiées du nouveau créneau.
                 </p>
               )}
 
