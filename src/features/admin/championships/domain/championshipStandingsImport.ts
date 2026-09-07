@@ -25,6 +25,11 @@ export type ChampionshipStandingImportRow = {
   sourcePayload: Record<string, string>;
 };
 
+export type ChampionshipGeneralStandingImportRow =
+  ChampionshipStandingImportRow & {
+    poolRank: number;
+  };
+
 export type ChampionshipStandingsPreviewFile = {
   standings: ChampionshipStandingImportRow[];
   issues: ChampionshipStandingIssue[];
@@ -42,6 +47,7 @@ export type ChampionshipStandingsFileDescriptor = {
 export type ChampionshipStandingsImportPayload = {
   file: ChampionshipStandingsFileDescriptor;
   standings: ChampionshipStandingImportRow[];
+  generalStandings?: ChampionshipGeneralStandingImportRow[];
 };
 
 const fold = (value: string) =>
