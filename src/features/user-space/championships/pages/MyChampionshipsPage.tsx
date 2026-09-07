@@ -421,13 +421,21 @@ function PoolTable({
                 key={team.teamId}
                 className={team.isMyTeam ? "is-mine" : undefined}
               >
-                <td><strong>{team.officialRank ?? "—"}</strong></td>
-                <td><strong>{team.teamLabel}</strong><span>{team.clubName}</span></td>
+                <td>
+                  <strong>{team.officialRank ?? "—"}</strong>
+                </td>
+                <td>
+                  <strong>{team.teamLabel}</strong>
+                  <span>{team.clubName}</span>
+                </td>
                 <td>{team.officialPoints ?? "—"}</td>
                 <td>{team.played}</td>
                 <td>{team.wins}</td>
                 <td>{team.losses}</td>
-                <td>{team.scoreDifference > 0 ? "+" : ""}{team.scoreDifference}</td>
+                <td>
+                  {team.scoreDifference > 0 ? "+" : ""}
+                  {team.scoreDifference}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -463,12 +471,15 @@ const qualificationLabel = (
 
 function GeneralTable({ context }: { context: MyChampionshipRankingContext }) {
   const myStanding = context.generalStandings.find((team) => team.isMyTeam);
-  const myZone = myStanding ? qualificationLabel(myStanding.rank, context) : null;
+  const myZone = myStanding
+    ? qualificationLabel(myStanding.rank, context)
+    : null;
 
   if (context.generalStandings.length === 0) {
     return (
       <div className="my-championships__empty-block">
-        Le classement général officiel à l’issue des poules n’est pas encore disponible.
+        Le classement général officiel à l’issue des poules n’est pas encore
+        disponible.
       </div>
     );
   }
@@ -476,15 +487,33 @@ function GeneralTable({ context }: { context: MyChampionshipRankingContext }) {
   return (
     <>
       {myStanding && myZone && (
-        <div className={`my-championships__qualification is-${myZone.key}`} role="status">
-          <div><span>Votre situation</span><strong>{myStanding.rank}e / {context.generalStandings.length}</strong></div>
+        <div
+          className={`my-championships__qualification is-${myZone.key}`}
+          role="status"
+        >
+          <div>
+            <span>Votre situation</span>
+            <strong>
+              {myStanding.rank}e / {context.generalStandings.length}
+            </strong>
+          </div>
           <p>{myZone.label}</p>
         </div>
       )}
       <div className="my-championships__table-scroll">
         <table>
           <thead>
-            <tr><th>Gén.</th><th>Équipe</th><th>Poule</th><th>Rang poule</th><th>Pts</th><th>J</th><th>V</th><th>D</th><th>+/-</th></tr>
+            <tr>
+              <th>Gén.</th>
+              <th>Équipe</th>
+              <th>Poule</th>
+              <th>Rang poule</th>
+              <th>Pts</th>
+              <th>J</th>
+              <th>V</th>
+              <th>D</th>
+              <th>+/-</th>
+            </tr>
           </thead>
           <tbody>
             {context.generalStandings.map((team) => {
@@ -496,14 +525,27 @@ function GeneralTable({ context }: { context: MyChampionshipRankingContext }) {
                     ? " qualification-boundary-barrage"
                     : "";
               return (
-                <tr key={team.teamId} className={`${team.isMyTeam ? "is-mine" : ""} is-${zone.key}${boundaryClass}`.trim()}>
-                  <td><strong>{team.rank}</strong></td>
-                  <td><strong>{team.teamLabel}</strong><span>{team.clubName}</span></td>
+                <tr
+                  key={team.teamId}
+                  className={`${team.isMyTeam ? "is-mine" : ""} is-${zone.key}${boundaryClass}`.trim()}
+                >
+                  <td>
+                    <strong>{team.rank}</strong>
+                  </td>
+                  <td>
+                    <strong>{team.teamLabel}</strong>
+                    <span>{team.clubName}</span>
+                  </td>
                   <td>{team.poolCode ?? "—"}</td>
                   <td>{team.poolRank ?? "—"}</td>
                   <td>{team.points ?? "—"}</td>
-                  <td>{team.played}</td><td>{team.wins}</td><td>{team.losses}</td>
-                  <td>{team.scoreDifference > 0 ? "+" : ""}{team.scoreDifference}</td>
+                  <td>{team.played}</td>
+                  <td>{team.wins}</td>
+                  <td>{team.losses}</td>
+                  <td>
+                    {team.scoreDifference > 0 ? "+" : ""}
+                    {team.scoreDifference}
+                  </td>
                 </tr>
               );
             })}
@@ -512,43 +554,92 @@ function GeneralTable({ context }: { context: MyChampionshipRankingContext }) {
       </div>
       <div className="my-championships__qualification-legend">
         {context.qualification.directCutoff !== null && (
-          <span className="is-direct">Qualification directe : 1 à {context.qualification.directCutoff}</span>
+          <span className="is-direct">
+            Qualification directe : 1 à {context.qualification.directCutoff}
+          </span>
         )}
-        {context.qualification.barrageStart !== null && context.qualification.barrageEnd !== null && (
-          <span className="is-barrage">Barrage : {context.qualification.barrageStart} à {context.qualification.barrageEnd}</span>
-        )}
+        {context.qualification.barrageStart !== null &&
+          context.qualification.barrageEnd !== null && (
+            <span className="is-barrage">
+              Barrage : {context.qualification.barrageStart} à{" "}
+              {context.qualification.barrageEnd}
+            </span>
+          )}
       </div>
       <small>
-        Classement général et statistiques issus de la source officielle. Les zones sont déduites uniquement des phases finales officielles déjà publiées.
+        Classement général et statistiques issus de la source officielle. Les
+        zones sont déduites uniquement des phases finales officielles déjà
+        publiées.
       </small>
     </>
   );
 }
 
-function Standings({ championship, context }: { championship: MyChampionship; context: MyChampionshipRankingContext | null }) {
+function Standings({
+  championship,
+  context,
+}: {
+  championship: MyChampionship;
+  context: MyChampionshipRankingContext | null;
+}) {
   const [view, setView] = useState<"mine" | "pools" | "general">("mine");
   const myPool = context?.pools.find((pool) => pool.isMyPool) ?? null;
-  const [selectedPoolId, setSelectedPoolId] = useState<string | null>(myPool?.poolId ?? championship.poolId);
-  const selectedPool = context?.pools.find((pool) => pool.poolId === selectedPoolId) ?? myPool;
+  const [selectedPoolId, setSelectedPoolId] = useState<string | null>(
+    myPool?.poolId ?? championship.poolId,
+  );
+  const selectedPool =
+    context?.pools.find((pool) => pool.poolId === selectedPoolId) ?? myPool;
 
   if (!championship.poolId) {
-    return <div className="my-championships__empty-block">Cette équipe n’est pas rattachée à une poule dans la source officielle.</div>;
+    return (
+      <div className="my-championships__empty-block">
+        Cette équipe n’est pas rattachée à une poule dans la source officielle.
+      </div>
+    );
   }
 
   return (
     <div className="my-championships__standings-wrap">
       <div className="my-championships__standings-heading">
-        <div><p className="my-championships__label">Classements officiels</p><strong>{championship.divisionName}</strong></div>
+        <div>
+          <p className="my-championships__label">Classements officiels</p>
+          <strong>{championship.divisionName}</strong>
+        </div>
         <span>Source fédérale</span>
       </div>
       <div className="my-championships__ranking-tabs" role="tablist">
-        <button type="button" className={view === "mine" ? "is-active" : undefined} onClick={() => setView("mine")}>Ma poule</button>
-        <button type="button" className={view === "pools" ? "is-active" : undefined} onClick={() => setView("pools")} disabled={!context || context.pools.length === 0}>Toutes les poules</button>
-        <button type="button" className={view === "general" ? "is-active" : undefined} onClick={() => setView("general")} disabled={!context}>Classement général</button>
+        <button
+          type="button"
+          className={view === "mine" ? "is-active" : undefined}
+          onClick={() => setView("mine")}
+        >
+          Ma poule
+        </button>
+        <button
+          type="button"
+          className={view === "pools" ? "is-active" : undefined}
+          onClick={() => setView("pools")}
+          disabled={!context || context.pools.length === 0}
+        >
+          Toutes les poules
+        </button>
+        <button
+          type="button"
+          className={view === "general" ? "is-active" : undefined}
+          onClick={() => setView("general")}
+          disabled={!context}
+        >
+          Classement général
+        </button>
       </div>
       {view === "mine" && (
         <div>
-          <div className="my-championships__ranking-subtitle"><strong>{myPool?.poolName ?? `Poule ${championship.poolCode ?? "—"}`}</strong><span>Votre poule</span></div>
+          <div className="my-championships__ranking-subtitle">
+            <strong>
+              {myPool?.poolName ?? `Poule ${championship.poolCode ?? "—"}`}
+            </strong>
+            <span>Votre poule</span>
+          </div>
           <PoolTable pool={myPool} fallback={championship} />
         </div>
       )}
@@ -556,14 +647,31 @@ function Standings({ championship, context }: { championship: MyChampionship; co
         <div>
           <div className="my-championships__pool-tabs">
             {context.pools.map((pool) => (
-              <button type="button" key={pool.poolId} className={pool.poolId === selectedPool?.poolId ? "is-active" : undefined} onClick={() => setSelectedPoolId(pool.poolId)}>
-                Poule {pool.poolCode}{pool.isMyPool && <small>Vous</small>}
+              <button
+                type="button"
+                key={pool.poolId}
+                className={
+                  pool.poolId === selectedPool?.poolId ? "is-active" : undefined
+                }
+                onClick={() => setSelectedPoolId(pool.poolId)}
+              >
+                Poule {pool.poolCode}
+                {pool.isMyPool && <small>Vous</small>}
               </button>
             ))}
           </div>
           {selectedPool && (
             <>
-              <div className="my-championships__ranking-subtitle"><strong>{selectedPool.poolName ?? `Poule ${selectedPool.poolCode}`}</strong><span>{selectedPool.isMyPool ? "Votre poule" : "Autre poule de la série"}</span></div>
+              <div className="my-championships__ranking-subtitle">
+                <strong>
+                  {selectedPool.poolName ?? `Poule ${selectedPool.poolCode}`}
+                </strong>
+                <span>
+                  {selectedPool.isMyPool
+                    ? "Votre poule"
+                    : "Autre poule de la série"}
+                </span>
+              </div>
               <PoolTable pool={selectedPool} fallback={championship} />
             </>
           )}
@@ -574,7 +682,12 @@ function Standings({ championship, context }: { championship: MyChampionship; co
   );
 }
 
-function ChampionshipCard({ championship, settings, rankingContext, onResultSaved }: {
+function ChampionshipCard({
+  championship,
+  settings,
+  rankingContext,
+  onResultSaved,
+}: {
   championship: MyChampionship;
   settings: MyChampionshipResultSettings | null;
   rankingContext: MyChampionshipRankingContext | null;
@@ -582,57 +695,150 @@ function ChampionshipCard({ championship, settings, rankingContext, onResultSave
 }) {
   const now = Date.now();
   const sortedMatches = useMemo(
-    () => [...championship.matches].sort((left, right) => {
-      const leftTime = matchTimestamp(left);
-      const rightTime = matchTimestamp(right);
-      if (leftTime === null && rightTime === null) return 0;
-      if (leftTime === null) return 1;
-      if (rightTime === null) return -1;
-      return leftTime - rightTime;
-    }),
+    () =>
+      [...championship.matches].sort((left, right) => {
+        const leftTime = matchTimestamp(left);
+        const rightTime = matchTimestamp(right);
+        if (leftTime === null && rightTime === null) return 0;
+        if (leftTime === null) return 1;
+        if (rightTime === null) return -1;
+        return leftTime - rightTime;
+      }),
     [championship.matches],
   );
-  const nextMatch = sortedMatches.find((match) => {
-    const timestamp = matchTimestamp(match);
-    return timestamp !== null && timestamp >= now && !hasOfficialResult(match) && !match.submission;
-  }) ?? null;
-  const lastResult = [...sortedMatches].reverse().find((match) => {
-    const timestamp = matchTimestamp(match);
-    return hasOfficialResult(match) || match.submission !== null || (timestamp !== null && timestamp < now && match.status === "played");
-  }) ?? null;
-  const otherMatches = sortedMatches.filter((match) => match.id !== nextMatch?.id && match.id !== lastResult?.id);
-  const generalStanding = rankingContext?.generalStandings.find((team) => team.isMyTeam);
+  const nextMatch =
+    sortedMatches.find((match) => {
+      const timestamp = matchTimestamp(match);
+      return (
+        timestamp !== null &&
+        timestamp >= now &&
+        !hasOfficialResult(match) &&
+        !match.submission
+      );
+    }) ?? null;
+  const lastResult =
+    [...sortedMatches].reverse().find((match) => {
+      const timestamp = matchTimestamp(match);
+      return (
+        hasOfficialResult(match) ||
+        match.submission !== null ||
+        (timestamp !== null && timestamp < now && match.status === "played")
+      );
+    }) ?? null;
+  const otherMatches = sortedMatches.filter(
+    (match) => match.id !== nextMatch?.id && match.id !== lastResult?.id,
+  );
+  const generalStanding = rankingContext?.generalStandings.find(
+    (team) => team.isMyTeam,
+  );
 
   return (
     <article className="my-championships__card">
       <header className="my-championships__card-header">
-        <div><p className="my-championships__eyebrow">{championship.seasonLabel}</p><h2>{championship.championshipName}</h2><p>{championship.specialty}</p></div>
+        <div>
+          <p className="my-championships__eyebrow">
+            {championship.seasonLabel}
+          </p>
+          <h2>{championship.championshipName}</h2>
+          <p>{championship.specialty}</p>
+        </div>
         <div className="my-championships__header-actions">
-          <span>{statusLabels[championship.championshipStatus] ?? championship.championshipStatus}</span>
-          {championship.sourceUrl && <a href={officialSourceHref(championship.sourceUrl)} target="_blank" rel="noreferrer">Source officielle <ExternalLink aria-hidden="true" /></a>}
+          <span>
+            {statusLabels[championship.championshipStatus] ??
+              championship.championshipStatus}
+          </span>
+          {championship.sourceUrl && (
+            <a
+              href={officialSourceHref(championship.sourceUrl)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Source officielle <ExternalLink aria-hidden="true" />
+            </a>
+          )}
         </div>
       </header>
       <div className="my-championships__identity-grid">
-        <div><span>Série</span><strong>{championship.divisionName}</strong></div>
-        <div><span>Poule</span><strong>{championship.poolCode ?? "—"}</strong></div>
-        <div><span>Équipe</span><strong>{championship.teamLabel}</strong></div>
-        <div><span>Classement général</span><strong>{generalStanding ? `${generalStanding.rank}e / ${rankingContext?.generalStandings.length ?? "—"}` : "Non importé"}</strong></div>
+        <div>
+          <span>Série</span>
+          <strong>{championship.divisionName}</strong>
+        </div>
+        <div>
+          <span>Poule</span>
+          <strong>{championship.poolCode ?? "—"}</strong>
+        </div>
+        <div>
+          <span>Équipe</span>
+          <strong>{championship.teamLabel}</strong>
+        </div>
+        <div>
+          <span>Classement général</span>
+          <strong>
+            {generalStanding
+              ? `${generalStanding.rank}e / ${rankingContext?.generalStandings.length ?? "—"}`
+              : "Non importé"}
+          </strong>
+        </div>
       </div>
       <section className="my-championships__players" aria-label="Mon équipe">
         <p className="my-championships__label">Mon équipe</p>
-        <div>{championship.players.map((player) => <span key={`${player.firstName}-${player.lastName}`}><strong>{player.firstName} {player.lastName}</strong>{player.isMe && <small>Vous</small>}</span>)}</div>
+        <div>
+          {championship.players.map((player) => (
+            <span key={`${player.firstName}-${player.lastName}`}>
+              <strong>
+                {player.firstName} {player.lastName}
+              </strong>
+              {player.isMe && <small>Vous</small>}
+            </span>
+          ))}
+        </div>
       </section>
       {(nextMatch || lastResult) && (
         <section className="my-championships__highlights">
-          {nextMatch && <div><p className="my-championships__label">Prochaine partie</p><MatchRow match={nextMatch} settings={settings} emphasis="next" onResultSaved={onResultSaved} /></div>}
-          {lastResult && <div><p className="my-championships__label">Dernier résultat</p><MatchRow match={lastResult} settings={settings} emphasis="last" onResultSaved={onResultSaved} /></div>}
+          {nextMatch && (
+            <div>
+              <p className="my-championships__label">Prochaine partie</p>
+              <MatchRow
+                match={nextMatch}
+                settings={settings}
+                emphasis="next"
+                onResultSaved={onResultSaved}
+              />
+            </div>
+          )}
+          {lastResult && (
+            <div>
+              <p className="my-championships__label">Dernier résultat</p>
+              <MatchRow
+                match={lastResult}
+                settings={settings}
+                emphasis="last"
+                onResultSaved={onResultSaved}
+              />
+            </div>
+          )}
         </section>
       )}
       <Standings championship={championship} context={rankingContext} />
       <details className="my-championships__calendar">
-        <summary>Voir toutes mes parties <span>{championship.matches.length}</span></summary>
+        <summary>
+          Voir toutes mes parties <span>{championship.matches.length}</span>
+        </summary>
         <div>
-          {otherMatches.length > 0 ? otherMatches.map((match) => <MatchRow key={match.id} match={match} settings={settings} onResultSaved={onResultSaved} />) : <div className="my-championships__empty-block">Aucune autre partie à afficher.</div>}
+          {otherMatches.length > 0 ? (
+            otherMatches.map((match) => (
+              <MatchRow
+                key={match.id}
+                match={match}
+                settings={settings}
+                onResultSaved={onResultSaved}
+              />
+            ))
+          ) : (
+            <div className="my-championships__empty-block">
+              Aucune autre partie à afficher.
+            </div>
+          )}
         </div>
       </details>
     </article>
@@ -641,20 +847,39 @@ function ChampionshipCard({ championship, settings, rankingContext, onResultSave
 
 export function MyChampionshipsPage() {
   const [championships, setChampionships] = useState<MyChampionship[]>([]);
-  const [resultSettings, setResultSettings] = useState(new Map<string, MyChampionshipResultSettings>());
-  const [rankingContexts, setRankingContexts] = useState(new Map<string, MyChampionshipRankingContext>());
+  const [resultSettings, setResultSettings] = useState(
+    new Map<string, MyChampionshipResultSettings>(),
+  );
+  const [rankingContexts, setRankingContexts] = useState(
+    new Map<string, MyChampionshipRankingContext>(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const applyLoadedData = useCallback((
-    items: MyChampionship[],
-    settings: MyChampionshipResultSettings[],
-    contexts: MyChampionshipRankingContext[],
-  ) => {
-    setChampionships(items);
-    setResultSettings(new Map(settings.map((item) => [item.championshipId, item] as const)));
-    setRankingContexts(new Map(contexts.map((item) => [`${item.championshipId}:${item.divisionId}:${item.myTeamId}`, item] as const)));
-  }, []);
+  const applyLoadedData = useCallback(
+    (
+      items: MyChampionship[],
+      settings: MyChampionshipResultSettings[],
+      contexts: MyChampionshipRankingContext[],
+    ) => {
+      setChampionships(items);
+      setResultSettings(
+        new Map(settings.map((item) => [item.championshipId, item] as const)),
+      );
+      setRankingContexts(
+        new Map(
+          contexts.map(
+            (item) =>
+              [
+                `${item.championshipId}:${item.divisionId}:${item.myTeamId}`,
+                item,
+              ] as const,
+          ),
+        ),
+      );
+    },
+    [],
+  );
 
   const refresh = useCallback(async () => {
     const [items, settings, contexts] = await Promise.all([
@@ -677,35 +902,67 @@ export function MyChampionshipsPage() {
       })
       .catch((cause) => {
         if (!active) return;
-        setError(cause instanceof Error ? cause.message : "Impossible de charger vos championnats.");
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Impossible de charger vos championnats.",
+        );
       })
       .finally(() => {
         if (active) setLoading(false);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [applyLoadedData]);
 
   return (
     <UserSpaceShell>
-      <section className="my-championships" aria-labelledby="my-championships-title">
+      <section
+        className="my-championships"
+        aria-labelledby="my-championships-title"
+      >
         <header className="my-championships__page-header">
-          <div className="my-championships__page-icon"><Trophy aria-hidden="true" /></div>
-          <div><p className="my-championships__eyebrow">Mon espace</p><h1 id="my-championships-title">Mes championnats</h1><p>Retrouvez vos équipes, vos prochaines parties, vos classements de poule et votre situation au classement général.</p></div>
+          <div className="my-championships__page-icon">
+            <Trophy aria-hidden="true" />
+          </div>
+          <div>
+            <p className="my-championships__eyebrow">Mon espace</p>
+            <h1 id="my-championships-title">Mes championnats</h1>
+            <p>
+              Retrouvez vos équipes, vos prochaines parties, vos classements de
+              poule et votre situation au classement général.
+            </p>
+          </div>
         </header>
         {loading ? (
           <div className="my-championships__state">Chargement…</div>
         ) : error ? (
-          <div className="my-championships__state is-error" role="alert">{error}</div>
+          <div className="my-championships__state is-error" role="alert">
+            {error}
+          </div>
         ) : championships.length === 0 ? (
-          <div className="my-championships__state"><strong>Aucun championnat rattaché à votre compte.</strong><span>Dès qu’une licence de championnat est reliée à votre profil, vos équipes et vos parties apparaissent ici automatiquement.</span></div>
+          <div className="my-championships__state">
+            <strong>Aucun championnat rattaché à votre compte.</strong>
+            <span>
+              Dès qu’une licence de championnat est reliée à votre profil, vos
+              équipes et vos parties apparaissent ici automatiquement.
+            </span>
+          </div>
         ) : (
           <div className="my-championships__list">
             {championships.map((championship) => (
               <ChampionshipCard
                 key={`${championship.championshipId}-${championship.teamId}`}
                 championship={championship}
-                settings={resultSettings.get(championship.championshipId) ?? null}
-                rankingContext={rankingContexts.get(`${championship.championshipId}:${championship.divisionId}:${championship.teamId}`) ?? null}
+                settings={
+                  resultSettings.get(championship.championshipId) ?? null
+                }
+                rankingContext={
+                  rankingContexts.get(
+                    `${championship.championshipId}:${championship.divisionId}:${championship.teamId}`,
+                  ) ?? null
+                }
                 onResultSaved={refresh}
               />
             ))}

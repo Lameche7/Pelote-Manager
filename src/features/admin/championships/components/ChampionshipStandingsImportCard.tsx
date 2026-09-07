@@ -235,7 +235,9 @@ export function ChampionshipStandingsImportCard({
           onClick={() => void readOfficialStandings()}
           disabled={!sourceUrl || divisions.length === 0 || busy}
         >
-          {busy ? "Lecture de la fédération…" : "Lire les classements officiels"}
+          {busy
+            ? "Lecture de la fédération…"
+            : "Lire les classements officiels"}
         </button>
         <span>
           {divisions.length} série(s) connue(s) · poules + classement général

@@ -141,9 +141,7 @@ const categoryOptions = (html) => {
     (match) => {
       const attrs = match[1];
       return {
-        value: decodeHtml(
-          attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "",
-        ),
+        value: decodeHtml(attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? ""),
         label: decodeHtml(match[2].replace(/<[^>]+>/gu, ""))
           .replace(/\s+/gu, " ")
           .trim(),

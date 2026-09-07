@@ -150,6 +150,8 @@ export const myChampionshipRankingContextService = {
         ),
       );
     }
-    return rows(data).map(mapContext).filter((item) => item.myTeamId);
+    return rows(data)
+      .map(mapContext)
+      .filter((item) => item.myTeamId);
   },
 };
