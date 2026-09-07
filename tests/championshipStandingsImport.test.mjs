@@ -6,8 +6,8 @@ const domainUrl = new URL(
   "../src/features/admin/championships/domain/championshipStandingsImport.ts",
   import.meta.url,
 );
-const clipboardUrl = new URL(
-  "../src/features/admin/championships/domain/championshipStandingsClipboard.ts",
+const sourceReaderUrl = new URL(
+  "../api/championship-standings-source.mjs",
   import.meta.url,
 );
 const sourceServiceUrl = new URL(
@@ -49,33 +49,29 @@ test("le parseur de classement accepte les intitulés officiels courants", async
   assert.match(domain, /goal-average/);
 });
 
-test("le copier-coller fédéral accepte une série choisie et un numéro d'équipe sur la ligne suivante", async () => {
-  const clipboard = await read(clipboardUrl);
-  const card = await read(cardUrl);
+test("la lecture officielle se fait côté serveur sans copier-coller", async () => {
+  const reader = await read(sourceReaderUrl);
 
-  assert.match(clipboard, /fallbackDivision/);
-  assert.match(clipboard, /teamWithFollowingNumber/);
-  assert.match(clipboard, /wins \+ losses \+ \(lost \?\? 0\)/);
-  assert.match(card, /Série du classement copié/);
-  assert.match(card, /championshipImportService/);
-  assert.match(card, /divisionOptions/);
+  assert.match(reader, /lbpb\.competition\.ffpb\.net/);
+  assert.match(reader, /ALLOWED_HOSTS/);
+  assert.match(reader, /FFPB_COMPETITION/);
+  assert.match(reader, /categoryOptions/);
+  assert.match(reader, /WD_BUTTON_CLICK_/);
+  assert.match(reader, /I54/);
+  assert.match(reader, /for \(const division of divisions\)/);
+  assert.match(reader, /parseStandings/);
 });
 
-test("les entêtes fédéraux ne sont jamais pris pour une équipe et peuvent porter le premier rang", async () => {
-  const clipboard = await read(clipboardUrl);
+test("le lecteur refuse une source externe arbitraire", async () => {
+  const reader = await read(sourceReaderUrl);
 
-  assert.match(clipboard, /isStandingsHeaderLine/);
-  assert.match(clipboard, /trailingRankFromHeader/);
-  assert.match(clipboard, /pendingRank = trailingRankFromHeader\(line\) \?\? pendingRank/);
-  assert.match(clipboard, /isStandingsHeaderLine\(line\).*return null/s);
+  assert.match(reader, /if \(!ALLOWED_HOSTS\.has\(url\.hostname\)\)/);
+  assert.match(reader, /Cette source officielle n’est pas prise en charge/);
 });
 
-test("les fichiers de classement xlsx et csv sont acceptés et empreintés", async () => {
+test("les empreintes du classement restent traçables", async () => {
   const source = await read(sourceServiceUrl);
 
-  assert.match(source, /endsWith\("\.xlsx"\)/);
-  assert.match(source, /endsWith\("\.csv"\)/);
-  assert.match(source, /parseStandings/);
   assert.match(source, /describeStandings/);
   assert.match(source, /SHA-256/);
   assert.match(source, /kind: "standings"/);
@@ -87,14 +83,8 @@ test("le serveur prévisualise puis applique sans recalculer le classement", asy
     read(standingsServiceUrl),
   ]);
 
-  assert.match(
-    migration,
-    /admin_preview_championship_standings_import/,
-  );
-  assert.match(
-    migration,
-    /admin_apply_championship_standings_import/,
-  );
+  assert.match(migration, /admin_preview_championship_standings_import/);
+  assert.match(migration, /admin_apply_championship_standings_import/);
   assert.match(migration, /championship_club_can_manage/);
   assert.match(migration, /source_file\.kind = 'standings'/);
   assert.match(migration, /'alreadyImported'/);
@@ -112,17 +102,20 @@ test("une poule partielle ne peut pas effacer un classement officiel complet", a
   assert.match(migration, /Le classement de la poule est incomplet/);
 });
 
-test("l'administration affiche l'aperçu avant l'application", async () => {
+test("l'administration propose une actualisation automatique et compacte", async () => {
   const [card, integration] = await Promise.all([
     read(cardUrl),
     read(adminIntegrationUrl),
   ]);
 
-  assert.match(card, /Importer \/ actualiser le classement/);
-  assert.match(card, /Comparer le classement/);
+  assert.match(card, /Actualiser depuis la fédération/);
+  assert.match(card, /\/api\/championship-standings-source/);
+  assert.match(card, /Lire le classement officiel/);
   assert.match(card, /Appliquer le classement officiel/);
-  assert.match(card, /Aucun classement n’est recalculé ici/);
+  assert.doesNotMatch(card, /textarea/);
+  assert.doesNotMatch(card, /presse-papiers/);
   assert.match(integration, /ChampionshipStandingsImportCard/);
+  assert.match(integration, /championshipImportService\.detail/);
 });
 
 test("l'espace joueur reçoit les valeurs officielles avec un indicateur de provenance", async () => {
