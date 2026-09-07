@@ -52,6 +52,23 @@ const rankAndTeamFromLine = (value: string) => {
   return null;
 };
 
+const teamWithFollowingNumber = (lines: string[], index: number) => {
+  const line = lines[index] ?? "";
+  const next = lines[index + 1] ?? "";
+  if (
+    !line ||
+    line.startsWith("-") ||
+    isDivisionLine(line) ||
+    poolFromLine(line) ||
+    !/[A-Za-zÀ-ÖØ-öø-ÿ]/u.test(line) ||
+    !/^\d{1,3}$/u.test(next)
+  ) {
+    return null;
+  }
+  const teamLabel = `${line} ${next}`;
+  return parseTeam(teamLabel) ? teamLabel : null;
+};
+
 const numericTokens = (value: string) => {
   if (!/^-?\d+(?:[.,]\d+)?(?:\s+-?\d+(?:[.,]\d+)?)*$/u.test(value)) {
     return [];
@@ -64,6 +81,7 @@ const numericTokens = (value: string) => {
 
 export const parseChampionshipStandingsClipboard = (
   source: string,
+  fallbackDivision = "",
 ): ChampionshipStandingsPreviewFile => {
   const lines = source
     .split(/\r?\n/u)
@@ -72,7 +90,7 @@ export const parseChampionshipStandingsClipboard = (
   const standings: ChampionshipStandingImportRow[] = [];
   const issues: ChampionshipStandingsPreviewFile["issues"] = [];
 
-  let division = "";
+  let division = fallbackDivision.trim();
   let poolCode = "";
   let pendingRank: number | null = null;
 
@@ -93,14 +111,19 @@ export const parseChampionshipStandingsClipboard = (
     }
 
     if (/^\d{1,2}$/u.test(line)) {
-      const next = lines[index + 1] ?? "";
-      if (rankAndTeamFromLine(next)) {
-        pendingRank = Number(line);
-        continue;
-      }
+      pendingRank = Number(line);
+      continue;
     }
 
-    const teamCandidate = rankAndTeamFromLine(line);
+    let teamCandidate = rankAndTeamFromLine(line);
+    let consumedTeamNumberLine = false;
+    if (!teamCandidate) {
+      const splitTeamLabel = teamWithFollowingNumber(lines, index);
+      if (splitTeamLabel) {
+        teamCandidate = { rank: null, teamLabel: splitTeamLabel };
+        consumedTeamNumberLine = true;
+      }
+    }
     if (!teamCandidate) continue;
 
     const parsedTeam = parseTeam(teamCandidate.teamLabel);
@@ -113,23 +136,28 @@ export const parseChampionshipStandingsClipboard = (
         severity: "error",
         message: `Classement incomplet près de « ${teamCandidate.teamLabel} » : série, poule ou rang introuvable.`,
       });
+      if (consumedTeamNumberLine) index += 1;
       continue;
     }
 
     const stats: number[] = [];
-    let cursor = index + 1;
+    let cursor = index + (consumedTeamNumberLine ? 2 : 1);
     for (; cursor < lines.length; cursor += 1) {
       const candidate = lines[cursor];
       if (
         isDivisionLine(candidate) ||
         poolFromLine(candidate) ||
-        rankAndTeamFromLine(candidate)
+        rankAndTeamFromLine(candidate) ||
+        teamWithFollowingNumber(lines, cursor)
       ) {
         break;
       }
       if (candidate.startsWith("-")) continue;
       stats.push(...numericTokens(candidate));
-      if (stats.length >= 9) break;
+      if (stats.length >= 9) {
+        cursor += 1;
+        break;
+      }
     }
 
     if (stats.length < 9) {
@@ -138,10 +166,21 @@ export const parseChampionshipStandingsClipboard = (
         severity: "error",
         message: `Les chiffres officiels de ${teamCandidate.teamLabel} n’ont pas été reconnus.`,
       });
+      if (consumedTeamNumberLine) index += 1;
       continue;
     }
 
-    const [winsValue, lossesValue, lostValue, pointsValue, pointsPerGame, scoreForValue, scoreAgainstValue, differenceValue, averageDifference] = stats;
+    const [
+      winsValue,
+      lossesValue,
+      lostValue,
+      pointsValue,
+      pointsPerGame,
+      scoreForValue,
+      scoreAgainstValue,
+      differenceValue,
+      averageDifference,
+    ] = stats;
     const wins = parseInteger(String(winsValue));
     const losses = parseInteger(String(lossesValue));
     const lost = parseInteger(String(lostValue));
@@ -159,7 +198,10 @@ export const parseChampionshipStandingsClipboard = (
       clubNormalized: fold(parsedTeam.clubName),
       teamNumber: parsedTeam.teamNumber,
       rank,
-      played: wins !== null && losses !== null ? wins + losses : null,
+      played:
+        wins !== null && losses !== null
+          ? wins + losses + (lost ?? 0)
+          : null,
       wins,
       draws: null,
       losses,
@@ -179,6 +221,8 @@ export const parseChampionshipStandingsClipboard = (
         "Dif. points moy.": String(averageDifference),
       },
     });
+
+    index = Math.max(index, cursor - 1);
   }
 
   if (standings.length === 0 && issues.length === 0) {
@@ -186,7 +230,7 @@ export const parseChampionshipStandingsClipboard = (
       row: 0,
       severity: "error",
       message:
-        "Aucune ligne de classement n’a été reconnue. Copiez le classement affiché sur la page fédérale, avec le nom de la série et les poules.",
+        "Aucune ligne de classement n’a été reconnue. Copiez le classement affiché sur la page fédérale avec au moins une poule complète.",
     });
   }
 
