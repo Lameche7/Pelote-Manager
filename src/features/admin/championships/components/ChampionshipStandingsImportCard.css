@@ -1,0 +1,140 @@
+.admin-championships__standings-reader {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.admin-championships__standings-reader-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.admin-championships__standings-reader-head h2,
+.admin-championships__standings-reader-head p {
+  margin: 0.2rem 0 0;
+}
+
+.admin-championships__standings-reader-head > div {
+  max-width: 58rem;
+}
+
+.admin-championships__standings-reader-head > a {
+  flex: 0 0 auto;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.admin-championships__standings-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  padding-top: 0.2rem;
+}
+
+.admin-championships__standings-actions > span,
+.admin-championships__standings-note {
+  color: var(--text-muted, #667085);
+  font-size: 0.92rem;
+}
+
+.admin-championships__standings-note {
+  margin: 0;
+}
+
+.admin-championships__standings-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 0.7rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid #e4e7ec;
+}
+
+.admin-championships__standings-summary > div {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 4.5rem;
+  align-content: center;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.8rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.admin-championships__standings-summary strong {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.admin-championships__standings-summary span {
+  color: var(--text-muted, #667085);
+  font-size: 0.85rem;
+}
+
+.admin-championships__standings-warning,
+.admin-championships__standings-error {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.8rem 0.95rem;
+}
+
+.admin-championships__standings-warning {
+  border: 1px solid #d0d5dd;
+}
+
+.admin-championships__standings-warning p {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted, #667085);
+}
+
+.admin-championships__standings-error {
+  border: 1px solid #f1b7b2;
+}
+
+.admin-championships__standings-changes {
+  display: grid;
+  gap: 0;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.8rem;
+  overflow: hidden;
+}
+
+.admin-championships__standings-changes > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid #e4e7ec;
+}
+
+.admin-championships__standings-changes > div:last-child {
+  border-bottom: 0;
+}
+
+.admin-championships__standings-changes h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-championships__standings-changes span {
+  color: var(--text-muted, #667085);
+  font-size: 0.9rem;
+}
+
+.admin-championships__standings-apply {
+  justify-self: start;
+}
+
+@media (max-width: 640px) {
+  .admin-championships__standings-reader-head,
+  .admin-championships__standings-changes > div {
+    display: grid;
+  }
+
+  .admin-championships__standings-reader-head > a {
+    justify-self: start;
+  }
+}
