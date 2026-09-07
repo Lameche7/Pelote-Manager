@@ -61,6 +61,15 @@ test("le copier-coller fédéral accepte une série choisie et un numéro d'équ
   assert.match(card, /divisionOptions/);
 });
 
+test("les entêtes fédéraux ne sont jamais pris pour une équipe et peuvent porter le premier rang", async () => {
+  const clipboard = await read(clipboardUrl);
+
+  assert.match(clipboard, /isStandingsHeaderLine/);
+  assert.match(clipboard, /trailingRankFromHeader/);
+  assert.match(clipboard, /pendingRank = trailingRankFromHeader\(line\) \?\? pendingRank/);
+  assert.match(clipboard, /isStandingsHeaderLine\(line\).*return null/s);
+});
+
 test("les fichiers de classement xlsx et csv sont acceptés et empreintés", async () => {
   const source = await read(sourceServiceUrl);
 
