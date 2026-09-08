@@ -11,6 +11,7 @@ export type AdminPayment = {
   amountCents: number;
   currency: "EUR";
   status: PaymentStatus;
+  reservationStatus: string;
   checkoutIntentId: string | null;
   orderId: string | null;
   providerPaymentId: string | null;
@@ -18,6 +19,9 @@ export type AdminPayment = {
   paidAt: string | null;
   expiresAt: string;
   createdAt: string;
+  paymentMode: string;
+  canCancelReservation: boolean;
+  canDeleteTest: boolean;
 };
 
 type AdminPaymentRow = {
@@ -30,6 +34,7 @@ type AdminPaymentRow = {
   amount_cents: number;
   currency: "EUR";
   status: PaymentStatus;
+  reservation_status: string;
   provider_checkout_intent_id: string | null;
   provider_order_id: string | null;
   provider_payment_id: string | null;
@@ -37,21 +42,19 @@ type AdminPaymentRow = {
   paid_at: string | null;
   expires_at: string;
   created_at: string;
+  payment_mode: string;
+  can_cancel_reservation: boolean;
+  can_delete_test: boolean;
 };
 
 export const adminPaymentService = {
-  async list(filters: {
-    status: PaymentStatus | "all";
-    from: string;
-    to: string;
-  }): Promise<AdminPayment[]> {
+  async list(filters: { status: PaymentStatus | "all"; from: string; to: string }): Promise<AdminPayment[]> {
     const { data, error } = await supabase.rpc("admin_list_payments", {
       status_filter: filters.status === "all" ? null : filters.status,
       range_start: new Date(`${filters.from}T00:00:00`).toISOString(),
       range_end: new Date(`${filters.to}T23:59:59.999`).toISOString(),
     });
     if (error) throw error;
-
     return ((data ?? []) as AdminPaymentRow[]).map((row) => ({
       id: row.id,
       reservationId: row.reservation_id,
@@ -62,6 +65,7 @@ export const adminPaymentService = {
       amountCents: row.amount_cents,
       currency: row.currency,
       status: row.status,
+      reservationStatus: row.reservation_status,
       checkoutIntentId: row.provider_checkout_intent_id,
       orderId: row.provider_order_id,
       providerPaymentId: row.provider_payment_id,
@@ -69,6 +73,9 @@ export const adminPaymentService = {
       paidAt: row.paid_at,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
+      paymentMode: row.payment_mode,
+      canCancelReservation: row.can_cancel_reservation,
+      canDeleteTest: row.can_delete_test,
     }));
   },
 
@@ -76,5 +83,20 @@ export const adminPaymentService = {
     const { data, error } = await supabase.rpc("expire_abandoned_payments");
     if (error) throw error;
     return Number(data ?? 0);
+  },
+
+  async cancelReservation(paymentId: string): Promise<boolean> {
+    const { data, error } = await supabase.rpc("admin_cancel_reservation_from_payment", {
+      target_payment_id: paymentId,
+    });
+    if (error) throw error;
+    return Boolean((data as Array<{ refund_required: boolean }> | null)?.[0]?.refund_required);
+  },
+
+  async deleteTest(paymentId: string): Promise<void> {
+    const { error } = await supabase.rpc("admin_delete_test_payment", {
+      target_payment_id: paymentId,
+    });
+    if (error) throw error;
   },
 };
