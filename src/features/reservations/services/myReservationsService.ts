@@ -60,6 +60,11 @@ export type CancellationResult = {
   refundRequired: boolean;
 };
 
+export type ResumePaymentResult = {
+  redirectUrl: string | null;
+  paymentUpdated: boolean;
+};
+
 export const myReservationsService = {
   async list(): Promise<MyReservation[]> {
     const { data, error } = await supabase.rpc("list_my_reservations");
@@ -102,9 +107,57 @@ export const myReservationsService = {
     return { refundRequired: Boolean(row?.refund_required) };
   },
 
-  async resumePayment(reservation: MyReservation): Promise<string> {
+  async resumePayment(reservation: MyReservation): Promise<ResumePaymentResult> {
     if (!reservation.paymentRequired || !reservation.paymentId) {
       throw new Error("Aucun paiement en attente n’est associé à cette réservation.");
+    }
+
+    if (
+      reservation.paymentExpiresAt &&
+      new Date(reservation.paymentExpiresAt).getTime() <= Date.now()
+    ) {
+      throw new Error("Ce paiement a expiré.");
+    }
+
+    const { data: paymentMode, error: paymentModeError } = await supabase.rpc(
+      "get_payment_mode",
+    );
+    if (paymentModeError) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          paymentModeError,
+          "Impossible de déterminer le mode de paiement.",
+        ),
+      );
+    }
+
+    if (paymentMode !== "helloasso") {
+      const accepted = window.confirm(
+        "MODE TEST — Reprendre ce paiement ?\n\nOK : simuler le paiement accepté\nAnnuler : laisser le paiement en attente",
+      );
+
+      if (!accepted) {
+        return { redirectUrl: null, paymentUpdated: false };
+      }
+
+      const { error: simulationError } = await supabase.rpc("simulate_payment", {
+        target_payment_id: reservation.paymentId,
+        simulated_outcome: "paid",
+      });
+      if (simulationError) {
+        throw new Error(
+          getSupabaseErrorMessage(
+            simulationError,
+            "Le paiement de test ne peut pas être repris pour le moment.",
+          ),
+        );
+      }
+
+      return { redirectUrl: null, paymentUpdated: true };
+    }
+
+    if (reservation.paymentRedirectUrl) {
+      return { redirectUrl: reservation.paymentRedirectUrl, paymentUpdated: false };
     }
 
     const { data, error } = await supabase.functions.invoke("create-helloasso-checkout", {
@@ -121,6 +174,6 @@ export const myReservationsService = {
       throw new Error(checkout?.error ?? "Le lien de paiement HelloAsso est indisponible.");
     }
 
-    return checkout.redirectUrl;
+    return { redirectUrl: checkout.redirectUrl, paymentUpdated: false };
   },
 };
