@@ -314,11 +314,13 @@ function MatchRow({
   settings,
   emphasis,
   onResultSaved,
+  readOnly = false,
 }: {
   match: MyChampionshipMatch;
   settings: MyChampionshipResultSettings | null;
   emphasis?: "next" | "last";
   onResultSaved: () => Promise<void>;
+  readOnly?: boolean;
 }) {
   const { date, time } = dateTimeParts(match);
   const place = match.agreementVenue ?? match.venue;
@@ -353,11 +355,13 @@ function MatchRow({
           </span>
         </div>
       </div>
-      <ResultSubmission
-        match={match}
-        settings={settings}
-        onSaved={onResultSaved}
-      />
+      {!readOnly && (
+        <ResultSubmission
+          match={match}
+          settings={settings}
+          onSaved={onResultSaved}
+        />
+      )}
     </article>
   );
 }
@@ -694,6 +698,7 @@ function ChampionshipCard({
   onResultSaved: () => Promise<void>;
 }) {
   const now = Date.now();
+  const readOnly = championship.championshipStatus === "archived";
   const sortedMatches = useMemo(
     () =>
       [...championship.matches].sort((left, right) => {
@@ -803,6 +808,7 @@ function ChampionshipCard({
                 settings={settings}
                 emphasis="next"
                 onResultSaved={onResultSaved}
+                readOnly={readOnly}
               />
             </div>
           )}
@@ -814,6 +820,7 @@ function ChampionshipCard({
                 settings={settings}
                 emphasis="last"
                 onResultSaved={onResultSaved}
+                readOnly={readOnly}
               />
             </div>
           )}
@@ -832,6 +839,7 @@ function ChampionshipCard({
                 match={match}
                 settings={settings}
                 onResultSaved={onResultSaved}
+                readOnly={readOnly}
               />
             ))
           ) : (
@@ -853,8 +861,48 @@ export function MyChampionshipsPage() {
   const [rankingContexts, setRankingContexts] = useState(
     new Map<string, MyChampionshipRankingContext>(),
   );
+  const [selectedHistorySeason, setSelectedHistorySeason] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const currentChampionships = useMemo(
+    () =>
+      championships.filter(
+        (championship) => championship.championshipStatus !== "archived",
+      ),
+    [championships],
+  );
+
+  const archivedBySeason = useMemo(() => {
+    const grouped = new Map<string, MyChampionship[]>();
+    for (const championship of championships) {
+      if (championship.championshipStatus !== "archived") continue;
+      const season = championship.seasonLabel || "Saison non renseignée";
+      const items = grouped.get(season) ?? [];
+      items.push(championship);
+      grouped.set(season, items);
+    }
+    return grouped;
+  }, [championships]);
+
+  const historySeasons = useMemo(
+    () =>
+      [...archivedBySeason.keys()].sort((left, right) =>
+        right.localeCompare(left, "fr", { numeric: true }),
+      ),
+    [archivedBySeason],
+  );
+
+  useEffect(() => {
+    if (
+      selectedHistorySeason !== null &&
+      !archivedBySeason.has(selectedHistorySeason)
+    ) {
+      setSelectedHistorySeason(null);
+    }
+  }, [archivedBySeason, selectedHistorySeason]);
 
   const applyLoadedData = useCallback(
     (
@@ -916,6 +964,24 @@ export function MyChampionshipsPage() {
     };
   }, [applyLoadedData]);
 
+  const championshipCard = (championship: MyChampionship) => (
+    <ChampionshipCard
+      key={`${championship.championshipId}-${championship.teamId}`}
+      championship={championship}
+      settings={resultSettings.get(championship.championshipId) ?? null}
+      rankingContext={
+        rankingContexts.get(
+          `${championship.championshipId}:${championship.divisionId}:${championship.teamId}`,
+        ) ?? null
+      }
+      onResultSaved={refresh}
+    />
+  );
+
+  const selectedHistory = selectedHistorySeason
+    ? (archivedBySeason.get(selectedHistorySeason) ?? [])
+    : [];
+
   return (
     <UserSpaceShell>
       <section
@@ -930,8 +996,8 @@ export function MyChampionshipsPage() {
             <p className="my-championships__eyebrow">Mon espace</p>
             <h1 id="my-championships-title">Mes championnats</h1>
             <p>
-              Retrouvez vos équipes, vos prochaines parties, vos classements de
-              poule et votre situation au classement général.
+              Retrouvez vos championnats en cours ou à venir. Vos saisons
+              terminées restent disponibles dans l’historique.
             </p>
           </div>
         </header>
@@ -950,23 +1016,68 @@ export function MyChampionshipsPage() {
             </span>
           </div>
         ) : (
-          <div className="my-championships__list">
-            {championships.map((championship) => (
-              <ChampionshipCard
-                key={`${championship.championshipId}-${championship.teamId}`}
-                championship={championship}
-                settings={
-                  resultSettings.get(championship.championshipId) ?? null
-                }
-                rankingContext={
-                  rankingContexts.get(
-                    `${championship.championshipId}:${championship.divisionId}:${championship.teamId}`,
-                  ) ?? null
-                }
-                onResultSaved={refresh}
-              />
-            ))}
-          </div>
+          <>
+            {currentChampionships.length > 0 ? (
+              <div className="my-championships__list">
+                {currentChampionships.map(championshipCard)}
+              </div>
+            ) : (
+              <div className="my-championships__empty-block">
+                Aucun championnat en cours ou à venir.
+              </div>
+            )}
+
+            {historySeasons.length > 0 && (
+              <section
+                className="my-championships__standings-wrap"
+                aria-labelledby="my-championships-history-title"
+              >
+                <div className="my-championships__standings-heading">
+                  <div>
+                    <p className="my-championships__label">Archives</p>
+                    <strong id="my-championships-history-title">
+                      Historique
+                    </strong>
+                  </div>
+                  <span>Saisons terminées</span>
+                </div>
+                <div
+                  className="my-championships__ranking-tabs"
+                  role="tablist"
+                  aria-label="Saisons archivées"
+                >
+                  {historySeasons.map((season) => (
+                    <button
+                      type="button"
+                      role="tab"
+                      key={season}
+                      aria-selected={selectedHistorySeason === season}
+                      className={
+                        selectedHistorySeason === season ? "is-active" : undefined
+                      }
+                      onClick={() =>
+                        setSelectedHistorySeason((current) =>
+                          current === season ? null : season,
+                        )
+                      }
+                    >
+                      {season}
+                    </button>
+                  ))}
+                </div>
+                {selectedHistorySeason ? (
+                  <div className="my-championships__list">
+                    {selectedHistory.map(championshipCard)}
+                  </div>
+                ) : (
+                  <div className="my-championships__empty-block">
+                    Choisissez une saison pour consulter vos anciens
+                    championnats.
+                  </div>
+                )}
+              </section>
+            )}
+          </>
         )}
       </section>
     </UserSpaceShell>
