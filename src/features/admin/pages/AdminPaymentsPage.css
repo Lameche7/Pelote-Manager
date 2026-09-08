@@ -129,3 +129,32 @@
   background: #fee2e2;
   color: #991b1b;
 }
+
+.admin-payments__actions {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 10rem;
+}
+
+.admin-payments__actions button {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.55rem;
+  padding: 0.5rem 0.7rem;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.admin-payments__actions button:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.admin-payments__actions button.is-danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.admin-payments__actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
