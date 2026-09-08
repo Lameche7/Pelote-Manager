@@ -34,6 +34,7 @@ export function AdminPaymentsPage() {
   const [to, setTo] = useState(dateInput(60));
   const [payments, setPayments] = useState<AdminPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +61,42 @@ export function AdminPaymentsPage() {
       await load();
     } catch (expireError: unknown) {
       setError(expireError instanceof Error ? expireError.message : "Expiration impossible.");
+    }
+  }
+
+  async function cancelReservation(payment: AdminPayment) {
+    if (!window.confirm("Annuler cette réservation et libérer le créneau ?")) return;
+    setBusyId(payment.id);
+    setError(null);
+    setMessage(null);
+    try {
+      const refundRequired = await adminPaymentService.cancelReservation(payment.id);
+      setMessage(
+        refundRequired
+          ? "Réservation annulée. Un paiement encaissé reste à rembourser."
+          : "Réservation annulée et créneau libéré.",
+      );
+      await load();
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Annulation impossible.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteTest(payment: AdminPayment) {
+    if (!window.confirm("Supprimer définitivement cette réservation et ses paiements de test ?")) return;
+    setBusyId(payment.id);
+    setError(null);
+    setMessage(null);
+    try {
+      await adminPaymentService.deleteTest(payment.id);
+      setMessage("Paiement test et réservation supprimés.");
+      await load();
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Suppression impossible.");
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -102,16 +139,31 @@ export function AdminPaymentsPage() {
         <div className="admin-payments__table-wrap">
           <table>
             <thead>
-              <tr><th>Client</th><th>Réservation</th><th>Montant</th><th>Statut</th><th>HelloAsso</th></tr>
+              <tr><th>Client</th><th>Réservation</th><th>Montant</th><th>Statut</th><th>HelloAsso</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {payments.map((payment) => (
                 <tr key={payment.id}>
                   <td><strong>{payment.customerName}</strong><small>{payment.customerEmail}</small></td>
-                  <td>{payment.resourceName}<small>{new Date(payment.startsAt).toLocaleString("fr-FR")}</small></td>
+                  <td>{payment.resourceName}<small>{new Date(payment.startsAt).toLocaleString("fr-FR")}</small><small>Réservation : {payment.reservationStatus}</small></td>
                   <td>{euros(payment.amountCents)}</td>
                   <td><span className={`admin-payments__status admin-payments__status--${payment.status}`}>{STATUS_LABELS[payment.status]}</span>{payment.failureReason && <small>{payment.failureReason}</small>}</td>
                   <td><small>Checkout : {payment.checkoutIntentId ?? "—"}</small><small>Commande : {payment.orderId ?? "—"}</small><small>Paiement : {payment.providerPaymentId ?? "—"}</small></td>
+                  <td>
+                    <div className="admin-payments__actions">
+                      {payment.canCancelReservation && (
+                        <button type="button" onClick={() => void cancelReservation(payment)} disabled={busyId === payment.id}>
+                          Annuler la réservation
+                        </button>
+                      )}
+                      {payment.canDeleteTest && (
+                        <button type="button" className="is-danger" onClick={() => void deleteTest(payment)} disabled={busyId === payment.id}>
+                          Supprimer le test
+                        </button>
+                      )}
+                      {!payment.canCancelReservation && !payment.canDeleteTest && <small>Aucune action</small>}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
