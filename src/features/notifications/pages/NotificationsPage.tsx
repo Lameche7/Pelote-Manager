@@ -87,6 +87,29 @@ export function NotificationsPage() {
     }
   };
 
+  const deleteNotification = async (notification: MemberNotification) => {
+    if (!window.confirm("Supprimer cette notification de votre liste ?")) {
+      return;
+    }
+
+    setSavingId(notification.deliveryId);
+    setError("");
+    try {
+      await notificationService.deleteNotification(notification.deliveryId);
+      setNotifications((current) =>
+        current.filter((item) => item.deliveryId !== notification.deliveryId),
+      );
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Suppression impossible.",
+      );
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   const markAllRead = async () => {
     const unread = notifications.filter(
       (notification) => notification.isActive && !notification.readAt,
@@ -214,6 +237,13 @@ export function NotificationsPage() {
                       }
                     >
                       {notification.readAt ? "Marquer non lue" : "Marquer lue"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={savingId === notification.deliveryId}
+                      onClick={() => void deleteNotification(notification)}
+                    >
+                      Supprimer
                     </button>
                   </div>
                 </article>

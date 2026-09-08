@@ -70,6 +70,14 @@ export const notificationService = {
     notifyChanged();
   },
 
+  async deleteNotification(deliveryId: string): Promise<void> {
+    const { error } = await supabase.rpc("delete_my_notification", {
+      target_delivery_id: deliveryId,
+    });
+    if (error) fail(error, "Impossible de supprimer la notification.");
+    notifyChanged();
+  },
+
   async listHomeBanners(): Promise<MemberHomeBanner[]> {
     const { data, error } = await supabase.rpc("list_my_home_banners");
     if (error) fail(error, "Impossible de charger les informations du club.");
