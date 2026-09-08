@@ -226,8 +226,21 @@ export function MyReservationsPage() {
   async function resumePayment(reservation: MyReservation) {
     setBusyId(reservation.id);
     setError(null);
+    setMessage(null);
     try {
-      window.location.assign(await myReservationsService.resumePayment(reservation));
+      const result = await myReservationsService.resumePayment(reservation);
+      if (result.redirectUrl) {
+        window.location.assign(result.redirectUrl);
+        return;
+      }
+
+      setMessage(
+        result.paymentUpdated
+          ? "Le paiement de test a été enregistré."
+          : "Le paiement reste en attente. Vous pourrez le reprendre tant qu’il n’a pas expiré.",
+      );
+      await load();
+      setBusyId(null);
     } catch (paymentError: unknown) {
       setError(
         paymentError instanceof Error ? paymentError.message : "Paiement indisponible.",
