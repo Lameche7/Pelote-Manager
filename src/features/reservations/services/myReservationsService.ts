@@ -107,8 +107,6 @@ export const myReservationsService = {
       throw new Error("Aucun paiement en attente n’est associé à cette réservation.");
     }
 
-    if (reservation.paymentRedirectUrl) return reservation.paymentRedirectUrl;
-
     const { data, error } = await supabase.functions.invoke("create-helloasso-checkout", {
       body: { paymentId: reservation.paymentId },
     });
