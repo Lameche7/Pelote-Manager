@@ -285,6 +285,27 @@ export function MarketingPage() {
 
             <article className="marketing-guide-card">
               <span className="marketing-guide-card__number">02</span>
+              <BellRing aria-hidden="true" />
+              <h3>Activer les notifications</h3>
+              <ol>
+                <li>Connectez-vous à votre compte Pelote Manager.</li>
+                <li>Ouvrez « Mon espace », puis « Notifications ».</li>
+                <li>Touchez « Activer les notifications ».</li>
+                <li>
+                  Autorisez Pelote Manager à vous envoyer des notifications sur
+                  cet appareil.
+                </li>
+              </ol>
+              <p className="marketing-guide-note">
+                <strong>Exemples :</strong> créneau de réservation libéré,
+                information importante du club, demande ou accord de report
+                d’une partie de tournoi, rappel d’une prochaine partie ou d’un
+                planning publié.
+              </p>
+            </article>
+
+            <article className="marketing-guide-card">
+              <span className="marketing-guide-card__number">03</span>
               <CalendarDays aria-hidden="true" />
               <h3>Réserver un créneau</h3>
               <ol>
@@ -304,7 +325,7 @@ export function MarketingPage() {
             </article>
 
             <article className="marketing-guide-card">
-              <span className="marketing-guide-card__number">03</span>
+              <span className="marketing-guide-card__number">04</span>
               <ShieldCheck aria-hidden="true" />
               <h3>Annuler une réservation</h3>
               <ol>
