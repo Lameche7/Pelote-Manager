@@ -35,7 +35,7 @@ test("le domaine nu redirige vers la vitrine www", () => {
 
 test("les confirmations de compte reviennent toujours sur le domaine application", () => {
   assert.match(domains, /function currentApplicationOrigin\(\)/);
-  assert.match(domains, /return `https:\/\/${APP_HOST}`/);
+  assert.ok(domains.includes("return `https://${APP_HOST}`;"));
   assert.match(authService, /emailRedirectTo: currentApplicationOrigin\(\)/);
   assert.match(memberService, /emailRedirectTo: currentApplicationOrigin\(\)/);
 });
