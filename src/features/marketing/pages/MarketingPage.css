@@ -15,34 +15,34 @@
   justify-content: space-between;
   gap: 2rem;
   min-height: 5rem;
-  padding: .8rem clamp(1rem, 4vw, 4rem);
+  padding: 0.8rem clamp(1rem, 4vw, 4rem);
   border-bottom: 1px solid rgb(13 43 108 / 8%);
   background: rgb(255 255 255 / 92%);
-  box-shadow: 0 .6rem 2rem rgb(13 43 108 / 7%);
+  box-shadow: 0 0.6rem 2rem rgb(13 43 108 / 7%);
   backdrop-filter: blur(1rem);
 }
 
 .marketing-brand {
   display: inline-flex;
   align-items: center;
-  gap: .8rem;
+  gap: 0.8rem;
   text-decoration: none;
 }
 
 .marketing-brand > span:last-child {
   display: grid;
-  gap: .1rem;
+  gap: 0.1rem;
 }
 
 .marketing-brand strong {
   color: #0d2b6c;
   font-size: 1rem;
-  letter-spacing: -.01em;
+  letter-spacing: -0.01em;
 }
 
 .marketing-brand small {
   color: #65717c;
-  font-size: .69rem;
+  font-size: 0.69rem;
 }
 
 .marketing-brand__mark {
@@ -50,25 +50,25 @@
   width: 2.75rem;
   height: 2.75rem;
   place-items: center;
-  border-radius: .9rem;
+  border-radius: 0.9rem;
   color: #fff;
   background: linear-gradient(145deg, #0d2b6c, #174a9c 60%, #d62828 150%);
-  box-shadow: 0 .7rem 1.5rem rgb(13 43 108 / 20%);
+  box-shadow: 0 0.7rem 1.5rem rgb(13 43 108 / 20%);
   font-weight: 900;
-  letter-spacing: -.08em;
+  letter-spacing: -0.08em;
 }
 
 .marketing-nav {
   display: flex;
   align-items: center;
-  gap: .25rem;
+  gap: 0.25rem;
 }
 
 .marketing-nav a {
-  padding: .68rem .8rem;
-  border-radius: .75rem;
+  padding: 0.68rem 0.8rem;
+  border-radius: 0.75rem;
   color: #43505c;
-  font-size: .88rem;
+  font-size: 0.88rem;
   font-weight: 750;
   text-decoration: none;
 }
@@ -79,7 +79,7 @@
 }
 
 .marketing-nav .marketing-nav__app {
-  margin-left: .45rem;
+  margin-left: 0.45rem;
   padding-inline: 1rem;
   color: #fff;
   background: #0d2b6c;
@@ -96,7 +96,7 @@
   min-height: calc(100vh - 5rem);
   margin: 0 auto;
   padding: clamp(4rem, 8vw, 7rem) 0;
-  grid-template-columns: minmax(0, 1.04fr) minmax(20rem, .96fr);
+  grid-template-columns: minmax(0, 1.04fr) minmax(20rem, 0.96fr);
   align-items: center;
   gap: clamp(2.5rem, 7vw, 6rem);
 }
@@ -104,19 +104,19 @@
 .marketing-kicker {
   margin: 0;
   color: #d62828;
-  font-size: .76rem;
+  font-size: 0.76rem;
   font-weight: 900;
-  letter-spacing: .14em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .marketing-hero h1 {
   max-width: 12ch;
-  margin: .8rem 0 1.4rem;
+  margin: 0.8rem 0 1.4rem;
   color: #111927;
   font-size: clamp(3rem, 6.2vw, 5.8rem);
-  line-height: .95;
-  letter-spacing: -.055em;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
 }
 
 .marketing-hero h1 span {
@@ -133,7 +133,7 @@
 
 .marketing-hero__actions {
   display: flex;
-  gap: .8rem;
+  gap: 0.8rem;
   flex-wrap: wrap;
   margin-top: 2rem;
 }
@@ -143,14 +143,17 @@
   min-height: 3.25rem;
   align-items: center;
   justify-content: center;
-  gap: .55rem;
-  padding: .85rem 1.15rem;
+  gap: 0.55rem;
+  padding: 0.85rem 1.15rem;
   border: 1px solid transparent;
-  border-radius: .9rem;
-  font-size: .92rem;
+  border-radius: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 850;
   text-decoration: none;
-  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 
 .marketing-button svg {
@@ -165,7 +168,7 @@
 .marketing-button--primary {
   color: #fff;
   background: linear-gradient(135deg, #d62828, #ed3a3a);
-  box-shadow: 0 .85rem 2rem rgb(214 40 40 / 22%);
+  box-shadow: 0 0.85rem 2rem rgb(214 40 40 / 22%);
 }
 
 .marketing-button--secondary {
@@ -175,20 +178,20 @@
 }
 
 .marketing-button--secondary:hover {
-  box-shadow: 0 .8rem 1.8rem rgb(13 43 108 / 10%);
+  box-shadow: 0 0.8rem 1.8rem rgb(13 43 108 / 10%);
 }
 
 .marketing-button--light {
   flex: 0 0 auto;
   color: #0d2b6c;
   background: #fff;
-  box-shadow: 0 .8rem 2rem rgb(0 0 0 / 15%);
+  box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 15%);
 }
 
 .marketing-hero__install {
-  margin: .85rem 0 0;
+  margin: 0.85rem 0 0;
   color: #7a8590;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .marketing-product {
@@ -196,7 +199,11 @@
   padding: 1rem;
   border: 1px solid rgb(255 255 255 / 70%);
   border-radius: 1.65rem;
-  background: linear-gradient(145deg, rgb(255 255 255 / 92%), rgb(239 243 249 / 94%));
+  background: linear-gradient(
+    145deg,
+    rgb(255 255 255 / 92%),
+    rgb(239 243 249 / 94%)
+  );
   box-shadow: 0 2.4rem 5rem rgb(13 43 108 / 18%);
   transform: rotate(1deg);
 }
@@ -207,15 +214,19 @@
   inset: 12% -8% -10% 12%;
   border-radius: 2rem;
   content: "";
-  background: linear-gradient(145deg, rgb(13 43 108 / 14%), rgb(214 40 40 / 10%));
+  background: linear-gradient(
+    145deg,
+    rgb(13 43 108 / 14%),
+    rgb(214 40 40 / 10%)
+  );
   filter: blur(2.2rem);
 }
 
 .marketing-product__topbar {
   display: grid;
   align-items: center;
-  gap: .7rem;
-  padding: .45rem .3rem 1rem;
+  gap: 0.7rem;
+  padding: 0.45rem 0.3rem 1rem;
   grid-template-columns: auto 1fr auto;
 }
 
@@ -224,10 +235,10 @@
   width: 2.4rem;
   height: 2.4rem;
   place-items: center;
-  border-radius: .75rem;
+  border-radius: 0.75rem;
   color: #fff;
   background: #0d2b6c;
-  font-size: .82rem;
+  font-size: 0.82rem;
   font-weight: 900;
 }
 
@@ -237,26 +248,26 @@
 
 .marketing-product__topbar strong {
   color: #17202a;
-  font-size: .82rem;
+  font-size: 0.82rem;
 }
 
 .marketing-product__topbar small {
   color: #7a8590;
-  font-size: .67rem;
+  font-size: 0.67rem;
 }
 
 .marketing-product__status {
-  padding: .35rem .55rem;
+  padding: 0.35rem 0.55rem;
   border-radius: 99rem;
   color: #14663d;
   background: #e8f7ef;
-  font-size: .65rem;
+  font-size: 0.65rem;
   font-weight: 850;
 }
 
 .marketing-product__grid {
   display: grid;
-  gap: .8rem;
+  gap: 0.8rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -264,12 +275,12 @@
   display: grid;
   min-height: 8.2rem;
   align-content: end;
-  gap: .15rem;
+  gap: 0.15rem;
   padding: 1rem;
   border: 1px solid #e5e9f0;
   border-radius: 1rem;
   background: #fff;
-  box-shadow: 0 .65rem 1.5rem rgb(13 43 108 / 6%);
+  box-shadow: 0 0.65rem 1.5rem rgb(13 43 108 / 6%);
 }
 
 .marketing-mini-card svg {
@@ -281,7 +292,7 @@
 
 .marketing-mini-card small {
   color: #86919c;
-  font-size: .65rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -293,7 +304,7 @@
 
 .marketing-mini-card span {
   color: #78838e;
-  font-size: .72rem;
+  font-size: 0.72rem;
 }
 
 .marketing-mini-card--wide {
@@ -316,7 +327,7 @@
 
 .marketing-mini-card--wide div {
   display: grid;
-  gap: .15rem;
+  gap: 0.15rem;
 }
 
 .marketing-mini-card--wide small,
@@ -340,7 +351,7 @@
 .marketing-proof span {
   padding: 1.25rem 1rem;
   color: #5c6874;
-  font-size: .82rem;
+  font-size: 0.82rem;
   font-weight: 800;
   text-align: center;
 }
@@ -358,7 +369,7 @@
 .marketing-section__heading {
   display: grid;
   max-width: 48rem;
-  gap: .75rem;
+  gap: 0.75rem;
   margin-bottom: 2.5rem;
 }
 
@@ -370,7 +381,7 @@
   color: #111927;
   font-size: clamp(2rem, 4.5vw, 3.6rem);
   line-height: 1.03;
-  letter-spacing: -.04em;
+  letter-spacing: -0.04em;
 }
 
 .marketing-section__heading > p:last-child,
@@ -394,7 +405,7 @@
   border: 1px solid #e1e6ed;
   border-radius: 1.25rem;
   background: #fff;
-  box-shadow: 0 .8rem 2rem rgb(13 43 108 / 5%);
+  box-shadow: 0 0.8rem 2rem rgb(13 43 108 / 5%);
 }
 
 .marketing-feature__icon {
@@ -402,7 +413,7 @@
   width: 3rem;
   height: 3rem;
   place-items: center;
-  border-radius: .9rem;
+  border-radius: 0.9rem;
   color: #0d2b6c;
   background: #edf2fb;
 }
@@ -413,7 +424,7 @@
 }
 
 .marketing-feature h3 {
-  margin: 2rem 0 .65rem;
+  margin: 2rem 0 0.65rem;
   color: #0d2b6c;
   font-size: 1.18rem;
 }
@@ -421,7 +432,7 @@
 .marketing-feature p {
   margin: 0;
   color: #65717c;
-  font-size: .91rem;
+  font-size: 0.91rem;
   line-height: 1.65;
 }
 
@@ -439,11 +450,15 @@
 
 .marketing-audience + .marketing-audience {
   border-left: 1px solid rgb(255 255 255 / 12%);
-  background: linear-gradient(145deg, rgb(13 43 108 / 55%), rgb(17 25 39 / 25%));
+  background: linear-gradient(
+    145deg,
+    rgb(13 43 108 / 55%),
+    rgb(17 25 39 / 25%)
+  );
 }
 
 .marketing-audience h2 {
-  margin: .7rem 0 1rem;
+  margin: 0.7rem 0 1rem;
   color: #fff;
 }
 
@@ -453,7 +468,7 @@
 
 .marketing-audience ul {
   display: grid;
-  gap: .75rem;
+  gap: 0.75rem;
   margin: 1.6rem 0 0;
   padding: 0;
   list-style: none;
@@ -462,9 +477,9 @@
 .marketing-audience li {
   display: flex;
   align-items: flex-start;
-  gap: .6rem;
+  gap: 0.6rem;
   color: rgb(255 255 255 / 88%);
-  font-size: .9rem;
+  font-size: 0.9rem;
   line-height: 1.5;
 }
 
@@ -472,7 +487,7 @@
   flex: 0 0 auto;
   width: 1rem;
   height: 1rem;
-  margin-top: .15rem;
+  margin-top: 0.15rem;
   color: #ff5a5a;
 }
 
@@ -487,12 +502,12 @@
 }
 
 .marketing-platform h2 {
-  margin: .75rem 0 1rem;
+  margin: 0.75rem 0 1rem;
 }
 
 .marketing-platform__steps {
   display: grid;
-  gap: .8rem;
+  gap: 0.8rem;
 }
 
 .marketing-platform__steps div {
@@ -509,8 +524,8 @@
 
 .marketing-platform__steps strong {
   color: #d62828;
-  font-size: .72rem;
-  letter-spacing: .1em;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
 }
 
 .marketing-platform__steps span {
@@ -529,7 +544,11 @@
   border-radius: 1.6rem;
   color: #fff;
   background:
-    radial-gradient(circle at 85% 20%, rgb(255 255 255 / 14%), transparent 18rem),
+    radial-gradient(
+      circle at 85% 20%,
+      rgb(255 255 255 / 14%),
+      transparent 18rem
+    ),
     linear-gradient(135deg, #0d2b6c, #174a9c 65%, #1b3c74);
   box-shadow: 0 2rem 4rem rgb(13 43 108 / 20%);
 }
@@ -537,7 +556,7 @@
 .marketing-cta > div {
   display: grid;
   max-width: 45rem;
-  gap: .75rem;
+  gap: 0.75rem;
 }
 
 .marketing-cta .marketing-kicker {
@@ -565,15 +584,15 @@
 .marketing-brand--footer .marketing-brand__mark {
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: .7rem;
-  font-size: .78rem;
+  border-radius: 0.7rem;
+  font-size: 0.78rem;
   box-shadow: none;
 }
 
 .marketing-footer p {
   margin: 0;
   color: #7b8792;
-  font-size: .75rem;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 68rem) {
@@ -613,8 +632,8 @@
 
   .marketing-nav .marketing-nav__app {
     margin-left: 0;
-    padding: .62rem .75rem;
-    font-size: .78rem;
+    padding: 0.62rem 0.75rem;
+    font-size: 0.78rem;
   }
 
   .marketing-hero {

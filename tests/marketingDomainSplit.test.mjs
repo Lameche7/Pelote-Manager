@@ -19,7 +19,10 @@ test("www affiche la vitrine tandis que l'application reste séparée", () => {
 });
 
 test("la vitrine n'enregistre pas la PWA de l'application", () => {
-  assert.match(main, /document\.querySelector\('link\[rel="manifest"\]'\)\?\.remove\(\)/);
+  assert.match(
+    main,
+    /document\.querySelector\('link\[rel="manifest"\]'\)\?\.remove\(\)/,
+  );
   assert.match(main, /registration\.unregister\(\)/);
 });
 

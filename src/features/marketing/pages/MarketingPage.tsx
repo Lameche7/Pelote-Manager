@@ -147,8 +147,7 @@ export function MarketingPage() {
               </a>
             </div>
             <p className="marketing-hero__install">
-              Application web installable sur téléphone, tablette et
-              ordinateur.
+              Application web installable sur téléphone, tablette et ordinateur.
             </p>
           </div>
 
