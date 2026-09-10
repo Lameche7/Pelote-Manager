@@ -1,5 +1,6 @@
 export const MARKETING_HOST = "www.pelotemanager.fr";
 export const APP_HOST = "app.pelotemanager.fr";
+export const APEX_HOST = "pelotemanager.fr";
 export const MARKETING_PREVIEW_PATH = "/presentation";
 
 export function isMarketingHostname(hostname: string) {
@@ -18,4 +19,9 @@ export function isLocalOrPreviewHostname(hostname: string) {
 export function applicationOrigin(hostname: string, currentOrigin: string) {
   if (isLocalOrPreviewHostname(hostname)) return currentOrigin;
   return `https://${APP_HOST}`;
+}
+
+export function currentApplicationOrigin() {
+  if (typeof window === "undefined") return `https://${APP_HOST}`;
+  return applicationOrigin(window.location.hostname, window.location.origin);
 }
