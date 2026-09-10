@@ -292,7 +292,9 @@ export function MarketingPage() {
                 <li>Ouvrez la rubrique « Réservations ».</li>
                 <li>Choisissez le terrain, la semaine et le créneau libre.</li>
                 <li>Touchez le créneau marqué « Réserver ».</li>
-                <li>Vérifiez la date, l’horaire et confirmez avec « Réserver ».</li>
+                <li>
+                  Vérifiez la date, l’horaire et confirmez avec « Réserver ».
+                </li>
               </ol>
               <p className="marketing-guide-note">
                 Pour le test PCL, les créneaux s’ouvrent à 8 h : 72 h à l’avance
@@ -353,11 +355,13 @@ export function MarketingPage() {
         <section className="marketing-cta">
           <div>
             <p className="marketing-kicker">Déploiement pilote</p>
-            <h2>Pelote Manager est actuellement testé en conditions réelles.</h2>
+            <h2>
+              Pelote Manager est actuellement testé en conditions réelles.
+            </h2>
             <p>
               Le Pelotaris Club Lourdais est le club pilote. Cette phase permet
-              de valider les usages quotidiens avec les joueurs et les dirigeants
-              avant une ouverture plus large.
+              de valider les usages quotidiens avec les joueurs et les
+              dirigeants avant une ouverture plus large.
             </p>
           </div>
           <span className="marketing-pilot-stamp">Pilote PCL · en cours</span>
