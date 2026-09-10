@@ -26,7 +26,7 @@ test("la vitrine n'enregistre pas la PWA de l'application", () => {
   assert.match(main, /registration\.unregister\(\)/);
 });
 
-test("la vitrine présente les modules principaux et renvoie vers l'application", () => {
+test("la vitrine présente les modules principaux sans lien public vers l'application", () => {
   for (const label of [
     "Réservations",
     "Tournois",
@@ -37,6 +37,19 @@ test("la vitrine présente les modules principaux et renvoie vers l'application"
   ]) {
     assert.match(marketing, new RegExp(label.replace("&", "&")));
   }
-  assert.match(marketing, /Ouvrir Pelote Manager/);
-  assert.match(marketing, /applicationOrigin/);
+  assert.doesNotMatch(marketing, /Ouvrir Pelote Manager/);
+  assert.doesNotMatch(marketing, /applicationOrigin/);
+  assert.doesNotMatch(marketing, /app\.pelotemanager\.fr/);
+});
+
+test("la vitrine présente le pilote PCL et son guide joueur", () => {
+  assert.match(marketing, /En test au Pelotaris Club Lourdais/);
+  assert.match(marketing, /Guide du test PCL/);
+  assert.match(marketing, /Ajouter à l’écran d’accueil/);
+  assert.match(marketing, /Sur Android/);
+  assert.match(marketing, /Touchez le créneau marqué « Réserver »/);
+  assert.match(marketing, /72 h à l’avance/);
+  assert.match(marketing, /48 h à l’avance/);
+  assert.match(marketing, /jusqu’à 8 heures/);
+  assert.match(marketing, /Annuler la réservation/);
 });
