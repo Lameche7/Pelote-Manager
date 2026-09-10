@@ -9,6 +9,7 @@ import {
   VerificationAttemptLimiter,
 } from "@/features/members/domain/memberRegistration";
 import { mapSupabaseUser } from "@/infrastructure/auth/authService";
+import { currentApplicationOrigin } from "@/shared/config/domains";
 export { MemberRegistrationError } from "@/features/members/domain/memberRegistration";
 
 export type MemberIdentity = {
@@ -197,6 +198,7 @@ export const memberService = {
       email: input.email,
       password: input.password,
       options: {
+        emailRedirectTo: currentApplicationOrigin(),
         data: {
           [REGISTRATION_PENDING_KEY]: true,
           [PENDING_IDENTITY_KEY]: input.identity,

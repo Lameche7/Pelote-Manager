@@ -4,18 +4,40 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-const [app, main, domains, marketing] = await Promise.all([
-  read("src/app/App.tsx"),
-  read("src/main.tsx"),
-  read("src/shared/config/domains.ts"),
-  read("src/features/marketing/pages/MarketingPage.tsx"),
-]);
+const [app, main, domains, marketing, vercel, authService, memberService] =
+  await Promise.all([
+    read("src/app/App.tsx"),
+    read("src/main.tsx"),
+    read("src/shared/config/domains.ts"),
+    read("src/features/marketing/pages/MarketingPage.tsx"),
+    read("vercel.json"),
+    read("src/infrastructure/auth/authService.ts"),
+    read("src/features/members/services/memberService.ts"),
+  ]);
 
 test("www affiche la vitrine tandis que l'application reste séparée", () => {
   assert.match(domains, /MARKETING_HOST = "www\.pelotemanager\.fr"/);
   assert.match(domains, /APP_HOST = "app\.pelotemanager\.fr"/);
+  assert.match(domains, /APEX_HOST = "pelotemanager\.fr"/);
   assert.match(app, /isMarketingHostname\(window\.location\.hostname\)/);
   assert.match(app, /return <MarketingPage \/>/);
+});
+
+test("le domaine nu redirige vers la vitrine www", () => {
+  assert.match(vercel, /"type": "host"/);
+  assert.match(vercel, /"value": "pelotemanager\.fr"/);
+  assert.match(
+    vercel,
+    /"destination": "https:\/\/www\.pelotemanager\.fr\/:path\*"/,
+  );
+  assert.match(vercel, /"permanent": true/);
+});
+
+test("les confirmations de compte reviennent toujours sur le domaine application", () => {
+  assert.match(domains, /function currentApplicationOrigin\(\)/);
+  assert.ok(domains.includes("return `https://${APP_HOST}`;"));
+  assert.match(authService, /emailRedirectTo: currentApplicationOrigin\(\)/);
+  assert.match(memberService, /emailRedirectTo: currentApplicationOrigin\(\)/);
 });
 
 test("la vitrine n'enregistre pas la PWA de l'application", () => {
@@ -46,7 +68,8 @@ test("la vitrine présente le pilote PCL et son guide joueur", () => {
   assert.match(marketing, /En test au Pelotaris Club Lourdais/);
   assert.match(marketing, /Guide du test PCL/);
   assert.match(marketing, /Ajouter à l’écran d’accueil/);
-  assert.match(marketing, /Sur Android/);
+  assert.match(marketing, /Activer les notifications/);
+  assert.match(marketing, /créneau de réservation libéré/);
   assert.match(marketing, /Touchez le créneau marqué « Réserver »/);
   assert.match(marketing, /72 h à l’avance/);
   assert.match(marketing, /48 h à l’avance/);
