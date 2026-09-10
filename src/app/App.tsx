@@ -1,11 +1,17 @@
 import AppRouter from "./router";
 import { AppProviders } from "./providers";
 import { MarketingPage } from "@/features/marketing/pages/MarketingPage";
+import {
+  MARKETING_PREVIEW_PATH,
+  isMarketingHostname,
+} from "@/shared/config/domains";
 
 function shouldShowMarketingSite() {
   if (typeof window === "undefined") return false;
-  const host = window.location.hostname.toLowerCase();
-  return host === "www.pelotemanager.fr" || window.location.pathname === "/presentation";
+  return (
+    isMarketingHostname(window.location.hostname) ||
+    window.location.pathname === MARKETING_PREVIEW_PATH
+  );
 }
 
 function App() {
