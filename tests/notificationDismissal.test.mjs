@@ -17,10 +17,13 @@ const page = await readFile(
 
 test("une notification peut être masquée uniquement pour son destinataire", () => {
   assert.match(migration, /add column if not exists deleted_at timestamptz/);
-  assert.match(migration, /create or replace function public\.delete_my_notification/);
+  assert.match(
+    migration,
+    /create or replace function public\.delete_my_notification/,
+  );
   assert.match(migration, /deliveries\.deleted_at is null/);
   assert.match(service, /supabase\.rpc\("delete_my_notification"/);
-  assert.match(page, />Supprimer</);
+  assert.match(page, />\s*Supprimer\s*</);
 });
 
 test("le rattachement d’un profil propage l’identité vers l’historique championnat", () => {
@@ -33,6 +36,12 @@ test("le rattachement d’un profil propage l’identité vers l’historique ch
     /after insert or update of member_id on public\.profiles/,
   );
   assert.match(migration, /link_status = 'verified'/);
-  assert.match(migration, /championship_import_normalize\(member_row\.first_name\)/);
-  assert.match(migration, /championship_import_normalize\(member_row\.last_name\)/);
+  assert.match(
+    migration,
+    /championship_import_normalize\(member_row\.first_name\)/,
+  );
+  assert.match(
+    migration,
+    /championship_import_normalize\(member_row\.last_name\)/,
+  );
 });

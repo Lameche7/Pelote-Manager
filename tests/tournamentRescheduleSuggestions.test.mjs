@@ -228,7 +228,7 @@ test("les équipes sans compte relié restent visibles et ne sont jamais auto-va
   assert.match(adminPage, /aucun compte relié/);
   assert.match(
     adminPage,
-    /ne considère pas ces équipes comme ayant\s+donné leur accord/,
+    /Pelote Manager n’invente aucun accord[\s\S]{0,180}réellement contacté l’équipe/,
   );
 });
 

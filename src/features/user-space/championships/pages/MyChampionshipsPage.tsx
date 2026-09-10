@@ -1053,7 +1053,9 @@ export function MyChampionshipsPage() {
                       key={season}
                       aria-selected={selectedHistorySeason === season}
                       className={
-                        selectedHistorySeason === season ? "is-active" : undefined
+                        selectedHistorySeason === season
+                          ? "is-active"
+                          : undefined
                       }
                       onClick={() =>
                         setSelectedHistorySeason((current) =>

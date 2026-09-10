@@ -126,5 +126,8 @@ test("les équipes reliées sont notifiées après application sans bloquer le r
   assert.match(migration, /'applied'/);
   assert.match(migration, /club_communications/);
   assert.match(migration, /communication_deliveries/);
-  assert.match(migration, /exception when others then\s*null;/);
+  assert.match(
+    migration,
+    /exception when others then[\s\S]{0,240}ne doit jamais annuler un report/,
+  );
 });
