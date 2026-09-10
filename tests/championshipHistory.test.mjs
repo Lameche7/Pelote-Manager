@@ -16,7 +16,7 @@ test("les archives sont regroupées et accessibles par saison", () => {
   assert.match(page, /const archivedBySeason = useMemo/);
   assert.match(page, /const historySeasons = useMemo/);
   assert.match(page, /selectedHistorySeason/);
-  assert.match(page, />Historique\s*</);
+  assert.match(page, />\s*Historique\s*</);
   assert.match(page, /Saisons terminées/);
 });
 
