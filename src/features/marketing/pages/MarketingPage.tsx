@@ -11,6 +11,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { APP_HOST, applicationOrigin } from "@/shared/config/domains";
 import "./MarketingPage.css";
 
 const features = [
@@ -70,16 +71,8 @@ const audiences = [
 ];
 
 function getAppOrigin() {
-  if (typeof window === "undefined") return "https://app.pelotemanager.fr";
-  const host = window.location.hostname.toLowerCase();
-  if (
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host.endsWith(".vercel.app")
-  ) {
-    return window.location.origin;
-  }
-  return "https://app.pelotemanager.fr";
+  if (typeof window === "undefined") return `https://${APP_HOST}`;
+  return applicationOrigin(window.location.hostname, window.location.origin);
 }
 
 export function MarketingPage() {
@@ -99,8 +92,14 @@ export function MarketingPage() {
   return (
     <div className="marketing-site">
       <header className="marketing-header">
-        <a className="marketing-brand" href="#accueil" aria-label="Pelote Manager - Accueil">
-          <span className="marketing-brand__mark" aria-hidden="true">PM</span>
+        <a
+          className="marketing-brand"
+          href="#accueil"
+          aria-label="Pelote Manager - Accueil"
+        >
+          <span className="marketing-brand__mark" aria-hidden="true">
+            PM
+          </span>
           <span>
             <strong>Pelote Manager</strong>
             <small>La plateforme des clubs de pelote</small>
@@ -119,32 +118,44 @@ export function MarketingPage() {
       <main>
         <section className="marketing-hero" id="accueil">
           <div className="marketing-hero__copy">
-            <p className="marketing-kicker">Pensé pour la pelote. Construit pour les clubs.</p>
+            <p className="marketing-kicker">
+              Pensé pour la pelote. Construit pour les clubs.
+            </p>
             <h1>
               Toute la vie du club.
               <span> Un seul endroit.</span>
             </h1>
             <p className="marketing-hero__lead">
               Pelote Manager réunit réservations, licenciés, tournois,
-              championnats et communication dans une plateforme simple à utiliser
-              pour les joueurs comme pour les dirigeants.
+              championnats et communication dans une plateforme simple à
+              utiliser pour les joueurs comme pour les dirigeants.
             </p>
             <div className="marketing-hero__actions">
-              <a className="marketing-button marketing-button--primary" href={appOrigin}>
+              <a
+                className="marketing-button marketing-button--primary"
+                href={appOrigin}
+              >
                 <Smartphone aria-hidden="true" />
                 Ouvrir Pelote Manager
                 <ArrowRight aria-hidden="true" />
               </a>
-              <a className="marketing-button marketing-button--secondary" href="#fonctionnalites">
+              <a
+                className="marketing-button marketing-button--secondary"
+                href="#fonctionnalites"
+              >
                 Découvrir les fonctionnalités
               </a>
             </div>
             <p className="marketing-hero__install">
-              Application web installable sur téléphone, tablette et ordinateur.
+              Application web installable sur téléphone, tablette et
+              ordinateur.
             </p>
           </div>
 
-          <div className="marketing-product" aria-label="Aperçu des modules Pelote Manager">
+          <div
+            className="marketing-product"
+            aria-label="Aperçu des modules Pelote Manager"
+          >
             <div className="marketing-product__topbar">
               <span className="marketing-product__logo">PM</span>
               <div>
@@ -186,7 +197,10 @@ export function MarketingPage() {
           </div>
         </section>
 
-        <section className="marketing-proof" aria-label="Principes de Pelote Manager">
+        <section
+          className="marketing-proof"
+          aria-label="Principes de Pelote Manager"
+        >
           <span>Une seule identité joueur</span>
           <span>Une seule administration club</span>
           <span>Une expérience mobile et bureau</span>
@@ -235,7 +249,9 @@ export function MarketingPage() {
 
         <section className="marketing-platform" id="vision">
           <div>
-            <p className="marketing-kicker">Une plateforme, pas un empilement d’outils</p>
+            <p className="marketing-kicker">
+              Une plateforme, pas un empilement d’outils
+            </p>
             <h2>Le même Pelote Manager, du licencié à l’administrateur.</h2>
             <p>
               Le joueur accède uniquement à ce qui le concerne. Les responsables
@@ -244,9 +260,20 @@ export function MarketingPage() {
             </p>
           </div>
           <div className="marketing-platform__steps">
-            <div><strong>01</strong><span>Le club configure son environnement.</span></div>
-            <div><strong>02</strong><span>Les licenciés retrouvent leur espace personnel.</span></div>
-            <div><strong>03</strong><span>Les compétitions et réservations vivent au même endroit.</span></div>
+            <div>
+              <strong>01</strong>
+              <span>Le club configure son environnement.</span>
+            </div>
+            <div>
+              <strong>02</strong>
+              <span>Les licenciés retrouvent leur espace personnel.</span>
+            </div>
+            <div>
+              <strong>03</strong>
+              <span>
+                Les compétitions et réservations vivent au même endroit.
+              </span>
+            </div>
           </div>
         </section>
 
@@ -259,7 +286,10 @@ export function MarketingPage() {
               joueur et côté dirigeant.
             </p>
           </div>
-          <a className="marketing-button marketing-button--light" href={appOrigin}>
+          <a
+            className="marketing-button marketing-button--light"
+            href={appOrigin}
+          >
             Ouvrir l’application <ArrowRight aria-hidden="true" />
           </a>
         </section>
@@ -267,7 +297,9 @@ export function MarketingPage() {
 
       <footer className="marketing-footer">
         <div className="marketing-brand marketing-brand--footer">
-          <span className="marketing-brand__mark" aria-hidden="true">PM</span>
+          <span className="marketing-brand__mark" aria-hidden="true">
+            PM
+          </span>
           <span>
             <strong>Pelote Manager</strong>
             <small>La plateforme des clubs de pelote</small>
