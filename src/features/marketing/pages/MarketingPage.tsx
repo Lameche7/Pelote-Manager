@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import {
-  ArrowRight,
   BarChart3,
   BellRing,
   CalendarDays,
@@ -11,8 +10,8 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import { APP_HOST, applicationOrigin } from "@/shared/config/domains";
 import "./MarketingPage.css";
+import "./MarketingPilotGuide.css";
 
 const features = [
   {
@@ -70,14 +69,7 @@ const audiences = [
   },
 ];
 
-function getAppOrigin() {
-  if (typeof window === "undefined") return `https://${APP_HOST}`;
-  return applicationOrigin(window.location.hostname, window.location.origin);
-}
-
 export function MarketingPage() {
-  const appOrigin = getAppOrigin();
-
   useEffect(() => {
     document.title = "Pelote Manager · La plateforme des clubs de pelote";
     const description = document.querySelector<HTMLMetaElement>(
@@ -108,16 +100,17 @@ export function MarketingPage() {
         <nav className="marketing-nav" aria-label="Navigation du site">
           <a href="#fonctionnalites">Fonctionnalités</a>
           <a href="#pour-qui">Pour qui ?</a>
+          <a href="#guide-pcl">Guide PCL</a>
           <a href="#vision">La plateforme</a>
-          <a className="marketing-nav__app" href={appOrigin}>
-            Ouvrir l’application
-          </a>
         </nav>
       </header>
 
       <main>
         <section className="marketing-hero" id="accueil">
           <div className="marketing-hero__copy">
+            <p className="marketing-pilot-badge">
+              En test au Pelotaris Club Lourdais
+            </p>
             <p className="marketing-kicker">
               Pensé pour la pelote. Construit pour les clubs.
             </p>
@@ -133,11 +126,10 @@ export function MarketingPage() {
             <div className="marketing-hero__actions">
               <a
                 className="marketing-button marketing-button--primary"
-                href={appOrigin}
+                href="#guide-pcl"
               >
                 <Smartphone aria-hidden="true" />
-                Ouvrir Pelote Manager
-                <ArrowRight aria-hidden="true" />
+                Guide du test PCL
               </a>
               <a
                 className="marketing-button marketing-button--secondary"
@@ -147,7 +139,8 @@ export function MarketingPage() {
               </a>
             </div>
             <p className="marketing-hero__install">
-              Application web installable sur téléphone, tablette et ordinateur.
+              Le pilote est actuellement réservé aux joueurs du Pelotaris Club
+              Lourdais.
             </p>
           </div>
 
@@ -161,7 +154,7 @@ export function MarketingPage() {
                 <strong>Pelote Manager</strong>
                 <small>Tableau de bord du club</small>
               </div>
-              <span className="marketing-product__status">En ligne</span>
+              <span className="marketing-product__status">Pilote PCL</span>
             </div>
             <div className="marketing-product__grid">
               <article className="marketing-mini-card marketing-mini-card--wide">
@@ -246,6 +239,87 @@ export function MarketingPage() {
           ))}
         </section>
 
+        <section className="marketing-pilot-guide" id="guide-pcl">
+          <header className="marketing-section__heading">
+            <p className="marketing-kicker">Pilote · Pelotaris Club Lourdais</p>
+            <h2>Bien démarrer avec Pelote Manager.</h2>
+            <p>
+              Cette partie s’adresse aux joueurs du PCL qui participent au test.
+              L’accès à l’application est transmis directement par le club.
+            </p>
+          </header>
+
+          <div className="marketing-guide-grid">
+            <article className="marketing-guide-card marketing-guide-card--install">
+              <span className="marketing-guide-card__number">01</span>
+              <Smartphone aria-hidden="true" />
+              <h3>Installer Pelote Manager comme une appli</h3>
+              <div className="marketing-install-columns">
+                <div>
+                  <strong>Sur iPhone</strong>
+                  <ol>
+                    <li>Ouvrez Pelote Manager avec Safari.</li>
+                    <li>Touchez le bouton Partager.</li>
+                    <li>Choisissez « Ajouter à l’écran d’accueil ».</li>
+                    <li>Validez avec « Ajouter ».</li>
+                  </ol>
+                </div>
+                <div>
+                  <strong>Sur Android</strong>
+                  <ol>
+                    <li>Ouvrez Pelote Manager avec Chrome.</li>
+                    <li>Ouvrez le menu ⋮ du navigateur.</li>
+                    <li>
+                      Choisissez « Installer l’application » ou « Ajouter à
+                      l’écran d’accueil ».
+                    </li>
+                    <li>Confirmez l’installation.</li>
+                  </ol>
+                </div>
+              </div>
+              <p className="marketing-guide-note">
+                Une icône Pelote Manager apparaît ensuite sur votre écran
+                d’accueil, comme pour une application classique.
+              </p>
+            </article>
+
+            <article className="marketing-guide-card">
+              <span className="marketing-guide-card__number">02</span>
+              <CalendarDays aria-hidden="true" />
+              <h3>Réserver un créneau</h3>
+              <ol>
+                <li>Connectez-vous à votre compte.</li>
+                <li>Ouvrez la rubrique « Réservations ».</li>
+                <li>Choisissez le terrain, la semaine et le créneau libre.</li>
+                <li>Touchez le créneau marqué « Réserver ».</li>
+                <li>Vérifiez la date, l’horaire et confirmez avec « Réserver ».</li>
+              </ol>
+              <p className="marketing-guide-note">
+                Pour le test PCL, les créneaux s’ouvrent à 8 h : 72 h à l’avance
+                pour un licencié actif et 48 h à l’avance pour un compte non
+                licencié.
+              </p>
+            </article>
+
+            <article className="marketing-guide-card">
+              <span className="marketing-guide-card__number">03</span>
+              <ShieldCheck aria-hidden="true" />
+              <h3>Annuler une réservation</h3>
+              <ol>
+                <li>Ouvrez « Mon espace ».</li>
+                <li>Entrez dans « Mes réservations ».</li>
+                <li>Ouvrez la réservation concernée.</li>
+                <li>Touchez « Annuler la réservation » et confirmez.</li>
+              </ol>
+              <p className="marketing-guide-note marketing-guide-note--important">
+                Au PCL, l’annulation par le joueur est possible jusqu’à 8 heures
+                avant le début du créneau. Après cette limite, le bouton
+                d’annulation n’est plus proposé dans l’application.
+              </p>
+            </article>
+          </div>
+        </section>
+
         <section className="marketing-platform" id="vision">
           <div>
             <p className="marketing-kicker">
@@ -278,19 +352,15 @@ export function MarketingPage() {
 
         <section className="marketing-cta">
           <div>
-            <p className="marketing-kicker">Pelote Manager</p>
-            <h2>Moins de fichiers. Moins de messages perdus. Plus de club.</h2>
+            <p className="marketing-kicker">Déploiement pilote</p>
+            <h2>Pelote Manager est actuellement testé en conditions réelles.</h2>
             <p>
-              Accédez à l’application actuelle et découvrez l’expérience côté
-              joueur et côté dirigeant.
+              Le Pelotaris Club Lourdais est le club pilote. Cette phase permet
+              de valider les usages quotidiens avec les joueurs et les dirigeants
+              avant une ouverture plus large.
             </p>
           </div>
-          <a
-            className="marketing-button marketing-button--light"
-            href={appOrigin}
-          >
-            Ouvrir l’application <ArrowRight aria-hidden="true" />
-          </a>
+          <span className="marketing-pilot-stamp">Pilote PCL · en cours</span>
         </section>
       </main>
 
