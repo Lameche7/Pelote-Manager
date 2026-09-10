@@ -23,7 +23,7 @@ test("une notification peut être masquée uniquement pour son destinataire", ()
   );
   assert.match(migration, /deliveries\.deleted_at is null/);
   assert.match(service, /supabase\.rpc\("delete_my_notification"/);
-  assert.match(page, />Supprimer</);
+  assert.match(page, />\s*Supprimer\s*</);
 });
 
 test("le rattachement d’un profil propage l’identité vers l’historique championnat", () => {
