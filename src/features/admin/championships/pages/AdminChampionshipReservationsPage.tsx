@@ -47,7 +47,9 @@ export function AdminChampionshipReservationsPage() {
       setAdvanceDays(next.advanceDays);
       setMaxActiveReservations(next.maxActiveReservations);
       setResourceIds(
-        next.resources.filter((resource) => resource.selected).map((resource) => resource.id),
+        next.resources
+          .filter((resource) => resource.selected)
+          .map((resource) => resource.id),
       );
       setWindows(next.windows.length > 0 ? next.windows : DEFAULT_WINDOWS);
     } catch (caught) {
@@ -80,11 +82,13 @@ export function AdminChampionshipReservationsPage() {
 
   const toggleDay = (weekday: number, selected: boolean) => {
     setWindows((current) => {
-      if (!selected) return current.filter((window) => window.weekday !== weekday);
+      if (!selected)
+        return current.filter((window) => window.weekday !== weekday);
       if (current.some((window) => window.weekday === weekday)) return current;
-      return [...current, { weekday, opensAt: "09:00", closesAt: "18:00" }].sort(
-        (a, b) => a.weekday - b.weekday,
-      );
+      return [
+        ...current,
+        { weekday, opensAt: "09:00", closesAt: "18:00" },
+      ].sort((a, b) => a.weekday - b.weekday);
     });
   };
 
@@ -159,10 +163,14 @@ export function AdminChampionshipReservationsPage() {
           <article className="championship-reservation-admin__panel championship-reservation-admin__summary">
             <UsersRound aria-hidden="true" />
             <div>
-              <strong>{settings.eligiblePlayerCount} joueur(s) actuellement éligible(s)</strong>
+              <strong>
+                {settings.eligiblePlayerCount} joueur(s) actuellement
+                éligible(s)
+              </strong>
               <p>
-                L’éligibilité vient automatiquement des effectifs des championnats
-                en préparation ou actifs et du rattachement du compte joueur.
+                L’éligibilité vient automatiquement des effectifs des
+                championnats en préparation ou actifs et du rattachement du
+                compte joueur.
               </p>
             </div>
           </article>
@@ -177,8 +185,8 @@ export function AdminChampionshipReservationsPage() {
               <span>
                 <strong>Activer l’accès anticipé championnat</strong>
                 <small>
-                  Désactivé, tous les joueurs conservent uniquement les règles de
-                  réservation habituelles.
+                  Désactivé, tous les joueurs conservent uniquement les règles
+                  de réservation habituelles.
                 </small>
               </span>
             </label>
@@ -191,7 +199,9 @@ export function AdminChampionshipReservationsPage() {
                   min={1}
                   max={365}
                   value={advanceDays}
-                  onChange={(event) => setAdvanceDays(Number(event.target.value))}
+                  onChange={(event) =>
+                    setAdvanceDays(Number(event.target.value))
+                  }
                 />
               </label>
               <label>
@@ -212,8 +222,8 @@ export function AdminChampionshipReservationsPage() {
           <article className="championship-reservation-admin__panel">
             <h2>Terrains concernés</h2>
             <p>
-              Les plages championnat peuvent exister même lorsqu’un terrain n’est
-              pas ouvert à la réservation publique à ce moment-là.
+              Les plages championnat peuvent exister même lorsqu’un terrain
+              n’est pas ouvert à la réservation publique à ce moment-là.
             </p>
             <div className="championship-reservation-admin__resources">
               {settings.resources.map((resource) => (
@@ -247,7 +257,10 @@ export function AdminChampionshipReservationsPage() {
               {WEEKDAYS.map((day) => {
                 const window = windowByDay.get(day.value);
                 return (
-                  <div key={day.value} className="championship-reservation-admin__window">
+                  <div
+                    key={day.value}
+                    className="championship-reservation-admin__window"
+                  >
                     <label className="championship-reservation-admin__day">
                       <input
                         type="checkbox"

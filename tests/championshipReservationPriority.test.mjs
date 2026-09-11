@@ -4,24 +4,33 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-const [migration, routes, navigation, router, adminPage, service, calendar, calendarService, reservationsPage] =
-  await Promise.all([
-    read(
-      "../supabase/migrations/20260911170000_add_championship_reservation_priority.sql",
-    ),
-    read("../src/shared/config/routes.ts"),
-    read("../src/features/admin/config/adminPermissions.ts"),
-    read("../src/app/router.tsx"),
-    read(
-      "../src/features/admin/championships/pages/AdminChampionshipReservationsPage.tsx",
-    ),
-    read(
-      "../src/features/admin/championships/services/championshipReservationService.ts",
-    ),
-    read("../src/features/reservations/domain/calendar.ts"),
-    read("../src/features/reservations/services/reservationCalendarService.ts"),
-    read("../src/features/reservations/pages/ReservationsPage.tsx"),
-  ]);
+const [
+  migration,
+  routes,
+  navigation,
+  router,
+  adminPage,
+  service,
+  calendar,
+  calendarService,
+  reservationsPage,
+] = await Promise.all([
+  read(
+    "../supabase/migrations/20260911170000_add_championship_reservation_priority.sql",
+  ),
+  read("../src/shared/config/routes.ts"),
+  read("../src/features/admin/config/adminPermissions.ts"),
+  read("../src/app/router.tsx"),
+  read(
+    "../src/features/admin/championships/pages/AdminChampionshipReservationsPage.tsx",
+  ),
+  read(
+    "../src/features/admin/championships/services/championshipReservationService.ts",
+  ),
+  read("../src/features/reservations/domain/calendar.ts"),
+  read("../src/features/reservations/services/reservationCalendarService.ts"),
+  read("../src/features/reservations/pages/ReservationsPage.tsx"),
+]);
 
 test("configure un droit championnat indépendant des horaires publics", () => {
   assert.match(migration, /championship_reservation_settings/);
@@ -37,7 +46,10 @@ test("déduit l'éligibilité de l'effectif réel du championnat", () => {
   assert.match(migration, /championship_team_players/);
   assert.match(migration, /player\.profile_id = target_user_id/);
   assert.match(migration, /federation_club\.linked_club_id = target_club_id/);
-  assert.match(migration, /championship\.status in \('preparation', 'active'\)/);
+  assert.match(
+    migration,
+    /championship\.status in \('preparation', 'active'\)/,
+  );
 });
 
 test("le serveur contrôle le passe-droit même hors horaires publics", () => {
