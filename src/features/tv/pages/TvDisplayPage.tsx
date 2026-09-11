@@ -9,6 +9,7 @@ import {
   QrCode,
   RefreshCw,
   ShoppingBag,
+  Trophy,
   WifiOff,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
@@ -17,6 +18,7 @@ import {
   type PublicEvent,
 } from "@/features/home/services/publicEventService";
 import { CLUB_CONFIG } from "@/shared/config";
+import { currentApplicationOrigin } from "@/shared/config/domains";
 import {
   tvDisplayService,
   type TvDisplay,
@@ -27,6 +29,11 @@ import {
   tvMediaService,
   type TvMediaAsset,
 } from "@/features/tv/services/tvMediaService";
+import {
+  tvTournamentService,
+  type TvTournamentSeries,
+} from "@/features/tv/services/tvTournamentService";
+import { TvTournamentSeriesView } from "./TvTournamentSeriesView";
 import "./TvDisplayPage.css";
 import "./TvWeeklyView.css";
 import "./TvPromotionView.css";
@@ -40,9 +47,7 @@ const SHOP_URL =
   "https://www.helloasso.com/associations/pelotaris-club-lourdais/boutiques/dotations-2026";
 const QR_ENDPOINT = "https://quickchart.io/qr";
 
-type TvView = "today" | "week" | "club";
-
-const TV_VIEW_ORDER: TvView[] = ["today", "week", "club"];
+type TvView = "today" | "week" | "club" | `tournament:${string}:${string}`;
 
 const tokenPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -112,15 +117,21 @@ const weekItemLabel = (item: TvWeekItem) =>
 const buildQrImageUrl = (value: string) =>
   `${QR_ENDPOINT}?text=${encodeURIComponent(value)}&format=svg&size=280&margin=2&ecLevel=M`;
 
-const nextTvView = (current: TvView): TvView => {
-  const currentIndex = TV_VIEW_ORDER.indexOf(current);
-  return TV_VIEW_ORDER[(currentIndex + 1) % TV_VIEW_ORDER.length] ?? "today";
+const nextTvView = (current: TvView, order: TvView[]): TvView => {
+  const currentIndex = order.indexOf(current);
+  return order[(currentIndex + 1) % order.length] ?? "today";
 };
 
-const viewEyebrow = (view: TvView) => {
+const viewEyebrow = (
+  view: TvView,
+  activeTournamentSeries: TvTournamentSeries | null,
+) => {
   if (view === "today") return "Réservations du jour";
   if (view === "week") return "Planning des 7 prochains jours";
-  return "Boutique & partenaires";
+  if (view === "club") return "Boutique & partenaires";
+  return activeTournamentSeries
+    ? `Tournoi · ${activeTournamentSeries.seriesName}`
+    : "Tournoi en cours";
 };
 
 const eventLocation = (event: PublicEvent) =>
@@ -161,6 +172,9 @@ export function TvDisplayPage() {
   const [display, setDisplay] = useState<TvDisplay | null>(null);
   const [upcomingEvents, setUpcomingEvents] = useState<PublicEvent[]>([]);
   const [tvMedia, setTvMedia] = useState<TvMediaAsset[]>([]);
+  const [tournamentSeries, setTournamentSeries] = useState<
+    TvTournamentSeries[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [eventsError, setEventsError] = useState(false);
@@ -227,11 +241,25 @@ export function TvDisplayPage() {
     }
   }, [token, tokenIsValid]);
 
+  const loadTournamentSeries = useCallback(async () => {
+    try {
+      setTournamentSeries(await tvTournamentService.listCurrentSeries());
+    } catch {
+      // Les écrans tournoi sont facultatifs : on conserve le dernier état connu.
+    }
+  }, []);
+
   useEffect(() => {
     void loadDisplay(true);
     void loadUpcomingEvents();
     void loadTvMedia();
-  }, [loadDisplay, loadUpcomingEvents, loadTvMedia]);
+    void loadTournamentSeries();
+  }, [
+    loadDisplay,
+    loadTournamentSeries,
+    loadTvMedia,
+    loadUpcomingEvents,
+  ]);
 
   useEffect(() => {
     const clock = window.setInterval(() => setNow(new Date()), 1_000);
@@ -246,6 +274,7 @@ export function TvDisplayPage() {
         void loadDisplay(false);
         void loadUpcomingEvents();
         void loadTvMedia();
+        void loadTournamentSeries();
       },
       (display?.refreshIntervalSeconds ?? 30) * 1_000,
     );
@@ -255,24 +284,45 @@ export function TvDisplayPage() {
     display?.refreshIntervalSeconds,
     display?.status,
     loadDisplay,
-    loadUpcomingEvents,
+    loadTournamentSeries,
     loadTvMedia,
+    loadUpcomingEvents,
     tokenIsValid,
   ]);
+
+  const viewOrder = useMemo<TvView[]>(
+    () => [
+      "today",
+      "week",
+      ...tournamentSeries.map((series) => series.viewKey as TvView),
+      "club",
+    ],
+    [tournamentSeries],
+  );
+
+  const activeTournamentSeries = useMemo(
+    () =>
+      tournamentSeries.find((series) => series.viewKey === activeView) ?? null,
+    [activeView, tournamentSeries],
+  );
+
+  useEffect(() => {
+    if (!viewOrder.includes(activeView)) setActiveView("today");
+  }, [activeView, viewOrder]);
 
   useEffect(() => {
     if (display?.status !== "ready") return;
 
     const rotation = window.setInterval(() => {
-      setActiveView(nextTvView);
+      setActiveView((current) => nextTvView(current, viewOrder));
     }, display.viewDurationSeconds * 1_000);
 
     return () => window.clearInterval(rotation);
-  }, [display?.status, display?.viewDurationSeconds]);
+  }, [display?.status, display?.viewDurationSeconds, viewOrder]);
 
   const clubName = display?.clubName || CLUB_CONFIG.name;
   const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
-  const appUrl = window.location.origin;
+  const appUrl = currentApplicationOrigin();
   const shopMedia = useMemo(
     () =>
       tvMedia.filter((item) => item.kind === "shop").slice(0, MAX_SHOP_MEDIA),
@@ -347,7 +397,9 @@ export function TvDisplayPage() {
         <div className="tv-display__identity">
           <img className="tv-display__logo" src={logoUrl} alt="" />
           <div>
-            <p className="tv-display__eyebrow">{viewEyebrow(activeView)}</p>
+            <p className="tv-display__eyebrow">
+              {viewEyebrow(activeView, activeTournamentSeries)}
+            </p>
             <h1>{clubName}</h1>
           </div>
         </div>
@@ -522,6 +574,13 @@ export function TvDisplayPage() {
         </section>
       )}
 
+      {activeTournamentSeries && (
+        <TvTournamentSeriesView
+          key={activeTournamentSeries.viewKey}
+          series={activeTournamentSeries}
+        />
+      )}
+
       {activeView === "club" && (
         <section
           className="tv-display__promotion tv-display__view"
@@ -605,6 +664,13 @@ export function TvDisplayPage() {
               {displayedWeek}
             </>
           )}
+          {activeTournamentSeries && (
+            <>
+              <Trophy aria-hidden="true" />
+              {activeTournamentSeries.tournamentName} ·{" "}
+              {activeTournamentSeries.seriesName}
+            </>
+          )}
           {activeView === "club" && (
             <>
               <ShoppingBag aria-hidden="true" />
@@ -613,7 +679,7 @@ export function TvDisplayPage() {
           )}
         </span>
         <span className="tv-display__view-indicator">
-          {TV_VIEW_ORDER.map((view) => (
+          {viewOrder.map((view) => (
             <i className={activeView === view ? "is-active" : ""} key={view} />
           ))}
           Alternance toutes les {display.viewDurationSeconds} secondes
