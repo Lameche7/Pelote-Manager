@@ -11,6 +11,7 @@ import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell"
 import { useAuth } from "@/shared/hooks/useAuth";
 import {
   licenceService,
+  type LicencePaymentMode,
   type LicencePortal,
   type LicenceRequestStatus,
 } from "../services/licenceService";
@@ -35,6 +36,7 @@ const STATUS_LABELS: Record<LicenceRequestStatus, string> = {
 export function MyLicencePage() {
   const { profile } = useAuth();
   const [portal, setPortal] = useState<LicencePortal | null>(null);
+  const [paymentMode, setPaymentMode] = useState<LicencePaymentMode>("test");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -44,7 +46,12 @@ export function MyLicencePage() {
     setLoading(true);
     setError("");
     try {
-      setPortal(await licenceService.getMyPortal());
+      const [nextPortal, nextPaymentMode] = await Promise.all([
+        licenceService.getMyPortal(),
+        licenceService.getPaymentMode(),
+      ]);
+      setPortal(nextPortal);
+      setPaymentMode(nextPaymentMode);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -134,11 +141,10 @@ export function MyLicencePage() {
 
   const uploadDocument = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formElement = event.currentTarget;
     const request = portal?.request;
     if (!request) return;
-    const input = event.currentTarget.elements.namedItem(
-      "document",
-    ) as HTMLInputElement;
+    const input = formElement.elements.namedItem("document") as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
     setBusy(true);
@@ -147,7 +153,7 @@ export function MyLicencePage() {
     try {
       await licenceService.uploadMyDocument(request.id, file);
       setMessage("Document transmis au club.");
-      event.currentTarget.reset();
+      formElement.reset();
       await load();
     } catch (caught) {
       setError(
@@ -160,19 +166,53 @@ export function MyLicencePage() {
     }
   };
 
+  const simulatePayment = async (paymentId: string) => {
+    const accepted = window.confirm(
+      "MODE TEST — Aucun paiement réel ne sera effectué.\n\nOK : simuler un paiement accepté\nAnnuler : choisir un refus ou une annulation",
+    );
+
+    let outcome: "paid" | "failed" | "cancelled" = "paid";
+    if (!accepted) {
+      const refused = window.confirm(
+        "Simuler un paiement refusé ?\n\nOK : paiement refusé\nAnnuler : paiement abandonné",
+      );
+      outcome = refused ? "failed" : "cancelled";
+    }
+
+    await licenceService.simulatePayment(paymentId, outcome);
+
+    if (outcome === "paid") {
+      setMessage("Paiement simulé accepté. Le dossier a été mis à jour.");
+    } else if (outcome === "failed") {
+      setMessage("Paiement simulé refusé. Vous pouvez réessayer.");
+    } else {
+      setMessage("Paiement simulé annulé. Vous pouvez réessayer.");
+    }
+    await load();
+  };
+
   const pay = async () => {
     if (!portal?.request) return;
     setBusy(true);
     setError("");
+    setMessage("");
     try {
-      const url = await licenceService.preparePayment(portal.request.id);
-      window.location.assign(url);
+      const prepared = await licenceService.preparePayment(portal.request.id);
+      if (prepared.mode === "test") {
+        await simulatePayment(prepared.paymentId);
+        return;
+      }
+      if (!prepared.redirectUrl) {
+        throw new Error("Lien HelloAsso introuvable.");
+      }
+      window.location.assign(prepared.redirectUrl);
     } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
           : "Impossible de lancer le paiement.",
       );
+    } finally {
       setBusy(false);
     }
   };
@@ -410,7 +450,9 @@ export function MyLicencePage() {
                     disabled={busy}
                     onClick={() => void pay()}
                   >
-                    Payer avec HelloAsso
+                    {paymentMode === "test"
+                      ? "Simuler le paiement (mode test)"
+                      : "Payer avec HelloAsso"}
                   </button>
                 )}
               </article>
