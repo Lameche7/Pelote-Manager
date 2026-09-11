@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
+  localInputToStoredDateTime,
+  storedDateTimeToLocalInput,
+} from "@/features/admin/events/domain/eventDateTime";
+import {
   licenceService,
   type AdminLicenceRequest,
   type AdminLicenceSettings,
@@ -45,9 +49,6 @@ const statusLabel = (request: AdminLicenceRequest) => {
       return "Annulé";
   }
 };
-
-const toDateTimeLocal = (value: string | null) =>
-  value ? new Date(value).toISOString().slice(0, 16) : "";
 
 export function AdminLicencesPage() {
   const [tab, setTab] = useState<Tab>("requests");
@@ -133,8 +134,8 @@ export function AdminLicencesPage() {
         isOpen: form.get("isOpen") === "on",
         renewalPriceCents: renewalPrice,
         firstApplicationPriceCents: firstPrice,
-        opensAt: opensAt ? new Date(opensAt).toISOString() : null,
-        closesAt: closesAt ? new Date(closesAt).toISOString() : null,
+        opensAt: opensAt ? localInputToStoredDateTime(opensAt) : null,
+        closesAt: closesAt ? localInputToStoredDateTime(closesAt) : null,
         applicationFormPath,
         instructions: String(form.get("instructions") || "").trim() || null,
       });
@@ -319,7 +320,11 @@ export function AdminLicencesPage() {
               <input
                 name="opensAt"
                 type="datetime-local"
-                defaultValue={toDateTimeLocal(campaign?.opensAt ?? null)}
+                defaultValue={
+                  campaign?.opensAt
+                    ? storedDateTimeToLocalInput(campaign.opensAt)
+                    : ""
+                }
                 key={`open-${seasonId}-${campaign?.updatedAt ?? "new"}`}
               />
             </label>
@@ -328,7 +333,11 @@ export function AdminLicencesPage() {
               <input
                 name="closesAt"
                 type="datetime-local"
-                defaultValue={toDateTimeLocal(campaign?.closesAt ?? null)}
+                defaultValue={
+                  campaign?.closesAt
+                    ? storedDateTimeToLocalInput(campaign.closesAt)
+                    : ""
+                }
                 key={`close-${seasonId}-${campaign?.updatedAt ?? "new"}`}
               />
             </label>
