@@ -108,6 +108,8 @@ export function AdminLicencesPage() {
     const firstPrice = Math.round(Number(form.get("firstPrice") || 0) * 100);
     const opensAt = String(form.get("opensAt") || "");
     const closesAt = String(form.get("closesAt") || "");
+    const paymentMode =
+      form.get("paymentMode") === "helloasso" ? "helloasso" : "test";
     const template = (
       event.currentTarget.elements.namedItem("template") as HTMLInputElement
     ).files?.[0];
@@ -138,6 +140,7 @@ export function AdminLicencesPage() {
         closesAt: closesAt ? localInputToStoredDateTime(closesAt) : null,
         applicationFormPath,
         instructions: String(form.get("instructions") || "").trim() || null,
+        paymentMode,
       });
       setMessage("Paramètres de licence enregistrés.");
       await load();
@@ -229,7 +232,7 @@ export function AdminLicencesPage() {
             className={tab === "requests" ? "active" : "secondary"}
             onClick={() => setTab("requests")}
           >
-            <FileCheck2 aria-hidden="true" /> Demandes
+            <FileCheck2 aria-hidden="true" /> Dossiers
           </button>
           <button
             className={tab === "settings" ? "active" : "secondary"}
@@ -316,6 +319,23 @@ export function AdminLicencesPage() {
               />
             </label>
             <label>
+              Paiement de la licence
+              <select
+                name="paymentMode"
+                defaultValue={campaign?.paymentMode ?? "test"}
+                key={`payment-${seasonId}-${campaign?.updatedAt ?? "new"}`}
+              >
+                <option value="test">Mode test · simulation</option>
+                <option value="helloasso">
+                  HelloAsso officiel · paiement réel
+                </option>
+              </select>
+              <small>
+                Ce réglage concerne uniquement les licences, pas les
+                réservations.
+              </small>
+            </label>
+            <label>
               Ouverture
               <input
                 name="opensAt"
@@ -375,7 +395,7 @@ export function AdminLicencesPage() {
         </form>
       ) : requests.length === 0 ? (
         <div className="admin-licences__panel">
-          <p>Aucune demande de licence pour le moment.</p>
+          <p>Aucun dossier de licence pour le moment.</p>
         </div>
       ) : (
         <div className="admin-licences__requests">
