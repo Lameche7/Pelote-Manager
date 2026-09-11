@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   BadgeCheck,
+  CalendarPlus,
   Download,
   FileCheck2,
   FileWarning,
   Settings,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   licenceService,
   type AdminLicenceRequest,
   type AdminLicenceSettings,
 } from "@/features/licences/services/licenceService";
+import { ROUTES } from "@/shared/config";
 import "./AdminLicencesPage.css";
 
 type Tab = "requests" | "settings";
@@ -257,7 +260,7 @@ export function AdminLicencesPage() {
           className="admin-licences__panel"
           onSubmit={(event) => void saveSettings(event)}
         >
-          <div className="admin-licences__form-grid">
+          <div className="admin-licences__season-row">
             <label>
               Saison
               <select
@@ -273,6 +276,18 @@ export function AdminLicencesPage() {
                 ))}
               </select>
             </label>
+            <div className="admin-licences__season-actions">
+              <span>
+                Les saisons sont libres : 2027, 2026-2027 ou toute autre période
+                définie par le club.
+              </span>
+              <Link className="secondary" to={ROUTES.adminClubSeasons}>
+                <CalendarPlus aria-hidden="true" /> Créer / gérer les saisons
+              </Link>
+            </div>
+          </div>
+
+          <div className="admin-licences__form-grid">
             <label>
               Tarif renouvellement (€)
               <input
