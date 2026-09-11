@@ -16,7 +16,7 @@ const [
   reservationsPage,
 ] = await Promise.all([
   read(
-    "../supabase/migrations/20260911170000_add_championship_reservation_priority.sql",
+    "../supabase/migrations/20260911170050_add_championship_reservation_priority.sql",
   ),
   read("../src/shared/config/routes.ts"),
   read("../src/features/admin/config/adminPermissions.ts"),
@@ -45,6 +45,7 @@ test("configure un droit championnat indépendant des horaires publics", () => {
 test("déduit l'éligibilité de l'effectif réel du championnat", () => {
   assert.match(migration, /championship_team_players/);
   assert.match(migration, /player\.profile_id = target_user_id/);
+  assert.match(migration, /player\.link_status in \('claimed', 'verified'\)/);
   assert.match(migration, /federation_club\.linked_club_id = target_club_id/);
   assert.match(
     migration,
