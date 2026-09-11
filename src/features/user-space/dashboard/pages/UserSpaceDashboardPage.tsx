@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BadgeCheck,
   Bell,
   CalendarDays,
   CreditCard,
@@ -26,6 +27,12 @@ const cards: DashboardCard[] = [
     description: "Consulter, reprendre un paiement ou annuler une réservation.",
     icon: CalendarDays,
     to: ROUTES.myReservations,
+  },
+  {
+    title: "Ma licence",
+    description: "Demander ou renouveler votre licence et suivre votre dossier.",
+    icon: BadgeCheck,
+    to: ROUTES.myLicence,
   },
   {
     title: "Mon profil",
