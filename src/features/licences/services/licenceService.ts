@@ -19,6 +19,14 @@ export type LicencePayment = {
   expiresAt: string;
 };
 
+export type LicencePaymentMode = "test" | "helloasso";
+
+export type PreparedLicencePayment = {
+  paymentId: string;
+  mode: LicencePaymentMode;
+  redirectUrl?: string;
+};
+
 export type LicencePortal = {
   campaign: null | {
     id: string;
@@ -135,6 +143,12 @@ export const licenceService = {
   getMyPortal: async () =>
     value<LicencePortal>(await rpc("get_my_licence_portal")),
 
+  getPaymentMode: async (): Promise<LicencePaymentMode> => {
+    const { data, error } = await supabase.rpc("get_payment_mode");
+    if (error) throw new Error(error.message);
+    return data === "helloasso" ? "helloasso" : "test";
+  },
+
   startMyRequest: async (payload: Record<string, unknown> = {}) =>
     value<string>(await rpc("start_my_licence_request", { payload })),
 
@@ -158,7 +172,7 @@ export const licenceService = {
     if (result.error) throw new Error(result.error.message);
   },
 
-  preparePayment: async (requestId: string) => {
+  preparePayment: async (requestId: string): Promise<PreparedLicencePayment> => {
     const result = value<Array<{ payment_id: string }>>(
       await rpc("prepare_my_licence_payment", {
         target_request_id: requestId,
@@ -166,6 +180,10 @@ export const licenceService = {
     );
     const paymentId = result[0]?.payment_id;
     if (!paymentId) throw new Error("Paiement introuvable.");
+
+    const mode = await licenceService.getPaymentMode();
+    if (mode === "test") return { paymentId, mode };
+
     const { data, error } = await supabase.functions.invoke(
       "create-helloasso-checkout",
       { body: { paymentId } },
@@ -173,7 +191,18 @@ export const licenceService = {
     if (error) throw new Error(error.message);
     const redirectUrl = (data as { redirectUrl?: string } | null)?.redirectUrl;
     if (!redirectUrl) throw new Error("Lien HelloAsso introuvable.");
-    return redirectUrl;
+    return { paymentId, mode, redirectUrl };
+  },
+
+  simulatePayment: async (
+    paymentId: string,
+    outcome: "paid" | "failed" | "cancelled",
+  ) => {
+    const result = await rpc("simulate_payment", {
+      target_payment_id: paymentId,
+      simulated_outcome: outcome,
+    });
+    if (result.error) throw new Error(result.error.message);
   },
 
   getTemplateUrl: (path: string) => signedUrl(path, 600),
