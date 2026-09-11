@@ -40,6 +40,36 @@
   gap: 1rem;
 }
 
+.admin-licences__season-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(280px, 1.3fr);
+  gap: 1rem;
+  align-items: end;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.18);
+}
+
+.admin-licences__season-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.admin-licences__season-actions span {
+  flex: 1 1 260px;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+.admin-licences__season-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+}
+
 .admin-licences__form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -108,4 +138,10 @@
 .admin-licences textarea {
   width: 100%;
   box-sizing: border-box;
+}
+
+@media (max-width: 760px) {
+  .admin-licences__season-row {
+    grid-template-columns: 1fr;
+  }
 }
