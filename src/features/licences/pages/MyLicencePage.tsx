@@ -144,7 +144,9 @@ export function MyLicencePage() {
     const formElement = event.currentTarget;
     const request = portal?.request;
     if (!request) return;
-    const input = formElement.elements.namedItem("document") as HTMLInputElement;
+    const input = formElement.elements.namedItem(
+      "document",
+    ) as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
     setBusy(true);
