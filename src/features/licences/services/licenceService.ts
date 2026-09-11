@@ -197,8 +197,7 @@ export const licenceService = {
         target_season_id: input.seasonId,
         target_is_open: input.isOpen,
         target_renewal_price_cents: input.renewalPriceCents,
-        target_first_application_price_cents:
-          input.firstApplicationPriceCents,
+        target_first_application_price_cents: input.firstApplicationPriceCents,
         target_opens_at: input.opensAt,
         target_closes_at: input.closesAt,
         target_application_form_path: input.applicationFormPath,

@@ -18,9 +18,7 @@ const [
 ] = await Promise.all([
   read("../src/shared/config/routes.ts"),
   read("../src/features/user-space/components/UserSpaceShell.tsx"),
-  read(
-    "../src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx",
-  ),
+  read("../src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx"),
   read("../src/features/licences/pages/MyLicencePage.tsx"),
   read("../src/features/admin/members/pages/AdminLicencesPage.tsx"),
   read("../src/features/licences/services/licenceService.ts"),

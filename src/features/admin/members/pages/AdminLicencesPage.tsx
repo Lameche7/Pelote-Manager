@@ -216,7 +216,9 @@ export function AdminLicencesPage() {
         <div>
           <p className="eyebrow">Licenciés</p>
           <h1>Licences</h1>
-          <p>Suivez les renouvellements et les premières demandes de licence.</p>
+          <p>
+            Suivez les renouvellements et les premières demandes de licence.
+          </p>
         </div>
         <nav aria-label="Sections licences">
           <button

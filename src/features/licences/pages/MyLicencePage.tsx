@@ -379,9 +379,7 @@ export function MyLicencePage() {
                 </p>
                 {portal.request.status !== "approved" &&
                   portal.request.status !== "licensed" && (
-                    <form
-                      onSubmit={(event) => void uploadDocument(event)}
-                    >
+                    <form onSubmit={(event) => void uploadDocument(event)}>
                       <input
                         name="document"
                         type="file"
