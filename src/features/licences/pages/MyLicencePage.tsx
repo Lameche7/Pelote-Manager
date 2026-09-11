@@ -46,7 +46,11 @@ export function MyLicencePage() {
     try {
       setPortal(await licenceService.getMyPortal());
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible de charger votre licence.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Impossible de charger votre licence.",
+      );
     } finally {
       setLoading(false);
     }
@@ -70,7 +74,11 @@ export function MyLicencePage() {
       await licenceService.startMyRequest();
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible de démarrer la demande.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Impossible de démarrer la demande.",
+      );
     } finally {
       setBusy(false);
     }
@@ -91,7 +99,11 @@ export function MyLicencePage() {
       });
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible de démarrer la demande.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Impossible de démarrer la demande.",
+      );
     } finally {
       setBusy(false);
     }
@@ -103,12 +115,18 @@ export function MyLicencePage() {
     setError("");
     try {
       window.open(
-        await licenceService.getTemplateUrl(portal.campaign.applicationFormPath),
+        await licenceService.getTemplateUrl(
+          portal.campaign.applicationFormPath,
+        ),
         "_blank",
         "noopener,noreferrer",
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible d’ouvrir le formulaire.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Impossible d’ouvrir le formulaire.",
+      );
     } finally {
       setBusy(false);
     }
@@ -118,7 +136,9 @@ export function MyLicencePage() {
     event.preventDefault();
     const request = portal?.request;
     if (!request) return;
-    const input = event.currentTarget.elements.namedItem("document") as HTMLInputElement;
+    const input = event.currentTarget.elements.namedItem(
+      "document",
+    ) as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
     setBusy(true);
@@ -130,7 +150,11 @@ export function MyLicencePage() {
       event.currentTarget.reset();
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible d’envoyer le document.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Impossible d’envoyer le document.",
+      );
     } finally {
       setBusy(false);
     }
@@ -144,7 +168,11 @@ export function MyLicencePage() {
       const url = await licenceService.preparePayment(portal.request.id);
       window.location.assign(url);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible de lancer le paiement.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Impossible de lancer le paiement.",
+      );
       setBusy(false);
     }
   };
@@ -156,22 +184,43 @@ export function MyLicencePage() {
           <div>
             <p>Mon espace</p>
             <h1 id="my-licence-title">Ma licence</h1>
-            <span>Demandez ou renouvelez votre licence directement auprès du club.</span>
+            <span>
+              Demandez ou renouvelez votre licence directement auprès du club.
+            </span>
           </div>
-          <button type="button" className="secondary" onClick={() => void load()} disabled={loading || busy}>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void load()}
+            disabled={loading || busy}
+          >
             <RefreshCcw aria-hidden="true" /> Actualiser
           </button>
         </header>
 
-        {error && <p className="my-licence__alert my-licence__alert--error" role="alert">{error}</p>}
-        {message && <p className="my-licence__alert" role="status">{message}</p>}
+        {error && (
+          <p
+            className="my-licence__alert my-licence__alert--error"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+        {message && (
+          <p className="my-licence__alert" role="status">
+            {message}
+          </p>
+        )}
 
         {loading ? (
           <p role="status">Chargement de votre situation…</p>
         ) : !portal?.campaign ? (
           <article className="my-licence__card">
             <h2>Aucune campagne ouverte</h2>
-            <p>Le club n’a pas encore ouvert les demandes de licence pour une nouvelle saison.</p>
+            <p>
+              Le club n’a pas encore ouvert les demandes de licence pour une
+              nouvelle saison.
+            </p>
           </article>
         ) : portal.licensedForCampaign ? (
           <article className="my-licence__card my-licence__card--success">
@@ -179,23 +228,36 @@ export function MyLicencePage() {
             <div>
               <h2>Licence {portal.campaign.seasonName} valide</h2>
               <p>Votre licence est déjà enregistrée pour cette saison.</p>
-              {portal.member && <strong>N° {portal.member.licenceNumber}</strong>}
+              {portal.member && (
+                <strong>N° {portal.member.licenceNumber}</strong>
+              )}
             </div>
           </article>
         ) : !portal.campaign.isOpen ? (
           <article className="my-licence__card">
             <h2>Campagne {portal.campaign.seasonName}</h2>
-            <p>La campagne est configurée mais n’est pas ouverte actuellement.</p>
+            <p>
+              La campagne est configurée mais n’est pas ouverte actuellement.
+            </p>
           </article>
         ) : !portal.request ? (
           portal.recommendedType === "renewal" ? (
             <article className="my-licence__card">
               <div className="my-licence__badge">Renouvellement</div>
               <h2>Renouveler ma licence {portal.campaign.seasonName}</h2>
-              <p>Pour un renouvellement, il vous suffit de déposer votre certificat médical puis de régler la licence.</p>
+              <p>
+                Pour un renouvellement, il vous suffit de déposer votre
+                certificat médical puis de régler la licence.
+              </p>
               <div className="my-licence__price">{euro(amount)}</div>
-              {portal.campaign.instructions && <p>{portal.campaign.instructions}</p>}
-              <button type="button" disabled={busy} onClick={() => void startRenewal()}>
+              {portal.campaign.instructions && (
+                <p>{portal.campaign.instructions}</p>
+              )}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void startRenewal()}
+              >
                 Commencer mon renouvellement
               </button>
             </article>
@@ -203,19 +265,58 @@ export function MyLicencePage() {
             <article className="my-licence__card">
               <div className="my-licence__badge">Première licence</div>
               <h2>Demander une première licence</h2>
-              <p>Téléchargez d’abord le formulaire FFPB, complétez-le et faites-le viser si nécessaire. Vous pourrez ensuite le déposer ici et payer votre licence.</p>
+              <p>
+                Téléchargez d’abord le formulaire FFPB, complétez-le et
+                faites-le viser si nécessaire. Vous pourrez ensuite le déposer
+                ici et payer votre licence.
+              </p>
               <div className="my-licence__actions">
-                <button type="button" className="secondary" disabled={busy || !portal.campaign.applicationFormPath} onClick={() => void downloadTemplate()}>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busy || !portal.campaign.applicationFormPath}
+                  onClick={() => void downloadTemplate()}
+                >
                   <Download aria-hidden="true" /> Télécharger le formulaire
                 </button>
                 <strong>{euro(amount)}</strong>
               </div>
-              <form className="my-licence__form" onSubmit={(event) => void startFirstApplication(event)}>
-                <label>Prénom<input name="firstName" required defaultValue={profile?.firstName ?? ""} /></label>
-                <label>Nom<input name="lastName" required defaultValue={profile?.lastName ?? ""} /></label>
-                <label>Date de naissance<input name="birthDate" type="date" required /></label>
-                <label>Sexe<select name="gender" required><option value="">Choisir</option><option value="female">Femme</option><option value="male">Homme</option></select></label>
-                <label>Téléphone<input name="phone" type="tel" /></label>
+              <form
+                className="my-licence__form"
+                onSubmit={(event) => void startFirstApplication(event)}
+              >
+                <label>
+                  Prénom
+                  <input
+                    name="firstName"
+                    required
+                    defaultValue={profile?.firstName ?? ""}
+                  />
+                </label>
+                <label>
+                  Nom
+                  <input
+                    name="lastName"
+                    required
+                    defaultValue={profile?.lastName ?? ""}
+                  />
+                </label>
+                <label>
+                  Date de naissance
+                  <input name="birthDate" type="date" required />
+                </label>
+                <label>
+                  Sexe
+                  <select name="gender" required>
+                    <option value="">Choisir</option>
+                    <option value="female">Femme</option>
+                    <option value="male">Homme</option>
+                  </select>
+                </label>
+                <label>
+                  Téléphone
+                  <input name="phone" type="tel" />
+                </label>
                 <button disabled={busy}>Créer ma demande</button>
               </form>
             </article>
@@ -226,7 +327,9 @@ export function MyLicencePage() {
               <div className="my-licence__request-head">
                 <div>
                   <div className="my-licence__badge">
-                    {portal.request.type === "renewal" ? "Renouvellement" : "Première licence"}
+                    {portal.request.type === "renewal"
+                      ? "Renouvellement"
+                      : "Première licence"}
                   </div>
                   <h2>{portal.campaign.seasonName}</h2>
                 </div>
@@ -244,33 +347,71 @@ export function MyLicencePage() {
                 <article className="my-licence__card">
                   <Download aria-hidden="true" />
                   <h3>1. Formulaire FFPB</h3>
-                  <p>Téléchargez le formulaire de première demande et complétez-le avant de le déposer.</p>
-                  <button type="button" className="secondary" disabled={busy || !portal.campaign.applicationFormPath} onClick={() => void downloadTemplate()}>
+                  <p>
+                    Téléchargez le formulaire de première demande et
+                    complétez-le avant de le déposer.
+                  </p>
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={busy || !portal.campaign.applicationFormPath}
+                    onClick={() => void downloadTemplate()}
+                  >
                     Télécharger
                   </button>
                 </article>
               )}
 
               <article className="my-licence__card">
-                {portal.request.documentPath ? <FileCheck2 aria-hidden="true" /> : <FileUp aria-hidden="true" />}
-                <h3>{portal.request.type === "renewal" ? "Certificat médical" : "Formulaire complété"}</h3>
-                <p>{portal.request.documentOriginalName ?? "Aucun document transmis"}</p>
-                {portal.request.status !== "approved" && portal.request.status !== "licensed" && (
-                  <form onSubmit={(event) => void uploadDocument(event)}>
-                    <input name="document" type="file" required accept="application/pdf,image/jpeg,image/png,image/webp" />
-                    <button disabled={busy}>{portal.request.documentPath ? "Remplacer" : "Déposer le document"}</button>
-                  </form>
+                {portal.request.documentPath ? (
+                  <FileCheck2 aria-hidden="true" />
+                ) : (
+                  <FileUp aria-hidden="true" />
                 )}
+                <h3>
+                  {portal.request.type === "renewal"
+                    ? "Certificat médical"
+                    : "Formulaire complété"}
+                </h3>
+                <p>
+                  {portal.request.documentOriginalName ??
+                    "Aucun document transmis"}
+                </p>
+                {portal.request.status !== "approved" &&
+                  portal.request.status !== "licensed" && (
+                    <form
+                      onSubmit={(event) => void uploadDocument(event)}
+                    >
+                      <input
+                        name="document"
+                        type="file"
+                        required
+                        accept="application/pdf,image/jpeg,image/png,image/webp"
+                      />
+                      <button disabled={busy}>
+                        {portal.request.documentPath
+                          ? "Remplacer"
+                          : "Déposer le document"}
+                      </button>
+                    </form>
+                  )}
               </article>
 
               <article className="my-licence__card">
                 <CreditCard aria-hidden="true" />
                 <h3>Paiement</h3>
-                <div className="my-licence__price">{euro(portal.request.amountCents)}</div>
+                <div className="my-licence__price">
+                  {euro(portal.request.amountCents)}
+                </div>
                 {portal.request.payment?.status === "paid" ? (
                   <strong>✓ Paiement reçu</strong>
-                ) : portal.request.status === "approved" || portal.request.status === "licensed" ? null : (
-                  <button type="button" disabled={busy} onClick={() => void pay()}>
+                ) : portal.request.status === "approved" ||
+                  portal.request.status === "licensed" ? null : (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void pay()}
+                  >
                     Payer avec HelloAsso
                   </button>
                 )}
