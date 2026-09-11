@@ -1,0 +1,111 @@
+.admin-licences {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.admin-licences__header,
+.admin-licences__header nav,
+.admin-licences__request header,
+.admin-licences__request footer,
+.admin-licences__panel footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.admin-licences__header h1,
+.admin-licences__header p,
+.admin-licences__request h2,
+.admin-licences__request p {
+  margin: 0;
+}
+
+.admin-licences__alert,
+.admin-licences__panel,
+.admin-licences__request {
+  border: 1px solid rgba(127, 127, 127, 0.28);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.admin-licences__alert--error,
+.admin-licences__warning {
+  font-weight: 650;
+}
+
+.admin-licences__panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-licences__form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.admin-licences__panel label,
+.admin-licences__form-grid label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.admin-licences__switch {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  width: fit-content;
+}
+
+.admin-licences__requests {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-licences__request {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-licences__request header span,
+.admin-licences__request header small {
+  display: block;
+  opacity: 0.72;
+}
+
+.admin-licences__request dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.admin-licences__request dl div {
+  padding: 0.7rem;
+  border-radius: 0.75rem;
+  background: rgba(127, 127, 127, 0.06);
+}
+
+.admin-licences__request dt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.admin-licences__request dd {
+  margin: 0.2rem 0 0;
+}
+
+.admin-licences__warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-licences input,
+.admin-licences select,
+.admin-licences textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
