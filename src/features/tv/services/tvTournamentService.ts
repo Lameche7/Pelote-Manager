@@ -37,7 +37,7 @@ const dateKeyInClubTimeZone = (date: Date) => {
     month: "2-digit",
     day: "2-digit",
   }).formatToParts(date);
-  const value = (type: Intl.DateTimeFormatPartTypes) =>
+  const value = (type: "year" | "month" | "day") =>
     parts.find((part) => part.type === type)?.value ?? "";
   return `${value("year")}-${value("month")}-${value("day")}`;
 };
