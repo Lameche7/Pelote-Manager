@@ -19,7 +19,7 @@ test("les deux QR codes encodent seulement des URL publiques", async () => {
 
   assert.match(page, /const QR_ENDPOINT = "https:\/\/quickchart\.io\/qr"/);
   assert.match(page, /encodeURIComponent\(value\)/);
-  assert.match(page, /const appUrl = window\.location\.origin/);
+  assert.match(page, /const appUrl = currentApplicationOrigin\(\)/);
   assert.match(
     page,
     /https:\/\/www\.helloasso\.com\/associations\/pelotaris-club-lourdais\/boutiques\/dotations-2026/,
