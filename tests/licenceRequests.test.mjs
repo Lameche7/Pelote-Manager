@@ -14,6 +14,7 @@ const [
   schemaMigration,
   workflowMigration,
   paymentMigration,
+  simulatedPaymentMigration,
   checkout,
 ] = await Promise.all([
   read("../src/shared/config/routes.ts"),
@@ -26,6 +27,9 @@ const [
   read("../supabase/migrations/20260911103100_add_licence_workflows.sql"),
   read(
     "../supabase/migrations/20260911103200_extend_helloasso_to_licences.sql",
+  ),
+  read(
+    "../supabase/migrations/20260911120000_extend_simulated_payment_to_licences.sql",
   ),
   read("../supabase/functions/create-helloasso-checkout/index.ts"),
 ]);
@@ -69,7 +73,7 @@ test("le tarif est fixé par la campagne et figé sur la demande", () => {
   assert.match(adminPage, /Tarif première licence/);
 });
 
-test("réutilise le paiement HelloAsso pour les licences", () => {
+test("réutilise HelloAsso pour les licences quand le mode réel est actif", () => {
   assert.match(
     schemaMigration,
     /payment_context text not null default 'reservation'/,
@@ -78,6 +82,22 @@ test("réutilise le paiement HelloAsso pour les licences", () => {
   assert.match(checkout, /payment\.payment_context === "licence"/);
   assert.match(checkout, /\/mon-espace\/licence/);
   assert.match(checkout, /licence_request_id/);
+  assert.match(service, /get_payment_mode/);
+  assert.match(service, /mode === "test"/);
+});
+
+test("simule le paiement des licences sans appeler HelloAsso en mode test", () => {
+  assert.match(service, /simulate_payment/);
+  assert.match(playerPage, /Simuler le paiement \(mode test\)/);
+  assert.match(playerPage, /MODE TEST — Aucun paiement réel ne sera effectué/);
+  assert.match(simulatedPaymentMigration, /payment_context = 'licence'/);
+  assert.match(simulatedPaymentMigration, /request\.profile_id = actor_id/);
+  assert.match(simulatedPaymentMigration, /ready_for_review/);
+});
+
+test("conserve le formulaire avant l'upload asynchrone", () => {
+  assert.match(playerPage, /const formElement = event\.currentTarget/);
+  assert.match(playerPage, /formElement\.reset\(\)/);
 });
 
 test("l'admin garde la validation finale de la licence", () => {
