@@ -132,7 +132,8 @@ const signedUrl = async (path: string, expiresIn = 300) => {
 };
 
 export const licenceService = {
-  getMyPortal: async () => value<LicencePortal>(await rpc("get_my_licence_portal")),
+  getMyPortal: async () =>
+    value<LicencePortal>(await rpc("get_my_licence_portal")),
 
   startMyRequest: async (payload: Record<string, unknown> = {}) =>
     value<string>(await rpc("start_my_licence_request", { payload })),
