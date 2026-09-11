@@ -45,15 +45,14 @@ const dateKeyInClubTimeZone = (date: Date) => {
   return `${value("year")}-${value("month")}-${value("day")}`;
 };
 
-const tournamentIsCurrent = (startsOn: string, endsOn: string, today: string) =>
-  Boolean(startsOn && endsOn && startsOn <= today && today <= endsOn);
+const tournamentCanAppearOnTv = (endsOn: string, today: string) =>
+  Boolean(endsOn && today <= endsOn);
 
 export const tvTournamentService = {
   async listCurrentSeries(now = new Date()): Promise<TvTournamentSeries[]> {
     const today = dateKeyInClubTimeZone(now);
     const tournaments = (await tournamentService.listPublic()).filter(
-      (tournament) =>
-        tournamentIsCurrent(tournament.startsOn, tournament.endsOn, today),
+      (tournament) => tournamentCanAppearOnTv(tournament.endsOn, today),
     );
 
     const loaded = await Promise.all(
