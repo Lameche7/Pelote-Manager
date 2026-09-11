@@ -61,19 +61,25 @@ test("le service mappe les sept jours sans modifier le lien public", async () =>
   assert.match(service, /target_token: token/);
 });
 
-test("l'écran commence par le jour puis alterne sur trois vues selon la durée configurée", async () => {
+test("l'écran commence par le jour et insère les séries de tournoi dans la rotation", async () => {
   const [page, styles] = await Promise.all([
     read("../src/features/tv/pages/TvDisplayPage.tsx"),
     read("../src/features/tv/pages/TvWeeklyView.css"),
   ]);
 
-  assert.match(page, /type TvView = "today" \| "week" \| "club"/);
   assert.match(
     page,
-    /const TV_VIEW_ORDER: TvView\[\] = \["today", "week", "club"\]/,
+    /type TvView = "today" \| "week" \| "club" \| `tournament:\$\{string\}:\$\{string\}`/,
   );
   assert.match(page, /useState<TvView>\("today"\)/);
-  assert.match(page, /setActiveView\(nextTvView\)/);
+  assert.match(page, /const viewOrder = useMemo<TvView\[]>/);
+  assert.match(page, /"today",\s*"week",/);
+  assert.match(
+    page,
+    /\.\.\.tournamentSeries\.map\(\(series\) => series\.viewKey as TvView\)/,
+  );
+  assert.match(page, /"club",/);
+  assert.match(page, /nextTvView\(current, viewOrder\)/);
   assert.match(page, /display\.viewDurationSeconds \* 1_000/);
   assert.match(page, /Planning des 7 prochains jours/);
   assert.match(page, /7 jours à venir/);
@@ -82,6 +88,7 @@ test("l'écran commence par le jour puis alterne sur trois vues selon la durée 
     page,
     /Alternance toutes les \{display\.viewDurationSeconds\} secondes/,
   );
+  assert.match(page, /viewOrder\.map\(\(view\) =>/);
   assert.doesNotMatch(page, /Semaine en cours/);
   assert.doesNotMatch(page, /TV_VIEW_DURATION_MS = 60_000/);
   assert.match(page, /MAX_WEEK_ITEMS_PER_DAY = 5/);
