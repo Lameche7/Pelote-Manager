@@ -181,6 +181,11 @@ export const adminNavigation = [
         to: ROUTES.adminChampionshipImport,
         permission: ADMIN_PERMISSIONS.championships,
       },
+      {
+        label: "Réservations championnat",
+        to: ROUTES.adminChampionshipReservations,
+        permission: ADMIN_PERMISSIONS.championships,
+      },
     ],
     permission: ADMIN_PERMISSIONS.championships,
   },
