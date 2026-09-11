@@ -18,6 +18,7 @@ import {
   type AdminPermission,
 } from "@/features/admin/config/adminPermissions";
 import { AdminEventsPage } from "@/features/admin/events/pages/AdminEventsPage";
+import { AdminLicencesPage } from "@/features/admin/members/pages/AdminLicencesPage";
 import { AdminMembersPage } from "@/features/admin/members/pages/AdminMembersPage";
 import { GlobalMemberSearchPage } from "@/features/admin/members/pages/GlobalMemberSearchPage";
 import { MemberDetailPage } from "@/features/admin/members/pages/MemberDetailPage";
@@ -49,6 +50,7 @@ import {
 } from "@/features/legal/pages/LegalPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
+import { MyLicencePage } from "@/features/licences/pages/MyLicencePage";
 import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
 import { PlatformProtectedRoute } from "@/features/platform/auth/PlatformProtectedRoute";
 import { PlatformProviderLayout } from "@/features/platform/auth/PlatformProviderLayout";
@@ -133,6 +135,14 @@ export const routes = [
         element: (
           <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
             <MyChampionshipsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.myLicence,
+        element: (
+          <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
+            <MyLicencePage />
           </ProtectedRoute>
         ),
       },
@@ -252,6 +262,10 @@ export const routes = [
           {
             path: "membres",
             element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />),
+          },
+          {
+            path: "membres/licences",
+            element: permitted(ADMIN_PERMISSIONS.members, <AdminLicencesPage />),
           },
           {
             path: "membres/importer",
