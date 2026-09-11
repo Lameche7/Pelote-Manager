@@ -5,6 +5,7 @@ import {
   type TvModeSettings,
 } from "@/features/admin/settings/services/adminTvSettingsService";
 import { ROUTES } from "@/shared/config";
+import { currentApplicationOrigin } from "@/shared/config/domains";
 import "./AdminTvSettingsPage.css";
 
 const refreshOptions = [
@@ -56,7 +57,7 @@ export function AdminTvSettingsPage() {
   );
 
   const publicUrl = settings
-    ? `${window.location.origin}${ROUTES.tv}/${settings.publicToken}`
+    ? `${currentApplicationOrigin()}${ROUTES.tv}/${settings.publicToken}`
     : "";
 
   const updateSettings = (changes: Partial<TvModeSettings>) => {

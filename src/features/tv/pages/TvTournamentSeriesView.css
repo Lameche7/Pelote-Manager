@@ -1,0 +1,267 @@
+.tv-tournament {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: clamp(0.55rem, 1vmin, 0.9rem);
+  padding-top: clamp(0.55rem, 1vmin, 0.9rem);
+  overflow: hidden;
+}
+
+.tv-tournament__heading {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tv-tournament__heading h2,
+.tv-tournament__heading p {
+  margin: 0;
+}
+
+.tv-tournament__heading h2 {
+  margin-top: 0.16rem;
+  font-size: clamp(1.2rem, 2.8vmin, 2rem);
+  line-height: 1;
+}
+
+.tv-tournament__heading > strong {
+  max-width: 42%;
+  padding: 0.42rem 0.82rem;
+  overflow: hidden;
+  border: 2px solid #60a5fa;
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(15 47 39 / 90%);
+  font-size: clamp(0.82rem, 1.7vmin, 1.15rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tv-tournament__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #f6c453;
+  font-size: clamp(0.68rem, 1.25vmin, 0.9rem);
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.tv-tournament__kicker svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+
+.tv-tournament__pools {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: clamp(0.5rem, 0.9vmin, 0.8rem);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tv-tournament__pool {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 0.9rem;
+  background: rgb(15 47 39 / 88%);
+  box-shadow: 0 0.65rem 1.5rem rgb(0 0 0 / 15%);
+}
+
+.tv-tournament__pool > header {
+  flex: 0 0 auto;
+  padding: clamp(0.42rem, 0.75vmin, 0.62rem) clamp(0.6rem, 1vw, 0.85rem);
+  border-bottom: 1px solid rgb(255 255 255 / 11%);
+  background: rgb(255 255 255 / 5%);
+}
+
+.tv-tournament__pool > header h3,
+.tv-tournament__pool > header span {
+  margin: 0;
+}
+
+.tv-tournament__pool > header h3 {
+  font-size: clamp(0.92rem, 1.9vmin, 1.35rem);
+}
+
+.tv-tournament__pool > header span {
+  color: #94a3b8;
+  font-size: clamp(0.58rem, 1.05vmin, 0.78rem);
+}
+
+.tv-tournament__pool-content {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tv-tournament__ranking {
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.tv-tournament__ranking table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: clamp(0.58rem, 1.05vmin, 0.8rem);
+}
+
+.tv-tournament__ranking th,
+.tv-tournament__ranking td {
+  padding: clamp(0.2rem, 0.4vmin, 0.35rem) 0.32rem;
+  overflow: hidden;
+  border-bottom: 1px solid rgb(255 255 255 / 7%);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tv-tournament__ranking thead th {
+  color: #94a3b8;
+  font-size: 0.88em;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tv-tournament__ranking th:nth-child(1),
+.tv-tournament__ranking td:nth-child(1) {
+  width: 9%;
+}
+
+.tv-tournament__ranking th:nth-child(2) {
+  width: 45%;
+  text-align: left;
+}
+
+.tv-tournament__ranking tbody th {
+  text-align: left;
+}
+
+.tv-tournament__ranking tbody tr:first-child {
+  background: rgb(246 196 83 / 10%);
+}
+
+.tv-tournament__ranking tbody tr:first-child td:first-child {
+  color: #f6c453;
+}
+
+.tv-tournament__matches {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tv-tournament__matches h4,
+.tv-tournament__matches > p {
+  margin: 0;
+}
+
+.tv-tournament__matches h4 {
+  flex: 0 0 auto;
+  padding: 0.34rem 0.58rem 0.24rem;
+  color: #cbd5e1;
+  font-size: clamp(0.62rem, 1.12vmin, 0.82rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tv-tournament__matches > p {
+  margin: auto;
+  color: #94a3b8;
+  font-size: clamp(0.65rem, 1.1vmin, 0.82rem);
+}
+
+.tv-tournament__match {
+  display: grid;
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 0.18rem 0.5rem;
+  border-top: 1px solid rgb(255 255 255 / 6%);
+  overflow: hidden;
+}
+
+.tv-tournament__match--validated {
+  background: rgb(22 101 52 / 12%);
+}
+
+.tv-tournament__match--pending_validation {
+  background: rgb(120 53 15 / 16%);
+}
+
+.tv-tournament__match-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.tv-tournament__match-teams span,
+.tv-tournament__match-teams strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tv-tournament__match-teams span {
+  font-size: clamp(0.62rem, 1.18vmin, 0.88rem);
+  font-weight: 750;
+}
+
+.tv-tournament__match-teams span:last-child {
+  text-align: right;
+}
+
+.tv-tournament__match-teams strong {
+  color: #f6c453;
+  font-size: clamp(0.64rem, 1.2vmin, 0.9rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.tv-tournament__match small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: clamp(0.48rem, 0.86vmin, 0.66rem);
+  line-height: 1.05;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-height: 44rem) {
+  .tv-tournament__heading h2 {
+    font-size: clamp(1rem, 2.4vmin, 1.55rem);
+  }
+
+  .tv-tournament__pool > header {
+    padding-block: 0.3rem;
+  }
+
+  .tv-tournament__ranking th,
+  .tv-tournament__ranking td {
+    padding-block: 0.16rem;
+  }
+
+  .tv-tournament__matches h4 {
+    padding-block: 0.22rem 0.16rem;
+  }
+}
