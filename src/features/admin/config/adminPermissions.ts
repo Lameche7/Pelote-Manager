@@ -98,7 +98,18 @@ export const adminNavigation = [
   },
   {
     label: "Licenciés",
-    to: ROUTES.adminMembers,
+    children: [
+      {
+        label: "Liste des licenciés",
+        to: ROUTES.adminMembers,
+        permission: ADMIN_PERMISSIONS.members,
+      },
+      {
+        label: "Licences",
+        to: ROUTES.adminLicences,
+        permission: ADMIN_PERMISSIONS.members,
+      },
+    ],
     permission: ADMIN_PERMISSIONS.members,
   },
   {

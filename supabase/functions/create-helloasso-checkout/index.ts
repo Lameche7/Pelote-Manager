@@ -7,7 +7,8 @@ import {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (request) => {
@@ -60,10 +61,13 @@ Deno.serve(async (request) => {
     });
 
     const returnPath =
-      payment.payment_plan === "split"
-        ? "/reservations/paiement-part"
-        : "/reservations/paiement";
+      payment.payment_context === "licence"
+        ? "/mon-espace/licence"
+        : payment.payment_plan === "split"
+          ? "/reservations/paiement-part"
+          : "/reservations/paiement";
     const returnBase = `${applicationUrl}${returnPath}?paymentId=${encodeURIComponent(payment.payment_id)}`;
+
     const checkout = await createHelloAssoCheckout({
       environment,
       accessToken,
@@ -75,7 +79,9 @@ Deno.serve(async (request) => {
       },
       metadata: {
         payment_id: payment.payment_id,
-        reservation_id: payment.reservation_id,
+        payment_context: payment.payment_context,
+        reservation_id: payment.reservation_id ?? undefined,
+        licence_request_id: payment.licence_request_id ?? undefined,
       },
       backUrl: `${returnBase}&result=back`,
       errorUrl: `${returnBase}&result=error`,
