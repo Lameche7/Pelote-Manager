@@ -1,0 +1,45 @@
+name: Format PR148
+
+on:
+  push:
+    branches:
+      - agent/tv-tournament-series
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer la branche
+        uses: actions/checkout@v4
+        with:
+          ref: agent/tv-tournament-series
+          fetch-depth: 0
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Formater
+        run: npm run format
+
+      - name: Enregistrer le formatage si nécessaire
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "Aucun formatage nécessaire."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/tv/pages/TvDisplayPage.tsx src/features/tv/pages/TvTournamentSeriesView.tsx src/features/tv/services/tvTournamentService.ts tests/tvTournamentSeries.test.mjs
+          git commit -m "style(tv): formater la PR148"
+          git push origin HEAD:agent/tv-tournament-series
