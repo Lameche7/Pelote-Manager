@@ -18,9 +18,10 @@ test("le lien Mode TV est toujours généré depuis le domaine application", () 
   assert.match(page, /const appUrl = currentApplicationOrigin\(\)/);
 });
 
-test("le Mode TV ajoute un écran par série seulement pendant la période du tournoi", () => {
+test("le Mode TV peut afficher les poules avant le début du tournoi et les retire après sa fin", () => {
   assert.match(service, /tournamentService\.listPublic\(\)/);
-  assert.match(service, /startsOn <= today && today <= endsOn/);
+  assert.match(service, /today <= endsOn/);
+  assert.doesNotMatch(service, /startsOn <= today/);
   assert.match(service, /tournamentRankingService\.get\(tournament\.id\)/);
   assert.match(service, /tournamentResultsService\.get\(tournament\.id\)/);
   assert.match(
