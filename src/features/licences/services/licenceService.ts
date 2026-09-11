@@ -172,8 +172,12 @@ export const licenceService = {
     if (result.error) throw new Error(result.error.message);
   },
 
-  preparePayment: async (requestId: string): Promise<PreparedLicencePayment> => {
-    const result = value<Array<{ payment_id: string }>>(
+  preparePayment: async (
+    requestId: string,
+  ): Promise<PreparedLicencePayment> => {
+    const result = value<
+      Array<{ payment_id: string; redirect_url: string | null }>
+    >(
       await rpc("prepare_my_licence_payment", {
         target_request_id: requestId,
       }),
@@ -183,6 +187,11 @@ export const licenceService = {
 
     const mode = await licenceService.getPaymentMode();
     if (mode === "test") return { paymentId, mode };
+
+    const existingRedirectUrl = result[0]?.redirect_url;
+    if (existingRedirectUrl) {
+      return { paymentId, mode, redirectUrl: existingRedirectUrl };
+    }
 
     const { data, error } = await supabase.functions.invoke(
       "create-helloasso-checkout",
