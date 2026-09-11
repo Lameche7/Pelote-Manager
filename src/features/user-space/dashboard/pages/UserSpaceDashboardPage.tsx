@@ -30,7 +30,8 @@ const cards: DashboardCard[] = [
   },
   {
     title: "Ma licence",
-    description: "Demander ou renouveler votre licence et suivre votre dossier.",
+    description:
+      "Demander ou renouveler votre licence et suivre votre dossier.",
     icon: BadgeCheck,
     to: ROUTES.myLicence,
   },
