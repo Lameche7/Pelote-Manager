@@ -1,4 +1,7 @@
-import { tournamentRankingService, type TournamentRankingTeam } from "@/features/tournaments/services/tournamentRankingService";
+import {
+  tournamentRankingService,
+  type TournamentRankingTeam,
+} from "@/features/tournaments/services/tournamentRankingService";
 import {
   tournamentResultsService,
   type PublicTournamentResultMatch,
@@ -42,11 +45,8 @@ const dateKeyInClubTimeZone = (date: Date) => {
   return `${value("year")}-${value("month")}-${value("day")}`;
 };
 
-const tournamentIsCurrent = (
-  startsOn: string,
-  endsOn: string,
-  today: string,
-) => Boolean(startsOn && endsOn && startsOn <= today && today <= endsOn);
+const tournamentIsCurrent = (startsOn: string, endsOn: string, today: string) =>
+  Boolean(startsOn && endsOn && startsOn <= today && today <= endsOn);
 
 export const tvTournamentService = {
   async listCurrentSeries(now = new Date()): Promise<TvTournamentSeries[]> {
@@ -72,7 +72,8 @@ export const tvTournamentService = {
               const rankingSeries = rankings.series.find(
                 (series) => series.id === resultSeries.id,
               );
-              if (!rankingSeries || rankingSeries.pools.length === 0) return null;
+              if (!rankingSeries || rankingSeries.pools.length === 0)
+                return null;
 
               return {
                 viewKey: `tournament:${tournament.id}:${resultSeries.id}`,

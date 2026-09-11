@@ -23,7 +23,10 @@ test("le Mode TV ajoute un écran par série seulement pendant la période du to
   assert.match(service, /startsOn <= today && today <= endsOn/);
   assert.match(service, /tournamentRankingService\.get\(tournament\.id\)/);
   assert.match(service, /tournamentResultsService\.get\(tournament\.id\)/);
-  assert.match(service, /viewKey: `tournament:\$\{tournament\.id\}:\$\{resultSeries\.id\}`/);
+  assert.match(
+    service,
+    /viewKey: `tournament:\$\{tournament\.id\}:\$\{resultSeries\.id\}`/,
+  );
   assert.match(page, /\.\.\.tournamentSeries\.map/);
   assert.match(page, /<TvTournamentSeriesView/);
 });

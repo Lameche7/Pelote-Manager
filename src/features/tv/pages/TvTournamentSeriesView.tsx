@@ -39,9 +39,7 @@ const goalAverageValue = (
 const scoreLabel = (match: PublicTournamentResultMatch) => {
   if (match.resultStatus === "pending_validation") return "En validation";
   if (match.resultStatus !== "validated" || !match.score) return "À jouer";
-  return match.score.sets
-    .map((set) => `${set.teamA}–${set.teamB}`)
-    .join(" · ");
+  return match.score.sets.map((set) => `${set.teamA}–${set.teamB}`).join(" · ");
 };
 
 const matchMeta = (match: PublicTournamentResultMatch) => {

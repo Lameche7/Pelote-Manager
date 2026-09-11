@@ -254,12 +254,7 @@ export function TvDisplayPage() {
     void loadUpcomingEvents();
     void loadTvMedia();
     void loadTournamentSeries();
-  }, [
-    loadDisplay,
-    loadTournamentSeries,
-    loadTvMedia,
-    loadUpcomingEvents,
-  ]);
+  }, [loadDisplay, loadTournamentSeries, loadTvMedia, loadUpcomingEvents]);
 
   useEffect(() => {
     const clock = window.setInterval(() => setNow(new Date()), 1_000);
