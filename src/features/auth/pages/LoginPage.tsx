@@ -4,7 +4,10 @@ import { Link, useLocation } from "react-router-dom";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useFinalizeMemberRegistration } from "@/features/members/hooks/useMemberLookup";
-import { finalizePendingExternalParticipation } from "@/infrastructure/auth/authService";
+import {
+  finalizePendingExternalParticipation,
+  resendSignupConfirmation,
+} from "@/infrastructure/auth/authService";
 
 export function LoginPage() {
   const { isAuthenticated, login, refreshProfile } = useAuth();
@@ -14,16 +17,23 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   if (isAuthenticated) {
     return <Navigate to={ROUTES.home} replace />;
   }
 
+  const confirmationRequired =
+    location.state?.accountCreated === "confirmation_required" ||
+    error?.includes("confirmer votre adresse email") === true;
+
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setResendStatus(null);
 
     try {
       await login(email, password);
@@ -40,6 +50,27 @@ export function LoginPage() {
       );
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleResendConfirmation() {
+    setIsResendingConfirmation(true);
+    setError(null);
+    setResendStatus(null);
+
+    try {
+      await resendSignupConfirmation(email);
+      setResendStatus(
+        "Un nouvel email de confirmation vient de vous être envoyé. Vérifiez aussi vos courriers indésirables.",
+      );
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Impossible de renvoyer l’email de confirmation.",
+      );
+    } finally {
+      setIsResendingConfirmation(false);
     }
   }
 
@@ -83,6 +114,24 @@ export function LoginPage() {
         </button>
         {error && <p role="alert">{error}</p>}
       </form>
+      {confirmationRequired && (
+        <div>
+          <p>
+            Vous n’avez pas reçu l’email ? Saisissez votre adresse ci-dessus et
+            demandez un nouvel envoi.
+          </p>
+          <button
+            type="button"
+            disabled={isResendingConfirmation || !email.trim()}
+            onClick={() => void handleResendConfirmation()}
+          >
+            {isResendingConfirmation
+              ? "Envoi…"
+              : "Renvoyer l’email de confirmation"}
+          </button>
+          {resendStatus && <p role="status">{resendStatus}</p>}
+        </div>
+      )}
       <p>
         Pas encore de compte ? <Link to={ROUTES.register}>Créer un compte</Link>
       </p>

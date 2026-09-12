@@ -74,6 +74,32 @@ export const authService: AuthService = {
   },
 };
 
+export async function resendSignupConfirmation(email: string): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error(
+      "Saisissez votre adresse email avant de renvoyer le message.",
+    );
+  }
+
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: normalizedEmail,
+    options: {
+      emailRedirectTo: currentApplicationOrigin(),
+    },
+  });
+
+  if (error) {
+    throw new Error(
+      getSupabaseErrorMessage(
+        error,
+        "Impossible de renvoyer l’email de confirmation. Merci de réessayer.",
+      ),
+    );
+  }
+}
+
 const pendingExternalIdentityId = (user: User): string | null => {
   const value = user.user_metadata?.pending_external_identity_id;
   return typeof value === "string" && value.trim() ? value.trim() : null;
