@@ -3,43 +3,64 @@
   --pilotoki-red: #e31b2b;
 }
 
+/* Marketing site: show the real PILOTOKI artwork, not a text placeholder. */
 .marketing-site .marketing-brand__mark {
-  width: clamp(8.5rem, 13vw, 10.5rem);
-  height: 2.75rem;
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(9.5rem, 14vw, 12rem);
+  height: 3.15rem;
+  border: 0;
   border-radius: 0;
   color: transparent;
-  background: url("/branding/pilotoki-wordmark.png") center / contain no-repeat;
+  background: url("/branding/pilotoki-wordmark.png") center / contain no-repeat !important;
   box-shadow: none;
   font-size: 0;
-  letter-spacing: normal;
+  line-height: 0;
+  letter-spacing: 0;
 }
 
-.marketing-site .marketing-brand > span:last-child strong {
-  position: absolute;
-  overflow: hidden;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+.marketing-site .marketing-brand--footer .marketing-brand__mark {
+  width: 8.5rem;
+  height: 2.35rem;
+  border-radius: 0;
 }
 
 .marketing-site .marketing-product__logo {
+  display: block;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.8rem;
   color: transparent;
-  background: url("/branding/pilotoki-mark.png") center / contain no-repeat;
+  background: #0b1e2b url("/branding/pilotoki-mark.png") center / 88% 88% no-repeat !important;
+  box-shadow: 0 0.45rem 1rem rgb(11 30 43 / 16%);
   font-size: 0;
 }
 
-.app-brand__logo {
-  aspect-ratio: 1;
-  object-fit: contain;
+/* Club home: replace the discreet "by PILOTOKI" line with the actual wordmark. */
+.premium-home .premium-home__eyebrow {
+  display: block;
+  width: clamp(9.5rem, 20vw, 13rem);
+  height: clamp(2.6rem, 5vw, 3.3rem);
+  margin: 0.15rem 0 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 42%);
+  border-radius: 0.85rem;
+  color: transparent;
+  background: rgb(255 255 255 / 96%) url("/branding/pilotoki-wordmark.png") center / calc(100% - 1rem) auto no-repeat !important;
+  box-shadow: 0 0.65rem 1.5rem rgb(0 0 0 / 22%);
+  font-size: 0;
+  line-height: 0;
+  text-shadow: none;
 }
 
 @media (max-width: 40rem) {
   .marketing-site .marketing-brand__mark {
-    width: 8.25rem;
-    max-width: 45vw;
+    width: min(9rem, 48vw);
+    height: 2.65rem;
+  }
+
+  .marketing-site .marketing-brand--footer .marketing-brand__mark {
+    width: 7.75rem;
+    height: 2.15rem;
   }
 }
