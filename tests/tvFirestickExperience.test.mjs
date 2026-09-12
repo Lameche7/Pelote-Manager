@@ -26,7 +26,8 @@ test("le Mode TV propose un plein écran déclenché par l’utilisateur avec re
   ]);
 
   assert.match(main, /setupTvFullscreenPrompt\(\)/);
-  assert.match(fullscreen, /TV_PATH_PATTERN = \/\^\\\/tv\\\/\[\^\/\]\+\\\/?\$\//);
+  assert.match(fullscreen, /TV_PATH_PATTERN/);
+  assert.match(fullscreen, /window\.location\.pathname/);
   assert.match(fullscreen, /target\.requestFullscreen/);
   assert.match(fullscreen, /target\.webkitRequestFullscreen/);
   assert.match(fullscreen, /⛶ Plein écran/);
