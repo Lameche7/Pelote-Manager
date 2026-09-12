@@ -29,10 +29,7 @@ test("le pied de page rend les documents juridiques visibles", async () => {
 test("la politique explique le rattachement des participations importées", async () => {
   const legalPage = await read("src/features/legal/pages/LegalPage.tsx");
 
-  assert.match(
-    legalPage,
-    /Pourquoi Pelote Manager peut déjà connaître votre inscription/,
-  );
+  assert.match(legalPage, /Pourquoi PILOTOKI peut déjà connaître votre inscription/);
   assert.match(legalPage, /ne\s+constituent jamais une preuve d’identité/);
   assert.match(
     legalPage,
