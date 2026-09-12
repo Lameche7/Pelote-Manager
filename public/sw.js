@@ -23,8 +23,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "PILOTOKI";
   const options = {
     body: payload.body || "Une nouvelle notification est disponible.",
-    icon: payload.icon || "/pwa-icon.svg",
-    badge: payload.badge || "/pwa-icon.svg",
+    icon: payload.icon || "/branding/pilotoki-app-icon.png",
+    badge: payload.badge || "/branding/pilotoki-mark.png",
     tag: payload.tag || undefined,
     renotify: payload.priority === "urgent",
     data: {

@@ -4,15 +4,12 @@ import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 
-test("PILOTOKI utilise les assets de marque dans l'application et la PWA", () => {
+test("PILOTOKI utilise les assets de marque validés dans l'application et la PWA", () => {
   const assets = [
     "public/branding/pilotoki-wordmark.png",
     "public/branding/pilotoki-mark.png",
+    "public/branding/pilotoki-app-icon.png",
     "public/branding/pilotoki-branding.css",
-    "public/pwa-icon-192.png",
-    "public/pwa-icon-512.png",
-    "public/pwa-icon-maskable-512.png",
-    "public/pwa-icon.svg",
   ];
 
   for (const asset of assets) {
@@ -20,7 +17,7 @@ test("PILOTOKI utilise les assets de marque dans l'application et la PWA", () =>
   }
 
   const html = read("index.html");
-  assert.match(html, /pwa-icon-192\.png/);
+  assert.match(html, /branding\/pilotoki-app-icon\.png/);
   assert.match(html, /pilotoki-branding\.css/);
   assert.match(html, /#0b1e2b/);
 
@@ -29,14 +26,11 @@ test("PILOTOKI utilise les assets de marque dans l'application et la PWA", () =>
   assert.equal(manifest.theme_color, "#0b1e2b");
   assert.deepEqual(
     manifest.icons.map((icon) => icon.src),
-    [
-      "/pwa-icon-192.png",
-      "/pwa-icon-512.png",
-      "/pwa-icon-maskable-512.png",
-    ],
+    ["/branding/pilotoki-app-icon.png"],
   );
 
   const brandingCss = read("public/branding/pilotoki-branding.css");
   assert.match(brandingCss, /pilotoki-wordmark\.png/);
-  assert.match(brandingCss, /pilotoki-mark\.png/);
+  assert.match(brandingCss, /pilotoki-app-icon\.png/);
+  assert.doesNotMatch(brandingCss, /data:image\/png;base64/);
 });

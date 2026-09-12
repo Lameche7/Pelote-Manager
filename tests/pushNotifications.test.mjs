@@ -16,7 +16,7 @@ test("la PWA expose un manifeste et un service worker Push", async () => {
   ]);
 
   assert.match(manifest, /"display"\s*:\s*"standalone"/i);
-  assert.match(manifest, /\/pwa-icon\.svg/);
+  assert.match(manifest, /\/branding\/pilotoki-app-icon\.png/);
   assert.match(serviceWorker, /addEventListener\("push"/);
   assert.match(serviceWorker, /showNotification/);
   assert.match(serviceWorker, /addEventListener\("notificationclick"/);

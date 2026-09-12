@@ -19,23 +19,15 @@
   box-shadow: 0 0 0 2px rgb(255 255 255 / 16%);
 }
 
-.app-brand__logo-shell {
-  display: grid;
-  flex: 0 0 auto;
-  width: clamp(9.4rem, 13vw, 11.5rem);
-  min-height: 3rem;
-  place-items: center;
-  padding: 0.38rem 0.55rem;
-  border: 1px solid rgb(255 255 255 / 35%);
-  border-radius: 0.85rem;
-  background: #fff;
-  box-shadow: 0 0.55rem 1.35rem rgb(0 0 0 / 18%);
-}
-
 .app-brand__logo {
   display: block;
-  width: 100%;
+  flex: 0 0 auto;
+  width: clamp(10.5rem, 14vw, 13rem);
   height: auto;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 0.18rem rgb(255 255 255 / 72%))
+    drop-shadow(0 0.25rem 0.6rem rgb(0 0 0 / 18%));
 }
 
 .app-brand__club {
@@ -99,10 +91,8 @@
     justify-content: center;
   }
 
-  .app-brand__logo-shell {
+  .app-brand__logo {
     width: min(10rem, 58vw);
-    min-height: 2.65rem;
-    padding: 0.32rem 0.5rem;
   }
 
   .app-brand__club {
