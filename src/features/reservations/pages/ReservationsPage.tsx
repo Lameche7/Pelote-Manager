@@ -70,6 +70,7 @@ function SlotCard({
   onBook: (slot: CalendarSlot) => void;
 }) {
   const slotTime = formatTime(slot.startsAt, timezone);
+  const isChampionship = slot.reservationAccess === "championship";
 
   if (slot.status === "occupied") {
     const bookedBy = slot.bookedByName ?? "Réservation";
@@ -97,11 +98,14 @@ function SlotCard({
       : "prochainement";
     return (
       <div
-        className="reservation-slot reservation-slot--locked"
-        aria-label={`${slotTime} : réservable à partir du ${openingLabel}`}
+        className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}`}
+        aria-label={`${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`}
       >
         <strong>{slotTime}</strong>
-        <span>Réservable dès le {openingLabel}</span>
+        <span>
+          {isChampionship ? "Championnat · " : ""}Réservable dès le{" "}
+          {openingLabel}
+        </span>
       </div>
     );
   }
@@ -109,12 +113,12 @@ function SlotCard({
   return (
     <button
       type="button"
-      className="reservation-slot reservation-slot--available"
-      aria-label={`Réserver le créneau de ${slotTime}`}
+      className={`reservation-slot reservation-slot--available${isChampionship ? " reservation-slot--championship" : ""}`}
+      aria-label={`Réserver le créneau de ${slotTime}${isChampionship ? " réservé aux joueurs de championnat" : ""}`}
       onClick={() => onBook(slot)}
     >
       <strong>{slotTime}</strong>
-      <span>Réserver</span>
+      <span>{isChampionship ? "Réserver · Championnat" : "Réserver"}</span>
     </button>
   );
 }
@@ -420,6 +424,10 @@ export function ReservationsPage() {
       ),
     [slots, selectedResource?.timezone],
   );
+  const hasChampionshipSlots = useMemo(
+    () => slots.some((slot) => slot.reservationAccess === "championship"),
+    [slots],
+  );
 
   useEffect(() => {
     let isCurrent = true;
@@ -474,8 +482,9 @@ export function ReservationsPage() {
           </p>
           <h1>Calendrier des disponibilités</h1>
           <p>
-            Les créneaux s’ouvrent à 8 h, 48 h avant pour les non licenciés et
-            72 h avant pour les licenciés actifs.
+            Les règles habituelles restent inchangées. Les joueurs engagés en
+            championnat peuvent bénéficier d’un accès anticipé sur les plages
+            réservées par le club.
           </p>
         </div>
         {resources.length > 1 && (
@@ -521,6 +530,16 @@ export function ReservationsPage() {
           Semaine suivante
         </button>
       </div>
+
+      {hasChampionshipSlots && (
+        <div className="reservation-calendar__championship-notice" role="status">
+          <strong>Accès championnat actif</strong>
+          <span>
+            Les créneaux marqués « Championnat » sont ouverts en avance grâce à
+            votre inscription dans un effectif du club.
+          </span>
+        </div>
+      )}
 
       {errorMessage && (
         <div
@@ -571,6 +590,10 @@ export function ReservationsPage() {
         <span>
           <i className="reservation-calendar__dot reservation-calendar__dot--available" />{" "}
           Libre
+        </span>
+        <span>
+          <i className="reservation-calendar__dot reservation-calendar__dot--championship" />{" "}
+          Championnat
         </span>
         <span>
           <i className="reservation-calendar__dot reservation-calendar__dot--locked" />{" "}

@@ -24,6 +24,7 @@ type SlotRow = {
   booked_by_name: string | null;
   occupation_type: string | null;
   display_color: string | null;
+  reservation_access: "standard" | "championship" | null;
 };
 
 export const reservationCalendarService = {
@@ -72,6 +73,7 @@ export const reservationCalendarService = {
       bookedByName: slot.booked_by_name,
       occupationType: slot.occupation_type,
       displayColor: slot.display_color,
+      reservationAccess: slot.reservation_access,
     }));
   },
 

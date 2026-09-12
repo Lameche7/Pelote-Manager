@@ -9,6 +9,7 @@ export type CalendarSlot = {
   bookedByName: string | null;
   occupationType?: string | null;
   displayColor?: string | null;
+  reservationAccess?: "standard" | "championship" | null;
 };
 
 export type CalendarOccupation = {

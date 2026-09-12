@@ -12,6 +12,7 @@ import { ClubHoursPage } from "@/features/admin/club/pages/ClubHoursPage";
 import { ClubClosuresPage } from "@/features/admin/club/pages/ClubClosuresPage";
 import { AdminCommunicationPage } from "@/features/admin/communication/pages/AdminCommunicationPage";
 import { AdminChampionshipImportPage } from "@/features/admin/championships/pages/AdminChampionshipImportPage";
+import { AdminChampionshipReservationsPage } from "@/features/admin/championships/pages/AdminChampionshipReservationsPage";
 import { AdminChampionshipsPage } from "@/features/admin/championships/pages/AdminChampionshipsPage";
 import {
   ADMIN_PERMISSIONS,
@@ -378,6 +379,13 @@ export const routes = [
             element: permitted(
               ADMIN_PERMISSIONS.championships,
               <AdminChampionshipImportPage />,
+            ),
+          },
+          {
+            path: "championnats/reservations",
+            element: permitted(
+              ADMIN_PERMISSIONS.championships,
+              <AdminChampionshipReservationsPage />,
             ),
           },
           {

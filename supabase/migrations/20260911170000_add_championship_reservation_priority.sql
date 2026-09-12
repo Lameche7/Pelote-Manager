@@ -1,0 +1,2 @@
+-- Migration remplacée avant déploiement par 20260911170050_add_championship_reservation_priority.sql.
+-- Cette version n'a jamais été appliquée en production : PostgreSQL rejetait l'alias réservé `window`.
