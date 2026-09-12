@@ -32,7 +32,28 @@ const fallback: ClubBranding = {
 };
 
 const value = (input: unknown, defaultValue: string) =>
-  typeof input === "string" && input.trim() ? input : defaultValue;
+  typeof input === "string" && input.trim() ? input.trim() : defaultValue;
+
+function brandingAssetUrl(input: unknown, defaultValue: string) {
+  const resolved = value(input, defaultValue);
+
+  try {
+    const parsed = new URL(resolved);
+    const fallbackPath = defaultValue.startsWith("/") ? defaultValue : null;
+
+    if (
+      fallbackPath &&
+      parsed.hostname.endsWith(".vercel.app") &&
+      parsed.pathname === fallbackPath
+    ) {
+      return fallbackPath;
+    }
+  } catch {
+    // Les chemins relatifs et les URL non standard sont conservés tels quels.
+  }
+
+  return resolved;
+}
 
 export const clubBrandingService = {
   fallback,
@@ -43,8 +64,8 @@ export const clubBrandingService = {
     const row = (data ?? {}) as ClubBrandingRow;
     return {
       name: value(row.name, fallback.name),
-      logoUrl: value(row.logo_url, fallback.logoUrl),
-      heroImageUrl: value(row.hero_image_url, fallback.heroImageUrl),
+      logoUrl: brandingAssetUrl(row.logo_url, fallback.logoUrl),
+      heroImageUrl: brandingAssetUrl(row.hero_image_url, fallback.heroImageUrl),
       primaryColor: value(row.primary_color, fallback.primaryColor),
       secondaryColor: value(row.secondary_color, fallback.secondaryColor),
       accentColor: value(row.accent_color, fallback.accentColor),

@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Smartphone,
   Trophy,
+  UserPlus,
   Users,
 } from "lucide-react";
 import "./MarketingPage.css";
@@ -247,11 +248,48 @@ export function MarketingPage() {
               Cette partie s’adresse aux joueurs du PCL qui participent au test.
               L’accès à l’application est transmis directement par le club.
             </p>
+            <p>
+              <strong>Avant de commencer :</strong> si vous avez une licence,
+              munissez-vous de votre numéro de licence. Il permettra à Pelote
+              Manager de retrouver votre fiche licencié au PCL.
+            </p>
           </header>
 
           <div className="marketing-guide-grid">
-            <article className="marketing-guide-card marketing-guide-card--install">
+            <article className="marketing-guide-card">
               <span className="marketing-guide-card__number">01</span>
+              <UserPlus aria-hidden="true" />
+              <h3>Créer votre compte</h3>
+              <ol>
+                <li>
+                  Ouvrez Pelote Manager et choisissez « Créer un compte ».
+                </li>
+                <li>
+                  Si votre licence est enregistrée au PCL, choisissez « Ma
+                  licence est enregistrée dans ce club ».
+                </li>
+                <li>
+                  Saisissez votre numéro de licence, votre nom, votre prénom et
+                  votre date de naissance exactement comme sur votre licence.
+                </li>
+                <li>
+                  Si vous n’avez pas de licence enregistrée au club, choisissez
+                  « Créer mon compte Pelote Manager ».
+                </li>
+                <li>
+                  Renseignez votre adresse email, choisissez votre mot de passe
+                  et terminez la création du compte.
+                </li>
+              </ol>
+              <p className="marketing-guide-note marketing-guide-note--important">
+                <strong>Licencié PCL :</strong> utilisez bien le parcours avec
+                votre numéro de licence afin que votre compte soit rattaché à
+                votre fiche licencié et bénéficie des bons accès.
+              </p>
+            </article>
+
+            <article className="marketing-guide-card marketing-guide-card--install">
+              <span className="marketing-guide-card__number">02</span>
               <Smartphone aria-hidden="true" />
               <h3>Installer Pelote Manager comme une appli</h3>
               <div className="marketing-install-columns">
@@ -284,7 +322,7 @@ export function MarketingPage() {
             </article>
 
             <article className="marketing-guide-card">
-              <span className="marketing-guide-card__number">02</span>
+              <span className="marketing-guide-card__number">03</span>
               <BellRing aria-hidden="true" />
               <h3>Activer les notifications</h3>
               <ol>
@@ -305,7 +343,7 @@ export function MarketingPage() {
             </article>
 
             <article className="marketing-guide-card">
-              <span className="marketing-guide-card__number">03</span>
+              <span className="marketing-guide-card__number">04</span>
               <CalendarDays aria-hidden="true" />
               <h3>Réserver un créneau</h3>
               <ol>
@@ -325,7 +363,7 @@ export function MarketingPage() {
             </article>
 
             <article className="marketing-guide-card">
-              <span className="marketing-guide-card__number">04</span>
+              <span className="marketing-guide-card__number">05</span>
               <ShieldCheck aria-hidden="true" />
               <h3>Annuler une réservation</h3>
               <ol>
