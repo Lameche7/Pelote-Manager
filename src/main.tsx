@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "@/app/App";
 import "@/features/admin/tournaments/pages/AdminTournamentPlanningCompact.css";
+import { setupTvFullscreenPrompt } from "@/features/tv/tvFullscreenPrompt";
 import {
   MARKETING_PREVIEW_PATH,
   isMarketingHostname,
@@ -36,6 +37,8 @@ if (isMarketingSite) {
     });
   });
 }
+
+setupTvFullscreenPrompt();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
