@@ -1,0 +1,45 @@
+:root {
+  --pilotoki-navy: #0b1e2b;
+  --pilotoki-red: #e31b2b;
+}
+
+.marketing-site .marketing-brand__mark {
+  width: clamp(8.5rem, 13vw, 10.5rem);
+  height: 2.75rem;
+  border-radius: 0;
+  color: transparent;
+  background: url("/branding/pilotoki-wordmark.png") center / contain no-repeat;
+  box-shadow: none;
+  font-size: 0;
+  letter-spacing: normal;
+}
+
+.marketing-site .marketing-brand > span:last-child strong {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.marketing-site .marketing-product__logo {
+  color: transparent;
+  background: url("/branding/pilotoki-mark.png") center / contain no-repeat;
+  font-size: 0;
+}
+
+.app-brand__logo {
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+@media (max-width: 40rem) {
+  .marketing-site .marketing-brand__mark {
+    width: 8.25rem;
+    max-width: 45vw;
+  }
+}
