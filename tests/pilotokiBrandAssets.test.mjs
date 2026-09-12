@@ -17,7 +17,10 @@ test("PILOTOKI utilise les assets de marque validés dans l'application et la PW
   }
 
   const html = read("index.html");
-  assert.match(html, /branding\/pilotoki-app-icon\.png/);
+  assert.match(html, /branding\/pilotoki-app-icon\.png\?v=20260912-home2/);
+  assert.match(html, /apple-touch-icon/);
+  assert.match(html, /sizes="180x180"/);
+  assert.match(html, /manifest\.webmanifest\?v=20260912-home2/);
   assert.match(html, /pilotoki-branding\.css/);
   assert.match(html, /#0b1e2b/);
 
@@ -26,7 +29,7 @@ test("PILOTOKI utilise les assets de marque validés dans l'application et la PW
   assert.equal(manifest.theme_color, "#0b1e2b");
   assert.deepEqual(
     manifest.icons.map((icon) => icon.src),
-    ["/branding/pilotoki-app-icon.png"],
+    ["/branding/pilotoki-app-icon.png?v=20260912-home2"],
   );
 
   const brandingCss = read("public/branding/pilotoki-branding.css");
