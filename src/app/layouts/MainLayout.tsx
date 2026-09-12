@@ -100,7 +100,12 @@ export function MainLayout() {
           to={ROUTES.home}
           aria-label={`${APP_CONFIG.name} - Accueil`}
         >
-          <ClubLogo compact className="app-brand__logo" />
+          <img
+            className="app-brand__logo"
+            src="/pwa-icon.svg"
+            alt=""
+            aria-hidden="true"
+          />
           <span>
             <strong>{APP_CONFIG.name}</strong>
             <small>{CLUB_CONFIG.name}</small>
