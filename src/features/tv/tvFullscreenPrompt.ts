@@ -13,7 +13,11 @@ const BUTTON_ID = "pelote-manager-tv-fullscreen";
 
 function currentFullscreenElement() {
   const fullscreenDocument = document as WebkitFullscreenDocument;
-  return document.fullscreenElement ?? fullscreenDocument.webkitFullscreenElement ?? null;
+  return (
+    document.fullscreenElement ??
+    fullscreenDocument.webkitFullscreenElement ??
+    null
+  );
 }
 
 export function setupTvFullscreenPrompt() {
