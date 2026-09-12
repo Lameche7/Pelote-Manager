@@ -151,7 +151,22 @@ export function HomePage() {
             alt={branding.name}
           />
           <h1 id="home-title">{branding.name}</h1>
-          <p className="premium-home__eyebrow">by PILOTOKI</p>
+          <div
+            aria-label="PILOTOKI"
+            style={{
+              width: "clamp(10rem, 20vw, 14rem)",
+              padding: "0.45rem 0.65rem",
+              borderRadius: "0.85rem",
+              background: "rgba(255, 255, 255, 0.96)",
+              boxShadow: "0 0.65rem 1.5rem rgba(0, 0, 0, 0.22)",
+            }}
+          >
+            <img
+              src="/branding/pilotoki-wordmark.png"
+              alt="PILOTOKI"
+              style={{ display: "block", width: "100%", height: "auto" }}
+            />
+          </div>
           <p className="premium-home__signature">
             {CLUB_CONFIG.foundedYear && (
               <>
