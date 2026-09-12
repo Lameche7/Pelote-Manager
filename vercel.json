@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
+      "source": "/tv/pcl",
+      "destination": "/tv/08008b4d-9825-487d-a156-8e69f7b8aaca",
+      "permanent": false
+    },
+    {
       "source": "/:path*",
       "has": [
         {
