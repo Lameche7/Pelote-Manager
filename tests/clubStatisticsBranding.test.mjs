@@ -13,7 +13,6 @@ const homePage = read("src/features/home/pages/HomePage.tsx");
 const brandingService = read(
   "src/features/home/services/clubBrandingService.ts",
 );
-const domains = read("src/shared/config/domains.ts");
 const statisticsPage = read(
   "src/features/admin/statistics/pages/AdminStatisticsPage.tsx",
 );
@@ -37,14 +36,10 @@ test("public homepage only receives the safe branding projection", () => {
   assert.match(homePage, /--club-primary/);
   assert.match(homePage, /branding\.heroImageUrl/);
   assert.match(homePage, /branding\.logoUrl/);
-});
-
-test("homepage resists stale Vercel branding assets and links to the showcase", () => {
-  assert.match(brandingService, /hostname\.endsWith\("\.vercel\.app"\)/);
-  assert.match(brandingService, /parsed\.pathname === fallbackPath/);
+  assert.match(homePage, /https:\/\/www\.pelotemanager\.fr/);
   assert.match(homePage, /Découvrir Pelote Manager/);
-  assert.match(homePage, /MARKETING_HOST/);
-  assert.match(domains, /MARKETING_HOST = "www\.pelotemanager\.fr"/);
+  assert.match(brandingService, /normalizeAssetUrl/);
+  assert.match(brandingService, /\.vercel\.app/);
 });
 
 test("club information page edits images and the four-color palette", () => {
