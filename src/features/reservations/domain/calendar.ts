@@ -21,7 +21,8 @@ export type CalendarOccupation = {
     | "closure"
     | "maintenance"
     | "club_event"
-    | "animation";
+    | "animation"
+    | "private_use";
   title: string;
   startsAt: string;
   endsAt: string;
