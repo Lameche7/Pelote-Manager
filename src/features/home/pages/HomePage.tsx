@@ -150,8 +150,8 @@ export function HomePage() {
             src={branding.logoUrl}
             alt={branding.name}
           />
-          <p className="premium-home__eyebrow">{branding.name}</p>
-          <h1 id="home-title">Pelote Manager</h1>
+          <h1 id="home-title">{branding.name}</h1>
+          <p className="premium-home__eyebrow">by PILOTOKI</p>
           <p className="premium-home__signature">
             {CLUB_CONFIG.foundedYear && (
               <>
@@ -173,7 +173,7 @@ export function HomePage() {
               target="_blank"
               rel="noreferrer"
             >
-              ↗ Découvrir Pelote Manager
+              ↗ Découvrir PILOTOKI
             </a>
           </div>
         </div>
@@ -206,7 +206,7 @@ export function HomePage() {
 
       <section
         className="premium-home__benefits"
-        aria-label="Services Pelote Manager"
+        aria-label="Services PILOTOKI"
       >
         <div className="premium-home__benefit-grid">
           {benefits.map((benefit) => (

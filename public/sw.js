@@ -15,12 +15,12 @@ self.addEventListener("push", (event) => {
     payload = event.data ? event.data.json() : {};
   } catch {
     payload = {
-      title: "Pelote Manager",
+      title: "PILOTOKI",
       body: event.data?.text() ?? "Une nouvelle notification est disponible.",
     };
   }
 
-  const title = payload.title || "Pelote Manager";
+  const title = payload.title || "PILOTOKI";
   const options = {
     body: payload.body || "Une nouvelle notification est disponible.",
     icon: payload.icon || "/pwa-icon.svg",

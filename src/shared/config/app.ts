@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  name: "Pelote Manager",
+  name: "PILOTOKI",
   description: "Gestion de tournois et de réservations de pelote basque.",
   version: "0.0.0",
 } as const;

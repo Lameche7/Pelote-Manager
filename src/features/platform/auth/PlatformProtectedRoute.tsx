@@ -10,7 +10,7 @@ export function PlatformProtectedRoute() {
     return (
       <main className="platform-page platform-page--centered">
         <section className="platform-card">
-          <p className="platform-kicker">Pelote Manager</p>
+          <p className="platform-kicker">PILOTOKI</p>
           <h1>Plateforme centrale non configurée</h1>
           <p>
             Ce déploiement reste une instance de club. La connexion centrale

@@ -39,7 +39,7 @@ export function PlatformLoginPage() {
   return (
     <main className="platform-page platform-page--centered">
       <section className="platform-card platform-login-card">
-        <p className="platform-kicker">Pelote Manager · Propriétaire</p>
+        <p className="platform-kicker">PILOTOKI · Propriétaire</p>
         <h1>Super administration</h1>
         <p>
           Cet accès est indépendant des comptes administrateurs et licenciés des
