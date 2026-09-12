@@ -100,14 +100,14 @@ export function MainLayout() {
           to={ROUTES.home}
           aria-label={`${APP_CONFIG.name} - Accueil`}
         >
-          <img
-            className="app-brand__logo"
-            src="/pwa-icon.svg"
-            alt=""
-            aria-hidden="true"
-          />
-          <span>
-            <strong>{APP_CONFIG.name}</strong>
+          <span className="app-brand__logo-shell" aria-hidden="true">
+            <img
+              className="app-brand__logo"
+              src="/branding/pilotoki-wordmark.png"
+              alt=""
+            />
+          </span>
+          <span className="app-brand__club">
             <small>{CLUB_CONFIG.name}</small>
           </span>
         </Link>
