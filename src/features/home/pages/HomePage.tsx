@@ -150,8 +150,8 @@ export function HomePage() {
             src={branding.logoUrl}
             alt={branding.name}
           />
-          <p className="premium-home__eyebrow">{branding.name}</p>
-          <h1 id="home-title">PILOTOKI</h1>
+          <h1 id="home-title">{branding.name}</h1>
+          <p className="premium-home__eyebrow">by PILOTOKI</p>
           <p className="premium-home__signature">
             {CLUB_CONFIG.foundedYear && (
               <>
