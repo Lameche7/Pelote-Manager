@@ -19,6 +19,37 @@
   box-shadow: 0 0 0 2px rgb(255 255 255 / 16%);
 }
 
+.app-brand__logo-shell {
+  display: grid;
+  flex: 0 0 auto;
+  width: clamp(9.4rem, 13vw, 11.5rem);
+  min-height: 3rem;
+  place-items: center;
+  padding: 0.38rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 0.85rem;
+  background: #fff;
+  box-shadow: 0 0.55rem 1.35rem rgb(0 0 0 / 18%);
+}
+
+.app-brand__logo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.app-brand__club {
+  display: grid;
+}
+
+.app-brand__club small {
+  max-width: 12rem;
+  color: rgb(255 255 255 / 78%);
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
 @media (max-width: 62rem) {
   .app-layout,
   .app-main {
@@ -66,6 +97,16 @@
   .app-brand {
     width: 100%;
     justify-content: center;
+  }
+
+  .app-brand__logo-shell {
+    width: min(10rem, 58vw);
+    min-height: 2.65rem;
+    padding: 0.32rem 0.5rem;
+  }
+
+  .app-brand__club {
+    display: none;
   }
 
   .app-navigation {
