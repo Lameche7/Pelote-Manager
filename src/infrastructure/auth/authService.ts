@@ -74,10 +74,14 @@ export const authService: AuthService = {
   },
 };
 
-export async function resendSignupConfirmation(email: string): Promise<void> {
+export async function resendSignupConfirmation(
+  email: string,
+): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail) {
-    throw new Error("Saisissez votre adresse email avant de renvoyer le message.");
+    throw new Error(
+      "Saisissez votre adresse email avant de renvoyer le message.",
+    );
   }
 
   const { error } = await supabase.auth.resend({
