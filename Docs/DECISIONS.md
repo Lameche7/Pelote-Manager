@@ -120,3 +120,9 @@ Le domaine pur est placé dans `src/domain`.
 
 ## ADR-017 — Routes dans les features
 Les écrans routables appartiennent à leurs features ; la composition du routeur reste centralisée dans `src/app`.
+
+## ADR-018 — Les créneaux permanents matérialisent leurs occurrences dans le Calendrier
+
+Un créneau permanent est une règle récurrente appartenant au domaine Réservations/Calendrier. Ses occurrences futures sont matérialisées par des Occupations `private_use` afin de conserver le Calendrier comme autorité unique sur les conflits.
+
+Une occurrence est occupée par défaut. La libération ponctuelle annule son Occupation sans la supprimer. Une reprise par le titulaire réactive cette même Occupation uniquement en l'absence de conflit. Les droits de gestion sont liés au compte PILOTOKI et non au statut de licencié.
