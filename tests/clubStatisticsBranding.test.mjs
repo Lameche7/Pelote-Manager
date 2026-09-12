@@ -36,9 +36,9 @@ test("public homepage only receives the safe branding projection", () => {
   assert.match(homePage, /--club-primary/);
   assert.match(homePage, /branding\.heroImageUrl/);
   assert.match(homePage, /branding\.logoUrl/);
-  assert.match(homePage, /https:\/\/www\.pelotemanager\.fr/);
+  assert.match(homePage, /MARKETING_HOST/);
   assert.match(homePage, /Découvrir Pelote Manager/);
-  assert.match(brandingService, /normalizeAssetUrl/);
+  assert.match(brandingService, /brandingAssetUrl/);
   assert.match(brandingService, /\.vercel\.app/);
 });
 
