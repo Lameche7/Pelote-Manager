@@ -69,7 +69,7 @@ test("la vitrine présente le pilote PCL et son guide joueur", () => {
   assert.match(marketing, /Guide du test PCL/);
   assert.match(marketing, /Créer votre compte/);
   assert.match(marketing, /munissez-vous de votre numéro de licence/);
-  assert.match(marketing, /Ma licence est enregistrée dans ce club/);
+  assert.match(marketing, /Ma\s+licence est enregistrée dans ce club/);
   assert.match(marketing, /Ajouter à l’écran d’accueil/);
   assert.match(marketing, /Activer les notifications/);
   assert.match(marketing, /créneau de réservation libéré/);
