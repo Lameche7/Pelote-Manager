@@ -92,8 +92,8 @@ export function PrivacyPage() {
         <h2>Qui est responsable des données ?</h2>
         <p>
           Pour le pilote du tournoi PCL, {LEGAL_CONFIG.editorName} détermine les
-          finalités de gestion du tournoi et des services du club. Pelote
-          Manager est l’outil utilisé pour les mettre en œuvre.
+          finalités de gestion du tournoi et des services du club. PILOTOKI est
+          l’outil utilisé pour les mettre en œuvre.
         </p>
       </section>
 
@@ -110,13 +110,13 @@ export function PrivacyPage() {
       </section>
 
       <section id="participations-importees">
-        <h2>Pourquoi Pelote Manager peut déjà connaître votre inscription ?</h2>
+        <h2>Pourquoi PILOTOKI peut déjà connaître votre inscription ?</h2>
         <p>
           Une participation peut avoir été importée depuis les données fournies
           à l’organisateur du tournoi, y compris lorsque l’inscription a été
           saisie par votre partenaire ou un responsable d’équipe. Dans ce cas,
-          Pelote Manager recherche uniquement une correspondance sur le nom et
-          le prénom afin de vous proposer la participation à confirmer.
+          PILOTOKI recherche uniquement une correspondance sur le nom et le
+          prénom afin de vous proposer la participation à confirmer.
         </p>
         <p>
           Les coordonnées éventuellement présentes dans la source importée ne
@@ -199,7 +199,7 @@ export function TermsPage() {
     <article className="legal-page">
       <LegalHeader
         title="Conditions d’utilisation"
-        intro="Ces conditions encadrent l’utilisation gratuite de Pelote Manager pendant le pilote PCL."
+        intro="Ces conditions encadrent l’utilisation gratuite de PILOTOKI pendant le pilote PCL."
       />
       <MissingLegalDetails />
 
@@ -237,7 +237,7 @@ export function TermsPage() {
       <section>
         <h2>Disponibilité du service</h2>
         <p>
-          Pelote Manager est encore en phase pilote. Le club peut interrompre
+          PILOTOKI est encore en phase pilote. Le club peut interrompre
           temporairement une fonction pour maintenance, correction ou sécurité.
           Les anomalies constatées pendant le tournoi servent à améliorer le
           service.
