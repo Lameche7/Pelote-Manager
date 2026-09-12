@@ -261,7 +261,9 @@ export function MarketingPage() {
               <UserPlus aria-hidden="true" />
               <h3>Créer votre compte</h3>
               <ol>
-                <li>Ouvrez Pelote Manager et choisissez « Créer un compte ».</li>
+                <li>
+                  Ouvrez Pelote Manager et choisissez « Créer un compte ».
+                </li>
                 <li>
                   Si votre licence est enregistrée au PCL, choisissez « Ma
                   licence est enregistrée dans ce club ».
