@@ -60,6 +60,17 @@
   margin-bottom: 0.7rem;
 }
 
+.premium-home__pilotoki-logo {
+  display: block;
+  width: clamp(12rem, 24vw, 17rem);
+  height: auto;
+  margin: 0.2rem 0 0.25rem;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 0.22rem rgb(255 255 255 / 88%))
+    drop-shadow(0 0.4rem 0.9rem rgb(0 0 0 / 32%));
+}
+
 .premium-home__eyebrow {
   margin: 0;
   color: rgb(255 255 255 / 80%);
@@ -348,6 +359,10 @@
   .premium-home__hero {
     min-height: 39rem;
     background-position: 56% center;
+  }
+
+  .premium-home__pilotoki-logo {
+    width: min(14rem, 72vw);
   }
 
   .premium-home__actions {
