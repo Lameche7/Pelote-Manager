@@ -29,7 +29,7 @@ export type PermanentSlotCandidate = {
   email: string;
 };
 
-export type CreatePermanentSlotInput = {
+export type PermanentSlotInput = {
   resourceId: string;
   label: string;
   weekday: number;
@@ -42,11 +42,28 @@ export type CreatePermanentSlotInput = {
   managerProfileIds: string[];
 };
 
+export type CreatePermanentSlotInput = PermanentSlotInput;
+
 type PermanentSlotCandidateRow = {
   profile_id: string;
   display_name: string;
   email: string;
 };
+
+function toRpcInput(input: PermanentSlotInput) {
+  return {
+    target_resource_id: input.resourceId,
+    target_label: input.label,
+    target_weekday: input.weekday,
+    target_starts_at: input.startsAt,
+    target_ends_at: input.endsAt,
+    target_valid_from: input.validFrom,
+    target_valid_until: input.validUntil,
+    target_management_window_hours: input.managementWindowHours,
+    target_primary_profile_id: input.primaryProfileId,
+    target_manager_profile_ids: input.managerProfileIds,
+  };
+}
 
 export const adminPermanentSlotService = {
   listResources: reservationCalendarService.listResources,
@@ -84,19 +101,11 @@ export const adminPermanentSlotService = {
     return (data ?? []) as AdminPermanentSlot[];
   },
 
-  async createSlot(input: CreatePermanentSlotInput): Promise<string> {
-    const { data, error } = await supabase.rpc("admin_create_permanent_slot", {
-      target_resource_id: input.resourceId,
-      target_label: input.label,
-      target_weekday: input.weekday,
-      target_starts_at: input.startsAt,
-      target_ends_at: input.endsAt,
-      target_valid_from: input.validFrom,
-      target_valid_until: input.validUntil,
-      target_management_window_hours: input.managementWindowHours,
-      target_primary_profile_id: input.primaryProfileId,
-      target_manager_profile_ids: input.managerProfileIds,
-    });
+  async createSlot(input: PermanentSlotInput): Promise<string> {
+    const { data, error } = await supabase.rpc(
+      "admin_create_permanent_slot",
+      toRpcInput(input),
+    );
     if (error) {
       throw new Error(
         getSupabaseErrorMessage(
@@ -106,6 +115,24 @@ export const adminPermanentSlotService = {
       );
     }
     return data as string;
+  },
+
+  async updateSlot(
+    permanentSlotId: string,
+    input: PermanentSlotInput,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("admin_update_permanent_slot", {
+      target_permanent_slot_id: permanentSlotId,
+      ...toRpcInput(input),
+    });
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de modifier ce créneau permanent.",
+        ),
+      );
+    }
   },
 
   async deactivateSlot(permanentSlotId: string): Promise<void> {
