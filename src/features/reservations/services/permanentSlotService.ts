@@ -2,9 +2,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
 export type PermanentSlotOccurrenceStatus =
-  | "scheduled"
-  | "confirmed"
-  | "released";
+  "scheduled" | "confirmed" | "released";
 
 export type PermanentSlotOccurrence = {
   occurrenceId: string;
