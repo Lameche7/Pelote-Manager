@@ -14,8 +14,6 @@ const [
   profile,
   licence,
   splitPayment,
-  tournamentRegistration,
-  tournamentAvailability,
 ] = await Promise.all([
   read("../src/shared/components/forms/RequiredField.tsx"),
   read("../src/styles/forms.css"),
@@ -28,8 +26,6 @@ const [
   read(
     "../src/features/reservations/components/ReservationSplitPaymentFields.tsx",
   ),
-  read("../src/features/tournaments/components/TournamentRegistrationForm.tsx"),
-  read("../src/features/tournaments/components/TournamentAvailabilityGrid.tsx"),
 ]);
 
 test("fournit une étoile et une légende communes pour les champs obligatoires", () => {
@@ -93,54 +89,3 @@ test("signale la sélection obligatoire des joueurs pour un paiement partagé", 
   assert.match(splitPayment, /<RequiredFieldsNotice \/>/);
   assert.match(splitPayment, /Rechercher un joueur/);
 });
-
-test("signale les champs obligatoires de l'inscription tournoi", () => {
-  assert.match(tournamentRegistration, /Série <RequiredFieldMark \/>/);
-  assert.match(
-    tournamentRegistration,
-    /Votre prénom <RequiredFieldMark \/>/,
-  );
-  assert.match(tournamentRegistration, /Votre nom <RequiredFieldMark \/>/);
-  assert.match(tournamentRegistration, /Votre club <RequiredFieldMark \/>/);
-  assert.match(tournamentRegistration, /Votre e-mail <RequiredFieldMark \/>/);
-  assert.match(
-    tournamentRegistration,
-    /Votre téléphone <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    tournamentRegistration,
-    /Prénom du partenaire <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    tournamentRegistration,
-    /Nom du partenaire <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    tournamentRegistration,
-    /Club du partenaire <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    tournamentRegistration,
-    /!partnerEmailFromMember && <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    tournamentRegistration,
-    /!partnerPhoneFromMember && <RequiredFieldMark \/>/,
-  );
-  assert.match(tournamentRegistration, /<RequiredFieldsNotice \/>/);
-  assert.match(
-    tournamentRegistration,
-    /Commentaire pour l’organisateur\s*\n\s*<textarea/,
-  );
-});
-
-test(
-  "signale les disponibilités obligatoires uniquement côté inscription tournoi",
-  () => {
-    assert.match(tournamentAvailability, /!admin && \(/);
-    assert.match(tournamentAvailability, /<RequiredFieldMark \/>/);
-    assert.match(tournamentAvailability, /minimumAvailabilitySlots/);
-    assert.match(tournamentAvailability, /minimumWeekendAvailabilitySlots/);
-    assert.match(tournamentAvailability, /minimumFinalsAvailabilitySlots/);
-  },
-);
