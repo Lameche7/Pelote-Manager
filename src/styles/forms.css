@@ -16,9 +16,15 @@
   font-weight: 650;
 }
 
-:where(input, select, textarea)[required]:not([type="checkbox"]):not([type="radio"]):not([type="color"]) {
+:where(input, select, textarea)[required]:not([type="checkbox"]):not(
+  [type="radio"]
+):not([type="color"]) {
   border-inline-start-color: var(--form-required);
-  background-image: linear-gradient(90deg, var(--form-required-soft), transparent 0.55rem);
+  background-image: linear-gradient(
+    90deg,
+    var(--form-required-soft),
+    transparent 0.55rem
+  );
   background-repeat: no-repeat;
 }
 
