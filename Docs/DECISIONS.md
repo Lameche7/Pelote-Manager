@@ -126,3 +126,9 @@ Les écrans routables appartiennent à leurs features ; la composition du routeu
 Un créneau permanent est une règle récurrente appartenant au domaine Réservations/Calendrier. Ses occurrences futures sont matérialisées par des Occupations `private_use` afin de conserver le Calendrier comme autorité unique sur les conflits.
 
 Une occurrence est occupée par défaut. La libération ponctuelle annule son Occupation sans la supprimer. Une reprise par le titulaire réactive cette même Occupation uniquement en l'absence de conflit. Les droits de gestion sont liés au compte PILOTOKI et non au statut de licencié.
+
+## ADR-019 — Une convention unique signale les champs obligatoires
+
+Tous les formulaires PILOTOKI utilisent la même convention visuelle pour distinguer les champs obligatoires : une étoile rouge associée au libellé, une mention « Champs obligatoires » dans les formulaires concernés et une mise en évidence légère des contrôles HTML `required`.
+
+Les écrans réutilisent les composants partagés de `src/shared/components/forms/RequiredField.tsx` et les styles de `src/styles/forms.css`. Une obligation conditionnelle n'est affichée comme telle que lorsque sa condition métier est satisfaite ; la règle métier côté service ou serveur reste l'autorité finale.
