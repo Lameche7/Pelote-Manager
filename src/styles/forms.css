@@ -1,6 +1,5 @@
 :root {
   --form-required: #b42318;
-  --form-required-soft: rgb(180 35 24 / 9%);
 }
 
 .required-field-mark {
@@ -16,19 +15,21 @@
   font-weight: 650;
 }
 
-:where(input, select, textarea)[required]:not([type="checkbox"]):not(
-  [type="radio"]
-):not([type="color"]) {
+input[required],
+select[required],
+textarea[required] {
   border-inline-start-color: var(--form-required);
-  background-image: linear-gradient(
-    90deg,
-    var(--form-required-soft),
-    transparent 0.55rem
-  );
-  background-repeat: no-repeat;
 }
 
-:where(input, select, textarea)[aria-invalid="true"] {
+input[type="checkbox"][required],
+input[type="radio"][required],
+input[type="color"][required] {
+  border-inline-start-color: revert;
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
   border-color: var(--form-required);
   outline: 2px solid rgb(180 35 24 / 18%);
   outline-offset: 1px;
