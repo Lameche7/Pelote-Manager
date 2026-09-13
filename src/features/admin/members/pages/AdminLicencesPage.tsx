@@ -17,10 +17,20 @@ import {
   type AdminLicenceRequest,
   type AdminLicenceSettings,
 } from "@/features/licences/services/licenceService";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 import { ROUTES } from "@/shared/config";
 import "./AdminLicencesPage.css";
 
 type Tab = "requests" | "settings";
+type ReviewDetailsAction = "reject" | "mark_licensed";
+type ReviewDetailsDraft = {
+  requestId: string;
+  action: ReviewDetailsAction;
+  value: string;
+};
 
 const euro = (cents: number) =>
   new Intl.NumberFormat("fr-FR", {
@@ -55,6 +65,10 @@ export function AdminLicencesPage() {
   const [settings, setSettings] = useState<AdminLicenceSettings | null>(null);
   const [requests, setRequests] = useState<AdminLicenceRequest[]>([]);
   const [seasonId, setSeasonId] = useState("");
+  const [campaignOpen, setCampaignOpen] = useState(false);
+  const [reviewDetails, setReviewDetails] = useState<ReviewDetailsDraft | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -97,6 +111,12 @@ export function AdminLicencesPage() {
       settings?.campaigns.find((item) => item.seasonId === seasonId) ?? null,
     [settings, seasonId],
   );
+
+  useEffect(() => {
+    setCampaignOpen(campaign?.isOpen ?? false);
+  }, [campaign?.isOpen, campaign?.updatedAt, seasonId]);
+
+  const templateRequired = campaignOpen && !campaign?.applicationFormPath;
 
   const saveSettings = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -179,25 +199,15 @@ export function AdminLicencesPage() {
   const review = async (
     request: AdminLicenceRequest,
     action: "approve" | "reject" | "mark_licensed",
+    reason?: string,
+    licenceNumber?: string,
   ) => {
-    let reason: string | undefined;
-    let licenceNumber: string | undefined;
-    if (action === "reject") {
-      reason = window.prompt("Pourquoi ce document est-il refusé ?")?.trim();
-      if (!reason) return;
-    }
-    if (action === "mark_licensed" && request.type === "first_application") {
-      licenceNumber = window
-        .prompt("Numéro de licence attribué par la FFPB :")
-        ?.trim();
-      if (!licenceNumber) return;
-    }
-
     setBusy(true);
     setError("");
     setMessage("");
     try {
       await licenceService.review(request.id, action, reason, licenceNumber);
+      setReviewDetails(null);
       setMessage(
         action === "reject"
           ? "Le joueur devra remplacer son document."
@@ -215,6 +225,22 @@ export function AdminLicencesPage() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const submitReviewDetails = async (
+    event: FormEvent<HTMLFormElement>,
+    request: AdminLicenceRequest,
+  ) => {
+    event.preventDefault();
+    if (!reviewDetails || reviewDetails.requestId !== request.id) return;
+    const value = reviewDetails.value.trim();
+    if (!value) return;
+
+    if (reviewDetails.action === "reject") {
+      await review(request, "reject", value);
+      return;
+    }
+    await review(request, "mark_licensed", undefined, value);
   };
 
   return (
@@ -264,9 +290,12 @@ export function AdminLicencesPage() {
           className="admin-licences__panel"
           onSubmit={(event) => void saveSettings(event)}
         >
+          <RequiredFieldsNotice />
           <div className="admin-licences__season-row">
             <label>
-              Saison
+              <span>
+                Saison <RequiredFieldMark />
+              </span>
               <select
                 value={seasonId}
                 onChange={(event) => setSeasonId(event.target.value)}
@@ -293,7 +322,9 @@ export function AdminLicencesPage() {
 
           <div className="admin-licences__form-grid">
             <label>
-              Tarif renouvellement (€)
+              <span>
+                Tarif renouvellement (€) <RequiredFieldMark />
+              </span>
               <input
                 name="renewalPrice"
                 type="number"
@@ -305,7 +336,9 @@ export function AdminLicencesPage() {
               />
             </label>
             <label>
-              Tarif première licence (€)
+              <span>
+                Tarif première licence (€) <RequiredFieldMark />
+              </span>
               <input
                 name="firstPrice"
                 type="number"
@@ -362,12 +395,22 @@ export function AdminLicencesPage() {
               />
             </label>
             <label>
-              Formulaire première licence (PDF)
-              <input name="template" type="file" accept="application/pdf" />
+              <span>
+                Formulaire première licence (PDF)
+                {templateRequired && <RequiredFieldMark />}
+              </span>
+              <input
+                name="template"
+                type="file"
+                accept="application/pdf"
+                required={templateRequired}
+              />
               <small>
                 {campaign?.applicationFormPath
                   ? "Un formulaire est déjà enregistré."
-                  : "Aucun formulaire enregistré."}
+                  : templateRequired
+                    ? "Ce PDF est obligatoire pour ouvrir la campagne."
+                    : "Aucun formulaire enregistré."}
               </small>
             </label>
           </div>
@@ -384,8 +427,8 @@ export function AdminLicencesPage() {
             <input
               name="isOpen"
               type="checkbox"
-              defaultChecked={campaign?.isOpen ?? false}
-              key={`toggle-${seasonId}-${campaign?.updatedAt ?? "new"}`}
+              checked={campaignOpen}
+              onChange={(event) => setCampaignOpen(event.target.checked)}
             />
             Ouvrir la campagne aux joueurs
           </label>
@@ -451,7 +494,13 @@ export function AdminLicencesPage() {
                     <button
                       className="secondary"
                       disabled={busy}
-                      onClick={() => void review(request, "reject")}
+                      onClick={() =>
+                        setReviewDetails({
+                          requestId: request.id,
+                          action: "reject",
+                          value: "",
+                        })
+                      }
                     >
                       Refuser le document
                     </button>
@@ -463,18 +512,93 @@ export function AdminLicencesPage() {
                     </button>
                   </>
                 )}
-                {request.status === "approved" && (
-                  <button
-                    disabled={busy}
-                    onClick={() => void review(request, "mark_licensed")}
-                  >
-                    <BadgeCheck aria-hidden="true" />{" "}
-                    {request.type === "renewal"
-                      ? "Confirmer le renouvellement"
-                      : "Enregistrer la licence"}
-                  </button>
-                )}
+                {request.status === "approved" &&
+                  (request.type === "renewal" ? (
+                    <button
+                      disabled={busy}
+                      onClick={() => void review(request, "mark_licensed")}
+                    >
+                      <BadgeCheck aria-hidden="true" />{" "}
+                      {"Confirmer le renouvellement"}
+                    </button>
+                  ) : (
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        setReviewDetails({
+                          requestId: request.id,
+                          action: "mark_licensed",
+                          value: "",
+                        })
+                      }
+                    >
+                      <BadgeCheck aria-hidden="true" /> Enregistrer la licence
+                    </button>
+                  ))}
               </footer>
+
+              {reviewDetails?.requestId === request.id && (
+                <form
+                  className="admin-licences__panel"
+                  onSubmit={(event) => void submitReviewDetails(event, request)}
+                >
+                  <RequiredFieldsNotice />
+                  {reviewDetails.action === "reject" ? (
+                    <label>
+                      <span>
+                        Motif du refus <RequiredFieldMark />
+                      </span>
+                      <textarea
+                        rows={3}
+                        value={reviewDetails.value}
+                        onChange={(event) =>
+                          setReviewDetails((current) =>
+                            current
+                              ? { ...current, value: event.target.value }
+                              : current,
+                          )
+                        }
+                        required
+                        autoFocus
+                      />
+                    </label>
+                  ) : (
+                    <label>
+                      <span>
+                        Numéro de licence FFPB <RequiredFieldMark />
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        value={reviewDetails.value}
+                        onChange={(event) =>
+                          setReviewDetails((current) =>
+                            current
+                              ? { ...current, value: event.target.value }
+                              : current,
+                          )
+                        }
+                        required
+                        autoFocus
+                      />
+                    </label>
+                  )}
+                  <footer>
+                    <button type="submit" disabled={busy}>
+                      Confirmer
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={busy}
+                      onClick={() => setReviewDetails(null)}
+                    >
+                      Annuler
+                    </button>
+                  </footer>
+                </form>
+              )}
             </article>
           ))}
         </div>

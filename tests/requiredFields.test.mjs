@@ -14,6 +14,7 @@ const [
   profile,
   licence,
   splitPayment,
+  adminLicences,
 ] = await Promise.all([
   read("../src/shared/components/forms/RequiredField.tsx"),
   read("../src/styles/forms.css"),
@@ -26,6 +27,7 @@ const [
   read(
     "../src/features/reservations/components/ReservationSplitPaymentFields.tsx",
   ),
+  read("../src/features/admin/members/pages/AdminLicencesPage.tsx"),
 ]);
 
 test("fournit une étoile et une légende communes pour les champs obligatoires", () => {
@@ -88,4 +90,24 @@ test("signale la sélection obligatoire des joueurs pour un paiement partagé", 
   );
   assert.match(splitPayment, /<RequiredFieldsNotice \/>/);
   assert.match(splitPayment, /Rechercher un joueur/);
+});
+
+test("signale les champs obligatoires dans l'administration des licences", () => {
+  assert.match(adminLicences, /Saison <RequiredFieldMark \/>/);
+  assert.match(
+    adminLicences,
+    /Tarif renouvellement \(€\) <RequiredFieldMark \/>/,
+  );
+  assert.match(
+    adminLicences,
+    /Tarif première licence \(€\) <RequiredFieldMark \/>/,
+  );
+  assert.match(
+    adminLicences,
+    /const templateRequired = campaignOpen && !campaign\?\.applicationFormPath/,
+  );
+  assert.match(adminLicences, /required=\{templateRequired\}/);
+  assert.match(adminLicences, /Motif du refus <RequiredFieldMark \/>/);
+  assert.match(adminLicences, /Numéro de licence FFPB <RequiredFieldMark \/>/);
+  assert.doesNotMatch(adminLicences, /window\.prompt/);
 });
