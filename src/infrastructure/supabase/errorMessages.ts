@@ -41,6 +41,49 @@ export function getSupabaseErrorMessage(
     return "L’annulation n’est plus possible : le délai autorisé avant le créneau est dépassé.";
   }
 
+  if (normalized.includes("libellé du créneau permanent obligatoire")) {
+    return "Renseignez un libellé pour ce créneau permanent.";
+  }
+  if (normalized.includes("jour du créneau permanent invalide")) {
+    return "Le jour sélectionné n’est pas valide.";
+  }
+  if (normalized.includes("heure de début du créneau permanent obligatoire")) {
+    return "Renseignez l’heure de début du créneau permanent.";
+  }
+  if (normalized.includes("heure de fin du créneau permanent obligatoire")) {
+    return "L’heure de fin du créneau permanent est manquante.";
+  }
+  if (
+    normalized.includes(
+      "heure de fin du créneau permanent doit être après l heure de début",
+    )
+  ) {
+    return "L’heure de fin doit être après l’heure de début. Les créneaux passant minuit ne sont pas encore pris en charge.";
+  }
+  if (normalized.includes("date de début du créneau permanent obligatoire")) {
+    return "Renseignez la date de début du créneau permanent.";
+  }
+  if (normalized.includes("date de fin du créneau permanent obligatoire")) {
+    return "Renseignez la date de fin du créneau permanent.";
+  }
+  if (
+    normalized.includes(
+      "date de fin du créneau permanent antérieure à la date de début",
+    )
+  ) {
+    return "La date de fin doit être postérieure ou égale à la date de début.";
+  }
+  if (normalized.includes("date de fin du créneau permanent déjà passée")) {
+    return "La date de fin du créneau permanent est déjà passée.";
+  }
+  if (
+    normalized.includes("période du créneau permanent supérieure à deux ans")
+  ) {
+    return "La période d’un créneau permanent ne peut pas dépasser deux ans.";
+  }
+  if (normalized.includes("délai de gestion du créneau permanent invalide")) {
+    return "Le délai de gestion du créneau permanent n’est pas valide.";
+  }
   if (normalized.includes("paramètres du créneau permanent invalides")) {
     return "Le créneau permanent n’est pas valide. Vérifiez le jour, l’horaire, la période et le délai de gestion.";
   }
