@@ -31,6 +31,7 @@ import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
+import { AdminPermanentSlotsPage } from "@/features/admin/reservations/pages/AdminPermanentSlotsPage";
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminTvSettingsPage } from "@/features/admin/settings/pages/AdminTvSettingsPage";
 import { AdminStatisticsPage } from "@/features/admin/statistics/pages/AdminStatisticsPage";
@@ -57,6 +58,7 @@ import { PlatformProtectedRoute } from "@/features/platform/auth/PlatformProtect
 import { PlatformProviderLayout } from "@/features/platform/auth/PlatformProviderLayout";
 import { PlatformDashboardPage } from "@/features/platform/pages/PlatformDashboardPage";
 import { PlatformLoginPage } from "@/features/platform/pages/PlatformLoginPage";
+import { MyPermanentSlotsPage } from "@/features/reservations/pages/MyPermanentSlotsPage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { MyChampionshipsPage } from "@/features/user-space/championships/pages/MyChampionshipsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
@@ -171,6 +173,14 @@ export const routes = [
           </ProtectedRoute>
         ),
       },
+      {
+        path: ROUTES.myPermanentSlots,
+        element: (
+          <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
+            <MyPermanentSlotsPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: ROUTES.reservationPaymentReturn, element: <PaymentReturnPage /> },
       {
         path: ROUTES.reservationSharePayment,
@@ -233,6 +243,13 @@ export const routes = [
             element: permitted(
               ADMIN_PERMISSIONS.reservations,
               <AdminReservationsManagementPage />,
+            ),
+          },
+          {
+            path: "reservations/creneaux-permanents",
+            element: permitted(
+              ADMIN_PERMISSIONS.reservations,
+              <AdminPermanentSlotsPage />,
             ),
           },
           {

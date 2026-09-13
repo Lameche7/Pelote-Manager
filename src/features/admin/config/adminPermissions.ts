@@ -89,6 +89,11 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.reservations,
       },
       {
+        label: "Créneaux permanents",
+        to: ROUTES.adminPermanentSlots,
+        permission: ADMIN_PERMISSIONS.reservations,
+      },
+      {
         label: "Paramètres",
         to: ROUTES.adminReservationSettings,
         permission: ADMIN_PERMISSIONS.reservations,

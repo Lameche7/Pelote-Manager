@@ -1,14 +1,17 @@
+import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
   Bell,
   CalendarDays,
+  Clock3,
   CreditCard,
   Trophy,
   TrendingUp,
   UserRound,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { permanentSlotService } from "@/features/reservations/services/permanentSlotService";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import { getGreeting } from "@/features/user-space/domain/userSpace";
 import { ROUTES } from "@/shared/config";
@@ -21,7 +24,8 @@ type DashboardCard = {
   icon: LucideIcon;
   to?: string;
 };
-const cards: DashboardCard[] = [
+
+const standardCards: DashboardCard[] = [
   {
     title: "Mes réservations",
     description: "Consulter, reprendre un paiement ou annuler une réservation.",
@@ -64,6 +68,14 @@ const cards: DashboardCard[] = [
   },
 ];
 
+const permanentSlotCard: DashboardCard = {
+  title: "Mes créneaux permanents",
+  description:
+    "Maintenir ou libérer ponctuellement vos créneaux réservés à l’année.",
+  icon: Clock3,
+  to: ROUTES.myPermanentSlots,
+};
+
 function Card({ card }: { card: DashboardCard }) {
   const Icon = card.icon;
   const content = (
@@ -102,6 +114,25 @@ function Card({ card }: { card: DashboardCard }) {
 
 export function UserSpaceDashboardPage() {
   const { profile } = useAuth();
+  const [hasPermanentSlots, setHasPermanentSlots] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    permanentSlotService
+      .hasPermanentSlots()
+      .then((hasSlots) => {
+        if (active) setHasPermanentSlots(hasSlots);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const cards = hasPermanentSlots
+    ? [standardCards[0], permanentSlotCard, ...standardCards.slice(1)]
+    : standardCards;
+
   return (
     <UserSpaceShell>
       <section className="user-dashboard" aria-labelledby="user-space-title">
