@@ -54,6 +54,19 @@ Deno.serve(async (request) => {
     const payment = data?.[0];
     if (!payment) throw new Error("Paiement expiré ou introuvable.");
 
+    if (payment.payment_context === "licence") {
+      const { data: licencePaymentMode, error: paymentModeError } =
+        await supabase.rpc("get_licence_payment_mode", {
+          target_payment_id: payment.payment_id,
+        });
+      if (paymentModeError) throw paymentModeError;
+      if (licencePaymentMode !== "helloasso") {
+        throw new Error(
+          "Le paiement HelloAsso officiel n’est pas activé pour cette campagne de licences.",
+        );
+      }
+    }
+
     const accessToken = await getHelloAssoAccessToken({
       environment,
       clientId,
