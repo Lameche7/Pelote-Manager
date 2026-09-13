@@ -55,11 +55,6 @@ jobs:
         run: npx prettier --check tests/protectedRouteAccess.test.mjs tests/roles.test.mjs tsconfig.test.json
         continue-on-error: true
 
-      - name: Diagnostic format permanent slots
-        run: |
-          npx prettier --write src/features/admin/reservations/pages/AdminPermanentSlotsPage.tsx src/features/reservations/pages/MyPermanentSlotsPage.tsx src/features/reservations/services/permanentSlotService.ts
-          git diff -- src/features/admin/reservations/pages/AdminPermanentSlotsPage.tsx src/features/reservations/pages/MyPermanentSlotsPage.tsx src/features/reservations/services/permanentSlotService.ts
-
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
