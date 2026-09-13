@@ -16,6 +16,13 @@ const priorityLabels = {
   urgent: "Urgent",
 } as const;
 
+function getActionLabel(actionUrl: string) {
+  if (actionUrl === ROUTES.myPermanentSlots) {
+    return "Gérer mon créneau permanent";
+  }
+  return "Voir le tournoi et l’inscription";
+}
+
 export function NotificationsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -224,7 +231,7 @@ export function NotificationsPage() {
                           }
                         }}
                       >
-                        Voir le tournoi et l’inscription
+                        {getActionLabel(notification.actionUrl)}
                       </Link>
                     )}
                   </div>
