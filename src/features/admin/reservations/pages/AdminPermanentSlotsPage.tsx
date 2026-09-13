@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { adminPermanentSlotService } from "@/features/admin/reservations/services/adminPermanentSlotService";
+import {
+  adminPermanentSlotService,
+  type AdminPermanentSlot,
+} from "@/features/admin/reservations/services/adminPermanentSlotService";
 import { adminReservationService } from "@/features/admin/services/adminReservationService";
 import type { ReservableResource } from "@/features/reservations/domain/calendar";
 import "./AdminPermanentSlotsPage.css";
@@ -14,8 +17,37 @@ const WEEKDAYS = [
   "Dimanche",
 ];
 
+type PermanentSlotForm = {
+  label: string;
+  resourceId: string;
+  weekday: number;
+  startsAt: string;
+  validFrom: string;
+  validUntil: string;
+  managementWindowHours: number;
+  primaryProfileId: string;
+  managerProfileIds: string[];
+};
+
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function initialForm(
+  resourceId = "",
+  primaryProfileId = "",
+): PermanentSlotForm {
+  return {
+    label: "",
+    resourceId,
+    weekday: 1,
+    startsAt: "18:00",
+    validFrom: todayIso(),
+    validUntil: "",
+    managementWindowHours: 48,
+    primaryProfileId,
+    managerProfileIds: [],
+  };
 }
 
 function addMinutes(time: string, minutes: number): string {
@@ -35,21 +67,12 @@ export function AdminPermanentSlotsPage() {
     Awaited<ReturnType<typeof adminPermanentSlotService.listCandidates>>
   >([]);
   const [durationMinutes, setDurationMinutes] = useState(60);
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    label: "",
-    resourceId: "",
-    weekday: 1,
-    startsAt: "18:00",
-    validFrom: todayIso(),
-    validUntil: "",
-    managementWindowHours: 48,
-    primaryProfileId: "",
-    managerProfileIds: [] as string[],
-  });
+  const [form, setForm] = useState<PermanentSlotForm>(() => initialForm());
 
   async function loadData() {
     setError(null);
@@ -91,7 +114,34 @@ export function AdminPermanentSlotsPage() {
     [durationMinutes, form.startsAt],
   );
 
-  async function createSlot() {
+  function resetForm() {
+    setEditingSlotId(null);
+    setForm(
+      initialForm(resources[0]?.id ?? "", candidates[0]?.profileId ?? ""),
+    );
+  }
+
+  function editSlot(slot: AdminPermanentSlot) {
+    const primary = slot.managers.find((manager) => manager.isPrimary);
+    setEditingSlotId(slot.id);
+    setError(null);
+    setMessage(null);
+    setForm({
+      label: slot.label,
+      resourceId: slot.resourceId,
+      weekday: slot.weekday,
+      startsAt: slot.startsAt,
+      validFrom: slot.validFrom,
+      validUntil: slot.validUntil,
+      managementWindowHours: slot.managementWindowHours,
+      primaryProfileId: primary?.profileId ?? "",
+      managerProfileIds: slot.managers
+        .filter((manager) => !manager.isPrimary)
+        .map((manager) => manager.profileId),
+    });
+  }
+
+  async function saveSlot() {
     if (
       !form.label.trim() ||
       !form.resourceId ||
@@ -106,22 +156,29 @@ export function AdminPermanentSlotsPage() {
     setIsSaving(true);
     setError(null);
     setMessage(null);
+    const input = {
+      ...form,
+      label: form.label.trim(),
+      endsAt,
+    };
+
     try {
-      await adminPermanentSlotService.createSlot({
-        ...form,
-        label: form.label.trim(),
-        endsAt,
-      });
-      setMessage("Le créneau permanent a été créé.");
-      setForm((current) => ({
-        ...current,
-        label: "",
-        managerProfileIds: [],
-      }));
+      if (editingSlotId) {
+        await adminPermanentSlotService.updateSlot(editingSlotId, input);
+        setMessage("Le créneau permanent a été modifié.");
+      } else {
+        await adminPermanentSlotService.createSlot(input);
+        setMessage("Le créneau permanent a été créé.");
+      }
+      resetForm();
       await loadData();
     } catch (saveError: unknown) {
       setError(
-        saveError instanceof Error ? saveError.message : "Création impossible.",
+        saveError instanceof Error
+          ? saveError.message
+          : editingSlotId
+            ? "Modification impossible."
+            : "Création impossible.",
       );
     } finally {
       setIsSaving(false);
@@ -139,6 +196,7 @@ export function AdminPermanentSlotsPage() {
     setMessage(null);
     try {
       await adminPermanentSlotService.deactivateSlot(slotId);
+      if (editingSlotId === slotId) resetForm();
       setMessage("Le créneau permanent a été désactivé.");
       await loadData();
     } catch (deactivateError: unknown) {
@@ -180,7 +238,18 @@ export function AdminPermanentSlotsPage() {
       )}
 
       <div className="admin-permanent-slots__panel">
-        <h2>Nouveau créneau permanent</h2>
+        <h2>
+          {editingSlotId
+            ? "Modifier le créneau permanent"
+            : "Nouveau créneau permanent"}
+        </h2>
+        {editingSlotId && (
+          <p className="admin-permanent-slots__editing-help">
+            Les modifications s’appliquent aux occurrences futures. Les
+            réservations déjà reprises par d’autres utilisateurs restent
+            protégées.
+          </p>
+        )}
         <div className="admin-permanent-slots__grid">
           <label>
             <span>Libellé</span>
@@ -317,13 +386,29 @@ export function AdminPermanentSlotsPage() {
             </small>
           </label>
         </div>
-        <button
-          type="button"
-          disabled={isSaving || isLoading}
-          onClick={() => void createSlot()}
-        >
-          {isSaving ? "Création…" : "Créer le créneau permanent"}
-        </button>
+        <div className="admin-permanent-slots__actions">
+          <button
+            type="button"
+            disabled={isSaving || isLoading}
+            onClick={() => void saveSlot()}
+          >
+            {isSaving
+              ? "Enregistrement…"
+              : editingSlotId
+                ? "Enregistrer les modifications"
+                : "Créer le créneau permanent"}
+          </button>
+          {editingSlotId && (
+            <button
+              type="button"
+              className="admin-permanent-slots__secondary"
+              disabled={isSaving}
+              onClick={resetForm}
+            >
+              Annuler
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="admin-permanent-slots__panel">
@@ -367,17 +452,22 @@ export function AdminPermanentSlotsPage() {
                       ?.displayName ?? "Non défini"}
                   </small>
                 </div>
-                {slot.isActive ? (
-                  <button
-                    type="button"
-                    className="admin-permanent-slots__danger"
-                    onClick={() => void deactivateSlot(slot.id)}
-                  >
-                    Désactiver
+                <div className="admin-permanent-slots__slot-actions">
+                  <button type="button" onClick={() => editSlot(slot)}>
+                    Modifier
                   </button>
-                ) : (
-                  <span>Inactif</span>
-                )}
+                  {slot.isActive ? (
+                    <button
+                      type="button"
+                      className="admin-permanent-slots__danger"
+                      onClick={() => void deactivateSlot(slot.id)}
+                    >
+                      Désactiver
+                    </button>
+                  ) : (
+                    <span>Inactif</span>
+                  )}
+                </div>
               </article>
             ))}
           </div>
