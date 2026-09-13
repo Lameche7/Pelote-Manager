@@ -88,6 +88,7 @@ export type AdminLicenceSettings = {
     firstApplicationPriceCents: number;
     applicationFormPath: string | null;
     instructions: string | null;
+    paymentMode: LicencePaymentMode;
     updatedAt: string;
   }>;
 };
@@ -144,9 +145,8 @@ export const licenceService = {
     value<LicencePortal>(await rpc("get_my_licence_portal")),
 
   getPaymentMode: async (): Promise<LicencePaymentMode> => {
-    const { data, error } = await supabase.rpc("get_payment_mode");
-    if (error) throw new Error(error.message);
-    return data === "helloasso" ? "helloasso" : "test";
+    const mode = value<string>(await rpc("get_licence_payment_mode"));
+    return mode === "helloasso" ? "helloasso" : "test";
   },
 
   startMyRequest: async (payload: Record<string, unknown> = {}) =>
@@ -207,7 +207,7 @@ export const licenceService = {
     paymentId: string,
     outcome: "paid" | "failed" | "cancelled",
   ) => {
-    const result = await rpc("simulate_payment", {
+    const result = await rpc("simulate_licence_payment", {
       target_payment_id: paymentId,
       simulated_outcome: outcome,
     });
@@ -229,6 +229,7 @@ export const licenceService = {
     closesAt: string | null;
     applicationFormPath: string | null;
     instructions: string | null;
+    paymentMode: LicencePaymentMode;
   }) =>
     value<string>(
       await rpc("admin_save_licence_campaign", {
@@ -240,6 +241,7 @@ export const licenceService = {
         target_closes_at: input.closesAt,
         target_application_form_path: input.applicationFormPath,
         target_instructions: input.instructions,
+        target_payment_mode: input.paymentMode,
       }),
     ),
 
