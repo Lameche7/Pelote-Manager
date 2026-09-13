@@ -1,6 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { RequiredFieldMark, RequiredFieldsNotice } from "@/shared/components/forms/RequiredField";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 import { ROUTES } from "@/shared/config";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
 import "./PlatformPages.css";
