@@ -9,6 +9,10 @@ import type {
   TournamentPlayerRole,
   TournamentRegistrationIdentity,
 } from "@/features/tournaments/types";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 
 const playerRoleLabels: Record<TournamentPlayerRole, string> = {
   front: "Avant",
@@ -191,8 +195,8 @@ export function TournamentRegistrationForm({
   ).length;
   const poolMinimumReached = Boolean(
     draft &&
-    poolAvailabilitySlots.length >= tournament.minimumAvailabilitySlots &&
-    weekendAvailabilityCount >= tournament.minimumWeekendAvailabilitySlots,
+      poolAvailabilitySlots.length >= tournament.minimumAvailabilitySlots &&
+      weekendAvailabilityCount >= tournament.minimumWeekendAvailabilitySlots,
   );
   const finalsMinimumReached =
     tournament.availableFinalsSlotCount === 0 ||
@@ -327,9 +331,10 @@ export function TournamentRegistrationForm({
 
   return (
     <form className="public-registration-form" onSubmit={submit}>
+      <RequiredFieldsNotice />
       <div className="public-registration-form__grid">
         <label>
-          Série
+          Série <RequiredFieldMark />
           <select
             required
             disabled={saving}
@@ -366,7 +371,7 @@ export function TournamentRegistrationForm({
         </label>
 
         <label>
-          Votre prénom
+          Votre prénom <RequiredFieldMark />
           <input
             required
             disabled={saving || Boolean(identity.memberId)}
@@ -378,7 +383,7 @@ export function TournamentRegistrationForm({
         </label>
 
         <label>
-          Votre nom
+          Votre nom <RequiredFieldMark />
           <input
             required
             disabled={saving || Boolean(identity.memberId)}
@@ -390,7 +395,7 @@ export function TournamentRegistrationForm({
         </label>
 
         <label>
-          Votre club
+          Votre club <RequiredFieldMark />
           <input
             required
             disabled={saving}
@@ -406,7 +411,7 @@ export function TournamentRegistrationForm({
         </label>
 
         <label>
-          Votre e-mail
+          Votre e-mail <RequiredFieldMark />
           <input
             required
             type="email"
@@ -423,7 +428,7 @@ export function TournamentRegistrationForm({
         </label>
 
         <label>
-          Votre téléphone
+          Votre téléphone <RequiredFieldMark />
           <input
             required
             type="tel"
@@ -509,7 +514,7 @@ export function TournamentRegistrationForm({
 
         <div className="public-registration-form__grid">
           <label>
-            Prénom du partenaire
+            Prénom du partenaire <RequiredFieldMark />
             <input
               required
               disabled={saving}
@@ -522,7 +527,7 @@ export function TournamentRegistrationForm({
           </label>
 
           <label>
-            Nom du partenaire
+            Nom du partenaire <RequiredFieldMark />
             <input
               required
               disabled={saving}
@@ -535,7 +540,7 @@ export function TournamentRegistrationForm({
           </label>
 
           <label>
-            Club du partenaire
+            Club du partenaire <RequiredFieldMark />
             <input
               required
               disabled={saving}
@@ -551,7 +556,8 @@ export function TournamentRegistrationForm({
           </label>
 
           <label>
-            E-mail du partenaire
+            E-mail du partenaire{" "}
+            {!partnerEmailFromMember && <RequiredFieldMark />}
             <input
               required={!partnerEmailFromMember}
               type={partnerEmailFromMember ? "text" : "email"}
@@ -569,7 +575,8 @@ export function TournamentRegistrationForm({
           </label>
 
           <label>
-            Téléphone du partenaire
+            Téléphone du partenaire{" "}
+            {!partnerPhoneFromMember && <RequiredFieldMark />}
             <input
               required={!partnerPhoneFromMember}
               type={partnerPhoneFromMember ? "text" : "tel"}
