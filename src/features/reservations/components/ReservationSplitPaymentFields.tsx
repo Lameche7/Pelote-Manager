@@ -3,6 +3,10 @@ import {
   reservationBookingService,
   type ReservationPaymentPlayer,
 } from "@/features/reservations/services/reservationBookingService";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 import "./ReservationSplitPaymentFields.css";
 
 type Props = {
@@ -69,8 +73,11 @@ export function ReservationSplitPaymentFields({
 
   return (
     <div className="split-payment-fields">
+      <RequiredFieldsNotice />
       <div className="split-payment-fields__heading">
-        <strong>Choisissez les 3 autres joueurs</strong>
+        <strong>
+          Choisissez les 3 autres joueurs <RequiredFieldMark />
+        </strong>
         <span>{selectedPlayers.length}/3 sélectionnés</span>
       </div>
       <p>
