@@ -121,9 +121,7 @@ export function AdminPermanentSlotsPage() {
       await loadData();
     } catch (saveError: unknown) {
       setError(
-        saveError instanceof Error
-          ? saveError.message
-          : "Création impossible.",
+        saveError instanceof Error ? saveError.message : "Création impossible.",
       );
     } finally {
       setIsSaving(false);
@@ -306,8 +304,7 @@ export function AdminPermanentSlotsPage() {
             >
               {candidates
                 .filter(
-                  (candidate) =>
-                    candidate.profileId !== form.primaryProfileId,
+                  (candidate) => candidate.profileId !== form.primaryProfileId,
                 )
                 .map((candidate) => (
                   <option key={candidate.profileId} value={candidate.profileId}>
@@ -315,7 +312,9 @@ export function AdminPermanentSlotsPage() {
                   </option>
                 ))}
             </select>
-            <small>Ctrl/Cmd + clic pour sélectionner plusieurs personnes.</small>
+            <small>
+              Ctrl/Cmd + clic pour sélectionner plusieurs personnes.
+            </small>
           </label>
         </div>
         <button
