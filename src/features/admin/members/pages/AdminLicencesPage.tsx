@@ -66,8 +66,9 @@ export function AdminLicencesPage() {
   const [requests, setRequests] = useState<AdminLicenceRequest[]>([]);
   const [seasonId, setSeasonId] = useState("");
   const [campaignOpen, setCampaignOpen] = useState(false);
-  const [reviewDetails, setReviewDetails] =
-    useState<ReviewDetailsDraft | null>(null);
+  const [reviewDetails, setReviewDetails] = useState<ReviewDetailsDraft | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
