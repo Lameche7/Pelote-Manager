@@ -20,6 +20,9 @@ function getActionLabel(actionUrl: string) {
   if (actionUrl === ROUTES.myPermanentSlots) {
     return "Gérer mon créneau permanent";
   }
+  if (actionUrl === ROUTES.reservations) {
+    return "Réserver ce créneau";
+  }
   return "Voir le tournoi et l’inscription";
 }
 
