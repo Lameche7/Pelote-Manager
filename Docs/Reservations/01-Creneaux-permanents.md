@@ -1,7 +1,7 @@
 # Créneaux permanents
 
-Statut : implémenté — socle métier et interfaces V1
-Version : 1.1
+Statut : implémenté — socle métier, interfaces V1 et rappels automatiques
+Version : 1.2
 Date : 2026-09-13
 
 ## Objectif
@@ -61,7 +61,7 @@ Chaque occurrence possède une Occupation Calendrier de type `private_use`.
 
 ### Historique
 
-`permanent_slot_audit_log` conserve les créations, désactivations et changements d'état des occurrences.
+`permanent_slot_audit_log` conserve les créations, modifications, désactivations et changements d'état des occurrences.
 
 ## Intégration Calendrier
 
@@ -92,6 +92,7 @@ Administration → Réservations → Créneaux permanents :
 - choisir le titulaire principal parmi les comptes PILOTOKI, licenciés ou non ;
 - ajouter éventuellement des gestionnaires ;
 - définir le délai de gestion ;
+- modifier les paramètres d'un créneau existant ;
 - consulter les créneaux actifs et inactifs ;
 - désactiver un créneau permanent et ses occurrences futures.
 
@@ -116,12 +117,32 @@ Les interfaces utilisent uniquement des RPC dédiées ; elles n'accèdent jamais
 
 - `admin_list_permanent_slots()` : liste d'administration ;
 - `admin_create_permanent_slot(...)` : création et matérialisation des occurrences ;
+- `admin_update_permanent_slot(...)` : modification des paramètres et resynchronisation des occurrences futures ;
 - `admin_deactivate_permanent_slot(...)` : désactivation ;
 - `admin_list_permanent_slot_candidates()` : comptes pouvant être désignés titulaires ou gestionnaires ;
 - `has_my_permanent_slots()` : détermine si le menu personnel doit être affiché ;
 - `list_my_permanent_slot_occurrences(...)` : occurrences accessibles au gestionnaire connecté ;
 - `set_my_permanent_slot_occurrence_status(...)` : maintien, libération et reprise.
 
-## Notifications prévues
+## Rappels automatiques
 
-Une évolution dédiée ajoutera les rappels automatiques, par exemple 48 h puis 24 h avant le créneau si aucune action explicite n'a été réalisée. Les notifications ne modifient jamais automatiquement l'état de l'occurrence.
+Les rappels utilisent exclusivement le moteur central de notifications :
+
+`club_communications → communication_deliveries → Mon espace / Notifications → Web Push`.
+
+Pour une occurrence encore `scheduled` :
+
+- un premier rappel est publié à l'ouverture de la fenêtre de gestion configurée pour le créneau ;
+- si cette fenêtre est supérieure à 24 heures et qu'aucune décision n'a été prise, un second rappel est publié 24 heures avant le début ;
+- une fenêtre de 24 heures ne génère qu'un seul rappel ;
+- les rappels sont adressés au titulaire principal et à tous les gestionnaires autorisés ;
+- une action `Maintenir`, `Libérer` ou une annulation administrative archive les rappels encore actifs et empêche tout nouveau rappel pour l'occurrence ;
+- l'absence de réponse ne libère jamais le créneau.
+
+Le traitement est relancé toutes les 15 minutes. La table `permanent_slot_reminder_events` garantit l'idempotence par occurrence et type de rappel.
+
+Le centre de notifications ouvre directement `/mon-espace/creneaux-permanents` pour ces rappels.
+
+## Notification d'un créneau libéré
+
+La diffusion générale d'un créneau permanent libéré aux autres membres du club est volontairement séparée du système de rappels. Elle fera l'objet d'une évolution dédiée afin de ne pas mélanger le rappel personnel et la notification de disponibilité publique.
