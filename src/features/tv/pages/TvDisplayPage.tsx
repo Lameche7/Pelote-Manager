@@ -33,9 +33,7 @@ import {
   tvTournamentService,
   type TvTournamentSeries,
 } from "@/features/tv/services/tvTournamentService";
-import {
-  TvRemoteNavigation,
-} from "@/features/tv/components/TvRemoteNavigation";
+import { TvRemoteNavigation } from "@/features/tv/components/TvRemoteNavigation";
 import { TvTournamentSeriesView } from "./TvTournamentSeriesView";
 import "./TvDisplayPage.css";
 import "./TvWeeklyView.css";
