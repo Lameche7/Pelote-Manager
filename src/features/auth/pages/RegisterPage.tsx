@@ -12,8 +12,9 @@ import {
   externalParticipationService,
   type ExternalParticipationCandidate,
 } from "@/features/auth/services/externalParticipationService";
-import { ROUTES } from "@/shared/config";
 import { registerAccount } from "@/infrastructure/auth/authService";
+import { RequiredFieldMark, RequiredFieldsNotice } from "@/shared/components/forms/RequiredField";
+import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./RegisterPage.css";
 
@@ -252,7 +253,10 @@ export function RegisterPage() {
           <p>
             Renseignez exactement les informations figurant sur votre licence.
           </p>
-          <label htmlFor="licence">Numéro de licence</label>
+          <RequiredFieldsNotice />
+          <label htmlFor="licence">
+            Numéro de licence <RequiredFieldMark />
+          </label>
           <input
             id="licence"
             value={identity.licenceNumber}
@@ -262,7 +266,9 @@ export function RegisterPage() {
             required
             disabled={memberPending}
           />
-          <label htmlFor="lastName">Nom</label>
+          <label htmlFor="lastName">
+            Nom <RequiredFieldMark />
+          </label>
           <input
             id="lastName"
             autoComplete="family-name"
@@ -271,7 +277,9 @@ export function RegisterPage() {
             required
             disabled={memberPending}
           />
-          <label htmlFor="firstName">Prénom</label>
+          <label htmlFor="firstName">
+            Prénom <RequiredFieldMark />
+          </label>
           <input
             id="firstName"
             autoComplete="given-name"
@@ -282,7 +290,9 @@ export function RegisterPage() {
             required
             disabled={memberPending}
           />
-          <label htmlFor="birthDate">Date de naissance</label>
+          <label htmlFor="birthDate">
+            Date de naissance <RequiredFieldMark />
+          </label>
           <input
             id="birthDate"
             type="date"
@@ -337,7 +347,10 @@ export function RegisterPage() {
             Nous allons vérifier si votre nom correspond à une participation
             déjà enregistrée dans un tournoi Pelote Manager.
           </p>
-          <label htmlFor="accountFirstName">Prénom</label>
+          <RequiredFieldsNotice />
+          <label htmlFor="accountFirstName">
+            Prénom <RequiredFieldMark />
+          </label>
           <input
             id="accountFirstName"
             autoComplete="given-name"
@@ -346,7 +359,9 @@ export function RegisterPage() {
             required
             disabled={searchingParticipations}
           />
-          <label htmlFor="accountLastName">Nom</label>
+          <label htmlFor="accountLastName">
+            Nom <RequiredFieldMark />
+          </label>
           <input
             id="accountLastName"
             autoComplete="family-name"
@@ -495,7 +510,10 @@ function AccountFields({
 }: AccountFieldsProps) {
   return (
     <>
-      <label htmlFor="registerEmail">Adresse email</label>
+      <RequiredFieldsNotice />
+      <label htmlFor="registerEmail">
+        Adresse email <RequiredFieldMark />
+      </label>
       <input
         id="registerEmail"
         type="email"
@@ -505,7 +523,9 @@ function AccountFields({
         required
         disabled={pending}
       />
-      <label htmlFor="registerPassword">Mot de passe</label>
+      <label htmlFor="registerPassword">
+        Mot de passe <RequiredFieldMark />
+      </label>
       <input
         id="registerPassword"
         type="password"
@@ -517,7 +537,9 @@ function AccountFields({
         disabled={pending}
       />
       <small>8 caractères minimum.</small>
-      <label htmlFor="confirmation">Confirmer le mot de passe</label>
+      <label htmlFor="confirmation">
+        Confirmer le mot de passe <RequiredFieldMark />
+      </label>
       <input
         id="confirmation"
         type="password"
