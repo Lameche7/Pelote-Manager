@@ -110,7 +110,10 @@ export function MyPermanentSlotsPage() {
         </header>
 
         {error && (
-          <p className="my-permanent-slots__alert my-permanent-slots__alert--error" role="alert">
+          <p
+            className="my-permanent-slots__alert my-permanent-slots__alert--error"
+            role="alert"
+          >
             {error}
           </p>
         )}
@@ -125,7 +128,10 @@ export function MyPermanentSlotsPage() {
         ) : occurrences.length === 0 ? (
           <div className="my-permanent-slots__empty">
             <h2>Aucune occurrence à venir</h2>
-            <p>Vous n’avez pas de créneau permanent prévu dans les prochaines semaines.</p>
+            <p>
+              Vous n’avez pas de créneau permanent prévu dans les prochaines
+              semaines.
+            </p>
           </div>
         ) : (
           <div className="my-permanent-slots__list">
@@ -146,16 +152,20 @@ export function MyPermanentSlotsPage() {
                       </span>
                       <h2>{occurrence.label}</h2>
                       <p>
-                        {formatDateTime(occurrence.startsAt)} · {occurrence.resourceName}
+                        {formatDateTime(occurrence.startsAt)} ·{" "}
+                        {occurrence.resourceName}
                       </p>
                       {!occurrence.canManageNow &&
                         !occurrence.isRebooked &&
                         occurrence.status !== "released" && (
                           <small>
-                            Vous pourrez confirmer ou libérer cette occurrence à partir de {managementOpens}.
+                            Vous pourrez confirmer ou libérer cette occurrence à
+                            partir de {managementOpens}.
                           </small>
                         )}
-                      {occurrence.isPrimary && <small>Vous êtes le titulaire principal.</small>}
+                      {occurrence.isPrimary && (
+                        <small>Vous êtes le titulaire principal.</small>
+                      )}
                     </div>
                   </div>
 
@@ -192,7 +202,9 @@ export function MyPermanentSlotsPage() {
                               void updateOccurrence(occurrence, "released")
                             }
                           >
-                            {isSaving ? "Mise à jour…" : "Libérer ce créneau"}
+                            {isSaving
+                              ? "Mise à jour…"
+                              : "Libérer ce créneau"}
                           </button>
                         </>
                       )}
