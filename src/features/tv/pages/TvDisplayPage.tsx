@@ -33,7 +33,9 @@ import {
   tvTournamentService,
   type TvTournamentSeries,
 } from "@/features/tv/services/tvTournamentService";
-import { TvRemoteNavigation } from "@/features/tv/components/TvRemoteNavigation";
+import {
+  TvRemoteNavigation,
+} from "@/features/tv/components/TvRemoteNavigation";
 import { TvTournamentSeriesView } from "./TvTournamentSeriesView";
 import "./TvDisplayPage.css";
 import "./TvWeeklyView.css";
@@ -660,10 +662,7 @@ export function TvDisplayPage() {
         </section>
       )}
 
-      <TvRemoteNavigation
-        onPrevious={showPreviousView}
-        onNext={showNextView}
-      />
+      <TvRemoteNavigation onPrevious={showPreviousView} onNext={showNextView} />
 
       <footer className="tv-display__footer">
         <span>
