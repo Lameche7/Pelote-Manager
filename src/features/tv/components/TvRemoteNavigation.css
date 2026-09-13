@@ -1,0 +1,59 @@
+.tv-remote-navigation {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.tv-remote-navigation--visible,
+.tv-remote-navigation:focus-within {
+  opacity: 1;
+}
+
+.tv-remote-navigation__button {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: clamp(42px, 4vw, 64px);
+  height: clamp(64px, 8vh, 96px);
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  background: rgb(7 22 36 / 28%);
+  color: rgb(255 255 255 / 72%);
+  font: inherit;
+  font-size: clamp(2rem, 3.4vw, 3.4rem);
+  line-height: 1;
+  opacity: 0.72;
+  pointer-events: auto;
+  transform: translateY(-50%);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.tv-remote-navigation__button--previous {
+  left: clamp(0.4rem, 1vw, 1rem);
+}
+
+.tv-remote-navigation__button--next {
+  right: clamp(0.4rem, 1vw, 1rem);
+}
+
+.tv-remote-navigation__button:hover,
+.tv-remote-navigation__button:focus-visible {
+  border-color: rgb(255 255 255 / 42%);
+  background: rgb(7 22 36 / 58%);
+  color: white;
+  opacity: 1;
+  outline: 2px solid rgb(255 255 255 / 55%);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tv-remote-navigation {
+    transition: none;
+  }
+}
