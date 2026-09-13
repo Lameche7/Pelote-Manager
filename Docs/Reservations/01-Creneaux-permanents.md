@@ -1,7 +1,7 @@
 # Créneaux permanents
 
-Statut : implémenté — socle métier, interfaces V1 et rappels automatiques
-Version : 1.2
+Statut : implémenté — socle métier, interfaces V1, rappels et diffusion des créneaux libérés
+Version : 1.3
 Date : 2026-09-13
 
 ## Objectif
@@ -145,4 +145,14 @@ Le centre de notifications ouvre directement `/mon-espace/creneaux-permanents` p
 
 ## Notification d'un créneau libéré
 
-La diffusion générale d'un créneau permanent libéré aux autres membres du club est volontairement séparée du système de rappels. Elle fera l'objet d'une évolution dédiée afin de ne pas mélanger le rappel personnel et la notification de disponibilité publique.
+Lorsqu'une occurrence passe réellement à l'état `released`, PILOTOKI publie immédiatement une communication de disponibilité dans le moteur central de notifications.
+
+- destinataires : tous les membres actifs du club disposant d'un compte PILOTOKI ;
+- le gestionnaire qui vient de libérer le créneau est exclu de cette diffusion générale ;
+- les autres gestionnaires du créneau peuvent recevoir l'information comme les autres membres ;
+- la notification indique la ressource, la date et l'heure du créneau sans exposer le libellé privé du groupe ;
+- le bouton `Réserver ce créneau` ouvre l'espace normal de réservation ;
+- une répétition de l'action `Libérer` sur une occurrence déjà libérée ne produit pas de doublon ;
+- si l'occurrence est reprise par son gestionnaire puis libérée à nouveau, une nouvelle notification est publiée, car le créneau redevient réellement disponible.
+
+Cette diffusion réutilise `club_communications` et `communication_deliveries` afin de bénéficier du centre de notifications et du Web Push existants.
