@@ -38,3 +38,13 @@ test("décision et lien métier", async () => {
   assert.match(sql, /cancelled/);
   assert.match(sql, /mon-espace\/creneaux-permanents/);
 });
+
+test("la notification de créneau permanent utilise un libellé d'action dédié", async () => {
+  const page = await read(
+    "../src/features/notifications/pages/NotificationsPage.tsx",
+  );
+
+  assert.match(page, /actionUrl === ROUTES\.myPermanentSlots/);
+  assert.match(page, /Gérer mon créneau permanent/);
+  assert.match(page, /Voir le tournoi et l’inscription/);
+});
