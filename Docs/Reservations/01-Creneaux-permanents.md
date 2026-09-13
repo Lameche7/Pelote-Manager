@@ -1,8 +1,8 @@
 # Créneaux permanents
 
-Statut : conception validée
-Version : 1.0
-Date : 2026-09-12
+Statut : implémenté — socle métier et interfaces V1
+Version : 1.1
+Date : 2026-09-13
 
 ## Objectif
 
@@ -83,28 +83,44 @@ La réservation d'une occurrence libérée applique les règles normales du club
 
 La première version impose que la durée d'un créneau permanent corresponde à la durée de réservation configurée par le club. Cette contrainte garantit qu'une occurrence libérée est reprise comme un créneau normal sans découpage ambigu.
 
-## Parcours administrateur prévu
+## Parcours administrateur V1
 
 Administration → Réservations → Créneaux permanents :
 
 - créer un créneau permanent ;
 - choisir la ressource, le jour, l'horaire et la période ;
-- choisir le titulaire principal ;
+- choisir le titulaire principal parmi les comptes PILOTOKI, licenciés ou non ;
 - ajouter éventuellement des gestionnaires ;
 - définir le délai de gestion ;
-- consulter les créneaux actifs ;
-- désactiver un créneau permanent.
+- consulter les créneaux actifs et inactifs ;
+- désactiver un créneau permanent et ses occurrences futures.
 
-## Parcours utilisateur prévu
+La durée de fin est calculée depuis la durée standard de réservation configurée par le club afin que toute occurrence libérée puisse entrer directement dans le moteur de réservation normal.
 
-Le menu `Mes créneaux permanents` n'est visible que si le compte est gestionnaire d'au moins un créneau actif.
+## Parcours utilisateur V1
+
+Le menu `Mes créneaux permanents` n'est visible dans `Mon espace` que si le compte est gestionnaire d'au moins un créneau actif encore valide.
 
 Pour chaque occurrence à venir :
 
-- avant l'ouverture de la fenêtre : information uniquement ;
-- dans la fenêtre : `Maintenir` ou `Libérer` ;
-- après libération et avant reprise : `Reprendre mon créneau` ;
-- après réservation par un tiers : état verrouillé, sans possibilité de reprise.
+- avant l'ouverture de la fenêtre : information uniquement avec la date d'ouverture de la gestion ;
+- dans la fenêtre : `Maintenir` ou `Libérer ce créneau` ;
+- après libération et avant reprise par un tiers : `Reprendre mon créneau` ;
+- après réservation par un tiers : état `Libéré · repris par un autre joueur`, sans possibilité de reprise.
+
+L'absence d'action ne change jamais l'état physique du créneau : l'occupation reste active et la ressource reste bloquée.
+
+## API d'interface
+
+Les interfaces utilisent uniquement des RPC dédiées ; elles n'accèdent jamais directement aux tables de créneaux permanents.
+
+- `admin_list_permanent_slots()` : liste d'administration ;
+- `admin_create_permanent_slot(...)` : création et matérialisation des occurrences ;
+- `admin_deactivate_permanent_slot(...)` : désactivation ;
+- `admin_list_permanent_slot_candidates()` : comptes pouvant être désignés titulaires ou gestionnaires ;
+- `has_my_permanent_slots()` : détermine si le menu personnel doit être affiché ;
+- `list_my_permanent_slot_occurrences(...)` : occurrences accessibles au gestionnaire connecté ;
+- `set_my_permanent_slot_occurrence_status(...)` : maintien, libération et reprise.
 
 ## Notifications prévues
 
