@@ -4,11 +4,15 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-const [component, styles, main] = await Promise.all([
-  read("../src/shared/components/forms/RequiredField.tsx"),
-  read("../src/styles/forms.css"),
-  read("../src/main.tsx"),
-]);
+const [component, styles, main, login, register, platformLogin] =
+  await Promise.all([
+    read("../src/shared/components/forms/RequiredField.tsx"),
+    read("../src/styles/forms.css"),
+    read("../src/main.tsx"),
+    read("../src/features/auth/pages/LoginPage.tsx"),
+    read("../src/features/auth/pages/RegisterPage.tsx"),
+    read("../src/features/platform/pages/PlatformLoginPage.tsx"),
+  ]);
 
 test("fournit une étoile et une légende communes pour les champs obligatoires", () => {
   assert.match(component, /RequiredFieldMark/);
@@ -27,4 +31,20 @@ test("met visuellement en évidence les contrôles required et invalides", () =>
 
 test("charge les styles de formulaire au démarrage de l'application", () => {
   assert.match(main, /\.\/styles\/forms\.css/);
+});
+
+test("signale les champs obligatoires dans les parcours d'authentification", () => {
+  assert.match(login, /Adresse e-mail <RequiredFieldMark \/>/);
+  assert.match(login, /Mot de passe <RequiredFieldMark \/>/);
+  assert.match(login, /<RequiredFieldsNotice \/>/);
+
+  assert.match(register, /Numéro de licence <RequiredFieldMark \/>/);
+  assert.match(register, /Date de naissance <RequiredFieldMark \/>/);
+  assert.match(register, /Adresse email <RequiredFieldMark \/>/);
+  assert.match(register, /Confirmer le mot de passe <RequiredFieldMark \/>/);
+  assert.match(register, /<RequiredFieldsNotice \/>/);
+
+  assert.match(platformLogin, /Adresse email <RequiredFieldMark \/>/);
+  assert.match(platformLogin, /Mot de passe <RequiredFieldMark \/>/);
+  assert.match(platformLogin, /<RequiredFieldsNotice \/>/);
 });
