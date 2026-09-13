@@ -1,6 +1,6 @@
 # 11 - Mode TV
 
-Version : 2.1
+Version : 2.2
 
 Ce document décrit le fonctionnement du Mode TV.
 
@@ -138,6 +138,8 @@ Actualités
 Informations pratiques
 
 La durée d'affichage de chaque écran est paramétrable.
+
+La télécommande peut également utiliser les touches gauche et droite pour passer immédiatement à l'écran précédent ou suivant. Deux chevrons très discrets apparaissent pendant l'interaction puis disparaissent après environ trois secondes d'inactivité. Après une navigation manuelle, la temporisation automatique repart de zéro sur le nouvel écran.
 
 ---
 
