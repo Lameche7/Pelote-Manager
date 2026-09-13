@@ -28,8 +28,12 @@ const [
   read(
     "../src/features/reservations/components/ReservationSplitPaymentFields.tsx",
   ),
-  read("../src/features/tournaments/components/TournamentRegistrationForm.tsx"),
-  read("../src/features/tournaments/components/TournamentAvailabilityGrid.tsx"),
+  read(
+    "../src/features/tournaments/components/TournamentRegistrationForm.tsx",
+  ),
+  read(
+    "../src/features/tournaments/components/TournamentAvailabilityGrid.tsx",
+  ),
 ]);
 
 test("fournit une étoile et une légende communes pour les champs obligatoires", () => {
@@ -102,7 +106,10 @@ test("signale les champs obligatoires de l'inscription tournoi", () => {
   );
   assert.match(tournamentRegistration, /Votre nom <RequiredFieldMark \/>/);
   assert.match(tournamentRegistration, /Votre club <RequiredFieldMark \/>/);
-  assert.match(tournamentRegistration, /Votre e-mail <RequiredFieldMark \/>/);
+  assert.match(
+    tournamentRegistration,
+    /Votre e-mail <RequiredFieldMark \/>/,
+  );
   assert.match(
     tournamentRegistration,
     /Votre téléphone <RequiredFieldMark \/>/,
@@ -134,10 +141,13 @@ test("signale les champs obligatoires de l'inscription tournoi", () => {
   );
 });
 
-test("signale les disponibilités obligatoires uniquement côté inscription tournoi", () => {
-  assert.match(tournamentAvailability, /!admin && \(/);
-  assert.match(tournamentAvailability, /<RequiredFieldMark \/>/);
-  assert.match(tournamentAvailability, /minimumAvailabilitySlots/);
-  assert.match(tournamentAvailability, /minimumWeekendAvailabilitySlots/);
-  assert.match(tournamentAvailability, /minimumFinalsAvailabilitySlots/);
-});
+test(
+  "signale les disponibilités obligatoires uniquement côté inscription tournoi",
+  () => {
+    assert.match(tournamentAvailability, /!admin && \(/);
+    assert.match(tournamentAvailability, /<RequiredFieldMark \/>/);
+    assert.match(tournamentAvailability, /minimumAvailabilitySlots/);
+    assert.match(tournamentAvailability, /minimumWeekendAvailabilitySlots/);
+    assert.match(tournamentAvailability, /minimumFinalsAvailabilitySlots/);
+  },
+);
