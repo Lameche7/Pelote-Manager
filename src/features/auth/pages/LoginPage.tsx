@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
-import { ROUTES } from "@/shared/config";
-import { useAuth } from "@/shared/hooks/useAuth";
 import { useFinalizeMemberRegistration } from "@/features/members/hooks/useMemberLookup";
 import {
   finalizePendingExternalParticipation,
   resendSignupConfirmation,
 } from "@/infrastructure/auth/authService";
+import { RequiredFieldMark, RequiredFieldsNotice } from "@/shared/components/forms/RequiredField";
+import { ROUTES } from "@/shared/config";
+import { useAuth } from "@/shared/hooks/useAuth";
 
 export function LoginPage() {
   const { isAuthenticated, login, refreshProfile } = useAuth();
@@ -89,7 +90,10 @@ export function LoginPage() {
         </p>
       )}
       <form onSubmit={(event) => void handleLogin(event)}>
-        <label htmlFor="email">Adresse e-mail</label>
+        <RequiredFieldsNotice />
+        <label htmlFor="email">
+          Adresse e-mail <RequiredFieldMark />
+        </label>
         <input
           id="email"
           name="email"
@@ -99,7 +103,9 @@ export function LoginPage() {
           onChange={(event) => setEmail(event.target.value)}
           required
         />
-        <label htmlFor="password">Mot de passe</label>
+        <label htmlFor="password">
+          Mot de passe <RequiredFieldMark />
+        </label>
         <input
           id="password"
           name="password"
