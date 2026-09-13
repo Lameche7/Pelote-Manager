@@ -3,6 +3,7 @@ import type {
   TournamentAvailabilitySlot,
   TournamentPhase,
 } from "@/features/tournaments/types";
+import { RequiredFieldMark } from "@/shared/components/forms/RequiredField";
 import "./TournamentAvailabilityGrid.css";
 
 const slotKey = (slot: TournamentAvailabilitySlot) =>
@@ -247,6 +248,12 @@ export function TournamentAvailabilityGrid({
             {admin
               ? "Disponibilités datées de l’équipe"
               : "Créneaux disponibles — poules & phase finale"}
+            {!admin && (
+              <>
+                {" "}
+                <RequiredFieldMark />
+              </>
+            )}
           </h3>
         </div>
         <strong>
