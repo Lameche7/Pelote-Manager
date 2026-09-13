@@ -202,9 +202,7 @@ export function MyPermanentSlotsPage() {
                               void updateOccurrence(occurrence, "released")
                             }
                           >
-                            {isSaving
-                              ? "Mise à jour…"
-                              : "Libérer ce créneau"}
+                            {isSaving ? "Mise à jour…" : "Libérer ce créneau"}
                           </button>
                         </>
                       )}
