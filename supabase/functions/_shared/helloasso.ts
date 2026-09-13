@@ -25,6 +25,33 @@ function baseUrls(environment: HelloAssoEnvironment) {
   };
 }
 
+function helloAssoErrorDetails(response: Response, rawBody: string): string | null {
+  const trimmed = rawBody.trim();
+  if (!trimmed) return null;
+
+  try {
+    const payload = JSON.parse(trimmed) as Record<string, unknown>;
+    const detail = [payload.error_description, payload.error, payload.message].find(
+      (value): value is string => typeof value === "string" && value.trim().length > 0,
+    );
+    if (detail) return detail.trim().slice(0, 500);
+  } catch {
+    // Certaines protections réseau renvoient une page HTML plutôt qu'un JSON API.
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (
+    contentType.includes("text/html") ||
+    /cloudflare|enable javascript|verify your connection|vérifier votre connexion|attention required/i.test(
+      trimmed,
+    )
+  ) {
+    return "La protection de sécurité HelloAsso/Cloudflare a bloqué la connexion du serveur.";
+  }
+
+  return trimmed.replace(/\s+/g, " ").slice(0, 500);
+}
+
 export async function getHelloAssoAccessToken(input: {
   environment: HelloAssoEnvironment;
   clientId: string;
@@ -39,12 +66,20 @@ export async function getHelloAssoAccessToken(input: {
 
   const response = await fetch(urls.oauth, {
     method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
+    headers: {
+      accept: "application/json",
+      "content-type": "application/x-www-form-urlencoded",
+    },
     body,
   });
 
   if (!response.ok) {
-    throw new Error(`Authentification HelloAsso impossible (${response.status}).`);
+    const details = helloAssoErrorDetails(response, await response.text());
+    throw new Error(
+      `Authentification HelloAsso impossible (${response.status})${
+        details ? ` : ${details}` : "."
+      }`,
+    );
   }
 
   const token = (await response.json()) as TokenResponse;
@@ -88,7 +123,9 @@ export async function createHelloAssoCheckout(input: {
 
   if (!response.ok) {
     const details = await response.text();
-    throw new Error(`Création du paiement HelloAsso impossible (${response.status}): ${details}`);
+    throw new Error(
+      `Création du paiement HelloAsso impossible (${response.status}): ${details}`,
+    );
   }
 
   return (await response.json()) as HelloAssoCheckoutIntent;
