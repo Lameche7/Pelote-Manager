@@ -132,6 +132,44 @@ const value = <T>({ data, error }: RpcResult): T => {
   return data as T;
 };
 
+const edgeFunctionErrorMessage = async (error: unknown) => {
+  const fallback =
+    error instanceof Error && error.message
+      ? error.message
+      : "Erreur lors de l’appel au service de paiement.";
+
+  if (!error || typeof error !== "object" || !("context" in error)) {
+    return fallback;
+  }
+
+  const context = (error as { context?: unknown }).context;
+  if (!(context instanceof Response)) return fallback;
+
+  try {
+    const payload = (await context.clone().json()) as {
+      error?: unknown;
+      message?: unknown;
+    };
+    if (typeof payload.error === "string" && payload.error.trim()) {
+      return payload.error.trim();
+    }
+    if (typeof payload.message === "string" && payload.message.trim()) {
+      return payload.message.trim();
+    }
+  } catch {
+    // Le corps n'est pas forcément du JSON.
+  }
+
+  try {
+    const text = (await context.clone().text()).trim();
+    if (text) return text;
+  } catch {
+    // On conserve le message Supabase générique en dernier recours.
+  }
+
+  return fallback;
+};
+
 const signedUrl = async (path: string, expiresIn = 300) => {
   const { data, error } = await supabase.storage
     .from("licence-documents")
@@ -197,7 +235,7 @@ export const licenceService = {
       "create-helloasso-checkout",
       { body: { paymentId } },
     );
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(await edgeFunctionErrorMessage(error));
     const redirectUrl = (data as { redirectUrl?: string } | null)?.redirectUrl;
     if (!redirectUrl) throw new Error("Lien HelloAsso introuvable.");
     return { paymentId, mode, redirectUrl };

@@ -97,6 +97,13 @@ test("réutilise HelloAsso pour les licences quand le mode officiel est actif", 
   assert.match(service, /mode === "test"/);
 });
 
+test("affiche le vrai message renvoyé par la fonction HelloAsso", () => {
+  assert.match(service, /const edgeFunctionErrorMessage = async/);
+  assert.match(service, /context instanceof Response/);
+  assert.match(service, /payload\.error/);
+  assert.match(service, /await edgeFunctionErrorMessage\(error\)/);
+});
+
 test("simule le paiement des licences sans appeler HelloAsso en mode test", () => {
   assert.match(service, /simulate_licence_payment/);
   assert.match(playerPage, /Simuler le paiement \(mode test\)/);
