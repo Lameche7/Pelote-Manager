@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { RequiredFieldMark, RequiredFieldsNotice } from "@/shared/components/forms/RequiredField";
 import { ROUTES } from "@/shared/config";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
 import "./PlatformPages.css";
@@ -52,8 +53,11 @@ export function PlatformLoginPage() {
           </div>
         ) : (
           <form className="platform-form" onSubmit={handleSubmit}>
+            <RequiredFieldsNotice />
             <label>
-              Adresse email
+              <span>
+                Adresse email <RequiredFieldMark />
+              </span>
               <input
                 type="email"
                 autoComplete="username"
@@ -63,7 +67,9 @@ export function PlatformLoginPage() {
               />
             </label>
             <label>
-              Mot de passe
+              <span>
+                Mot de passe <RequiredFieldMark />
+              </span>
               <input
                 type="password"
                 autoComplete="current-password"
