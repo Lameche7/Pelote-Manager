@@ -74,7 +74,9 @@ export function getSupabaseErrorMessage(
   if (
     normalized.includes("impossible de créer le créneau permanent : conflit le")
   ) {
-    const conflictDate = message.match(/conflit le\s+(\d{2}\/\d{2}\/\d{4})/i)?.[1];
+    const conflictDate = message.match(
+      /conflit le\s+(\d{2}\/\d{2}\/\d{4})/i,
+    )?.[1];
     return conflictDate
       ? `Impossible de créer ce créneau permanent : le terrain est déjà occupé le ${conflictDate}.`
       : "Impossible de créer ce créneau permanent : au moins une occurrence est déjà occupée.";
