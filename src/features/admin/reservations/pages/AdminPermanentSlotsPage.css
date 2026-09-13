@@ -47,6 +47,11 @@
   box-shadow: 0 0.8rem 2rem rgb(8 58 44 / 7%);
 }
 
+.admin-permanent-slots__editing-help {
+  margin: 0;
+  color: var(--muted);
+}
+
 .admin-permanent-slots__grid {
   display: grid;
   gap: 1rem;
@@ -83,7 +88,15 @@
   grid-column: 1 / -1;
 }
 
-.admin-permanent-slots__panel > button,
+.admin-permanent-slots__actions,
+.admin-permanent-slots__slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-permanent-slots__actions button,
 .admin-permanent-slots__slot button {
   width: fit-content;
   padding: 0.7rem 1rem;
@@ -95,9 +108,15 @@
   cursor: pointer;
 }
 
-.admin-permanent-slots__panel > button:disabled {
+.admin-permanent-slots__actions button:disabled {
   opacity: 0.55;
   cursor: wait;
+}
+
+.admin-permanent-slots__actions .admin-permanent-slots__secondary {
+  border: 1px solid rgb(8 58 44 / 18%);
+  color: var(--brand-green);
+  background: #fff;
 }
 
 .admin-permanent-slots__list {
