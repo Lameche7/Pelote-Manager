@@ -4,16 +4,25 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-const [component, styles, main, login, register, platformLogin, profile] =
-  await Promise.all([
-    read("../src/shared/components/forms/RequiredField.tsx"),
-    read("../src/styles/forms.css"),
-    read("../src/main.tsx"),
-    read("../src/features/auth/pages/LoginPage.tsx"),
-    read("../src/features/auth/pages/RegisterPage.tsx"),
-    read("../src/features/platform/pages/PlatformLoginPage.tsx"),
-    read("../src/features/user-space/profile/pages/MyProfilePage.tsx"),
-  ]);
+const [
+  component,
+  styles,
+  main,
+  login,
+  register,
+  platformLogin,
+  profile,
+  licence,
+] = await Promise.all([
+  read("../src/shared/components/forms/RequiredField.tsx"),
+  read("../src/styles/forms.css"),
+  read("../src/main.tsx"),
+  read("../src/features/auth/pages/LoginPage.tsx"),
+  read("../src/features/auth/pages/RegisterPage.tsx"),
+  read("../src/features/platform/pages/PlatformLoginPage.tsx"),
+  read("../src/features/user-space/profile/pages/MyProfilePage.tsx"),
+  read("../src/features/licences/pages/MyLicencePage.tsx"),
+]);
 
 test("fournit une étoile et une légende communes pour les champs obligatoires", () => {
   assert.match(component, /RequiredFieldMark/);
@@ -56,4 +65,14 @@ test("signale les champs obligatoires du rattachement de licence dans Mon profil
   assert.match(profile, /Prénom <RequiredFieldMark \/>/);
   assert.match(profile, /Date de naissance <RequiredFieldMark \/>/);
   assert.match(profile, /<RequiredFieldsNotice \/>/);
+});
+
+test("signale les champs obligatoires dans Ma licence", () => {
+  assert.match(licence, /Prénom <RequiredFieldMark \/>/);
+  assert.match(licence, /Nom <RequiredFieldMark \/>/);
+  assert.match(licence, /Date de naissance <RequiredFieldMark \/>/);
+  assert.match(licence, /Sexe <RequiredFieldMark \/>/);
+  assert.match(licence, /Document à déposer <RequiredFieldMark \/>/);
+  assert.match(licence, /Téléphone\s*\n\s*<input name="phone" type="tel" \/>/);
+  assert.match(licence, /<RequiredFieldsNotice \/>/);
 });

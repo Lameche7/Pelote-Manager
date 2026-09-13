@@ -8,6 +8,10 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 import { useAuth } from "@/shared/hooks/useAuth";
 import {
   licenceService,
@@ -327,8 +331,9 @@ export function MyLicencePage() {
                 className="my-licence__form"
                 onSubmit={(event) => void startFirstApplication(event)}
               >
+                <RequiredFieldsNotice />
                 <label>
-                  Prénom
+                  Prénom <RequiredFieldMark />
                   <input
                     name="firstName"
                     required
@@ -336,7 +341,7 @@ export function MyLicencePage() {
                   />
                 </label>
                 <label>
-                  Nom
+                  Nom <RequiredFieldMark />
                   <input
                     name="lastName"
                     required
@@ -344,11 +349,11 @@ export function MyLicencePage() {
                   />
                 </label>
                 <label>
-                  Date de naissance
+                  Date de naissance <RequiredFieldMark />
                   <input name="birthDate" type="date" required />
                 </label>
                 <label>
-                  Sexe
+                  Sexe <RequiredFieldMark />
                   <select name="gender" required>
                     <option value="">Choisir</option>
                     <option value="female">Femme</option>
@@ -422,12 +427,16 @@ export function MyLicencePage() {
                 {portal.request.status !== "approved" &&
                   portal.request.status !== "licensed" && (
                     <form onSubmit={(event) => void uploadDocument(event)}>
-                      <input
-                        name="document"
-                        type="file"
-                        required
-                        accept="application/pdf,image/jpeg,image/png,image/webp"
-                      />
+                      <RequiredFieldsNotice />
+                      <label>
+                        Document à déposer <RequiredFieldMark />
+                        <input
+                          name="document"
+                          type="file"
+                          required
+                          accept="application/pdf,image/jpeg,image/png,image/webp"
+                        />
+                      </label>
                       <button disabled={busy}>
                         {portal.request.documentPath
                           ? "Remplacer"
