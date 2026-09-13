@@ -127,7 +127,9 @@ export function getSupabaseErrorMessage(
     return "Le créneau d’aujourd’hui a déjà commencé. Modifiez la série à partir d’une date ultérieure.";
   }
   if (
-    normalized.includes("impossible de modifier le créneau permanent : conflit le")
+    normalized.includes(
+      "impossible de modifier le créneau permanent : conflit le",
+    )
   ) {
     const conflictDate = message.match(
       /conflit le\s+(\d{2}\/\d{2}\/\d{4})/i,
