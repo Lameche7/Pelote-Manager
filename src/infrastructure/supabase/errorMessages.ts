@@ -76,11 +76,6 @@ export function getSupabaseErrorMessage(
   if (normalized.includes("date de fin du créneau permanent déjà passée")) {
     return "La date de fin du créneau permanent est déjà passée.";
   }
-  if (
-    normalized.includes("période du créneau permanent supérieure à deux ans")
-  ) {
-    return "La période d’un créneau permanent ne peut pas dépasser deux ans.";
-  }
   if (normalized.includes("délai de gestion du créneau permanent invalide")) {
     return "Le délai de gestion du créneau permanent n’est pas valide.";
   }
@@ -123,6 +118,23 @@ export function getSupabaseErrorMessage(
     return conflictDate
       ? `Impossible de créer ce créneau permanent : le terrain est déjà occupé le ${conflictDate}.`
       : "Impossible de créer ce créneau permanent : au moins une occurrence est déjà occupée.";
+  }
+  if (
+    normalized.includes(
+      "impossible de modifier le créneau permanent : occurrence du jour déjà commencée",
+    )
+  ) {
+    return "Le créneau d’aujourd’hui a déjà commencé. Modifiez la série à partir d’une date ultérieure.";
+  }
+  if (
+    normalized.includes("impossible de modifier le créneau permanent : conflit le")
+  ) {
+    const conflictDate = message.match(
+      /conflit le\s+(\d{2}\/\d{2}\/\d{4})/i,
+    )?.[1];
+    return conflictDate
+      ? `Impossible de modifier ce créneau permanent : le terrain est déjà occupé le ${conflictDate}.`
+      : "Impossible de modifier ce créneau permanent : au moins une occurrence future est déjà occupée.";
   }
 
   if (code === "PGRST202") {
