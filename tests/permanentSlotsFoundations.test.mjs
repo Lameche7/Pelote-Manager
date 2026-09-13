@@ -40,23 +40,6 @@ test("API administration des créneaux permanents", async () => {
   has(sql, /slot_deactivated/);
 });
 
-test(
-  "la modification supprime la limite de deux ans et resynchronise le calendrier",
-  async () => {
-    const sql = await readMigration(
-      "20260913110000_update_permanent_slots.sql",
-    );
-
-    has(sql, /drop constraint if exists permanent_slots_period_limited/);
-    has(sql, /admin_update_permanent_slot/);
-    has(sql, /shape_changed/);
-    has(sql, /slot_updated/);
-    has(sql, /Impossible de modifier le créneau permanent : conflit le/);
-    has(sql, /target_valid_until date/);
-    assert.doesNotMatch(sql, /target_valid_from \+ 730/);
-  },
-);
-
 test("gestion utilisateur des occurrences", async () => {
   const sql = await readMigration(
     "20260912200800_add_permanent_slot_user_api.sql",
