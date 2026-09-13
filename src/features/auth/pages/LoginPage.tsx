@@ -6,7 +6,10 @@ import {
   finalizePendingExternalParticipation,
   resendSignupConfirmation,
 } from "@/infrastructure/auth/authService";
-import { RequiredFieldMark, RequiredFieldsNotice } from "@/shared/components/forms/RequiredField";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 
