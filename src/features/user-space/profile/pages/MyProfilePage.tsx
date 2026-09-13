@@ -15,6 +15,10 @@ import {
   memberProfileService,
   type MemberProfileDetails,
 } from "@/features/user-space/profile/services/memberProfileService";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 import { CLUB_CONFIG } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MyProfilePage.css";
@@ -481,9 +485,10 @@ export function MyProfilePage() {
                 </button>
               </div>
 
+              <RequiredFieldsNotice />
               <div className="my-profile__licence-fields">
                 <label>
-                  Numéro de licence
+                  Numéro de licence <RequiredFieldMark />
                   <input
                     value={licenceIdentity.licenceNumber}
                     onChange={(event) =>
@@ -494,7 +499,7 @@ export function MyProfilePage() {
                   />
                 </label>
                 <label>
-                  Nom
+                  Nom <RequiredFieldMark />
                   <input
                     autoComplete="family-name"
                     value={licenceIdentity.lastName}
@@ -506,7 +511,7 @@ export function MyProfilePage() {
                   />
                 </label>
                 <label>
-                  Prénom
+                  Prénom <RequiredFieldMark />
                   <input
                     autoComplete="given-name"
                     value={licenceIdentity.firstName}
@@ -518,7 +523,7 @@ export function MyProfilePage() {
                   />
                 </label>
                 <label>
-                  Date de naissance
+                  Date de naissance <RequiredFieldMark />
                   <input
                     type="date"
                     value={licenceIdentity.birthDate}

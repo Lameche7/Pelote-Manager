@@ -4,7 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-const [component, styles, main, login, register, platformLogin] =
+const [component, styles, main, login, register, platformLogin, profile] =
   await Promise.all([
     read("../src/shared/components/forms/RequiredField.tsx"),
     read("../src/styles/forms.css"),
@@ -12,6 +12,7 @@ const [component, styles, main, login, register, platformLogin] =
     read("../src/features/auth/pages/LoginPage.tsx"),
     read("../src/features/auth/pages/RegisterPage.tsx"),
     read("../src/features/platform/pages/PlatformLoginPage.tsx"),
+    read("../src/features/user-space/profile/pages/MyProfilePage.tsx"),
   ]);
 
 test("fournit une étoile et une légende communes pour les champs obligatoires", () => {
@@ -47,4 +48,12 @@ test("signale les champs obligatoires dans les parcours d'authentification", () 
   assert.match(platformLogin, /Adresse email <RequiredFieldMark \/>/);
   assert.match(platformLogin, /Mot de passe <RequiredFieldMark \/>/);
   assert.match(platformLogin, /<RequiredFieldsNotice \/>/);
+});
+
+test("signale les champs obligatoires du rattachement de licence dans Mon profil", () => {
+  assert.match(profile, /Numéro de licence <RequiredFieldMark \/>/);
+  assert.match(profile, /Nom <RequiredFieldMark \/>/);
+  assert.match(profile, /Prénom <RequiredFieldMark \/>/);
+  assert.match(profile, /Date de naissance <RequiredFieldMark \/>/);
+  assert.match(profile, /<RequiredFieldsNotice \/>/);
 });
