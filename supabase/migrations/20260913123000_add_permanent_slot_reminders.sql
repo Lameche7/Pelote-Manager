@@ -46,7 +46,8 @@ begin
     slot.management_window_hours,
     occupation.starts_at,
     occupation.ends_at,
-    resource.name as resource_name
+    resource.name as resource_name,
+    resource.timezone as resource_timezone
   into target
   from public.permanent_slot_occurrences as occurrence
   join public.permanent_slots as slot
@@ -84,9 +85,9 @@ begin
       'Votre créneau « %s » sur %s est prévu le %s de %s à %s. Vous pouvez le maintenir ou le libérer depuis Mes créneaux permanents.',
       target.label,
       target.resource_name,
-      to_char(target.starts_at, 'DD/MM/YYYY'),
-      to_char(target.starts_at, 'HH24:MI'),
-      to_char(target.ends_at, 'HH24:MI')
+      to_char(target.starts_at at time zone target.resource_timezone, 'DD/MM/YYYY'),
+      to_char(target.starts_at at time zone target.resource_timezone, 'HH24:MI'),
+      to_char(target.ends_at at time zone target.resource_timezone, 'HH24:MI')
     );
   else
     if target.management_window_hours <= 24
@@ -100,9 +101,9 @@ begin
       'Votre créneau « %s » sur %s est prévu le %s de %s à %s. Si vous ne l’utilisez pas, pensez à le libérer.',
       target.label,
       target.resource_name,
-      to_char(target.starts_at, 'DD/MM/YYYY'),
-      to_char(target.starts_at, 'HH24:MI'),
-      to_char(target.ends_at, 'HH24:MI')
+      to_char(target.starts_at at time zone target.resource_timezone, 'DD/MM/YYYY'),
+      to_char(target.starts_at at time zone target.resource_timezone, 'HH24:MI'),
+      to_char(target.ends_at at time zone target.resource_timezone, 'HH24:MI')
     );
   end if;
 
