@@ -19,7 +19,7 @@ test("la télécommande permet de passer à l'écran précédent ou suivant", as
   assert.match(navigation, /Écran suivant/);
 });
 
-test("les commandes disparaissent après inactivité", async () => {
+test("les commandes disparaissent après inactivité même si un bouton garde le focus", async () => {
   const [navigation, styles] = await Promise.all([
     read("../src/features/tv/components/TvRemoteNavigation.tsx"),
     read("../src/features/tv/components/TvRemoteNavigation.css"),
@@ -30,6 +30,7 @@ test("les commandes disparaissent après inactivité", async () => {
   assert.match(navigation, /pointermove/);
   assert.match(styles, /opacity: 0/);
   assert.match(styles, /tv-remote-navigation--visible/);
+  assert.doesNotMatch(styles, /tv-remote-navigation:focus-within/);
 });
 
 test("une navigation manuelle redémarre la temporisation automatique", async () => {
