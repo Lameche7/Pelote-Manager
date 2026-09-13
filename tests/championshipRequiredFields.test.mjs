@@ -19,7 +19,7 @@ test("signale les scores obligatoires de la saisie de résultat", () => {
   );
   assert.match(
     source,
-    /\{isSets \? "Manches adverses" : "Points adverses"\} <RequiredFieldMark \/>/,
+    /\{isSets \? "Manches adverses" : "Points adverses"\}\{" "\}\s*<RequiredFieldMark \/>/,
   );
   assert.match(source, /<RequiredFieldsNotice \/>/);
 });
