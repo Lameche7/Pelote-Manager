@@ -50,7 +50,7 @@ test("le titulaire peut maintenir, libérer puis reprendre une occurrence", asyn
   assert.match(service, /set_my_permanent_slot_occurrence_status/);
 });
 
-test("l'administration peut créer et désactiver un créneau permanent", async () => {
+test("l'administration peut créer, modifier et désactiver un créneau permanent", async () => {
   const [page, service, navigation] = await Promise.all([
     read(
       "../src/features/admin/reservations/pages/AdminPermanentSlotsPage.tsx",
@@ -62,9 +62,13 @@ test("l'administration peut créer et désactiver un créneau permanent", async 
   ]);
 
   assert.match(page, /Nouveau créneau permanent/);
+  assert.match(page, /Modifier le créneau permanent/);
+  assert.match(page, /Enregistrer les modifications/);
+  assert.match(page, /editingSlotId/);
   assert.match(page, /managementWindowHours/);
   assert.match(page, /primaryProfileId/);
   assert.match(service, /admin_create_permanent_slot/);
+  assert.match(service, /admin_update_permanent_slot/);
   assert.match(service, /admin_deactivate_permanent_slot/);
   assert.match(navigation, /Créneaux permanents/);
 });
