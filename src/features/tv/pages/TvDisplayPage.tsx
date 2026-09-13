@@ -33,6 +33,7 @@ import {
   tvTournamentService,
   type TvTournamentSeries,
 } from "@/features/tv/services/tvTournamentService";
+import { TvRemoteNavigation } from "@/features/tv/components/TvRemoteNavigation";
 import { TvTournamentSeriesView } from "./TvTournamentSeriesView";
 import "./TvDisplayPage.css";
 import "./TvWeeklyView.css";
@@ -120,6 +121,12 @@ const buildQrImageUrl = (value: string) =>
 const nextTvView = (current: TvView, order: TvView[]): TvView => {
   const currentIndex = order.indexOf(current);
   return order[(currentIndex + 1) % order.length] ?? "today";
+};
+
+const previousTvView = (current: TvView, order: TvView[]): TvView => {
+  const currentIndex = order.indexOf(current);
+  const previousIndex = currentIndex <= 0 ? order.length - 1 : currentIndex - 1;
+  return order[previousIndex] ?? "today";
 };
 
 const viewEyebrow = (
@@ -295,6 +302,14 @@ export function TvDisplayPage() {
     [tournamentSeries],
   );
 
+  const showPreviousView = useCallback(() => {
+    setActiveView((current) => previousTvView(current, viewOrder));
+  }, [viewOrder]);
+
+  const showNextView = useCallback(() => {
+    setActiveView((current) => nextTvView(current, viewOrder));
+  }, [viewOrder]);
+
   const activeTournamentSeries = useMemo(
     () =>
       tournamentSeries.find((series) => series.viewKey === activeView) ?? null,
@@ -308,12 +323,12 @@ export function TvDisplayPage() {
   useEffect(() => {
     if (display?.status !== "ready") return;
 
-    const rotation = window.setInterval(() => {
+    const rotation = window.setTimeout(() => {
       setActiveView((current) => nextTvView(current, viewOrder));
     }, display.viewDurationSeconds * 1_000);
 
-    return () => window.clearInterval(rotation);
-  }, [display?.status, display?.viewDurationSeconds, viewOrder]);
+    return () => window.clearTimeout(rotation);
+  }, [activeView, display?.status, display?.viewDurationSeconds, viewOrder]);
 
   const clubName = display?.clubName || CLUB_CONFIG.name;
   const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
@@ -644,6 +659,11 @@ export function TvDisplayPage() {
           </div>
         </section>
       )}
+
+      <TvRemoteNavigation
+        onPrevious={showPreviousView}
+        onNext={showNextView}
+      />
 
       <footer className="tv-display__footer">
         <span>
