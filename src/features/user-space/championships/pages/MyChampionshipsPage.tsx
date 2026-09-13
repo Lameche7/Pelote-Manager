@@ -22,6 +22,10 @@ import {
   type MyChampionship,
   type MyChampionshipMatch,
 } from "@/features/user-space/championships/services/myChampionshipsService";
+import {
+  RequiredFieldMark,
+  RequiredFieldsNotice,
+} from "@/shared/components/forms/RequiredField";
 import "./MyChampionshipsPage.css";
 
 const statusLabels: Record<string, string> = {
@@ -241,9 +245,12 @@ function ResultSubmission({
 
       {canSubmit && editing && winningScore !== null && (
         <form className="my-championships__submission-form" onSubmit={submit}>
+          <RequiredFieldsNotice />
           <div className="my-championships__score-fields">
             <label>
-              <span>{isSets ? "Nos manches" : "Nos points"}</span>
+              <span>
+                {isSets ? "Nos manches" : "Nos points"} <RequiredFieldMark />
+              </span>
               <input
                 type="number"
                 min="0"
@@ -255,7 +262,10 @@ function ResultSubmission({
               />
             </label>
             <label>
-              <span>{isSets ? "Manches adverses" : "Points adverses"}</span>
+              <span>
+                {isSets ? "Manches adverses" : "Points adverses"}{" "}
+                <RequiredFieldMark />
+              </span>
               <input
                 type="number"
                 min="0"
