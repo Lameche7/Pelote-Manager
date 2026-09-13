@@ -92,19 +92,25 @@ test("signale la sélection obligatoire des joueurs pour un paiement partagé", 
   assert.match(splitPayment, /Rechercher un joueur/);
 });
 
-test("signale les champs obligatoires dans l'administration des licences", () => {
-  assert.match(adminLicences, /Saison <RequiredFieldMark \/>/);
-  assert.match(adminLicences, /Tarif renouvellement \(€\) <RequiredFieldMark \/>/);
-  assert.match(
-    adminLicences,
-    /Tarif première licence \(€\) <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    adminLicences,
-    /const templateRequired = campaignOpen && !campaign\?\.applicationFormPath/,
-  );
-  assert.match(adminLicences, /required=\{templateRequired\}/);
-  assert.match(adminLicences, /Motif du refus <RequiredFieldMark \/>/);
-  assert.match(adminLicences, /Numéro de licence FFPB <RequiredFieldMark \/>/);
-  assert.doesNotMatch(adminLicences, /window\.prompt/);
-});
+test(
+  "signale les champs obligatoires dans l'administration des licences",
+  () => {
+    assert.match(adminLicences, /Saison <RequiredFieldMark \/>/);
+    assert.match(
+      adminLicences,
+      /Tarif renouvellement \(€\) <RequiredFieldMark \/>/,
+    );
+    assert.match(
+      adminLicences,
+      /Tarif première licence \(€\) <RequiredFieldMark \/>/,
+    );
+    assert.match(
+      adminLicences,
+      /const templateRequired = campaignOpen && !campaign\?\.applicationFormPath/,
+    );
+    assert.match(adminLicences, /required=\{templateRequired\}/);
+    assert.match(adminLicences, /Motif du refus <RequiredFieldMark \/>/);
+    assert.match(adminLicences, /Numéro de licence FFPB <RequiredFieldMark \/>/);
+    assert.doesNotMatch(adminLicences, /window\.prompt/);
+  },
+);
