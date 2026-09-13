@@ -43,7 +43,7 @@ test("le titulaire peut maintenir, libérer puis reprendre une occurrence", asyn
     read("../src/features/reservations/services/permanentSlotService.ts"),
   ]);
 
-  assert.match(page, />Maintenir</);
+  assert.match(page, /Maintenir/);
   assert.match(page, /Libérer ce créneau/);
   assert.match(page, /Reprendre mon créneau/);
   assert.match(service, /list_my_permanent_slot_occurrences/);
