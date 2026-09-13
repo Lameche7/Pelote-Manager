@@ -16,6 +16,7 @@ const [
   paymentMigration,
   licencePaymentModeMigration,
   checkout,
+  helloAssoShared,
 ] = await Promise.all([
   read("../src/shared/config/routes.ts"),
   read("../src/features/user-space/components/UserSpaceShell.tsx"),
@@ -30,6 +31,7 @@ const [
   ),
   read("../supabase/migrations/20260911140000_add_licence_payment_mode.sql"),
   read("../supabase/functions/create-helloasso-checkout/index.ts"),
+  read("../supabase/functions/_shared/helloasso.ts"),
 ]);
 
 test("expose Ma licence dans l'espace joueur", () => {
@@ -102,6 +104,15 @@ test("affiche le vrai message renvoyé par la fonction HelloAsso", () => {
   assert.match(service, /context instanceof Response/);
   assert.match(service, /payload\.error/);
   assert.match(service, /await edgeFunctionErrorMessage\(error\)/);
+});
+
+test("détaille les refus OAuth HelloAsso sans exposer les identifiants", () => {
+  assert.match(helloAssoShared, /helloAssoErrorDetails/);
+  assert.match(helloAssoShared, /payload\.error_description/);
+  assert.match(helloAssoShared, /payload\.message/);
+  assert.match(helloAssoShared, /HelloAsso\/Cloudflare/);
+  assert.match(helloAssoShared, /accept: "application\/json"/);
+  assert.match(helloAssoShared, /await response\.text\(\)/);
 });
 
 test("simule le paiement des licences sans appeler HelloAsso en mode test", () => {
