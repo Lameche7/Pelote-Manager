@@ -40,6 +40,46 @@ export function getSupabaseErrorMessage(
   if (normalized.includes("délai d’annulation en ligne est dépassé")) {
     return "L’annulation n’est plus possible : le délai autorisé avant le créneau est dépassé.";
   }
+
+  if (normalized.includes("paramètres du créneau permanent invalides")) {
+    return "Le créneau permanent n’est pas valide. Vérifiez le jour, l’horaire, la période et le délai de gestion.";
+  }
+  if (normalized.includes("terrain invalide")) {
+    return "Le terrain sélectionné n’est pas disponible pour ce créneau permanent.";
+  }
+  if (
+    normalized.includes(
+      "le titulaire principal doit posséder un compte pilotoki",
+    )
+  ) {
+    return "Le titulaire principal doit posséder un compte PILOTOKI.";
+  }
+  if (
+    normalized.includes(
+      "un gestionnaire sélectionné ne possède pas de compte pilotoki",
+    )
+  ) {
+    return "Un des gestionnaires sélectionnés ne possède pas de compte PILOTOKI.";
+  }
+  if (
+    normalized.includes(
+      "le créneau permanent doit avoir la durée de réservation configurée",
+    )
+  ) {
+    const duration = message.match(/\((\d+)\s*min\)/i)?.[1];
+    return duration
+      ? `Ce créneau permanent doit durer ${duration} minutes.`
+      : "La durée du créneau permanent ne correspond pas à la durée de réservation configurée.";
+  }
+  if (
+    normalized.includes("impossible de créer le créneau permanent : conflit le")
+  ) {
+    const conflictDate = message.match(/conflit le\s+(\d{2}\/\d{2}\/\d{4})/i)?.[1];
+    return conflictDate
+      ? `Impossible de créer ce créneau permanent : le terrain est déjà occupé le ${conflictDate}.`
+      : "Impossible de créer ce créneau permanent : au moins une occurrence est déjà occupée.";
+  }
+
   if (code === "PGRST202") {
     return "Cette fonction vient d’être ajoutée mais n’est pas encore visible par l’API. Rechargez le schéma Supabase puis réessayez.";
   }
