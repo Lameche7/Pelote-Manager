@@ -518,8 +518,8 @@ export function AdminLicencesPage() {
                       disabled={busy}
                       onClick={() => void review(request, "mark_licensed")}
                     >
-                      <BadgeCheck aria-hidden="true" /> Confirmer le
-                      renouvellement
+                      <BadgeCheck aria-hidden="true" />{" "}
+                      {"Confirmer le renouvellement"}
                     </button>
                   ) : (
                     <button
