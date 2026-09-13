@@ -1,0 +1,36 @@
+:root {
+  --form-required: #b42318;
+  --form-required-soft: rgb(180 35 24 / 9%);
+}
+
+.required-field-mark {
+  margin-inline-start: 0.16rem;
+  color: var(--form-required);
+  font-weight: 900;
+}
+
+.required-fields-notice {
+  margin: 0.35rem 0 0;
+  color: #6b4a47;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+:where(input, select, textarea)[required]:not([type="checkbox"]):not([type="radio"]):not([type="color"]) {
+  border-inline-start-color: var(--form-required);
+  background-image: linear-gradient(90deg, var(--form-required-soft), transparent 0.55rem);
+  background-repeat: no-repeat;
+}
+
+:where(input, select, textarea)[aria-invalid="true"] {
+  border-color: var(--form-required);
+  outline: 2px solid rgb(180 35 24 / 18%);
+  outline-offset: 1px;
+}
+
+.field-error {
+  margin: 0.25rem 0 0;
+  color: var(--form-required);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
