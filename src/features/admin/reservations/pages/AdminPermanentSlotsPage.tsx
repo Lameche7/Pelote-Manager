@@ -27,9 +27,13 @@ function addMinutes(time: string, minutes: number): string {
 }
 
 export function AdminPermanentSlotsPage() {
-  const [slots, setSlots] = useState<Awaited<ReturnType<typeof adminPermanentSlotService.listSlots>>>([]);
+  const [slots, setSlots] = useState<
+    Awaited<ReturnType<typeof adminPermanentSlotService.listSlots>>
+  >([]);
   const [resources, setResources] = useState<ReservableResource[]>([]);
-  const [candidates, setCandidates] = useState<Awaited<ReturnType<typeof adminPermanentSlotService.listCandidates>>>([]);
+  const [candidates, setCandidates] = useState<
+    Awaited<ReturnType<typeof adminPermanentSlotService.listCandidates>>
+  >([]);
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -127,7 +131,12 @@ export function AdminPermanentSlotsPage() {
   }
 
   async function deactivateSlot(slotId: string) {
-    if (!window.confirm("Désactiver ce créneau permanent et ses occurrences futures ?")) return;
+    if (
+      !window.confirm(
+        "Désactiver ce créneau permanent et ses occurrences futures ?",
+      )
+    )
+      return;
     setError(null);
     setMessage(null);
     try {
@@ -144,54 +153,122 @@ export function AdminPermanentSlotsPage() {
   }
 
   return (
-    <section className="admin-permanent-slots" aria-labelledby="permanent-slots-title">
+    <section
+      className="admin-permanent-slots"
+      aria-labelledby="permanent-slots-title"
+    >
       <header>
         <p className="admin-permanent-slots__eyebrow">Réservations</p>
         <h1 id="permanent-slots-title">Créneaux permanents</h1>
         <p>
           Réservez un horaire récurrent à un titulaire. Chaque occurrence reste
-          bloquée par défaut et pourra être libérée ponctuellement par ses gestionnaires.
+          bloquée par défaut et pourra être libérée ponctuellement par ses
+          gestionnaires.
         </p>
       </header>
 
-      {error && <p className="admin-permanent-slots__alert admin-permanent-slots__alert--error" role="alert">{error}</p>}
-      {message && <p className="admin-permanent-slots__alert" role="status">{message}</p>}
+      {error && (
+        <p
+          className="admin-permanent-slots__alert admin-permanent-slots__alert--error"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="admin-permanent-slots__alert" role="status">
+          {message}
+        </p>
+      )}
 
       <div className="admin-permanent-slots__panel">
         <h2>Nouveau créneau permanent</h2>
         <div className="admin-permanent-slots__grid">
           <label>
             <span>Libellé</span>
-            <input value={form.label} onChange={(event) => setForm({ ...form, label: event.target.value })} placeholder="Ex. Groupe du mardi" />
+            <input
+              value={form.label}
+              onChange={(event) =>
+                setForm({ ...form, label: event.target.value })
+              }
+              placeholder="Ex. Groupe du mardi"
+            />
           </label>
           <label>
             <span>Terrain</span>
-            <select value={form.resourceId} onChange={(event) => setForm({ ...form, resourceId: event.target.value })}>
-              {resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}
+            <select
+              value={form.resourceId}
+              onChange={(event) =>
+                setForm({ ...form, resourceId: event.target.value })
+              }
+            >
+              {resources.map((resource) => (
+                <option key={resource.id} value={resource.id}>
+                  {resource.name}
+                </option>
+              ))}
             </select>
           </label>
           <label>
             <span>Jour</span>
-            <select value={form.weekday} onChange={(event) => setForm({ ...form, weekday: Number(event.target.value) })}>
-              {WEEKDAYS.map((day, index) => <option key={day} value={index + 1}>{day}</option>)}
+            <select
+              value={form.weekday}
+              onChange={(event) =>
+                setForm({ ...form, weekday: Number(event.target.value) })
+              }
+            >
+              {WEEKDAYS.map((day, index) => (
+                <option key={day} value={index + 1}>
+                  {day}
+                </option>
+              ))}
             </select>
           </label>
           <label>
             <span>Début</span>
-            <input type="time" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} />
-            <small>Fin automatique : {endsAt} ({durationMinutes} min)</small>
+            <input
+              type="time"
+              value={form.startsAt}
+              onChange={(event) =>
+                setForm({ ...form, startsAt: event.target.value })
+              }
+            />
+            <small>
+              Fin automatique : {endsAt} ({durationMinutes} min)
+            </small>
           </label>
           <label>
             <span>Du</span>
-            <input type="date" value={form.validFrom} onChange={(event) => setForm({ ...form, validFrom: event.target.value })} />
+            <input
+              type="date"
+              value={form.validFrom}
+              onChange={(event) =>
+                setForm({ ...form, validFrom: event.target.value })
+              }
+            />
           </label>
           <label>
             <span>Au</span>
-            <input type="date" min={form.validFrom} value={form.validUntil} onChange={(event) => setForm({ ...form, validUntil: event.target.value })} />
+            <input
+              type="date"
+              min={form.validFrom}
+              value={form.validUntil}
+              onChange={(event) =>
+                setForm({ ...form, validUntil: event.target.value })
+              }
+            />
           </label>
           <label>
             <span>Gestion ouverte avant</span>
-            <select value={form.managementWindowHours} onChange={(event) => setForm({ ...form, managementWindowHours: Number(event.target.value) })}>
+            <select
+              value={form.managementWindowHours}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  managementWindowHours: Number(event.target.value),
+                })
+              }
+            >
               <option value={24}>24 heures</option>
               <option value={48}>48 heures</option>
               <option value={72}>72 heures</option>
@@ -199,8 +276,17 @@ export function AdminPermanentSlotsPage() {
           </label>
           <label>
             <span>Titulaire principal</span>
-            <select value={form.primaryProfileId} onChange={(event) => setForm({ ...form, primaryProfileId: event.target.value })}>
-              {candidates.map((candidate) => <option key={candidate.profileId} value={candidate.profileId}>{candidate.displayName} · {candidate.email}</option>)}
+            <select
+              value={form.primaryProfileId}
+              onChange={(event) =>
+                setForm({ ...form, primaryProfileId: event.target.value })
+              }
+            >
+              {candidates.map((candidate) => (
+                <option key={candidate.profileId} value={candidate.profileId}>
+                  {candidate.displayName} · {candidate.email}
+                </option>
+              ))}
             </select>
           </label>
           <label className="admin-permanent-slots__wide">
@@ -211,35 +297,88 @@ export function AdminPermanentSlotsPage() {
               onChange={(event) =>
                 setForm({
                   ...form,
-                  managerProfileIds: Array.from(event.currentTarget.selectedOptions, (option) => option.value),
+                  managerProfileIds: Array.from(
+                    event.currentTarget.selectedOptions,
+                    (option) => option.value,
+                  ),
                 })
               }
             >
               {candidates
-                .filter((candidate) => candidate.profileId !== form.primaryProfileId)
-                .map((candidate) => <option key={candidate.profileId} value={candidate.profileId}>{candidate.displayName} · {candidate.email}</option>)}
+                .filter(
+                  (candidate) =>
+                    candidate.profileId !== form.primaryProfileId,
+                )
+                .map((candidate) => (
+                  <option key={candidate.profileId} value={candidate.profileId}>
+                    {candidate.displayName} · {candidate.email}
+                  </option>
+                ))}
             </select>
             <small>Ctrl/Cmd + clic pour sélectionner plusieurs personnes.</small>
           </label>
         </div>
-        <button type="button" disabled={isSaving || isLoading} onClick={() => void createSlot()}>
+        <button
+          type="button"
+          disabled={isSaving || isLoading}
+          onClick={() => void createSlot()}
+        >
           {isSaving ? "Création…" : "Créer le créneau permanent"}
         </button>
       </div>
 
       <div className="admin-permanent-slots__panel">
         <h2>Créneaux existants</h2>
-        {isLoading ? <p>Chargement…</p> : slots.length === 0 ? <p>Aucun créneau permanent.</p> : (
+        {isLoading ? (
+          <p>Chargement…</p>
+        ) : slots.length === 0 ? (
+          <p>Aucun créneau permanent.</p>
+        ) : (
           <div className="admin-permanent-slots__list">
             {slots.map((slot) => (
-              <article key={slot.id} className={!slot.isActive ? "admin-permanent-slots__slot admin-permanent-slots__slot--inactive" : "admin-permanent-slots__slot"}>
+              <article
+                key={slot.id}
+                className={
+                  !slot.isActive
+                    ? "admin-permanent-slots__slot admin-permanent-slots__slot--inactive"
+                    : "admin-permanent-slots__slot"
+                }
+              >
                 <div>
                   <strong>{slot.label}</strong>
-                  <p>{WEEKDAYS[slot.weekday - 1]} · {slot.startsAt}–{slot.endsAt} · {slot.resourceName}</p>
-                  <small>Du {new Date(`${slot.validFrom}T12:00:00`).toLocaleDateString("fr-FR")} au {new Date(`${slot.validUntil}T12:00:00`).toLocaleDateString("fr-FR")} · gestion {slot.managementWindowHours} h avant</small>
-                  <small>Titulaire : {slot.managers.find((manager) => manager.isPrimary)?.displayName ?? "Non défini"}</small>
+                  <p>
+                    {WEEKDAYS[slot.weekday - 1]} · {slot.startsAt}–{slot.endsAt}
+                    {" · "}
+                    {slot.resourceName}
+                  </p>
+                  <small>
+                    Du{" "}
+                    {new Date(`${slot.validFrom}T12:00:00`).toLocaleDateString(
+                      "fr-FR",
+                    )}{" "}
+                    au{" "}
+                    {new Date(`${slot.validUntil}T12:00:00`).toLocaleDateString(
+                      "fr-FR",
+                    )}{" "}
+                    · gestion {slot.managementWindowHours} h avant
+                  </small>
+                  <small>
+                    Titulaire :{" "}
+                    {slot.managers.find((manager) => manager.isPrimary)
+                      ?.displayName ?? "Non défini"}
+                  </small>
                 </div>
-                {slot.isActive ? <button type="button" className="admin-permanent-slots__danger" onClick={() => void deactivateSlot(slot.id)}>Désactiver</button> : <span>Inactif</span>}
+                {slot.isActive ? (
+                  <button
+                    type="button"
+                    className="admin-permanent-slots__danger"
+                    onClick={() => void deactivateSlot(slot.id)}
+                  >
+                    Désactiver
+                  </button>
+                ) : (
+                  <span>Inactif</span>
+                )}
               </article>
             ))}
           </div>
