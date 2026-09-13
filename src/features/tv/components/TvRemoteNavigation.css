@@ -7,8 +7,7 @@
   transition: opacity 180ms ease;
 }
 
-.tv-remote-navigation--visible,
-.tv-remote-navigation:focus-within {
+.tv-remote-navigation--visible {
   opacity: 1;
 }
 
