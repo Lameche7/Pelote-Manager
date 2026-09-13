@@ -1,6 +1,6 @@
 # 11 - Mode TV
 
-Version : 2.0
+Version : 2.1
 
 Ce document décrit le fonctionnement du Mode TV.
 
@@ -54,6 +54,10 @@ Le Mode TV fonctionne en continu.
 Il actualise automatiquement les informations.
 
 Aucun rechargement manuel n'est nécessaire.
+
+Lorsqu'il est supporté par le navigateur, le Mode TV demande un `screen Wake Lock` pour empêcher la mise en veille de l'écran pendant la diffusion. Si le navigateur relâche ce verrou lorsque la page passe en arrière-plan, PILOTOKI le redemande automatiquement lorsque l'écran redevient visible. Le verrou est relâché quand la page TV est quittée ou masquée.
+
+L'absence de support de l'API Wake Lock ne bloque jamais le Mode TV.
 
 ---
 
