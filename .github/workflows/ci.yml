@@ -55,12 +55,6 @@ jobs:
         run: npx prettier --check tests/protectedRouteAccess.test.mjs tests/roles.test.mjs tsconfig.test.json
         continue-on-error: true
 
-      - name: Diagnostic format Mode TV
-        run: |
-          npx prettier --write src/features/tv/pages/TvDisplayPage.tsx
-          git diff -- src/features/tv/pages/TvDisplayPage.tsx
-          git checkout -- src/features/tv/pages/TvDisplayPage.tsx
-
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
