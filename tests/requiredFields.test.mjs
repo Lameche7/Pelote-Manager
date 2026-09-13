@@ -13,6 +13,7 @@ const [
   platformLogin,
   profile,
   licence,
+  splitPayment,
 ] = await Promise.all([
   read("../src/shared/components/forms/RequiredField.tsx"),
   read("../src/styles/forms.css"),
@@ -22,6 +23,9 @@ const [
   read("../src/features/platform/pages/PlatformLoginPage.tsx"),
   read("../src/features/user-space/profile/pages/MyProfilePage.tsx"),
   read("../src/features/licences/pages/MyLicencePage.tsx"),
+  read(
+    "../src/features/reservations/components/ReservationSplitPaymentFields.tsx",
+  ),
 ]);
 
 test("fournit une étoile et une légende communes pour les champs obligatoires", () => {
@@ -75,4 +79,13 @@ test("signale les champs obligatoires dans Ma licence", () => {
   assert.match(licence, /Document à déposer <RequiredFieldMark \/>/);
   assert.match(licence, /Téléphone\s*\n\s*<input name="phone" type="tel" \/>/);
   assert.match(licence, /<RequiredFieldsNotice \/>/);
+});
+
+test("signale la sélection obligatoire des joueurs pour un paiement partagé", () => {
+  assert.match(
+    splitPayment,
+    /Choisissez les 3 autres joueurs <RequiredFieldMark \/>/,
+  );
+  assert.match(splitPayment, /<RequiredFieldsNotice \/>/);
+  assert.match(splitPayment, /Rechercher un joueur/);
 });
