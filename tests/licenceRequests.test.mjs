@@ -101,7 +101,10 @@ test("simule le paiement des licences sans appeler HelloAsso en mode test", () =
   assert.match(service, /simulate_licence_payment/);
   assert.match(playerPage, /Simuler le paiement \(mode test\)/);
   assert.match(playerPage, /MODE TEST — Aucun paiement réel ne sera effectué/);
-  assert.match(licencePaymentModeMigration, /payment\.payment_context = 'licence'/);
+  assert.match(
+    licencePaymentModeMigration,
+    /payment\.payment_context = 'licence'/,
+  );
   assert.match(licencePaymentModeMigration, /request\.profile_id = actor_id/);
   assert.match(licencePaymentModeMigration, /campaign\.payment_mode = 'test'/);
   assert.match(licencePaymentModeMigration, /ready_for_review/);
