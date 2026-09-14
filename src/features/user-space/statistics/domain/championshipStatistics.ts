@@ -140,7 +140,10 @@ const breakdown = (
         winRate: group.length ? (wins / group.length) * 100 : 0,
       };
     })
-    .sort((left, right) => right.played - left.played || left.label.localeCompare(right.label, "fr"));
+    .sort(
+      (left, right) =>
+        right.played - left.played || left.label.localeCompare(right.label, "fr"),
+    );
 };
 
 const currentStreak = (rows: ChampionshipStatisticsRow[]) => {
@@ -184,7 +187,9 @@ export const summarizeChampionshipStatistics = (
 };
 
 const unique = (values: string[]) =>
-  [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+  [...new Set(values.filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "fr", { numeric: true }),
+  );
 
 export const buildChampionshipStatisticsDashboard = (
   championships: MyChampionship[],
@@ -192,8 +197,9 @@ export const buildChampionshipStatisticsDashboard = (
 ) => {
   const allRows = buildChampionshipStatisticsRows(championships);
   const rows = filterChampionshipStatisticsRows(allRows, filters);
-  const recent = [...rows]
-    .sort((left, right) => String(right.date ?? "").localeCompare(String(left.date ?? "")))
+  const recent = rows
+    .filter((row) => row.date)
+    .sort((left, right) => String(right.date).localeCompare(String(left.date)))
     .slice(0, 12);
 
   return {
@@ -202,10 +208,18 @@ export const buildChampionshipStatisticsDashboard = (
     options: {
       seasons: unique(allRows.map((row) => row.seasonLabel)).reverse(),
       specialties: unique(allRows.map((row) => row.specialty)),
-      championships: [...new Map(allRows.map((row) => [row.championshipId, row.championshipName])).entries()]
+      championships: [
+        ...new Map(
+          allRows.map((row) => [row.championshipId, row.championshipName]),
+        ).entries(),
+      ]
         .map(([value, label]) => ({ value, label }))
         .sort((a, b) => a.label.localeCompare(b.label, "fr")),
-      divisions: [...new Map(allRows.map((row) => [row.divisionId, row.divisionName])).entries()]
+      divisions: [
+        ...new Map(
+          allRows.map((row) => [row.divisionId, row.divisionName]),
+        ).entries(),
+      ]
         .map(([value, label]) => ({ value, label }))
         .sort((a, b) => a.label.localeCompare(b.label, "fr")),
       phases: unique(allRows.map((row) => row.phase)),
