@@ -74,9 +74,15 @@ function Breakdown({
                 </span>
               </div>
               <div className="my-statistics__bar-track" aria-hidden="true">
-                <span style={{ width: `${Math.max(row.winRate, row.played ? 3 : 0)}%` }} />
+                <span
+                  style={{
+                    width: `${Math.max(row.winRate, row.played ? 3 : 0)}%`,
+                  }}
+                />
               </div>
-              <small>{row.played} match{row.played > 1 ? "s" : ""}</small>
+              <small>
+                {row.played} match{row.played > 1 ? "s" : ""}
+              </small>
             </li>
           ))}
         </ul>
@@ -128,6 +134,9 @@ export function MyStatisticsPage() {
   ) => setFilters((current) => ({ ...current, [key]: value }));
 
   const streak = dashboard.summary.currentStreak;
+  const lossRate = dashboard.summary.played
+    ? (dashboard.summary.losses / dashboard.summary.played) * 100
+    : 0;
   const scoreMetricAvailable =
     dashboard.summary.singleSpecialty && dashboard.summary.played > 0;
 
@@ -287,21 +296,23 @@ export function MyStatisticsPage() {
                 <Trophy aria-hidden="true" />
                 <span>Victoires</span>
                 <strong>{dashboard.summary.wins}</strong>
-                <small>{number.format(dashboard.summary.winRate)} % de réussite</small>
+                <small>
+                  {number.format(dashboard.summary.winRate)} % de réussite
+                </small>
               </article>
               <article>
                 <TrendingDown aria-hidden="true" />
                 <span>Défaites</span>
                 <strong>{dashboard.summary.losses}</strong>
-                <small>
-                  {number.format(100 - dashboard.summary.winRate)} % hors lecture des nuls
-                </small>
+                <small>{number.format(lossRate)} % des matchs</small>
               </article>
               <article>
                 <TrendingUp aria-hidden="true" />
                 <span>Série actuelle</span>
                 <strong>
-                  {streak ? `${streak.length} ${outcomeLabel[streak.outcome]}` : "—"}
+                  {streak
+                    ? `${streak.length} ${outcomeLabel[streak.outcome]}`
+                    : "—"}
                 </strong>
                 <small>sur les matchs datés les plus récents</small>
               </article>
