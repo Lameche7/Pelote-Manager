@@ -61,6 +61,7 @@ import { PlatformLoginPage } from "@/features/platform/pages/PlatformLoginPage";
 import { MyPermanentSlotsPage } from "@/features/reservations/pages/MyPermanentSlotsPage";
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { MyChampionshipsPage } from "@/features/user-space/championships/pages/MyChampionshipsPage";
+import { MyStatisticsPage } from "@/features/user-space/statistics/pages/MyStatisticsPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
 import { ReservationSharePaymentPage } from "@/features/reservations/pages/ReservationSharePaymentPage";
@@ -138,6 +139,14 @@ export const routes = [
         element: (
           <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
             <MyChampionshipsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.myStatistics,
+        element: (
+          <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
+            <MyStatisticsPage />
           </ProtectedRoute>
         ),
       },
