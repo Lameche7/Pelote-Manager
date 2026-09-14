@@ -1,0 +1,26 @@
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
+html {
+  /* Empêche Safari/iOS de déplacer tout le viewport si un enfant déborde de quelques pixels. */
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
+body,
+#root,
+.app-layout,
+.app-main {
+  min-width: 0;
+}
+
+.app-layout,
+.app-main {
+  width: 100%;
+  max-width: 100%;
+}
