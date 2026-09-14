@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import type { TournamentSportingRules } from "@/features/admin/tournaments/services/tournamentAdminService";
+import { supabase } from "@/infrastructure/supabase/client";
+import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 
 type Props = {
   rules: TournamentSportingRules;
@@ -17,6 +20,81 @@ export function TournamentSportingRulesSection({
   onSave,
   showSaveButton = true,
 }: Props) {
+  const [specialty, setSpecialty] = useState("");
+  const [specialtyLoading, setSpecialtyLoading] = useState(false);
+  const [specialtySaving, setSpecialtySaving] = useState(false);
+  const [specialtyError, setSpecialtyError] = useState("");
+  const [specialtyMessage, setSpecialtyMessage] = useState("");
+
+  useEffect(() => {
+    if (!rules.tournamentId) {
+      setSpecialty("");
+      setSpecialtyError("");
+      setSpecialtyMessage("");
+      return;
+    }
+
+    let active = true;
+    setSpecialtyLoading(true);
+    setSpecialtyError("");
+    void supabase
+      .rpc("admin_get_tournament_specialty", {
+        target_id: rules.tournamentId,
+      })
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (active) setSpecialty(String(data ?? ""));
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setSpecialtyError(
+            getSupabaseErrorMessage(
+              error,
+              "Impossible de charger la discipline du tournoi.",
+            ),
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setSpecialtyLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [rules.tournamentId]);
+
+  const saveSpecialty = async () => {
+    if (!rules.tournamentId) return;
+    const value = specialty.trim();
+    if (!value) {
+      setSpecialtyError("Renseignez la discipline du tournoi.");
+      return;
+    }
+
+    setSpecialtySaving(true);
+    setSpecialtyError("");
+    setSpecialtyMessage("");
+    try {
+      const { error } = await supabase.rpc("admin_set_tournament_specialty", {
+        target_id: rules.tournamentId,
+        target_specialty: value,
+      });
+      if (error) throw error;
+      setSpecialty(value);
+      setSpecialtyMessage("Discipline enregistrée.");
+    } catch (error: unknown) {
+      setSpecialtyError(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible d’enregistrer la discipline du tournoi.",
+        ),
+      );
+    } finally {
+      setSpecialtySaving(false);
+    }
+  };
+
   const straightWin = rules.baseWinPoints + rules.offensiveBonusPoints;
   const decidingWin = rules.baseWinPoints;
   const decidingLoss = rules.baseLossPoints + rules.defensiveBonusPoints;
@@ -28,14 +106,32 @@ export function TournamentSportingRulesSection({
         <div>
           <h3>3. Règles sportives & classement</h3>
           <p>
-            Ces paramètres seront la source de vérité du futur moteur de
-            résultats et de classement. Un score peut se terminer avec un seul
-            point d’écart.
+            Ces paramètres sont la source de vérité du moteur de résultats et
+            de classement. La discipline alimente aussi le tableau de bord
+            personnel Mes statistiques.
           </p>
         </div>
       </header>
 
       <div className="tournament-form__grid">
+        <label>
+          Discipline du tournoi
+          <input
+            type="text"
+            placeholder="Ex. Paleta gomme pleine"
+            disabled={!rules.tournamentId || specialtyLoading || specialtySaving}
+            value={specialty}
+            onChange={(event) => {
+              setSpecialty(event.target.value);
+              setSpecialtyMessage("");
+            }}
+          />
+          <small>
+            Utilisée pour regrouper championnats et tournois dans Mes
+            statistiques.
+          </small>
+        </label>
+
         <label>
           Format des parties
           <select
@@ -246,6 +342,29 @@ export function TournamentSportingRulesSection({
           </select>
         </label>
       </div>
+
+      {rules.tournamentId ? (
+        <div>
+          <button
+            className="tournaments-primary"
+            type="button"
+            disabled={specialtyLoading || specialtySaving}
+            onClick={() => void saveSpecialty()}
+          >
+            {specialtySaving ? "Enregistrement…" : "Enregistrer la discipline"}
+          </button>
+          {specialtyError && (
+            <p className="tournaments-error" role="alert">
+              {specialtyError}
+            </p>
+          )}
+          {specialtyMessage && <p>{specialtyMessage}</p>}
+        </div>
+      ) : (
+        <p>
+          La discipline pourra être renseignée dès que le tournoi aura été créé.
+        </p>
+      )}
 
       <div className="tournaments-alert">
         {rules.matchFormat === "best_of_three_sets" ? (
