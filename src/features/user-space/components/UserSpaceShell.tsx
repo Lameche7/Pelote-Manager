@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import {
   BadgeCheck,
+  BarChart3,
   Bell,
   CalendarDays,
   LayoutDashboard,
@@ -30,6 +31,9 @@ export function UserSpaceShell({ children }: PropsWithChildren) {
         </NavLink>
         <NavLink to={ROUTES.myChampionships}>
           <TrendingUp aria-hidden="true" /> Mes championnats
+        </NavLink>
+        <NavLink to={ROUTES.myStatistics}>
+          <BarChart3 aria-hidden="true" /> Mes statistiques
         </NavLink>
         <NavLink to={ROUTES.myLicence}>
           <BadgeCheck aria-hidden="true" /> Ma licence
