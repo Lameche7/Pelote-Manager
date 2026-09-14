@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Copy, ExternalLink, Monitor, RefreshCcw, Save } from "lucide-react";
+import { Copy, ExternalLink, Monitor, Save } from "lucide-react";
 import {
   adminTvSettingsService,
   type TvModeSettings,
 } from "@/features/admin/settings/services/adminTvSettingsService";
-import { ROUTES } from "@/shared/config";
-import { currentApplicationOrigin } from "@/shared/config/domains";
 import "./AdminTvSettingsPage.css";
+
+const PUBLIC_TV_URL = "https://app.pelotemanager.fr/tv/pcl";
 
 const refreshOptions = [
   { value: 15, label: "Toutes les 15 secondes" },
@@ -20,7 +20,6 @@ export function AdminTvSettingsPage() {
   const [settings, setSettings] = useState<TvModeSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isRotating, setIsRotating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,9 +55,7 @@ export function AdminTvSettingsPage() {
     [settings],
   );
 
-  const publicUrl = settings
-    ? `${currentApplicationOrigin()}${ROUTES.tv}/${settings.publicToken}`
-    : "";
+  const publicUrl = PUBLIC_TV_URL;
 
   const updateSettings = (changes: Partial<TvModeSettings>) => {
     setSettings((current) => (current ? { ...current, ...changes } : current));
@@ -129,33 +126,6 @@ export function AdminTvSettingsPage() {
       setError(null);
     } catch {
       setError("La copie automatique est indisponible sur ce navigateur.");
-    }
-  };
-
-  const rotatePublicToken = async () => {
-    if (
-      !window.confirm(
-        "Régénérer le lien rendra immédiatement l’ancien lien inutilisable. Continuer ?",
-      )
-    ) {
-      return;
-    }
-
-    setIsRotating(true);
-    setError(null);
-    setMessage(null);
-    try {
-      const publicToken = await adminTvSettingsService.rotatePublicToken();
-      updateSettings({ publicToken });
-      setMessage("Un nouveau lien public a été généré.");
-    } catch (rotateError: unknown) {
-      setError(
-        rotateError instanceof Error
-          ? rotateError.message
-          : "Régénération du lien impossible.",
-      );
-    } finally {
-      setIsRotating(false);
     }
   };
 
@@ -349,10 +319,10 @@ export function AdminTvSettingsPage() {
       </article>
 
       <article className="admin-tv-settings__panel">
-        <h2>Lien public sécurisé</h2>
+        <h2>Lien permanent du Mode TV</h2>
         <p>
-          Ce lien est difficile à deviner et peut être ouvert sur la télévision
-          sans connexion. Enregistrez les paramètres avant de vérifier l’écran.
+          Cette adresse est fixe et peut être conservée dans les favoris de la
+          télévision. Enregistrez les paramètres avant de vérifier l’écran.
         </p>
         <div className="admin-tv-settings__url">
           <input
@@ -372,25 +342,13 @@ export function AdminTvSettingsPage() {
         >
           <ExternalLink aria-hidden="true" /> Ouvrir l’écran TV
         </a>
-        <button
-          className="admin-tv-settings__secondary-button"
-          type="button"
-          disabled={isRotating}
-          onClick={() => void rotatePublicToken()}
-        >
-          <RefreshCcw aria-hidden="true" />
-          {isRotating ? "Régénération…" : "Régénérer le lien"}
-        </button>
-        <small>
-          La régénération invalide immédiatement l’adresse précédente.
-        </small>
       </article>
 
       <div className="admin-tv-settings__actions">
         <button
           className="admin-tv-settings__save-button"
           type="button"
-          disabled={isSaving || isRotating}
+          disabled={isSaving}
           onClick={() => void save()}
         >
           <Save aria-hidden="true" />

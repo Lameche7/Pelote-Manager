@@ -67,10 +67,4 @@ export const adminTvSettingsService = {
     });
     if (error) throw error;
   },
-
-  async rotatePublicToken(): Promise<string> {
-    const { data, error } = await supabase.rpc("admin_rotate_tv_token");
-    if (error) throw error;
-    return String(data);
-  },
 };
