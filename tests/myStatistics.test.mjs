@@ -4,20 +4,31 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-const [domain, page, routes, router, shell, tournamentService, migration] =
-  await Promise.all([
-    read("src/features/user-space/statistics/domain/championshipStatistics.ts"),
-    read("src/features/user-space/statistics/pages/MyStatisticsPage.tsx"),
-    read("src/shared/config/routes.ts"),
-    read("src/app/router.tsx"),
-    read("src/features/user-space/components/UserSpaceShell.tsx"),
-    read(
-      "src/features/user-space/statistics/services/myTournamentStatisticsService.ts",
-    ),
-    read(
-      "supabase/migrations/20260914092333_add_tournament_statistics_and_specialty.sql",
-    ),
-  ]);
+const [
+  domain,
+  page,
+  routes,
+  router,
+  shell,
+  tournamentService,
+  sportingRulesSection,
+  migration,
+] = await Promise.all([
+  read("src/features/user-space/statistics/domain/championshipStatistics.ts"),
+  read("src/features/user-space/statistics/pages/MyStatisticsPage.tsx"),
+  read("src/shared/config/routes.ts"),
+  read("src/app/router.tsx"),
+  read("src/features/user-space/components/UserSpaceShell.tsx"),
+  read(
+    "src/features/user-space/statistics/services/myTournamentStatisticsService.ts",
+  ),
+  read(
+    "src/features/admin/tournaments/components/TournamentSportingRulesSection.tsx",
+  ),
+  read(
+    "supabase/migrations/20260914092333_add_tournament_statistics_and_specialty.sql",
+  ),
+]);
 
 test("ajoute Mes statistiques à l’espace joueur", () => {
   assert.match(routes, /myStatistics: "\/mon-espace\/statistiques"/);
@@ -61,6 +72,16 @@ test("agrège les résultats validés de tournois", () => {
   assert.match(page, /myTournamentStatisticsService\.list\(\)/);
   assert.match(migration, /match_result\.status = 'validated'/);
   assert.match(migration, /match_result\.winner_team_id is not null/);
+});
+
+test("permet de renseigner la discipline d’un tournoi", () => {
+  assert.match(migration, /add column if not exists specialty text/);
+  assert.match(migration, /admin_get_tournament_specialty/);
+  assert.match(migration, /admin_set_tournament_specialty/);
+  assert.match(sportingRulesSection, /Discipline du tournoi/);
+  assert.match(sportingRulesSection, /admin_get_tournament_specialty/);
+  assert.match(sportingRulesSection, /admin_set_tournament_specialty/);
+  assert.match(sportingRulesSection, /Enregistrer la discipline/);
 });
 
 test("protège les indicateurs de score quand les barèmes diffèrent", () => {
