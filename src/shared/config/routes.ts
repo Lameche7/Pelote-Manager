@@ -12,6 +12,7 @@ export const ROUTES = {
   myPermanentSlots: "/mon-espace/creneaux-permanents",
   myTournaments: "/mon-espace/tournois",
   myChampionships: "/mon-espace/championnats",
+  myStatistics: "/mon-espace/statistiques",
   myLicence: "/mon-espace/licence",
   myProfile: "/mon-espace/profil",
   myNotifications: "/mon-espace/notifications",
