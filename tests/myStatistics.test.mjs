@@ -10,6 +10,7 @@ const [
   routes,
   router,
   shell,
+  dashboard,
   tournamentService,
   sportingRulesSection,
   migration,
@@ -19,6 +20,7 @@ const [
   read("src/shared/config/routes.ts"),
   read("src/app/router.tsx"),
   read("src/features/user-space/components/UserSpaceShell.tsx"),
+  read("src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx"),
   read(
     "src/features/user-space/statistics/services/myTournamentStatisticsService.ts",
   ),
@@ -37,6 +39,8 @@ test("ajoute Mes statistiques à l’espace joueur", () => {
   assert.match(router, /<MyStatisticsPage \/>/);
   assert.match(shell, /to=\{ROUTES\.myStatistics\}/);
   assert.match(shell, /Mes statistiques/);
+  assert.match(dashboard, /title: "Mes statistiques"/);
+  assert.match(dashboard, /to: ROUTES\.myStatistics/);
 });
 
 test("propose les filtres du tableau de bord sportif unifié", () => {
