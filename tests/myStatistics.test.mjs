@@ -4,13 +4,20 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-const [domain, page, routes, router, shell] = await Promise.all([
-  read("src/features/user-space/statistics/domain/championshipStatistics.ts"),
-  read("src/features/user-space/statistics/pages/MyStatisticsPage.tsx"),
-  read("src/shared/config/routes.ts"),
-  read("src/app/router.tsx"),
-  read("src/features/user-space/components/UserSpaceShell.tsx"),
-]);
+const [domain, page, routes, router, shell, tournamentService, migration] =
+  await Promise.all([
+    read("src/features/user-space/statistics/domain/championshipStatistics.ts"),
+    read("src/features/user-space/statistics/pages/MyStatisticsPage.tsx"),
+    read("src/shared/config/routes.ts"),
+    read("src/app/router.tsx"),
+    read("src/features/user-space/components/UserSpaceShell.tsx"),
+    read(
+      "src/features/user-space/statistics/services/myTournamentStatisticsService.ts",
+    ),
+    read(
+      "supabase/migrations/20260914092333_add_tournament_statistics_and_specialty.sql",
+    ),
+  ]);
 
 test("ajoute Mes statistiques à l’espace joueur", () => {
   assert.match(routes, /myStatistics: "\/mon-espace\/statistiques"/);
@@ -21,36 +28,57 @@ test("ajoute Mes statistiques à l’espace joueur", () => {
   assert.match(shell, /Mes statistiques/);
 });
 
-test("propose les filtres du tableau de bord sportif", () => {
+test("propose les filtres du tableau de bord sportif unifié", () => {
+  assert.match(domain, /source: StatisticsSource/);
   assert.match(domain, /season: string/);
   assert.match(domain, /specialty: string/);
-  assert.match(domain, /championshipId: string/);
+  assert.match(domain, /competitionId: string/);
   assert.match(domain, /divisionId: string/);
   assert.match(domain, /phase: string/);
   assert.match(domain, /teamSide: StatisticsTeamSide/);
+  assert.match(page, /Type de compétition/);
+  assert.match(page, />Championnats</);
+  assert.match(page, />Tournois</);
   assert.match(page, />Saison</);
   assert.match(page, />Discipline</);
-  assert.match(page, />Championnat</);
+  assert.match(page, />Compétition</);
   assert.match(page, />Série</);
   assert.match(page, />Phase</);
-  assert.match(page, /Position sur la feuille/);
 });
 
-test("calcule les indicateurs victoire et protège les scores multi-disciplines", () => {
-  assert.match(domain, /winRate: rows\.length \? \(wins \/ rows\.length\) \* 100 : 0/);
-  assert.match(domain, /singleSpecialty: specialties\.size <= 1/);
-  assert.match(domain, /currentStreak: currentStreak\(rows\)/);
-  assert.match(page, /sélectionnez une seule discipline/);
-  assert.match(page, /les barèmes diffèrent selon la discipline/);
+test("la pelote ne produit jamais de statistique de match nul", () => {
+  assert.doesNotMatch(domain, /"draw"/);
+  assert.doesNotMatch(page, /Nul/);
+  assert.doesNotMatch(page, /nul\(s\)/);
+  assert.match(domain, /if \(match\.scoreMine === match\.scoreOpponent\) return/);
+  assert.match(domain, /losses = rows\.length - wins/);
+});
+
+test("agrège les résultats validés de tournois", () => {
+  assert.match(tournamentService, /get_my_tournament_statistics/);
+  assert.match(domain, /buildTournamentStatisticsRows/);
+  assert.match(domain, /match\.won \? "win" : "loss"/);
+  assert.match(page, /myTournamentStatisticsService\.list\(\)/);
+  assert.match(migration, /match_result\.status = 'validated'/);
+  assert.match(migration, /match_result\.winner_team_id is not null/);
+});
+
+test("protège les indicateurs de score quand les barèmes diffèrent", () => {
+  assert.match(domain, /scoreMetricKey/);
+  assert.match(domain, /scoreMetricsComparable: metricKeys\.size <= 1/);
+  assert.match(page, /barèmes différents dans la sélection/);
+  assert.match(page, /filtrez un barème comparable/);
 });
 
 test("ventile les résultats comme un tableau croisé", () => {
+  assert.match(domain, /bySource: breakdown/);
   assert.match(domain, /bySeason: breakdown/);
   assert.match(domain, /bySpecialty: breakdown/);
   assert.match(domain, /byPhase: breakdown/);
-  assert.match(domain, /byChampionship: breakdown/);
+  assert.match(domain, /byCompetition: breakdown/);
+  assert.match(page, /Par type/);
   assert.match(page, /Par discipline/);
   assert.match(page, /Par saison/);
   assert.match(page, /Par phase/);
-  assert.match(page, /Par championnat/);
+  assert.match(page, /Par compétition/);
 });
