@@ -55,25 +55,37 @@ test("les règles empêchent une configuration TV incohérente", async () => {
   assert.match(migration, /token_rotated/);
 });
 
-test("l’administration expose un écran complet et un lien révocable", async () => {
-  const [service, page, navigation, router, routes] = await Promise.all([
-    read("../src/features/admin/settings/services/adminTvSettingsService.ts"),
-    read("../src/features/admin/settings/pages/AdminTvSettingsPage.tsx"),
-    read("../src/features/admin/config/adminPermissions.ts"),
-    read("../src/app/router.tsx"),
-    read("../src/shared/config/routes.ts"),
-  ]);
+test("l’administration expose le lien permanent du Mode TV", async () => {
+  const [service, page, navigation, router, routes, permanentLinkMigration] =
+    await Promise.all([
+      read("../src/features/admin/settings/services/adminTvSettingsService.ts"),
+      read("../src/features/admin/settings/pages/AdminTvSettingsPage.tsx"),
+      read("../src/features/admin/config/adminPermissions.ts"),
+      read("../src/app/router.tsx"),
+      read("../src/shared/config/routes.ts"),
+      read("../supabase/migrations/20260914131731_fix_permanent_tv_pcl_link.sql"),
+    ]);
 
   assert.match(service, /supabase\.rpc\("admin_get_tv_settings"\)/);
   assert.match(service, /supabase\.rpc\("admin_save_tv_settings"/);
-  assert.match(service, /supabase\.rpc\("admin_rotate_tv_token"\)/);
+  assert.doesNotMatch(service, /admin_rotate_tv_token/);
   assert.match(page, /Mode TV/);
   assert.match(page, /Terrains affichés/);
   assert.match(page, /Actualisation automatique/);
-  assert.match(page, /Régénérer le lien/);
+  assert.match(page, /Lien permanent du Mode TV/);
+  assert.match(page, /https:\/\/app\.pelotemanager\.fr\/tv\/pcl/);
+  assert.doesNotMatch(page, /Régénérer le lien/);
   assert.match(page, /18h30/);
   assert.match(page, /Réservé/);
   assert.match(routes, /tv: "\/tv"/);
+  assert.match(
+    permanentLinkMigration,
+    /08008b4d-9825-487d-a156-8e69f7b8aaca/,
+  );
+  assert.match(
+    permanentLinkMigration,
+    /revoke execute on function public\.admin_rotate_tv_token\(\) from authenticated/,
+  );
   assert.match(
     navigation,
     /label: "Paramètres"[\s\S]*?permission: ADMIN_PERMISSIONS\.settings/,
