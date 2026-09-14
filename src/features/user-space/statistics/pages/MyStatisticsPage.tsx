@@ -21,6 +21,10 @@ import {
   type StatisticsBreakdown,
   type StatisticsOutcome,
 } from "@/features/user-space/statistics/domain/championshipStatistics";
+import {
+  myTournamentStatisticsService,
+  type MyTournamentStatisticsMatch,
+} from "@/features/user-space/statistics/services/myTournamentStatisticsService";
 import "./MyStatisticsPage.css";
 
 const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
@@ -32,9 +36,13 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
 
 const outcomeLabel: Record<StatisticsOutcome, string> = {
   win: "Victoire",
-  draw: "Nul",
   loss: "Défaite",
 };
+
+const sourceLabel = {
+  championship: "Championnat",
+  tournament: "Tournoi",
+} as const;
 
 const displayDate = (value: string | null) => {
   if (!value) return "Date non renseignée";
@@ -69,8 +77,7 @@ function Breakdown({
               <div className="my-statistics__bar-label">
                 <strong>{row.label}</strong>
                 <span>
-                  {row.wins} V · {row.draws} N · {row.losses} D ·{" "}
-                  {number.format(row.winRate)} %
+                  {row.wins} V · {row.losses} D · {number.format(row.winRate)} %
                 </span>
               </div>
               <div className="my-statistics__bar-track" aria-hidden="true">
@@ -93,6 +100,7 @@ function Breakdown({
 
 export function MyStatisticsPage() {
   const [championships, setChampionships] = useState<MyChampionship[]>([]);
+  const [tournaments, setTournaments] = useState<MyTournamentStatisticsMatch[]>([]);
   const [filters, setFilters] = useState<ChampionshipStatisticsFilters>(
     emptyChampionshipStatisticsFilters,
   );
@@ -101,10 +109,14 @@ export function MyStatisticsPage() {
 
   useEffect(() => {
     let active = true;
-    void myChampionshipsService
-      .list()
-      .then((items) => {
-        if (active) setChampionships(items);
+    void Promise.all([
+      myChampionshipsService.list(),
+      myTournamentStatisticsService.list(),
+    ])
+      .then(([championshipItems, tournamentItems]) => {
+        if (!active) return;
+        setChampionships(championshipItems);
+        setTournaments(tournamentItems);
       })
       .catch((cause: unknown) => {
         if (active) {
@@ -124,8 +136,8 @@ export function MyStatisticsPage() {
   }, []);
 
   const dashboard = useMemo(
-    () => buildChampionshipStatisticsDashboard(championships, filters),
-    [championships, filters],
+    () => buildChampionshipStatisticsDashboard(championships, tournaments, filters),
+    [championships, tournaments, filters],
   );
 
   const setFilter = <K extends keyof ChampionshipStatisticsFilters>(
@@ -133,12 +145,21 @@ export function MyStatisticsPage() {
     value: ChampionshipStatisticsFilters[K],
   ) => setFilters((current) => ({ ...current, [key]: value }));
 
+  const setSource = (value: ChampionshipStatisticsFilters["source"]) =>
+    setFilters((current) => ({
+      ...current,
+      source: value,
+      competitionId: "",
+      divisionId: "",
+    }));
+
+  const visibleCompetitions = dashboard.options.competitions.filter(
+    (competition) =>
+      filters.source === "all" || competition.source === filters.source,
+  );
   const streak = dashboard.summary.currentStreak;
-  const lossRate = dashboard.summary.played
-    ? (dashboard.summary.losses / dashboard.summary.played) * 100
-    : 0;
   const scoreMetricAvailable =
-    dashboard.summary.singleSpecialty && dashboard.summary.played > 0;
+    dashboard.summary.scoreMetricsComparable && dashboard.summary.played > 0;
 
   return (
     <UserSpaceShell>
@@ -148,9 +169,9 @@ export function MyStatisticsPage() {
             <p className="my-statistics__eyebrow">Historique sportif</p>
             <h1>Mes statistiques</h1>
             <p>
-              Explorez votre historique championnat comme un tableau de bord :
-              filtrez par saison, discipline, compétition ou phase et tous les
-              indicateurs se recalculent instantanément.
+              Analysez ensemble vos championnats et vos tournois : filtrez par
+              saison, discipline, compétition ou phase et tous les indicateurs
+              se recalculent instantanément.
             </p>
           </div>
           <Trophy aria-hidden="true" />
@@ -172,6 +193,21 @@ export function MyStatisticsPage() {
           </div>
 
           <div className="my-statistics__filter-grid">
+            <label>
+              Type de compétition
+              <select
+                value={filters.source}
+                onChange={(event) =>
+                  setSource(
+                    event.target.value as ChampionshipStatisticsFilters["source"],
+                  )
+                }
+              >
+                <option value="all">Tout</option>
+                <option value="championship">Championnats</option>
+                <option value="tournament">Tournois</option>
+              </select>
+            </label>
             <label>
               Saison
               <select
@@ -201,17 +237,20 @@ export function MyStatisticsPage() {
               </select>
             </label>
             <label>
-              Championnat
+              Compétition
               <select
-                value={filters.championshipId}
+                value={filters.competitionId}
                 onChange={(event) =>
-                  setFilter("championshipId", event.target.value)
+                  setFilter("competitionId", event.target.value)
                 }
               >
-                <option value="">Tous</option>
-                {dashboard.options.championships.map((championship) => (
-                  <option key={championship.value} value={championship.value}>
-                    {championship.label}
+                <option value="">Toutes</option>
+                {visibleCompetitions.map((competition) => (
+                  <option
+                    key={`${competition.source}:${competition.value}`}
+                    value={competition.value}
+                  >
+                    {competition.label}
                   </option>
                 ))}
               </select>
@@ -277,8 +316,8 @@ export function MyStatisticsPage() {
             <Target aria-hidden="true" />
             <h2>Aucun résultat pour cette sélection</h2>
             <p>
-              Les statistiques se rempliront automatiquement à mesure que vos
-              championnats et résultats historiques seront importés.
+              Les statistiques se rempliront automatiquement avec vos résultats
+              de championnats et vos résultats de tournois validés.
             </p>
           </div>
         )}
@@ -290,7 +329,9 @@ export function MyStatisticsPage() {
                 <Target aria-hidden="true" />
                 <span>Matchs joués</span>
                 <strong>{dashboard.summary.played}</strong>
-                <small>{dashboard.summary.draws} nul(s)</small>
+                <small>
+                  {dashboard.summary.wins} V · {dashboard.summary.losses} D
+                </small>
               </article>
               <article>
                 <Trophy aria-hidden="true" />
@@ -304,7 +345,9 @@ export function MyStatisticsPage() {
                 <TrendingDown aria-hidden="true" />
                 <span>Défaites</span>
                 <strong>{dashboard.summary.losses}</strong>
-                <small>{number.format(lossRate)} % des matchs</small>
+                <small>
+                  {number.format(dashboard.summary.lossRate)} % des matchs
+                </small>
               </article>
               <article>
                 <TrendingUp aria-hidden="true" />
@@ -327,7 +370,7 @@ export function MyStatisticsPage() {
                 <small>
                   {scoreMetricAvailable
                     ? `contre ${number.format(dashboard.summary.averageAgainst)}`
-                    : "sélectionnez une seule discipline"}
+                    : "barèmes différents dans la sélection"}
                 </small>
               </article>
               <article>
@@ -341,12 +384,17 @@ export function MyStatisticsPage() {
                 <small>
                   {scoreMetricAvailable
                     ? `${dashboard.summary.scoreFor} pour · ${dashboard.summary.scoreAgainst} contre`
-                    : "les barèmes diffèrent selon la discipline"}
+                    : "filtrez un barème comparable"}
                 </small>
               </article>
             </div>
 
             <div className="my-statistics__breakdowns">
+              <Breakdown
+                title="Par type"
+                subtitle="Championnats et tournois"
+                rows={dashboard.bySource}
+              />
               <Breakdown
                 title="Par discipline"
                 subtitle="Volume et taux de victoire"
@@ -363,9 +411,9 @@ export function MyStatisticsPage() {
                 rows={dashboard.byPhase}
               />
               <Breakdown
-                title="Par championnat"
-                subtitle="Comparaison de vos compétitions"
-                rows={dashboard.byChampionship}
+                title="Par compétition"
+                subtitle="Comparaison de vos championnats et tournois"
+                rows={dashboard.byCompetition}
               />
             </div>
 
@@ -381,6 +429,7 @@ export function MyStatisticsPage() {
                   <thead>
                     <tr>
                       <th>Date</th>
+                      <th>Type</th>
                       <th>Discipline</th>
                       <th>Adversaire</th>
                       <th>Phase</th>
@@ -392,6 +441,7 @@ export function MyStatisticsPage() {
                     {dashboard.recent.map((row) => (
                       <tr key={row.matchId}>
                         <td>{displayDate(row.date)}</td>
+                        <td>{sourceLabel[row.source]}</td>
                         <td>
                           <strong>{row.specialty}</strong>
                           <span>{row.seasonLabel}</span>
