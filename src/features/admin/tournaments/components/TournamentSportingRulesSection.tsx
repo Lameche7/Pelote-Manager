@@ -37,15 +37,16 @@ export function TournamentSportingRulesSection({
     let active = true;
     setSpecialtyLoading(true);
     setSpecialtyError("");
-    void supabase
-      .rpc("admin_get_tournament_specialty", {
-        target_id: rules.tournamentId,
-      })
-      .then(({ data, error }) => {
+
+    const loadSpecialty = async () => {
+      try {
+        const { data, error } = await supabase.rpc(
+          "admin_get_tournament_specialty",
+          { target_id: rules.tournamentId },
+        );
         if (error) throw error;
         if (active) setSpecialty(String(data ?? ""));
-      })
-      .catch((error: unknown) => {
+      } catch (error: unknown) {
         if (active) {
           setSpecialtyError(
             getSupabaseErrorMessage(
@@ -54,10 +55,12 @@ export function TournamentSportingRulesSection({
             ),
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (active) setSpecialtyLoading(false);
-      });
+      }
+    };
+
+    void loadSpecialty();
 
     return () => {
       active = false;
