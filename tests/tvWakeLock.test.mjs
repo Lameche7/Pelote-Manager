@@ -24,7 +24,22 @@ test("le Mode TV active et restaure le Wake Lock", async () => {
 test("le Wake Lock reste optionnel sur les navigateurs non compatibles", async () => {
   const wakeLock = await read("../src/features/tv/tvWakeLock.ts");
 
-  assert.match(wakeLock, /if \(!wakeLock \|\| !TV_PATH_PATTERN\.test/);
+  assert.match(wakeLock, /if \(!wakeLock\) return/);
   assert.match(wakeLock, /catch \{/);
-  assert.match(wakeLock, /le Mode TV reste fonctionnel/i);
+  assert.match(wakeLock, /Mode TV reste fonctionnel/i);
+});
+
+test("Amazon Silk reçoit un garde-fou média en plus du Wake Lock", async () => {
+  const wakeLock = await read("../src/features/tv/tvWakeLock.ts");
+
+  assert.match(wakeLock, /SILK_USER_AGENT_PATTERN = \/Silk\\\//);
+  assert.match(wakeLock, /setupSilkMediaKeepAlive\(\)/);
+  assert.match(wakeLock, /canvas\.captureStream/);
+  assert.match(wakeLock, /video\.muted = true/);
+  assert.match(wakeLock, /video\.autoplay = true/);
+  assert.match(wakeLock, /await video\.play\(\)/);
+  assert.match(wakeLock, /pointerdown/);
+  assert.match(wakeLock, /keydown/);
+  assert.match(wakeLock, /SILK_FRAME_INTERVAL_MS/);
+  assert.match(wakeLock, /stream\.getTracks\(\)/);
 });
