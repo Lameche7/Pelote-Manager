@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
+  BarChart3,
   Bell,
   CalendarDays,
   Clock3,
@@ -65,6 +66,13 @@ const standardCards: DashboardCard[] = [
       "Consulter votre équipe, vos matchs, vos résultats et votre poule.",
     icon: TrendingUp,
     to: ROUTES.myChampionships,
+  },
+  {
+    title: "Mes statistiques",
+    description:
+      "Analyser vos résultats de championnats et tournois avec des filtres détaillés.",
+    icon: BarChart3,
+    to: ROUTES.myStatistics,
   },
 ];
 
