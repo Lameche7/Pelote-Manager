@@ -6,7 +6,7 @@ on:
       - feature/global-player-identity
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   format:
@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: feature/global-player-identity
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -33,10 +35,23 @@ jobs:
             tests/myStatistics.test.mjs \
             tests/tvModeSettings.test.mjs \
             tests/viewportStability.test.mjs
-          git diff --binary > prettier.patch
-      - name: Upload patch
-        uses: actions/upload-artifact@v4
-        with:
-          name: prettier-network-patch
-          path: prettier.patch
-          if-no-files-found: error
+      - name: Commit exact Prettier output
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/features/admin/tournaments/components/TournamentSportingRulesSection.tsx \
+            src/features/tv/tvWakeLock.ts \
+            src/features/user-space/statistics/domain/championshipStatistics.ts \
+            src/features/user-space/statistics/pages/MyStatisticsPage.tsx \
+            src/features/user-space/statistics/services/myTournamentStatisticsService.ts \
+            tests/globalPlayerIdentityFoundation.test.mjs \
+            tests/myStatistics.test.mjs \
+            tests/tvModeSettings.test.mjs \
+            tests/viewportStability.test.mjs
+          git commit -m "style: normalize prettier baseline"
+          git push origin HEAD:feature/global-player-identity
