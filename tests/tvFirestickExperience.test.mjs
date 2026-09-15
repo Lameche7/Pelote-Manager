@@ -15,8 +15,9 @@ test("le lien public du Mode TV reste sur le domaine officiel depuis l’admin",
   assert.match(domains, /return `https:\/\/\$\{APP_HOST\}`/);
   assert.match(
     settingsPage,
-    /`\$\{currentApplicationOrigin\(\)\}\$\{ROUTES\.tv\}\/\$\{settings\.publicToken\}`/,
+    /const PUBLIC_TV_URL = "https:\/\/app\.pelotemanager\.fr\/tv\/pcl"/,
   );
+  assert.match(settingsPage, /const publicUrl = PUBLIC_TV_URL/);
 });
 
 test("le Mode TV propose un plein écran déclenché par l’utilisateur avec repli WebKit", async () => {

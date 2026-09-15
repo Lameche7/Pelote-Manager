@@ -109,8 +109,8 @@ export function TournamentSportingRulesSection({
         <div>
           <h3>3. Règles sportives & classement</h3>
           <p>
-            Ces paramètres sont la source de vérité du moteur de résultats et
-            de classement. La discipline alimente aussi le tableau de bord
+            Ces paramètres sont la source de vérité du moteur de résultats et de
+            classement. La discipline alimente aussi le tableau de bord
             personnel Mes statistiques.
           </p>
         </div>
@@ -122,7 +122,9 @@ export function TournamentSportingRulesSection({
           <input
             type="text"
             placeholder="Ex. Paleta gomme pleine"
-            disabled={!rules.tournamentId || specialtyLoading || specialtySaving}
+            disabled={
+              !rules.tournamentId || specialtyLoading || specialtySaving
+            }
             value={specialty}
             onChange={(event) => {
               setSpecialty(event.target.value);

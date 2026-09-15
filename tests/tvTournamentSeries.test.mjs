@@ -11,10 +11,12 @@ const [settings, page, service, seriesView] = await Promise.all([
   read("src/features/tv/pages/TvTournamentSeriesView.tsx"),
 ]);
 
-test("le lien Mode TV est toujours généré depuis le domaine application", () => {
-  assert.match(settings, /currentApplicationOrigin\(\)/);
-  assert.match(settings, /\$\{ROUTES\.tv\}\/\$\{settings\.publicToken\}/);
-  assert.doesNotMatch(settings, /window\.location\.origin.*ROUTES\.tv/);
+test("le lien Mode TV PCL reste l’adresse permanente officielle", () => {
+  assert.match(
+    settings,
+    /const PUBLIC_TV_URL = "https:\/\/app\.pelotemanager\.fr\/tv\/pcl"/,
+  );
+  assert.match(settings, /const publicUrl = PUBLIC_TV_URL/);
   assert.match(page, /const appUrl = currentApplicationOrigin\(\)/);
 });
 

@@ -57,15 +57,16 @@ export type ChampionshipStatisticsSummary = {
   currentStreak: { outcome: StatisticsOutcome; length: number } | null;
 };
 
-export const emptyChampionshipStatisticsFilters = (): ChampionshipStatisticsFilters => ({
-  source: "all",
-  season: "",
-  specialty: "",
-  competitionId: "",
-  divisionId: "",
-  phase: "",
-  teamSide: "all",
-});
+export const emptyChampionshipStatisticsFilters =
+  (): ChampionshipStatisticsFilters => ({
+    source: "all",
+    season: "",
+    specialty: "",
+    competitionId: "",
+    divisionId: "",
+    phase: "",
+    teamSide: "all",
+  });
 
 const matchDate = (match: MyChampionship["matches"][number]) =>
   match.agreementOn ?? match.reportOn ?? match.scheduledOn;
@@ -145,7 +146,8 @@ export const filterChampionshipStatisticsRows = (
     if (filters.specialty && row.specialty !== filters.specialty) return false;
     if (filters.competitionId && row.competitionId !== filters.competitionId)
       return false;
-    if (filters.divisionId && row.divisionId !== filters.divisionId) return false;
+    if (filters.divisionId && row.divisionId !== filters.divisionId)
+      return false;
     if (filters.phase && row.phase !== filters.phase) return false;
     if (filters.teamSide !== "all" && row.teamSide !== filters.teamSide)
       return false;
@@ -176,7 +178,8 @@ const breakdown = (
     })
     .sort(
       (left, right) =>
-        right.played - left.played || left.label.localeCompare(right.label, "fr"),
+        right.played - left.played ||
+        left.label.localeCompare(right.label, "fr"),
     );
 };
 

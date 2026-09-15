@@ -63,7 +63,9 @@ test("l’administration expose le lien permanent du Mode TV", async () => {
       read("../src/features/admin/config/adminPermissions.ts"),
       read("../src/app/router.tsx"),
       read("../src/shared/config/routes.ts"),
-      read("../supabase/migrations/20260914131731_fix_permanent_tv_pcl_link.sql"),
+      read(
+        "../supabase/migrations/20260914131731_fix_permanent_tv_pcl_link.sql",
+      ),
     ]);
 
   assert.match(service, /supabase\.rpc\("admin_get_tv_settings"\)/);
@@ -78,10 +80,7 @@ test("l’administration expose le lien permanent du Mode TV", async () => {
   assert.match(page, /18h30/);
   assert.match(page, /Réservé/);
   assert.match(routes, /tv: "\/tv"/);
-  assert.match(
-    permanentLinkMigration,
-    /08008b4d-9825-487d-a156-8e69f7b8aaca/,
-  );
+  assert.match(permanentLinkMigration, /08008b4d-9825-487d-a156-8e69f7b8aaca/);
   assert.match(
     permanentLinkMigration,
     /revoke execute on function public\.admin_rotate_tv_token\(\) from authenticated/,
