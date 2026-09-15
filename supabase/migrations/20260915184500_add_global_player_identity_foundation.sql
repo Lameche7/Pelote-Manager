@@ -21,7 +21,7 @@ create table public.sport_players (
 comment on table public.sport_players is
   'Identité sportive globale PILOTOKI. Une licence fédérale correspond à une seule identité, indépendamment des clubs auxquels le joueur est affilié.';
 comment on column public.sport_players.licence_number is
-  'Numéro de licence fédérale canonique et unique à l’échelle de PILOTOKI.';
+  'Numéro de licence fédérale canonique composé uniquement de chiffres et unique à l’échelle de PILOTOKI.';
 
 create table public.sport_player_club_affiliations (
   id uuid primary key default gen_random_uuid(),
@@ -66,7 +66,9 @@ create unique index profiles_sport_player_id_unique
   where sport_player_id is not null;
 
 -- Le registre PCL actuel devient la première source de vérité pour amorcer
--- l’identité sportive globale. Les coordonnées privées restent dans club_members.
+-- l’identité sportive globale. On utilise la même normalisation chiffres seuls
+-- que le module Championnat afin qu’une licence formatée 12-345 et 12345 soit
+-- reconnue comme une seule identité sportive.
 insert into public.sport_players (
   licence_number,
   first_name,
@@ -75,20 +77,34 @@ insert into public.sport_players (
   gender
 )
 select
-  member.licence_number_normalized,
+  regexp_replace(
+    coalesce(member.licence_number_normalized, member.licence_number, ''),
+    '[^0-9]+',
+    '',
+    'g'
+  ),
   member.first_name,
   member.last_name,
   member.birth_date,
   member.gender
 from public.club_members as member
-where member.licence_number_normalized is not null
-  and btrim(member.licence_number_normalized) <> ''
+where regexp_replace(
+    coalesce(member.licence_number_normalized, member.licence_number, ''),
+    '[^0-9]+',
+    '',
+    'g'
+  ) <> ''
 on conflict (licence_number) do nothing;
 
 update public.club_members as member
 set sport_player_id = player.id
 from public.sport_players as player
-where player.licence_number = member.licence_number_normalized
+where player.licence_number = regexp_replace(
+    coalesce(member.licence_number_normalized, member.licence_number, ''),
+    '[^0-9]+',
+    '',
+    'g'
+  )
   and member.sport_player_id is null;
 
 -- On ne déduit pas arbitrairement principal/extension des anciennes fiches.
@@ -121,12 +137,48 @@ where profile.member_id = member.id
   and profile.sport_player_id is null;
 
 -- Les joueurs de championnat déjà reconnus par licence peuvent pointer vers la
--- même identité globale sans modifier le fonctionnement du module Championnat.
+-- même identité globale. La comparaison reprend la normalisation chiffres seuls
+-- utilisée par les imports Championnat.
 update public.championship_players as championship_player
 set sport_player_id = player.id
 from public.sport_players as player
-where championship_player.licence_number = player.licence_number
+where regexp_replace(
+    coalesce(championship_player.licence_number, ''),
+    '[^0-9]+',
+    '',
+    'g'
+  ) = player.licence_number
   and championship_player.sport_player_id is null;
+
+-- Le nouveau lien d’identité ne doit jamais être modifiable directement par un
+-- client authentifié, même par un administrateur de club. Les futurs workflows
+-- serveur dédiés pourront lever explicitement ce verrou via un flag transactionnel.
+create function public.protect_profile_sport_player_link()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if auth.uid() is not null
+    and coalesce(
+      current_setting('app.allow_profile_sport_player_link', true),
+      'off'
+    ) <> 'on'
+    and new.sport_player_id is distinct from old.sport_player_id
+  then
+    raise exception 'Sport player links must be managed through a dedicated workflow'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger protect_profile_sport_player_link
+before update of sport_player_id on public.profiles
+for each row execute function public.protect_profile_sport_player_link();
+
+revoke all on function public.protect_profile_sport_player_link() from public;
 
 -- Garde-fous de migration : chaque fiche licencié canonique existante doit être
 -- reliée, et un profil lié à un membre ne doit jamais pointer vers un autre joueur.
@@ -135,8 +187,12 @@ begin
   if exists (
     select 1
     from public.club_members
-    where licence_number_normalized is not null
-      and btrim(licence_number_normalized) <> ''
+    where regexp_replace(
+        coalesce(licence_number_normalized, licence_number, ''),
+        '[^0-9]+',
+        '',
+        'g'
+      ) <> ''
       and sport_player_id is null
   ) then
     raise exception 'Global player backfill incomplete for club_members';
