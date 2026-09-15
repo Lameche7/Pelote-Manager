@@ -57,7 +57,9 @@ test("les imports championnat alimentent le même registre global", () => {
 
 test("ne déduit aucune affiliation club depuis un championnat", () => {
   const championshipFunction = migration.slice(
-    migration.indexOf("create function public.sync_championship_player_sport_player"),
+    migration.indexOf(
+      "create function public.sync_championship_player_sport_player",
+    ),
     migration.indexOf("-- Backfill des joueurs de championnat"),
   );
   assert.doesNotMatch(championshipFunction, /sport_player_club_affiliations/i);
