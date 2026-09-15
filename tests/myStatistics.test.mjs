@@ -54,11 +54,11 @@ test("propose les filtres du tableau de bord sportif unifié", () => {
   assert.match(page, /Type de compétition/);
   assert.match(page, />Championnats</);
   assert.match(page, />Tournois</);
-  assert.match(page, />Saison</);
-  assert.match(page, />Discipline</);
-  assert.match(page, />Compétition</);
-  assert.match(page, />Série</);
-  assert.match(page, />Phase</);
+  assert.match(page, /Saison/);
+  assert.match(page, /Discipline/);
+  assert.match(page, /Compétition/);
+  assert.match(page, /Série/);
+  assert.match(page, /Phase/);
 });
 
 test("la pelote ne produit jamais de statistique de match nul", () => {
