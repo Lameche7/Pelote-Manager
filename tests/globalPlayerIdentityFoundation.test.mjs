@@ -14,28 +14,58 @@ test("crée une identité sportive globale unique par licence", () => {
 });
 
 test("sépare l'identité globale des affiliations club", () => {
-  assert.match(migration, /create table public\.sport_player_club_affiliations/i);
-  assert.match(migration, /affiliation_type in \('primary', 'extension', 'unknown'\)/i);
+  assert.match(
+    migration,
+    /create table public\.sport_player_club_affiliations/i,
+  );
+  assert.match(
+    migration,
+    /affiliation_type in \('primary', 'extension', 'unknown'\)/i,
+  );
   assert.match(migration, /sport_player_id, club_id/i);
 });
 
 test("conserve les parcours PCL historiques pendant la transition", () => {
-  assert.match(migration, /alter table public\.club_members[\s\S]*add column sport_player_id/i);
-  assert.match(migration, /alter table public\.profiles[\s\S]*add column sport_player_id/i);
+  assert.match(
+    migration,
+    /alter table public\.club_members[\s\S]*add column sport_player_id/i,
+  );
+  assert.match(
+    migration,
+    /alter table public\.profiles[\s\S]*add column sport_player_id/i,
+  );
   assert.doesNotMatch(migration, /drop column member_id/i);
   assert.doesNotMatch(migration, /drop table public\.club_members/i);
-  assert.doesNotMatch(migration, /alter column sport_player_id set not null/i);
+  assert.doesNotMatch(
+    migration,
+    /alter column sport_player_id set not null/i,
+  );
 });
 
 test("backfill sans inventer une extension ou un club principal", () => {
   assert.match(migration, /'unknown'[\s\S]*member\.is_active/i);
   assert.match(migration, /source_member_id/i);
-  assert.match(migration, /Global player backfill incomplete for club_members/i);
+  assert.match(
+    migration,
+    /Global player backfill incomplete for club_members/i,
+  );
 });
 
 test("ne rend pas les identités globales directement accessibles au client", () => {
-  assert.match(migration, /alter table public\.sport_players enable row level security/i);
-  assert.match(migration, /alter table public\.sport_player_club_affiliations enable row level security/i);
-  assert.match(migration, /revoke all on table public\.sport_players from anon, authenticated/i);
-  assert.match(migration, /revoke all on table public\.sport_player_club_affiliations from anon, authenticated/i);
+  assert.match(
+    migration,
+    /alter table public\.sport_players enable row level security/i,
+  );
+  assert.match(
+    migration,
+    /alter table public\.sport_player_club_affiliations enable row level security/i,
+  );
+  assert.match(
+    migration,
+    /revoke all on table public\.sport_players from anon, authenticated/i,
+  );
+  assert.match(
+    migration,
+    /revoke all on table public\.sport_player_club_affiliations from anon, authenticated/i,
+  );
 });
