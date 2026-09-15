@@ -191,13 +191,6 @@ where sport_player.licence_number = regexp_replace(
   )
   and championship_player.sport_player_id is distinct from sport_player.id;
 
--- Rejoue la synchronisation logique des fiches existantes sans modifier leurs
--- données métier. Cela garantit que le trigger et le backfill convergent vers
--- le même état.
-update public.club_members
-set updated_at = updated_at
-where sport_player_id is not null;
-
 -- Invariants de sortie.
 do $$
 begin
