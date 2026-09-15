@@ -11,6 +11,10 @@ test("crée une identité sportive globale unique par licence", () => {
   assert.match(migration, /create table public\.sport_players/i);
   assert.match(migration, /unique \(licence_number\)/i);
   assert.match(migration, /Identité sportive globale PILOTOKI/i);
+  assert.match(
+    migration,
+    /regexp_replace\([\s\S]*licence_number_normalized[\s\S]*'\[\^0-9\]\+'[\s\S]*'g'/i,
+  );
 });
 
 test("sépare l'identité globale des affiliations club", () => {
@@ -48,6 +52,28 @@ test("backfill sans inventer une extension ou un club principal", () => {
   assert.match(
     migration,
     /Global player backfill incomplete for club_members/i,
+  );
+});
+
+test("normalise aussi les licences du championnat en chiffres seuls", () => {
+  assert.match(
+    migration,
+    /regexp_replace\([\s\S]*championship_player\.licence_number[\s\S]*'\[\^0-9\]\+'[\s\S]*'g'[\s\S]*= player\.licence_number/i,
+  );
+});
+
+test("protège le lien global du profil contre les mises à jour directes", () => {
+  assert.match(
+    migration,
+    /create function public\.protect_profile_sport_player_link\(\)/i,
+  );
+  assert.match(
+    migration,
+    /before update of sport_player_id on public\.profiles/i,
+  );
+  assert.match(
+    migration,
+    /app\.allow_profile_sport_player_link/i,
   );
 });
 
