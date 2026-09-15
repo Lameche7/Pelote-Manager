@@ -109,7 +109,10 @@ function setupSilkMediaKeepAlive() {
   const cleanup = () => {
     window.clearInterval(frameTimer);
     removeGestureListeners();
-    document.removeEventListener("visibilitychange", syncPlaybackWithVisibility);
+    document.removeEventListener(
+      "visibilitychange",
+      syncPlaybackWithVisibility,
+    );
     stream.getTracks().forEach((track) => track.stop());
     video.pause();
     video.srcObject = null;

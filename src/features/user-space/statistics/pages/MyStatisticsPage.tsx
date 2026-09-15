@@ -69,7 +69,9 @@ function Breakdown({
         <BarChart3 aria-hidden="true" />
       </header>
       {rows.length === 0 ? (
-        <p className="my-statistics__empty">Aucun match dans cette sélection.</p>
+        <p className="my-statistics__empty">
+          Aucun match dans cette sélection.
+        </p>
       ) : (
         <ul className="my-statistics__bars">
           {rows.map((row) => (
@@ -100,7 +102,9 @@ function Breakdown({
 
 export function MyStatisticsPage() {
   const [championships, setChampionships] = useState<MyChampionship[]>([]);
-  const [tournaments, setTournaments] = useState<MyTournamentStatisticsMatch[]>([]);
+  const [tournaments, setTournaments] = useState<MyTournamentStatisticsMatch[]>(
+    [],
+  );
   const [filters, setFilters] = useState<ChampionshipStatisticsFilters>(
     emptyChampionshipStatisticsFilters,
   );
@@ -136,7 +140,8 @@ export function MyStatisticsPage() {
   }, []);
 
   const dashboard = useMemo(
-    () => buildChampionshipStatisticsDashboard(championships, tournaments, filters),
+    () =>
+      buildChampionshipStatisticsDashboard(championships, tournaments, filters),
     [championships, tournaments, filters],
   );
 
@@ -199,7 +204,8 @@ export function MyStatisticsPage() {
                 value={filters.source}
                 onChange={(event) =>
                   setSource(
-                    event.target.value as ChampionshipStatisticsFilters["source"],
+                    event.target
+                      .value as ChampionshipStatisticsFilters["source"],
                   )
                 }
               >
@@ -259,7 +265,9 @@ export function MyStatisticsPage() {
               Série
               <select
                 value={filters.divisionId}
-                onChange={(event) => setFilter("divisionId", event.target.value)}
+                onChange={(event) =>
+                  setFilter("divisionId", event.target.value)
+                }
               >
                 <option value="">Toutes</option>
                 {dashboard.options.divisions.map((division) => (
@@ -290,7 +298,8 @@ export function MyStatisticsPage() {
                 onChange={(event) =>
                   setFilter(
                     "teamSide",
-                    event.target.value as ChampionshipStatisticsFilters["teamSide"],
+                    event.target
+                      .value as ChampionshipStatisticsFilters["teamSide"],
                   )
                 }
               >
@@ -308,7 +317,9 @@ export function MyStatisticsPage() {
 
         {error && <p className="my-statistics__error">{error}</p>}
         {loading && (
-          <p className="my-statistics__loading">Chargement de votre historique…</p>
+          <p className="my-statistics__loading">
+            Chargement de votre historique…
+          </p>
         )}
 
         {!loading && !error && dashboard.summary.played === 0 && (

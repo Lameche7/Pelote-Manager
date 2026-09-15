@@ -59,6 +59,8 @@ export const myTournamentStatisticsService = {
         ),
       );
     }
-    return rows(data).map(mapMatch).filter((row) => row.matchId);
+    return rows(data)
+      .map(mapMatch)
+      .filter((row) => row.matchId);
   },
 };

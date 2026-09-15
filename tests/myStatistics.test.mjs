@@ -65,7 +65,10 @@ test("la pelote ne produit jamais de statistique de match nul", () => {
   assert.doesNotMatch(domain, /"draw"/);
   assert.doesNotMatch(page, /Nul/);
   assert.doesNotMatch(page, /nul\(s\)/);
-  assert.match(domain, /if \(match\.scoreMine === match\.scoreOpponent\) return/);
+  assert.match(
+    domain,
+    /if \(match\.scoreMine === match\.scoreOpponent\) return/,
+  );
   assert.match(domain, /losses = rows\.length - wins/);
 });
 

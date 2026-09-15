@@ -40,10 +40,7 @@ test("conserve les parcours PCL historiques pendant la transition", () => {
   );
   assert.doesNotMatch(migration, /drop column member_id/i);
   assert.doesNotMatch(migration, /drop table public\.club_members/i);
-  assert.doesNotMatch(
-    migration,
-    /alter column sport_player_id set not null/i,
-  );
+  assert.doesNotMatch(migration, /alter column sport_player_id set not null/i);
 });
 
 test("backfill sans inventer une extension ou un club principal", () => {
@@ -71,10 +68,7 @@ test("protège le lien global du profil contre les mises à jour directes", () =
     migration,
     /before update of sport_player_id on public\.profiles/i,
   );
-  assert.match(
-    migration,
-    /app\.allow_profile_sport_player_link/i,
-  );
+  assert.match(migration, /app\.allow_profile_sport_player_link/i);
 });
 
 test("ne rend pas les identités globales directement accessibles au client", () => {
