@@ -111,6 +111,115 @@ from public, anon, authenticated;
 grant execute on function public.admin_import_errebot_tournament_configured(jsonb)
 to authenticated;
 
+-- La couleur de série est la source unique, même après publication. Les
+-- événements génériques créés pour le calendrier gardent donc leur cache de
+-- couleur synchronisé dans la même transaction.
+create or replace function public.admin_update_tournament_series_colors(
+  target_tournament_id uuid,
+  payload jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_club_id uuid := public.admin_current_club_id();
+  target_tournament public.tournaments;
+  item jsonb;
+  target_series_id uuid;
+  target_color text;
+  seen_series_ids uuid[] := '{}'::uuid[];
+begin
+  if not public.has_club_permission(target_club_id, 'tournaments.manage') then
+    raise exception 'Forbidden' using errcode = '42501';
+  end if;
+
+  select tournament.*
+  into target_tournament
+  from public.tournaments as tournament
+  where tournament.id = target_tournament_id
+    and tournament.club_id = target_club_id
+  for update;
+
+  if target_tournament.id is null then
+    raise exception 'Tournament not found' using errcode = 'P0002';
+  end if;
+
+  if target_tournament.status in ('archived', 'cancelled') then
+    raise exception 'Tournament series colors are locked at this stage'
+      using errcode = 'P0001';
+  end if;
+
+  if jsonb_typeof(payload) <> 'array' then
+    raise exception 'Tournament series colors are invalid' using errcode = '22023';
+  end if;
+
+  perform set_config('app.allow_tournament_event_sync', 'on', true);
+
+  for item in
+    select value from jsonb_array_elements(payload)
+  loop
+    target_series_id := nullif(item->>'id', '')::uuid;
+    target_color := upper(btrim(coalesce(item->>'color', '')));
+
+    if target_series_id is null
+      or target_color !~ '^#[0-9A-F]{6}$'
+      or target_series_id = any(seen_series_ids)
+      or not exists (
+        select 1
+        from public.tournament_series as series
+        where series.id = target_series_id
+          and series.tournament_id = target_tournament.id
+      ) then
+      raise exception 'Tournament series colors are invalid' using errcode = '22023';
+    end if;
+
+    update public.tournament_series
+    set color = target_color
+    where id = target_series_id
+      and tournament_id = target_tournament.id;
+
+    update public.events as event
+    set
+      color = target_color,
+      updated_by = auth.uid(),
+      updated_at = now()
+    from public.tournament_match_events as match_event
+    join public.tournament_matches as match
+      on match.id = match_event.match_id
+    where event.id = match_event.event_id
+      and event.club_id = target_club_id
+      and match.tournament_id = target_tournament.id
+      and match.series_id = target_series_id;
+
+    seen_series_ids := array_append(seen_series_ids, target_series_id);
+  end loop;
+
+  insert into public.tournament_audit_log (
+    tournament_id,
+    action,
+    before_status,
+    after_status,
+    payload,
+    created_by
+  )
+  values (
+    target_tournament.id,
+    'series_colors_updated',
+    target_tournament.status,
+    target_tournament.status,
+    jsonb_build_object('series_count', cardinality(seen_series_ids)),
+    auth.uid()
+  );
+end;
+$$;
+
+revoke all on function public.admin_update_tournament_series_colors(uuid, jsonb)
+from public, anon, authenticated;
+grant execute on function public.admin_update_tournament_series_colors(uuid, jsonb)
+to authenticated;
+
 -- Lecture légère des séries/couleurs disponible même après publication.
 create or replace function public.admin_get_tournament_series_colors(
   target_tournament_id uuid
