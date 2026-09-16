@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChampionshipStandingsImportCard } from "@/features/admin/championships/components/ChampionshipStandingsImportCard";
 import { championshipImportService } from "@/features/admin/championships/services/championshipImportService";
+import { championshipLifecycleService } from "@/features/admin/championships/services/championshipLifecycleService";
 import {
   championshipResultSettingsService,
   type ChampionshipResultInputMode,
@@ -30,12 +31,17 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
   const [divisions, setDivisions] = useState<
     Array<{ id: string; name: string }>
   >([]);
+  const [championshipName, setChampionshipName] = useState("");
+  const [championshipStatus, setChampionshipStatus] = useState("");
+  const [archiving, setArchiving] = useState(false);
+  const [archiveError, setArchiveError] = useState("");
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setMessage("");
     setError("");
+    setArchiveError("");
 
     void Promise.all([
       championshipResultSettingsService.get(championshipId),
@@ -53,6 +59,8 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
           setConfigured(false);
         }
         setSourceUrl(detail.sourceUrl);
+        setChampionshipName(detail.name);
+        setChampionshipStatus(detail.status);
         setDivisions(
           detail.divisions.map((division) => ({
             id: division.id,
@@ -114,6 +122,30 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
     }
   };
 
+  const archive = async () => {
+    if (championshipStatus === "archived" || archiving) return;
+
+    const confirmed = window.confirm(
+      `Archiver « ${championshipName || "ce championnat"} » ?\n\nLes données resteront consultables, mais ses joueurs ne bénéficieront plus de l’accès réservé championnat.`,
+    );
+    if (!confirmed) return;
+
+    setArchiving(true);
+    setArchiveError("");
+    try {
+      await championshipLifecycleService.archive(championshipId);
+      setChampionshipStatus("archived");
+      window.location.reload();
+    } catch (cause) {
+      setArchiveError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible d’archiver le championnat.",
+      );
+      setArchiving(false);
+    }
+  };
+
   return (
     <>
       <div className="admin-card admin-championships__update admin-championships__result-settings">
@@ -145,7 +177,7 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
                   setMessage("");
                   setError("");
                 }}
-                disabled={saving}
+                disabled={saving || championshipStatus === "archived"}
               >
                 <option value="points">Score en points</option>
                 <option value="sets">Score en manches</option>
@@ -165,12 +197,16 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
                   setMessage("");
                   setError("");
                 }}
-                disabled={saving}
+                disabled={saving || championshipStatus === "archived"}
               />
               <span>{hintForWinningScore(mode)}</span>
             </label>
 
-            <button type="button" onClick={() => void save()} disabled={saving}>
+            <button
+              type="button"
+              onClick={() => void save()}
+              disabled={saving || championshipStatus === "archived"}
+            >
               {saving
                 ? "Enregistrement…"
                 : configured
@@ -193,6 +229,33 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
           </p>
         )}
       </div>
+
+      {!loading && championshipStatus !== "archived" && (
+        <div className="admin-card admin-championships__archive-card">
+          <div>
+            <p className="admin-page__eyebrow">Cycle de vie</p>
+            <h2>Archiver ce championnat</h2>
+            <p>
+              L’archivage conserve les équipes, parties, résultats et historiques,
+              mais retire immédiatement ce championnat des droits de réservation
+              anticipée de ses joueurs.
+            </p>
+          </div>
+          <button
+            className="admin-championships__archive-button"
+            type="button"
+            onClick={() => void archive()}
+            disabled={archiving}
+          >
+            {archiving ? "Archivage…" : "Archiver le championnat"}
+          </button>
+          {archiveError && (
+            <p className="admin-championships__alert" role="alert">
+              {archiveError}
+            </p>
+          )}
+        </div>
+      )}
 
       {!loading && (
         <ChampionshipStandingsImportCard
