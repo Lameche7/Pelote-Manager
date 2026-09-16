@@ -9,6 +9,8 @@ export type TvDisplaySlot = {
   endsAt: string;
   status: TvSlotStatus;
   displayName: string | null;
+  seriesName: string | null;
+  displayColor: string | null;
 };
 
 export type TvDisplayResource = {
@@ -24,6 +26,8 @@ export type TvWeekItem = {
   endsAt: string;
   status: TvWeekItemStatus;
   displayName: string;
+  seriesName: string | null;
+  displayColor: string | null;
 };
 
 export type TvWeekDay = {
@@ -47,6 +51,14 @@ export type TvDisplay = {
   weekDays: TvWeekDay[];
 };
 
+type TournamentSlotDecoration = {
+  resourceId: string;
+  startsAt: string;
+  endsAt: string;
+  seriesName: string;
+  displayColor: string;
+};
+
 const statuses = new Set<TvDisplayStatus>(["ready", "disabled", "invalid"]);
 const slotStatuses = new Set<TvSlotStatus>([
   "available",
@@ -54,38 +66,98 @@ const slotStatuses = new Set<TvSlotStatus>([
   "unavailable",
 ]);
 const weekItemStatuses = new Set<TvWeekItemStatus>(["reserved", "unavailable"]);
+const colorPattern = /^#[0-9A-Fa-f]{6}$/;
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 
-const mapSlot = (value: unknown): TvDisplaySlot => {
+const mapDecoration = (value: unknown): TournamentSlotDecoration | null => {
+  const row = asRecord(value);
+  const resourceId = String(row.resource_id ?? "");
+  const startsAt = String(row.starts_at ?? "");
+  const endsAt = String(row.ends_at ?? "");
+  const seriesName = String(row.series_name ?? "");
+  const displayColor = String(row.display_color ?? "").toUpperCase();
+
+  if (
+    !resourceId ||
+    !startsAt ||
+    !endsAt ||
+    !seriesName ||
+    !colorPattern.test(displayColor)
+  ) {
+    return null;
+  }
+
+  return { resourceId, startsAt, endsAt, seriesName, displayColor };
+};
+
+const findDecoration = (
+  decorations: TournamentSlotDecoration[],
+  resourceId: string,
+  startsAt: string,
+  endsAt: string,
+) => {
+  const start = Date.parse(startsAt);
+  const end = Date.parse(endsAt);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+
+  return (
+    decorations.find((decoration) => {
+      if (decoration.resourceId !== resourceId) return false;
+      const decorationStart = Date.parse(decoration.startsAt);
+      const decorationEnd = Date.parse(decoration.endsAt);
+      return decorationStart < end && decorationEnd > start;
+    }) ?? null
+  );
+};
+
+const mapSlot = (
+  value: unknown,
+  resourceId: string,
+  decorations: TournamentSlotDecoration[],
+): TvDisplaySlot => {
   const row = asRecord(value);
   const status = String(row.status ?? "unavailable") as TvSlotStatus;
+  const startsAt = String(row.starts_at ?? "");
+  const endsAt = String(row.ends_at ?? "");
+  const decoration = findDecoration(decorations, resourceId, startsAt, endsAt);
 
   return {
-    startsAt: String(row.starts_at ?? ""),
-    endsAt: String(row.ends_at ?? ""),
+    startsAt,
+    endsAt,
     status: slotStatuses.has(status) ? status : "unavailable",
     displayName:
       row.display_name === null || row.display_name === undefined
         ? null
         : String(row.display_name),
+    seriesName: decoration?.seriesName ?? null,
+    displayColor: decoration?.displayColor ?? null,
   };
 };
 
-const mapWeekItem = (value: unknown): TvWeekItem => {
+const mapWeekItem = (
+  value: unknown,
+  decorations: TournamentSlotDecoration[],
+): TvWeekItem => {
   const row = asRecord(value);
   const status = String(row.status ?? "unavailable") as TvWeekItemStatus;
+  const resourceId = String(row.resource_id ?? "");
+  const startsAt = String(row.starts_at ?? "");
+  const endsAt = String(row.ends_at ?? "");
+  const decoration = findDecoration(decorations, resourceId, startsAt, endsAt);
 
   return {
-    resourceId: String(row.resource_id ?? ""),
+    resourceId,
     resourceName: String(row.resource_name ?? "Terrain"),
-    startsAt: String(row.starts_at ?? ""),
-    endsAt: String(row.ends_at ?? ""),
+    startsAt,
+    endsAt,
     status: weekItemStatuses.has(status) ? status : "unavailable",
     displayName: String(row.display_name ?? "Indisponible"),
+    seriesName: decoration?.seriesName ?? null,
+    displayColor: decoration?.displayColor ?? null,
   };
 };
 
@@ -98,6 +170,7 @@ const clampViewDuration = (value: unknown) => {
 const mapDisplay = (
   value: unknown,
   viewDurationSeconds: unknown,
+  decorations: TournamentSlotDecoration[],
 ): TvDisplay => {
   const row = asRecord(value);
   const status = String(row.status ?? "invalid") as TvDisplayStatus;
@@ -123,34 +196,52 @@ const mapDisplay = (
     ),
     viewDurationSeconds: clampViewDuration(viewDurationSeconds),
     generatedAt: row.generated_at ? String(row.generated_at) : null,
-    resources: resources.map((resource) => ({
-      id: String(resource.id ?? ""),
-      name: String(resource.name ?? "Terrain"),
-      slots: Array.isArray(resource.slots) ? resource.slots.map(mapSlot) : [],
-    })),
+    resources: resources.map((resource) => {
+      const resourceId = String(resource.id ?? "");
+      return {
+        id: resourceId,
+        name: String(resource.name ?? "Terrain"),
+        slots: Array.isArray(resource.slots)
+          ? resource.slots.map((slot) => mapSlot(slot, resourceId, decorations))
+          : [],
+      };
+    }),
     weekStart: row.week_start ? String(row.week_start) : null,
     weekEnd: row.week_end ? String(row.week_end) : null,
     weekDays: weekDays.map((day) => ({
       date: String(day.date ?? ""),
-      items: Array.isArray(day.items) ? day.items.map(mapWeekItem) : [],
+      items: Array.isArray(day.items)
+        ? day.items.map((item) => mapWeekItem(item, decorations))
+        : [],
     })),
   };
 };
 
 export const tvDisplayService = {
   async getDisplay(token: string): Promise<TvDisplay> {
-    const [displayResult, durationResult] = await Promise.all([
-      supabase.rpc("get_public_tv_display", {
-        target_token: token,
-      }),
-      supabase.rpc("get_public_tv_view_duration", {
-        target_token: token,
-      }),
-    ]);
+    const [displayResult, durationResult, decorationResult] = await Promise.all(
+      [
+        supabase.rpc("get_public_tv_display", {
+          target_token: token,
+        }),
+        supabase.rpc("get_public_tv_view_duration", {
+          target_token: token,
+        }),
+        supabase.rpc("get_public_tv_tournament_slot_colors", {
+          target_token: token,
+        }),
+      ],
+    );
 
     if (displayResult.error) throw displayResult.error;
     if (durationResult.error) throw durationResult.error;
 
-    return mapDisplay(displayResult.data, durationResult.data);
+    const decorations = decorationResult.error
+      ? []
+      : ((decorationResult.data ?? []) as unknown[])
+          .map(mapDecoration)
+          .filter((item): item is TournamentSlotDecoration => item !== null);
+
+    return mapDisplay(displayResult.data, durationResult.data, decorations);
   },
 };

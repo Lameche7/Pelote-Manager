@@ -257,6 +257,15 @@
   color: #fca5a5;
 }
 
+.tv-display__slot--tournament {
+  border-left: 0.35rem solid var(--tv-tournament-color);
+  background: rgb(255 255 255 / 7%);
+}
+
+.tv-display__slot--tournament strong {
+  color: var(--tv-tournament-color);
+}
+
 .tv-display__empty {
   margin: auto;
   padding: 1rem;

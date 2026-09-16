@@ -154,6 +154,11 @@
   background: rgb(127 29 29 / 24%);
 }
 
+.tv-display__week-item--tournament {
+  border-left-color: var(--tv-tournament-color);
+  background: rgb(255 255 255 / 7%);
+}
+
 .tv-display__week-item time {
   overflow: hidden;
   color: #fff;
@@ -174,6 +179,10 @@
 .tv-display__week-item strong {
   color: #f8fafc;
   font-size: clamp(0.58rem, 1.1vmin, 0.8rem);
+}
+
+.tv-display__week-item--tournament strong {
+  color: var(--tv-tournament-color);
 }
 
 .tv-display__week-item span {

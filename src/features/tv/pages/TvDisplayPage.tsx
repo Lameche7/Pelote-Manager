@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   CalendarDays,
   CalendarRange,
@@ -106,14 +112,24 @@ const dateFromIso = (value: string | null, fallback = new Date()) => {
 const formatDisplayDate = (value: string | null, fallback: Date) =>
   dateFormatter.format(dateFromIso(value, fallback));
 
+const tournamentColorStyle = (
+  color: string | null,
+): CSSProperties | undefined =>
+  color ? ({ "--tv-tournament-color": color } as CSSProperties) : undefined;
+
 const slotLabel = (slot: TvDisplaySlot) => {
+  if (slot.seriesName) return `Tournoi · ${slot.seriesName}`;
   if (slot.status === "available") return "Disponible";
   if (slot.status === "reserved") return "Réservé";
   return "Indisponible";
 };
 
 const weekItemLabel = (item: TvWeekItem) =>
-  item.status === "reserved" ? "Réservé" : "Indisponible";
+  item.seriesName
+    ? `Tournoi · ${item.seriesName}`
+    : item.status === "reserved"
+      ? "Réservé"
+      : "Indisponible";
 
 const buildQrImageUrl = (value: string) =>
   `${QR_ENDPOINT}?text=${encodeURIComponent(value)}&format=svg&size=280&margin=2&ecLevel=M`;
@@ -454,8 +470,9 @@ export function TvDisplayPage() {
                   <div className="tv-display__slots">
                     {resource.slots.map((slot) => (
                       <div
-                        className={`tv-display__slot tv-display__slot--${slot.status}`}
+                        className={`tv-display__slot tv-display__slot--${slot.status}${slot.displayColor ? " tv-display__slot--tournament" : ""}`}
                         key={`${resource.id}-${slot.startsAt}`}
+                        style={tournamentColorStyle(slot.displayColor)}
                       >
                         <time dateTime={slot.startsAt}>
                           {timeFormatter.format(new Date(slot.startsAt))}
@@ -555,8 +572,9 @@ export function TvDisplayPage() {
                     ) : (
                       visibleItems.map((item) => (
                         <div
-                          className={`tv-display__week-item tv-display__week-item--${item.status}`}
+                          className={`tv-display__week-item tv-display__week-item--${item.status}${item.displayColor ? " tv-display__week-item--tournament" : ""}`}
                           key={`${item.resourceId}-${item.startsAt}`}
+                          style={tournamentColorStyle(item.displayColor)}
                         >
                           <time dateTime={item.startsAt}>
                             {timeFormatter.format(new Date(item.startsAt))}

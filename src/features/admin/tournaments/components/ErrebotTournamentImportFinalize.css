@@ -124,6 +124,46 @@
   width: auto;
 }
 
+.errebot-import-finalize__series-colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+
+.errebot-import-finalize__series-colors label {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.errebot-import-finalize__series-colors input[type="color"] {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0.1rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.errebot-import-finalize__series-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.14);
+}
+
+.errebot-import-finalize__series-colors strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .errebot-import-finalize__required-note {
   font-weight: 700;
 }
