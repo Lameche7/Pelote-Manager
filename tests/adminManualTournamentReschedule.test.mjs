@@ -24,7 +24,10 @@ test("l'admin peut créer une demande de report sans compte joueur", async () =>
   assert.match(migration, /admin_get_tournament_manual_reschedule_context/);
   assert.match(migration, /admin_get_tournament_manual_reschedule_slots/);
   assert.match(migration, /admin_create_tournament_manual_reschedule_request/);
-  assert.match(migration, /has_club_permission\(target_club_id, 'tournaments\.manage'\)/);
+  assert.match(
+    migration,
+    /has_club_permission\(target_club_id, 'tournaments\.manage'\)/,
+  );
   assert.match(migration, /'offline_admin'/);
   assert.match(migration, /'admin_manual'/);
   assert.match(migration, /tournament_reschedule_approvals/);
