@@ -25,35 +25,20 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
           path = Path("src/app/router.tsx")
           text = path.read_text()
-
           import_marker = 'import { AdminMembersPage } from "@/features/admin/members/pages/AdminMembersPage";\n'
           import_line = 'import { AdminUnlicensedPilotokiUsersPage } from "@/features/admin/members/pages/AdminUnlicensedPilotokiUsersPage";\n'
           if import_line not in text:
               if import_marker not in text:
                   raise RuntimeError("member import marker not found")
               text = text.replace(import_marker, import_marker + import_line, 1)
-
-          route_marker = '''          {
-            path: "membres",
-            element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />),
-          },
-'''
-          route_block = route_marker + '''          {
-            path: "membres/inscrits-sans-licence",
-            element: permitted(
-              ADMIN_PERMISSIONS.members,
-              <AdminUnlicensedPilotokiUsersPage />,
-            ),
-          },
-'''
+          route_marker = '          {\n            path: "membres",\n            element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />),\n          },\n'
+          route_addition = '          {\n            path: "membres/inscrits-sans-licence",\n            element: permitted(\n              ADMIN_PERMISSIONS.members,\n              <AdminUnlicensedPilotokiUsersPage />,\n            ),\n          },\n'
           if 'path: "membres/inscrits-sans-licence"' not in text:
               if route_marker not in text:
                   raise RuntimeError("member route marker not found")
-              text = text.replace(route_marker, route_block, 1)
-
+              text = text.replace(route_marker, route_marker + route_addition, 1)
           path.write_text(text)
           PY
       - name: Format changed files
