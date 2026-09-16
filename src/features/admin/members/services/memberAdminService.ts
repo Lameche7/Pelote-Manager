@@ -1,6 +1,8 @@
 import { supabase } from "@/infrastructure/supabase/client";
 import type { Json } from "@/infrastructure/supabase/database";
 import type {
+  AdminLicenceLinkInput,
+  AdminLicenceLinkPreview,
   AdminMember,
   AdminUnlicensedPilotokiUser,
   MemberDetail,
@@ -28,6 +30,20 @@ export const memberAdminService = {
       filters,
     });
     return value(r.data, r.error) as AdminUnlicensedPilotokiUser[];
+  },
+  previewProfileLicenceLink: async (
+    profileId: string,
+    licenceNumber: string,
+  ) => {
+    const r = await supabase.rpc("admin_preview_profile_licence_link", {
+      target_profile_id: profileId,
+      target_licence_number: licenceNumber,
+    });
+    return value(r.data, r.error) as AdminLicenceLinkPreview;
+  },
+  linkUnlicensedProfile: async (payload: AdminLicenceLinkInput) => {
+    const r = await supabase.rpc("admin_link_unlicensed_profile", { payload });
+    return value(r.data, r.error);
   },
   searchGlobal: async (filters: Record<string, Json> = {}) => {
     const r = await supabase.rpc("admin_search_members_global", { filters });

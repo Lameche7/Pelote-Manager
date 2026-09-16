@@ -30,6 +30,37 @@ export type AdminUnlicensedPilotokiUser = {
   status: "unlinked" | "member_inactive" | "unlicensed";
   total_count: number;
 };
+export type AdminLicenceLinkPreview = {
+  licenceNumber: string;
+  foundGlobally: boolean;
+  foundInClub: boolean;
+  sportPlayerId: string | null;
+  memberId: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  birthDate: string | null;
+  gender: MemberGender | null;
+  memberActive: boolean;
+  licensedThisSeason: boolean;
+  affiliationType: "primary" | "extension" | "unknown" | null;
+  otherAffiliations: Array<{
+    clubId: string;
+    clubName: string;
+    affiliationType: "primary" | "extension" | "unknown";
+  }>;
+  linkedToAnotherAccount: boolean;
+  requiresIdentityDetails: boolean;
+};
+export type AdminLicenceLinkInput = {
+  profileId: string;
+  licenceNumber: string;
+  affiliationType: "primary" | "extension";
+  firstName?: string;
+  lastName?: string;
+  birthDate?: string;
+  gender?: MemberGender;
+  reason?: string;
+};
 export type MemberForm = {
   licenceNumber: string;
   lastName: string;

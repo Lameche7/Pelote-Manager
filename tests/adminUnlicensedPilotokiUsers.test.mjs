@@ -38,3 +38,36 @@ test("le back-office expose les inscrits PILOTOKI sans licence active", async ()
   assert.match(routes, /adminUnlicensedUsers/);
   assert.match(router, /AdminUnlicensedPilotokiUsersPage/);
 });
+
+test("un administrateur peut rattacher manuellement un compte à une licence", async () => {
+  const [migration, page, service, hooks] = await Promise.all([
+    read(
+      "supabase/migrations/20260916211500_add_admin_profile_licence_linking.sql",
+    ),
+    read(
+      "src/features/admin/members/pages/AdminUnlicensedPilotokiUsersPage.tsx",
+    ),
+    read("src/features/admin/members/services/memberAdminService.ts"),
+    read("src/features/admin/members/hooks/useAdminMembers.ts"),
+  ]);
+
+  assert.match(migration, /admin_preview_profile_licence_link/);
+  assert.match(migration, /admin_link_unlicensed_profile/);
+  assert.match(migration, /affiliation_kind not in \('primary', 'extension'\)/);
+  assert.match(migration, /sport_player_club_affiliations/);
+  assert.match(migration, /set_config\('app\.allow_profile_member_link'/);
+  assert.match(migration, /set_config\('app\.allow_profile_sport_player_link'/);
+  assert.match(migration, /admin_account_linked/);
+  assert.match(
+    migration,
+    /Cette licence possède déjà un club principal : utilisez Extension/,
+  );
+  assert.match(service, /previewProfileLicenceLink/);
+  assert.match(service, /linkUnlicensedProfile/);
+  assert.match(hooks, /usePreviewProfileLicenceLink/);
+  assert.match(hooks, /useLinkUnlicensedProfile/);
+  assert.match(page, /Rattacher/);
+  assert.match(page, /Licence au club/);
+  assert.match(page, /Extension depuis un autre club/);
+  assert.match(page, /Vérifier la licence/);
+});
