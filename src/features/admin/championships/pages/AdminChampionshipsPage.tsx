@@ -353,9 +353,10 @@ export function AdminChampionshipsPage() {
                 <p className="admin-page__eyebrow">Actualisation</p>
                 <h2>Mettre à jour avec le nouveau parties.xlsx</h2>
                 <p>
-                  Pas besoin de réimporter les engagements. Pelote Manager compare
-                  le fichier à l’état actuel avant toute écriture : nouveaux
-                  résultats, reports, changements de lieu et nouvelles phases.
+                  Pas besoin de réimporter les engagements. Pelote Manager
+                  compare le fichier à l’état actuel avant toute écriture :
+                  nouveaux résultats, reports, changements de lieu et nouvelles
+                  phases.
                 </p>
               </div>
               <div className="admin-championships__update-controls">
@@ -384,7 +385,10 @@ export function AdminChampionshipsPage() {
               </div>
 
               {filePreview && !filePreview.valid && (
-                <div className="admin-championships__update-issues" role="alert">
+                <div
+                  className="admin-championships__update-issues"
+                  role="alert"
+                >
                   <strong>Le fichier ne peut pas encore être utilisé.</strong>
                   {filePreview.issues.map((issue, index) => (
                     <p key={`${issue.row}-${index}`}>{issue.message}</p>
@@ -451,8 +455,8 @@ export function AdminChampionshipsPage() {
                               {change.category} · {change.phase}
                             </strong>
                             <span>
-                              {change.team1} {change.team1Number} — {change.team2}{" "}
-                              {change.team2Number}
+                              {change.team1} {change.team1Number} —{" "}
+                              {change.team2} {change.team2Number}
                               {change.score ? ` · ${change.score}` : ""}
                             </span>
                             <small>{change.fields.join(", ")}</small>
