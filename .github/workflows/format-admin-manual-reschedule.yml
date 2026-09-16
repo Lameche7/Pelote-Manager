@@ -36,3 +36,5 @@ jobs:
           fi
           git commit -m "style(reschedules): apply prettier"
           git push origin HEAD:feat/admin-manual-reschedules
+
+# Temporary workflow: removed after formatting the PR branch.
