@@ -12,11 +12,14 @@ export type ChampionshipReservationResource = {
   selected: boolean;
 };
 
+export type ChampionshipMatchPaymentMode = "free" | "standard";
+
 export type ChampionshipReservationSettings = {
   clubId: string;
   enabled: boolean;
   advanceDays: number;
   maxActiveReservations: number;
+  matchPaymentMode: ChampionshipMatchPaymentMode;
   eligiblePlayerCount: number;
   resources: ChampionshipReservationResource[];
   windows: ChampionshipReservationWindow[];
@@ -35,22 +38,28 @@ export const championshipReservationService = {
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error("Paramètres championnat introuvables.");
-    return data;
+    return {
+      ...data,
+      matchPaymentMode:
+        data.matchPaymentMode === "standard" ? "standard" : "free",
+    };
   },
 
   async saveSettings(input: {
     enabled: boolean;
     advanceDays: number;
     maxActiveReservations: number;
+    matchPaymentMode: ChampionshipMatchPaymentMode;
     resourceIds: string[];
     windows: ChampionshipReservationWindow[];
   }): Promise<void> {
     const { error } = await supabase.rpc(
-      "admin_save_championship_reservation_settings",
+      "admin_save_championship_reservation_settings_v2",
       {
         target_enabled: input.enabled,
         target_advance_days: input.advanceDays,
         target_max_active_reservations: input.maxActiveReservations,
+        target_match_payment_mode: input.matchPaymentMode,
         target_resource_ids: input.resourceIds,
         target_windows: input.windows.map((window) => ({
           weekday: window.weekday,
