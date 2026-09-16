@@ -267,8 +267,8 @@ export function AdminUnlicensedPilotokiUsersPage() {
               Rattacher {displayName(selectedUser)}
             </h2>
             <p>
-              Vérifie d’abord le numéro de licence. Aucun rattachement n’est fait
-              avant la validation finale.
+              Vérifie d’abord le numéro de licence. Aucun rattachement n’est
+              fait avant la validation finale.
             </p>
 
             <div className="form-grid">
@@ -335,7 +335,8 @@ export function AdminUnlicensedPilotokiUsersPage() {
                 {preview.foundInClub && (
                   <p>
                     Fiche club {preview.memberActive ? "active" : "inactive"} ·
-                    saison actuelle {preview.licensedThisSeason ? "licenciée" : "non licenciée"}
+                    saison actuelle{" "}
+                    {preview.licensedThisSeason ? "licenciée" : "non licenciée"}
                   </p>
                 )}
                 {preview.otherAffiliations.length > 0 && (
@@ -386,9 +387,7 @@ export function AdminUnlicensedPilotokiUsersPage() {
                   <select
                     value={gender}
                     onChange={(event) =>
-                      setGender(
-                        event.target.value as "" | "male" | "female",
-                      )
+                      setGender(event.target.value as "" | "male" | "female")
                     }
                   >
                     <option value="">Choisir</option>

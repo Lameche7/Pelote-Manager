@@ -29,7 +29,8 @@ export const usePreviewProfileLicenceLink = () =>
     }: {
       profileId: string;
       licenceNumber: string;
-    }) => memberAdminService.previewProfileLicenceLink(profileId, licenceNumber),
+    }) =>
+      memberAdminService.previewProfileLicenceLink(profileId, licenceNumber),
   });
 export const useLinkUnlicensedProfile = () => {
   const client = useQueryClient();
