@@ -51,12 +51,13 @@ export type TvDisplay = {
   weekDays: TvWeekDay[];
 };
 
-type TournamentSlotDecoration = {
+type SlotDecoration = {
   resourceId: string;
   startsAt: string;
   endsAt: string;
-  seriesName: string;
+  seriesName: string | null;
   displayColor: string;
+  displayName: string | null;
 };
 
 const statuses = new Set<TvDisplayStatus>(["ready", "disabled", "invalid"]);
@@ -73,7 +74,7 @@ const asRecord = (value: unknown): Record<string, unknown> =>
     ? (value as Record<string, unknown>)
     : {};
 
-const mapDecoration = (value: unknown): TournamentSlotDecoration | null => {
+const mapTournamentDecoration = (value: unknown): SlotDecoration | null => {
   const row = asRecord(value);
   const resourceId = String(row.resource_id ?? "");
   const startsAt = String(row.starts_at ?? "");
@@ -91,11 +92,49 @@ const mapDecoration = (value: unknown): TournamentSlotDecoration | null => {
     return null;
   }
 
-  return { resourceId, startsAt, endsAt, seriesName, displayColor };
+  return {
+    resourceId,
+    startsAt,
+    endsAt,
+    seriesName,
+    displayColor,
+    displayName: null,
+  };
+};
+
+const mapChampionshipDecoration = (value: unknown): SlotDecoration | null => {
+  const row = asRecord(value);
+  const resourceId = String(row.resource_id ?? "");
+  const startsAt = String(row.starts_at ?? "");
+  const endsAt = String(row.ends_at ?? "");
+  const displayColor = String(row.display_color ?? "").toUpperCase();
+  const championshipName = String(row.championship_name ?? "");
+  const divisionName = String(row.division_name ?? "");
+  const matchLabel = String(row.match_label ?? "");
+
+  if (
+    !resourceId ||
+    !startsAt ||
+    !endsAt ||
+    !colorPattern.test(displayColor)
+  ) {
+    return null;
+  }
+
+  return {
+    resourceId,
+    startsAt,
+    endsAt,
+    seriesName: null,
+    displayColor,
+    displayName:
+      [championshipName, divisionName, matchLabel].filter(Boolean).join(" · ") ||
+      "Match championnat",
+  };
 };
 
 const findDecoration = (
-  decorations: TournamentSlotDecoration[],
+  decorations: SlotDecoration[],
   resourceId: string,
   startsAt: string,
   endsAt: string,
@@ -117,7 +156,7 @@ const findDecoration = (
 const mapSlot = (
   value: unknown,
   resourceId: string,
-  decorations: TournamentSlotDecoration[],
+  decorations: SlotDecoration[],
 ): TvDisplaySlot => {
   const row = asRecord(value);
   const status = String(row.status ?? "unavailable") as TvSlotStatus;
@@ -130,9 +169,10 @@ const mapSlot = (
     endsAt,
     status: slotStatuses.has(status) ? status : "unavailable",
     displayName:
-      row.display_name === null || row.display_name === undefined
+      decoration?.displayName ??
+      (row.display_name === null || row.display_name === undefined
         ? null
-        : String(row.display_name),
+        : String(row.display_name)),
     seriesName: decoration?.seriesName ?? null,
     displayColor: decoration?.displayColor ?? null,
   };
@@ -140,7 +180,7 @@ const mapSlot = (
 
 const mapWeekItem = (
   value: unknown,
-  decorations: TournamentSlotDecoration[],
+  decorations: SlotDecoration[],
 ): TvWeekItem => {
   const row = asRecord(value);
   const status = String(row.status ?? "unavailable") as TvWeekItemStatus;
@@ -155,7 +195,8 @@ const mapWeekItem = (
     startsAt,
     endsAt,
     status: weekItemStatuses.has(status) ? status : "unavailable",
-    displayName: String(row.display_name ?? "Indisponible"),
+    displayName:
+      decoration?.displayName ?? String(row.display_name ?? "Indisponible"),
     seriesName: decoration?.seriesName ?? null,
     displayColor: decoration?.displayColor ?? null,
   };
@@ -170,7 +211,7 @@ const clampViewDuration = (value: unknown) => {
 const mapDisplay = (
   value: unknown,
   viewDurationSeconds: unknown,
-  decorations: TournamentSlotDecoration[],
+  decorations: SlotDecoration[],
 ): TvDisplay => {
   const row = asRecord(value);
   const status = String(row.status ?? "invalid") as TvDisplayStatus;
@@ -219,29 +260,43 @@ const mapDisplay = (
 
 export const tvDisplayService = {
   async getDisplay(token: string): Promise<TvDisplay> {
-    const [displayResult, durationResult, decorationResult] = await Promise.all(
-      [
-        supabase.rpc("get_public_tv_display", {
-          target_token: token,
-        }),
-        supabase.rpc("get_public_tv_view_duration", {
-          target_token: token,
-        }),
-        supabase.rpc("get_public_tv_tournament_slot_colors", {
-          target_token: token,
-        }),
-      ],
-    );
+    const [
+      displayResult,
+      durationResult,
+      tournamentDecorationResult,
+      championshipDecorationResult,
+    ] = await Promise.all([
+      supabase.rpc("get_public_tv_display", {
+        target_token: token,
+      }),
+      supabase.rpc("get_public_tv_view_duration", {
+        target_token: token,
+      }),
+      supabase.rpc("get_public_tv_tournament_slot_colors", {
+        target_token: token,
+      }),
+      supabase.rpc("get_public_tv_championship_slot_decorations", {
+        target_token: token,
+      }),
+    ]);
 
     if (displayResult.error) throw displayResult.error;
     if (durationResult.error) throw durationResult.error;
 
-    const decorations = decorationResult.error
+    const tournamentDecorations = tournamentDecorationResult.error
       ? []
-      : ((decorationResult.data ?? []) as unknown[])
-          .map(mapDecoration)
-          .filter((item): item is TournamentSlotDecoration => item !== null);
+      : ((tournamentDecorationResult.data ?? []) as unknown[])
+          .map(mapTournamentDecoration)
+          .filter((item): item is SlotDecoration => item !== null);
+    const championshipDecorations = championshipDecorationResult.error
+      ? []
+      : ((championshipDecorationResult.data ?? []) as unknown[])
+          .map(mapChampionshipDecoration)
+          .filter((item): item is SlotDecoration => item !== null);
 
-    return mapDisplay(displayResult.data, durationResult.data, decorations);
+    return mapDisplay(displayResult.data, durationResult.data, [
+      ...championshipDecorations,
+      ...tournamentDecorations,
+    ]);
   },
 };
