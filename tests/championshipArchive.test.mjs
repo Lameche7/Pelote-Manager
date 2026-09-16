@@ -26,7 +26,10 @@ const service = await readFile(
 
 test("l’archivage championnat est protégé et audité côté base", () => {
   assert.match(migration, /admin_archive_championship/);
-  assert.match(migration, /championship_club_can_manage\(target_id, target_club_id\)/);
+  assert.match(
+    migration,
+    /championship_club_can_manage\(target_id, target_club_id\)/,
+  );
   assert.match(migration, /status = 'archived'::public\.championship_status/);
   assert.match(migration, /'championship_archived'/);
   assert.match(
@@ -44,9 +47,12 @@ test("le service admin appelle uniquement le RPC d’archivage", () => {
   assert.match(service, /target_id: championshipId/);
 });
 
-test("l’interface demande confirmation et explique l’effet sur les réservations", () => {
-  assert.match(component, /Archiver le championnat/);
-  assert.match(component, /window\.confirm/);
-  assert.match(component, /droits de réservation/);
-  assert.match(component, /championshipStatus !== "archived"/);
-});
+test(
+  "l’interface demande confirmation et explique l’effet sur les réservations",
+  () => {
+    assert.match(component, /Archiver le championnat/);
+    assert.match(component, /window\.confirm/);
+    assert.match(component, /droits de réservation/);
+    assert.match(component, /championshipStatus !== "archived"/);
+  },
+);
