@@ -76,7 +76,7 @@ test("le service admin appelle uniquement le RPC d’archivage", () => {
 test("l’interface passe en consultation seule après archivage", () => {
   assert.match(component, /Archiver le championnat/);
   assert.match(component, /window\.confirm/);
-  assert.match(component, /droits de réservation/);
+  assert.match(component, /droits\s+de réservation/);
   assert.match(component, /Championnat archivé/);
   assert.match(component, /championshipStatus !== "archived"/);
   assert.match(page, /detail\.status !== "archived"/);
