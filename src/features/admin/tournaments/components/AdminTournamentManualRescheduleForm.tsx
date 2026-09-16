@@ -47,7 +47,9 @@ export function AdminTournamentManualRescheduleForm({
     setTournaments(items);
     setTournamentId((current) => {
       if (current && items.some((item) => item.id === current)) return current;
-      return items.find((item) => item.matches.length > 0)?.id ?? items[0]?.id ?? "";
+      return (
+        items.find((item) => item.matches.length > 0)?.id ?? items[0]?.id ?? ""
+      );
     });
   }, []);
 
@@ -60,7 +62,9 @@ export function AdminTournamentManualRescheduleForm({
         if (!active) return;
         setTournaments(items);
         setTournamentId(
-          items.find((item) => item.matches.length > 0)?.id ?? items[0]?.id ?? "",
+          items.find((item) => item.matches.length > 0)?.id ??
+            items[0]?.id ??
+            "",
         );
       })
       .catch((cause) => {
@@ -134,7 +138,9 @@ export function AdminTournamentManualRescheduleForm({
   const create = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!match || !requesterTeamId || !selectedSlot) {
-      setError("Choisissez la partie, l’équipe demandeuse et le nouveau créneau.");
+      setError(
+        "Choisissez la partie, l’équipe demandeuse et le nouveau créneau.",
+      );
       return;
     }
     if (contactNote.trim().length < 3) {
@@ -173,7 +179,10 @@ export function AdminTournamentManualRescheduleForm({
   };
 
   return (
-    <section className="admin-manual-reschedule" aria-labelledby="admin-manual-reschedule-title">
+    <section
+      className="admin-manual-reschedule"
+      aria-labelledby="admin-manual-reschedule-title"
+    >
       <header>
         <div>
           <p className="admin-page__eyebrow">Création manuelle</p>
@@ -211,7 +220,9 @@ export function AdminTournamentManualRescheduleForm({
             <select
               value={matchId}
               onChange={(event) => setMatchId(event.target.value)}
-              disabled={saving || !tournament || tournament.matches.length === 0}
+              disabled={
+                saving || !tournament || tournament.matches.length === 0
+              }
               required
             >
               <option value="">Choisir une partie</option>
@@ -230,7 +241,8 @@ export function AdminTournamentManualRescheduleForm({
             <div className="admin-manual-reschedule__current">
               <span>Créneau actuel</span>
               <strong>
-                {dateLabel(match.playDate)} · {match.startsAt}–{match.endsAt} · {match.resourceName}
+                {dateLabel(match.playDate)} · {match.startsAt}–{match.endsAt} ·{" "}
+                {match.resourceName}
               </strong>
             </div>
           )}
@@ -262,11 +274,14 @@ export function AdminTournamentManualRescheduleForm({
               required
             >
               <option value="">
-                {loadingSlots ? "Recherche des créneaux…" : "Choisir un créneau disponible"}
+                {loadingSlots
+                  ? "Recherche des créneaux…"
+                  : "Choisir un créneau disponible"}
               </option>
               {slots.map((slot) => (
                 <option key={slotKey(slot)} value={slotKey(slot)}>
-                  {dateLabel(slot.playDate)} · {slot.startsAt}–{slot.endsAt} · {slot.resourceName}
+                  {dateLabel(slot.playDate)} · {slot.startsAt}–{slot.endsAt} ·{" "}
+                  {slot.resourceName}
                 </option>
               ))}
             </select>
@@ -289,8 +304,8 @@ export function AdminTournamentManualRescheduleForm({
             />
             <small>
               Cette note est conservée dans l’audit et vaut accord de l’équipe
-              demandeuse. L’autre équipe devra ensuite accepter dans l’application
-              ou être contactée hors application.
+              demandeuse. L’autre équipe devra ensuite accepter dans
+              l’application ou être contactée hors application.
             </small>
           </label>
 
