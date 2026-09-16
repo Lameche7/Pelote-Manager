@@ -4,6 +4,7 @@ import {
   adminTournamentPublicationService,
   type TournamentPublicationPreview,
   type TournamentPublicationSummary,
+  type TournamentSeriesColor,
 } from "@/features/admin/tournaments/services/adminTournamentPublicationService";
 import { ROUTES } from "@/shared/config";
 import "./AdminTournamentPublicationPage.css";
@@ -34,6 +35,12 @@ const occupationTypeLabels: Record<string, string> = {
   animation: "Animation",
 };
 
+const colorSignature = (values: TournamentSeriesColor[]) =>
+  values
+    .map((series) => `${series.id}:${series.color.toUpperCase()}`)
+    .sort()
+    .join("|");
+
 export function AdminTournamentPublicationPage() {
   const [tournaments, setTournaments] = useState<
     TournamentPublicationSummary[]
@@ -42,15 +49,24 @@ export function AdminTournamentPublicationPage() {
   const [preview, setPreview] = useState<TournamentPublicationPreview | null>(
     null,
   );
+  const [seriesColors, setSeriesColors] = useState<TournamentSeriesColor[]>([]);
+  const [savedSeriesColors, setSavedSeriesColors] = useState<
+    TournamentSeriesColor[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
+  const [savingColors, setSavingColors] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const loadPreview = async (tournamentId: string) => {
-    const loaded =
-      await adminTournamentPublicationService.preview(tournamentId);
-    setPreview(loaded);
+  const loadTournamentDetails = async (tournamentId: string) => {
+    const [loadedPreview, loadedColors] = await Promise.all([
+      adminTournamentPublicationService.preview(tournamentId),
+      adminTournamentPublicationService.listSeriesColors(tournamentId),
+    ]);
+    setPreview(loadedPreview);
+    setSeriesColors(loadedColors);
+    setSavedSeriesColors(loadedColors);
   };
 
   const refresh = async (preferredId?: string) => {
@@ -64,11 +80,13 @@ export function AdminTournamentPublicationPage() {
     if (!preferred) {
       setSelectedId("");
       setPreview(null);
+      setSeriesColors([]);
+      setSavedSeriesColors([]);
       return;
     }
 
     setSelectedId(preferred.id);
-    await loadPreview(preferred.id);
+    await loadTournamentDetails(preferred.id);
   };
 
   useEffect(() => {
@@ -83,10 +101,15 @@ export function AdminTournamentPublicationPage() {
           items[0];
         if (!preferred) return;
         setSelectedId(preferred.id);
-        const loaded = await adminTournamentPublicationService.preview(
-          preferred.id,
-        );
-        if (active) setPreview(loaded);
+        const [loadedPreview, loadedColors] = await Promise.all([
+          adminTournamentPublicationService.preview(preferred.id),
+          adminTournamentPublicationService.listSeriesColors(preferred.id),
+        ]);
+        if (active) {
+          setPreview(loadedPreview);
+          setSeriesColors(loadedColors);
+          setSavedSeriesColors(loadedColors);
+        }
       })
       .catch((loadError: unknown) => {
         if (active) {
@@ -119,15 +142,19 @@ export function AdminTournamentPublicationPage() {
   const canPublish =
     preview?.tournament.status === "planning_generated" && complete;
   const isPublished = preview?.tournament.status === "planning_published";
+  const colorsDirty =
+    colorSignature(seriesColors) !== colorSignature(savedSeriesColors);
 
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
     setPreview(null);
+    setSeriesColors([]);
+    setSavedSeriesColors([]);
     setError("");
     setMessage("");
     setLoading(true);
     try {
-      await loadPreview(id);
+      await loadTournamentDetails(id);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -136,6 +163,31 @@ export function AdminTournamentPublicationPage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveColors = async () => {
+    if (!preview || !colorsDirty || seriesColors.length === 0) return;
+    setSavingColors(true);
+    setError("");
+    setMessage("");
+    try {
+      await adminTournamentPublicationService.saveSeriesColors(
+        preview.tournament.id,
+        seriesColors,
+      );
+      setSavedSeriesColors(seriesColors.map((series) => ({ ...series })));
+      setMessage(
+        "Couleurs des séries enregistrées. Elles sont utilisées immédiatement dans le planning, les réservations et le Mode TV.",
+      );
+    } catch (colorError) {
+      setError(
+        colorError instanceof Error
+          ? colorError.message
+          : "Impossible d’enregistrer les couleurs des séries.",
+      );
+    } finally {
+      setSavingColors(false);
     }
   };
 
@@ -191,7 +243,7 @@ export function AdminTournamentPublicationPage() {
           ? publishError.message
           : "Impossible de publier le planning.",
       );
-      await loadPreview(preview.tournament.id).catch(() => undefined);
+      await loadTournamentDetails(preview.tournament.id).catch(() => undefined);
     } finally {
       setPublishing(false);
     }
@@ -253,7 +305,7 @@ export function AdminTournamentPublicationPage() {
           ? unpublishError.message
           : "Impossible de retirer le tournoi en conflit du calendrier.",
       );
-      await loadPreview(selectedTournamentId).catch(() => undefined);
+      await loadTournamentDetails(selectedTournamentId).catch(() => undefined);
     } finally {
       setPublishing(false);
     }
@@ -418,6 +470,53 @@ export function AdminTournamentPublicationPage() {
               </div>
             )}
           </section>
+
+          {seriesColors.length > 0 && (
+            <section className="admin-card admin-tournament-publication__series-colors">
+              <header>
+                <div>
+                  <h2>Couleurs des séries</h2>
+                  <p>
+                    Modifiables même après publication. La même couleur est
+                    utilisée dans le planning, les réservations, les résultats
+                    et le Mode TV.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={!colorsDirty || savingColors}
+                  onClick={() => void saveColors()}
+                >
+                  {savingColors ? "Enregistrement…" : "Enregistrer les couleurs"}
+                </button>
+              </header>
+              <div className="admin-tournament-publication__series-color-list">
+                {seriesColors.map((series) => (
+                  <label key={series.id}>
+                    <input
+                      type="color"
+                      value={series.color}
+                      disabled={savingColors}
+                      onChange={(event) =>
+                        setSeriesColors((current) =>
+                          current.map((item) =>
+                            item.id === series.id
+                              ? {
+                                  ...item,
+                                  color: event.target.value.toUpperCase(),
+                                }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <span style={{ backgroundColor: series.color }} />
+                    <strong>{series.name}</strong>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
 
           {preview.conflicts.length > 0 && (
             <section className="admin-card admin-tournament-publication__conflicts">
