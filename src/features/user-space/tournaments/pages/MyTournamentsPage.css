@@ -457,3 +457,37 @@
     justify-self: start;
   }
 }
+
+.my-tournaments__phone,
+.my-tournaments__opponent-contacts a {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.3rem;
+  color: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+  opacity: 0.78;
+}
+
+.my-tournaments__phone:hover,
+.my-tournaments__opponent-contacts a:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.my-tournaments__phone svg,
+.my-tournaments__opponent-contacts svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+}
+
+.my-tournaments__opponent-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.15rem;
+}

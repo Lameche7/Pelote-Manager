@@ -4,6 +4,7 @@ import {
   CalendarPlus,
   CheckCircle2,
   ExternalLink,
+  Phone,
   Send,
   Trophy,
 } from "lucide-react";
@@ -111,6 +112,8 @@ const resultTone = (match: MyChampionshipMatch) => {
 
 const officialSourceHref = (value: string) =>
   /^https?:\/\//iu.test(value) ? value : `https://${value}`;
+
+const phoneHref = (phone: string) => `tel:${phone.replace(/[^+\d]/gu, "")}`;
 
 function ResultSubmission({
   match,
@@ -365,6 +368,19 @@ function MatchRow({
             {match.poolCode ? ` · Poule ${match.poolCode}` : ""}
           </span>
           <strong>vs {match.opponentLabel || "Adversaire à définir"}</strong>
+          {match.opponentContacts.length > 0 && (
+            <div className="my-championships__opponent-contacts">
+              {match.opponentContacts.map((contact) => (
+                <a
+                  key={`${contact.firstName}-${contact.lastName}-${contact.phone}`}
+                  href={phoneHref(contact.phone)}
+                >
+                  <Phone aria-hidden="true" />
+                  {contact.firstName} {contact.lastName} · {contact.phone}
+                </a>
+              ))}
+            </div>
+          )}
           {place && <small>{place}</small>}
         </div>
         <div className={`my-championships__match-result is-${tone}`}>
@@ -856,6 +872,15 @@ function ChampionshipCard({
                 {player.firstName} {player.lastName}
               </strong>
               {player.isMe && <small>Vous</small>}
+              {player.phone && (
+                <a
+                  className="my-championships__phone"
+                  href={phoneHref(player.phone)}
+                >
+                  <Phone aria-hidden="true" />
+                  {player.phone}
+                </a>
+              )}
             </span>
           ))}
         </div>
