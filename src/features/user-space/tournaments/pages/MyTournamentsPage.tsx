@@ -5,6 +5,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { Phone } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import { TournamentRescheduleRequestsPanel } from "@/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel";
@@ -100,6 +101,8 @@ const playerLabel = (player: MyTournamentPlayer) =>
 const teamLabel = (players: MyTournamentPlayer[]) =>
   players.map(playerLabel).filter(Boolean).join(" / ") || "Équipe";
 
+const phoneHref = (phone: string) => `tel:${phone.replace(/[^+\d]/gu, "")}`;
+
 const isTournamentHistory = (tournament: MyTournamentOverview) =>
   ["completed", "archived", "cancelled"].includes(tournament.status) ||
   dateAtNoon(tournament.endsOn).getTime() < Date.now();
@@ -144,6 +147,9 @@ function MatchCard({
   const isInProgress = startsAt <= now && endsAt >= now;
   const canRequestReschedule = !match.result && startsAt > now;
   const opponent = teamLabel(match.opponentPlayers);
+  const opponentContacts = match.opponentPlayers.filter(
+    (player) => player.phone,
+  );
   const resultLabel = formatResult(match);
   const finalRound =
     match.phase === "finals" ? asEncouragementRound(match.finalRound) : null;
@@ -213,6 +219,19 @@ function MatchCard({
       <div className="my-tournaments__match-opponent">
         <span>{statusLabel}</span>
         <strong>vs {opponent}</strong>
+        {opponentContacts.length > 0 && (
+          <div className="my-tournaments__opponent-contacts">
+            {opponentContacts.map((player) => (
+              <a
+                key={`${player.role}-${player.firstName}-${player.lastName}`}
+                href={phoneHref(player.phone!)}
+              >
+                <Phone aria-hidden="true" />
+                {playerLabel(player)} · {player.phone}
+              </a>
+            ))}
+          </div>
+        )}
         {encouragement && (
           <span className="my-tournaments__encouragement">
             “{encouragement}”
@@ -368,6 +387,15 @@ function TournamentCard({
                   {roleLabels[player.role]}
                   {player.clubName ? ` · ${player.clubName}` : ""}
                 </span>
+                {player.phone && (
+                  <a
+                    className="my-tournaments__phone"
+                    href={phoneHref(player.phone)}
+                  >
+                    <Phone aria-hidden="true" />
+                    {player.phone}
+                  </a>
+                )}
               </div>
             ))}
           </div>

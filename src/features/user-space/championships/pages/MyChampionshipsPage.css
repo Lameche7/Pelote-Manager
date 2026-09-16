@@ -638,3 +638,35 @@
     padding: 1rem;
   }
 }
+
+.my-championships__phone,
+.my-championships__opponent-contacts a {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.3rem;
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  opacity: 0.78;
+}
+
+.my-championships__phone:hover,
+.my-championships__opponent-contacts a:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.my-championships__phone svg,
+.my-championships__opponent-contacts svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+}
+
+.my-championships__opponent-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
