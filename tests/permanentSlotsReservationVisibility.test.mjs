@@ -36,10 +36,7 @@ test("les créneaux permanents actifs sont visibles dans Réservations", () => {
 });
 
 test("le libellé métier du créneau permanent est affiché dans Réservations", () => {
-  assert.match(
-    labelMigration,
-    /permanent_slot\.label as permanent_label/,
-  );
+  assert.match(labelMigration, /permanent_slot\.label as permanent_label/);
   assert.match(
     labelMigration,
     /coalesce\(slot\.permanent_label, slot\.booked_by_name, 'Créneau permanent'\)/,
