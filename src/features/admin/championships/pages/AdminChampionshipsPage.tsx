@@ -347,138 +347,144 @@ export function AdminChampionshipsPage() {
 
           <ChampionshipResultSettingsCard championshipId={detail.id} />
 
-          <div className="admin-card admin-championships__update">
-            <div>
-              <p className="admin-page__eyebrow">Actualisation</p>
-              <h2>Mettre à jour avec le nouveau parties.xlsx</h2>
-              <p>
-                Pas besoin de réimporter les engagements. Pelote Manager compare
-                le fichier à l’état actuel avant toute écriture : nouveaux
-                résultats, reports, changements de lieu et nouvelles phases.
-              </p>
-            </div>
-            <div className="admin-championships__update-controls">
-              <label>
-                Nouveau fichier des parties (.xlsx)
-                <input
-                  type="file"
-                  accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  onChange={selectUpdateFile}
-                  disabled={updateBusy}
-                />
-                <span>
-                  {updateFile?.name ??
-                    "Aucun fichier de mise à jour sélectionné"}
-                </span>
-              </label>
-              <button
-                type="button"
-                onClick={() => void analyseUpdate()}
-                disabled={!updateFile || updateBusy}
-              >
-                {updateBusy
-                  ? "Analyse en cours…"
-                  : "Comparer avant mise à jour"}
-              </button>
-            </div>
-
-            {filePreview && !filePreview.valid && (
-              <div className="admin-championships__update-issues" role="alert">
-                <strong>Le fichier ne peut pas encore être utilisé.</strong>
-                {filePreview.issues.map((issue, index) => (
-                  <p key={`${issue.row}-${index}`}>{issue.message}</p>
-                ))}
+          {detail.status !== "archived" && (
+            <div className="admin-card admin-championships__update">
+              <div>
+                <p className="admin-page__eyebrow">Actualisation</p>
+                <h2>Mettre à jour avec le nouveau parties.xlsx</h2>
+                <p>
+                  Pas besoin de réimporter les engagements. Pelote Manager
+                  compare le fichier à l’état actuel avant toute écriture :
+                  nouveaux résultats, reports, changements de lieu et nouvelles
+                  phases.
+                </p>
               </div>
-            )}
-
-            {updatePreview && (
-              <div className="admin-championships__diff">
-                <div className="admin-championships__diff-kpis">
-                  <div>
-                    <strong>{updatePreview.summary.resultAddedCount}</strong>
-                    <span>nouveaux résultats</span>
-                  </div>
-                  <div>
-                    <strong>{updatePreview.summary.changedCount}</strong>
-                    <span>rencontres modifiées</span>
-                  </div>
-                  <div>
-                    <strong>{updatePreview.summary.rescheduledCount}</strong>
-                    <span>dates / reports modifiés</span>
-                  </div>
-                  <div>
-                    <strong>{updatePreview.summary.newCount}</strong>
-                    <span>nouvelles rencontres</span>
-                  </div>
-                  <div>
-                    <strong>{updatePreview.summary.newPhaseCount}</strong>
-                    <span>nouvelles phases</span>
-                  </div>
-                  <div>
-                    <strong>{updatePreview.summary.unchangedCount}</strong>
-                    <span>inchangées</span>
-                  </div>
-                </div>
-
-                {updatePreview.alreadyImported && (
-                  <p className="admin-championships__success">
-                    Ce fichier a déjà été appliqué. Pelote Manager ne le
-                    dupliquera pas.
-                  </p>
-                )}
-
-                {updatePreview.issues.length > 0 && (
-                  <div className="admin-championships__update-issues">
-                    {updatePreview.issues.map((issue, index) => (
-                      <p key={`${issue.code}-${index}`}>{issue.message}</p>
-                    ))}
-                  </div>
-                )}
-
-                {updatePreview.changes.length > 0 && (
-                  <div className="admin-championships__change-list">
-                    <h3>Détail des changements</h3>
-                    {updatePreview.changes
-                      .slice(0, 100)
-                      .map((change, index) => (
-                        <div key={`${change.kind}-${index}`}>
-                          <strong>
-                            {change.kind === "new"
-                              ? "Nouvelle"
-                              : "Modification"}
-                            {" · "}
-                            {change.category} · {change.phase}
-                          </strong>
-                          <span>
-                            {change.team1} {change.team1Number} — {change.team2}{" "}
-                            {change.team2Number}
-                            {change.score ? ` · ${change.score}` : ""}
-                          </span>
-                          <small>{change.fields.join(", ")}</small>
-                        </div>
-                      ))}
-                  </div>
-                )}
-
+              <div className="admin-championships__update-controls">
+                <label>
+                  Nouveau fichier des parties (.xlsx)
+                  <input
+                    type="file"
+                    accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    onChange={selectUpdateFile}
+                    disabled={updateBusy}
+                  />
+                  <span>
+                    {updateFile?.name ??
+                      "Aucun fichier de mise à jour sélectionné"}
+                  </span>
+                </label>
                 <button
                   type="button"
-                  className="admin-championships__apply"
-                  disabled={
-                    updateBusy ||
-                    !updatePreview.valid ||
-                    updatePreview.alreadyImported
-                  }
-                  onClick={() => void applyUpdate()}
+                  onClick={() => void analyseUpdate()}
+                  disabled={!updateFile || updateBusy}
                 >
-                  Appliquer cette mise à jour
+                  {updateBusy
+                    ? "Analyse en cours…"
+                    : "Comparer avant mise à jour"}
                 </button>
               </div>
-            )}
 
-            {updateMessage && (
-              <p className="admin-championships__success">{updateMessage}</p>
-            )}
-          </div>
+              {filePreview && !filePreview.valid && (
+                <div
+                  className="admin-championships__update-issues"
+                  role="alert"
+                >
+                  <strong>Le fichier ne peut pas encore être utilisé.</strong>
+                  {filePreview.issues.map((issue, index) => (
+                    <p key={`${issue.row}-${index}`}>{issue.message}</p>
+                  ))}
+                </div>
+              )}
+
+              {updatePreview && (
+                <div className="admin-championships__diff">
+                  <div className="admin-championships__diff-kpis">
+                    <div>
+                      <strong>{updatePreview.summary.resultAddedCount}</strong>
+                      <span>nouveaux résultats</span>
+                    </div>
+                    <div>
+                      <strong>{updatePreview.summary.changedCount}</strong>
+                      <span>rencontres modifiées</span>
+                    </div>
+                    <div>
+                      <strong>{updatePreview.summary.rescheduledCount}</strong>
+                      <span>dates / reports modifiés</span>
+                    </div>
+                    <div>
+                      <strong>{updatePreview.summary.newCount}</strong>
+                      <span>nouvelles rencontres</span>
+                    </div>
+                    <div>
+                      <strong>{updatePreview.summary.newPhaseCount}</strong>
+                      <span>nouvelles phases</span>
+                    </div>
+                    <div>
+                      <strong>{updatePreview.summary.unchangedCount}</strong>
+                      <span>inchangées</span>
+                    </div>
+                  </div>
+
+                  {updatePreview.alreadyImported && (
+                    <p className="admin-championships__success">
+                      Ce fichier a déjà été appliqué. Pelote Manager ne le
+                      dupliquera pas.
+                    </p>
+                  )}
+
+                  {updatePreview.issues.length > 0 && (
+                    <div className="admin-championships__update-issues">
+                      {updatePreview.issues.map((issue, index) => (
+                        <p key={`${issue.code}-${index}`}>{issue.message}</p>
+                      ))}
+                    </div>
+                  )}
+
+                  {updatePreview.changes.length > 0 && (
+                    <div className="admin-championships__change-list">
+                      <h3>Détail des changements</h3>
+                      {updatePreview.changes
+                        .slice(0, 100)
+                        .map((change, index) => (
+                          <div key={`${change.kind}-${index}`}>
+                            <strong>
+                              {change.kind === "new"
+                                ? "Nouvelle"
+                                : "Modification"}
+                              {" · "}
+                              {change.category} · {change.phase}
+                            </strong>
+                            <span>
+                              {change.team1} {change.team1Number} —{" "}
+                              {change.team2} {change.team2Number}
+                              {change.score ? ` · ${change.score}` : ""}
+                            </span>
+                            <small>{change.fields.join(", ")}</small>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    className="admin-championships__apply"
+                    disabled={
+                      updateBusy ||
+                      !updatePreview.valid ||
+                      updatePreview.alreadyImported
+                    }
+                    onClick={() => void applyUpdate()}
+                  >
+                    Appliquer cette mise à jour
+                  </button>
+                </div>
+              )}
+
+              {updateMessage && (
+                <p className="admin-championships__success">{updateMessage}</p>
+              )}
+            </div>
+          )}
 
           <div className="admin-card admin-championships__consultation">
             <div className="admin-championships__consultation-head">
