@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminTournamentManualRescheduleForm } from "@/features/admin/tournaments/components/AdminTournamentManualRescheduleForm";
 import {
   ADMIN_RESCHEDULE_APPLY_LABEL,
   adminTournamentRescheduleService,
@@ -247,6 +248,8 @@ export function AdminTournamentReschedulePage() {
         et calendrier sont modifiés ensemble, ou aucun changement n’est
         conservé.
       </p>
+
+      <AdminTournamentManualRescheduleForm onCreated={load} />
 
       <div className="admin-reschedules__toolbar">
         <button
