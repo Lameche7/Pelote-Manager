@@ -144,7 +144,9 @@ export function AdminTournamentManualRescheduleForm({
       return;
     }
     if (contactNote.trim().length < 3) {
-      setError("Indiquez comment la demande a été recueillie hors application.");
+      setError(
+        "Indiquez comment la demande a été recueillie hors application.",
+      );
       return;
     }
 
@@ -188,8 +190,8 @@ export function AdminTournamentManualRescheduleForm({
           <p className="admin-page__eyebrow">Création manuelle</p>
           <h2 id="admin-manual-reschedule-title">Créer un report de A à Z</h2>
           <p>
-            Pour une demande reçue par téléphone, au club ou par message, même si
-            les joueurs n’ont pas encore de compte PILOTOKI.
+            Pour une demande reçue par téléphone, au club ou par message, même
+            si les joueurs n’ont pas encore de compte PILOTOKI.
           </p>
         </div>
       </header>
