@@ -1,0 +1,85 @@
+name: Wire unlicensed PILOTOKI users page
+
+on:
+  push:
+    branches:
+      - feat/unlicensed-pilotoki-users
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/unlicensed-pilotoki-users
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Wire route
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/app/router.tsx")
+          text = path.read_text()
+
+          import_marker = 'import { AdminMembersPage } from "@/features/admin/members/pages/AdminMembersPage";\n'
+          import_line = 'import { AdminUnlicensedPilotokiUsersPage } from "@/features/admin/members/pages/AdminUnlicensedPilotokiUsersPage";\n'
+          if import_line not in text:
+              if import_marker not in text:
+                  raise RuntimeError("member import marker not found")
+              text = text.replace(import_marker, import_marker + import_line, 1)
+
+          route_marker = '''          {
+            path: "membres",
+            element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />),
+          },
+'''
+          route_block = route_marker + '''          {
+            path: "membres/inscrits-sans-licence",
+            element: permitted(
+              ADMIN_PERMISSIONS.members,
+              <AdminUnlicensedPilotokiUsersPage />,
+            ),
+          },
+'''
+          if 'path: "membres/inscrits-sans-licence"' not in text:
+              if route_marker not in text:
+                  raise RuntimeError("member route marker not found")
+              text = text.replace(route_marker, route_block, 1)
+
+          path.write_text(text)
+          PY
+      - name: Format changed files
+        run: |
+          npx prettier --write \
+            src/app/router.tsx \
+            src/shared/config/routes.ts \
+            src/features/admin/config/adminPermissions.ts \
+            src/features/admin/members/hooks/useAdminMembers.ts \
+            src/features/admin/members/services/memberAdminService.ts \
+            src/features/admin/members/types.ts \
+            src/features/admin/members/pages/AdminUnlicensedPilotokiUsersPage.tsx \
+            tests/adminUnlicensedPilotokiUsers.test.mjs
+      - name: Commit generated changes and remove helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-unlicensed-pilotoki-users.yml
+          git add \
+            src/app/router.tsx \
+            src/shared/config/routes.ts \
+            src/features/admin/config/adminPermissions.ts \
+            src/features/admin/members/hooks/useAdminMembers.ts \
+            src/features/admin/members/services/memberAdminService.ts \
+            src/features/admin/members/types.ts \
+            src/features/admin/members/pages/AdminUnlicensedPilotokiUsersPage.tsx \
+            tests/adminUnlicensedPilotokiUsers.test.mjs
+          git commit -m "feat(members): expose PILOTOKI users without licence"
+          git push origin HEAD:feat/unlicensed-pilotoki-users
