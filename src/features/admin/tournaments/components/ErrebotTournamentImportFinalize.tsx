@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  buildDefaultErrebotSeriesColors,
   buildErrebotTournamentImportPayload,
   defaultErrebotTournamentName,
   getErrebotTournamentDateRange,
@@ -43,6 +44,7 @@ const seasonCovers = (
 ) => season.startsOn <= startsOn && season.endsOn >= endsOn;
 
 const numberValue = (value: string) => Number(value || 0);
+const colorPattern = /^#[0-9A-Fa-f]{6}$/;
 
 export function ErrebotTournamentImportFinalize({
   file,
@@ -60,6 +62,9 @@ export function ErrebotTournamentImportFinalize({
   const [resourceIds, setResourceIds] = useState<string[]>([]);
   const [primaryResourceId, setPrimaryResourceId] = useState("");
   const [slotDurationMinutes, setSlotDurationMinutes] = useState(60);
+  const [seriesColors, setSeriesColors] = useState<Record<string, string>>(() =>
+    buildDefaultErrebotSeriesColors(parsed),
+  );
   const [matchFormat, setMatchFormat] = useState<
     ErrebotTournamentMatchFormat | ""
   >("");
@@ -97,6 +102,10 @@ export function ErrebotTournamentImportFinalize({
         resourceIds.includes(resource.id),
       ),
     [options?.resources, resourceIds],
+  );
+
+  const seriesColorsValid = parsed.series.every((series) =>
+    colorPattern.test(seriesColors[series.series] ?? ""),
   );
 
   useEffect(() => {
@@ -169,7 +178,8 @@ export function ErrebotTournamentImportFinalize({
       resourceIds.length === 0 ||
       !primaryResourceId ||
       !matchFormat ||
-      !sportingRulesValid
+      !sportingRulesValid ||
+      !seriesColorsValid
     ) {
       return;
     }
@@ -184,6 +194,7 @@ export function ErrebotTournamentImportFinalize({
           resourceIds,
           primaryResourceId,
           slotDurationMinutes,
+          seriesColors,
           sportingRules: {
             matchFormat,
             singleGamePoints,
@@ -262,8 +273,8 @@ export function ErrebotTournamentImportFinalize({
 
         <p className="admin-tournament-import__privacy-note">
           Le planning est importé mais pas encore publié dans le calendrier du
-          club. Les scores Errebot simples restent conservés comme provenance et
-          ne sont pas transformés artificiellement en manches.
+          club. Les couleurs choisies pour chaque série suivront les matchs dans
+          les réservations, les résultats et le Mode TV.
         </p>
 
         <div className="admin-tournament-import__actions">
@@ -623,15 +634,52 @@ export function ErrebotTournamentImportFinalize({
               </p>
             )}
           </section>
+
+          <section className="errebot-import-finalize__section">
+            <div className="errebot-import-finalize__section-heading">
+              <div>
+                <h3>4. Couleurs des séries</h3>
+                <p>
+                  Une couleur est proposée par série. Elle sera utilisée dans le
+                  planning, les réservations, les résultats et le Mode TV.
+                </p>
+              </div>
+              <strong>{parsed.series.length} série(s)</strong>
+            </div>
+            <div className="errebot-import-finalize__series-colors">
+              {parsed.series.map((series) => (
+                <label key={series.series}>
+                  <input
+                    type="color"
+                    value={seriesColors[series.series] ?? "#2563EB"}
+                    disabled={importing}
+                    onChange={(event) =>
+                      setSeriesColors((current) => ({
+                        ...current,
+                        [series.series]: event.target.value.toUpperCase(),
+                      }))
+                    }
+                  />
+                  <span
+                    className="errebot-import-finalize__series-swatch"
+                    style={{
+                      backgroundColor:
+                        seriesColors[series.series] ?? "#2563EB",
+                    }}
+                  />
+                  <strong>{series.series}</strong>
+                </label>
+              ))}
+            </div>
+          </section>
         </div>
       )}
 
       <p className="admin-tournament-import__privacy-note">
         Seules les données structurées nécessaires à la création sont envoyées
         au RPC sécurisé. Le PDF et son texte extrait restent dans le navigateur.
-        Si ce même PDF a déjà été importé, aucun doublon n’est créé : ces
-        options corrigent le tournoi Errebot existant tant que son planning
-        n’est pas publié.
+        Si ce même PDF a déjà été importé, aucun doublon n’est créé : ces options
+        corrigent le tournoi existant et les couleurs de ses séries.
       </p>
 
       <div className="admin-tournament-import__actions">
@@ -651,6 +699,7 @@ export function ErrebotTournamentImportFinalize({
             slotDurationMinutes < 15 ||
             slotDurationMinutes > 240 ||
             !sportingRulesValid ||
+            !seriesColorsValid ||
             parsed.issues.length > 0
           }
           onClick={() => void importTournament()}
