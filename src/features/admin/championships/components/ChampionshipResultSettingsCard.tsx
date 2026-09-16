@@ -236,9 +236,9 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
             <p className="admin-page__eyebrow">Cycle de vie</p>
             <h2>Archiver ce championnat</h2>
             <p>
-              L’archivage conserve les équipes, parties, résultats et historiques,
-              mais retire immédiatement ce championnat des droits de réservation
-              anticipée de ses joueurs.
+              L’archivage conserve les équipes, parties, résultats et
+              historiques, mais retire immédiatement ce championnat des droits de
+              réservation anticipée de ses joueurs.
             </p>
           </div>
           <button
