@@ -15,6 +15,13 @@ export type TournamentPublicationSummary = {
   conflictCount: number;
 };
 
+export type TournamentSeriesColor = {
+  id: string;
+  name: string;
+  color: string;
+  displayOrder: number;
+};
+
 export type TournamentPublicationConflict = {
   matchId: string;
   resourceId: string;
@@ -72,6 +79,8 @@ const knownErrors: Record<string, string> = {
     "Ce planning n’est pas actuellement publié.",
   "Tournament calendar event is invalid":
     "Un événement calendrier lié à ce tournoi est incohérent.",
+  "Tournament series colors are invalid":
+    "Les couleurs des séries sont invalides.",
 };
 
 const fail = (error: unknown, fallback: string): never => {
@@ -94,6 +103,13 @@ const mapSummary = (row: Row): TournamentPublicationSummary => ({
   matchCount: Number(row.match_count ?? 0),
   publishedMatchCount: Number(row.published_match_count ?? 0),
   conflictCount: Number(row.conflict_count ?? 0),
+});
+
+const mapSeriesColor = (row: Row): TournamentSeriesColor => ({
+  id: String(row.id),
+  name: String(row.name ?? "Série"),
+  color: String(row.color ?? "#2563EB"),
+  displayOrder: Number(row.display_order ?? 0),
 });
 
 const mapPreview = (value: unknown): TournamentPublicationPreview => {
@@ -166,6 +182,31 @@ export const adminTournamentPublicationService = {
     );
     if (error) fail(error, "Impossible de vérifier la publication du tournoi.");
     return mapPreview(data);
+  },
+
+  async listSeriesColors(tournamentId: string): Promise<TournamentSeriesColor[]> {
+    const { data, error } = await supabase.rpc(
+      "admin_get_tournament_series_colors",
+      { target_tournament_id: tournamentId },
+    );
+    if (error)
+      fail(error, "Impossible de charger les couleurs des séries du tournoi.");
+    return ((data ?? []) as Row[]).map(mapSeriesColor);
+  },
+
+  async saveSeriesColors(
+    tournamentId: string,
+    values: TournamentSeriesColor[],
+  ): Promise<void> {
+    const { error } = await supabase.rpc("admin_update_tournament_series_colors", {
+      target_tournament_id: tournamentId,
+      payload: values.map((series) => ({
+        id: series.id,
+        color: series.color,
+      })),
+    });
+    if (error)
+      fail(error, "Impossible d’enregistrer les couleurs des séries.");
   },
 
   async publish(tournamentId: string): Promise<number> {
