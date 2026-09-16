@@ -18,6 +18,18 @@ export type AdminMember = {
   updated_at: string;
   total_count: number;
 };
+export type AdminUnlicensedPilotokiUser = {
+  id: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string | null;
+  created_at: string;
+  member_id: string | null;
+  licence_number: string | null;
+  status: "unlinked" | "member_inactive" | "unlicensed";
+  total_count: number;
+};
 export type MemberForm = {
   licenceNumber: string;
   lastName: string;
