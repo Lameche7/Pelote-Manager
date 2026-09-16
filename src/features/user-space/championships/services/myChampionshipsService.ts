@@ -48,6 +48,15 @@ export type MyChampionshipResultSubmission = {
   resolvedAt: string | null;
 };
 
+export type MyChampionshipMatchReservation = {
+  reservationId: string;
+  resourceId: string;
+  resourceName: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+};
+
 export type MyChampionshipMatch = {
   id: string;
   phase: string;
@@ -69,6 +78,7 @@ export type MyChampionshipMatch = {
   scoreOpponent: number | null;
   resultComment: string | null;
   submission: MyChampionshipResultSubmission | null;
+  reservation: MyChampionshipMatchReservation | null;
 };
 
 export type MyChampionship = {
@@ -169,15 +179,18 @@ const mapChampionship = (row: Row): MyChampionship => ({
     scoreOpponent: nullableNumber(match.score_opponent),
     resultComment: nullableString(match.result_comment),
     submission: null,
+    reservation: null,
   })),
 });
 
 export const myChampionshipsService = {
   async list(): Promise<MyChampionship[]> {
-    const [championshipsResult, submissionsResult] = await Promise.all([
-      supabase.rpc("get_my_championships"),
-      supabase.rpc("get_my_championship_result_submissions"),
-    ]);
+    const [championshipsResult, submissionsResult, reservationsResult] =
+      await Promise.all([
+        supabase.rpc("get_my_championships"),
+        supabase.rpc("get_my_championship_result_submissions"),
+        supabase.rpc("get_my_championship_match_reservations"),
+      ]);
 
     if (championshipsResult.error) {
       throw new Error(
@@ -195,12 +208,33 @@ export const myChampionshipsService = {
         ),
       );
     }
+    if (reservationsResult.error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          reservationsResult.error,
+          "Impossible de charger les réservations de vos rencontres.",
+        ),
+      );
+    }
 
     const submissions = new Map(
       rows(submissionsResult.data).map((row) => {
         const submission = mapSubmission(row);
         return [submission.matchId, submission] as const;
       }),
+    );
+    const reservations = new Map(
+      rows(reservationsResult.data).map((row) => [
+        String(row.match_id ?? ""),
+        {
+          reservationId: String(row.reservation_id ?? ""),
+          resourceId: String(row.resource_id ?? ""),
+          resourceName: String(row.resource_name ?? "Terrain"),
+          startsAt: String(row.starts_at ?? ""),
+          endsAt: String(row.ends_at ?? ""),
+          status: String(row.status ?? "confirmed"),
+        } satisfies MyChampionshipMatchReservation,
+      ] as const),
     );
 
     return rows(championshipsResult.data)
@@ -210,6 +244,7 @@ export const myChampionshipsService = {
         matches: championship.matches.map((match) => ({
           ...match,
           submission: submissions.get(match.id) ?? null,
+          reservation: reservations.get(match.id) ?? null,
         })),
       }))
       .filter((item) => item.teamId);
