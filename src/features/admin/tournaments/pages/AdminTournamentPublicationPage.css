@@ -175,6 +175,69 @@
   color: #fff;
 }
 
+.admin-tournament-publication__series-colors {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-tournament-publication__series-colors > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-tournament-publication__series-colors h2,
+.admin-tournament-publication__series-colors p {
+  margin: 0;
+}
+
+.admin-tournament-publication__series-colors p {
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.admin-tournament-publication__series-color-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+}
+
+.admin-tournament-publication__series-color-list label {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid rgb(100 116 139 / 18%);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.admin-tournament-publication__series-color-list input[type="color"] {
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0.1rem;
+  border: 1px solid rgb(100 116 139 / 22%);
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.admin-tournament-publication__series-color-list label > span {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 14%);
+}
+
+.admin-tournament-publication__series-color-list strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-tournament-publication__conflicts {
   display: grid;
   gap: 0.8rem;
@@ -274,7 +337,8 @@
 
   .admin-tournament-publication__summary,
   .admin-tournament-publication__publish-actions,
-  .admin-tournament-publication__published-actions {
+  .admin-tournament-publication__published-actions,
+  .admin-tournament-publication__series-colors > header {
     align-items: stretch;
     flex-direction: column;
   }
