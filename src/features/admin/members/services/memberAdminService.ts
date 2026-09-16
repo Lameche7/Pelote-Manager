@@ -2,6 +2,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 import type { Json } from "@/infrastructure/supabase/database";
 import type {
   AdminMember,
+  AdminUnlicensedPilotokiUser,
   MemberDetail,
   MemberForm,
   MemberImport,
@@ -21,6 +22,12 @@ export const memberAdminService = {
   list: async (filters: Record<string, Json> = {}) => {
     const r = await supabase.rpc("admin_list_club_members", { filters });
     return value(r.data, r.error) as AdminMember[];
+  },
+  listUnlicensedPilotokiUsers: async (filters: Record<string, Json> = {}) => {
+    const r = await supabase.rpc("admin_list_unlicensed_pilotoki_users", {
+      filters,
+    });
+    return value(r.data, r.error) as AdminUnlicensedPilotokiUser[];
   },
   searchGlobal: async (filters: Record<string, Json> = {}) => {
     const r = await supabase.rpc("admin_search_members_global", { filters });
