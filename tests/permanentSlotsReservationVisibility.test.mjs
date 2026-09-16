@@ -12,15 +12,30 @@ const migration = await readFile(
 
 test("les créneaux permanents actifs sont visibles sans exposer leur libellé", () => {
   assert.match(migration, /active_permanent_occurrences/);
-  assert.match(migration, /'scheduled'::public\.permanent_slot_occurrence_status/);
-  assert.match(migration, /'confirmed'::public\.permanent_slot_occurrence_status/);
-  assert.match(migration, /when permanent\.occupation_id is not null then 'permanent_slot'/);
-  assert.match(migration, /when slot\.is_active_permanent_slot then 'Créneau permanent'/);
+  assert.match(
+    migration,
+    /'scheduled'::public\.permanent_slot_occurrence_status/,
+  );
+  assert.match(
+    migration,
+    /'confirmed'::public\.permanent_slot_occurrence_status/,
+  );
+  assert.match(
+    migration,
+    /when permanent\.occupation_id is not null then 'permanent_slot'/,
+  );
+  assert.match(
+    migration,
+    /when slot\.is_active_permanent_slot then 'Créneau permanent'/,
+  );
   assert.match(migration, /permanent_slots_outside_schedule/);
 });
 
 test("les autres occupations privées restent masquées et les créneaux libérés restent disponibles", () => {
-  assert.match(migration, /coalesce\(slot\.occupation_type, ''\) <> 'private_use'/);
+  assert.match(
+    migration,
+    /coalesce\(slot\.occupation_type, ''\) <> 'private_use'/,
+  );
   assert.match(migration, /released_slots_outside_schedule/);
   assert.match(migration, /'available'::text as status/);
 });
