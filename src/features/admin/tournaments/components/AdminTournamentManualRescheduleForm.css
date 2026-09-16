@@ -1,0 +1,122 @@
+.admin-manual-reschedule {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgb(59 130 246 / 20%);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: rgb(59 130 246 / 5%);
+}
+
+.admin-manual-reschedule header h2,
+.admin-manual-reschedule header p {
+  margin: 0;
+}
+
+.admin-manual-reschedule header > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-manual-reschedule form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.admin-manual-reschedule label {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+}
+
+.admin-manual-reschedule label > span {
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.admin-manual-reschedule select,
+.admin-manual-reschedule input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(100 116 139 / 28%);
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.7rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.admin-manual-reschedule small {
+  font-size: 0.76rem;
+  line-height: 1.35;
+  opacity: 0.68;
+}
+
+.admin-manual-reschedule__current,
+.admin-manual-reschedule__note,
+.admin-manual-reschedule__error,
+.admin-manual-reschedule__success,
+.admin-manual-reschedule__submit {
+  grid-column: 1 / -1;
+}
+
+.admin-manual-reschedule__current {
+  display: grid;
+  gap: 0.15rem;
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  background: rgb(15 23 42 / 5%);
+}
+
+.admin-manual-reschedule__current span {
+  font-size: 0.74rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  opacity: 0.58;
+}
+
+.admin-manual-reschedule__error,
+.admin-manual-reschedule__success {
+  margin: 0;
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.admin-manual-reschedule__error {
+  background: rgb(185 28 28 / 8%);
+}
+
+.admin-manual-reschedule__success {
+  background: rgb(22 163 74 / 9%);
+}
+
+.admin-manual-reschedule__submit {
+  cursor: pointer;
+  justify-self: start;
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--club-accent, #1e5aa8);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+}
+
+.admin-manual-reschedule__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 760px) {
+  .admin-manual-reschedule form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-manual-reschedule__current,
+  .admin-manual-reschedule__note,
+  .admin-manual-reschedule__error,
+  .admin-manual-reschedule__success,
+  .admin-manual-reschedule__submit {
+    grid-column: auto;
+  }
+}
