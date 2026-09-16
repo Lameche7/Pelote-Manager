@@ -16,6 +16,7 @@ export type MyTournamentPlayer = {
   lastName: string;
   clubName: string;
   role: TournamentPlayerRole;
+  phone: string | null;
 };
 
 export type MyTournamentSportingRules = {
@@ -100,7 +101,21 @@ const mapPlayer = (row: Row): MyTournamentPlayer => ({
   lastName: String(row.last_name ?? ""),
   clubName: String(row.club_name ?? ""),
   role: row.role as TournamentPlayerRole,
+  phone: null,
 });
+
+const playerContactKey = (
+  tournamentId: string,
+  teamId: string,
+  player: Pick<MyTournamentPlayer, "firstName" | "lastName" | "role">,
+) =>
+  [
+    tournamentId,
+    teamId,
+    player.role,
+    player.firstName.trim().toLocaleLowerCase("fr"),
+    player.lastName.trim().toLocaleLowerCase("fr"),
+  ].join(":");
 
 const mapScore = (value: unknown): TournamentScorePayload => {
   const score = (value ?? {}) as Row;
@@ -212,10 +227,12 @@ const mapTournament = (row: Row): MyTournamentOverview => {
 
 export const myTournamentsService = {
   async list(): Promise<MyTournamentOverview[]> {
-    const [tournamentsResponse, qualificationResponse] = await Promise.all([
-      supabase.rpc("get_my_tournaments"),
-      supabase.rpc("get_my_tournament_qualification_scenarios"),
-    ]);
+    const [tournamentsResponse, qualificationResponse, contactsResponse] =
+      await Promise.all([
+        supabase.rpc("get_my_tournaments"),
+        supabase.rpc("get_my_tournament_qualification_scenarios"),
+        supabase.rpc("get_my_tournament_player_contacts"),
+      ]);
 
     if (tournamentsResponse.error) {
       throw new Error(
@@ -235,6 +252,26 @@ export const myTournamentsService = {
       );
     }
 
+    const phoneByPlayer = new Map<string, string>();
+    if (!contactsResponse.error) {
+      for (const contact of rows(contactsResponse.data)) {
+        const phone = String(contact.phone ?? "").trim();
+        if (!phone) continue;
+        phoneByPlayer.set(
+          playerContactKey(
+            String(contact.tournament_id ?? ""),
+            String(contact.team_id ?? ""),
+            {
+              firstName: String(contact.first_name ?? ""),
+              lastName: String(contact.last_name ?? ""),
+              role: contact.role as TournamentPlayerRole,
+            },
+          ),
+          phone,
+        );
+      }
+    }
+
     const qualificationByTeam = new Map<string, MyTournamentQualification>();
     for (const scenario of rows(qualificationResponse.data)) {
       const key = `${String(scenario.tournament_id ?? "")}:${String(
@@ -245,8 +282,27 @@ export const myTournamentsService = {
 
     return rows(tournamentsResponse.data).map((row) => {
       const tournament = mapTournament(row);
+      const withPhone = (teamId: string, player: MyTournamentPlayer) => ({
+        ...player,
+        phone:
+          phoneByPlayer.get(playerContactKey(tournament.id, teamId, player)) ??
+          null,
+      });
+
       return {
         ...tournament,
+        team: {
+          ...tournament.team,
+          players: tournament.team.players.map((player) =>
+            withPhone(tournament.team.id, player),
+          ),
+        },
+        matches: tournament.matches.map((match) => ({
+          ...match,
+          opponentPlayers: match.opponentPlayers.map((player) =>
+            withPhone(match.opponentTeamId, player),
+          ),
+        })),
         qualification:
           qualificationByTeam.get(`${tournament.id}:${tournament.team.id}`) ??
           null,
