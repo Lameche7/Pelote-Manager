@@ -1,0 +1,76 @@
+name: Wire admin manual reschedule form
+
+on:
+  push:
+    branches:
+      - feat/admin-manual-reschedules
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/admin-manual-reschedules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Wire form into admin page
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/features/admin/tournaments/pages/AdminTournamentReschedulePage.tsx")
+          text = path.read_text()
+
+          import_line = 'import { AdminTournamentManualRescheduleForm } from "@/features/admin/tournaments/components/AdminTournamentManualRescheduleForm";\n'
+          marker = 'import {\n  ADMIN_RESCHEDULE_APPLY_LABEL,\n'
+          if import_line not in text:
+              if marker not in text:
+                  raise RuntimeError("import marker not found")
+              text = text.replace(marker, import_line + marker, 1)
+
+          ready_block = '''      <p className="admin-reschedules__ready" role="status">
+        L’application est atomique : planning, éventuel échange, grille finale
+        et calendrier sont modifiés ensemble, ou aucun changement n’est
+        conservé.
+      </p>
+'''
+          insertion = ready_block + '''
+      <AdminTournamentManualRescheduleForm onCreated={load} />
+'''
+          if '<AdminTournamentManualRescheduleForm onCreated={load} />' not in text:
+              if ready_block not in text:
+                  raise RuntimeError("ready block not found")
+              text = text.replace(ready_block, insertion, 1)
+
+          path.write_text(text)
+          PY
+      - name: Format changed files
+        run: |
+          npx prettier --write \
+            src/features/admin/tournaments/pages/AdminTournamentReschedulePage.tsx \
+            src/features/admin/tournaments/components/AdminTournamentManualRescheduleForm.tsx \
+            src/features/admin/tournaments/components/AdminTournamentManualRescheduleForm.css \
+            src/features/admin/tournaments/services/adminTournamentManualRescheduleService.ts \
+            supabase/migrations/20260916190000_add_admin_manual_tournament_reschedules.sql \
+            tests/adminManualTournamentReschedule.test.mjs
+      - name: Commit generated changes and remove helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-admin-manual-reschedule.yml
+          git add \
+            src/features/admin/tournaments/pages/AdminTournamentReschedulePage.tsx \
+            src/features/admin/tournaments/components/AdminTournamentManualRescheduleForm.tsx \
+            src/features/admin/tournaments/components/AdminTournamentManualRescheduleForm.css \
+            src/features/admin/tournaments/services/adminTournamentManualRescheduleService.ts \
+            supabase/migrations/20260916190000_add_admin_manual_tournament_reschedules.sql \
+            tests/adminManualTournamentReschedule.test.mjs
+          git commit -m "feat(reschedules): create requests manually from admin"
+          git push origin HEAD:feat/admin-manual-reschedules
