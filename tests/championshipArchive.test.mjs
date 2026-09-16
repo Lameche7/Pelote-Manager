@@ -16,6 +16,13 @@ const component = await readFile(
   ),
   "utf8",
 );
+const page = await readFile(
+  new URL(
+    "../src/features/admin/championships/pages/AdminChampionshipsPage.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const service = await readFile(
   new URL(
     "../src/features/admin/championships/services/championshipLifecycleService.ts",
@@ -42,14 +49,35 @@ test("l’archivage championnat est protégé et audité côté base", () => {
   );
 });
 
+test("un championnat archivé est verrouillé en lecture seule côté base", () => {
+  assert.match(migration, /reject_archived_championship_update/);
+  assert.match(migration, /reject_archived_championship_match_mutation/);
+  assert.match(migration, /reject_archived_championship_standing_mutation/);
+  assert.match(
+    migration,
+    /reject_archived_championship_general_standing_mutation/,
+  );
+  assert.match(migration, /Archived championship is read-only/);
+  assert.match(
+    migration,
+    /before insert or update or delete on public\.championship_matches/,
+  );
+  assert.match(
+    migration,
+    /before insert or update or delete on public\.championship_standings/,
+  );
+});
+
 test("le service admin appelle uniquement le RPC d’archivage", () => {
   assert.match(service, /rpc\("admin_archive_championship"/);
   assert.match(service, /target_id: championshipId/);
 });
 
-test("l’interface demande confirmation et explique l’effet sur les réservations", () => {
+test("l’interface passe en consultation seule après archivage", () => {
   assert.match(component, /Archiver le championnat/);
   assert.match(component, /window\.confirm/);
   assert.match(component, /droits de réservation/);
+  assert.match(component, /Championnat archivé/);
   assert.match(component, /championshipStatus !== "archived"/);
+  assert.match(page, /detail\.status !== "archived"/);
 });
