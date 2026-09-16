@@ -58,8 +58,15 @@ test("le serveur applique les couleurs dans la transaction d'import", () => {
   assert.match(migration, /series\.tournament_id = target_tournament_id/);
 });
 
-test("les couleurs restent éditables sur un planning déjà publié", () => {
+test("les couleurs restent éditables et synchronisent les événements publiés", () => {
   assert.match(migration, /admin_get_tournament_series_colors/);
+  assert.match(
+    migration,
+    /create or replace function public\.admin_update_tournament_series_colors/,
+  );
+  assert.match(migration, /set_config\('app\.allow_tournament_event_sync'/);
+  assert.match(migration, /update public\.events as event/);
+  assert.match(migration, /match\.series_id = target_series_id/);
   assert.match(publicationService, /listSeriesColors/);
   assert.match(publicationService, /admin_update_tournament_series_colors/);
   assert.match(publicationPage, /Couleurs des séries/);
