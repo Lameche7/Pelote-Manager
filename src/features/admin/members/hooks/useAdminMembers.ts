@@ -6,12 +6,19 @@ export const memberKeys = {
   all: allMemberKeys,
   list: (filters: Record<string, Json>) =>
     [...allMemberKeys, "list", filters] as const,
+  unlicensedUsers: (filters: Record<string, Json>) =>
+    [...allMemberKeys, "unlicensed-users", filters] as const,
   imports: [...allMemberKeys, "imports"] as const,
 };
 export const useAdminMembers = (filters: Record<string, Json>) =>
   useQuery({
     queryKey: memberKeys.list(filters),
     queryFn: () => memberAdminService.list(filters),
+  });
+export const useUnlicensedPilotokiUsers = (filters: Record<string, Json>) =>
+  useQuery({
+    queryKey: memberKeys.unlicensedUsers(filters),
+    queryFn: () => memberAdminService.listUnlicensedPilotokiUsers(filters),
   });
 export const useMemberImports = (filters: Record<string, Json>) =>
   useQuery({
