@@ -53,7 +53,7 @@ export const reservationCalendarService = {
     fromDate: string,
     toDate: string,
   ): Promise<CalendarSlot[]> {
-    const { data, error } = await supabase.rpc("list_available_slots_v2", {
+    const { data, error } = await supabase.rpc("list_available_slots_v3", {
       target_resource_id: resourceId,
       range_start: fromDate,
       range_end: toDate,

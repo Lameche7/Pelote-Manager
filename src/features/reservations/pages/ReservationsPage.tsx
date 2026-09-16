@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
 import {
   formatPrice,
@@ -22,6 +22,10 @@ import {
   type ReservationPaymentPlayer,
 } from "@/features/reservations/services/reservationBookingService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
+import {
+  championshipMatchReservationService,
+  type ChampionshipMatchReservationContext,
+} from "@/features/user-space/championships/services/championshipMatchReservationService";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./ReservationsPage.css";
@@ -46,6 +50,14 @@ const rangeFormatter = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
   year: "numeric",
 });
+
+const initialAnchorDate = (value: string | null) => {
+  if (!value) return startOfIsoWeek(new Date());
+  const parsed = new Date(`${value.slice(0, 10)}T12:00:00`);
+  return Number.isNaN(parsed.getTime())
+    ? startOfIsoWeek(new Date())
+    : startOfIsoWeek(parsed);
+};
 
 function CalendarSkeleton() {
   return (
@@ -76,17 +88,25 @@ function SlotCard({
     const bookedBy = slot.bookedByName ?? "Réservation";
     const isTournamentMatch =
       slot.occupationType === "match" && Boolean(slot.displayColor);
+    const isChampionshipMatch = slot.occupationType === "championship_match";
+    const isColoredMatch = isTournamentMatch || isChampionshipMatch;
     const style = slot.displayColor
       ? ({ "--tournament-series-color": slot.displayColor } as CSSProperties)
       : undefined;
     return (
       <div
-        className={`reservation-slot reservation-slot--occupied${isTournamentMatch ? " reservation-slot--tournament" : ""}`}
+        className={`reservation-slot reservation-slot--occupied${isColoredMatch ? " reservation-slot--tournament" : ""}`}
         style={style}
         aria-label={`${slotTime} : occupé par ${bookedBy}`}
       >
         <strong>{slotTime}</strong>
-        <span>{isTournamentMatch ? "Match tournoi" : "Occupé"}</span>
+        <span>
+          {isChampionshipMatch
+            ? "Match championnat"
+            : isTournamentMatch
+              ? "Match tournoi"
+              : "Occupé"}
+        </span>
         <small>{bookedBy}</small>
       </div>
     );
@@ -158,11 +178,13 @@ function AccountRequiredModal({ onClose }: { onClose: () => void }) {
 function BookingModal({
   slot,
   resource,
+  championshipContext,
   onClose,
   onSuccess,
 }: {
   slot: CalendarSlot;
   resource: ReservableResource;
+  championshipContext: ChampionshipMatchReservationContext | null;
   onClose: () => void;
   onSuccess: () => Promise<void>;
 }) {
@@ -177,17 +199,39 @@ function BookingModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const isFreeChampionshipMatch =
+    championshipContext?.matchPaymentMode === "free";
 
   useEffect(() => {
     let isCurrent = true;
-    void Promise.all([
+    setTerms(null);
+    setPaymentEnabled(null);
+
+    if (isFreeChampionshipMatch) {
+      setPaymentEnabled(false);
+      return () => {
+        isCurrent = false;
+      };
+    }
+
+    const requests: Promise<unknown>[] = [
       reservationBookingService.getTerms(slot.startsAt),
-      reservationBookingService.getPaymentConfig(),
-    ])
-      .then(([reservationTerms, paymentConfig]) => {
+    ];
+    if (!championshipContext) {
+      requests.push(reservationBookingService.getPaymentConfig());
+    }
+
+    void Promise.all(requests)
+      .then((values) => {
         if (!isCurrent) return;
-        setTerms(reservationTerms);
-        setPaymentEnabled(paymentConfig.enabled);
+        setTerms(values[0] as ReservationTerms);
+        if (championshipContext) {
+          setPaymentEnabled(championshipContext.onlinePaymentEnabled);
+        } else {
+          setPaymentEnabled(
+            (values[1] as { enabled: boolean } | undefined)?.enabled ?? false,
+          );
+        }
       })
       .catch((error: unknown) => {
         if (isCurrent) setErrorMessage(getBookingErrorMessage(error));
@@ -195,11 +239,30 @@ function BookingModal({
     return () => {
       isCurrent = false;
     };
-  }, [slot.startsAt]);
+  }, [championshipContext, isFreeChampionshipMatch, slot.startsAt]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+
+    if (championshipContext) {
+      setIsSubmitting(true);
+      try {
+        await championshipMatchReservationService.create(
+          championshipContext,
+          resource.id,
+          slot.startsAt,
+        );
+        setIsConfirmed(true);
+        await onSuccess();
+      } catch (error) {
+        setErrorMessage(getBookingErrorMessage(error));
+        await onSuccess();
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     if (paymentEnabled && paymentChoice === "split") {
       if (selectedPlayers.length !== 3) {
@@ -243,6 +306,9 @@ function BookingModal({
 
   const partnerShare = terms ? Math.floor(terms.priceCents / 4) : 0;
   const ownerShare = terms ? terms.priceCents - partnerShare * 3 : 0;
+  const championshipMatchLabel = championshipContext
+    ? `${championshipContext.team1Label} – ${championshipContext.team2Label}`
+    : null;
 
   return (
     <div className="booking-modal" role="presentation" onMouseDown={onClose}>
@@ -267,18 +333,32 @@ function BookingModal({
             <span aria-hidden="true">✓</span>
             <h2 id="booking-modal-title">Réservation confirmée</h2>
             <p>
-              Votre créneau au {resource.name} est enregistré pour le{" "}
+              {championshipContext ? "La rencontre" : "Votre créneau"} au{" "}
+              {resource.name} est enregistré pour le{" "}
               {fullDateFormatter.format(new Date(slot.startsAt))} à{" "}
               {formatTime(slot.startsAt, resource.timezone)}.
             </p>
+            {championshipMatchLabel && <strong>{championshipMatchLabel}</strong>}
             <button type="button" onClick={onClose}>
               Retour au calendrier
             </button>
           </div>
         ) : (
           <form onSubmit={(event) => void handleSubmit(event)}>
-            <p className="booking-modal__eyebrow">Votre réservation</p>
+            <p className="booking-modal__eyebrow">
+              {championshipContext ? "Rencontre de championnat" : "Votre réservation"}
+            </p>
             <h2 id="booking-modal-title">Réserver {resource.name}</h2>
+
+            {championshipContext && (
+              <div className="booking-modal__championship-summary">
+                <strong>{championshipMatchLabel}</strong>
+                <span>
+                  {championshipContext.championshipName} ·{" "}
+                  {championshipContext.divisionName}
+                </span>
+              </div>
+            )}
 
             <dl className="booking-modal__summary">
               <div>
@@ -295,12 +375,23 @@ function BookingModal({
               <div>
                 <dt>Tarif</dt>
                 <dd>
-                  {terms ? formatPrice(terms.priceCents) : "Calcul en cours…"}
+                  {isFreeChampionshipMatch
+                    ? "Sans paiement"
+                    : terms
+                      ? formatPrice(terms.priceCents)
+                      : "Calcul en cours…"}
                 </dd>
               </div>
             </dl>
 
-            {terms && (
+            {isFreeChampionshipMatch && (
+              <p className="booking-modal__terms">
+                Le club a configuré les réservations de rencontres de championnat
+                sans paiement.
+              </p>
+            )}
+
+            {!isFreeChampionshipMatch && terms && (
               <p className="booking-modal__terms">
                 {terms.customerType === "licensee"
                   ? "Profil licencié actif : conditions licencié appliquées."
@@ -308,7 +399,7 @@ function BookingModal({
               </p>
             )}
 
-            {paymentEnabled && terms && (
+            {!championshipContext && paymentEnabled && terms && (
               <fieldset className="booking-modal__payment-choice">
                 <legend>Comment souhaitez-vous payer ?</legend>
                 <label className="booking-modal__payment-option">
@@ -342,7 +433,7 @@ function BookingModal({
               </fieldset>
             )}
 
-            {paymentEnabled && paymentChoice === "split" && (
+            {!championshipContext && paymentEnabled && paymentChoice === "split" && (
               <ReservationSplitPaymentFields
                 resourceId={resource.id}
                 selectedPlayers={selectedPlayers}
@@ -350,12 +441,22 @@ function BookingModal({
               />
             )}
 
-            {paymentEnabled === false && (
+            {!championshipContext && paymentEnabled === false && (
               <p className="booking-modal__account">
                 Le paiement en ligne est désactivé : votre réservation sera
                 enregistrée immédiatement.
               </p>
             )}
+
+            {championshipContext &&
+              championshipContext.matchPaymentMode === "standard" &&
+              paymentEnabled === false && (
+                <p className="booking-modal__account">
+                  La tarification habituelle du club s’applique. Le paiement en
+                  ligne est désactivé : la réservation sera enregistrée
+                  immédiatement.
+                </p>
+              )}
 
             {errorMessage && (
               <div className="booking-modal__error" role="alert">
@@ -375,20 +476,27 @@ function BookingModal({
                 type="submit"
                 disabled={
                   isSubmitting ||
-                  !terms ||
                   paymentEnabled === null ||
-                  (paymentEnabled &&
+                  (!isFreeChampionshipMatch && !terms) ||
+                  (!championshipContext &&
+                    paymentEnabled &&
                     paymentChoice === "split" &&
                     selectedPlayers.length !== 3)
                 }
               >
                 {isSubmitting
                   ? "Réservation en cours…"
-                  : paymentEnabled
-                    ? paymentChoice === "split"
-                      ? `Continuer — ma part ${formatPrice(ownerShare)}`
-                      : `Payer la totalité — ${terms ? formatPrice(terms.priceCents) : "…"}`
-                    : "Réserver"}
+                  : championshipContext
+                    ? isFreeChampionshipMatch
+                      ? "Réserver la rencontre"
+                      : paymentEnabled
+                        ? `Continuer vers le paiement — ${terms ? formatPrice(terms.priceCents) : "…"}`
+                        : `Réserver — ${terms ? formatPrice(terms.priceCents) : "…"}`
+                    : paymentEnabled
+                      ? paymentChoice === "split"
+                        ? `Continuer — ma part ${formatPrice(ownerShare)}`
+                        : `Payer la totalité — ${terms ? formatPrice(terms.priceCents) : "…"}`
+                      : "Réserver"}
               </button>
             </div>
           </form>
@@ -400,13 +508,22 @@ function BookingModal({
 
 export function ReservationsPage() {
   const { isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
+  const championshipMatchId = searchParams.get("championshipMatch");
+  const requestedDate = searchParams.get("date");
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
-  const [anchorDate, setAnchorDate] = useState(() => startOfIsoWeek(new Date()));
+  const [anchorDate, setAnchorDate] = useState(() =>
+    initialAnchorDate(requestedDate),
+  );
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [championshipContext, setChampionshipContext] =
+    useState<ChampionshipMatchReservationContext | null>(null);
+  const [championshipContextLoading, setChampionshipContextLoading] =
+    useState(Boolean(championshipMatchId));
 
   const selectedResource = resources.find(
     (resource) => resource.id === resourceId,
@@ -450,6 +567,35 @@ export function ReservationsPage() {
     };
   }, []);
 
+  const loadChampionshipContext = async () => {
+    if (!championshipMatchId || !isAuthenticated) {
+      setChampionshipContext(null);
+      setChampionshipContextLoading(false);
+      return;
+    }
+    setChampionshipContextLoading(true);
+    try {
+      setChampionshipContext(
+        await championshipMatchReservationService.getContext(
+          championshipMatchId,
+        ),
+      );
+    } catch (caught) {
+      setErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "Impossible de préparer cette rencontre.",
+      );
+      setChampionshipContext(null);
+    } finally {
+      setChampionshipContextLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadChampionshipContext();
+  }, [championshipMatchId, isAuthenticated]);
+
   async function loadSlots(): Promise<void> {
     if (!resourceId) return;
     setIsLoading(true);
@@ -472,6 +618,10 @@ export function ReservationsPage() {
   useEffect(() => {
     void loadSlots();
   }, [resourceId, weekEndValue, weekStartValue]);
+
+  const refreshAfterBooking = async () => {
+    await Promise.all([loadSlots(), loadChampionshipContext()]);
+  };
 
   return (
     <section className="reservation-calendar">
@@ -503,6 +653,39 @@ export function ReservationsPage() {
           </label>
         )}
       </div>
+
+      {championshipMatchId && (
+        <div className="reservation-calendar__championship-context" role="status">
+          {championshipContextLoading ? (
+            <strong>Préparation de la rencontre…</strong>
+          ) : championshipContext ? (
+            <>
+              <div>
+                <span>Réservation pour une rencontre</span>
+                <strong>
+                  {championshipContext.team1Label} –{" "}
+                  {championshipContext.team2Label}
+                </strong>
+                <small>
+                  {championshipContext.championshipName} ·{" "}
+                  {championshipContext.divisionName}
+                </small>
+              </div>
+              <div>
+                {championshipContext.existingReservation ? (
+                  <strong>Cette rencontre est déjà réservée.</strong>
+                ) : championshipContext.matchPaymentMode === "free" ? (
+                  <strong>Sans paiement</strong>
+                ) : (
+                  <strong>Tarification habituelle du club</strong>
+                )}
+              </div>
+            </>
+          ) : (
+            <strong>Cette rencontre ne peut pas être réservée ici.</strong>
+          )}
+        </div>
+      )}
 
       <div
         className="reservation-calendar__toolbar"
@@ -573,7 +756,15 @@ export function ReservationsPage() {
                         timezone={
                           selectedResource?.timezone ?? "Europe/Paris"
                         }
-                        onBook={setSelectedSlot}
+                        onBook={(nextSlot) => {
+                          if (
+                            championshipContext?.existingReservation ||
+                            championshipContextLoading
+                          ) {
+                            return;
+                          }
+                          setSelectedSlot(nextSlot);
+                        }}
                       />
                     ))}
                   </div>
@@ -615,8 +806,9 @@ export function ReservationsPage() {
           <BookingModal
             slot={selectedSlot}
             resource={selectedResource}
+            championshipContext={championshipContext}
             onClose={() => setSelectedSlot(null)}
-            onSuccess={loadSlots}
+            onSuccess={refreshAfterBooking}
           />
         ) : (
           <AccountRequiredModal onClose={() => setSelectedSlot(null)} />

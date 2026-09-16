@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CalendarClock, ShieldCheck, UsersRound } from "lucide-react";
+import {
+  CalendarClock,
+  CreditCard,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
 import {
   championshipReservationService,
+  type ChampionshipMatchPaymentMode,
   type ChampionshipReservationSettings,
   type ChampionshipReservationWindow,
 } from "@/features/admin/championships/services/championshipReservationService";
@@ -29,6 +35,8 @@ export function AdminChampionshipReservationsPage() {
   const [enabled, setEnabled] = useState(false);
   const [advanceDays, setAdvanceDays] = useState(90);
   const [maxActiveReservations, setMaxActiveReservations] = useState(20);
+  const [matchPaymentMode, setMatchPaymentMode] =
+    useState<ChampionshipMatchPaymentMode>("free");
   const [resourceIds, setResourceIds] = useState<string[]>([]);
   const [windows, setWindows] =
     useState<ChampionshipReservationWindow[]>(DEFAULT_WINDOWS);
@@ -46,6 +54,7 @@ export function AdminChampionshipReservationsPage() {
       setEnabled(next.enabled);
       setAdvanceDays(next.advanceDays);
       setMaxActiveReservations(next.maxActiveReservations);
+      setMatchPaymentMode(next.matchPaymentMode);
       setResourceIds(
         next.resources
           .filter((resource) => resource.selected)
@@ -114,6 +123,7 @@ export function AdminChampionshipReservationsPage() {
         enabled,
         advanceDays,
         maxActiveReservations,
+        matchPaymentMode,
         resourceIds,
         windows,
       });
@@ -215,6 +225,53 @@ export function AdminChampionshipReservationsPage() {
                     setMaxActiveReservations(Number(event.target.value))
                   }
                 />
+              </label>
+            </div>
+          </article>
+
+          <article className="championship-reservation-admin__panel">
+            <div className="championship-reservation-admin__section-title">
+              <div>
+                <h2>Paiement d’une rencontre de championnat</h2>
+                <p>
+                  Ce réglage concerne uniquement les réservations lancées depuis
+                  « Mon espace → Mes championnats ».
+                </p>
+              </div>
+              <CreditCard aria-hidden="true" />
+            </div>
+            <div className="championship-reservation-admin__payment-modes">
+              <label>
+                <input
+                  type="radio"
+                  name="championship-payment-mode"
+                  value="free"
+                  checked={matchPaymentMode === "free"}
+                  onChange={() => setMatchPaymentMode("free")}
+                />
+                <span>
+                  <strong>Sans paiement</strong>
+                  <small>
+                    Le créneau est confirmé immédiatement à 0 €. Idéal lorsqu’un
+                    club met ses installations à disposition de ses équipes.
+                  </small>
+                </span>
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="championship-payment-mode"
+                  value="standard"
+                  checked={matchPaymentMode === "standard"}
+                  onChange={() => setMatchPaymentMode("standard")}
+                />
+                <span>
+                  <strong>Tarification habituelle du club</strong>
+                  <small>
+                    La réservation utilise le tarif et, s’il est activé, le
+                    paiement en ligne des réservations ordinaires.
+                  </small>
+                </span>
               </label>
             </div>
           </article>

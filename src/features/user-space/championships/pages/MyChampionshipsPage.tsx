@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  CalendarPlus,
   CheckCircle2,
   ExternalLink,
   Send,
   Trophy,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import {
   myChampionshipResultSettingsService,
@@ -26,6 +28,7 @@ import {
   RequiredFieldMark,
   RequiredFieldsNotice,
 } from "@/shared/components/forms/RequiredField";
+import { ROUTES } from "@/shared/config";
 import "./MyChampionshipsPage.css";
 
 const statusLabels: Record<string, string> = {
@@ -49,6 +52,14 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
   month: "short",
   year: "numeric",
+});
+
+const reservationDateFormatter = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "2-digit",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
 });
 
 const dateTimeParts = (match: MyChampionshipMatch) => ({
@@ -324,12 +335,14 @@ function MatchRow({
   settings,
   emphasis,
   onResultSaved,
+  reservationHref,
   readOnly = false,
 }: {
   match: MyChampionshipMatch;
   settings: MyChampionshipResultSettings | null;
   emphasis?: "next" | "last";
   onResultSaved: () => Promise<void>;
+  reservationHref?: string | null;
   readOnly?: boolean;
 }) {
   const { date, time } = dateTimeParts(match);
@@ -365,6 +378,28 @@ function MatchRow({
           </span>
         </div>
       </div>
+
+      {match.reservation ? (
+        <div className="my-championships__reservation-status">
+          <CalendarPlus aria-hidden="true" />
+          <span>
+            <strong>Terrain réservé</strong>
+            {match.reservation.resourceName} ·{" "}
+            {reservationDateFormatter.format(
+              new Date(match.reservation.startsAt),
+            )}
+          </span>
+        </div>
+      ) : reservationHref ? (
+        <Link
+          className="my-championships__reservation-action"
+          to={reservationHref}
+        >
+          <CalendarPlus aria-hidden="true" />
+          Réserver un terrain pour cette rencontre
+        </Link>
+      ) : null}
+
       {!readOnly && (
         <ResultSubmission
           match={match}
@@ -747,6 +782,23 @@ function ChampionshipCard({
     (team) => team.isMyTeam,
   );
 
+  const reservationHref = (match: MyChampionshipMatch) => {
+    if (
+      readOnly ||
+      match.reservation ||
+      hasOfficialResult(match) ||
+      ["played", "forfeit", "cancelled"].includes(match.status) ||
+      !match.opponentTeamId
+    ) {
+      return null;
+    }
+    const params = new URLSearchParams({ championshipMatch: match.id });
+    const preferredDate =
+      match.agreementOn ?? match.reportOn ?? match.scheduledOn ?? null;
+    if (preferredDate) params.set("date", preferredDate);
+    return `${ROUTES.reservations}?${params.toString()}`;
+  };
+
   return (
     <article className="my-championships__card">
       <header className="my-championships__card-header">
@@ -818,6 +870,7 @@ function ChampionshipCard({
                 settings={settings}
                 emphasis="next"
                 onResultSaved={onResultSaved}
+                reservationHref={reservationHref(nextMatch)}
                 readOnly={readOnly}
               />
             </div>
@@ -830,6 +883,7 @@ function ChampionshipCard({
                 settings={settings}
                 emphasis="last"
                 onResultSaved={onResultSaved}
+                reservationHref={reservationHref(lastResult)}
                 readOnly={readOnly}
               />
             </div>
@@ -849,6 +903,7 @@ function ChampionshipCard({
                 match={match}
                 settings={settings}
                 onResultSaved={onResultSaved}
+                reservationHref={reservationHref(match)}
                 readOnly={readOnly}
               />
             ))

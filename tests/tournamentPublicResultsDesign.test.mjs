@@ -60,7 +60,7 @@ test("le calendrier récupère et applique la couleur de série", async () => {
   assert.match(migration, /list_available_slots_v2/);
   assert.match(migration, /tournament_match_events/);
   assert.match(migration, /series\.color as display_color/);
-  assert.match(service, /list_available_slots_v2/);
+  assert.match(service, /list_available_slots_v3/);
   assert.match(service, /displayColor: slot\.display_color/);
   assert.match(page, /reservation-slot--tournament/);
   assert.match(page, /--tournament-series-color/);

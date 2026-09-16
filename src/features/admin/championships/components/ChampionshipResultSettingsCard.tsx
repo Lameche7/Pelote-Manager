@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { ChampionshipStandingsImportCard } from "@/features/admin/championships/components/ChampionshipStandingsImportCard";
+import {
+  championshipDivisionColorService,
+  type ChampionshipDivisionColor,
+} from "@/features/admin/championships/services/championshipDivisionColorService";
 import { championshipImportService } from "@/features/admin/championships/services/championshipImportService";
 import { championshipLifecycleService } from "@/features/admin/championships/services/championshipLifecycleService";
 import {
@@ -31,6 +35,11 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
   const [divisions, setDivisions] = useState<
     Array<{ id: string; name: string }>
   >([]);
+  const [divisionColors, setDivisionColors] = useState<
+    ChampionshipDivisionColor[]
+  >([]);
+  const [colorSavingId, setColorSavingId] = useState<string | null>(null);
+  const [colorMessage, setColorMessage] = useState("");
   const [championshipName, setChampionshipName] = useState("");
   const [championshipStatus, setChampionshipStatus] = useState("");
   const [archiving, setArchiving] = useState(false);
@@ -42,12 +51,14 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
     setMessage("");
     setError("");
     setArchiveError("");
+    setColorMessage("");
 
     void Promise.all([
       championshipResultSettingsService.get(championshipId),
       championshipImportService.detail(championshipId),
+      championshipDivisionColorService.list(championshipId),
     ])
-      .then(([settings, detail]) => {
+      .then(([settings, detail, colors]) => {
         if (!active) return;
         if (settings.inputMode && settings.winningScore !== null) {
           setMode(settings.inputMode);
@@ -67,6 +78,7 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
             name: division.name,
           })),
         );
+        setDivisionColors(colors);
       })
       .catch((cause) => {
         if (!active) return;
@@ -119,6 +131,38 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveDivisionColor = async (
+    divisionId: string,
+    color: string | null,
+  ) => {
+    setColorSavingId(divisionId);
+    setColorMessage("");
+    setError("");
+    try {
+      await championshipDivisionColorService.update(divisionId, color);
+      setDivisionColors((current) =>
+        current.map((division) =>
+          division.divisionId === divisionId
+            ? { ...division, displayColor: color }
+            : division,
+        ),
+      );
+      setColorMessage(
+        color
+          ? "Couleur enregistrée : elle sera utilisée dans Réservations et le Mode TV."
+          : "Couleur retirée.",
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible d’enregistrer la couleur de la série.",
+      );
+    } finally {
+      setColorSavingId(null);
     }
   };
 
@@ -229,6 +273,85 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
           </p>
         )}
       </div>
+
+      {!loading && divisionColors.length > 0 && (
+        <div className="admin-card admin-championships__update admin-championships__division-colors">
+          <div>
+            <p className="admin-page__eyebrow">Affichage</p>
+            <h2>Couleurs des séries</h2>
+            <p>
+              Ces couleurs sont définies par l’administrateur et identifient les
+              rencontres de championnat dans Réservations et le Mode TV.
+            </p>
+          </div>
+          <div className="admin-championships__division-color-list">
+            {divisionColors.map((division) => (
+              <div
+                className="admin-championships__division-color-row"
+                key={division.divisionId}
+              >
+                <strong>{division.divisionName}</strong>
+                <input
+                  type="color"
+                  aria-label={`Couleur ${division.divisionName}`}
+                  value={division.displayColor ?? "#2563EB"}
+                  disabled={
+                    championshipStatus === "archived" ||
+                    colorSavingId === division.divisionId
+                  }
+                  onChange={(event) =>
+                    setDivisionColors((current) =>
+                      current.map((item) =>
+                        item.divisionId === division.divisionId
+                          ? {
+                              ...item,
+                              displayColor: event.target.value.toUpperCase(),
+                            }
+                          : item,
+                      ),
+                    )
+                  }
+                />
+                <code>{division.displayColor ?? "Aucune"}</code>
+                <button
+                  type="button"
+                  disabled={
+                    championshipStatus === "archived" ||
+                    colorSavingId === division.divisionId
+                  }
+                  onClick={() =>
+                    void saveDivisionColor(
+                      division.divisionId,
+                      division.displayColor ?? "#2563EB",
+                    )
+                  }
+                >
+                  {colorSavingId === division.divisionId
+                    ? "Enregistrement…"
+                    : "Enregistrer"}
+                </button>
+                {division.displayColor && (
+                  <button
+                    type="button"
+                    disabled={
+                      championshipStatus === "archived" ||
+                      colorSavingId === division.divisionId
+                    }
+                    onClick={() =>
+                      void saveDivisionColor(division.divisionId, null)
+                    }
+                  >
+                    Retirer
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {colorMessage && (
+            <p className="admin-championships__success">{colorMessage}</p>
+          )}
+        </div>
+      )}
 
       {!loading && championshipStatus !== "archived" && (
         <div className="admin-card admin-championships__archive-card">
