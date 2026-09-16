@@ -47,12 +47,9 @@ test("le service admin appelle uniquement le RPC d’archivage", () => {
   assert.match(service, /target_id: championshipId/);
 });
 
-test(
-  "l’interface demande confirmation et explique l’effet sur les réservations",
-  () => {
-    assert.match(component, /Archiver le championnat/);
-    assert.match(component, /window\.confirm/);
-    assert.match(component, /droits de réservation/);
-    assert.match(component, /championshipStatus !== "archived"/);
-  },
-);
+test("l’interface demande confirmation et explique l’effet sur les réservations", () => {
+  assert.match(component, /Archiver le championnat/);
+  assert.match(component, /window\.confirm/);
+  assert.match(component, /droits de réservation/);
+  assert.match(component, /championshipStatus !== "archived"/);
+});
