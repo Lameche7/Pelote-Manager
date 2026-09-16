@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 
-const read = (path) =>
-  readFile(new URL(`../${path}`, import.meta.url), "utf8");
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("le back-office expose les inscrits PILOTOKI sans licence active", async () => {
   const [migration, page, service, hooks, navigation, routes, router] =
@@ -22,9 +21,15 @@ test("le back-office expose les inscrits PILOTOKI sans licence active", async ()
     ]);
 
   assert.match(migration, /admin_list_unlicensed_pilotoki_users/);
-  assert.match(migration, /has_club_permission\(current_club, 'members\.manage'\)/);
+  assert.match(
+    migration,
+    /has_club_permission\(current_club, 'members\.manage'\)/,
+  );
   assert.match(migration, /not coalesce\(member_season\.is_licensed, false\)/);
-  assert.match(migration, /profile\.member_id is null or member\.id is not null/);
+  assert.match(
+    migration,
+    /profile\.member_id is null or member\.id is not null/,
+  );
   assert.match(service, /admin_list_unlicensed_pilotoki_users/);
   assert.match(hooks, /useUnlicensedPilotokiUsers/);
   assert.match(page, /Inscrits sans licence/);

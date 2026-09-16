@@ -33,8 +33,8 @@ export function AdminUnlicensedPilotokiUsersPage() {
           <p className="eyebrow">Comptes PILOTOKI du club</p>
           <h1>Inscrits sans licence</h1>
           <p>
-            Comptes créés dans PILOTOKI qui ne disposent pas d’une licence valide
-            pour la saison active du club.
+            Comptes créés dans PILOTOKI qui ne disposent pas d’une licence
+            valide pour la saison active du club.
           </p>
         </div>
       </header>
@@ -77,9 +77,13 @@ export function AdminUnlicensedPilotokiUsersPage() {
                     <strong>{displayName(user)}</strong>
                   </td>
                   <td>{user.email || "—"}</td>
-                  <td>{new Date(user.created_at).toLocaleDateString("fr-FR")}</td>
                   <td>
-                    <span className="pill muted">{statusLabels[user.status]}</span>
+                    {new Date(user.created_at).toLocaleDateString("fr-FR")}
+                  </td>
+                  <td>
+                    <span className="pill muted">
+                      {statusLabels[user.status]}
+                    </span>
                   </td>
                   <td>{user.licence_number || "—"}</td>
                 </tr>
@@ -88,7 +92,9 @@ export function AdminUnlicensedPilotokiUsersPage() {
           </table>
 
           {query.data?.length === 0 && (
-            <p className="empty">Aucun inscrit sans licence ne correspond à la recherche.</p>
+            <p className="empty">
+              Aucun inscrit sans licence ne correspond à la recherche.
+            </p>
           )}
 
           <div className="members-actions">
