@@ -112,10 +112,10 @@ const dateFromIso = (value: string | null, fallback = new Date()) => {
 const formatDisplayDate = (value: string | null, fallback: Date) =>
   dateFormatter.format(dateFromIso(value, fallback));
 
-const tournamentColorStyle = (color: string | null): CSSProperties | undefined =>
-  color
-    ? ({ "--tv-tournament-color": color } as CSSProperties)
-    : undefined;
+const tournamentColorStyle = (
+  color: string | null,
+): CSSProperties | undefined =>
+  color ? ({ "--tv-tournament-color": color } as CSSProperties) : undefined;
 
 const slotLabel = (slot: TvDisplaySlot) => {
   if (slot.seriesName) return `Tournoi · ${slot.seriesName}`;

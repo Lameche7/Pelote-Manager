@@ -487,7 +487,9 @@ export function AdminTournamentPublicationPage() {
                   disabled={!colorsDirty || savingColors}
                   onClick={() => void saveColors()}
                 >
-                  {savingColors ? "Enregistrement…" : "Enregistrer les couleurs"}
+                  {savingColors
+                    ? "Enregistrement…"
+                    : "Enregistrer les couleurs"}
                 </button>
               </header>
               <div className="admin-tournament-publication__series-color-list">

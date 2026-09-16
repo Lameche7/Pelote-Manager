@@ -15,7 +15,9 @@ const [
   tvTodayStyles,
   tvWeekStyles,
 ] = await Promise.all([
-  read("../src/features/admin/tournaments/domain/errebotTransactionalImport.ts"),
+  read(
+    "../src/features/admin/tournaments/domain/errebotTransactionalImport.ts",
+  ),
   read(
     "../src/features/admin/tournaments/components/ErrebotTournamentImportFinalize.tsx",
   ),
@@ -37,7 +39,10 @@ const [
 test("l'import propose et transmet une couleur différente par série", () => {
   assert.match(importDomain, /TOURNAMENT_SERIES_COLOR_PALETTE/);
   assert.match(importDomain, /seriesColors: Record<string, string>/);
-  assert.match(importDomain, /color: selection\.seriesColors\[series\.series\]/);
+  assert.match(
+    importDomain,
+    /color: selection\.seriesColors\[series\.series\]/,
+  );
   assert.match(importFinalize, /4\. Couleurs des séries/);
   assert.match(importFinalize, /type="color"/);
   assert.match(importFinalize, /seriesColors/);

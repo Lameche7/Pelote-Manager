@@ -184,7 +184,9 @@ export const adminTournamentPublicationService = {
     return mapPreview(data);
   },
 
-  async listSeriesColors(tournamentId: string): Promise<TournamentSeriesColor[]> {
+  async listSeriesColors(
+    tournamentId: string,
+  ): Promise<TournamentSeriesColor[]> {
     const { data, error } = await supabase.rpc(
       "admin_get_tournament_series_colors",
       { target_tournament_id: tournamentId },
@@ -198,15 +200,17 @@ export const adminTournamentPublicationService = {
     tournamentId: string,
     values: TournamentSeriesColor[],
   ): Promise<void> {
-    const { error } = await supabase.rpc("admin_update_tournament_series_colors", {
-      target_tournament_id: tournamentId,
-      payload: values.map((series) => ({
-        id: series.id,
-        color: series.color,
-      })),
-    });
-    if (error)
-      fail(error, "Impossible d’enregistrer les couleurs des séries.");
+    const { error } = await supabase.rpc(
+      "admin_update_tournament_series_colors",
+      {
+        target_tournament_id: tournamentId,
+        payload: values.map((series) => ({
+          id: series.id,
+          color: series.color,
+        })),
+      },
+    );
+    if (error) fail(error, "Impossible d’enregistrer les couleurs des séries.");
   },
 
   async publish(tournamentId: string): Promise<number> {

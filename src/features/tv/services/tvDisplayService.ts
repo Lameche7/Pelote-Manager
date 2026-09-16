@@ -123,12 +123,7 @@ const mapSlot = (
   const status = String(row.status ?? "unavailable") as TvSlotStatus;
   const startsAt = String(row.starts_at ?? "");
   const endsAt = String(row.ends_at ?? "");
-  const decoration = findDecoration(
-    decorations,
-    resourceId,
-    startsAt,
-    endsAt,
-  );
+  const decoration = findDecoration(decorations, resourceId, startsAt, endsAt);
 
   return {
     startsAt,
@@ -152,12 +147,7 @@ const mapWeekItem = (
   const resourceId = String(row.resource_id ?? "");
   const startsAt = String(row.starts_at ?? "");
   const endsAt = String(row.ends_at ?? "");
-  const decoration = findDecoration(
-    decorations,
-    resourceId,
-    startsAt,
-    endsAt,
-  );
+  const decoration = findDecoration(decorations, resourceId, startsAt, endsAt);
 
   return {
     resourceId,
@@ -212,9 +202,7 @@ const mapDisplay = (
         id: resourceId,
         name: String(resource.name ?? "Terrain"),
         slots: Array.isArray(resource.slots)
-          ? resource.slots.map((slot) =>
-              mapSlot(slot, resourceId, decorations),
-            )
+          ? resource.slots.map((slot) => mapSlot(slot, resourceId, decorations))
           : [],
       };
     }),
@@ -231,17 +219,19 @@ const mapDisplay = (
 
 export const tvDisplayService = {
   async getDisplay(token: string): Promise<TvDisplay> {
-    const [displayResult, durationResult, decorationResult] = await Promise.all([
-      supabase.rpc("get_public_tv_display", {
-        target_token: token,
-      }),
-      supabase.rpc("get_public_tv_view_duration", {
-        target_token: token,
-      }),
-      supabase.rpc("get_public_tv_tournament_slot_colors", {
-        target_token: token,
-      }),
-    ]);
+    const [displayResult, durationResult, decorationResult] = await Promise.all(
+      [
+        supabase.rpc("get_public_tv_display", {
+          target_token: token,
+        }),
+        supabase.rpc("get_public_tv_view_duration", {
+          target_token: token,
+        }),
+        supabase.rpc("get_public_tv_tournament_slot_colors", {
+          target_token: token,
+        }),
+      ],
+    );
 
     if (displayResult.error) throw displayResult.error;
     if (durationResult.error) throw durationResult.error;
@@ -250,9 +240,7 @@ export const tvDisplayService = {
       ? []
       : ((decorationResult.data ?? []) as unknown[])
           .map(mapDecoration)
-          .filter(
-            (item): item is TournamentSlotDecoration => item !== null,
-          );
+          .filter((item): item is TournamentSlotDecoration => item !== null);
 
     return mapDisplay(displayResult.data, durationResult.data, decorations);
   },

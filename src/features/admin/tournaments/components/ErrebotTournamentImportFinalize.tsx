@@ -663,8 +663,7 @@ export function ErrebotTournamentImportFinalize({
                   <span
                     className="errebot-import-finalize__series-swatch"
                     style={{
-                      backgroundColor:
-                        seriesColors[series.series] ?? "#2563EB",
+                      backgroundColor: seriesColors[series.series] ?? "#2563EB",
                     }}
                   />
                   <strong>{series.series}</strong>
@@ -678,8 +677,8 @@ export function ErrebotTournamentImportFinalize({
       <p className="admin-tournament-import__privacy-note">
         Seules les données structurées nécessaires à la création sont envoyées
         au RPC sécurisé. Le PDF et son texte extrait restent dans le navigateur.
-        Si ce même PDF a déjà été importé, aucun doublon n’est créé : ces options
-        corrigent le tournoi existant et les couleurs de ses séries.
+        Si ce même PDF a déjà été importé, aucun doublon n’est créé : ces
+        options corrigent le tournoi existant et les couleurs de ses séries.
       </p>
 
       <div className="admin-tournament-import__actions">
