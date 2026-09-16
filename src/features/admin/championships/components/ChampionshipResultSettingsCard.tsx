@@ -237,8 +237,8 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
             <h2>Archiver ce championnat</h2>
             <p>
               L’archivage conserve les équipes, parties, résultats et
-              historiques, mais retire immédiatement ce championnat des droits de
-              réservation anticipée de ses joueurs.
+              historiques, mais retire immédiatement ce championnat des droits
+              de réservation anticipée de ses joueurs.
             </p>
           </div>
           <button
