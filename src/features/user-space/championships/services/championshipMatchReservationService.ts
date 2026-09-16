@@ -53,7 +53,8 @@ const mapContext = (value: unknown): ChampionshipMatchReservationContext => {
     displayColor: nullableString(row.display_color),
     team1Label: String(row.team1_label ?? ""),
     team2Label: String(row.team2_label ?? ""),
-    matchPaymentMode: row.match_payment_mode === "standard" ? "standard" : "free",
+    matchPaymentMode:
+      row.match_payment_mode === "standard" ? "standard" : "free",
     onlinePaymentEnabled: row.online_payment_enabled === true,
     existingReservation: existing
       ? {
@@ -68,7 +69,8 @@ const mapContext = (value: unknown): ChampionshipMatchReservationContext => {
 };
 
 async function checkoutPayment(payment: PaymentReservationRow): Promise<void> {
-  const { data: mode, error: modeError } = await supabase.rpc("get_payment_mode");
+  const { data: mode, error: modeError } =
+    await supabase.rpc("get_payment_mode");
   if (modeError) throw modeError;
 
   if (mode !== "helloasso") {
@@ -117,7 +119,9 @@ async function checkoutPayment(payment: PaymentReservationRow): Promise<void> {
 }
 
 export const championshipMatchReservationService = {
-  async getContext(matchId: string): Promise<ChampionshipMatchReservationContext> {
+  async getContext(
+    matchId: string,
+  ): Promise<ChampionshipMatchReservationContext> {
     const { data, error } = await supabase.rpc(
       "get_my_championship_reservation_context",
       { target_match_id: matchId },
@@ -146,7 +150,10 @@ export const championshipMatchReservationService = {
       throw new Error("Cette rencontre possède déjà une réservation active.");
     }
 
-    if (context.matchPaymentMode === "standard" && context.onlinePaymentEnabled) {
+    if (
+      context.matchPaymentMode === "standard" &&
+      context.onlinePaymentEnabled
+    ) {
       const { data, error } = await supabase.rpc(
         "reserve_my_championship_match_for_payment",
         {

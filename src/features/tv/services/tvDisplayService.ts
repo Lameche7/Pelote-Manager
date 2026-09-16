@@ -112,12 +112,7 @@ const mapChampionshipDecoration = (value: unknown): SlotDecoration | null => {
   const divisionName = String(row.division_name ?? "");
   const matchLabel = String(row.match_label ?? "");
 
-  if (
-    !resourceId ||
-    !startsAt ||
-    !endsAt ||
-    !colorPattern.test(displayColor)
-  ) {
+  if (!resourceId || !startsAt || !endsAt || !colorPattern.test(displayColor)) {
     return null;
   }
 
@@ -128,8 +123,9 @@ const mapChampionshipDecoration = (value: unknown): SlotDecoration | null => {
     seriesName: null,
     displayColor,
     displayName:
-      [championshipName, divisionName, matchLabel].filter(Boolean).join(" · ") ||
-      "Match championnat",
+      [championshipName, divisionName, matchLabel]
+        .filter(Boolean)
+        .join(" · ") || "Match championnat",
   };
 };
 

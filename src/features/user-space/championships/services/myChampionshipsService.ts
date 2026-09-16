@@ -224,17 +224,20 @@ export const myChampionshipsService = {
       }),
     );
     const reservations = new Map(
-      rows(reservationsResult.data).map((row) => [
-        String(row.match_id ?? ""),
-        {
-          reservationId: String(row.reservation_id ?? ""),
-          resourceId: String(row.resource_id ?? ""),
-          resourceName: String(row.resource_name ?? "Terrain"),
-          startsAt: String(row.starts_at ?? ""),
-          endsAt: String(row.ends_at ?? ""),
-          status: String(row.status ?? "confirmed"),
-        } satisfies MyChampionshipMatchReservation,
-      ] as const),
+      rows(reservationsResult.data).map(
+        (row) =>
+          [
+            String(row.match_id ?? ""),
+            {
+              reservationId: String(row.reservation_id ?? ""),
+              resourceId: String(row.resource_id ?? ""),
+              resourceName: String(row.resource_name ?? "Terrain"),
+              startsAt: String(row.starts_at ?? ""),
+              endsAt: String(row.ends_at ?? ""),
+              status: String(row.status ?? "confirmed"),
+            } satisfies MyChampionshipMatchReservation,
+          ] as const,
+      ),
     );
 
     return rows(championshipsResult.data)
