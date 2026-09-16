@@ -257,7 +257,13 @@ export function ChampionshipResultSettingsCard({ championshipId }: Props) {
         </div>
       )}
 
-      {!loading && (
+      {!loading && championshipStatus === "archived" && (
+        <p className="admin-championships__success">
+          Championnat archivé : les données restent consultables en lecture seule.
+        </p>
+      )}
+
+      {!loading && championshipStatus !== "archived" && (
         <ChampionshipStandingsImportCard
           championshipId={championshipId}
           sourceUrl={sourceUrl}
