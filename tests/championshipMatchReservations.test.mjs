@@ -118,7 +118,10 @@ test("les couleurs de série restent administratives et alimentent Réservations
 test("les réservations championnat affichent championnat, série et équipes en entier", () => {
   assert.match(labelMigration, /concat_ws\(E'\\n'/);
   assert.match(labelMigration, /concat\('vs ', team2\.source_label\)/);
-  assert.match(labelMigration, /coalesce\(division\.display_color, '#D5B04C'\)/);
+  assert.match(
+    labelMigration,
+    /coalesce\(division\.display_color, '#D5B04C'\)/,
+  );
   assert.match(
     reservationStyles,
     /\.reservation-slot--tournament small\s*\{[^}]*white-space: pre-line/s,
