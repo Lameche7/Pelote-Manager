@@ -141,7 +141,7 @@ test("la création de compte propose la participation avant les identifiants", a
   assert.match(service, /find_external_participation_candidates/);
   assert.match(service, /claim_external_participation/);
   assert.match(registerPage, /Quelle est votre situation/);
-  assert.match(registerPage, /Créer mon compte Pelote Manager/);
+  assert.match(registerPage, /Sans licence au \{CLUB_CONFIG\.name\}/);
   assert.match(registerPage, /Il semblerait que vous participiez au/);
   assert.match(registerPage, /Oui, c’est bien moi/);
   assert.match(registerPage, /Aucune ne me correspond/);

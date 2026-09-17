@@ -17,7 +17,7 @@ import {
   RequiredFieldMark,
   RequiredFieldsNotice,
 } from "@/shared/components/forms/RequiredField";
-import { ROUTES } from "@/shared/config";
+import { CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./RegisterPage.css";
 
@@ -233,18 +233,18 @@ export function RegisterPage() {
           <h2>Quelle est votre situation ?</h2>
           <button type="button" onClick={() => setJourney("member")}>
             <span>🪪</span>
-            <strong>Ma licence est enregistrée dans ce club</strong>
+            <strong>Avec licence au {CLUB_CONFIG.name}</strong>
             <small>
-              Je rattache mon compte à ma fiche licencié avec mon numéro de
-              licence.
+              Je suis licencié(e) au {CLUB_CONFIG.name} et je rattache mon
+              compte avec mon numéro de licence.
             </small>
           </button>
           <button type="button" onClick={() => setJourney("account")}>
             <span>👤</span>
-            <strong>Créer mon compte Pelote Manager</strong>
+            <strong>Sans licence au {CLUB_CONFIG.name}</strong>
             <small>
-              Pelote Manager recherchera aussi les tournois auxquels je
-              participe déjà, même dans un autre club.
+              Je n’ai pas de licence enregistrée au {CLUB_CONFIG.name}. PILOTOKI
+              pourra aussi retrouver mes participations à des tournois.
             </small>
           </button>
         </div>
