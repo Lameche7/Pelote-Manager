@@ -10,6 +10,7 @@ const [
   securityMigration,
   calendarService,
   reservationPage,
+  reservationStyles,
   championshipsPage,
   championshipsService,
   matchReservationService,
@@ -17,6 +18,8 @@ const [
   adminReservationService,
   resultSettingsCard,
   tvService,
+  tvStyles,
+  displayHelper,
 ] = await Promise.all([
   read(
     "../supabase/migrations/20260916143000_add_championship_match_reservations.sql",
@@ -29,6 +32,7 @@ const [
   ),
   read("../src/features/reservations/services/reservationCalendarService.ts"),
   read("../src/features/reservations/pages/ReservationsPage.tsx"),
+  read("../src/features/reservations/pages/ReservationLockedSlots.css"),
   read(
     "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
   ),
@@ -48,6 +52,8 @@ const [
     "../src/features/admin/championships/components/ChampionshipResultSettingsCard.tsx",
   ),
   read("../src/features/tv/services/tvDisplayService.ts"),
+  read("../src/features/tv/pages/TvDisplayPage.css"),
+  read("../src/shared/utils/competitionDisplay.ts"),
 ]);
 
 test("une réservation peut être rattachée à une rencontre et décorée par série", () => {
@@ -99,10 +105,46 @@ test("Mes championnats ouvre Réservations avec le contexte de la rencontre", ()
   );
 });
 
+test("un créneau championnat ne retombe pas dans une réservation ordinaire", () => {
+  assert.match(
+    reservationPage,
+    /nextSlot\.reservationAccess === "championship"[\s\S]*!championshipContext/,
+  );
+  assert.match(
+    reservationPage,
+    /Ce créneau est réservé à une rencontre de championnat/,
+  );
+  assert.match(reservationPage, /Mon espace → Mes championnats/);
+});
+
+test("Réservations affiche championnat, série et rencontre complète", () => {
+  assert.match(calendarService, /formatCompetitionReservationLabel/);
+  assert.match(calendarService, /occupation_type === "championship_match"/);
+  assert.match(reservationPage, /reservation-slot--championship-match/);
+  assert.match(
+    reservationStyles,
+    /\.reservation-slot--championship-match small[\s\S]*white-space: pre-line/,
+  );
+  assert.match(displayHelper, /competitionName\.trim\(\)/);
+  assert.match(displayHelper, /seriesName\.trim\(\)/);
+  assert.match(displayHelper, /`\$\{teamA\}\\nvs \$\{teamB\}`/);
+});
+
 test("les couleurs de série restent administratives et alimentent Réservations et TV", () => {
   assert.match(resultSettingsCard, /Couleurs des séries/);
   assert.match(resultSettingsCard, /type="color"/);
   assert.match(resultSettingsCard, /Réservations et le Mode TV/);
   assert.match(tvService, /get_public_tv_championship_slot_decorations/);
   assert.match(tvService, /mapChampionshipDecoration/);
+});
+
+test("le Mode TV affiche aussi championnat, série et équipes sans troncature", () => {
+  assert.match(tvService, /formatCompetitionReservationParts/);
+  assert.match(tvService, /championshipName/);
+  assert.match(tvService, /divisionName/);
+  assert.match(tvService, /matchLabel/);
+  assert.match(
+    tvStyles,
+    /\.tv-display__slot--tournament span[\s\S]*white-space: pre-line/,
+  );
 });
