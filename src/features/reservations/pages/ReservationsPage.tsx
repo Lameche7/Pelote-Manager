@@ -95,9 +95,13 @@ function SlotCard({
       : undefined;
     return (
       <div
-        className={`reservation-slot reservation-slot--occupied${isColoredMatch ? " reservation-slot--tournament" : ""}`}
+        className={`reservation-slot reservation-slot--occupied${isColoredMatch ? " reservation-slot--tournament" : ""}${isChampionshipMatch ? " reservation-slot--championship-match" : ""}`}
         style={style}
-        aria-label={`${slotTime} : occupé par ${bookedBy}`}
+        aria-label={
+          isChampionshipMatch
+            ? `${slotTime} : ${bookedBy.replaceAll("\n", ", ")}`
+            : `${slotTime} : occupé par ${bookedBy}`
+        }
       >
         <strong>{slotTime}</strong>
         <span>
@@ -718,8 +722,8 @@ export function ReservationsPage() {
         <div className="reservation-calendar__championship-notice" role="status">
           <strong>Accès championnat actif</strong>
           <span>
-            Les créneaux marqués « Championnat » sont ouverts en avance grâce à
-            votre inscription dans un effectif du club.
+            Pour réserver un créneau « Championnat », ouvrez Mon espace → Mes
+            championnats et choisissez d’abord la rencontre concernée.
           </span>
         </div>
       )}
@@ -763,6 +767,16 @@ export function ReservationsPage() {
                           ) {
                             return;
                           }
+                          if (
+                            nextSlot.reservationAccess === "championship" &&
+                            !championshipContext
+                          ) {
+                            setErrorMessage(
+                              "Ce créneau est réservé à une rencontre de championnat. Ouvrez Mon espace → Mes championnats et choisissez la rencontre avant de réserver.",
+                            );
+                            return;
+                          }
+                          setErrorMessage(null);
                           setSelectedSlot(nextSlot);
                         }}
                       />
