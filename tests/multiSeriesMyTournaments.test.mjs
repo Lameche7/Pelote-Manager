@@ -18,7 +18,10 @@ test("Mes tournois conserve plusieurs participations du même tournoi", async ()
   ]);
 
   assert.match(migration, /select distinct on \(team\.tournament_id\)/);
-  assert.match(migration, /replace\([\s\S]*'select distinct on \(team\.tournament_id\)'[\s\S]*'select'/);
+  assert.match(
+    migration,
+    /replace\([\s\S]*'select distinct on \(team\.tournament_id\)'[\s\S]*'select'/,
+  );
   assert.match(service, /qualificationByTeam/);
   assert.match(service, /tournament\.id}:\$\{tournament\.team\.id/);
 });
