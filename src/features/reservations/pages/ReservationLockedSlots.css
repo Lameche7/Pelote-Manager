@@ -103,3 +103,10 @@
   color: #4f5b63;
   line-height: 1.25;
 }
+
+.reservation-slot--tournament small {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: pre-line;
+}
