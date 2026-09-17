@@ -235,8 +235,8 @@ export function RegisterPage() {
             <span>🪪</span>
             <strong>Avec licence au {CLUB_CONFIG.name}</strong>
             <small>
-              Je suis licencié(e) au {CLUB_CONFIG.name} et je rattache mon compte
-              avec mon numéro de licence.
+              Je suis licencié(e) au {CLUB_CONFIG.name} et je rattache mon
+              compte avec mon numéro de licence.
             </small>
           </button>
           <button type="button" onClick={() => setJourney("account")}>

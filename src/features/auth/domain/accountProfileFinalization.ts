@@ -9,7 +9,8 @@ import type { UserProfile } from "../../../shared/types/profile.js";
 export async function finalizeAccountProfile(
   user: AuthUser,
   getOrCreateProfile: (user: AuthUser) => Promise<UserProfile>,
-  finalizePendingMemberRegistration: () => Promise<boolean> = async () => false,
+  finalizePendingMemberRegistration: () => Promise<boolean> = async () =>
+    false,
 ): Promise<UserProfile> {
   let currentProfile = await getOrCreateProfile(user);
 
