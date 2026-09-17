@@ -66,15 +66,23 @@ test("les caractères du classement de poule sont renforcés pour la lecture TV"
   );
 });
 
-test("six poules sont équilibrées en trois colonnes sur deux lignes", () => {
-  assert.match(seriesView, /series\.pools\.length === 6/);
-  assert.match(seriesView, /tv-tournament__pools--six/);
+test("les nombreuses poules sont paginées et ne dépassent jamais six cartes par écran", () => {
+  assert.match(seriesView, /const MAX_POOLS_PER_PAGE = 6/);
+  assert.match(seriesView, /Math\.ceil\(poolCount \/ MAX_POOLS_PER_PAGE\)/);
+  assert.match(seriesView, /series\.pools\.slice\(/);
+  assert.match(seriesView, /const POOL_PAGE_DURATION_MS = 12_000/);
+  assert.match(seriesView, /window\.setInterval/);
+  assert.match(seriesView, /safePoolPage \+ 1/);
+});
+
+test("la géométrie de grille reste limitée à trois colonnes et deux lignes", () => {
   assert.match(
-    seriesStyles,
-    /\.tv-tournament__pools--six\s*\{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/s,
+    seriesView,
+    /gridTemplateColumns: "repeat\(3, minmax\(0, 1fr\)\)"/,
   );
   assert.match(
-    seriesStyles,
-    /\.tv-tournament__pools--six\s*\{[^}]*grid-template-rows: repeat\(2, minmax\(0, 1fr\)\)/s,
+    seriesView,
+    /gridTemplateRows: "repeat\(2, minmax\(0, 1fr\)\)"/,
   );
+  assert.match(seriesView, /style=\{poolGridStyle\(visiblePools\.length\)\}/);
 });

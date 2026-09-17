@@ -1,8 +1,12 @@
+import { useEffect, useState, type CSSProperties } from "react";
 import { Trophy } from "lucide-react";
 import type { TournamentRankingTeam } from "@/features/tournaments/services/tournamentRankingService";
 import type { PublicTournamentResultMatch } from "@/features/tournaments/services/tournamentResultsService";
 import type { TvTournamentSeries } from "@/features/tv/services/tvTournamentService";
 import "./TvTournamentSeriesView.css";
+
+const MAX_POOLS_PER_PAGE = 6;
+const POOL_PAGE_DURATION_MS = 12_000;
 
 const numberFormatter = new Intl.NumberFormat("fr-FR", {
   minimumFractionDigits: 0,
@@ -56,6 +60,43 @@ const nextMatches = (matches: PublicTournamentResultMatch[]) =>
     })
     .slice(0, 2);
 
+const poolPagePlan = (poolCount: number) => {
+  const pageCount = Math.max(1, Math.ceil(poolCount / MAX_POOLS_PER_PAGE));
+  const poolsPerPage = Math.max(1, Math.ceil(poolCount / pageCount));
+  return { pageCount, poolsPerPage };
+};
+
+const poolGridStyle = (poolCount: number): CSSProperties => {
+  if (poolCount <= 1) {
+    return {
+      gridTemplateColumns: "minmax(0, 1fr)",
+      gridTemplateRows: "minmax(0, 1fr)",
+    };
+  }
+  if (poolCount === 2) {
+    return {
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gridTemplateRows: "minmax(0, 1fr)",
+    };
+  }
+  if (poolCount === 3) {
+    return {
+      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      gridTemplateRows: "minmax(0, 1fr)",
+    };
+  }
+  if (poolCount === 4) {
+    return {
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gridTemplateRows: "repeat(2, minmax(0, 1fr))",
+    };
+  }
+  return {
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gridTemplateRows: "repeat(2, minmax(0, 1fr))",
+  };
+};
+
 export function TvTournamentSeriesView({
   series,
 }: {
@@ -67,7 +108,29 @@ export function TvTournamentSeriesView({
     series.goalAverageMode === "point_difference_per_match"
       ? "Diff./partie"
       : "Diff.";
-  const sixPoolLayout = series.pools.length === 6;
+  const { pageCount, poolsPerPage } = poolPagePlan(series.pools.length);
+  const [poolPage, setPoolPage] = useState(0);
+
+  useEffect(() => {
+    setPoolPage(0);
+  }, [series.viewKey, series.pools.length]);
+
+  useEffect(() => {
+    if (pageCount <= 1) return;
+
+    const rotation = window.setInterval(() => {
+      setPoolPage((current) => (current + 1) % pageCount);
+    }, POOL_PAGE_DURATION_MS);
+
+    return () => window.clearInterval(rotation);
+  }, [pageCount]);
+
+  const safePoolPage = Math.min(poolPage, pageCount - 1);
+  const firstPoolIndex = safePoolPage * poolsPerPage;
+  const visiblePools = series.pools.slice(
+    firstPoolIndex,
+    firstPoolIndex + poolsPerPage,
+  );
 
   return (
     <section
@@ -83,13 +146,15 @@ export function TvTournamentSeriesView({
         </div>
         <strong style={{ borderColor: series.color }}>
           {series.seriesName}
+          {pageCount > 1 ? ` · ${safePoolPage + 1}/${pageCount}` : ""}
         </strong>
       </header>
 
       <div
-        className={`tv-tournament__pools${sixPoolLayout ? " tv-tournament__pools--six" : ""}`}
+        className="tv-tournament__pools"
+        style={poolGridStyle(visiblePools.length)}
       >
-        {series.pools.map((pool) => {
+        {visiblePools.map((pool) => {
           const upcoming = nextMatches(pool.matches);
 
           return (
