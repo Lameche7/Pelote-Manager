@@ -1,19 +1,23 @@
 const QUICKCHART_QR_HOST = "quickchart.io";
 const QUICKCHART_QR_PATH = "/qr";
+const TV_QR_PROXY_PATH = "/api/tv-qr";
 
 export const toTvCompatibleQrUrl = (value: string) => {
   try {
     const url = new URL(value, window.location.origin);
     if (
       url.hostname !== QUICKCHART_QR_HOST ||
-      url.pathname !== QUICKCHART_QR_PATH ||
-      url.searchParams.get("format") !== "svg"
+      url.pathname !== QUICKCHART_QR_PATH
     ) {
       return value;
     }
 
-    url.searchParams.set("format", "png");
-    return url.toString();
+    const text = url.searchParams.get("text");
+    if (!text) return value;
+
+    const proxyUrl = new URL(TV_QR_PROXY_PATH, window.location.origin);
+    proxyUrl.searchParams.set("text", text);
+    return `${proxyUrl.pathname}${proxyUrl.search}`;
   } catch {
     return value;
   }
