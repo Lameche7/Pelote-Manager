@@ -7,6 +7,7 @@ import {
   type PropsWithChildren,
 } from "react";
 import { finalizeAccountProfile } from "@/features/auth/domain/accountProfileFinalization";
+import { memberService } from "@/features/members/services/memberService";
 import { pushNotificationService } from "@/features/notifications/services/pushNotificationService";
 import {
   authService as defaultAuthService,
@@ -23,12 +24,16 @@ import type { UserProfile } from "@/shared/types/profile";
 type AuthProviderProps = PropsWithChildren<{
   service?: AuthService;
   profileService?: ProfileService;
+  finalizePendingMemberRegistration?: () => Promise<boolean>;
 }>;
 
 export function AuthProvider({
   children,
   service = defaultAuthService,
   profileService = defaultProfileService,
+  finalizePendingMemberRegistration = memberService.finalizePendingRegistration.bind(
+    memberService,
+  ),
 }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -52,6 +57,7 @@ export function AuthProvider({
         const currentProfile = await finalizeAccountProfile(
           currentUser,
           profileService.getOrCreateProfile.bind(profileService),
+          finalizePendingMemberRegistration,
         );
         if (currentRevision === synchronizationRevision.current) {
           setProfile(currentProfile);
@@ -70,7 +76,7 @@ export function AuthProvider({
         }
       }
     },
-    [profileService],
+    [finalizePendingMemberRegistration, profileService],
   );
 
   useEffect(() => {
@@ -111,7 +117,7 @@ export function AuthProvider({
     async (email: string, password: string) => {
       const authenticatedUser = await service.login(email, password);
       // An explicit login must not complete until the account has its profile.
-      // This is especially important after an email-confirmed visitor signup.
+      // This is especially important after an email-confirmed signup.
       await synchronize(authenticatedUser, true);
     },
     [service, synchronize],
