@@ -55,6 +55,17 @@ test("le classement occupe deux tiers de la carte et À suivre un tiers", () => 
   );
 });
 
+test("les caractères du classement de poule sont renforcés pour la lecture TV", () => {
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__ranking table\s*\{[^}]*font-size: clamp\(0\.72rem, 1\.45vmin, 1\.05rem\)/s,
+  );
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__ranking tbody th\s*\{[^}]*font-weight: 800/s,
+  );
+});
+
 test("six poules sont équilibrées en trois colonnes sur deux lignes", () => {
   assert.match(seriesView, /series\.pools\.length === 6/);
   assert.match(seriesView, /tv-tournament__pools--six/);
