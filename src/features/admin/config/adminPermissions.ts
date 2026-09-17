@@ -146,6 +146,11 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.tournaments,
       },
       {
+        label: "Comptes joueurs",
+        to: ROUTES.adminTournamentAccounts,
+        permission: ADMIN_PERMISSIONS.tournaments,
+      },
+      {
         label: "Poules",
         to: ROUTES.adminTournamentPools,
         permission: ADMIN_PERMISSIONS.tournaments,
