@@ -24,6 +24,7 @@ const statusLabel = (status: TournamentAccountAuditRow["status"]) => {
   return "Aucun compte trouvé";
 };
 
+// prettier-ignore
 export function AdminTournamentAccountsPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
