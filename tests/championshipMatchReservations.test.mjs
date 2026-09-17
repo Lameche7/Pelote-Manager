@@ -8,8 +8,10 @@ const [
   baseMigration,
   paymentMigration,
   securityMigration,
+  labelMigration,
   calendarService,
   reservationPage,
+  reservationStyles,
   championshipsPage,
   championshipsService,
   matchReservationService,
@@ -17,6 +19,7 @@ const [
   adminReservationService,
   resultSettingsCard,
   tvService,
+  tvWeeklyStyles,
 ] = await Promise.all([
   read(
     "../supabase/migrations/20260916143000_add_championship_match_reservations.sql",
@@ -27,8 +30,12 @@ const [
   read(
     "../supabase/migrations/20260916144100_secure_championship_match_reservations.sql",
   ),
+  read(
+    "../supabase/migrations/20260917133500_improve_championship_reservation_labels.sql",
+  ),
   read("../src/features/reservations/services/reservationCalendarService.ts"),
   read("../src/features/reservations/pages/ReservationsPage.tsx"),
+  read("../src/features/reservations/pages/ReservationLockedSlots.css"),
   read(
     "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
   ),
@@ -48,6 +55,7 @@ const [
     "../src/features/admin/championships/components/ChampionshipResultSettingsCard.tsx",
   ),
   read("../src/features/tv/services/tvDisplayService.ts"),
+  read("../src/features/tv/pages/TvWeeklyView.css"),
 ]);
 
 test("une réservation peut être rattachée à une rencontre et décorée par série", () => {
@@ -105,4 +113,18 @@ test("les couleurs de série restent administratives et alimentent Réservations
   assert.match(resultSettingsCard, /Réservations et le Mode TV/);
   assert.match(tvService, /get_public_tv_championship_slot_decorations/);
   assert.match(tvService, /mapChampionshipDecoration/);
+});
+
+test("les réservations championnat affichent championnat, série et équipes en entier", () => {
+  assert.match(labelMigration, /concat_ws\(E'\\n'/);
+  assert.match(labelMigration, /concat\('vs ', team2\.source_label\)/);
+  assert.match(labelMigration, /coalesce\(division\.display_color, '#D5B04C'\)/);
+  assert.match(
+    reservationStyles,
+    /\.reservation-slot--tournament small\s*\{[^}]*white-space: pre-line/s,
+  );
+  assert.match(
+    tvWeeklyStyles,
+    /\.tv-display__slot--tournament span\s*\{[^}]*white-space: pre-line/s,
+  );
 });
