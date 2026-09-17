@@ -62,6 +62,7 @@ const mapAuditRow = (row: Row): TournamentAccountAuditRow => ({
   candidates: rows(row.candidates).map(mapCandidate),
 });
 
+// prettier-ignore
 export const adminTournamentAccountService = {
   async list(tournamentId: string): Promise<TournamentAccountAuditRow[]> {
     const { data, error } = await supabase.rpc(
