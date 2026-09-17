@@ -36,17 +36,25 @@ const goalAverageValue = (
     ? numberFormatter.format(team.goalAverageValue)
     : String(team.pointDifference);
 
-const scoreLabel = (match: PublicTournamentResultMatch) => {
-  if (match.resultStatus === "pending_validation") return "En validation";
-  if (match.resultStatus !== "validated" || !match.score) return "À jouer";
-  return match.score.sets.map((set) => `${set.teamA}–${set.teamB}`).join(" · ");
-};
-
 const matchMeta = (match: PublicTournamentResultMatch) => {
   if (!match.playDate) return match.resourceName;
   const date = compactDateFormatter.format(dateFromIso(match.playDate));
   return [date, match.startsAt, match.resourceName].filter(Boolean).join(" · ");
 };
+
+const nextMatches = (matches: PublicTournamentResultMatch[]) =>
+  matches
+    .filter((match) => match.resultStatus === null)
+    .slice()
+    .sort((left, right) => {
+      const leftStart = left.scheduledStartAt || "9999";
+      const rightStart = right.scheduledStartAt || "9999";
+      return (
+        leftStart.localeCompare(rightStart) ||
+        left.displayOrder - right.displayOrder
+      );
+    })
+    .slice(0, 2);
 
 export function TvTournamentSeriesView({
   series,
@@ -59,6 +67,7 @@ export function TvTournamentSeriesView({
     series.goalAverageMode === "point_difference_per_match"
       ? "Diff./partie"
       : "Diff.";
+  const sixPoolLayout = series.pools.length === 6;
 
   return (
     <section
@@ -77,71 +86,74 @@ export function TvTournamentSeriesView({
         </strong>
       </header>
 
-      <div className="tv-tournament__pools">
-        {series.pools.map((pool) => (
-          <article className="tv-tournament__pool" key={pool.id}>
-            <header>
-              <div>
-                <h3>Poule {pool.number}</h3>
-                <span>
-                  {pool.validatedMatches}/{pool.totalMatches} résultat
-                  {pool.totalMatches > 1 ? "s" : ""} validé
-                  {pool.validatedMatches > 1 ? "s" : ""}
-                </span>
-              </div>
-            </header>
+      <div
+        className={`tv-tournament__pools${sixPoolLayout ? " tv-tournament__pools--six" : ""}`}
+      >
+        {series.pools.map((pool) => {
+          const upcoming = nextMatches(pool.matches);
 
-            <div className="tv-tournament__pool-content">
-              <div className="tv-tournament__ranking">
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">Cl.</th>
-                      <th scope="col">Équipe</th>
-                      <th scope="col">MJ</th>
-                      <th scope="col">{rankingTitle}</th>
-                      <th scope="col">{goalAverageTitle}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pool.teams.map((team) => (
-                      <tr key={team.teamId}>
-                        <td>
-                          <strong>{team.position}</strong>
-                        </td>
-                        <th scope="row">{team.teamLabel}</th>
-                        <td>{team.matchesPlayed}</td>
-                        <td>{rankingValue(team, series)}</td>
-                        <td>{goalAverageValue(team, series)}</td>
+          return (
+            <article className="tv-tournament__pool" key={pool.id}>
+              <header>
+                <div>
+                  <h3>Poule {pool.number}</h3>
+                  <span>
+                    {pool.validatedMatches}/{pool.totalMatches} résultat
+                    {pool.totalMatches > 1 ? "s" : ""} validé
+                    {pool.validatedMatches > 1 ? "s" : ""}
+                  </span>
+                </div>
+              </header>
+
+              <div className="tv-tournament__pool-content">
+                <div className="tv-tournament__ranking">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Cl.</th>
+                        <th scope="col">Équipe</th>
+                        <th scope="col">MJ</th>
+                        <th scope="col">{rankingTitle}</th>
+                        <th scope="col">{goalAverageTitle}</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {pool.teams.map((team) => (
+                        <tr key={team.teamId}>
+                          <td>
+                            <strong>{team.position}</strong>
+                          </td>
+                          <th scope="row">{team.teamLabel}</th>
+                          <td>{team.matchesPlayed}</td>
+                          <td>{rankingValue(team, series)}</td>
+                          <td>{goalAverageValue(team, series)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-              <div className="tv-tournament__matches">
-                <h4>Parties</h4>
-                {pool.matches.length === 0 ? (
-                  <p>Aucune partie publiée.</p>
-                ) : (
-                  pool.matches.map((match) => (
-                    <div
-                      className={`tv-tournament__match tv-tournament__match--${match.resultStatus ?? "scheduled"}`}
-                      key={match.id}
-                    >
-                      <div className="tv-tournament__match-teams">
-                        <span>{match.teamALabel}</span>
-                        <strong>{scoreLabel(match)}</strong>
-                        <span>{match.teamBLabel}</span>
+                <div className="tv-tournament__matches">
+                  <h4>À suivre</h4>
+                  {upcoming.length === 0 ? (
+                    <p>Toutes les parties sont jouées.</p>
+                  ) : (
+                    upcoming.map((match) => (
+                      <div className="tv-tournament__match" key={match.id}>
+                        <div className="tv-tournament__match-teams">
+                          <span>{match.teamALabel}</span>
+                          <strong>vs</strong>
+                          <span>{match.teamBLabel}</span>
+                        </div>
+                        <small>{matchMeta(match)}</small>
                       </div>
-                      <small>{matchMeta(match)}</small>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </div>
     </section>
   );
