@@ -4,6 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
+// prettier-ignore
 test("le back-office peut auditer et rattacher les comptes tournoi", async () => {
   const [migration, page, service, routes, navigation, router] = await Promise.all([
     read("supabase/migrations/20260917113000_add_admin_tournament_account_audit.sql"),
