@@ -1,5 +1,3 @@
-import { supabase } from "@/infrastructure/supabase/client";
-import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 import type {
   CalendarOccupation,
   CalendarOccupationRow,
@@ -7,6 +5,9 @@ import type {
   ReservableResource,
 } from "@/features/reservations/domain/calendar";
 import { mapCalendarOccupation } from "@/features/reservations/domain/calendar";
+import { supabase } from "@/infrastructure/supabase/client";
+import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
+import { formatCompetitionReservationLabel } from "@/shared/utils/competitionDisplay";
 
 type ResourceRow = {
   id: string;
@@ -70,7 +71,10 @@ export const reservationCalendarService = {
       endsAt: slot.ends_at,
       status: slot.status,
       bookingOpensAt: slot.booking_opens_at,
-      bookedByName: slot.booked_by_name,
+      bookedByName:
+        slot.occupation_type === "championship_match"
+          ? formatCompetitionReservationLabel(slot.booked_by_name)
+          : slot.booked_by_name,
       occupationType: slot.occupation_type,
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
