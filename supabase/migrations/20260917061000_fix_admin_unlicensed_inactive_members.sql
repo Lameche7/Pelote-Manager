@@ -108,7 +108,4 @@ from public, anon, authenticated;
 grant execute on function public.admin_list_unlicensed_pilotoki_users(jsonb)
 to authenticated;
 
-comment on function public.admin_list_unlicensed_pilotoki_users(jsonb) is
-  'Liste paginée des comptes PILOTOKI de l instance club sans licence valide sur la saison active. Accès members.manage uniquement.';
-
 commit;

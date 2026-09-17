@@ -5,10 +5,13 @@ import { readFile } from "node:fs/promises";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("le back-office expose les inscrits PILOTOKI sans licence active", async () => {
-  const [migration, page, service, hooks, navigation, routes, router] =
+  const [migration, fixMigration, page, service, hooks, navigation, routes, router] =
     await Promise.all([
       read(
         "supabase/migrations/20260916193000_add_admin_unlicensed_pilotoki_users.sql",
+      ),
+      read(
+        "supabase/migrations/20260917061000_fix_admin_unlicensed_inactive_members.sql",
       ),
       read(
         "src/features/admin/members/pages/AdminUnlicensedPilotokiUsersPage.tsx",
@@ -26,6 +29,8 @@ test("le back-office expose les inscrits PILOTOKI sans licence active", async ()
     /has_club_permission\(current_club, 'members\.manage'\)/,
   );
   assert.match(migration, /not coalesce\(member_season\.is_licensed, false\)/);
+  assert.match(migration, /member\.id is not null and not member\.is_active/);
+  assert.match(fixMigration, /member\.id is not null and not member\.is_active/);
   assert.match(
     migration,
     /profile\.member_id is null or member\.id is not null/,
