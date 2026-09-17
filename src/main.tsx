@@ -7,6 +7,7 @@ import "./styles/forms.css";
 import App from "@/app/App";
 import "@/features/admin/tournaments/pages/AdminTournamentPlanningCompact.css";
 import { setupTvFullscreenPrompt } from "@/features/tv/tvFullscreenPrompt";
+import { setupTvQrCompatibility } from "@/features/tv/tvQrCompatibility";
 import { setupTvWakeLock } from "@/features/tv/tvWakeLock";
 import {
   MARKETING_PREVIEW_PATH,
@@ -42,6 +43,7 @@ if (isMarketingSite) {
 }
 
 setupTvFullscreenPrompt();
+setupTvQrCompatibility();
 setupTvWakeLock();
 
 createRoot(document.getElementById("root")!).render(
