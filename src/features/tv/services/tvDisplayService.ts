@@ -68,11 +68,33 @@ const slotStatuses = new Set<TvSlotStatus>([
 ]);
 const weekItemStatuses = new Set<TvWeekItemStatus>(["reserved", "unavailable"]);
 const colorPattern = /^#[0-9A-Fa-f]{6}$/;
+const matchupSeparators = [" — ", " – ", " vs ", " VS "];
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
+
+const formatTournamentWeekDisplayName = (
+  value: string,
+  seriesName: string | null,
+) => {
+  if (!seriesName) return value;
+
+  const prefix = `${seriesName} · `;
+  const label = value.startsWith(prefix) ? value.slice(prefix.length) : value;
+
+  for (const separator of matchupSeparators) {
+    const separatorIndex = label.indexOf(separator);
+    if (separatorIndex <= 0) continue;
+
+    const teamA = label.slice(0, separatorIndex).trim();
+    const teamB = label.slice(separatorIndex + separator.length).trim();
+    if (teamA && teamB) return `${teamA}\nvs ${teamB}`;
+  }
+
+  return label;
+};
 
 const mapTournamentDecoration = (value: unknown): SlotDecoration | null => {
   const row = asRecord(value);
@@ -184,6 +206,8 @@ const mapWeekItem = (
   const startsAt = String(row.starts_at ?? "");
   const endsAt = String(row.ends_at ?? "");
   const decoration = findDecoration(decorations, resourceId, startsAt, endsAt);
+  const displayName =
+    decoration?.displayName ?? String(row.display_name ?? "Indisponible");
 
   return {
     resourceId,
@@ -191,8 +215,10 @@ const mapWeekItem = (
     startsAt,
     endsAt,
     status: weekItemStatuses.has(status) ? status : "unavailable",
-    displayName:
-      decoration?.displayName ?? String(row.display_name ?? "Indisponible"),
+    displayName: formatTournamentWeekDisplayName(
+      displayName,
+      decoration?.seriesName ?? null,
+    ),
     seriesName: decoration?.seriesName ?? null,
     displayColor: decoration?.displayColor ?? null,
   };
