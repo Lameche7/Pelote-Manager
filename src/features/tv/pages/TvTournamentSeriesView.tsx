@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Trophy } from "lucide-react";
 import type { TournamentRankingTeam } from "@/features/tournaments/services/tournamentRankingService";
 import type { PublicTournamentResultMatch } from "@/features/tournaments/services/tournamentResultsService";
@@ -66,6 +66,37 @@ const poolPagePlan = (poolCount: number) => {
   return { pageCount, poolsPerPage };
 };
 
+const poolGridStyle = (poolCount: number): CSSProperties => {
+  if (poolCount <= 1) {
+    return {
+      gridTemplateColumns: "minmax(0, 1fr)",
+      gridTemplateRows: "minmax(0, 1fr)",
+    };
+  }
+  if (poolCount === 2) {
+    return {
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gridTemplateRows: "minmax(0, 1fr)",
+    };
+  }
+  if (poolCount === 3) {
+    return {
+      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      gridTemplateRows: "minmax(0, 1fr)",
+    };
+  }
+  if (poolCount === 4) {
+    return {
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gridTemplateRows: "repeat(2, minmax(0, 1fr))",
+    };
+  }
+  return {
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gridTemplateRows: "repeat(2, minmax(0, 1fr))",
+  };
+};
+
 export function TvTournamentSeriesView({
   series,
 }: {
@@ -100,10 +131,6 @@ export function TvTournamentSeriesView({
     firstPoolIndex,
     firstPoolIndex + poolsPerPage,
   );
-  const poolLayoutClass = `tv-tournament__pools tv-tournament__pools--count-${Math.min(
-    visiblePools.length,
-    MAX_POOLS_PER_PAGE,
-  )}`;
 
   return (
     <section
@@ -123,7 +150,10 @@ export function TvTournamentSeriesView({
         </strong>
       </header>
 
-      <div className={poolLayoutClass}>
+      <div
+        className="tv-tournament__pools"
+        style={poolGridStyle(visiblePools.length)}
+      >
         {visiblePools.map((pool) => {
           const upcoming = nextMatches(pool.matches);
 
