@@ -1,6 +1,8 @@
 import type { AuthUser } from "../../../shared/types/auth.js";
 import type { UserProfile } from "../../../shared/types/profile.js";
 
+const noPendingMemberRegistration = async () => false;
+
 /**
  * Finalizes every authenticated account through the shared profile creation path.
  * When an email-confirmed member registration opens a session directly, finish
@@ -9,8 +11,8 @@ import type { UserProfile } from "../../../shared/types/profile.js";
 export async function finalizeAccountProfile(
   user: AuthUser,
   getOrCreateProfile: (user: AuthUser) => Promise<UserProfile>,
-  finalizePendingMemberRegistration: () => Promise<boolean> = async () =>
-    false,
+  finalizePendingMemberRegistration: () => Promise<boolean> =
+    noPendingMemberRegistration,
 ): Promise<UserProfile> {
   let currentProfile = await getOrCreateProfile(user);
 
