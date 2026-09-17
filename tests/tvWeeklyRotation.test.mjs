@@ -61,6 +61,20 @@ test("le service mappe les sept jours sans modifier le lien public", async () =>
   assert.match(service, /target_token: token/);
 });
 
+test("les cartes tournoi des 7 jours affichent les deux équipes en entier sur des lignes séparées", async () => {
+  const [service, styles] = await Promise.all([
+    read("../src/features/tv/services/tvDisplayService.ts"),
+    read("../src/features/tv/pages/TvWeeklyView.css"),
+  ]);
+
+  assert.match(service, /formatTournamentWeekDisplayName/);
+  assert.match(service, /const prefix = `\$\{seriesName\} · `/);
+  assert.match(service, /return `\$\{teamA\}\\nvs \$\{teamB\}`/);
+  assert.match(styles, /white-space: pre-line/);
+  assert.match(styles, /overflow-wrap: anywhere/);
+  assert.match(styles, /text-overflow: clip/);
+});
+
 test("l'écran commence par le jour et insère les séries de tournoi dans la rotation", async () => {
   const [page, styles] = await Promise.all([
     read("../src/features/tv/pages/TvDisplayPage.tsx"),
