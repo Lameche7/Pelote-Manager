@@ -31,6 +31,7 @@ export type TournamentAccountAuditRow = {
   candidates: TournamentAccountCandidate[];
 };
 
+// prettier-ignore
 const mapCandidate = (row: Row): TournamentAccountCandidate => ({
   id: String(row.id ?? ""),
   email: String(row.email ?? ""),
