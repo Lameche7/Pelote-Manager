@@ -103,3 +103,26 @@
   color: #4f5b63;
   line-height: 1.25;
 }
+
+.reservation-slot--championship-match {
+  min-height: 7.4rem;
+  align-content: start;
+  gap: 0.3rem;
+}
+
+.reservation-slot--championship-match span {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.reservation-slot--championship-match small {
+  display: block;
+  overflow: visible;
+  color: #27323a;
+  font-size: 0.76rem;
+  font-weight: 750;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
