@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   adminTournamentAccountService,
   type TournamentAccountAuditRow,
@@ -39,17 +39,35 @@ export function AdminTournamentAccountsPage() {
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
+  const auditRequestId = useRef(0);
 
   const loadAudit = async (tournamentId: string) => {
-    if (!tournamentId) return;
-    setItems(await adminTournamentAccountService.list(tournamentId));
+    if (!tournamentId) return false;
+    const requestId = ++auditRequestId.current;
+    setLoading(true);
+    try {
+      const audit = await adminTournamentAccountService.list(tournamentId);
+      if (requestId !== auditRequestId.current) return false;
+      setItems(audit);
+      return true;
+    } catch (cause) {
+      if (requestId !== auditRequestId.current) return false;
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible de charger le contrôle des comptes.",
+      );
+      return false;
+    } finally {
+      if (requestId === auditRequestId.current) setLoading(false);
+    }
   };
 
   useEffect(() => {
     let active = true;
     tournamentAdminService
       .list()
-      .then(async (list) => {
+      .then((list) => {
         if (!active) return;
         setTournaments(list);
         const preferred =
@@ -57,8 +75,9 @@ export function AdminTournamentAccountsPage() {
           list[0];
         if (preferred) {
           setSelectedId(preferred.id);
-          const audit = await adminTournamentAccountService.list(preferred.id);
-          if (active) setItems(audit);
+          void loadAudit(preferred.id);
+        } else {
+          setLoading(false);
         }
       })
       .catch((cause) => {
@@ -68,32 +87,21 @@ export function AdminTournamentAccountsPage() {
               ? cause.message
               : "Impossible de charger le contrôle des comptes.",
           );
+          setLoading(false);
         }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
       });
     return () => {
       active = false;
+      auditRequestId.current += 1;
     };
   }, []);
 
   const chooseTournament = async (tournamentId: string) => {
     setSelectedId(tournamentId);
-    setLoading(true);
     setError("");
     setMessage("");
-    try {
-      await loadAudit(tournamentId);
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Impossible de charger le contrôle des comptes.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    setLinking(null);
+    await loadAudit(tournamentId);
   };
 
   const counts = useMemo(
