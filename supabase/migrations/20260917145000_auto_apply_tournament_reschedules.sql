@@ -16,11 +16,12 @@ begin
   source_definition := pg_get_functiondef(
     'public.admin_apply_tournament_reschedule_request(uuid)'::regprocedure
   );
+  source_definition := replace(source_definition, chr(13), '');
 
   patched_definition := replace(
     source_definition,
     'target_club_id uuid := public.admin_current_club_id();',
-    'target_club_id uuid;\n  caller_can_apply boolean := false;'
+    E'target_club_id uuid;\n  caller_can_apply boolean := false;'
   );
   if patched_definition = source_definition then
     raise exception 'PR209 could not patch application declaration';
@@ -61,6 +62,7 @@ begin
   source_definition := pg_get_functiondef(
     'public.decide_my_tournament_reschedule_request(uuid,uuid,text)'::regprocedure
   );
+  source_definition := replace(source_definition, chr(13), '');
 
   patched_definition := replace(
     source_definition,
@@ -95,6 +97,7 @@ begin
   source_definition := pg_get_functiondef(
     'public.admin_record_tournament_reschedule_offline_decision(uuid,uuid,text,text)'::regprocedure
   );
+  source_definition := replace(source_definition, chr(13), '');
 
   patched_definition := replace(
     source_definition,
