@@ -69,8 +69,8 @@ begin
     function_definition := replace(pg_get_functiondef(function_signature), chr(13), '');
     patched_definition := regexp_replace(
       function_definition,
-      E'\\nbegin\\n',
-      E'\\nbegin\\n  perform public.assert_not_championship_only_slot(target_resource_id, target_starts_at);\\n',
+      E'\nbegin\n',
+      E'\nbegin\n  perform public.assert_not_championship_only_slot(target_resource_id, target_starts_at);\n',
       1,
       1
     );
