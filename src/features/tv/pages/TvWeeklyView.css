@@ -196,8 +196,33 @@
   white-space: nowrap;
 }
 
+.tv-display__slots:has(.tv-display__slot--tournament) {
+  grid-auto-rows: minmax(clamp(3.5rem, 7vmin, 5rem), 1fr);
+}
+
+.tv-display__slot--tournament {
+  grid-template-columns: minmax(4.2rem, 0.58fr) minmax(0, 3fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+}
+
+.tv-display__slot--tournament time {
+  grid-row: 1 / span 2;
+}
+
+.tv-display__slot--tournament strong,
+.tv-display__slot--tournament span {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.tv-display__slot--tournament strong {
+  white-space: normal;
+}
+
 .tv-display__slot--tournament span {
   overflow: visible;
+  font-size: clamp(0.66rem, 1.35vmin, 1rem);
   line-height: 1.08;
   overflow-wrap: anywhere;
   text-overflow: clip;
@@ -273,6 +298,14 @@
   .tv-display__week-item {
     gap: 0.04rem;
     padding: 0.18rem 0.24rem;
+  }
+
+  .tv-display__slots:has(.tv-display__slot--tournament) {
+    grid-auto-rows: minmax(3rem, 1fr);
+  }
+
+  .tv-display__slot--tournament span {
+    font-size: clamp(0.56rem, 1.15vmin, 0.82rem);
   }
 }
 
