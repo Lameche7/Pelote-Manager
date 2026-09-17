@@ -169,16 +169,14 @@
   white-space: nowrap;
 }
 
-.tv-display__week-item strong,
-.tv-display__week-item span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .tv-display__week-item strong {
+  overflow: visible;
   color: #f8fafc;
-  font-size: clamp(0.58rem, 1.1vmin, 0.8rem);
+  font-size: clamp(0.56rem, 1.02vmin, 0.76rem);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: pre-line;
 }
 
 .tv-display__week-item--tournament strong {
@@ -186,9 +184,12 @@
 }
 
 .tv-display__week-item span {
+  overflow: hidden;
   color: #cbd5e1;
   font-size: clamp(0.52rem, 0.95vmin, 0.72rem);
   line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tv-display__week-empty {
