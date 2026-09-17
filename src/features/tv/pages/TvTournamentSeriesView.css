@@ -68,6 +68,11 @@
   overflow: hidden;
 }
 
+.tv-tournament__pools--six {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
 .tv-tournament__pool {
   display: flex;
   min-width: 0;
@@ -186,6 +191,7 @@
   margin: auto;
   color: #94a3b8;
   font-size: clamp(0.65rem, 1.1vmin, 0.82rem);
+  text-align: center;
 }
 
 .tv-tournament__match {
@@ -197,14 +203,6 @@
   padding: 0.18rem 0.5rem;
   border-top: 1px solid rgb(255 255 255 / 6%);
   overflow: hidden;
-}
-
-.tv-tournament__match--validated {
-  background: rgb(22 101 52 / 12%);
-}
-
-.tv-tournament__match--pending_validation {
-  background: rgb(120 53 15 / 16%);
 }
 
 .tv-tournament__match-teams {
