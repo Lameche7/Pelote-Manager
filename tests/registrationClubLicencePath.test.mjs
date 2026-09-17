@@ -18,7 +18,7 @@ test("une session confirmée finalise automatiquement un rattachement licence en
 
   assert.match(provider, /memberService\.finalizePendingRegistration/);
   assert.match(provider, /finalizePendingMemberRegistration/);
-  assert.match(finalization, /currentProfile\.memberId !== null/);
+  assert.match(finalization, /if \(currentProfile\.memberId\) return currentProfile/);
   assert.match(finalization, /await finalizePendingMemberRegistration\(\)/);
   assert.match(finalization, /getOrCreateProfile\(user\)/);
 });

@@ -13,7 +13,7 @@ export async function finalizeAccountProfile(
 ): Promise<UserProfile> {
   let currentProfile = await getOrCreateProfile(user);
 
-  if (currentProfile.memberId !== null) return currentProfile;
+  if (currentProfile.memberId) return currentProfile;
 
   const memberRegistrationFinalized =
     await finalizePendingMemberRegistration();
