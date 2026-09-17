@@ -1,4 +1,8 @@
 import { supabase } from "@/infrastructure/supabase/client";
+import {
+  formatCompetitionReservationParts,
+  formatMatchupLines,
+} from "@/shared/utils/competitionDisplay";
 
 export type TvSlotStatus = "available" | "reserved" | "unavailable";
 export type TvWeekItemStatus = "reserved" | "unavailable";
@@ -68,7 +72,6 @@ const slotStatuses = new Set<TvSlotStatus>([
 ]);
 const weekItemStatuses = new Set<TvWeekItemStatus>(["reserved", "unavailable"]);
 const colorPattern = /^#[0-9A-Fa-f]{6}$/;
-const matchupSeparators = [" — ", " – ", " vs ", " VS "];
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -83,17 +86,7 @@ const formatTournamentWeekDisplayName = (
 
   const prefix = `${seriesName} · `;
   const label = value.startsWith(prefix) ? value.slice(prefix.length) : value;
-
-  for (const separator of matchupSeparators) {
-    const separatorIndex = label.indexOf(separator);
-    if (separatorIndex <= 0) continue;
-
-    const teamA = label.slice(0, separatorIndex).trim();
-    const teamB = label.slice(separatorIndex + separator.length).trim();
-    if (teamA && teamB) return `${teamA}\nvs ${teamB}`;
-  }
-
-  return label;
+  return formatMatchupLines(label);
 };
 
 const mapTournamentDecoration = (value: unknown): SlotDecoration | null => {
@@ -145,9 +138,11 @@ const mapChampionshipDecoration = (value: unknown): SlotDecoration | null => {
     seriesName: null,
     displayColor,
     displayName:
-      [championshipName, divisionName, matchLabel]
-        .filter(Boolean)
-        .join(" · ") || "Match championnat",
+      formatCompetitionReservationParts(
+        championshipName,
+        divisionName,
+        matchLabel,
+      ) || "Match championnat",
   };
 };
 
