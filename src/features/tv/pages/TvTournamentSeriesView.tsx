@@ -50,7 +50,8 @@ const nextMatches = (matches: PublicTournamentResultMatch[]) =>
       const leftStart = left.scheduledStartAt || "9999";
       const rightStart = right.scheduledStartAt || "9999";
       return (
-        leftStart.localeCompare(rightStart) || left.displayOrder - right.displayOrder
+        leftStart.localeCompare(rightStart) ||
+        left.displayOrder - right.displayOrder
       );
     })
     .slice(0, 2);
