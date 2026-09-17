@@ -21,6 +21,9 @@ import { AuthContext, type AuthContextValue } from "@/shared/hooks/useAuth";
 import type { AuthUser } from "@/shared/types/auth";
 import type { UserProfile } from "@/shared/types/profile";
 
+const defaultFinalizePendingMemberRegistration = () =>
+  memberService.finalizePendingRegistration();
+
 type AuthProviderProps = PropsWithChildren<{
   service?: AuthService;
   profileService?: ProfileService;
@@ -31,9 +34,7 @@ export function AuthProvider({
   children,
   service = defaultAuthService,
   profileService = defaultProfileService,
-  finalizePendingMemberRegistration = memberService.finalizePendingRegistration.bind(
-    memberService,
-  ),
+  finalizePendingMemberRegistration = defaultFinalizePendingMemberRegistration,
 }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
