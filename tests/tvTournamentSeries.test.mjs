@@ -48,6 +48,13 @@ test("chaque poule affiche son classement et seulement les deux prochaines parti
   assert.match(seriesView, /<strong>vs<\/strong>/);
 });
 
+test("le classement occupe deux tiers de la carte et À suivre un tiers", () => {
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__pool-content\s*\{[^}]*grid-template-rows: minmax\(0, 2fr\) minmax\(0, 1fr\)/s,
+  );
+});
+
 test("six poules sont équilibrées en trois colonnes sur deux lignes", () => {
   assert.match(seriesView, /series\.pools\.length === 6/);
   assert.match(seriesView, /tv-tournament__pools--six/);
