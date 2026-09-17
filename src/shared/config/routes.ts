@@ -26,6 +26,7 @@ export const ROUTES = {
   adminClubSeasons: "/admin/club/saisons",
   adminClubPricing: "/admin/club/tarifs",
   adminMembers: "/admin/membres",
+  adminUnlicensedUsers: "/admin/membres/inscrits-sans-licence",
   adminLicences: "/admin/membres/licences",
   adminEvents: "/admin/evenements",
   adminTournaments: "/admin/tournois",

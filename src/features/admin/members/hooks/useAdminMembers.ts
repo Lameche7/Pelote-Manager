@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { memberAdminService } from "../services/memberAdminService";
+import type { AdminLicenceLinkInput } from "../types";
 import type { Json } from "@/infrastructure/supabase/database";
 const allMemberKeys = ["admin-members"] as const;
 export const memberKeys = {
   all: allMemberKeys,
   list: (filters: Record<string, Json>) =>
     [...allMemberKeys, "list", filters] as const,
+  unlicensedUsers: (filters: Record<string, Json>) =>
+    [...allMemberKeys, "unlicensed-users", filters] as const,
   imports: [...allMemberKeys, "imports"] as const,
 };
 export const useAdminMembers = (filters: Record<string, Json>) =>
@@ -13,6 +16,30 @@ export const useAdminMembers = (filters: Record<string, Json>) =>
     queryKey: memberKeys.list(filters),
     queryFn: () => memberAdminService.list(filters),
   });
+export const useUnlicensedPilotokiUsers = (filters: Record<string, Json>) =>
+  useQuery({
+    queryKey: memberKeys.unlicensedUsers(filters),
+    queryFn: () => memberAdminService.listUnlicensedPilotokiUsers(filters),
+  });
+export const usePreviewProfileLicenceLink = () =>
+  useMutation({
+    mutationFn: ({
+      profileId,
+      licenceNumber,
+    }: {
+      profileId: string;
+      licenceNumber: string;
+    }) =>
+      memberAdminService.previewProfileLicenceLink(profileId, licenceNumber),
+  });
+export const useLinkUnlicensedProfile = () => {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminLicenceLinkInput) =>
+      memberAdminService.linkUnlicensedProfile(payload),
+    onSuccess: () => client.invalidateQueries({ queryKey: memberKeys.all }),
+  });
+};
 export const useMemberImports = (filters: Record<string, Json>) =>
   useQuery({
     queryKey: [...memberKeys.imports, filters],

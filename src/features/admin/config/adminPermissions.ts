@@ -110,6 +110,11 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.members,
       },
       {
+        label: "Inscrits sans licence",
+        to: ROUTES.adminUnlicensedUsers,
+        permission: ADMIN_PERMISSIONS.members,
+      },
+      {
         label: "Licences",
         to: ROUTES.adminLicences,
         permission: ADMIN_PERMISSIONS.members,

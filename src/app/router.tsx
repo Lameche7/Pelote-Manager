@@ -21,6 +21,7 @@ import {
 import { AdminEventsPage } from "@/features/admin/events/pages/AdminEventsPage";
 import { AdminLicencesPage } from "@/features/admin/members/pages/AdminLicencesPage";
 import { AdminMembersPage } from "@/features/admin/members/pages/AdminMembersPage";
+import { AdminUnlicensedPilotokiUsersPage } from "@/features/admin/members/pages/AdminUnlicensedPilotokiUsersPage";
 import { GlobalMemberSearchPage } from "@/features/admin/members/pages/GlobalMemberSearchPage";
 import { MemberDetailPage } from "@/features/admin/members/pages/MemberDetailPage";
 import { MemberImportDetailPage } from "@/features/admin/members/pages/MemberImportDetailPage";
@@ -289,6 +290,13 @@ export const routes = [
           {
             path: "membres",
             element: permitted(ADMIN_PERMISSIONS.members, <AdminMembersPage />),
+          },
+          {
+            path: "membres/inscrits-sans-licence",
+            element: permitted(
+              ADMIN_PERMISSIONS.members,
+              <AdminUnlicensedPilotokiUsersPage />,
+            ),
           },
           {
             path: "membres/licences",

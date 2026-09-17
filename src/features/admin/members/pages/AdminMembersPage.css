@@ -35,6 +35,10 @@
   text-decoration: none;
   cursor: pointer;
 }
+.members-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
 .members-page .secondary {
   background: #fff;
   color: #1e3a8a;
@@ -119,12 +123,50 @@
   padding: 1.5rem;
   border-radius: 0.8rem;
   width: min(700px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+}
+.member-dialog h2 {
+  margin-top: 0;
 }
 .member-dialog footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.7rem;
   margin-top: 1.2rem;
+}
+.member-pagination {
+  align-items: center;
+  padding: 0.9rem;
+}
+.member-link-verify {
+  margin-top: 1rem;
+}
+.member-link-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+.member-link-preview p {
+  margin: 0.45rem 0 0;
+}
+.member-link-identity {
+  margin-top: 1rem;
+}
+.member-link-error {
+  color: #b91c1c;
+  font-weight: 650;
+}
+.member-link-success {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.75rem;
+  background: #f0fdf4;
+  color: #166534;
+  font-weight: 650;
 }
 .import-steps {
   display: flex;
