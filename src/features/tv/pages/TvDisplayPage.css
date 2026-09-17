@@ -266,6 +266,14 @@
   color: var(--tv-tournament-color);
 }
 
+.tv-display__slot--tournament span {
+  overflow: visible;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: pre-line;
+}
+
 .tv-display__empty {
   margin: auto;
   padding: 1rem;
