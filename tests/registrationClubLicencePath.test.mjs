@@ -10,6 +10,7 @@ test("nomme explicitement le club à l'inscription", async () => {
   assert.match(page, /Sans licence au \{CLUB_CONFIG\.name\}/);
 });
 
+// prettier-ignore
 test("finalise le rattachement licence après confirmation", async () => {
   const [provider, finalization] = await Promise.all([
     read("src/app/providers/AuthProvider.tsx"),
