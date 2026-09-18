@@ -63,7 +63,7 @@ test("la page classement affiche J V D points et goal-average", () => {
 
 test("la page résultats sépare résultats récents et prochains matchs", () => {
   assert.match(seriesView, /function MatchTeamLabel/);
-  assert.match(seriesView, /label\.indexOf\("\/"/);
+  assert.match(seriesView, /label\.indexOf\(" \/ "\)/);
   assert.match(seriesView, /className="tv-tournament__match-team"/);
   assert.match(seriesView, /<MatchTeamLabel label=\{match\.teamALabel\} \/>/);
   assert.match(seriesView, /<MatchTeamLabel label=\{match\.teamBLabel\} \/>/);
