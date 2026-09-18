@@ -13,18 +13,23 @@ const [scrollReset, mainLayout] = await Promise.all([
   ),
 ]);
 
-test("une vraie navigation remet la nouvelle page en haut", () => {
-  assert.match(scrollReset, /useNavigationType/);
-  assert.match(scrollReset, /if \(navigationType === "POP"\) return/);
+test("chaque navigation remet tous les niveaux de scroll en haut", () => {
+  assert.doesNotMatch(scrollReset, /useNavigationType/);
+  assert.match(scrollReset, /window\.history\.scrollRestoration = "manual"/);
+  assert.match(scrollReset, /window\.scrollTo\(0, 0\)/);
+  assert.match(scrollReset, /document\.documentElement\.scrollTop = 0/);
+  assert.match(scrollReset, /document\.body\.scrollTop = 0/);
+  assert.match(scrollReset, /\.app-main, \.admin-shell__content/);
+  assert.match(scrollReset, /container\.scrollTop = 0/);
+  assert.match(scrollReset, /location\.search/);
+  assert.match(scrollReset, /location\.key/);
+});
+
+test("le reset est répété après le rendu pour contrer une restauration tardive", () => {
   assert.match(
     scrollReset,
-    /window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\)/,
+    /window\.requestAnimationFrame\(\(\) => \{[\s\S]*resetScrollPositions\(\)[\s\S]*window\.requestAnimationFrame\(resetScrollPositions\)/,
   );
-  assert.match(
-    scrollReset,
-    /\[location\.pathname, location\.hash, navigationType\]/,
-  );
-  assert.doesNotMatch(scrollReset, /location\.search/);
 });
 
 test("les ancres restent prioritaires sur le retour en haut", () => {
