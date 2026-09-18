@@ -21,61 +21,65 @@ test("le lien Mode TV PCL reste l’adresse permanente officielle", () => {
   assert.match(page, /const appUrl = currentApplicationOrigin\(\)/);
 });
 
-test("le Mode TV peut afficher les poules avant le début du tournoi et les retire après sa fin", () => {
+test("le Mode TV conserve les séries publiques du tournoi", () => {
   assert.match(service, /tournamentService\.listPublic\(\)/);
   assert.match(service, /today <= endsOn/);
   assert.doesNotMatch(service, /startsOn <= today/);
   assert.match(service, /tournamentRankingService\.get\(tournament\.id\)/);
   assert.match(service, /tournamentResultsService\.get\(tournament\.id\)/);
-  assert.match(
-    service,
-    /viewKey: `tournament:\$\{tournament\.id\}:\$\{resultSeries\.id\}`/,
-  );
-  assert.match(page, /\.\.\.tournamentSeries\.map/);
-  assert.match(page, /<TvTournamentSeriesView/);
 });
 
-test("chaque poule affiche son classement et seulement les deux prochaines parties", () => {
-  assert.match(seriesView, /Poule \{pool\.number\}/);
-  assert.match(seriesView, /pool\.teams\.map/);
+test("chaque série génère deux écrans successifs classement puis matchs", () => {
+  assert.match(
+    page,
+    /tournamentSeries\.flatMap\(\(series\) => \[/,
+  );
+  assert.match(page, /tournamentViewKey\(series, "ranking"\)/);
+  assert.match(page, /tournamentViewKey\(series, "matches"\)/);
+  assert.match(
+    page,
+    /activeView === tournamentViewKey\(series, "ranking"\)/,
+  );
+  assert.match(
+    page,
+    /activeView === tournamentViewKey\(series, "matches"\)/,
+  );
+  assert.match(page, /page=\{activeTournamentPage\}/);
+});
+
+test("la page classement affiche J V D points et goal-average", () => {
+  assert.match(seriesView, /<th scope="col">J<\/th>/);
+  assert.match(seriesView, /<th scope="col">V<\/th>/);
+  assert.match(seriesView, /<th scope="col">D<\/th>/);
+  assert.match(seriesView, /\{team\.matchesPlayed\}/);
+  assert.match(seriesView, /\{team\.wins\}/);
+  assert.match(seriesView, /\{team\.losses\}/);
+  assert.match(seriesView, /rankingValue\(team, series\)/);
+  assert.match(seriesView, /goalAverageValue\(team, series\)/);
+  assert.doesNotMatch(seriesView, /<h4>À suivre<\/h4>/);
+});
+
+test("la page résultats sépare résultats récents et prochains matchs", () => {
+  assert.match(seriesView, /<h3>Résultats<\/h3>/);
+  assert.match(seriesView, /<h3>Prochains matchs<\/h3>/);
+  assert.match(seriesView, /match\.resultStatus !== null/);
   assert.match(seriesView, /match\.resultStatus === null/);
-  assert.match(seriesView, /scheduledStartAt/);
-  assert.match(seriesView, /\.slice\(0, 2\)/);
-  assert.match(seriesView, /const upcoming = nextMatches\(pool\.matches\)/);
-  assert.doesNotMatch(seriesView, /pool\.matches\.map/);
-  assert.match(seriesView, /<th scope="col">Cl\.<\/th>/);
-  assert.match(seriesView, /<h4>À suivre<\/h4>/);
-  assert.match(seriesView, /<strong>vs<\/strong>/);
+  assert.match(seriesView, /scoreLabel\(match\)/);
+  assert.match(seriesView, /Poule \{poolNumber\}/);
+  assert.match(seriesView, /const MAX_MATCHES_PER_COLUMN = 6/);
 });
 
-test("le classement occupe deux tiers de la carte et À suivre un tiers", () => {
-  assert.match(
-    seriesStyles,
-    /\.tv-tournament__pool-content\s*\{[^}]*grid-template-rows: minmax\(0, 2fr\) minmax\(0, 1fr\)/s,
-  );
-});
-
-test("les caractères du classement de poule sont renforcés pour la lecture TV", () => {
-  assert.match(
-    seriesStyles,
-    /\.tv-tournament__ranking table\s*\{[^}]*font-size: clamp\(0\.72rem, 1\.45vmin, 1\.05rem\)/s,
-  );
-  assert.match(
-    seriesStyles,
-    /\.tv-tournament__ranking tbody th\s*\{[^}]*font-weight: 800/s,
-  );
-});
-
-test("les nombreuses poules sont paginées et ne dépassent jamais six cartes par écran", () => {
+test("les nombreuses poules restent paginées sur la seule page classement", () => {
   assert.match(seriesView, /const MAX_POOLS_PER_PAGE = 6/);
   assert.match(seriesView, /Math\.ceil\(poolCount \/ MAX_POOLS_PER_PAGE\)/);
   assert.match(seriesView, /series\.pools\.slice\(/);
   assert.match(seriesView, /const POOL_PAGE_DURATION_MS = 12_000/);
   assert.match(seriesView, /window\.setInterval/);
-  assert.match(seriesView, /safePoolPage \+ 1/);
+  assert.match(seriesView, /function RankingPage/);
+  assert.match(seriesView, /function MatchesPage/);
 });
 
-test("la géométrie de grille reste limitée à trois colonnes et deux lignes", () => {
+test("la géométrie du classement reste limitée à trois colonnes et deux lignes", () => {
   assert.match(
     seriesView,
     /gridTemplateColumns: "repeat\(3, minmax\(0, 1fr\)\)"/,
@@ -85,4 +89,19 @@ test("la géométrie de grille reste limitée à trois colonnes et deux lignes",
     /gridTemplateRows: "repeat\(2, minmax\(0, 1fr\)\)"/,
   );
   assert.match(seriesView, /style=\{poolGridStyle\(visiblePools\.length\)\}/);
+});
+
+test("les deux pages utilisent davantage d’espace pour la lecture TV", () => {
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__ranking table\s*\{[^}]*font-size: clamp\(0\.8rem, 1\.7vmin, 1\.18rem\)/s,
+  );
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__match-board\s*\{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/s,
+  );
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__match-row-main span\s*\{[^}]*font-size: clamp\(0\.8rem, 1\.65vmin, 1\.15rem\)/s,
+  );
 });
