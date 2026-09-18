@@ -41,6 +41,11 @@ import {
 } from "@/features/tv/services/tvTournamentService";
 import { TvRemoteNavigation } from "@/features/tv/components/TvRemoteNavigation";
 import {
+  canonicalizePclTvUrl,
+  isPublicTvIdentifier,
+  resolvePublicTvToken,
+} from "@/features/tv/tvPublicLink";
+import {
   TvTournamentSeriesView,
   type TvTournamentSeriesPage,
 } from "./TvTournamentSeriesView";
@@ -68,9 +73,6 @@ const tournamentViewKey = (
 
 const tournamentPageFromView = (view: TvView): TvTournamentSeriesPage =>
   view.endsWith(":matches") ? "matches" : "ranking";
-
-const tokenPattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
@@ -208,7 +210,8 @@ function QrCard({
 
 export function TvDisplayPage() {
   const { token = "" } = useParams<{ token: string }>();
-  const tokenIsValid = tokenPattern.test(token);
+  const tokenIsValid = isPublicTvIdentifier(token);
+  const resolvedToken = resolvePublicTvToken(token);
   const [display, setDisplay] = useState<TvDisplay | null>(null);
   const [upcomingEvents, setUpcomingEvents] = useState<PublicEvent[]>([]);
   const [tvMedia, setTvMedia] = useState<TvMediaAsset[]>([]);
@@ -244,7 +247,7 @@ export function TvDisplayPage() {
       }
 
       try {
-        const nextDisplay = await tvDisplayService.getDisplay(token);
+        const nextDisplay = await tvDisplayService.getDisplay(resolvedToken);
         setDisplay(nextDisplay);
         setRefreshError(null);
       } catch (loadError: unknown) {
@@ -258,7 +261,7 @@ export function TvDisplayPage() {
         if (initialLoad) setIsLoading(false);
       }
     },
-    [token, tokenIsValid],
+    [resolvedToken, tokenIsValid],
   );
 
   const loadUpcomingEvents = useCallback(async () => {
@@ -275,11 +278,11 @@ export function TvDisplayPage() {
     if (!tokenIsValid) return;
 
     try {
-      setTvMedia(await tvMediaService.list(token));
+      setTvMedia(await tvMediaService.list(resolvedToken));
     } catch {
       // Les médias promotionnels sont facultatifs : on conserve le dernier état connu.
     }
-  }, [token, tokenIsValid]);
+  }, [resolvedToken, tokenIsValid]);
 
   const loadTournamentSeries = useCallback(async () => {
     try {
@@ -288,6 +291,10 @@ export function TvDisplayPage() {
       // Les écrans tournoi sont facultatifs : on conserve le dernier état connu.
     }
   }, []);
+
+  useEffect(() => {
+    canonicalizePclTvUrl(token);
+  }, [token]);
 
   useEffect(() => {
     void loadDisplay(true);
