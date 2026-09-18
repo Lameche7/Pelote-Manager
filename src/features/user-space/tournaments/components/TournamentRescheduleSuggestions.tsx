@@ -255,8 +255,6 @@ export function TournamentRescheduleSuggestions({
   const availabilityPartial =
     options?.policy.availabilitySource === "partial_from_errebot";
   const availabilityIncomplete = availabilityUnknown || availabilityPartial;
-  const visibleFreeSlots = freeSlots.slice(0, 6);
-  const visibleSwaps = swaps.slice(0, 6);
 
   return (
     <div
@@ -357,11 +355,11 @@ export function TournamentRescheduleSuggestions({
             </p>
           ) : (
             <div className="tournament-reschedule__groups">
-              {visibleFreeSlots.length > 0 && (
+              {freeSlots.length > 0 && (
                 <section>
                   <h5>Créneaux libres</h5>
                   <div className="tournament-reschedule__list">
-                    {visibleFreeSlots.map((option) => (
+                    {freeSlots.map((option) => (
                       <FreeSlotCard
                         key={`${option.resourceId}-${option.playDate}-${option.startsAt}`}
                         option={option}
@@ -371,26 +369,14 @@ export function TournamentRescheduleSuggestions({
                       />
                     ))}
                   </div>
-                  {freeSlots.length > visibleFreeSlots.length && (
-                    <small>
-                      + {freeSlots.length - visibleFreeSlots.length} autre
-                      {freeSlots.length - visibleFreeSlots.length > 1
-                        ? "s"
-                        : ""}{" "}
-                      solution
-                      {freeSlots.length - visibleFreeSlots.length > 1
-                        ? "s"
-                        : ""}
-                    </small>
-                  )}
                 </section>
               )}
 
-              {swapsEnabled && visibleSwaps.length > 0 && (
+              {swapsEnabled && swaps.length > 0 && (
                 <section>
                   <h5>Échanges de créneaux</h5>
                   <div className="tournament-reschedule__list">
-                    {visibleSwaps.map((option) => (
+                    {swaps.map((option) => (
                       <SwapCard
                         key={option.swapMatchId}
                         option={option}
@@ -399,14 +385,6 @@ export function TournamentRescheduleSuggestions({
                       />
                     ))}
                   </div>
-                  {swaps.length > visibleSwaps.length && (
-                    <small>
-                      + {swaps.length - visibleSwaps.length} autre
-                      {swaps.length - visibleSwaps.length > 1 ? "s" : ""}{" "}
-                      échange
-                      {swaps.length - visibleSwaps.length > 1 ? "s" : ""}
-                    </small>
-                  )}
                 </section>
               )}
             </div>
