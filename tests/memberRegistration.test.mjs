@@ -23,6 +23,10 @@ const cleanupFunction = await readFile(
   ),
   "utf8",
 );
+const memberServiceSource = await readFile(
+  new URL("../src/features/members/services/memberService.ts", import.meta.url),
+  "utf8",
+);
 
 test("traduit les erreurs sans exposer les messages techniques", () => {
   assert.equal(
@@ -173,4 +177,20 @@ test("refuse toujours de supprimer un compte déjà finalisé", () => {
     canCleanupMemberRegistration({}, "registration-123", null),
     false,
   );
+});
+
+test("un compte déjà lié ne rejoue jamais le cleanup d'inscription", () => {
+  assert.match(
+    memberServiceSource,
+    /const currentProfile = await profileService\.getProfile\(data\.user\.id\)/,
+  );
+  assert.match(
+    memberServiceSource,
+    /if \(currentProfile\?\.memberId\) \{[\s\S]*clearedRegistrationMetadata[\s\S]*return false;/,
+  );
+});
+
+test("les licences numériques courtes sont complétées à 6 chiffres", () => {
+  assert.match(memberServiceSource, /compact\.padStart\(6, "0"\)/);
+  assert.match(memberServiceSource, /licence_number: normalizeLicenceNumber\(identity\.licenceNumber\)/);
 });
