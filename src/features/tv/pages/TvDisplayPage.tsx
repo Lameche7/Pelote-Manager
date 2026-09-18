@@ -40,7 +40,10 @@ import {
   type TvTournamentSeries,
 } from "@/features/tv/services/tvTournamentService";
 import { TvRemoteNavigation } from "@/features/tv/components/TvRemoteNavigation";
-import { TvTournamentSeriesView } from "./TvTournamentSeriesView";
+import {
+  TvTournamentSeriesView,
+  type TvTournamentSeriesPage,
+} from "./TvTournamentSeriesView";
 import "./TvDisplayPage.css";
 import "./TvWeeklyView.css";
 import "./TvPromotionView.css";
@@ -54,7 +57,17 @@ const SHOP_URL =
   "https://www.helloasso.com/associations/pelotaris-club-lourdais/boutiques/dotations-2026";
 const QR_ENDPOINT = "https://quickchart.io/qr";
 
-type TvView = "today" | "week" | "club" | `tournament:${string}:${string}`;
+type TvTournamentView =
+  `tournament:${string}:${string}:${TvTournamentSeriesPage}`;
+type TvView = "today" | "week" | "club" | TvTournamentView;
+
+const tournamentViewKey = (
+  series: TvTournamentSeries,
+  page: TvTournamentSeriesPage,
+): TvTournamentView => `${series.viewKey}:${page}` as TvTournamentView;
+
+const tournamentPageFromView = (view: TvView): TvTournamentSeriesPage =>
+  view.endsWith(":matches") ? "matches" : "ranking";
 
 const tokenPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -153,7 +166,11 @@ const viewEyebrow = (
   if (view === "week") return "Planning des 7 prochains jours";
   if (view === "club") return "Boutique & partenaires";
   return activeTournamentSeries
-    ? `Tournoi · ${activeTournamentSeries.seriesName}`
+    ? `Tournoi · ${activeTournamentSeries.seriesName} · ${
+        tournamentPageFromView(view) === "ranking"
+          ? "Poules & classement"
+          : "Résultats & matchs"
+      }`
     : "Tournoi en cours";
 };
 
@@ -312,7 +329,10 @@ export function TvDisplayPage() {
     () => [
       "today",
       "week",
-      ...tournamentSeries.map((series) => series.viewKey as TvView),
+      ...tournamentSeries.flatMap((series) => [
+        tournamentViewKey(series, "ranking"),
+        tournamentViewKey(series, "matches"),
+      ]),
       "club",
     ],
     [tournamentSeries],
@@ -328,8 +348,17 @@ export function TvDisplayPage() {
 
   const activeTournamentSeries = useMemo(
     () =>
-      tournamentSeries.find((series) => series.viewKey === activeView) ?? null,
+      tournamentSeries.find(
+        (series) =>
+          activeView === tournamentViewKey(series, "ranking") ||
+          activeView === tournamentViewKey(series, "matches"),
+      ) ?? null,
     [activeView, tournamentSeries],
+  );
+
+  const activeTournamentPage = useMemo<TvTournamentSeriesPage>(
+    () => tournamentPageFromView(activeView),
+    [activeView],
   );
 
   useEffect(() => {
@@ -604,8 +633,9 @@ export function TvDisplayPage() {
 
       {activeTournamentSeries && (
         <TvTournamentSeriesView
-          key={activeTournamentSeries.viewKey}
+          key={`${activeTournamentSeries.viewKey}:${activeTournamentPage}`}
           series={activeTournamentSeries}
+          page={activeTournamentPage}
         />
       )}
 
@@ -698,7 +728,10 @@ export function TvDisplayPage() {
             <>
               <Trophy aria-hidden="true" />
               {activeTournamentSeries.tournamentName} ·{" "}
-              {activeTournamentSeries.seriesName}
+              {activeTournamentSeries.seriesName} ·{" "}
+              {activeTournamentPage === "ranking"
+                ? "Classement"
+                : "Résultats & prochains matchs"}
             </>
           )}
           {activeView === "club" && (
