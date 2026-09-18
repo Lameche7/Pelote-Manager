@@ -103,6 +103,53 @@ const teamLabel = (players: MyTournamentPlayer[]) =>
 
 const phoneHref = (phone: string) => `tel:${phone.replace(/[^+\d]/gu, "")}`;
 
+type TournamentPhoneContact = {
+  key: string;
+  phone: string;
+  kind: "verified" | "registration";
+  players: MyTournamentPlayer[];
+};
+
+const phoneContactKey = (phone: string) =>
+  phone.replace(/[^+\d]/gu, "").replace(/^\+33/u, "0");
+
+const buildPhoneContacts = (
+  players: MyTournamentPlayer[],
+): TournamentPhoneContact[] => {
+  const contacts = new Map<string, TournamentPhoneContact>();
+
+  for (const player of players) {
+    if (!player.phone) continue;
+    const key = phoneContactKey(player.phone);
+    if (!key) continue;
+
+    const existing = contacts.get(key);
+    if (existing) {
+      existing.players.push(player);
+      if (player.phoneKind !== "verified") existing.kind = "registration";
+      continue;
+    }
+
+    contacts.set(key, {
+      key,
+      phone: player.phone,
+      kind: player.phoneKind === "verified" ? "verified" : "registration",
+      players: [player],
+    });
+  }
+
+  return [...contacts.values()];
+};
+
+const phoneContactLabel = (contact: TournamentPhoneContact) => {
+  if (contact.players.length > 1) return "Contact d’équipe";
+  const player = contact.players[0];
+  if (!player) return "Contact d’inscription";
+  return contact.kind === "verified"
+    ? playerLabel(player)
+    : `Contact d’inscription · ${playerLabel(player)}`;
+};
+
 const isTournamentHistory = (tournament: MyTournamentOverview) =>
   ["completed", "archived", "cancelled"].includes(tournament.status) ||
   dateAtNoon(tournament.endsOn).getTime() < Date.now();
@@ -147,9 +194,7 @@ function MatchCard({
   const isInProgress = startsAt <= now && endsAt >= now;
   const canRequestReschedule = !match.result && startsAt > now;
   const opponent = teamLabel(match.opponentPlayers);
-  const opponentContacts = match.opponentPlayers.filter(
-    (player) => player.phone,
-  );
+  const opponentContacts = buildPhoneContacts(match.opponentPlayers);
   const resultLabel = formatResult(match);
   const finalRound =
     match.phase === "finals" ? asEncouragementRound(match.finalRound) : null;
@@ -221,13 +266,10 @@ function MatchCard({
         <strong>vs {opponent}</strong>
         {opponentContacts.length > 0 && (
           <div className="my-tournaments__opponent-contacts">
-            {opponentContacts.map((player) => (
-              <a
-                key={`${player.role}-${player.firstName}-${player.lastName}`}
-                href={phoneHref(player.phone!)}
-              >
+            {opponentContacts.map((contact) => (
+              <a key={contact.key} href={phoneHref(contact.phone)}>
                 <Phone aria-hidden="true" />
-                {playerLabel(player)} · {player.phone}
+                {phoneContactLabel(contact)} · {contact.phone}
               </a>
             ))}
           </div>
@@ -352,6 +394,7 @@ function TournamentCard({
     "--series-color": tournament.team.seriesColor,
   } as CSSProperties;
   const qualification = tournament.qualification;
+  const teamContacts = buildPhoneContacts(tournament.team.players);
 
   return (
     <article className="my-tournaments__card" style={style}>
@@ -387,18 +430,19 @@ function TournamentCard({
                   {roleLabels[player.role]}
                   {player.clubName ? ` · ${player.clubName}` : ""}
                 </span>
-                {player.phone && (
-                  <a
-                    className="my-tournaments__phone"
-                    href={phoneHref(player.phone)}
-                  >
-                    <Phone aria-hidden="true" />
-                    {player.phone}
-                  </a>
-                )}
               </div>
             ))}
           </div>
+          {teamContacts.length > 0 && (
+            <div className="my-tournaments__team-contacts">
+              {teamContacts.map((contact) => (
+                <a key={contact.key} href={phoneHref(contact.phone)}>
+                  <Phone aria-hidden="true" />
+                  {phoneContactLabel(contact)} · {contact.phone}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
         <div className="my-tournaments__pool">
           <span>Poule</span>

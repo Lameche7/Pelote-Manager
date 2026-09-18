@@ -17,6 +17,7 @@ export type MyTournamentPlayer = {
   clubName: string;
   role: TournamentPlayerRole;
   phone: string | null;
+  phoneKind: "verified" | "registration" | null;
 };
 
 export type MyTournamentSportingRules = {
@@ -102,6 +103,7 @@ const mapPlayer = (row: Row): MyTournamentPlayer => ({
   clubName: String(row.club_name ?? ""),
   role: row.role as TournamentPlayerRole,
   phone: null,
+  phoneKind: null,
 });
 
 const playerContactKey = (
@@ -252,11 +254,16 @@ export const myTournamentsService = {
       );
     }
 
-    const phoneByPlayer = new Map<string, string>();
+    const phoneByPlayer = new Map<
+      string,
+      { phone: string; kind: "verified" | "registration" }
+    >();
     if (!contactsResponse.error) {
       for (const contact of rows(contactsResponse.data)) {
         const phone = String(contact.phone ?? "").trim();
         if (!phone) continue;
+        const kind =
+          contact.contact_kind === "verified" ? "verified" : "registration";
         phoneByPlayer.set(
           playerContactKey(
             String(contact.tournament_id ?? ""),
@@ -267,7 +274,7 @@ export const myTournamentsService = {
               role: contact.role as TournamentPlayerRole,
             },
           ),
-          phone,
+          { phone, kind },
         );
       }
     }
@@ -282,12 +289,16 @@ export const myTournamentsService = {
 
     return rows(tournamentsResponse.data).map((row) => {
       const tournament = mapTournament(row);
-      const withPhone = (teamId: string, player: MyTournamentPlayer) => ({
-        ...player,
-        phone:
-          phoneByPlayer.get(playerContactKey(tournament.id, teamId, player)) ??
-          null,
-      });
+      const withPhone = (teamId: string, player: MyTournamentPlayer) => {
+        const contact = phoneByPlayer.get(
+          playerContactKey(tournament.id, teamId, player),
+        );
+        return {
+          ...player,
+          phone: contact?.phone ?? null,
+          phoneKind: contact?.kind ?? null,
+        };
+      };
 
       return {
         ...tournament,
