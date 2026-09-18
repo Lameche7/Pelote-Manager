@@ -241,6 +241,9 @@ test("Mes tournois permet de créer et traiter une demande sans appliquer encore
   assert.match(myTournamentsPage, /TournamentRescheduleRequestsPanel/);
   assert.match(component, /Demander ce créneau/);
   assert.match(component, /Demander cet échange/);
+  assert.match(component, /freeSlots\.map\(\(option\) =>/);
+  assert.match(component, /swaps\.map\(\(option\) =>/);
+  assert.doesNotMatch(component, /slice\(0, 6\)/);
   assert.match(component, /Aucun match\s+n’est déplacé/);
   assert.match(requestsPanel, /Accepter/);
   assert.match(requestsPanel, /Refuser/);
