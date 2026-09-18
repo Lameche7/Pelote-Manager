@@ -37,6 +37,9 @@
     grid-auto-columns: min(82vw, 22rem);
     overflow-x: auto;
     overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    scrollbar-width: thin;
   }
 
   .reservation-calendar__day,

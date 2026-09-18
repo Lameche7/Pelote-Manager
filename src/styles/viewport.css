@@ -6,10 +6,13 @@ body,
 }
 
 html {
-  /* Empêche Safari/iOS de déplacer tout le viewport si un enfant déborde de quelques pixels. */
-  overflow-x: hidden;
-  overflow-x: clip;
-  overscroll-behavior-x: none;
+  /*
+   * Laisse le document récupérer un éventuel débordement réel au lieu de le
+   * couper définitivement. Les composants larges doivent gérer leur propre
+   * défilement horizontal.
+   */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 body,
@@ -22,5 +25,12 @@ body,
 .app-layout,
 .app-main {
   width: 100%;
+  max-width: 100%;
+}
+
+.app-header,
+.app-footer,
+.app-main > * {
+  min-width: 0;
   max-width: 100%;
 }
