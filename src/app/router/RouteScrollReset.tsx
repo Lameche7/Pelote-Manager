@@ -14,7 +14,7 @@ const scrollToHashTarget = (hash: string) => {
 
   const target =
     document.getElementById(targetId) ??
-    document.querySelector<HTMLElement>(`[name="${CSS.escape(targetId)}"]`);
+    (document.getElementsByName(targetId)[0] as HTMLElement | undefined);
 
   if (!target) return false;
   target.scrollIntoView({ block: "start" });
