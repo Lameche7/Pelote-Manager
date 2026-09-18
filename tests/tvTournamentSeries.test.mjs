@@ -51,6 +51,8 @@ test("la page classement affiche J V D points et goal-average", () => {
   assert.match(seriesView, /<th scope="col">J<\/th>/);
   assert.match(seriesView, /<th scope="col">V<\/th>/);
   assert.match(seriesView, /<th scope="col">D<\/th>/);
+  assert.match(seriesView, /\? "P\/M" : "Pts"/);
+  assert.match(seriesView, /\? "D\/M" : "Diff\."/);
   assert.match(seriesView, /\{team\.matchesPlayed\}/);
   assert.match(seriesView, /\{team\.wins\}/);
   assert.match(seriesView, /\{team\.losses\}/);
@@ -60,6 +62,11 @@ test("la page classement affiche J V D points et goal-average", () => {
 });
 
 test("la page résultats sépare résultats récents et prochains matchs", () => {
+  assert.match(seriesView, /function MatchTeamLabel/);
+  assert.match(seriesView, /label\.indexOf\(" \/ "\)/);
+  assert.match(seriesView, /className="tv-tournament__match-team"/);
+  assert.match(seriesView, /<MatchTeamLabel label=\{match\.teamALabel\} \/>/);
+  assert.match(seriesView, /<MatchTeamLabel label=\{match\.teamBLabel\} \/>/);
   assert.match(seriesView, /<h3>Résultats<\/h3>/);
   assert.match(seriesView, /<h3>Prochains matchs<\/h3>/);
   assert.match(seriesView, /match\.resultStatus !== null/);
@@ -102,6 +109,14 @@ test("les deux pages utilisent davantage d’espace pour la lecture TV", () => {
   );
   assert.match(
     seriesStyles,
-    /\.tv-tournament__match-row-main span\s*\{[^}]*font-size: clamp\(0\.8rem, 1\.65vmin, 1\.15rem\)/s,
+    /\.tv-tournament__match-team\s*\{[^}]*font-size: clamp\(0\.76rem, 1\.55vmin, 1\.08rem\)/s,
+  );
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__ranking th:nth-child\(2\)\s*\{[^}]*width: 52%/s,
+  );
+  assert.match(
+    seriesStyles,
+    /\.tv-tournament__ranking th:nth-child\(3\)[\s\S]*width: 6%/s,
   );
 });

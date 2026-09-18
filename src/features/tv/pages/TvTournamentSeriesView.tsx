@@ -146,11 +146,9 @@ function TournamentHeading({
 
 function RankingPage({ series }: { series: TvTournamentSeries }) {
   const rankingTitle =
-    series.rankingMode === "points_per_match" ? "Pts/M" : "Pts";
+    series.rankingMode === "points_per_match" ? "P/M" : "Pts";
   const goalAverageTitle =
-    series.goalAverageMode === "point_difference_per_match"
-      ? "Diff./M"
-      : "Diff.";
+    series.goalAverageMode === "point_difference_per_match" ? "D/M" : "Diff.";
   const { pageCount, poolsPerPage } = poolPagePlan(series.pools.length);
   const [poolPage, setPoolPage] = useState(0);
 
@@ -238,6 +236,22 @@ function RankingPage({ series }: { series: TvTournamentSeries }) {
   );
 }
 
+function MatchTeamLabel({ label }: { label: string }) {
+  const separatorIndex = label.indexOf(" / ");
+  const players =
+    separatorIndex >= 0
+      ? [label.slice(0, separatorIndex), label.slice(separatorIndex + 3)]
+      : [label];
+
+  return (
+    <span className="tv-tournament__match-team">
+      {players.map((player, index) => (
+        <span key={`${index}:${player}`}>{player}</span>
+      ))}
+    </span>
+  );
+}
+
 function MatchRow({
   item,
   kind,
@@ -251,9 +265,9 @@ function MatchRow({
     <article className="tv-tournament__match-row">
       <div className="tv-tournament__match-pool">Poule {poolNumber}</div>
       <div className="tv-tournament__match-row-main">
-        <span>{match.teamALabel}</span>
+        <MatchTeamLabel label={match.teamALabel} />
         <strong>{kind === "result" ? scoreLabel(match) : "vs"}</strong>
-        <span>{match.teamBLabel}</span>
+        <MatchTeamLabel label={match.teamBLabel} />
       </div>
       <div className="tv-tournament__match-row-meta">
         <small>{matchMeta(match)}</small>
