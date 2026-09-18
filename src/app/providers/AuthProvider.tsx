@@ -11,6 +11,7 @@ import { memberService } from "@/features/members/services/memberService";
 import { pushNotificationService } from "@/features/notifications/services/pushNotificationService";
 import {
   authService as defaultAuthService,
+  finalizePendingExternalParticipation as defaultFinalizePendingExternalParticipation,
   type AuthService,
 } from "@/infrastructure/auth/authService";
 import {
@@ -28,6 +29,7 @@ type AuthProviderProps = PropsWithChildren<{
   service?: AuthService;
   profileService?: ProfileService;
   finalizePendingMemberRegistration?: () => Promise<boolean>;
+  finalizePendingExternalParticipation?: () => Promise<boolean>;
 }>;
 
 export function AuthProvider({
@@ -35,6 +37,7 @@ export function AuthProvider({
   service = defaultAuthService,
   profileService = defaultProfileService,
   finalizePendingMemberRegistration = defaultFinalizePendingMemberRegistration,
+  finalizePendingExternalParticipation = defaultFinalizePendingExternalParticipation,
 }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -60,6 +63,19 @@ export function AuthProvider({
           profileService.getOrCreateProfile.bind(profileService),
           finalizePendingMemberRegistration,
         );
+
+        // La confirmation d'email peut ouvrir directement une session sans
+        // repasser par LoginPage. Finaliser ici la participation tournoi en
+        // attente garantit donc le rattachement dans tous les parcours Auth.
+        try {
+          await finalizePendingExternalParticipation();
+        } catch {
+          // Une panne momentanée du rattachement tournoi ne doit jamais
+          // invalider une session ou masquer un profil déjà utilisable.
+          // Le marqueur Auth reste présent et une synchronisation ultérieure
+          // pourra retenter la finalisation.
+        }
+
         if (currentRevision === synchronizationRevision.current) {
           setProfile(currentProfile);
           void pushNotificationService.syncExistingSubscription().catch(() => {
@@ -77,7 +93,11 @@ export function AuthProvider({
         }
       }
     },
-    [finalizePendingMemberRegistration, profileService],
+    [
+      finalizePendingExternalParticipation,
+      finalizePendingMemberRegistration,
+      profileService,
+    ],
   );
 
   useEffect(() => {

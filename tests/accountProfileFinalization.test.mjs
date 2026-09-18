@@ -48,3 +48,19 @@ test("la première connexion attend obligatoirement la finalisation du profil", 
     /await synchronize\(authenticatedUser, true\)/,
   );
 });
+
+
+test("toute session authentifiée finalise aussi la participation tournoi en attente", () => {
+  assert.match(
+    authProviderSource,
+    /finalizePendingExternalParticipation = defaultFinalizePendingExternalParticipation/,
+  );
+  assert.match(
+    authProviderSource,
+    /await finalizePendingExternalParticipation\(\)/,
+  );
+  assert.match(
+    authProviderSource,
+    /Une panne momentanée du rattachement tournoi ne doit jamais/,
+  );
+});
