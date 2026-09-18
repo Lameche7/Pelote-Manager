@@ -19,7 +19,9 @@ test("les téléphones restent limités aux participants des compétitions activ
     /championship\.status in \('preparation', 'active'\)/,
   );
   assert.match(migration, /identity\.status = 'verified'/);
-  assert.match(migration, /player\.external_identity_id is null/);
+  assert.match(migration, /nullif\(btrim\(player\.phone\), ''\)/);
+  assert.match(migration, /'contact_kind', contact\.contact_kind/);
+  assert.match(migration, /then 'registration'/);
 });
 
 test("Mes tournois et Mes championnats affichent les contacts disponibles", async () => {
@@ -41,8 +43,17 @@ test("Mes tournois et Mes championnats affichent les contacts disponibles", asyn
 
   assert.match(tournamentService, /get_my_tournament_player_contacts/);
   assert.match(tournamentService, /phone: string \| null/);
+  assert.match(
+    tournamentService,
+    /phoneKind: "verified" \| "registration" \| null/,
+  );
+  assert.match(tournamentService, /contact\.contact_kind === "verified"/);
+  assert.match(tournamentPage, /buildPhoneContacts/);
+  assert.match(tournamentPage, /Contact d’inscription/);
+  assert.match(tournamentPage, /Contact d’équipe/);
+  assert.match(tournamentPage, /my-tournaments__team-contacts/);
   assert.match(tournamentPage, /my-tournaments__opponent-contacts/);
-  assert.match(tournamentPage, /phoneHref\(player\.phone/);
+  assert.match(tournamentPage, /phoneHref\(contact\.phone\)/);
 
   assert.match(championshipService, /get_my_championship_player_contacts/);
   assert.match(championshipService, /opponentContacts/);
