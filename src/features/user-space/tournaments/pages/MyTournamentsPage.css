@@ -459,6 +459,7 @@
 }
 
 .my-tournaments__phone,
+.my-tournaments__team-contacts a,
 .my-tournaments__opponent-contacts a {
   display: inline-flex;
   width: fit-content;
@@ -473,21 +474,28 @@
 }
 
 .my-tournaments__phone:hover,
+.my-tournaments__team-contacts a:hover,
 .my-tournaments__opponent-contacts a:hover {
   text-decoration: underline;
   opacity: 1;
 }
 
 .my-tournaments__phone svg,
+.my-tournaments__team-contacts svg,
 .my-tournaments__opponent-contacts svg {
   width: 0.85rem;
   height: 0.85rem;
   flex: 0 0 auto;
 }
 
+.my-tournaments__team-contacts,
 .my-tournaments__opponent-contacts {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 0.75rem;
   margin-top: 0.15rem;
+}
+
+.my-tournaments__team-contacts {
+  margin-top: 0.5rem;
 }
