@@ -1,5 +1,4 @@
 import { StrictMode } from "react";
-import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 import "./index.css";
@@ -8,15 +7,12 @@ import "./styles/forms.css";
 import App from "@/app/App";
 import "@/features/admin/tournaments/pages/AdminTournamentPlanningCompact.css";
 import { setupTvFullscreenPrompt } from "@/features/tv/tvFullscreenPrompt";
-import { preparePclTvCanonicalUrl } from "@/features/tv/tvPublicLink";
 import { setupTvQrCompatibility } from "@/features/tv/tvQrCompatibility";
 import { setupTvWakeLock } from "@/features/tv/tvWakeLock";
 import {
   MARKETING_PREVIEW_PATH,
   isMarketingHostname,
 } from "@/shared/config/domains";
-
-const restorePclTvCanonicalUrl = preparePclTvCanonicalUrl();
 
 const isMarketingSite =
   isMarketingHostname(window.location.hostname) ||
@@ -51,11 +47,8 @@ setupTvQrCompatibility();
 setupTvWakeLock();
 
 const root = createRoot(document.getElementById("root")!);
-flushSync(() => {
-  root.render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  );
-});
-restorePclTvCanonicalUrl();
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
