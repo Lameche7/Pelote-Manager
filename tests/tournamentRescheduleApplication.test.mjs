@@ -131,3 +131,33 @@ test("les équipes reliées sont notifiées après application sans bloquer le r
     /exception when others then[\s\S]{0,240}ne doit jamais annuler un report/,
   );
 });
+
+
+test("un report supprime l'ancienne occupation avant de recréer le créneau", async () => {
+  const fixMigration = readFileSync(
+    new URL(
+      "../supabase/migrations/20260918110500_fix_reschedule_auto_apply_calendar_sync.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(
+    fixMigration,
+    /delete from public\.calendar_occupations as occupation[\s\S]*using public\.event_resources as event_resource/,
+  );
+  assert.match(
+    fixMigration,
+    /delete from public\.event_resources[\s\S]*insert into public\.event_resources/,
+  );
+  assert.match(
+    fixMigration,
+    /admin_apply_tournament_reschedule_request\(request\.id\)/,
+  );
+  assert.match(
+    fixMigration,
+    /admin_apply_tournament_reschedule_request\(target_request\.id\)/,
+  );
+  assert.match(fixMigration, /request\.proposal_kind = 'swap'/);
+  assert.match(fixMigration, /reschedule_orphan_released/);
+});
