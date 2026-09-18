@@ -35,11 +35,16 @@ export type MemberRegistration = {
   password: string;
 };
 
+function normalizeLicenceNumber(value: string): string {
+  const compact = value.trim().replace(/\s+/g, "").toUpperCase();
+  return /^\d{1,6}$/.test(compact) ? compact.padStart(6, "0") : compact;
+}
+
 function toRpcIdentity(identity: MemberIdentity) {
   return {
-    licence_number: identity.licenceNumber,
-    last_name: identity.lastName,
-    first_name: identity.firstName,
+    licence_number: normalizeLicenceNumber(identity.licenceNumber),
+    last_name: identity.lastName.trim(),
+    first_name: identity.firstName.trim(),
     birth_date: identity.birthDate,
   };
 }
@@ -184,9 +189,19 @@ export const memberService = {
   async finalizePendingRegistration(): Promise<boolean> {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) return false;
+
     const identity = readPendingIdentity(data.user.user_metadata);
     const registrationToken = readRegistrationToken(data.user.user_metadata);
     if (!identity || !registrationToken) return false;
+
+    // A linked account is already finalized. Legacy pending-registration
+    // metadata must never replay the destructive signup cleanup flow.
+    const currentProfile = await profileService.getProfile(data.user.id);
+    if (currentProfile?.memberId) {
+      await supabase.auth.updateUser({ data: clearedRegistrationMetadata });
+      return false;
+    }
+
     await this.completeCurrentRegistration(identity, registrationToken);
     await supabase.auth.updateUser({ data: clearedRegistrationMetadata });
     return true;
