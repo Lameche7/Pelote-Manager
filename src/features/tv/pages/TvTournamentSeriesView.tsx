@@ -245,8 +245,8 @@ function MatchTeamLabel({ label }: { label: string }) {
 
   return (
     <span className="tv-tournament__match-team">
-      {players.map((player) => (
-        <span key={player}>{player}</span>
+      {players.map((player, index) => (
+        <span key={`${index}:${player}`}>{player}</span>
       ))}
     </span>
   );
