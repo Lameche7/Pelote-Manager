@@ -1,5 +1,20 @@
-import { useLayoutEffect } from "react";
-import { useLocation, useNavigationType } from "react-router-dom";
+import { useEffect, useLayoutEffect } from "react";
+import { useLocation } from "react-router-dom";
+
+const resetScrollPositions = () => {
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
+  document
+    .querySelectorAll<HTMLElement>(
+      ".app-main, .admin-shell__content, [data-route-scroll-container]",
+    )
+    .forEach((container) => {
+      container.scrollTop = 0;
+      container.scrollLeft = 0;
+    });
+};
 
 const scrollToHashTarget = (hash: string) => {
   const rawTarget = hash.replace(/^#/u, "");
@@ -23,21 +38,38 @@ const scrollToHashTarget = (hash: string) => {
 
 export function RouteScrollReset() {
   const location = useLocation();
-  const navigationType = useNavigationType();
+
+  useEffect(() => {
+    const previous = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = previous;
+    };
+  }, []);
 
   useLayoutEffect(() => {
-    // Le navigateur sait mieux restaurer une position lors d'un retour/avance.
-    if (navigationType === "POP") return;
+    let firstFrame = 0;
+    let secondFrame = 0;
 
     if (location.hash) {
-      const frame = window.requestAnimationFrame(() => {
-        scrollToHashTarget(location.hash);
+      firstFrame = window.requestAnimationFrame(() => {
+        secondFrame = window.requestAnimationFrame(() => {
+          scrollToHashTarget(location.hash);
+        });
       });
-      return () => window.cancelAnimationFrame(frame);
+    } else {
+      resetScrollPositions();
+      firstFrame = window.requestAnimationFrame(() => {
+        resetScrollPositions();
+        secondFrame = window.requestAnimationFrame(resetScrollPositions);
+      });
     }
 
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [location.pathname, location.hash, navigationType]);
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [location.key, location.pathname, location.search, location.hash]);
 
   return null;
 }
