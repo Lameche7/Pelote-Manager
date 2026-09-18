@@ -29,6 +29,7 @@ import {
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./ReservationsPage.css";
+import "./ReservationsResponsive.css";
 import "./ReservationLockedSlots.css";
 import "./ReservationPaymentChoice.css";
 
