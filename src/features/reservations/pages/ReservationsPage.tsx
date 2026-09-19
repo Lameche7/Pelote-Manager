@@ -144,6 +144,52 @@ function SlotCard({
   );
 }
 
+function ChampionshipMatchRequiredModal({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  return (
+    <div className="booking-modal" role="presentation" onMouseDown={onClose}>
+      <section
+        className="booking-modal__panel booking-modal__account-required"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="championship-match-required-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="booking-modal__close"
+          aria-label="Fermer"
+          onClick={onClose}
+        >
+          ×
+        </button>
+        <p className="booking-modal__eyebrow">Créneau championnat</p>
+        <h2 id="championship-match-required-title">
+          Choisissez d’abord votre rencontre
+        </h2>
+        <p>
+          Ce créneau est réservé aux rencontres de championnat. Pour le
+          réserver, ouvrez « Mes championnats », choisissez la partie concernée,
+          puis utilisez « Réserver un terrain pour cette rencontre ».
+        </p>
+        <div className="booking-modal__actions">
+          <button
+            type="button"
+            className="booking-modal__secondary"
+            onClick={onClose}
+          >
+            Retour au calendrier
+          </button>
+          <Link to={ROUTES.myChampionships}>Choisir ma rencontre</Link>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function AccountRequiredModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="booking-modal" role="presentation" onMouseDown={onClose}>
@@ -719,8 +765,9 @@ export function ReservationsPage() {
         <div className="reservation-calendar__championship-notice" role="status">
           <strong>Accès championnat actif</strong>
           <span>
-            Les créneaux marqués « Championnat » sont ouverts en avance grâce à
-            votre inscription dans un effectif du club.
+            Les créneaux marqués « Championnat » sont réservés aux rencontres
+            de championnat. Si aucune rencontre n’est sélectionnée, choisissez
+            d’abord votre partie dans « Mes championnats ».
           </span>
         </div>
       )}
@@ -803,7 +850,16 @@ export function ReservationsPage() {
 
       {selectedSlot &&
         selectedResource &&
-        (isAuthenticated ? (
+        (selectedSlot.reservationAccess === "championship" &&
+        !championshipContext ? (
+          isAuthenticated ? (
+            <ChampionshipMatchRequiredModal
+              onClose={() => setSelectedSlot(null)}
+            />
+          ) : (
+            <AccountRequiredModal onClose={() => setSelectedSlot(null)} />
+          )
+        ) : isAuthenticated ? (
           <BookingModal
             slot={selectedSlot}
             resource={selectedResource}
