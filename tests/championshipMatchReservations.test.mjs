@@ -101,6 +101,12 @@ test("Mes championnats ouvre Réservations avec le contexte de la rencontre", ()
   assert.match(championshipsService, /get_my_championship_match_reservations/);
   assert.match(reservationPage, /Réservation pour une rencontre/);
   assert.match(reservationPage, /championshipMatchReservationService\.create/);
+  assert.match(reservationPage, /Choisir une rencontre/);
+  assert.match(reservationPage, /ROUTES\.myChampionships/);
+  assert.match(
+    reservationPage,
+    /selectedSlot\.reservationAccess === "championship"[\s\S]*!championshipContext/,
+  );
   assert.match(
     matchReservationService,
     /get_my_championship_reservation_context/,
