@@ -76,10 +76,12 @@ function CalendarSkeleton() {
 function SlotCard({
   slot,
   timezone,
+  championshipMatchSelected,
   onBook,
 }: {
   slot: CalendarSlot;
   timezone: string;
+  championshipMatchSelected: boolean;
   onBook: (slot: CalendarSlot) => void;
 }) {
   const slotTime = formatTime(slot.startsAt, timezone);
@@ -135,11 +137,21 @@ function SlotCard({
     <button
       type="button"
       className={`reservation-slot reservation-slot--available${isChampionship ? " reservation-slot--championship" : ""}`}
-      aria-label={`Réserver le créneau de ${slotTime}${isChampionship ? " réservé aux joueurs de championnat" : ""}`}
+      aria-label={
+        isChampionship && !championshipMatchSelected
+          ? `Choisir une rencontre avant de réserver le créneau de ${slotTime}`
+          : `Réserver le créneau de ${slotTime}${isChampionship ? " pour la rencontre de championnat sélectionnée" : ""}`
+      }
       onClick={() => onBook(slot)}
     >
       <strong>{slotTime}</strong>
-      <span>{isChampionship ? "Réserver · Championnat" : "Réserver"}</span>
+      <span>
+        {isChampionship
+          ? championshipMatchSelected
+            ? "Réserver · Championnat"
+            : "Choisir une rencontre"
+          : "Réserver"}
+      </span>
     </button>
   );
 }
@@ -804,6 +816,7 @@ export function ReservationsPage() {
                         timezone={
                           selectedResource?.timezone ?? "Europe/Paris"
                         }
+                        championshipMatchSelected={Boolean(championshipContext)}
                         onBook={(nextSlot) => {
                           if (
                             championshipContext?.existingReservation ||
