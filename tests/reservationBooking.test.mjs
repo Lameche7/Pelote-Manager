@@ -25,3 +25,15 @@ test("traduit les limites de quota en message utilisateur", () => {
     "Vous avez atteint le nombre maximal de réservations actives.",
   );
 });
+
+
+test("explique comment réserver un créneau réservé au championnat", () => {
+  assert.equal(
+    getBookingErrorMessage(
+      new Error(
+        "Ce créneau est réservé à une rencontre de championnat. Ouvrez Mon espace → Mes championnats et choisissez la rencontre avant de réserver.",
+      ),
+    ),
+    "Ce créneau est réservé aux rencontres de championnat. Ouvrez « Mes championnats », choisissez votre partie, puis réservez le terrain depuis cette rencontre.",
+  );
+});

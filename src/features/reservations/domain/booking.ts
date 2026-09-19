@@ -41,6 +41,13 @@ export function getBookingErrorMessage(error: unknown): string {
     return "Il est trop tard pour réserver ce créneau en ligne.";
   }
 
+  if (
+    message.includes("réservé à une rencontre de championnat") ||
+    message.includes("Mes championnats")
+  ) {
+    return "Ce créneau est réservé aux rencontres de championnat. Ouvrez « Mes championnats », choisissez votre partie, puis réservez le terrain depuis cette rencontre.";
+  }
+
   if (message.includes("nombre maximal")) {
     return "Vous avez atteint le nombre maximal de réservations actives.";
   }
