@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Phone } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import { TournamentRescheduleRequestsPanel } from "@/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel";
 import { TournamentRescheduleSuggestions } from "@/features/user-space/tournaments/components/TournamentRescheduleSuggestions";
@@ -667,6 +668,10 @@ export function MyTournamentsPage() {
           <p className="my-tournaments__alert" role="alert">
             {error}
           </p>
+        )}
+
+        {view === "current" && (
+          <PushActivationNudge context="tournament" />
         )}
 
         <TournamentRescheduleRequestsPanel refreshKey={rescheduleRefreshKey} />
