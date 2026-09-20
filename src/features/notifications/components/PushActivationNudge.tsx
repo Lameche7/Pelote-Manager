@@ -25,21 +25,21 @@ const copy: Record<
 > = {
   general: {
     eyebrow: "Alertes PILOTOKI",
-    title: "Reste informé sans ouvrir l’application",
+    title: "Restez informé sans ouvrir l’application",
     body:
-      "Active les alertes pour être prévenu lorsqu’une information importante concerne tes réservations, tes tournois ou ton club.",
+      "Activez les alertes pour être prévenu lorsqu’une information importante concerne vos réservations, vos tournois ou votre club.",
   },
   tournament: {
     eyebrow: "Tournoi · alertes instantanées",
-    title: "Ne rate pas une demande de report",
+    title: "Ne ratez pas une demande de report",
     body:
-      "PILOTOKI peut te prévenir immédiatement lorsqu’une équipe demande à déplacer une partie, qu’un horaire change ou qu’une action attend ta réponse.",
+      "PILOTOKI peut vous prévenir immédiatement lorsqu’une équipe demande à déplacer une partie, qu’un horaire change ou qu’une action attend votre réponse.",
   },
   championship: {
     eyebrow: "Rencontre réservée",
-    title: "Sois prévenu si quelque chose change",
+    title: "Soyez prévenu si quelque chose change",
     body:
-      "Active les alertes pour recevoir les informations importantes liées à tes rencontres et à tes réservations sans avoir à revenir vérifier l’application.",
+      "Activez les alertes pour recevoir les informations importantes liées à vos rencontres et à vos réservations sans avoir à revenir vérifier l’application.",
   },
 };
 
@@ -172,8 +172,8 @@ export function PushActivationNudge({
 
         {iosNeedsInstall && (
           <small>
-            Sur iPhone/iPad, ajoute d’abord PILOTOKI à l’écran d’accueil puis
-            ouvre-le depuis son icône pour pouvoir autoriser les notifications.
+            Sur iPhone/iPad, ajoutez d’abord PILOTOKI à l’écran d’accueil puis
+            ouvrez-le depuis son icône pour pouvoir autoriser les notifications.
           </small>
         )}
         {permissionDenied && (
