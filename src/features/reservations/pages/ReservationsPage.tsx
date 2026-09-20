@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
 import {
   formatPrice,
@@ -398,6 +399,9 @@ function BookingModal({
               {formatTime(slot.startsAt, resource.timezone)}.
             </p>
             {championshipMatchLabel && <strong>{championshipMatchLabel}</strong>}
+            {championshipContext && (
+              <PushActivationNudge context="championship" compact />
+            )}
             <button type="button" onClick={onClose}>
               Retour au calendrier
             </button>
