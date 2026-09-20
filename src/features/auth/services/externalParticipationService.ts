@@ -87,6 +87,23 @@ export const externalParticipationService = {
     return mapCandidates(data);
   },
 
+  async listUnclaimed(): Promise<ExternalParticipationCandidate[]> {
+    const { data, error } = await supabase.rpc(
+      "get_my_unclaimed_external_participations",
+    );
+
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de rechercher vos nouvelles participations pour le moment.",
+        ),
+      );
+    }
+
+    return mapCandidates(data);
+  },
+
   async listLinked(): Promise<ExternalParticipationCandidate[]> {
     const { data, error } = await supabase.rpc(
       "get_my_external_participations",

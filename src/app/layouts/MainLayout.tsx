@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { RouteScrollReset } from "@/app/router/RouteScrollReset";
+import { ExternalParticipationPrompt } from "@/features/auth/components/ExternalParticipationPrompt";
 import {
   adminAccessService,
   type ClubAccess,
@@ -96,6 +97,7 @@ export function MainLayout() {
   return (
     <div className="app-layout">
       <RouteScrollReset />
+      <ExternalParticipationPrompt />
       <header className="app-header">
         <Link
           className="app-brand"
