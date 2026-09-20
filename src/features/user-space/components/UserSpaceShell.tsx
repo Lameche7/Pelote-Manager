@@ -9,11 +9,15 @@ import {
   TrendingUp,
   UserRound,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ROUTES } from "@/shared/config";
 import "./UserSpaceShell.css";
 
 export function UserSpaceShell({ children }: PropsWithChildren) {
+  const location = useLocation();
+  const showDashboardPushNudge = location.pathname === ROUTES.userSpace;
+
   return (
     <div className="user-space-shell">
       <nav
@@ -45,7 +49,10 @@ export function UserSpaceShell({ children }: PropsWithChildren) {
           <UserRound aria-hidden="true" /> Mon profil
         </NavLink>
       </nav>
-      <div className="user-space-shell__content">{children}</div>
+      <div className="user-space-shell__content">
+        {showDashboardPushNudge && <PushActivationNudge context="general" />}
+        {children}
+      </div>
     </div>
   );
 }
