@@ -48,7 +48,7 @@ test("le tableau de bord explique l'intérêt général du push", () => {
 
 test("Mes tournois met les reports au cœur de la relance", () => {
   assert.match(tournaments, /PushActivationNudge context="tournament"/);
-  assert.match(nudge, /Ne rate pas une demande de report/);
+  assert.match(nudge, /Ne ratez pas une demande de report/);
   assert.match(nudge, /qu’un horaire change/);
 });
 
@@ -57,7 +57,7 @@ test("une réservation championnat confirmée propose les alertes", () => {
     reservations,
     /championshipContext[\s\S]*PushActivationNudge context="championship" compact/,
   );
-  assert.match(nudge, /Sois prévenu si quelque chose change/);
+  assert.match(nudge, /Soyez prévenu si quelque chose change/);
 });
 
 test("iPhone non installé et permission bloquée renvoient vers l'aide", () => {
