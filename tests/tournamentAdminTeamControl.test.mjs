@@ -133,3 +133,31 @@ test("les coordonnées d'équipe sont dérivées des joueurs et ne sont plus sai
   assert.doesNotMatch(page, /Téléphone de contact/);
   assert.match(page, /Coordonnées joueurs/);
 });
+
+
+test("un joueur peut être remplacé sans reconstruire le planning", async () => {
+  const [migration, service, page] = await Promise.all([
+    read(
+      "../supabase/migrations/20260921190000_add_admin_tournament_player_replacement.sql",
+    ),
+    read(
+      "../src/features/admin/tournaments/services/adminTournamentTeamService.ts",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
+    ),
+  ]);
+
+  assert.match(migration, /admin_replace_tournament_player/);
+  assert.match(migration, /tournament_player_replaced/);
+  assert.match(migration, /identity\.source = 'admin_replacement'/);
+  assert.match(migration, /Replacement participation email does not match profile/);
+  assert.match(migration, /target_tournament\.status in \('completed', 'archived', 'cancelled'\)/);
+  assert.doesNotMatch(migration, /delete from public\.tournament_matches/);
+  assert.doesNotMatch(migration, /delete from public\.tournament_match_planning/);
+  assert.doesNotMatch(migration, /delete from public\.tournament_pools/);
+  assert.match(service, /admin_replace_tournament_player/);
+  assert.match(page, />\s*Remplacer\s*</);
+  assert.match(page, /Son futur compte PILOTOKI pourra reconnaître cette participation/);
+  assert.match(page, /la série, la poule, le planning et les matchs sont[\s\S]*conservés/i);
+});
