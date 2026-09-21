@@ -96,6 +96,11 @@
   color: #166534;
 }
 
+.account-status--pending_confirmation {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 .account-status--probable {
   background: #fef3c7;
   color: #92400e;
@@ -104,6 +109,14 @@
 .account-status--unmatched {
   background: #f1f5f9;
   color: #475569;
+}
+
+.admin-tournament-accounts__automatic {
+  display: inline-block;
+  max-width: 230px;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .admin-tournament-accounts__error,
