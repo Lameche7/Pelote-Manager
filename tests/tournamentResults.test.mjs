@@ -117,7 +117,7 @@ test("Mes Tournois et le back-office exposent la saisie de résultat", async () 
   assert.match(userPage, /Saisir le score/);
   assert.match(userPage, /Transmettre au club/);
   assert.match(userService, /submit_my_tournament_match_result/);
-  assert.match(adminPage, /Valider ce résultat/);
+  assert.match(adminPage, /Valider/);
   assert.match(adminPage, /Enregistrer et valider/);
   assert.match(
     routes,
@@ -125,4 +125,24 @@ test("Mes Tournois et le back-office exposent la saisie de résultat", async () 
   );
   assert.match(navigation, /label: "Résultats"/);
   assert.match(router, /<AdminTournamentResultsPage \/>/);
+});
+
+test("le back-office résultats ouvre un tableau de traitement priorisé", async () => {
+  const adminPage = await read(
+    "../src/features/admin/tournaments/pages/AdminTournamentResultsPage.tsx",
+  );
+
+  assert.match(adminPage, /type ResultsView = "todo" \| "today" \| "pending" \| "all"/);
+  assert.match(adminPage, /À traiter/);
+  assert.match(adminPage, /Aujourd’hui/);
+  assert.match(adminPage, /Tous les matchs/);
+  assert.match(adminPage, /Joueur ou équipe/);
+  assert.match(adminPage, /Toutes les séries/);
+  assert.match(adminPage, /Toutes les poules/);
+  assert.match(adminPage, /type="date"/);
+  assert.match(adminPage, /matchHasFinished/);
+  assert.match(adminPage, /pending_validation/);
+  assert.match(adminPage, /Gestion des scores/);
+  assert.match(adminPage, /Classements/);
+  assert.match(adminPage, /role="dialog"/);
 });
