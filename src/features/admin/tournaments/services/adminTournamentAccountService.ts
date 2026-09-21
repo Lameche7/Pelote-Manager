@@ -13,6 +13,7 @@ export type TournamentAccountCandidate = {
   lastName: string;
   displayName: string;
   exactName: boolean;
+  emailConfirmed: boolean;
   matchReason?: "email" | "name";
 };
 
@@ -20,7 +21,11 @@ export type TournamentAccountAuditRow = {
   externalIdentityId: string;
   firstName: string;
   lastName: string;
-  status: "recognized" | "probable" | "unmatched";
+  status:
+    | "recognized"
+    | "pending_confirmation"
+    | "probable"
+    | "unmatched";
   linkedProfile: TournamentAccountCandidate | null;
   participations: Array<{
     teamId: string;
@@ -39,6 +44,7 @@ const mapCandidate = (row: Row): TournamentAccountCandidate => ({
   lastName: String(row.lastName ?? row.last_name ?? ""),
   displayName: String(row.displayName ?? row.display_name ?? ""),
   exactName: Boolean(row.exactName ?? row.exact_name),
+  emailConfirmed: Boolean(row.emailConfirmed ?? row.email_confirmed),
   matchReason: (row.matchReason ?? row.match_reason) as
     | "email"
     | "name"
