@@ -122,6 +122,14 @@ export function AdminTournamentTeamsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [replacementTarget, setReplacementTarget] = useState<{
+    team: AdminTournamentTeam;
+    player: AdminTournamentTeam["players"][number];
+  } | null>(null);
+  const [replacementPlayer, setReplacementPlayer] = useState<
+    AdminTournamentTeam["players"][number] | null
+  >(null);
+  const [replacementReason, setReplacementReason] = useState("Blessure");
 
   const loadTeams = async (tournamentId: string) => {
     if (!tournamentId) {
@@ -187,6 +195,9 @@ export function AdminTournamentTeamsPage() {
     : false;
   const poolsAlreadyBuilt = data
     ? poolStatuses.has(data.tournament.status)
+    : false;
+  const replacementAllowed = data
+    ? !["completed", "archived", "cancelled"].includes(data.tournament.status)
     : false;
 
   const counts = useMemo(() => {
@@ -386,6 +397,79 @@ export function AdminTournamentTeamsPage() {
         deleteError instanceof Error
           ? deleteError.message
           : "Impossible de supprimer l’équipe.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const beginReplacement = (
+    team: AdminTournamentTeam,
+    player: AdminTournamentTeam["players"][number],
+  ) => {
+    setReplacementTarget({ team, player });
+    setReplacementPlayer({
+      memberId: null,
+      firstName: "",
+      lastName: "",
+      clubName: "",
+      email: "",
+      phone: "",
+      emailFromMember: false,
+      phoneFromMember: false,
+      role: player.role,
+    });
+    setReplacementReason("Blessure");
+    setError("");
+    setMessage("");
+  };
+
+  const submitReplacement = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!replacementTarget || !replacementPlayer) return;
+
+    if (
+      !replacementPlayer.firstName.trim() ||
+      !replacementPlayer.lastName.trim() ||
+      !replacementPlayer.clubName.trim()
+    ) {
+      setError("Renseignez le nom et le club du remplaçant.");
+      return;
+    }
+
+    if (
+      (!replacementPlayer.emailFromMember &&
+        !(replacementPlayer.email ?? "").trim()) ||
+      (!replacementPlayer.phoneFromMember &&
+        !(replacementPlayer.phone ?? "").trim())
+    ) {
+      setError("Renseignez l’e-mail et le téléphone du remplaçant.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await adminTournamentTeamService.replacePlayer(
+        replacementTarget.team.id,
+        replacementTarget.player.role,
+        replacementPlayer,
+        replacementReason,
+      );
+      await reloadSelected();
+      setReplacementTarget(null);
+      setReplacementPlayer(null);
+      setMessage(
+        result.accountLinked
+          ? "Joueur remplacé. Le compte PILOTOKI du remplaçant a été reconnu et rattaché."
+          : "Joueur remplacé. Son futur compte PILOTOKI pourra reconnaître cette participation.",
+      );
+    } catch (replacementError) {
+      setError(
+        replacementError instanceof Error
+          ? replacementError.message
+          : "Impossible de remplacer ce joueur.",
       );
     } finally {
       setSaving(false);
@@ -747,6 +831,19 @@ export function AdminTournamentTeamsPage() {
                                       <small>
                                         {player.phone || "Téléphone manquant"}
                                       </small>
+                                      {replacementAllowed &&
+                                        team.status !== "withdrawn" && (
+                                          <button
+                                            type="button"
+                                            className="admin-tournament-team-table__replace"
+                                            disabled={saving || loadingDraft}
+                                            onClick={() =>
+                                              beginReplacement(team, player)
+                                            }
+                                          >
+                                            Remplacer
+                                          </button>
+                                        )}
                                     </div>
                                   ))}
                                 </td>
@@ -831,6 +928,90 @@ export function AdminTournamentTeamsPage() {
             </div>
           )}
         </>
+      )}
+
+      {replacementTarget && replacementPlayer && (
+        <div
+          className="admin-tournament-replacement-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target && !saving) {
+              setReplacementTarget(null);
+              setReplacementPlayer(null);
+            }
+          }}
+        >
+          <form
+            className="admin-card admin-tournament-team-form admin-tournament-replacement"
+            onSubmit={submitReplacement}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tournament-replacement-title"
+          >
+            <header>
+              <div>
+                <p className="admin-page__eyebrow">Remplacement joueur</p>
+                <h2 id="tournament-replacement-title">
+                  Remplacer {replacementTarget.player.firstName}{" "}
+                  {replacementTarget.player.lastName}
+                </h2>
+                <p>
+                  {replacementTarget.team.seriesName} ·{" "}
+                  {replacementTarget.player.role === "front"
+                    ? "Avant"
+                    : "Arrière"}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setReplacementTarget(null);
+                  setReplacementPlayer(null);
+                }}
+              >
+                Fermer
+              </button>
+            </header>
+
+            <p className="admin-tournament-teams__alert" role="status">
+              L’équipe, la série, la poule, le planning et les matchs sont
+              conservés. Seul le joueur est remplacé.
+            </p>
+
+            <AdminTournamentPlayerFields
+              tournamentId={selectedId}
+              teamId={replacementTarget.team.id}
+              player={replacementPlayer}
+              excludedMemberId={
+                replacementTarget.team.players.find(
+                  (player) => player.role !== replacementTarget.player.role,
+                )?.memberId ?? null
+              }
+              disabled={saving}
+              onError={setError}
+              onChange={setReplacementPlayer}
+            />
+
+            <label>
+              Motif
+              <input
+                required
+                disabled={saving}
+                value={replacementReason}
+                onChange={(event) => setReplacementReason(event.target.value)}
+              />
+            </label>
+
+            <button
+              className="admin-tournament-teams__primary"
+              type="submit"
+              disabled={saving}
+            >
+              {saving ? "Remplacement…" : "Confirmer le remplacement"}
+            </button>
+          </form>
+        </div>
       )}
     </section>
   );
