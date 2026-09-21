@@ -23,6 +23,11 @@ type TeamSaveResult = TeamMutationResult & {
   teamId: string;
 };
 
+type PlayerReplacementResult = {
+  accountLinked: boolean;
+  externalIdentityId: string;
+};
+
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 
@@ -118,6 +123,18 @@ const knownErrors: Record<string, string> = {
     "Le minimum de créneaux de la phase finale n’est pas atteint.",
   "A player can only belong to one active team per tournament":
     "Un joueur appartient déjà à une autre équipe active de ce tournoi.",
+  "A player can only belong to one active team per tournament series":
+    "Ce joueur appartient déjà à une autre équipe de cette série.",
+  "Tournament replacement player fields are incomplete":
+    "Renseignez le nom, le club, l’e-mail et le téléphone du remplaçant.",
+  "Replacement player is unchanged":
+    "Le remplaçant est identique au joueur actuel.",
+  "Replacement player already participates in this tournament series":
+    "Ce joueur participe déjà à une autre équipe de cette série.",
+  "Tournament player replacement is closed":
+    "Les remplacements ne sont plus possibles pour ce tournoi.",
+  "Tournament team is not active":
+    "Cette équipe n’est plus active.",
 };
 
 const fail = (error: unknown, fallback: string): never => {
@@ -309,6 +326,36 @@ export const adminTournamentTeamService = {
     return {
       teamId: String(row.team_id ?? ""),
       ...mapMutationResult(row),
+    };
+  },
+
+  async replacePlayer(
+    teamId: string,
+    role: TournamentTeamPlayer["role"],
+    player: TournamentTeamPlayer,
+    reason: string,
+  ): Promise<PlayerReplacementResult> {
+    const { data, error } = await supabase.rpc(
+      "admin_replace_tournament_player",
+      {
+        target_team_id: teamId,
+        target_role: role,
+        replacement: {
+          member_id: player.memberId || null,
+          first_name: player.firstName.trim(),
+          last_name: player.lastName.trim(),
+          club_name: player.clubName.trim(),
+          email: (player.email ?? "").trim(),
+          phone: (player.phone ?? "").trim(),
+        },
+        replacement_reason: reason.trim() || "Remplacement",
+      },
+    );
+    if (error) fail(error, "Impossible de remplacer ce joueur.");
+    const row = (data ?? {}) as Row;
+    return {
+      accountLinked: Boolean(row.account_linked),
+      externalIdentityId: String(row.external_identity_id ?? ""),
     };
   },
 
