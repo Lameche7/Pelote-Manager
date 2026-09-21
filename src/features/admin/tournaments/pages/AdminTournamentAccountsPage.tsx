@@ -20,6 +20,9 @@ const candidateLabel = (candidate: TournamentAccountCandidate) => {
 
 const statusLabel = (status: TournamentAccountAuditRow["status"]) => {
   if (status === "recognized") return "Accès confirmé";
+  if (status === "pending_confirmation") {
+    return "Compte créé — confirmation email en attente";
+  }
   if (status === "probable") return "Compte probable non lié";
   return "Aucun compte trouvé";
 };
@@ -108,6 +111,9 @@ export function AdminTournamentAccountsPage() {
     () => ({
       total: items.length,
       recognized: items.filter((item) => item.status === "recognized").length,
+      pendingConfirmation: items.filter(
+        (item) => item.status === "pending_confirmation",
+      ).length,
       probable: items.filter((item) => item.status === "probable").length,
       unmatched: items.filter((item) => item.status === "unmatched").length,
     }),
@@ -242,7 +248,7 @@ export function AdminTournamentAccountsPage() {
             className={filter === "attention" ? "active" : ""}
             onClick={() => setFilter("attention")}
           >
-            À corriger ({counts.probable + counts.unmatched})
+            À suivre ({counts.pendingConfirmation + counts.probable + counts.unmatched})
           </button>
           <button
             type="button"
@@ -256,6 +262,9 @@ export function AdminTournamentAccountsPage() {
 
       <div className="admin-tournament-accounts__summary">
         <span><strong>{counts.recognized}</strong> accès confirmés</span>
+        <span>
+          <strong>{counts.pendingConfirmation}</strong> confirmations email en attente
+        </span>
         <span><strong>{counts.probable}</strong> comptes probables non liés</span>
         <span><strong>{counts.unmatched}</strong> sans compte trouvé</span>
       </div>
@@ -301,11 +310,17 @@ export function AdminTournamentAccountsPage() {
                         : "—"}
                   </td>
                   <td>
-                    {item.status !== "recognized" && (
+                    {item.status === "pending_confirmation" ? (
+                      <span className="admin-tournament-accounts__automatic">
+                        Rattachement automatique après confirmation
+                      </span>
+                    ) : item.status !== "recognized" ? (
                       <button type="button" onClick={() => void openLink(item)}>
-                        Rattacher
+                        {item.candidates.length > 0
+                          ? "Rattacher ce compte"
+                          : "Rechercher un compte"}
                       </button>
-                    )}
+                    ) : null}
                   </td>
                 </tr>
               ))}
@@ -313,7 +328,7 @@ export function AdminTournamentAccountsPage() {
           </table>
           {displayed.length === 0 && (
             <p className="admin-tournament-accounts__empty">
-              Aucun compte à corriger pour ce tournoi.
+              Aucun compte à suivre pour ce tournoi.
             </p>
           )}
         </div>
@@ -351,7 +366,10 @@ export function AdminTournamentAccountsPage() {
                   />
                   <span>
                     <strong>{candidateLabel(candidate)}</strong>
-                    <small>{candidate.email}</small>
+                    <small>
+                      {candidate.email}
+                      {!candidate.emailConfirmed ? " · email non confirmé" : ""}
+                    </small>
                   </span>
                 </label>
               ))}
