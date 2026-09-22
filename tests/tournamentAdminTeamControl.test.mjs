@@ -198,3 +198,17 @@ test("le remplacement indique les champs obligatoires et rend le club facultatif
     /replacement_first_name = ''[\s\S]*replacement_last_name = ''[\s\S]*replacement_email = ''[\s\S]*replacement_phone = ''/,
   );
 });
+
+
+test("un remplacement resynchronise les libellés du calendrier Réservations", async () => {
+  const migration = await read(
+    "../supabase/migrations/20260922090000_sync_replacement_labels_to_calendar.sql",
+  );
+
+  assert.match(migration, /sync_tournament_team_calendar_labels/);
+  assert.match(migration, /public\.tournament_team_public_label\(match\.team_a_id\)/);
+  assert.match(migration, /public\.tournament_team_public_label\(match\.team_b_id\)/);
+  assert.match(migration, /update public\.events as event/);
+  assert.match(migration, /update public\.calendar_occupations as occupation/);
+  assert.match(migration, /perform public\.sync_tournament_team_calendar_labels\(target_team\.id\)/);
+});
