@@ -63,6 +63,10 @@ export function AdminChampionshipsPage() {
     useState<ChampionshipUpdatePreview | null>(null);
   const [updateBusy, setUpdateBusy] = useState(false);
   const [updateMessage, setUpdateMessage] = useState("");
+  const [engagementsUpdateFile, setEngagementsUpdateFile] =
+    useState<File | null>(null);
+  const [engagementsUpdateBusy, setEngagementsUpdateBusy] = useState(false);
+  const [engagementsUpdateMessage, setEngagementsUpdateMessage] = useState("");
 
   const loadList = async () => {
     const result = await championshipImportService.list();
@@ -175,6 +179,77 @@ export function AdminChampionshipsPage() {
     setUpdatePreview(null);
     setUpdateMessage("");
     setError("");
+  };
+
+  const selectEngagementsUpdateFile = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    setEngagementsUpdateFile(event.target.files?.[0] ?? null);
+    setEngagementsUpdateMessage("");
+    setError("");
+  };
+
+  const applyEngagementsUpdate = async () => {
+    if (!selectedId || !engagementsUpdateFile) return;
+    setEngagementsUpdateBusy(true);
+    setEngagementsUpdateMessage("");
+    setError("");
+    try {
+      const preview =
+        await championshipSourceFileService.parseEngagementsUpdate(
+          engagementsUpdateFile,
+        );
+      if (!preview.valid || !preview.competition || !preview.specialty) {
+        const details = preview.issues
+          .filter((issue) => issue.severity === "error")
+          .slice(0, 3)
+          .map((issue) => issue.message)
+          .join(" ");
+        throw new Error(
+          details ||
+            "Le fichier engagements.csv ne peut pas être utilisé.",
+        );
+      }
+      const descriptor =
+        await championshipSourceFileService.describeEngagementsUpdate(
+          engagementsUpdateFile,
+          preview.engagements.length,
+        );
+      const result =
+        await championshipImportService.applyEngagementContactsUpdate(
+          selectedId,
+          {
+            competition: preview.competition,
+            specialty: preview.specialty,
+            fileName: descriptor.fileName,
+            checksum: descriptor.checksum,
+            teams: preview.engagements.map((engagement) => ({
+              category: engagement.category,
+              clubName: engagement.clubName,
+              teamNumber: engagement.teamNumber,
+              responsibleName: engagement.responsibleName,
+              responsiblePhone: engagement.responsiblePhone,
+            })),
+          },
+        );
+      setEngagementsUpdateMessage(
+        `Responsables actualisés : ${result.updatedCount} équipe(s) modifiée(s), ${result.unchangedCount} inchangée(s).`,
+      );
+      setEngagementsUpdateFile(null);
+      const [nextDetail] = await Promise.all([
+        championshipImportService.detail(selectedId),
+        loadList(),
+      ]);
+      setDetail(nextDetail);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible d’actualiser les responsables.",
+      );
+    } finally {
+      setEngagementsUpdateBusy(false);
+    }
   };
 
   const analyseUpdate = async () => {
@@ -483,6 +558,47 @@ export function AdminChampionshipsPage() {
               {updateMessage && (
                 <p className="admin-championships__success">{updateMessage}</p>
               )}
+
+              <div className="admin-championships__engagement-update">
+                <div>
+                  <p className="admin-page__eyebrow">Contacts des équipes</p>
+                  <h3>Actualiser avec engagements.csv</h3>
+                  <p>
+                    Met à jour uniquement les colonnes Responsable et Tel
+                    Responsable. Les joueurs, poules, résultats et parties ne
+                    sont pas modifiés.
+                  </p>
+                </div>
+                <div className="admin-championships__update-controls">
+                  <label>
+                    Nouveau fichier engagements (.csv)
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      onChange={selectEngagementsUpdateFile}
+                      disabled={engagementsUpdateBusy}
+                    />
+                    <span>
+                      {engagementsUpdateFile?.name ??
+                        "Aucun fichier engagements sélectionné"}
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void applyEngagementsUpdate()}
+                    disabled={!engagementsUpdateFile || engagementsUpdateBusy}
+                  >
+                    {engagementsUpdateBusy
+                      ? "Actualisation…"
+                      : "Actualiser les responsables"}
+                  </button>
+                </div>
+                {engagementsUpdateMessage && (
+                  <p className="admin-championships__success">
+                    {engagementsUpdateMessage}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
