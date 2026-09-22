@@ -11,6 +11,7 @@ type Props = {
   teamId: string | null;
   player: TournamentTeamPlayer;
   excludedMemberId?: string | null;
+  clubRequired?: boolean;
   disabled: boolean;
   onChange: (player: TournamentTeamPlayer) => void;
   onError: (message: string) => void;
@@ -24,6 +25,7 @@ export function AdminTournamentPlayerFields({
   teamId,
   player,
   excludedMemberId,
+  clubRequired = true,
   disabled,
   onChange,
   onError,
@@ -175,9 +177,15 @@ export function AdminTournamentPlayerFields({
         )}
       </div>
 
+      <p className="admin-tournament-player-fields__required-hint">
+        <span aria-hidden="true">*</span> champ obligatoire
+      </p>
+
       <div className="admin-tournament-team-form__grid">
         <label>
-          Prénom
+          <span>
+            Prénom <strong aria-hidden="true">*</strong>
+          </span>
           <input
             required
             disabled={disabled}
@@ -187,7 +195,9 @@ export function AdminTournamentPlayerFields({
           />
         </label>
         <label>
-          Nom
+          <span>
+            Nom <strong aria-hidden="true">*</strong>
+          </span>
           <input
             required
             disabled={disabled}
@@ -197,9 +207,16 @@ export function AdminTournamentPlayerFields({
           />
         </label>
         <label>
-          Club
+          <span>
+            Club{" "}
+            {clubRequired ? (
+              <strong aria-hidden="true">*</strong>
+            ) : (
+              <em>(facultatif)</em>
+            )}
+          </span>
           <input
-            required
+            required={clubRequired}
             disabled={disabled}
             readOnly={Boolean(player.memberId)}
             value={player.clubName}
@@ -207,7 +224,12 @@ export function AdminTournamentPlayerFields({
           />
         </label>
         <label>
-          E-mail
+          <span>
+            E-mail{" "}
+            {!player.emailFromMember && (
+              <strong aria-hidden="true">*</strong>
+            )}
+          </span>
           <input
             required={!player.emailFromMember}
             type={player.emailFromMember ? "text" : "email"}
@@ -222,7 +244,12 @@ export function AdminTournamentPlayerFields({
           />
         </label>
         <label>
-          Téléphone
+          <span>
+            Téléphone{" "}
+            {!player.phoneFromMember && (
+              <strong aria-hidden="true">*</strong>
+            )}
+          </span>
           <input
             required={!player.phoneFromMember}
             type={player.phoneFromMember ? "text" : "tel"}
