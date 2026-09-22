@@ -14,19 +14,11 @@ export type MyChampionshipPlayer = {
   firstName: string;
   lastName: string;
   isMe: boolean;
-  phone: string | null;
-};
-
-export type MyChampionshipContact = {
-  firstName: string;
-  lastName: string;
-  phone: string;
 };
 
 export type MyChampionshipOpponentPlayer = {
   firstName: string;
   lastName: string;
-  phone: string | null;
 };
 
 export type MyChampionshipStanding = {
@@ -78,6 +70,8 @@ export type MyChampionshipMatch = {
   opponentTeamId: string;
   opponentLabel: string;
   opponentClubName: string | null;
+  opponentResponsibleName: string | null;
+  opponentResponsiblePhone: string | null;
   opponentPlayers: MyChampionshipOpponentPlayer[];
   scheduledOn: string | null;
   scheduledTime: string | null;
@@ -94,7 +88,6 @@ export type MyChampionshipMatch = {
   resultComment: string | null;
   submission: MyChampionshipResultSubmission | null;
   reservation: MyChampionshipMatchReservation | null;
-  opponentContacts: MyChampionshipContact[];
 };
 
 export type MyChampionship = {
@@ -118,12 +111,6 @@ export type MyChampionship = {
   matches: MyChampionshipMatch[];
 };
 
-const contactKey = (teamId: string, firstName: string, lastName: string) =>
-  [
-    teamId,
-    firstName.trim().toLocaleLowerCase("fr"),
-    lastName.trim().toLocaleLowerCase("fr"),
-  ].join(":");
 
 const mapSubmission = (row: Row): MyChampionshipResultSubmission => ({
   id: String(row.id ?? ""),
@@ -162,7 +149,6 @@ const mapChampionship = (row: Row): MyChampionship => ({
     firstName: String(player.first_name ?? ""),
     lastName: String(player.last_name ?? ""),
     isMe: Boolean(player.is_me),
-    phone: null,
   })),
   poolStandings: rows(row.pool_standings).map((standing) => ({
     teamId: String(standing.team_id ?? ""),
@@ -190,10 +176,11 @@ const mapChampionship = (row: Row): MyChampionship => ({
     opponentTeamId: String(match.opponent_team_id ?? ""),
     opponentLabel: String(match.opponent_label ?? ""),
     opponentClubName: nullableString(match.opponent_club_name),
+    opponentResponsibleName: nullableString(match.opponent_responsible_name),
+    opponentResponsiblePhone: nullableString(match.opponent_responsible_phone),
     opponentPlayers: rows(match.opponent_players).map((player) => ({
       firstName: String(player.first_name ?? ""),
       lastName: String(player.last_name ?? ""),
-      phone: null,
     })),
     scheduledOn: nullableString(match.scheduled_on),
     scheduledTime: nullableString(match.scheduled_time),
@@ -210,23 +197,17 @@ const mapChampionship = (row: Row): MyChampionship => ({
     resultComment: nullableString(match.result_comment),
     submission: null,
     reservation: null,
-    opponentContacts: [],
   })),
 });
 
 export const myChampionshipsService = {
   async list(): Promise<MyChampionship[]> {
-    const [
-      championshipsResult,
-      submissionsResult,
-      reservationsResult,
-      contactsResult,
-    ] = await Promise.all([
-      supabase.rpc("get_my_championships"),
-      supabase.rpc("get_my_championship_result_submissions"),
-      supabase.rpc("get_my_championship_match_reservations"),
-      supabase.rpc("get_my_championship_player_contacts"),
-    ]);
+    const [championshipsResult, submissionsResult, reservationsResult] =
+      await Promise.all([
+        supabase.rpc("get_my_championships"),
+        supabase.rpc("get_my_championship_result_submissions"),
+        supabase.rpc("get_my_championship_match_reservations"),
+      ]);
 
     if (championshipsResult.error) {
       throw new Error(
@@ -251,22 +232,6 @@ export const myChampionshipsService = {
           "Impossible de charger les réservations de vos rencontres.",
         ),
       );
-    }
-
-    const phoneByPlayer = new Map<string, string>();
-    const contactsByTeam = new Map<string, MyChampionshipContact[]>();
-    if (!contactsResult.error) {
-      for (const row of rows(contactsResult.data)) {
-        const teamId = String(row.team_id ?? "");
-        const firstName = String(row.first_name ?? "");
-        const lastName = String(row.last_name ?? "");
-        const phone = String(row.phone ?? "").trim();
-        if (!teamId || !phone) continue;
-        phoneByPlayer.set(contactKey(teamId, firstName, lastName), phone);
-        const teamContacts = contactsByTeam.get(teamId) ?? [];
-        teamContacts.push({ firstName, lastName, phone });
-        contactsByTeam.set(teamId, teamContacts);
-      }
     }
 
     const submissions = new Map(
@@ -296,33 +261,10 @@ export const myChampionshipsService = {
       .map(mapChampionship)
       .map((championship) => ({
         ...championship,
-        players: championship.players.map((player) => ({
-          ...player,
-          phone:
-            phoneByPlayer.get(
-              contactKey(
-                championship.teamId,
-                player.firstName,
-                player.lastName,
-              ),
-            ) ?? null,
-        })),
         matches: championship.matches.map((match) => ({
           ...match,
           submission: submissions.get(match.id) ?? null,
           reservation: reservations.get(match.id) ?? null,
-          opponentContacts: contactsByTeam.get(match.opponentTeamId) ?? [],
-          opponentPlayers: match.opponentPlayers.map((player) => ({
-            ...player,
-            phone:
-              phoneByPlayer.get(
-                contactKey(
-                  match.opponentTeamId,
-                  player.firstName,
-                  player.lastName,
-                ),
-              ) ?? null,
-          })),
         })),
       }))
       .filter((item) => item.teamId);
