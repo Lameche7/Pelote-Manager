@@ -78,3 +78,23 @@
   display: block;
   font-size: 0.72rem;
 }
+
+
+.admin-tournament-player-fields__required-hint {
+  margin: 0 0 0.65rem;
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.admin-tournament-player-fields__required-hint span,
+.admin-tournament-team-form__grid label > span strong,
+.admin-tournament-replacement > label > span strong {
+  color: #b91c1c;
+}
+
+.admin-tournament-team-form__grid label > span em {
+  color: #64748b;
+  font-size: 0.74rem;
+  font-style: normal;
+  font-weight: 500;
+}
