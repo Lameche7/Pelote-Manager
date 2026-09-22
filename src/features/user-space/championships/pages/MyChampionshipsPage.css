@@ -498,7 +498,11 @@
 }
 
 .my-championships__table-scroll {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .my-championships table {
@@ -751,12 +755,10 @@
 }
 
 
-/* Empêche les cartes de championnat d'élargir le viewport sur mobile. */
+/* Stabilise la largeur sans masquer le contenu qui dépasse. */
 .my-championships {
-  width: 100%;
   min-width: 0;
   max-width: 100%;
-  overflow-x: hidden;
 }
 
 .my-championships__card,
@@ -820,4 +822,23 @@
   width: 0.85rem;
   height: 0.85rem;
   flex: 0 0 auto;
+}
+
+
+.my-championships__list,
+.my-championships__standings-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.my-championships__card,
+.my-championships__match {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 620px) {
+  .my-championships__table-scroll {
+    margin-inline: 0;
+  }
 }
