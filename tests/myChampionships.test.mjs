@@ -85,3 +85,31 @@ test("l’interface expose les classements officiels et la navigation joueur", a
   assert.match(page, /Prochaine partie/);
   assert.match(page, /Dernier résultat/);
 });
+
+
+test("les rencontres indiquent domicile extérieur et la composition adverse", async () => {
+  const [page, service, migration] = await Promise.all([
+    read(pageUrl),
+    read(
+      new URL(
+        "../src/features/user-space/championships/services/myChampionshipsService.ts",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../supabase/migrations/20260922103000_championship_home_away_and_opponent_details.sql",
+        import.meta.url,
+      ),
+    ),
+  ]);
+
+  assert.match(page, /À domicile/);
+  assert.match(page, /À l’extérieur/);
+  assert.match(page, /Club : \{match\.opponentClubName\}/);
+  assert.match(page, /match\.opponentPlayers\.map/);
+  assert.match(service, /opponentClubName/);
+  assert.match(service, /opponentPlayers/);
+  assert.match(migration, /'opponent_club_name'/);
+  assert.match(migration, /'opponent_players'/);
+});
