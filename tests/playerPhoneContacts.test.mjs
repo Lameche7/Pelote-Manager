@@ -70,6 +70,6 @@ test("Mes tournois et Mes championnats affichent les contacts disponibles", asyn
 
   assert.match(championshipService, /get_my_championship_player_contacts/);
   assert.match(championshipService, /opponentContacts/);
-  assert.match(championshipPage, /my-championships__opponent-contacts/);
-  assert.match(championshipPage, /phoneHref\(contact\.phone\)/);
+  assert.match(championshipPage, /my-championships__opponent-players/);
+  assert.match(championshipPage, /phoneHref\(player\.phone\)/);
 });

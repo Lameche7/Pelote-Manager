@@ -94,8 +94,9 @@ test("le PCL peut réserver gratuitement sans contourner les contrôles de club"
   );
 });
 
-test("Mes championnats ouvre Réservations avec le contexte de la rencontre", () => {
+test("Mes championnats réserve uniquement lorsque notre équipe reçoit", () => {
   assert.match(championshipsPage, /Réserver un terrain pour cette rencontre/);
+  assert.match(championshipsPage, /match\.teamSide !== "a"/);
   assert.match(championshipsPage, /championshipMatch/);
   assert.match(championshipsPage, /match\.reservation/);
   assert.match(championshipsService, /get_my_championship_match_reservations/);
@@ -135,5 +136,29 @@ test("les réservations championnat affichent championnat, série et équipes en
   assert.match(
     tvWeeklyStyles,
     /\.tv-display__slot--tournament span\s*\{[^}]*white-space: pre-line/s,
+  );
+});
+
+
+test("le serveur refuse une réservation lorsque le joueur est en Equipe2", async () => {
+  const migration = await read(
+    "../supabase/migrations/20260922103000_championship_home_away_and_opponent_details.sql",
+  );
+
+  assert.match(
+    migration,
+    /team_player\.team_id = match\.team1_id/,
+  );
+  assert.doesNotMatch(
+    migration,
+    /team_player\.team_id in \(match\.team1_id, match\.team2_id\)/,
+  );
+  assert.match(
+    migration,
+    /validate_championship_match_reservation/,
+  );
+  assert.match(
+    migration,
+    /link_my_championship_match_reservation/,
   );
 });

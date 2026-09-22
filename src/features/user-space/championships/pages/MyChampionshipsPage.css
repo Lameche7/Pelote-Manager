@@ -670,3 +670,82 @@
   flex-wrap: wrap;
   gap: 0.25rem 0.75rem;
 }
+
+
+.my-championships__match-opponent-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.my-championships__venue-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0.18rem 0.48rem;
+  border-radius: 999px;
+  font-size: 0.72rem !important;
+  font-weight: 800;
+  opacity: 1 !important;
+}
+
+.my-championships__venue-badge.is-home {
+  background: rgb(34 197 94 / 12%);
+}
+
+.my-championships__venue-badge.is-away {
+  background: rgb(59 130 246 / 12%);
+}
+
+.my-championships__opponent-club {
+  width: fit-content;
+  font-weight: 700;
+  opacity: 0.82 !important;
+}
+
+.my-championships__opponent-players {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.my-championships__opponent-players > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+}
+
+.my-championships__opponent-players > div > strong {
+  font-size: 0.84rem;
+}
+
+.my-championships__opponent-players a {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.3rem;
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  opacity: 0.78;
+}
+
+.my-championships__opponent-players a:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.my-championships__opponent-players a svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+}
+
+.my-championships__opponent-players small {
+  font-size: 0.75rem;
+  opacity: 0.58;
+}
