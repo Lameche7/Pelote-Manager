@@ -391,16 +391,23 @@ function MatchRow({
                   <strong>
                     {player.firstName} {player.lastName}
                   </strong>
-                  {player.phone ? (
-                    <a href={phoneHref(player.phone)}>
-                      <Phone aria-hidden="true" />
-                      {player.phone}
-                    </a>
-                  ) : (
-                    <small>Téléphone non disponible</small>
-                  )}
                 </div>
               ))}
+            </div>
+          )}
+          {(match.opponentResponsibleName ||
+            match.opponentResponsiblePhone) && (
+            <div className="my-championships__opponent-responsible">
+              <span>Responsable</span>
+              <strong>
+                {match.opponentResponsibleName ?? "Nom non renseigné"}
+              </strong>
+              {match.opponentResponsiblePhone && (
+                <a href={phoneHref(match.opponentResponsiblePhone)}>
+                  <Phone aria-hidden="true" />
+                  {match.opponentResponsiblePhone}
+                </a>
+              )}
             </div>
           )}
           {place && <small>{place}</small>}
@@ -895,15 +902,6 @@ function ChampionshipCard({
                 {player.firstName} {player.lastName}
               </strong>
               {player.isMe && <small>Vous</small>}
-              {player.phone && (
-                <a
-                  className="my-championships__phone"
-                  href={phoneHref(player.phone)}
-                >
-                  <Phone aria-hidden="true" />
-                  {player.phone}
-                </a>
-              )}
             </span>
           ))}
         </div>
