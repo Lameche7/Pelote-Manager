@@ -113,3 +113,26 @@ test("les rencontres indiquent domicile extérieur et la composition adverse", a
   assert.match(migration, /'opponent_club_name'/);
   assert.match(migration, /'opponent_players'/);
 });
+
+
+test("les championnats utilisent le responsable d'équipe et restent stables en largeur", async () => {
+  const [page, service, styles, migration] = await Promise.all([
+    read(pageUrl),
+    read(new URL("../src/features/user-space/championships/services/myChampionshipsService.ts", import.meta.url)),
+    read(new URL("../src/features/user-space/championships/pages/MyChampionshipsPage.css", import.meta.url)),
+    read(new URL("../supabase/migrations/20260922110000_add_championship_team_responsible_contacts.sql", import.meta.url)),
+  ]);
+
+  assert.match(page, /Responsable/);
+  assert.match(page, /opponentResponsibleName/);
+  assert.match(page, /opponentResponsiblePhone/);
+  assert.doesNotMatch(page, /Téléphone non disponible/);
+  assert.match(service, /opponentResponsibleName/);
+  assert.match(service, /opponentResponsiblePhone/);
+  assert.doesNotMatch(service, /get_my_championship_player_contacts/);
+  assert.match(styles, /overflow-x: hidden/);
+  assert.match(styles, /overflow-wrap: anywhere/);
+  assert.match(migration, /responsible_name text/);
+  assert.match(migration, /responsible_phone text/);
+  assert.match(migration, /admin_update_championship_team_contacts/);
+});
