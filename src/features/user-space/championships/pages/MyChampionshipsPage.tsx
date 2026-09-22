@@ -367,17 +367,39 @@ function MatchRow({
             {match.phase}
             {match.poolCode ? ` · Poule ${match.poolCode}` : ""}
           </span>
-          <strong>vs {match.opponentLabel || "Adversaire à définir"}</strong>
-          {match.opponentContacts.length > 0 && (
-            <div className="my-championships__opponent-contacts">
-              {match.opponentContacts.map((contact) => (
-                <a
-                  key={`${contact.firstName}-${contact.lastName}-${contact.phone}`}
-                  href={phoneHref(contact.phone)}
+          <div className="my-championships__match-opponent-heading">
+            <strong>vs {match.opponentLabel || "Adversaire à définir"}</strong>
+            <span
+              className={`my-championships__venue-badge is-${
+                match.teamSide === "a" ? "home" : "away"
+              }`}
+            >
+              {match.teamSide === "a" ? "À domicile" : "À l’extérieur"}
+            </span>
+          </div>
+          {match.opponentClubName && (
+            <small className="my-championships__opponent-club">
+              Club : {match.opponentClubName}
+            </small>
+          )}
+          {match.opponentPlayers.length > 0 && (
+            <div className="my-championships__opponent-players">
+              {match.opponentPlayers.map((player) => (
+                <div
+                  key={`${match.opponentTeamId}-${player.firstName}-${player.lastName}`}
                 >
-                  <Phone aria-hidden="true" />
-                  {contact.firstName} {contact.lastName} · {contact.phone}
-                </a>
+                  <strong>
+                    {player.firstName} {player.lastName}
+                  </strong>
+                  {player.phone ? (
+                    <a href={phoneHref(player.phone)}>
+                      <Phone aria-hidden="true" />
+                      {player.phone}
+                    </a>
+                  ) : (
+                    <small>Téléphone non disponible</small>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -804,7 +826,8 @@ function ChampionshipCard({
       match.reservation ||
       hasOfficialResult(match) ||
       ["played", "forfeit", "cancelled"].includes(match.status) ||
-      !match.opponentTeamId
+      !match.opponentTeamId ||
+      match.teamSide !== "a"
     ) {
       return null;
     }
