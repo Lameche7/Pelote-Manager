@@ -194,3 +194,26 @@ test("un échange libère les deux occupations calendrier avant de recréer les 
     /calendar_occupations_no_overlap/,
   );
 });
+
+
+test("le chargement admin des reports utilise un comptage ensembliste des comptes reliés", () => {
+  const perfMigration = readFileSync(
+    new URL(
+      "../supabase/migrations/20260922165500_optimize_tournament_team_app_actor_count.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(
+    perfMigration,
+    /create or replace function public\.tournament_team_app_actor_count/,
+  );
+  assert.doesNotMatch(
+    perfMigration,
+    /public\.tournament_profile_can_act_for_team\(/,
+  );
+  assert.match(perfMigration, /candidate_profiles as/);
+  assert.match(perfMigration, /identity\.status = 'verified'/);
+  assert.match(perfMigration, /lower\(btrim\(profile\.email\)\)/);
+});
