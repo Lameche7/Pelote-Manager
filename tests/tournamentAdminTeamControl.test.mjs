@@ -161,3 +161,40 @@ test("un joueur peut être remplacé sans reconstruire le planning", async () =>
   assert.match(page, /Son futur compte PILOTOKI pourra reconnaître cette participation/);
   assert.match(page, /la série, la poule, le planning et les matchs sont[\s\S]*conservés/i);
 });
+
+
+test("le remplacement indique les champs obligatoires et rend le club facultatif", async () => {
+  const [migration, playerFields, page, service] = await Promise.all([
+    read(
+      "../supabase/migrations/20260922084500_make_replacement_club_optional.sql",
+    ),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentPlayerFields.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentTeamsPage.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/services/adminTournamentTeamService.ts",
+    ),
+  ]);
+
+  assert.match(playerFields, /clubRequired\?: boolean/);
+  assert.match(playerFields, /clubRequired = true/);
+  assert.match(playerFields, /Club/);
+  assert.match(playerFields, /facultatif/);
+  assert.match(playerFields, /champ obligatoire/);
+  assert.match(page, /clubRequired=\{false\}/);
+  assert.match(page, /Le prénom et le nom du remplaçant sont obligatoires/);
+  assert.match(page, /L’e-mail et le téléphone du remplaçant sont obligatoires/);
+  assert.match(service, /Le prénom, le nom, l’e-mail et le téléphone du remplaçant sont obligatoires/);
+  const replacementGuard = migration.slice(
+    migration.indexOf("new_fragment text := $new$"),
+    migration.indexOf("$new$;", migration.indexOf("new_fragment text := $new$")) + 6,
+  );
+  assert.doesNotMatch(replacementGuard, /replacement_club_name = ''/);
+  assert.match(
+    replacementGuard,
+    /replacement_first_name = ''[\s\S]*replacement_last_name = ''[\s\S]*replacement_email = ''[\s\S]*replacement_phone = ''/,
+  );
+});

@@ -430,10 +430,9 @@ export function AdminTournamentTeamsPage() {
 
     if (
       !replacementPlayer.firstName.trim() ||
-      !replacementPlayer.lastName.trim() ||
-      !replacementPlayer.clubName.trim()
+      !replacementPlayer.lastName.trim()
     ) {
-      setError("Renseignez le nom et le club du remplaçant.");
+      setError("Le prénom et le nom du remplaçant sont obligatoires.");
       return;
     }
 
@@ -443,7 +442,7 @@ export function AdminTournamentTeamsPage() {
       (!replacementPlayer.phoneFromMember &&
         !(replacementPlayer.phone ?? "").trim())
     ) {
-      setError("Renseignez l’e-mail et le téléphone du remplaçant.");
+      setError("L’e-mail et le téléphone du remplaçant sont obligatoires.");
       return;
     }
 
@@ -983,6 +982,7 @@ export function AdminTournamentTeamsPage() {
               tournamentId={selectedId}
               teamId={replacementTarget.team.id}
               player={replacementPlayer}
+              clubRequired={false}
               excludedMemberId={
                 replacementTarget.team.players.find(
                   (player) => player.role !== replacementTarget.player.role,
@@ -994,7 +994,9 @@ export function AdminTournamentTeamsPage() {
             />
 
             <label>
-              Motif
+              <span>
+                Motif <strong aria-hidden="true">*</strong>
+              </span>
               <input
                 required
                 disabled={saving}

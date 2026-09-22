@@ -126,7 +126,7 @@ const knownErrors: Record<string, string> = {
   "A player can only belong to one active team per tournament series":
     "Ce joueur appartient déjà à une autre équipe de cette série.",
   "Tournament replacement player fields are incomplete":
-    "Renseignez le nom, le club, l’e-mail et le téléphone du remplaçant.",
+    "Le prénom, le nom, l’e-mail et le téléphone du remplaçant sont obligatoires.",
   "Replacement player is unchanged":
     "Le remplaçant est identique au joueur actuel.",
   "Replacement player already participates in this tournament series":
