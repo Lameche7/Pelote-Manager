@@ -28,6 +28,8 @@ export type ChampionshipTransactionalImportPayload = {
     teamLabel: string;
     clubName: string;
     teamNumber: string;
+    responsibleName: string | null;
+    responsiblePhone: string | null;
     players: Array<{
       licenceNumber: string;
       firstName: string;
@@ -143,6 +145,8 @@ export const buildChampionshipTransactionalImportPayload = (
       teamLabel: engagement.teamLabel,
       clubName: engagement.clubName,
       teamNumber: engagement.teamNumber,
+      responsibleName: engagement.responsibleName,
+      responsiblePhone: engagement.responsiblePhone,
       players: engagement.players,
     })),
     matches: preview.matches.map((match) => {

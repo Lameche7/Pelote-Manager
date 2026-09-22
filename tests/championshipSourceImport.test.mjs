@@ -72,8 +72,8 @@ test("croise parties et engagements avant toute validation", () => {
       "",
       "CLUB ALPHA 01",
       "DUPONT Jean (012345) - MARTIN Paul (067890)",
-      "",
-      "",
+      "DUPONT Pierre",
+      "0611223344",
       "",
     ],
     [
@@ -141,6 +141,8 @@ test("croise parties et engagements avant toute validation", () => {
   assert.equal(preview.matches[0].status, "played");
   assert.equal(preview.matches[0].scoreTeam1, 40);
   assert.equal(preview.matches[0].scoreTeam2, 32);
+  assert.equal(preview.engagements[0].responsibleName, "DUPONT Pierre");
+  assert.equal(preview.engagements[0].responsiblePhone, "0611223344");
 });
 
 test("bloque la prévisualisation si une équipe des parties manque aux engagements", () => {

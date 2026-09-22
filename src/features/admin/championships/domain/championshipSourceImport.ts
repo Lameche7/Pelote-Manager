@@ -35,6 +35,8 @@ export type ChampionshipImportEngagement = {
   teamLabel: string;
   clubName: string;
   teamNumber: string;
+  responsibleName: string | null;
+  responsiblePhone: string | null;
   players: ChampionshipImportPlayer[];
 };
 
@@ -138,6 +140,18 @@ const valueAt = (
 ) => {
   const index = columns.get(name);
   return index === undefined ? null : (row[index] ?? null);
+};
+
+const valueAtAny = (
+  row: unknown[],
+  columns: Map<string, number>,
+  names: string[],
+) => {
+  for (const name of names) {
+    const index = columns.get(name);
+    if (index !== undefined) return row[index] ?? null;
+  }
+  return null;
 };
 
 const excelDate = (serial: number) => {
@@ -315,6 +329,23 @@ export const parseChampionshipEngagementRows = (
       teamLabel,
       clubName: parsedTeam.clubName,
       teamNumber: parsedTeam.teamNumber,
+      responsibleName: nullableText(
+        valueAtAny(sourceRow, columns, [
+          "responsable",
+          "nom responsable",
+          "responsable equipe",
+          "responsable de l equipe",
+        ]),
+      ),
+      responsiblePhone: nullableText(
+        valueAtAny(sourceRow, columns, [
+          "tel responsable",
+          "telephone responsable",
+          "telephone du responsable",
+          "telephone responsable equipe",
+          "portable responsable",
+        ]),
+      ),
       players,
     });
   });
