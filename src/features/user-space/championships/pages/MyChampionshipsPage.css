@@ -749,3 +749,75 @@
   font-size: 0.75rem;
   opacity: 0.58;
 }
+
+
+/* Empêche les cartes de championnat d'élargir le viewport sur mobile. */
+.my-championships {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.my-championships__card,
+.my-championships__highlights,
+.my-championships__highlights > div,
+.my-championships__match,
+.my-championships__match-summary,
+.my-championships__match-main,
+.my-championships__calendar,
+.my-championships__calendar > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.my-championships__match-opponent-heading strong,
+.my-championships__opponent-club,
+.my-championships__opponent-players strong {
+  overflow-wrap: anywhere;
+}
+
+.my-championships__opponent-responsible {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.55rem;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.65rem;
+  background: rgb(148 163 184 / 10%);
+}
+
+.my-championships__opponent-responsible > span {
+  font-size: 0.72rem !important;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.62 !important;
+}
+
+.my-championships__opponent-responsible > strong {
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.my-championships__opponent-responsible a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.my-championships__opponent-responsible a:hover {
+  text-decoration: underline;
+}
+
+.my-championships__opponent-responsible svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+}
