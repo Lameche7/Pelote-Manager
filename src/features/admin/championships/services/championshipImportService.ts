@@ -157,6 +157,27 @@ export type ChampionshipUpdateApplyResult = {
   summary: ChampionshipUpdatePreview["summary"];
 };
 
+export type ChampionshipEngagementContactsUpdatePayload = {
+  competition: string;
+  specialty: string;
+  fileName: string;
+  checksum: string;
+  teams: Array<{
+    category: string;
+    clubName: string;
+    teamNumber: string;
+    responsibleName: string | null;
+    responsiblePhone: string | null;
+  }>;
+};
+
+export type ChampionshipEngagementContactsUpdateResult = {
+  championshipId: string;
+  teamCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+};
+
 const mapChampionship = (value: unknown): AdminChampionshipSummary => {
   const row = (value ?? {}) as Row;
   return {
@@ -294,6 +315,11 @@ const fail = (error: unknown, fallback: string): never => {
         "La mise à jour contient des incohérences. Corrigez-les avant validation.",
       );
     }
+    if (message === "Championship engagement contacts update is invalid") {
+      throw new Error(
+        "Le fichier engagements.csv ne correspond pas complètement à ce championnat.",
+      );
+    }
     if (message === "Championship federation club mapping is invalid") {
       throw new Error(
         "Le club officiel choisi ne peut pas être rattaché à ce club Pelote Manager.",
@@ -348,6 +374,32 @@ export const championshipImportService = {
     });
     if (error) fail(error, "Impossible de charger le championnat.");
     return mapDetail(data);
+  },
+
+  async applyEngagementContactsUpdate(
+    championshipId: string,
+    payload: ChampionshipEngagementContactsUpdatePayload,
+  ): Promise<ChampionshipEngagementContactsUpdateResult> {
+    const { data, error } = await rpc(
+      "admin_update_championship_team_contacts",
+      {
+        target_id: championshipId,
+        payload,
+      },
+    );
+    if (error) {
+      fail(
+        error,
+        "Impossible d’actualiser les responsables des équipes.",
+      );
+    }
+    const row = (data ?? {}) as Row;
+    return {
+      championshipId: String(row.championshipId ?? ""),
+      teamCount: Number(row.teamCount ?? 0),
+      updatedCount: Number(row.updatedCount ?? 0),
+      unchangedCount: Number(row.unchangedCount ?? 0),
+    };
   },
 
   async previewMatchesUpdate(
