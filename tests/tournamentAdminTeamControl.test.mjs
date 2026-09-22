@@ -188,12 +188,13 @@ test("le remplacement indique les champs obligatoires et rend le club facultatif
   assert.match(page, /Le prénom et le nom du remplaçant sont obligatoires/);
   assert.match(page, /L’e-mail et le téléphone du remplaçant sont obligatoires/);
   assert.match(service, /Le prénom, le nom, l’e-mail et le téléphone du remplaçant sont obligatoires/);
-  assert.doesNotMatch(
-    migration,
-    /replacement_club_name = ''[\s\S]*Tournament replacement player fields are incomplete/,
+  const replacementGuard = migration.slice(
+    migration.indexOf("new_fragment text := $new$"),
+    migration.indexOf("$new$;", migration.indexOf("new_fragment text := $new$")) + 6,
   );
+  assert.doesNotMatch(replacementGuard, /replacement_club_name = ''/);
   assert.match(
-    migration,
+    replacementGuard,
     /replacement_first_name = ''[\s\S]*replacement_last_name = ''[\s\S]*replacement_email = ''[\s\S]*replacement_phone = ''/,
   );
 });
