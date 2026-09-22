@@ -161,3 +161,36 @@ test("un report supprime l'ancienne occupation avant de recréer le créneau", a
   assert.match(fixMigration, /request\.proposal_kind = 'swap'/);
   assert.match(fixMigration, /reschedule_orphan_released/);
 });
+
+
+test("un échange libère les deux occupations calendrier avant de recréer les créneaux", () => {
+  const atomicSwapMigration = readFileSync(
+    new URL(
+      "../supabase/migrations/20260922154500_fix_reschedule_swap_calendar_atomicity.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  const releaseIndex = atomicSwapMigration.indexOf(
+    "event_resource.event_id in (target_event_id, swap_event_id)",
+  );
+  const targetSyncIndex = atomicSwapMigration.indexOf(
+    "public.sync_tournament_reschedule_match_event(\\n        request.match_id",
+  );
+  const swapSyncIndex = atomicSwapMigration.indexOf(
+    "public.sync_tournament_reschedule_match_event(\\n        request.swap_match_id",
+  );
+
+  assert.ok(releaseIndex >= 0);
+  assert.ok(targetSyncIndex > releaseIndex);
+  assert.ok(swapSyncIndex > targetSyncIndex);
+  assert.match(
+    atomicSwapMigration,
+    /delete from public\.calendar_occupations as occupation[\s\S]*using public\.event_resources as event_resource/,
+  );
+  assert.match(
+    atomicSwapMigration,
+    /calendar_occupations_no_overlap/,
+  );
+});
