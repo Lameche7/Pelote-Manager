@@ -831,6 +831,16 @@
   max-width: 100%;
 }
 
+/*
+ * Les vues "Ma poule" / "Toutes les poules" sont des enfants directs de la
+ * grille. Sans cette contrainte, leur largeur minimale suit le tableau (34rem)
+ * et le swipe horizontal part sur la page au lieu de rester dans le scroller.
+ */
+.my-championships__standings-wrap > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .my-championships__card,
 .my-championships__match {
   box-sizing: border-box;

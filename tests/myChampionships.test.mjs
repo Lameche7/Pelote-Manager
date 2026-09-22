@@ -132,6 +132,10 @@ test("les championnats utilisent le responsable d'équipe et restent stables en 
   assert.doesNotMatch(service, /get_my_championship_player_contacts/);
   assert.doesNotMatch(styles, /\.my-championships\s*\{[^}]*overflow-x:\s*hidden/s);
   assert.match(styles, /\.my-championships__table-scroll\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(
+    styles,
+    /\.my-championships__standings-wrap\s*>\s*div\s*\{[^}]*min-width:\s*0[^}]*max-width:\s*100%/s,
+  );
   assert.match(styles, /overflow-wrap: anywhere/);
   assert.match(migration, /responsible_name text/);
   assert.match(migration, /responsible_phone text/);
