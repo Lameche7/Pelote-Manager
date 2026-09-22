@@ -23,6 +23,12 @@ export type MyChampionshipContact = {
   phone: string;
 };
 
+export type MyChampionshipOpponentPlayer = {
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+};
+
 export type MyChampionshipStanding = {
   teamId: string;
   teamLabel: string;
@@ -71,6 +77,8 @@ export type MyChampionshipMatch = {
   teamSide: "a" | "b";
   opponentTeamId: string;
   opponentLabel: string;
+  opponentClubName: string | null;
+  opponentPlayers: MyChampionshipOpponentPlayer[];
   scheduledOn: string | null;
   scheduledTime: string | null;
   reportOn: string | null;
@@ -181,6 +189,12 @@ const mapChampionship = (row: Row): MyChampionship => ({
     teamSide: match.team_side === "b" ? "b" : "a",
     opponentTeamId: String(match.opponent_team_id ?? ""),
     opponentLabel: String(match.opponent_label ?? ""),
+    opponentClubName: nullableString(match.opponent_club_name),
+    opponentPlayers: rows(match.opponent_players).map((player) => ({
+      firstName: String(player.first_name ?? ""),
+      lastName: String(player.last_name ?? ""),
+      phone: null,
+    })),
     scheduledOn: nullableString(match.scheduled_on),
     scheduledTime: nullableString(match.scheduled_time),
     reportOn: nullableString(match.report_on),
@@ -298,6 +312,17 @@ export const myChampionshipsService = {
           submission: submissions.get(match.id) ?? null,
           reservation: reservations.get(match.id) ?? null,
           opponentContacts: contactsByTeam.get(match.opponentTeamId) ?? [],
+          opponentPlayers: match.opponentPlayers.map((player) => ({
+            ...player,
+            phone:
+              phoneByPlayer.get(
+                contactKey(
+                  match.opponentTeamId,
+                  player.firstName,
+                  player.lastName,
+                ),
+              ) ?? null,
+          })),
         })),
       }))
       .filter((item) => item.teamId);
