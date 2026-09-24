@@ -419,17 +419,41 @@ export function AdminTournamentPlanningPage() {
       const pdfText = (value: string) =>
         value
           .replace(/[–—]/g, "-")
-          .replace(/’/g, "'")
+          .replace(/[‘’]/g, "'")
           .replace(/œ/g, "oe")
           .replace(/Œ/g, "OE")
-          .replace(/[^\x20-\xFF]/g, "?")
-          .replace(/\\/g, "\\\\")
-          .replace(/\(/g, "\\(")
-          .replace(/\)/g, "\\)");
-      const clip = (value: string, max: number) =>
-        value.length > max ? `${value.slice(0, Math.max(0, max - 1))}…` : value;
+          .replace(/…/g, "...")
+          .replace(/→/g, "->")
+          .replace(/·/g, "-")
+          .normalize("NFC")
+          .replace(/[^\\x20-\\xFF]/g, "")
+          .replace(/\\\\/g, "\\\\\\\\")
+          .replace(/\\(/g, "\\\\(")
+          .replace(/\\)/g, "\\\\)");
       const line = (x: number, y: number, size: number, value: string) =>
-        `BT /F1 ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\n`;
+        `BT /F1 ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\\n`;
+      const fittedLine = (
+        x: number,
+        y: number,
+        width: number,
+        value: string,
+        preferredSize = 5.8,
+        minimumSize = 4.1,
+      ) => {
+        const estimatedWidth = (text: string, size: number) =>
+          [...text].reduce((sum, character) => {
+            if (" ilI.,'".includes(character)) return sum + size * 0.25;
+            if ("MW@%".includes(character)) return sum + size * 0.8;
+            return sum + size * 0.5;
+          }, 0);
+        const available = Math.max(4, width - 4);
+        const naturalWidth = estimatedWidth(value, preferredSize);
+        const size =
+          naturalWidth <= available
+            ? preferredSize
+            : Math.max(minimumSize, preferredSize * (available / naturalWidth));
+        return line(x, y, size, value);
+      };
 
       const pageWidth = 842;
       const pageHeight = 595;
@@ -473,11 +497,11 @@ export function AdminTournamentPlanningPage() {
             match.teamBLabel,
             reports.map(reportLabel).join(" · "),
           ];
-          const limits = [20, 14, 8, 29, 9, 9, 29, 55];
           x = left;
           values.forEach((value, index) => {
-            stream += "0.09 0.13 0.20 rg\n";
-            stream += line(x + 2, y + 3.5, 5.8, clip(value, limits[index]));
+            stream += "0.09 0.13 0.20 rg\\n";
+            const minimumSize = index === 3 || index === 6 || index === 7 ? 3.8 : 4.6;
+            stream += fittedLine(x + 2, y + 3.5, widths[index], value, 5.8, minimumSize);
             x += widths[index];
           });
         });
