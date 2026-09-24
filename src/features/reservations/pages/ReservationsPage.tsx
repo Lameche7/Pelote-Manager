@@ -74,6 +74,33 @@ function CalendarSkeleton() {
   );
 }
 
+function getContrastTextColor(color: string): "#111827" | "#ffffff" {
+  const hex = color.trim().replace("#", "");
+  const normalized =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((value) => value + value)
+          .join("")
+      : hex;
+
+  if (!/^[0-9a-f]{6}$/i.test(normalized)) return "#111827";
+
+  const channels = [0, 2, 4].map((offset) =>
+    Number.parseInt(normalized.slice(offset, offset + 2), 16) / 255,
+  );
+  const [red, green, blue] = channels.map((channel) =>
+    channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4,
+  );
+  const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  const contrastWithDark = (luminance + 0.05) / 0.05;
+  const contrastWithWhite = 1.05 / (luminance + 0.05);
+
+  return contrastWithDark >= contrastWithWhite ? "#111827" : "#ffffff";
+}
+
 function SlotCard({
   slot,
   timezone,
@@ -95,7 +122,10 @@ function SlotCard({
     const isChampionshipMatch = slot.occupationType === "championship_match";
     const isColoredMatch = isTournamentMatch || isChampionshipMatch;
     const style = slot.displayColor
-      ? ({ "--tournament-series-color": slot.displayColor } as CSSProperties)
+      ? ({
+          "--tournament-series-color": slot.displayColor,
+          "--tournament-series-contrast": getContrastTextColor(slot.displayColor),
+        } as CSSProperties)
       : undefined;
     return (
       <div
@@ -104,7 +134,7 @@ function SlotCard({
         aria-label={`${slotTime} : occupé par ${bookedBy}`}
       >
         <strong>{slotTime}</strong>
-        <span>
+        <span className={isColoredMatch ? "reservation-slot__match-badge" : undefined}>
           {isChampionshipMatch
             ? "Match championnat"
             : isTournamentMatch
