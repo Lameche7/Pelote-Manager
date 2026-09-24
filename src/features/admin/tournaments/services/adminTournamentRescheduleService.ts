@@ -152,8 +152,6 @@ const mapRequest = (row: Row): AdminTournamentRescheduleRequest => {
 const knownErrors: Record<string, string> = {
   "Tournament reschedule offline contact note is required":
     "Indiquez comment l’accord ou le refus a été recueilli hors application.",
-  "Tournament reschedule team can answer in the application":
-    "Cette équipe possède maintenant un compte relié : elle doit répondre depuis son espace.",
   "Tournament reschedule approval is not pending":
     "Cette équipe a déjà répondu à la demande.",
   "Tournament reschedule request is no longer pending":
