@@ -1,6 +1,6 @@
 import { supabase } from "@/infrastructure/supabase/client";
 
-export type ClubTvMediaKind = "shop" | "partner";
+export type ClubTvMediaKind = "shop" | "partner" | "poster";
 
 export type ClubTvMedia = {
   id: string;
@@ -9,6 +9,7 @@ export type ClubTvMedia = {
   storagePath: string;
   originalName: string;
   publicUrl: string;
+  activeUntil: string | null;
 };
 
 const MEDIA_BUCKET = "club-tv-media";
@@ -37,6 +38,7 @@ const mapMedia = (row: Record<string, unknown>): ClubTvMedia => ({
   storagePath: String(row.storage_path),
   originalName: String(row.original_name),
   publicUrl: publicUrlFor(String(row.storage_path)),
+  activeUntil: row.active_until ? String(row.active_until) : null,
 });
 
 const validateFile = (file: File) => {
@@ -54,7 +56,7 @@ export const clubMediaService = {
     const clubId = await currentClubId();
     const { data, error } = await supabase
       .from("club_tv_media")
-      .select("id, club_id, kind, storage_path, original_name, created_at")
+      .select("id, club_id, kind, storage_path, original_name, active_until, created_at")
       .eq("club_id", clubId)
       .order("created_at", { ascending: true });
 
@@ -62,7 +64,7 @@ export const clubMediaService = {
     return (data ?? []).map((row) => mapMedia(row as Record<string, unknown>));
   },
 
-  async upload(kind: ClubTvMediaKind, file: File): Promise<ClubTvMedia> {
+  async upload(kind: ClubTvMediaKind, file: File, activeUntil: string | null = null): Promise<ClubTvMedia> {
     validateFile(file);
     const clubId = await currentClubId();
     const extension = extensionByMimeType[file.type];
@@ -86,8 +88,9 @@ export const clubMediaService = {
         storage_path: storagePath,
         original_name: file.name || `image.${extension}`,
         created_by: (await supabase.auth.getUser()).data.user?.id ?? null,
+        active_until: kind === "poster" ? activeUntil : null,
       })
-      .select("id, club_id, kind, storage_path, original_name")
+      .select("id, club_id, kind, storage_path, original_name, active_until")
       .single();
 
     if (insertError) {
