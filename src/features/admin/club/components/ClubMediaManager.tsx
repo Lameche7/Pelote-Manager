@@ -1,4 +1,4 @@
-import { Handshake, ImagePlus, Megaphone, Shirt, Trash2 } from "lucide-react";
+import { Handshake, ImagePlus, Shirt, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   clubMediaService,
@@ -27,12 +27,6 @@ const sections: MediaSection[] = [
     title: "Logos et plaquettes",
     help: "Ajoutez des logos individuels ou une plaquette regroupant plusieurs partenaires.",
   },
-  {
-    kind: "poster",
-    eyebrow: "Affiches & messages",
-    title: "Écrans temporaires",
-    help: "Ajoutez une affiche qui rejoindra automatiquement la rotation du Mode TV pendant la durée choisie.",
-  },
 ];
 
 export function ClubMediaManager() {
@@ -40,8 +34,6 @@ export function ClubMediaManager() {
   const [status, setStatus] = useState("");
   const [busyKind, setBusyKind] = useState<ClubTvMediaKind | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [posterDuration, setPosterDuration] = useState("24");
-  const [customUntil, setCustomUntil] = useState("");
 
   useEffect(() => {
     clubMediaService
@@ -58,7 +50,6 @@ export function ClubMediaManager() {
     () => ({
       shop: media.filter((item) => item.kind === "shop"),
       partner: media.filter((item) => item.kind === "partner"),
-      poster: media.filter((item) => item.kind === "poster"),
     }),
     [media],
   );
@@ -70,21 +61,9 @@ export function ClubMediaManager() {
     setStatus("");
 
     try {
-      let activeUntil: string | null = null;
-      if (kind === "poster") {
-        if (posterDuration === "custom") {
-          const customDate = new Date(customUntil);
-          if (!customUntil || Number.isNaN(customDate.getTime()) || customDate <= new Date()) {
-            throw new Error("Choisissez une date et une heure de fin futures.");
-          }
-          activeUntil = customDate.toISOString();
-        } else {
-          activeUntil = new Date(Date.now() + Number(posterDuration) * 60 * 60 * 1000).toISOString();
-        }
-      }
       const uploaded: ClubTvMedia[] = [];
       for (const file of Array.from(files)) {
-        uploaded.push(await clubMediaService.upload(kind, file, activeUntil));
+        uploaded.push(await clubMediaService.upload(kind, file));
       }
       setMedia((current) => [...current, ...uploaded]);
       setStatus(
@@ -136,7 +115,7 @@ export function ClubMediaManager() {
       <div className="club-media-manager__sections">
         {sections.map((section) => {
           const items = byKind[section.kind];
-          const Icon = section.kind === "shop" ? Shirt : section.kind === "partner" ? Handshake : Megaphone;
+          const Icon = section.kind === "shop" ? Shirt : Handshake;
 
           return (
             <article className="club-media-section" key={section.kind}>
@@ -149,23 +128,6 @@ export function ClubMediaManager() {
                 </div>
               </header>
 
-              {section.kind === "poster" && (
-                <div className="club-media-duration">
-                  <label>Durée active
-                    <select value={posterDuration} onChange={(event) => setPosterDuration(event.target.value)}>
-                      <option value="24">24 heures</option>
-                      <option value="48">48 heures</option>
-                      <option value="72">72 heures</option>
-                      <option value="custom">Personnalisée</option>
-                    </select>
-                  </label>
-                  {posterDuration === "custom" && (
-                    <label>Fin d’affichage
-                      <input type="datetime-local" value={customUntil} onChange={(event) => setCustomUntil(event.target.value)} />
-                    </label>
-                  )}
-                </div>
-              )}
 
               <label className="club-media-upload">
                 <ImagePlus aria-hidden="true" />
@@ -195,9 +157,6 @@ export function ClubMediaManager() {
                       <img src={item.publicUrl} alt={item.originalName} />
                       <figcaption title={item.originalName}>
                         {item.originalName}
-                        {item.kind === "poster" && item.activeUntil && (
-                          <small>Actif jusqu’au {new Date(item.activeUntil).toLocaleString("fr-FR")}</small>
-                        )}
                       </figcaption>
                       <button
                         type="button"
