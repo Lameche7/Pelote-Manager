@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Copy, ExternalLink, Monitor, Save } from "lucide-react";
+import { Copy, ExternalLink, ImagePlus, Monitor, Save, Trash2 } from "lucide-react";
 import {
   adminTvSettingsService,
   type TvModeSettings,
 } from "@/features/admin/settings/services/adminTvSettingsService";
+import { clubMediaService, type ClubTvMedia } from "@/features/admin/club/services/clubMediaService";
 import "./AdminTvSettingsPage.css";
 
 const PUBLIC_TV_URL = "https://app.pelotemanager.fr/tv/pcl";
@@ -22,6 +23,11 @@ export function AdminTvSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [posters, setPosters] = useState<ClubTvMedia[]>([]);
+  const [posterDuration, setPosterDuration] = useState("24");
+  const [customUntil, setCustomUntil] = useState("");
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false);
+  const [deletingPosterId, setDeletingPosterId] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -47,6 +53,10 @@ export function AdminTvSettingsPage() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    clubMediaService.list().then((items) => setPosters(items.filter((item) => item.kind === "poster"))).catch(() => setError("Impossible de charger les affiches du Mode TV."));
   }, []);
 
   const selectedResourceCount = useMemo(
@@ -117,6 +127,56 @@ export function AdminTvSettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+
+  const uploadPoster = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    setIsUploadingPoster(true);
+    setError(null);
+    setMessage(null);
+    try {
+      let activeUntil: string;
+      if (posterDuration === "custom") {
+        const date = new Date(customUntil);
+        if (!customUntil || Number.isNaN(date.getTime()) || date <= new Date()) {
+          throw new Error("Choisissez une date et une heure de fin futures.");
+        }
+        activeUntil = date.toISOString();
+      } else {
+        activeUntil = new Date(Date.now() + Number(posterDuration) * 3_600_000).toISOString();
+      }
+      const uploaded = await clubMediaService.upload("poster", file, activeUntil);
+      setPosters((current) => [...current, uploaded]);
+      setMessage("L’affiche a été ajoutée à la rotation du Mode TV.");
+    } catch (uploadError: unknown) {
+      setError(uploadError instanceof Error ? uploadError.message : "Ajout de l’affiche impossible.");
+    } finally {
+      setIsUploadingPoster(false);
+    }
+  };
+
+  const removePoster = async (poster: ClubTvMedia) => {
+    setDeletingPosterId(poster.id);
+    setError(null);
+    try {
+      await clubMediaService.remove(poster);
+      setPosters((current) => current.filter((item) => item.id !== poster.id));
+      setMessage("Affiche supprimée.");
+    } catch (removeError: unknown) {
+      setError(removeError instanceof Error ? removeError.message : "Suppression impossible.");
+    } finally {
+      setDeletingPosterId(null);
+    }
+  };
+
+  const posterStatus = (poster: ClubTvMedia) => {
+    if (!poster.activeUntil) return "Inactive";
+    const remaining = new Date(poster.activeUntil).getTime() - Date.now();
+    if (remaining <= 0) return "Expirée";
+    const hours = Math.ceil(remaining / 3_600_000);
+    return hours >= 24 ? `Encore ${Math.ceil(hours / 24)} j` : `Encore ${hours} h`;
   };
 
   const copyPublicUrl = async () => {
@@ -316,6 +376,67 @@ export function AdminTvSettingsPage() {
           <strong>Réservé</strong>
           <span>Nom</span>
         </div>
+      </article>
+
+
+      <article className="admin-tv-settings__panel">
+        <div className="admin-tv-settings__panel-heading">
+          <div>
+            <h2>Affiches & messages temporaires</h2>
+            <p>Ajoutez une image qui apparaîtra comme un écran supplémentaire dans la rotation du Mode TV.</p>
+          </div>
+          <ImagePlus aria-hidden="true" />
+        </div>
+
+        <div className="admin-tv-settings__poster-controls">
+          <label>
+            Durée active
+            <select value={posterDuration} onChange={(event) => setPosterDuration(event.target.value)}>
+              <option value="24">24 heures</option>
+              <option value="48">48 heures</option>
+              <option value="72">72 heures</option>
+              <option value="custom">Personnalisée</option>
+            </select>
+          </label>
+          {posterDuration === "custom" && (
+            <label>
+              Fin d’affichage
+              <input type="datetime-local" value={customUntil} onChange={(event) => setCustomUntil(event.target.value)} />
+            </label>
+          )}
+          <label className="admin-tv-settings__poster-upload">
+            <ImagePlus aria-hidden="true" />
+            {isUploadingPoster ? "Ajout…" : "Ajouter une affiche"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={isUploadingPoster}
+              onChange={(event) => {
+                void uploadPoster(event.target.files);
+                event.currentTarget.value = "";
+              }}
+            />
+          </label>
+        </div>
+
+        {posters.length === 0 ? (
+          <p className="admin-tv-settings__poster-empty">Aucune affiche enregistrée.</p>
+        ) : (
+          <div className="admin-tv-settings__posters">
+            {posters.map((poster) => (
+              <figure className="admin-tv-settings__poster" key={poster.id}>
+                <img src={poster.publicUrl} alt={poster.originalName} />
+                <figcaption>
+                  <strong>{poster.originalName}</strong>
+                  <span>{posterStatus(poster)}</span>
+                </figcaption>
+                <button type="button" disabled={deletingPosterId !== null} onClick={() => void removePoster(poster)} aria-label={`Supprimer ${poster.originalName}`}>
+                  <Trash2 aria-hidden="true" />
+                </button>
+              </figure>
+            ))}
+          </div>
+        )}
       </article>
 
       <article className="admin-tv-settings__panel">
