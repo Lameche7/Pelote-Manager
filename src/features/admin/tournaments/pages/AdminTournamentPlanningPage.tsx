@@ -426,12 +426,12 @@ export function AdminTournamentPlanningPage() {
           .replace(/→/g, "->")
           .replace(/·/g, "-")
           .normalize("NFC")
-          .replace(/[^\\x20-\\xFF]/g, "")
-          .replace(/\\\\/g, "\\\\\\\\")
-          .replace(/\\(/g, "\\\\(")
-          .replace(/\\)/g, "\\\\)");
+          .replace(/[^\x20-\xFF]/g, "")
+          .replace(/\\/g, "\\\\")
+          .replace(/\(/g, "\\(")
+          .replace(/\)/g, "\\)");
       const line = (x: number, y: number, size: number, value: string) =>
-        `BT /F1 ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\\n`;
+        `BT /F1 ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\n`;
       const fittedLine = (
         x: number,
         y: number,
@@ -499,7 +499,7 @@ export function AdminTournamentPlanningPage() {
           ];
           x = left;
           values.forEach((value, index) => {
-            stream += "0.09 0.13 0.20 rg\\n";
+            stream += "0.09 0.13 0.20 rg\n";
             const minimumSize = index === 3 || index === 6 || index === 7 ? 3.8 : 4.6;
             stream += fittedLine(x + 2, y + 3.5, widths[index], value, 5.8, minimumSize);
             x += widths[index];
