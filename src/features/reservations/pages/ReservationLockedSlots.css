@@ -93,10 +93,17 @@
   background: var(--tournament-series-color);
 }
 
-.reservation-slot--tournament span {
-  color: var(--tournament-series-color);
+.reservation-slot--tournament .reservation-slot__match-badge {
+  align-self: flex-start;
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.14rem 0.42rem;
+  border-radius: 0.4rem;
+  background: var(--tournament-series-color);
+  color: var(--tournament-series-contrast, #111827);
   opacity: 1;
   font-weight: 850;
+  line-height: 1.15;
 }
 
 .reservation-slot--tournament small {
