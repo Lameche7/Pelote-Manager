@@ -130,10 +130,7 @@ export function AdminTournamentReschedulePage() {
     (request) => request.status === "approved",
   ).length;
   const blockedCount = active.filter((request) =>
-    request.approvals.some(
-      (approval) =>
-        approval.decision === "pending" && approval.appActorCount === 0,
-    ),
+    request.approvals.some((approval) => approval.decision === "pending"),
   ).length;
 
   const recordOfflineDecision = async (
@@ -291,9 +288,8 @@ export function AdminTournamentReschedulePage() {
 
       <div className="admin-reschedules__list">
         {visible.map((request) => {
-          const missingActors = request.approvals.filter(
-            (approval) =>
-              approval.decision === "pending" && approval.appActorCount === 0,
+          const pendingApprovals = request.approvals.filter(
+            (approval) => approval.decision === "pending",
           );
           return (
             <article
@@ -379,15 +375,15 @@ export function AdminTournamentReschedulePage() {
                 ))}
               </div>
 
-              {missingActors.length > 0 && request.status === "pending" && (
+              {pendingApprovals.length > 0 && request.status === "pending" && (
                 <div className="admin-reschedules__offline">
-                  <strong>À contacter hors application</strong>
+                  <strong>Réponse obtenue hors application</strong>
                   <p>
-                    Pelote Manager n’invente aucun accord. Après avoir
-                    réellement contacté l’équipe, enregistrez sa réponse et le
-                    moyen de contact utilisé.
+                    Si vous avez réellement obtenu la réponse de l’équipe par
+                    téléphone, message ou directement au club, vous pouvez
+                    l’enregistrer ici, même si un compte est relié.
                   </p>
-                  {missingActors.map((approval) => {
+                  {pendingApprovals.map((approval) => {
                     const key = `${request.id}:${approval.teamId}`;
                     return (
                       <div className="admin-reschedules__offline-row" key={key}>
