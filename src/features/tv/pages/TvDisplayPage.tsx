@@ -64,7 +64,8 @@ const QR_ENDPOINT = "https://quickchart.io/qr";
 
 type TvTournamentView =
   `tournament:${string}:${string}:${TvTournamentSeriesPage}`;
-type TvView = "today" | "week" | "club" | TvTournamentView;
+type TvPosterView = `poster:${string}`;
+type TvView = "today" | "week" | "club" | TvTournamentView | TvPosterView;
 
 const tournamentViewKey = (
   series: TvTournamentSeries,
@@ -167,6 +168,7 @@ const viewEyebrow = (
   if (view === "today") return "Réservations du jour";
   if (view === "week") return "Planning des 7 prochains jours";
   if (view === "club") return "Boutique & partenaires";
+  if (view.startsWith("poster:")) return "Affiche du club";
   return activeTournamentSeries
     ? `Tournoi · ${activeTournamentSeries.seriesName} · ${
         tournamentPageFromView(view) === "ranking"
@@ -332,6 +334,11 @@ export function TvDisplayPage() {
     tokenIsValid,
   ]);
 
+  const activePosters = useMemo(
+    () => tvMedia.filter((item) => item.kind === "poster"),
+    [tvMedia],
+  );
+
   const viewOrder = useMemo<TvView[]>(
     () => [
       "today",
@@ -341,8 +348,9 @@ export function TvDisplayPage() {
         tournamentViewKey(series, "matches"),
       ]),
       "club",
+      ...activePosters.map((poster) => `poster:${poster.id}` as TvPosterView),
     ],
-    [tournamentSeries],
+    [activePosters, tournamentSeries],
   );
 
   const showPreviousView = useCallback(() => {
@@ -389,6 +397,10 @@ export function TvDisplayPage() {
     () =>
       tvMedia.filter((item) => item.kind === "shop").slice(0, MAX_SHOP_MEDIA),
     [tvMedia],
+  );
+  const activePoster = useMemo(
+    () => activePosters.find((item) => activeView === `poster:${item.id}`) ?? null,
+    [activePosters, activeView],
   );
   const partnerMedia = useMemo(
     () =>
@@ -646,6 +658,12 @@ export function TvDisplayPage() {
         />
       )}
 
+      {activePoster && (
+        <section className="tv-display__poster tv-display__view" aria-label="Affiche temporaire du club" key={activePoster.id}>
+          <img src={activePoster.publicUrl} alt={activePoster.originalName} />
+        </section>
+      )}
+
       {activeView === "club" && (
         <section
           className="tv-display__promotion tv-display__view"
@@ -745,6 +763,12 @@ export function TvDisplayPage() {
             <>
               <ShoppingBag aria-hidden="true" />
               Boutique & partenaires
+            </>
+          )}
+          {activePoster && (
+            <>
+              <Megaphone aria-hidden="true" />
+              Affiche temporaire
             </>
           )}
         </span>
