@@ -8,7 +8,7 @@ import {
 import "./ClubMediaManager.css";
 
 type MediaSection = {
-  kind: ClubTvMediaKind;
+  kind: Extract<ClubTvMediaKind, "shop" | "partner">;
   eyebrow: string;
   title: string;
   help: string;
