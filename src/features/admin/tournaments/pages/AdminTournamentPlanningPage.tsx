@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Printer } from "lucide-react";
 import {
   adminTournamentPlanningService,
   type TournamentPlanningSeries,
@@ -24,6 +25,7 @@ import {
   type PlanningMatch,
   type PlanningSlot,
 } from "@/features/tournaments/domain/planningEngine";
+import { adminTournamentRescheduleService, type AdminTournamentRescheduleRequest } from "@/features/admin/tournaments/services/adminTournamentRescheduleService";
 import "./AdminTournamentPlanningPage.css";
 
 const statusLabels: Record<string, string> = {
@@ -119,6 +121,7 @@ export function AdminTournamentPlanningPage() {
   const [savingColors, setSavingColors] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [printing, setPrinting] = useState(false);
 
   const hydrate = (loaded: TournamentPlanningWorkspace) => {
     setWorkspace(loaded);
@@ -343,6 +346,92 @@ export function AdminTournamentPlanningPage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const printPlanning = async () => {
+    if (!workspace) return;
+    setPrinting(true);
+    setError("");
+    try {
+      const requests = await adminTournamentRescheduleService.list(workspace.tournament.id);
+      const activeRequests = requests.filter((request) =>
+        request.status === "pending" || request.status === "approved",
+      );
+      const requestsByMatch = new Map<string, AdminTournamentRescheduleRequest[]>();
+      activeRequests.forEach((request) => {
+        requestsByMatch.set(request.matchId, [...(requestsByMatch.get(request.matchId) ?? []), request]);
+      });
+
+      const poolIds = [...new Set(workspace.matches.map((match) => match.poolId))];
+      const poolLabels = new Map(poolIds.map((id, index) => [id, String.fromCharCode(65 + index)]));
+      const dateTime = new Intl.DateTimeFormat("fr-FR", {
+        dateStyle: "short",
+        timeStyle: "short",
+      }).format(new Date());
+      const esc = (value: string) =>
+        value.replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;",
+        })[char] ?? char);
+      const date = (value: string) => {
+        const [year, month, day] = value.split("-");
+        return `${day}/${month}/${year}`;
+      };
+      const reportLabel = (request: AdminTournamentRescheduleRequest) => {
+        const target = `${date(request.target.playDate)} ${request.target.startsAt}`;
+        if (request.proposalKind === "swap" && request.swap) {
+          return `Échange demandé → ${target} (${request.target.resourceName})`;
+        }
+        return `Report demandé → ${target} (${request.target.resourceName})`;
+      };
+      const rows = scheduledRows.map((row) => {
+        const reports = requestsByMatch.get(row.match.id) ?? [];
+        return `<tr>
+          <td>${esc(date(row.slot.date))} ${esc(formatTime(row.slot.startsAt))}</td>
+          <td>${esc(row.series?.name ?? "Série")}</td>
+          <td class="center">${esc(poolLabels.get(row.match.poolId) ?? "")}</td>
+          <td class="team">${esc(teamName(row.match.teamAId))}</td>
+          <td class="score"></td><td class="score"></td>
+          <td class="team">${esc(teamName(row.match.teamBId))}</td>
+          <td class="report">${reports.map(reportLabel).map(esc).join("<br>")}</td>
+        </tr>`;
+      }).join("");
+
+      const printWindow = window.open("", "_blank", "noopener,noreferrer");
+      if (!printWindow) throw new Error("Le navigateur a bloqué l’ouverture de la fenêtre d’impression.");
+      printWindow.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8">
+        <title>Planning - ${esc(workspace.tournament.name)}</title>
+        <style>
+          @page { size: A4 landscape; margin: 8mm; }
+          * { box-sizing: border-box; }
+          body { margin: 0; font-family: Arial, sans-serif; color: #172033; }
+          h1 { margin: 0 0 2mm; font-size: 14pt; }
+          .meta { margin: 0 0 4mm; font-size: 8pt; color: #536277; }
+          table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 6.7pt; }
+          thead { display: table-header-group; }
+          th { padding: 2.2px 4px; background: #4f81bd; color: white; border: 1px solid white; text-align: left; }
+          td { padding: 2px 4px; border: 1px solid white; vertical-align: middle; }
+          tbody tr:nth-child(odd) td { background: #dbe6f1; }
+          tbody tr:nth-child(even) td { background: #b8cce4; }
+          th:nth-child(1) { width: 12%; } th:nth-child(2) { width: 10%; } th:nth-child(3) { width: 5%; }
+          th:nth-child(4), th:nth-child(7) { width: 18%; }
+          th:nth-child(5), th:nth-child(6) { width: 5%; }
+          th:nth-child(8) { width: 27%; }
+          .center, .score { text-align: center; } .team { text-align: right; font-weight: 600; }
+          .report { font-weight: 700; } tr { break-inside: avoid; }
+        </style></head><body>
+        <h1>${esc(workspace.tournament.name)} — Planning des rencontres</h1>
+        <p class="meta">Planning imprimé le ${esc(dateTime)} · ${scheduledRows.length} rencontre(s) · ${activeRequests.length} demande(s) de report en cours</p>
+        <table><thead><tr><th>Créneau</th><th>Série</th><th>Poule</th><th>Équipe 1</th><th>Score 1</th><th>Score 2</th><th>Équipe 2</th><th>Report en cours</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+        <script>window.addEventListener("load",()=>{window.print();});<\/script>
+        </body></html>`);
+      printWindow.document.close();
+    } catch (printError) {
+      setError(printError instanceof Error ? printError.message : "Impossible de préparer l’impression du planning.");
+    } finally {
+      setPrinting(false);
     }
   };
 
@@ -575,6 +664,14 @@ export function AdminTournamentPlanningPage() {
           </select>
         </label>
         <div className="admin-tournament-planning__toolbar-actions">
+          <button
+            type="button"
+            disabled={!workspace || printing || scheduledRows.length === 0}
+            onClick={() => void printPlanning()}
+          >
+            <Printer aria-hidden="true" />
+            {printing ? "Préparation…" : "Imprimer le planning"}
+          </button>
           <button
             type="button"
             disabled={!workspace || saving}
