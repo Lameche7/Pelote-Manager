@@ -1,6 +1,6 @@
 import { supabase } from "@/infrastructure/supabase/client";
 
-export type TvMediaKind = "shop" | "partner";
+export type TvMediaKind = "shop" | "partner" | "poster";
 
 export type TvMediaAsset = {
   id: string;
@@ -8,6 +8,7 @@ export type TvMediaAsset = {
   storagePath: string;
   originalName: string;
   publicUrl: string;
+  activeUntil: string | null;
 };
 
 const MEDIA_BUCKET = "club-tv-media";
@@ -29,6 +30,7 @@ export const tvMediaService = {
       storagePath: String(row.storage_path),
       originalName: String(row.original_name),
       publicUrl: publicUrlFor(String(row.storage_path)),
+      activeUntil: row.active_until ? String(row.active_until) : null,
     }));
   },
 };
