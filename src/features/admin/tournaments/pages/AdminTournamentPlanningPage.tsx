@@ -389,6 +389,7 @@ export function AdminTournamentPlanningPage() {
       setError("Aucun planning publié n’est disponible pour ce tournoi.");
       return;
     }
+
     setPrinting(true);
     setError("");
     try {
@@ -400,37 +401,130 @@ export function AdminTournamentPlanningPage() {
       activeRequests.forEach((request) => {
         requestsByMatch.set(request.matchId, [...(requestsByMatch.get(request.matchId) ?? []), request]);
       });
-      const dateTime = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date());
-      const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;",
-      })[char] ?? char);
+
       const date = (value: string) => {
         const [year, month, day] = value.split("-");
         return year && month && day ? `${day}/${month}/${year}` : value;
       };
       const reportLabel = (request: AdminTournamentRescheduleRequest) => {
         const target = `${date(request.target.playDate)} ${request.target.startsAt}`;
-        return `${request.proposalKind === "swap" ? "Échange" : "Report"} demandé → ${target} (${request.target.resourceName})`;
+        return `${request.proposalKind === "swap" ? "Échange" : "Report"} → ${target}`;
       };
       const matches = [...printable.matches].sort((a, b) =>
-        `${a.playDate}|${a.startsAt}|${a.resourceName}`.localeCompare(`${b.playDate}|${b.startsAt}|${b.resourceName}`),
+        `${a.playDate}|${a.startsAt}|${a.resourceName}`.localeCompare(
+          `${b.playDate}|${b.startsAt}|${b.resourceName}`,
+        ),
       );
-      const rows = matches.map((match) => {
-        const reports = requestsByMatch.get(match.id) ?? [];
-        const score = match.result?.score.sets ?? [];
-        const scoreA = score.length ? score.map((set) => set.teamA).join(" / ") : "";
-        const scoreB = score.length ? score.map((set) => set.teamB).join(" / ") : "";
-        const pool = match.phase === "pools" ? String(match.poolNumber ?? "") : "Finales";
-        return `<tr><td>${esc(date(match.playDate))} ${esc(match.startsAt)}</td><td>${esc(match.seriesName)}</td><td class="center">${esc(pool)}</td><td class="team">${esc(match.teamALabel)}</td><td class="score">${esc(scoreA)}</td><td class="score">${esc(scoreB)}</td><td class="team">${esc(match.teamBLabel)}</td><td class="report">${reports.map(reportLabel).map(esc).join("<br>")}</td></tr>`;
-      }).join("");
-      const printWindow = window.open("", "_blank", "noopener,noreferrer");
-      if (!printWindow) throw new Error("Le navigateur a bloqué l’ouverture de la fenêtre d’impression.");
-      printWindow.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Planning - ${esc(printable.name)}</title><style>
-        @page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#172033}h1{margin:0 0 2mm;font-size:14pt}.meta{margin:0 0 4mm;font-size:8pt;color:#536277}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:6.7pt}thead{display:table-header-group}th{padding:2.2px 4px;background:#4f81bd;color:white;border:1px solid white;text-align:left}td{padding:2px 4px;border:1px solid white;vertical-align:middle}tbody tr:nth-child(odd) td{background:#dbe6f1}tbody tr:nth-child(even) td{background:#b8cce4}th:nth-child(1){width:12%}th:nth-child(2){width:10%}th:nth-child(3){width:5%}th:nth-child(4),th:nth-child(7){width:18%}th:nth-child(5),th:nth-child(6){width:5%}th:nth-child(8){width:27%}.center,.score{text-align:center}.team{text-align:right;font-weight:600}.report{font-weight:700}tr{break-inside:avoid}
-      </style></head><body><h1>${esc(printable.name)} — Planning des rencontres</h1><p class="meta">Planning imprimé le ${esc(dateTime)} · ${matches.length} rencontre(s) · ${activeRequests.length} demande(s) de report en cours</p><table><thead><tr><th>Créneau</th><th>Série</th><th>Poule</th><th>Équipe 1</th><th>Score 1</th><th>Score 2</th><th>Équipe 2</th><th>Report en cours</th></tr></thead><tbody>${rows}</tbody></table><script>window.addEventListener("load",()=>window.print());<\/script></body></html>`);
-      printWindow.document.close();
+
+      const pdfText = (value: string) =>
+        value
+          .replace(/[–—]/g, "-")
+          .replace(/’/g, "'")
+          .replace(/œ/g, "oe")
+          .replace(/Œ/g, "OE")
+          .replace(/[^\x20-\xFF]/g, "?")
+          .replace(/\\/g, "\\\\")
+          .replace(/\(/g, "\\(")
+          .replace(/\)/g, "\\)");
+      const clip = (value: string, max: number) =>
+        value.length > max ? `${value.slice(0, Math.max(0, max - 1))}…` : value;
+      const line = (x: number, y: number, size: number, value: string) =>
+        `BT /F1 ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\n`;
+
+      const pageWidth = 842;
+      const pageHeight = 595;
+      const left = 22;
+      const top = 555;
+      const rowHeight = 12;
+      const rowsPerPage = 39;
+      const widths = [83, 62, 35, 135, 42, 42, 135, 264];
+      const headers = ["Créneau", "Série", "Poule", "Équipe 1", "Score 1", "Score 2", "Équipe 2", "Report en cours"];
+      const pages: string[] = [];
+
+      for (let pageStart = 0; pageStart < matches.length; pageStart += rowsPerPage) {
+        const pageMatches = matches.slice(pageStart, pageStart + rowsPerPage);
+        let stream = "";
+        stream += line(left, top + 14, 11, `${printable.name} - Planning des rencontres`);
+        const stamp = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date());
+        stream += line(left, top + 2, 6.5, `PDF généré le ${stamp} · ${matches.length} rencontre(s) · ${activeRequests.length} report(s) en cours`);
+
+        let x = left;
+        stream += "0.31 0.51 0.74 rg\n";
+        stream += `${left} ${top - 14} ${widths.reduce((sum, width) => sum + width, 0)} ${rowHeight} re f\n`;
+        headers.forEach((header, index) => {
+          stream += "1 1 1 rg\n";
+          stream += line(x + 2, top - 10, 6.2, header);
+          x += widths[index];
+        });
+
+        pageMatches.forEach((match, rowIndex) => {
+          const y = top - 14 - (rowIndex + 1) * rowHeight;
+          const shade = rowIndex % 2 === 0 ? "0.86 0.90 0.95" : "0.72 0.80 0.89";
+          stream += `${shade} rg\n${left} ${y} ${widths.reduce((sum, width) => sum + width, 0)} ${rowHeight} re f\n`;
+          const reports = requestsByMatch.get(match.id) ?? [];
+          const score = match.result?.score.sets ?? [];
+          const values = [
+            `${date(match.playDate)} ${match.startsAt}`,
+            match.seriesName,
+            match.phase === "pools" ? String(match.poolNumber ?? "") : "Finales",
+            match.teamALabel,
+            score.length ? score.map((set) => set.teamA).join("/") : "",
+            score.length ? score.map((set) => set.teamB).join("/") : "",
+            match.teamBLabel,
+            reports.map(reportLabel).join(" · "),
+          ];
+          const limits = [20, 14, 8, 29, 9, 9, 29, 55];
+          x = left;
+          values.forEach((value, index) => {
+            stream += "0.09 0.13 0.20 rg\n";
+            stream += line(x + 2, y + 3.5, 5.8, clip(value, limits[index]));
+            x += widths[index];
+          });
+        });
+        pages.push(stream);
+      }
+
+      const objects: string[] = [];
+      objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+      const pageObjectIds: number[] = [];
+      const contentObjectIds: number[] = [];
+      let nextId = 4;
+      pages.forEach(() => {
+        pageObjectIds.push(nextId++);
+        contentObjectIds.push(nextId++);
+      });
+      objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+      objects[2] = `<< /Type /Pages /Count ${pages.length} /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(" ")}] >>`;
+      pages.forEach((stream, index) => {
+        objects[pageObjectIds[index]] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectIds[index]} 0 R >>`;
+        objects[contentObjectIds[index]] = `<< /Length ${stream.length} >>\nstream\n${stream}endstream`;
+      });
+
+      let pdf = "%PDF-1.4\n%âãÏÓ\n";
+      const offsets: number[] = [0];
+      for (let id = 1; id < objects.length; id += 1) {
+        offsets[id] = pdf.length;
+        pdf += `${id} 0 obj\n${objects[id]}\nendobj\n`;
+      }
+      const xref = pdf.length;
+      pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+      for (let id = 1; id < objects.length; id += 1) {
+        pdf += `${String(offsets[id]).padStart(10, "0")} 00000 n \n`;
+      }
+      pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+
+      const bytes = Uint8Array.from(pdf, (character) => character.charCodeAt(0) & 0xff);
+      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `planning-${printable.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "tournoi"}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      setMessage("PDF du planning généré.");
     } catch (printError) {
-      setError(printError instanceof Error ? printError.message : "Impossible de préparer l’impression du planning.");
+      setError(printError instanceof Error ? printError.message : "Impossible de générer le PDF du planning.");
     } finally {
       setPrinting(false);
     }
@@ -671,7 +765,7 @@ export function AdminTournamentPlanningPage() {
             onClick={() => void printPlanning()}
           >
             <Printer aria-hidden="true" />
-            {printing ? "Préparation…" : "Imprimer le planning"}
+            {printing ? "Génération…" : "Générer le PDF"}
           </button>
           <button
             type="button"
