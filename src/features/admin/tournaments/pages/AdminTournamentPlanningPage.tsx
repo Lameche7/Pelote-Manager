@@ -389,6 +389,16 @@ export function AdminTournamentPlanningPage() {
       setError("Aucun planning publié n’est disponible pour ce tournoi.");
       return;
     }
+    // Open synchronously from the click gesture. Firefox can otherwise create
+    // an about:blank tab that loses its usable window context after the await.
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      setError("Le navigateur a bloqué l’ouverture de la fenêtre d’impression.");
+      return;
+    }
+    printWindow.document.write("<!doctype html><html><head><title>Préparation du planning…</title></head><body><p>Préparation du planning…</p></body></html>");
+    printWindow.document.close();
+
     setPrinting(true);
     setError("");
     try {
@@ -423,13 +433,13 @@ export function AdminTournamentPlanningPage() {
         const pool = match.phase === "pools" ? String(match.poolNumber ?? "") : "Finales";
         return `<tr><td>${esc(date(match.playDate))} ${esc(match.startsAt)}</td><td>${esc(match.seriesName)}</td><td class="center">${esc(pool)}</td><td class="team">${esc(match.teamALabel)}</td><td class="score">${esc(scoreA)}</td><td class="score">${esc(scoreB)}</td><td class="team">${esc(match.teamBLabel)}</td><td class="report">${reports.map(reportLabel).map(esc).join("<br>")}</td></tr>`;
       }).join("");
-      const printWindow = window.open("", "_blank", "noopener,noreferrer");
-      if (!printWindow) throw new Error("Le navigateur a bloqué l’ouverture de la fenêtre d’impression.");
+      printWindow.document.open();
       printWindow.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Planning - ${esc(printable.name)}</title><style>
         @page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#172033}h1{margin:0 0 2mm;font-size:14pt}.meta{margin:0 0 4mm;font-size:8pt;color:#536277}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:6.7pt}thead{display:table-header-group}th{padding:2.2px 4px;background:#4f81bd;color:white;border:1px solid white;text-align:left}td{padding:2px 4px;border:1px solid white;vertical-align:middle}tbody tr:nth-child(odd) td{background:#dbe6f1}tbody tr:nth-child(even) td{background:#b8cce4}th:nth-child(1){width:12%}th:nth-child(2){width:10%}th:nth-child(3){width:5%}th:nth-child(4),th:nth-child(7){width:18%}th:nth-child(5),th:nth-child(6){width:5%}th:nth-child(8){width:27%}.center,.score{text-align:center}.team{text-align:right;font-weight:600}.report{font-weight:700}tr{break-inside:avoid}
       </style></head><body><h1>${esc(printable.name)} — Planning des rencontres</h1><p class="meta">Planning imprimé le ${esc(dateTime)} · ${matches.length} rencontre(s) · ${activeRequests.length} demande(s) de report en cours</p><table><thead><tr><th>Créneau</th><th>Série</th><th>Poule</th><th>Équipe 1</th><th>Score 1</th><th>Score 2</th><th>Équipe 2</th><th>Report en cours</th></tr></thead><tbody>${rows}</tbody></table><script>window.addEventListener("load",()=>window.print());<\/script></body></html>`);
       printWindow.document.close();
     } catch (printError) {
+      printWindow.close();
       setError(printError instanceof Error ? printError.message : "Impossible de préparer l’impression du planning.");
     } finally {
       setPrinting(false);
