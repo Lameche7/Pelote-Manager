@@ -475,10 +475,10 @@ export function TournamentResultsBoard({
                   </header>
 
                   <div className="tournament-pool-results__matches">
-                    <h3>Matchs</h3>
+                    <h3>Parties</h3>
                     {pool.matches.length === 0 ? (
                       <p className="tournament-results-board__empty">
-                        Aucun match programmé.
+                        Aucune partie programmé.
                       </p>
                     ) : (
                       <div className="tournament-match-results-list">
