@@ -103,7 +103,7 @@ export function PrivacyPage() {
           Selon les fonctions utilisées : nom, prénom, adresse email, données de
           compte, informations de licence lorsque vous choisissez de la
           rattacher, participations aux tournois, équipe, partenaire, poste,
-          disponibilités, matchs, résultats, demandes de report, réservations,
+          disponibilités, parties, résultats, demandes de report, réservations,
           notifications et traces techniques nécessaires à la sécurité du
           service.
         </p>
