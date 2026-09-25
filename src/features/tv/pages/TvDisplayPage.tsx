@@ -756,7 +756,7 @@ export function TvDisplayPage() {
               {activeTournamentSeries.seriesName} ·{" "}
               {activeTournamentPage === "ranking"
                 ? "Classement"
-                : "Résultats & prochains parties"}
+                : "Résultats & prochaines parties"}
             </>
           )}
           {activeView === "club" && (
