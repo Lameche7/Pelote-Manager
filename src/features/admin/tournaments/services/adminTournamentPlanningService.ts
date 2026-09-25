@@ -60,7 +60,7 @@ const knownErrors: Record<string, string> = {
   "Tournament planning is not editable at this stage":
     "Le planning ne peut plus être modifié à cette étape.",
   "Tournament pools are incomplete":
-    "Les poules doivent être complètes avant de préparer les matchs.",
+    "Les poules doivent être complètes avant de préparer les parties.",
   "Tournament planning payload is invalid":
     "La proposition de planning est invalide.",
   "Tournament planning match is invalid":

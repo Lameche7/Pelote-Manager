@@ -190,7 +190,7 @@ export function AdminErrebotAvailabilityImport({
     if (
       (context.poolsKnownTeamCount > 0 || context.finalsKnownTeamCount > 0) &&
       !window.confirm(
-        "Pour les équipes présentes dans le classeur, les disponibilités déjà importées seront remplacées. Aucun match ni tableau final ne sera créé ou modifié. Continuer ?",
+        "Pour les équipes présentes dans le classeur, les disponibilités déjà importées seront remplacées. Aucune partie ni tableau final ne sera créé ou modifié. Continuer ?",
       )
     ) {
       return;
@@ -209,7 +209,7 @@ export function AdminErrebotAvailabilityImport({
       await loadContext();
       await onImported?.();
       setMessage(
-        `${result.importedSlotCount} disponibilités importées pour ${result.importedTeamCount} équipes. Poules : ${result.poolsKnownTeamCount}/${result.acceptedTeamCount}. Futures phases finales : ${result.finalsKnownTeamCount}/${result.acceptedTeamCount}. Aucun match final Errebot n’a été importé.`,
+        `${result.importedSlotCount} disponibilités importées pour ${result.importedTeamCount} équipes. Poules : ${result.poolsKnownTeamCount}/${result.acceptedTeamCount}. Futures phases finales : ${result.finalsKnownTeamCount}/${result.acceptedTeamCount}. Aucune partie final Errebot n’a été importé.`,
       );
       setItems([]);
       setDeclarations([]);

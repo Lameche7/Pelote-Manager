@@ -974,7 +974,7 @@ export function AdminTournamentTeamsPage() {
             </header>
 
             <p className="admin-tournament-teams__alert" role="status">
-              L’équipe, la série, la poule, le planning et les matchs sont
+              L’équipe, la série, la poule, le planning et les parties sont
               conservés. Seul le joueur est remplacé.
             </p>
 

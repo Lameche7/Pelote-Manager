@@ -28,7 +28,7 @@ const formatTime = (value: string) => value.slice(0, 5);
 
 const occupationTypeLabels: Record<string, string> = {
   reservation: "Réservation",
-  match: "Match",
+  match: "Partie",
   closure: "Fermeture",
   maintenance: "Maintenance",
   club_event: "Évènement club",
@@ -198,7 +198,7 @@ export function AdminTournamentPublicationPage() {
       ? `\n\n${preview.conflicts.length} occupation(s) concurrente(s) seront automatiquement libérées : les réservations concernées seront annulées avec le motif « Priorité tournoi », les autres tournois seront retirés du calendrier et les événements ou blocages seront supplantés.`
       : "";
     const confirmed = window.confirm(
-      `Publier ${preview.matchCount} matchs de « ${preview.tournament.name} » dans le calendrier des réservations ?${priorityCopy}\n\nLe tournoi devient prioritaire sur les occupations existantes aux mêmes horaires.`,
+      `Publier ${preview.matchCount} parties de « ${preview.tournament.name} » dans le calendrier des réservations ?${priorityCopy}\n\nLe tournoi devient prioritaire sur les occupations existantes aux mêmes horaires.`,
     );
     if (!confirmed) return;
 
@@ -226,7 +226,7 @@ export function AdminTournamentPublicationPage() {
             : "",
         ].filter(Boolean);
         setMessage(
-          `${result.publishedCount} matchs publiés en priorité.${impacts.length > 0 ? ` ${impacts.join(" · ")}.` : ""}`,
+          `${result.publishedCount} parties publiés en priorité.${impacts.length > 0 ? ` ${impacts.join(" · ")}.` : ""}`,
         );
       } else {
         const count = await adminTournamentPublicationService.publish(
@@ -234,7 +234,7 @@ export function AdminTournamentPublicationPage() {
         );
         await refresh(preview.tournament.id);
         setMessage(
-          `${count} matchs publiés. Les créneaux sont maintenant bloqués dans le calendrier des réservations.`,
+          `${count} parties publiés. Les créneaux sont maintenant bloqués dans le calendrier des réservations.`,
         );
       }
     } catch (publishError) {
@@ -252,7 +252,7 @@ export function AdminTournamentPublicationPage() {
   const unpublish = async () => {
     if (!preview || !isPublished) return;
     const confirmed = window.confirm(
-      `Retirer « ${preview.tournament.name} » du calendrier des réservations ?\n\nLes matchs redeviendront modifiables dans l’atelier Planning.`,
+      `Retirer « ${preview.tournament.name} » du calendrier des réservations ?\n\nLes parties redeviendront modifiables dans l’atelier Planning.`,
     );
     if (!confirmed) return;
 
@@ -265,7 +265,7 @@ export function AdminTournamentPublicationPage() {
       );
       await refresh(preview.tournament.id);
       setMessage(
-        `${count} matchs retirés du calendrier. Le planning peut de nouveau être modifié.`,
+        `${count} parties retirés du calendrier. Le planning peut de nouveau être modifié.`,
       );
     } catch (unpublishError) {
       setError(
@@ -285,7 +285,7 @@ export function AdminTournamentPublicationPage() {
     if (!preview) return;
     const selectedTournamentId = preview.tournament.id;
     const confirmed = window.confirm(
-      `Retirer « ${tournamentName} » du calendrier pour libérer ses créneaux ?\n\nLe tournoi et ses matchs seront conservés. Seules ses occupations publiées seront retirées du calendrier.`,
+      `Retirer « ${tournamentName} » du calendrier pour libérer ses créneaux ?\n\nLe tournoi et ses parties seront conservés. Seules ses occupations publiées seront retirées du calendrier.`,
     );
     if (!confirmed) return;
 
@@ -297,7 +297,7 @@ export function AdminTournamentPublicationPage() {
         await adminTournamentPublicationService.unpublish(tournamentId);
       await refresh(selectedTournamentId);
       setMessage(
-        `${count} matchs de « ${tournamentName} » ont été retirés du calendrier. Les conflits ont été recalculés.`,
+        `${count} parties de « ${tournamentName} » ont été retirés du calendrier. Les conflits ont été recalculés.`,
       );
     } catch (unpublishError) {
       setError(
@@ -421,7 +421,7 @@ export function AdminTournamentPublicationPage() {
             {isPublished ? (
               <div className="admin-tournament-publication__published-actions">
                 <span className="admin-tournament-publication__published-copy">
-                  Les matchs sont actuellement visibles et bloquants dans le
+                  Les parties sont actuellement visibles et bloquants dans le
                   calendrier des réservations.
                 </span>
                 <button
@@ -464,8 +464,8 @@ export function AdminTournamentPublicationPage() {
                   {publishing
                     ? "Publication en cours…"
                     : hasConflicts
-                      ? `Publier ${preview.matchCount} matchs en priorité`
-                      : `Publier ${preview.matchCount} matchs dans le calendrier`}
+                      ? `Publier ${preview.matchCount} parties en priorité`
+                      : `Publier ${preview.matchCount} parties dans le calendrier`}
                 </button>
               </div>
             )}
@@ -528,7 +528,7 @@ export function AdminTournamentPublicationPage() {
                   <p>
                     Le tournoi est prioritaire. Ces occupations seront libérées
                     dans la même transaction juste avant la publication des
-                    matchs. Si la publication échoue, aucune modification ne
+                    parties. Si la publication échoue, aucune modification ne
                     sera conservée.
                   </p>
                 </div>

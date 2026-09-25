@@ -249,7 +249,7 @@ export function ErrebotTournamentImportFinalize({
           </div>
           <div>
             <strong>{result.summary.matchCount}</strong>
-            <span>matchs planifiés</span>
+            <span>parties planifiés</span>
           </div>
           <div>
             <strong>{result.resourceCount ?? resourceIds.length}</strong>
@@ -273,7 +273,7 @@ export function ErrebotTournamentImportFinalize({
 
         <p className="admin-tournament-import__privacy-note">
           Le planning est importé mais pas encore publié dans le calendrier du
-          club. Les couleurs choisies pour chaque série suivront les matchs dans
+          club. Les couleurs choisies pour chaque série suivront les parties dans
           les réservations, les résultats et le Mode TV.
         </p>
 
@@ -310,7 +310,7 @@ export function ErrebotTournamentImportFinalize({
           <strong>{parsed.pools.length}</strong> poules
         </span>
         <span>
-          <strong>{parsed.fixtures.length}</strong> matchs
+          <strong>{parsed.fixtures.length}</strong> parties
         </span>
         <span>
           <strong>{formatDate(dateRange.startsOn)}</strong> →{" "}

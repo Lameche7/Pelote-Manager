@@ -472,7 +472,7 @@ export function AdminTournamentResultsPage() {
                   onClick={() => setView("all")}
                 >
                   <strong>{selected?.matches.length ?? 0}</strong>
-                  <span>Tous les matchs</span>
+                  <span>Tous les parties</span>
                 </button>
               </div>
 
@@ -550,7 +550,7 @@ export function AdminTournamentResultsPage() {
                       ? "Parties du jour"
                       : view === "pending"
                         ? "Scores transmis à valider"
-                        : "Tous les matchs"}
+                        : "Tous les parties"}
                 </span>
               </div>
 

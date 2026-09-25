@@ -136,9 +136,9 @@ function SlotCard({
         <strong>{slotTime}</strong>
         <span className={isColoredMatch ? "reservation-slot__match-badge" : undefined}>
           {isChampionshipMatch
-            ? "Match championnat"
+            ? "Partie championnat"
             : isTournamentMatch
-              ? "Match tournoi"
+              ? "Partie tournoi"
               : "Occupé"}
         </span>
         <small>{bookedBy}</small>

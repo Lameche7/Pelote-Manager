@@ -37,12 +37,12 @@ const staleReasonLabels: Record<string, string> = {
   tournament_stage_changed: "Le tournoi a changé d’étape.",
   source_planning_changed: "Le créneau d’origine a changé depuis la demande.",
   swap_planning_changed:
-    "Le match proposé pour l’échange a changé depuis la demande.",
+    "La partie proposée pour l’échange a changé depuis la demande.",
   match_has_result: "La partie possède désormais un résultat.",
   swap_match_has_result:
-    "Le match proposé pour l’échange possède désormais un résultat.",
+    "La partie proposée pour l’échange possède désormais un résultat.",
   match_unpublished: "La partie n’est plus publiée.",
-  swap_match_unpublished: "Le match proposé pour l’échange n’est plus publié.",
+  swap_match_unpublished: "La partie proposée pour l’échange n’est plus publié.",
   target_slot_invalid:
     "Le créneau demandé n’est plus disponible dans le tournoi.",
   target_slot_started: "Le créneau demandé a déjà commencé.",
@@ -61,7 +61,7 @@ const staleReasonLabels: Record<string, string> = {
   final_grid_slot_reserved:
     "Le créneau est désormais réservé par la grille de phase finale.",
   another_reschedule_started:
-    "Un autre report concernant l’un des matchs a été engagé.",
+    "Un autre report concernant l’un des parties a été engagé.",
 };
 
 const staleReasonLabel = (reason: string | null) =>
@@ -185,7 +185,7 @@ export function AdminTournamentReschedulePage() {
 
   const applyRequest = async (request: AdminTournamentRescheduleRequest) => {
     const message = request.swap
-      ? "Appliquer cet échange de deux matchs ? Le planning, la grille finale éventuelle et le calendrier seront synchronisés dans une seule transaction."
+      ? "Appliquer cet échange de deux parties ? Le planning, la grille finale éventuelle et le calendrier seront synchronisés dans une seule transaction."
       : "Appliquer ce report ? Le planning, la grille finale éventuelle et le calendrier seront synchronisés dans une seule transaction.";
     if (!window.confirm(message)) return;
 
@@ -199,7 +199,7 @@ export function AdminTournamentReschedulePage() {
       } else {
         setSuccess(
           request.swap
-            ? "Échange appliqué : les deux matchs et le calendrier sont à jour."
+            ? "Échange appliqué : les deux parties et le calendrier sont à jour."
             : "Report appliqué : le planning et le calendrier sont à jour.",
         );
       }

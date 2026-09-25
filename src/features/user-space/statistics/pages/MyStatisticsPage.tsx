@@ -70,7 +70,7 @@ function Breakdown({
       </header>
       {rows.length === 0 ? (
         <p className="my-statistics__empty">
-          Aucun match dans cette sélection.
+          Aucune partie dans cette sélection.
         </p>
       ) : (
         <ul className="my-statistics__bars">
@@ -90,7 +90,7 @@ function Breakdown({
                 />
               </div>
               <small>
-                {row.played} match{row.played > 1 ? "s" : ""}
+                {row.played} partie{row.played > 1 ? "s" : ""}
               </small>
             </li>
           ))}
@@ -338,7 +338,7 @@ export function MyStatisticsPage() {
             <div className="my-statistics__metrics">
               <article>
                 <Target aria-hidden="true" />
-                <span>Matchs joués</span>
+                <span>Parties joués</span>
                 <strong>{dashboard.summary.played}</strong>
                 <small>
                   {dashboard.summary.wins} V · {dashboard.summary.losses} D
@@ -357,7 +357,7 @@ export function MyStatisticsPage() {
                 <span>Défaites</span>
                 <strong>{dashboard.summary.losses}</strong>
                 <small>
-                  {number.format(dashboard.summary.lossRate)} % des matchs
+                  {number.format(dashboard.summary.lossRate)} % des parties
                 </small>
               </article>
               <article>
@@ -368,7 +368,7 @@ export function MyStatisticsPage() {
                     ? `${streak.length} ${outcomeLabel[streak.outcome]}`
                     : "—"}
                 </strong>
-                <small>sur les matchs datés les plus récents</small>
+                <small>sur les parties datés les plus récents</small>
               </article>
               <article>
                 <BarChart3 aria-hidden="true" />

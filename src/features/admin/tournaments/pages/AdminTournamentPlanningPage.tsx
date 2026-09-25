@@ -573,7 +573,7 @@ export function AdminTournamentPlanningPage() {
     setSelectedMatchId(null);
     if (proposal.unscheduledMatchIds.length === 0) {
       setMessage(
-        `Proposition complète : ${proposal.quality.scheduledMatches} matchs planifiés, qualité ${proposal.quality.score}/100.`,
+        `Proposition complète : ${proposal.quality.scheduledMatches} parties planifiés, qualité ${proposal.quality.score}/100.`,
       );
     } else {
       setError(

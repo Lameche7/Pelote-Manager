@@ -63,7 +63,7 @@ const standardCards: DashboardCard[] = [
   {
     title: "Mes championnats",
     description:
-      "Consulter votre équipe, vos matchs, vos résultats et votre poule.",
+      "Consulter votre équipe, vos parties, vos résultats et votre poule.",
     icon: TrendingUp,
     to: ROUTES.myChampionships,
   },

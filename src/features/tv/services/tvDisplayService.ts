@@ -147,7 +147,7 @@ const mapChampionshipDecoration = (value: unknown): SlotDecoration | null => {
     displayName:
       [championshipName, divisionName, matchLabel]
         .filter(Boolean)
-        .join(" · ") || "Match championnat",
+        .join(" · ") || "Partie championnat",
   };
 };
 
