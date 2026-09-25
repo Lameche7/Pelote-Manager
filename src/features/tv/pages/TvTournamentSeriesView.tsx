@@ -135,7 +135,7 @@ function TournamentHeading({
         <h2>{series.tournamentName}</h2>
       </div>
       <strong style={{ borderColor: series.color }}>
-        {series.seriesName} · {page === "ranking" ? "Poules & classement" : "Résultats & matchs"}
+        {series.seriesName} · {page === "ranking" ? "Poules & classement" : "Résultats & parties"}
         {page === "ranking" && poolPageCount > 1
           ? ` · ${poolPage + 1}/${poolPageCount}`
           : ""}
@@ -352,7 +352,7 @@ function MatchesPage({ series }: { series: TvTournamentSeries }) {
             <CalendarClock aria-hidden="true" />
             <div>
               <span>Programme de la série</span>
-              <h3>Prochains matchs</h3>
+              <h3>Prochains parties</h3>
             </div>
           </header>
           <div className="tv-tournament__match-list">
@@ -383,7 +383,7 @@ export function TvTournamentSeriesView({
     <section
       className="tv-tournament tv-display__view"
       aria-label={`${series.tournamentName} — ${series.seriesName} — ${
-        page === "ranking" ? "classement" : "résultats et prochains matchs"
+        page === "ranking" ? "classement" : "résultats et prochains parties"
       }`}
     >
       {page === "ranking" ? (
