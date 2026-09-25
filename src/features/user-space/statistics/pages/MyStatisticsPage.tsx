@@ -70,7 +70,7 @@ function Breakdown({
       </header>
       {rows.length === 0 ? (
         <p className="my-statistics__empty">
-          Aucun match dans cette sélection.
+          Aucune partie dans cette sélection.
         </p>
       ) : (
         <ul className="my-statistics__bars">
@@ -90,7 +90,7 @@ function Breakdown({
                 />
               </div>
               <small>
-                {row.played} match{row.played > 1 ? "s" : ""}
+                {row.played} partie{row.played > 1 ? "s" : ""}
               </small>
             </li>
           ))}
