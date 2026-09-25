@@ -297,7 +297,7 @@ export function TournamentRescheduleSuggestions({
           <strong>Demande créée.</strong>
           <span>
             Les autres équipes concernées la retrouveront dans « Reports à
-            traiter ». Aucun match n’est déplacé tant que tous les accords ne
+            traiter ». Aucune partie n’est déplacé tant que tous les accords ne
             sont pas réunis puis appliqués par l’organisation.
           </span>
         </div>
@@ -312,7 +312,7 @@ export function TournamentRescheduleSuggestions({
                   Les disponibilités Errebot sont encore incomplètes (
                   {options.policy.availabilityKnownTeamCount}/
                   {options.policy.availabilityTeamCount} équipes). Les échanges
-                  de matchs restent désactivés jusqu’à couverture complète ;
+                  de parties restent désactivés jusqu’à couverture complète ;
                   seuls les créneaux réellement libres sont proposés, sous
                   réserve d’accord des deux équipes.
                 </>
@@ -320,7 +320,7 @@ export function TournamentRescheduleSuggestions({
                 <>
                   Errebot n’a pas fourni les créneaux choisis par les équipes
                   lors de l’inscription. Ces disponibilités sont donc inconnues
-                  : les échanges de matchs sont désactivés et seuls les créneaux
+                  : les échanges de parties sont désactivés et seuls les créneaux
                   réellement libres sont proposés, sous réserve d’accord des
                   deux équipes.
                 </>
