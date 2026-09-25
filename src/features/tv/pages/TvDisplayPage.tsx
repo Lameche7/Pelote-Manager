@@ -173,7 +173,7 @@ const viewEyebrow = (
     ? `Tournoi · ${activeTournamentSeries.seriesName} · ${
         tournamentPageFromView(view) === "ranking"
           ? "Poules & classement"
-          : "Résultats & matchs"
+          : "Résultats & parties"
       }`
     : "Tournoi en cours";
 };
@@ -756,7 +756,7 @@ export function TvDisplayPage() {
               {activeTournamentSeries.seriesName} ·{" "}
               {activeTournamentPage === "ranking"
                 ? "Classement"
-                : "Résultats & prochains matchs"}
+                : "Résultats & prochains parties"}
             </>
           )}
           {activeView === "club" && (
