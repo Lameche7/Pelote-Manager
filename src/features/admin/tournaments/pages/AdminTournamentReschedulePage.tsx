@@ -61,7 +61,7 @@ const staleReasonLabels: Record<string, string> = {
   final_grid_slot_reserved:
     "Le créneau est désormais réservé par la grille de phase finale.",
   another_reschedule_started:
-    "Un autre report concernant l’un des matchs a été engagé.",
+    "Un autre report concernant l’un des parties a été engagé.",
 };
 
 const staleReasonLabel = (reason: string | null) =>
@@ -185,7 +185,7 @@ export function AdminTournamentReschedulePage() {
 
   const applyRequest = async (request: AdminTournamentRescheduleRequest) => {
     const message = request.swap
-      ? "Appliquer cet échange de deux matchs ? Le planning, la grille finale éventuelle et le calendrier seront synchronisés dans une seule transaction."
+      ? "Appliquer cet échange de deux parties ? Le planning, la grille finale éventuelle et le calendrier seront synchronisés dans une seule transaction."
       : "Appliquer ce report ? Le planning, la grille finale éventuelle et le calendrier seront synchronisés dans une seule transaction.";
     if (!window.confirm(message)) return;
 
@@ -199,7 +199,7 @@ export function AdminTournamentReschedulePage() {
       } else {
         setSuccess(
           request.swap
-            ? "Échange appliqué : les deux matchs et le calendrier sont à jour."
+            ? "Échange appliqué : les deux parties et le calendrier sont à jour."
             : "Report appliqué : le planning et le calendrier sont à jour.",
         );
       }
