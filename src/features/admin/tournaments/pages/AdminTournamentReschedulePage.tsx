@@ -37,12 +37,12 @@ const staleReasonLabels: Record<string, string> = {
   tournament_stage_changed: "Le tournoi a changé d’étape.",
   source_planning_changed: "Le créneau d’origine a changé depuis la demande.",
   swap_planning_changed:
-    "Le match proposé pour l’échange a changé depuis la demande.",
+    "La partie proposée pour l’échange a changé depuis la demande.",
   match_has_result: "La partie possède désormais un résultat.",
   swap_match_has_result:
-    "Le match proposé pour l’échange possède désormais un résultat.",
+    "La partie proposée pour l’échange possède désormais un résultat.",
   match_unpublished: "La partie n’est plus publiée.",
-  swap_match_unpublished: "Le match proposé pour l’échange n’est plus publié.",
+  swap_match_unpublished: "La partie proposée pour l’échange n’est plus publié.",
   target_slot_invalid:
     "Le créneau demandé n’est plus disponible dans le tournoi.",
   target_slot_started: "Le créneau demandé a déjà commencé.",
