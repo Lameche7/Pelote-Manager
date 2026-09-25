@@ -290,7 +290,7 @@ const buildDiagnostics = (
       {
         severity: "info",
         code: "complete",
-        message: `Les ${matches.length} matchs de poules sont planifiés.`,
+        message: `Les ${matches.length} parties de poules sont planifiées.`,
       },
     ];
   }
