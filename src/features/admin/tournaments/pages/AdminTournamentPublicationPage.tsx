@@ -28,7 +28,7 @@ const formatTime = (value: string) => value.slice(0, 5);
 
 const occupationTypeLabels: Record<string, string> = {
   reservation: "Réservation",
-  match: "Match",
+  match: "Partie",
   closure: "Fermeture",
   maintenance: "Maintenance",
   club_event: "Évènement club",
