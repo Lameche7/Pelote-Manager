@@ -259,7 +259,7 @@ export function AdminTournamentImportPage() {
             </div>
             <div>
               <strong>{parsed.fixtures.length}</strong>
-              <span>matchs</span>
+              <span>parties</span>
             </div>
             <div>
               <strong>{parsed.emptySlotCount}</strong>
@@ -283,7 +283,7 @@ export function AdminTournamentImportPage() {
                     <th>Série</th>
                     <th>Équipes</th>
                     <th>Poules</th>
-                    <th>Matchs</th>
+                    <th>Parties</th>
                   </tr>
                 </thead>
                 <tbody>
