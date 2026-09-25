@@ -352,7 +352,7 @@ function MatchesPage({ series }: { series: TvTournamentSeries }) {
             <CalendarClock aria-hidden="true" />
             <div>
               <span>Programme de la série</span>
-              <h3>Prochains parties</h3>
+              <h3>Prochaines parties</h3>
             </div>
           </header>
           <div className="tv-tournament__match-list">
@@ -383,7 +383,7 @@ export function TvTournamentSeriesView({
     <section
       className="tv-tournament tv-display__view"
       aria-label={`${series.tournamentName} — ${series.seriesName} — ${
-        page === "ranking" ? "classement" : "résultats et prochains parties"
+        page === "ranking" ? "classement" : "résultats et prochaines parties"
       }`}
     >
       {page === "ranking" ? (
