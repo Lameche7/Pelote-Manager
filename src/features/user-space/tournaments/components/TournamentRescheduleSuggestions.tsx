@@ -105,7 +105,7 @@ function FreeSlotCard({
         </span>
       </div>
       <p>
-        Créneau libre : seul votre match change. Le moteur a vérifié que ce
+        Créneau libre : seule votre partie change. Le moteur a vérifié que ce
         déplacement n’augmente pas la charge de parties le même jour pour vos
         adversaires.
       </p>
@@ -151,7 +151,7 @@ function SwapCard({
       </div>
       <div className="tournament-reschedule__swap">
         <p>
-          <strong>Votre match</strong> prend le créneau de :
+          <strong>Votre partie</strong> prend le créneau de :
           <span>
             {option.swapTeamALabel} — {option.swapTeamBLabel}
           </span>
