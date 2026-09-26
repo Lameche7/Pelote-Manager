@@ -653,7 +653,8 @@ button.reservation-slot:focus-visible {
   margin-top: 0.35rem;
   padding-top: 0.35rem;
   border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent);
-  font-size: 0.78rem;
-  line-height: 1.25;
-  font-weight: 800;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
