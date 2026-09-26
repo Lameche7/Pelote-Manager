@@ -148,9 +148,9 @@ function SlotCard({
               ? "Partie tournoi"
               : "Occupé"}
         </span>
-        <small>{bookedBy}</small>
+        <small>{bookedByDetails}</small>
         {slot.resultDisplay && (
-          <strong className="reservation-slot__result">{slot.resultDisplay}</strong>
+          <span className="reservation-slot__result">{slot.resultDisplay}</span>
         )}
       </div>
     );
