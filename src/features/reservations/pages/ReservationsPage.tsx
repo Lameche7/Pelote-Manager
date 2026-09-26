@@ -142,6 +142,9 @@ function SlotCard({
               : "Occupé"}
         </span>
         <small>{bookedBy}</small>
+        {slot.resultDisplay && (
+          <strong className="reservation-slot__result">{slot.resultDisplay}</strong>
+        )}
       </div>
     );
   }
