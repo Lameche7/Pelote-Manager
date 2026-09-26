@@ -351,6 +351,24 @@ function MatchRow({
   const { date, time } = dateTimeParts(match);
   const place = match.agreementVenue ?? match.venue;
   const tone = resultTone(match);
+  const [venueSaving, setVenueSaving] = useState(false);
+  const canChooseHomeVenue =
+    !readOnly &&
+    match.teamSide === "b" &&
+    !match.reservation &&
+    !hasOfficialResult(match) &&
+    !["played", "forfeit", "cancelled"].includes(match.status);
+
+  const toggleHomeVenue = async () => {
+    setVenueSaving(true);
+    try {
+      await myChampionshipsService.setHomeVenue(match.id, !match.playsAtMyClub);
+      await onResultSaved();
+    } finally {
+      setVenueSaving(false);
+    }
+  };
+
   return (
     <article
       className={`my-championships__match${
@@ -441,9 +459,30 @@ function MatchRow({
           to={reservationHref}
         >
           <CalendarPlus aria-hidden="true" />
-          Réserver un terrain pour cette rencontre
+          Réserver un terrain pour cette partie
         </Link>
       ) : null}
+
+      {canChooseHomeVenue && (
+        <button
+          type="button"
+          className="my-championships__submission-toggle"
+          onClick={toggleHomeVenue}
+          disabled={venueSaving}
+        >
+          <CalendarPlus aria-hidden="true" />
+          {venueSaving
+            ? "Mise à jour…"
+            : match.playsAtMyClub
+              ? "Ne plus jouer cette partie dans notre trinquet"
+              : "Jouer cette partie dans notre trinquet"}
+        </button>
+      )}
+      {match.teamSide === "b" && match.playsAtMyClub && (
+        <small className="my-championships__opponent-club">
+          Partie officiellement à l’extérieur · jouée dans notre trinquet
+        </small>
+      )}
 
       {!readOnly && (
         <ResultSubmission
@@ -834,7 +873,7 @@ function ChampionshipCard({
       hasOfficialResult(match) ||
       ["played", "forfeit", "cancelled"].includes(match.status) ||
       !match.opponentTeamId ||
-      match.teamSide !== "a"
+      (match.teamSide !== "a" && !match.playsAtMyClub)
     ) {
       return null;
     }
