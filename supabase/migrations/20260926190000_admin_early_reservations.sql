@@ -206,12 +206,12 @@ exception when exclusion_violation then
 end;
 $$;
 
-create or replace function public.admin_list_available_reservation_slots(
+drop function if exists public.admin_list_available_reservation_slots(uuid,date,uuid);\n\ncreate function public.admin_list_available_reservation_slots(
   target_resource_id uuid,
   target_date date,
   excluded_reservation_id uuid default null
 )
-returns table(starts_at timestamptz, ends_at timestamptz)
+returns table(starts_at timestamptz, ends_at timestamptz, booking_opens_at timestamptz)
 language plpgsql stable security definer set search_path = ''
 as $$
 begin
