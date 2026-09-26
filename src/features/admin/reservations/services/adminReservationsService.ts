@@ -105,7 +105,7 @@ export const adminReservationsService = {
       startsAt: String(row.starts_at),
       endsAt: String(row.ends_at),
       status: "available",
-      bookingOpensAt: null,
+      bookingOpensAt: row.booking_opens_at ? String(row.booking_opens_at) : null,
       bookedByName: null,
     }));
   },
