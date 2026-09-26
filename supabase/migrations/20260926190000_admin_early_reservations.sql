@@ -206,7 +206,9 @@ exception when exclusion_violation then
 end;
 $$;
 
-drop function if exists public.admin_list_available_reservation_slots(uuid,date,uuid);\n\ncreate function public.admin_list_available_reservation_slots(
+drop function if exists public.admin_list_available_reservation_slots(uuid,date,uuid);
+
+create function public.admin_list_available_reservation_slots(
   target_resource_id uuid,
   target_date date,
   excluded_reservation_id uuid default null
@@ -220,7 +222,7 @@ begin
   end if;
 
   return query
-  select slot.starts_at, slot.ends_at
+  select slot.starts_at, slot.ends_at, slot.booking_opens_at
   from public.list_available_slots(target_resource_id, target_date, target_date) slot
   where (
     slot.status in ('available', 'locked')
@@ -342,7 +344,8 @@ as $$
   left join lateral (
     select
       match.id as match_id,
-      concat_ws(E'\n',
+      concat_ws(E'
+',
         championship.name,
         division.name,
         coalesce(nullif((
