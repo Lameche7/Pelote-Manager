@@ -20,6 +20,7 @@ const [
   resultSettingsCard,
   tvService,
   tvWeeklyStyles,
+  awayHomeVenueMigration,
 ] = await Promise.all([
   read(
     "../supabase/migrations/20260916143000_add_championship_match_reservations.sql",
@@ -56,6 +57,7 @@ const [
   ),
   read("../src/features/tv/services/tvDisplayService.ts"),
   read("../src/features/tv/pages/TvWeeklyView.css"),
+  read("../supabase/migrations/20260926102000_allow_away_championship_match_at_home_venue.sql"),
 ]);
 
 test("une réservation peut être rattachée à une rencontre et décorée par série", () => {
@@ -94,9 +96,14 @@ test("le PCL peut réserver gratuitement sans contourner les contrôles de club"
   );
 });
 
-test("Mes championnats réserve uniquement lorsque notre équipe reçoit", () => {
-  assert.match(championshipsPage, /Réserver un terrain pour cette rencontre/);
-  assert.match(championshipsPage, /match\.teamSide !== "a"/);
+test("Mes championnats réserve à domicile ou dans notre trinquet après choix explicite", () => {
+  assert.match(championshipsPage, /Réserver un terrain pour cette partie/);
+  assert.match(championshipsPage, /Jouer cette partie dans notre trinquet/);
+  assert.match(championshipsPage, /match\.teamSide !== "a" && !match\.playsAtMyClub/);
+  assert.match(championshipsService, /get_my_championship_venue_overrides/);
+  assert.match(championshipsService, /set_my_championship_home_venue/);
+  assert.match(awayHomeVenueMigration, /championship_match_club_venue_overrides/);
+  assert.match(awayHomeVenueMigration, /team_player\.team_id = match\.team2_id/);
   assert.match(championshipsPage, /championshipMatch/);
   assert.match(championshipsPage, /match\.reservation/);
   assert.match(championshipsService, /get_my_championship_match_reservations/);
@@ -140,7 +147,7 @@ test("les réservations championnat affichent championnat, série et équipes en
 });
 
 
-test("le serveur refuse une réservation lorsque le joueur est en Equipe2", async () => {
+test("le serveur garde Equipe2 bloquée sans dérogation explicite de lieu", async () => {
   const migration = await read(
     "../supabase/migrations/20260922103000_championship_home_away_and_opponent_details.sql",
   );
@@ -161,4 +168,12 @@ test("le serveur refuse une réservation lorsque le joueur est en Equipe2", asyn
     migration,
     /link_my_championship_match_reservation/,
   );
+});
+
+
+test("une partie extérieure peut être déclarée dans notre trinquet sans changer domicile extérieur", () => {
+  assert.match(awayHomeVenueMigration, /set_my_championship_home_venue/);
+  assert.match(awayHomeVenueMigration, /venue_override\.enabled/);
+  assert.match(awayHomeVenueMigration, /match\.team2_id/);
+  assert.doesNotMatch(awayHomeVenueMigration, /update public\.championship_matches/);
 });
