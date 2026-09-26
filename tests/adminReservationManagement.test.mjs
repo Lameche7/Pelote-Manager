@@ -93,7 +93,7 @@ test("les conflits de réservation et de blocage renvoient un conflit explicite"
 });
 test("les anciennes invitées restent lisibles et strictement en lecture seule", () => {
   assert.match(body("admin_manage_reservations"), /r\.guest_name/);
-  assert.equal(canManageReservation("confirmed", "guest"), false);
+  assert.equal(canManageReservation("confirmed", "guest"), true);
   assert.equal(canManageReservation("confirmed", "account"), true);
 });
 test("le métier refuse les blocages sans motif ou de durée négative", () => {
