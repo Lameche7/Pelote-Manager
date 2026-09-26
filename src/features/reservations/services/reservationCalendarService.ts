@@ -25,6 +25,7 @@ type SlotRow = {
   occupation_type: string | null;
   display_color: string | null;
   reservation_access: "standard" | "championship" | null;
+  result_display: string | null;
 };
 
 export const reservationCalendarService = {
@@ -74,6 +75,7 @@ export const reservationCalendarService = {
       occupationType: slot.occupation_type,
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
+      resultDisplay: slot.result_display,
     }));
   },
 
