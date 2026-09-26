@@ -121,6 +121,13 @@ function SlotCard({
       slot.occupationType === "match" && Boolean(slot.displayColor);
     const isChampionshipMatch = slot.occupationType === "championship_match";
     const isColoredMatch = isTournamentMatch || isChampionshipMatch;
+    const bookedByDetails = slot.resultDisplay
+      ? isChampionshipMatch
+        ? bookedBy.split("\\n").slice(0, 2).join("\\n")
+        : isTournamentMatch
+          ? bookedBy.split(" · ")[0]
+          : bookedBy
+      : bookedBy;
     const style = slot.displayColor
       ? ({
           "--tournament-series-color": slot.displayColor,
