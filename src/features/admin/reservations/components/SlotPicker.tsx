@@ -55,24 +55,40 @@ export function SlotPicker({
         <p>Chargement des créneaux…</p>
       ) : (
         <div className="slot-picker__slots">
-          {slots.map((slot) => (
-            <button
-              type="button"
-              key={slot.startsAt}
-              className={selected === slot.startsAt ? "is-selected" : ""}
-              onClick={() => onSelect(slot.startsAt)}
-            >
-              {new Date(slot.startsAt).toLocaleTimeString("fr-FR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-              –{" "}
-              {new Date(slot.endsAt).toLocaleTimeString("fr-FR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </button>
-          ))}
+          {slots.map((slot) => {
+            const isEarly =
+              slot.bookingOpensAt &&
+              new Date(slot.bookingOpensAt).getTime() > Date.now();
+            return (
+              <button
+                type="button"
+                key={slot.startsAt}
+                className={selected === slot.startsAt ? "is-selected" : ""}
+                onClick={() => onSelect(slot.startsAt)}
+                title={
+                  isEarly
+                    ? `Réservation anticipée · visible des utilisateurs à partir du ${new Date(
+                        slot.bookingOpensAt!,
+                      ).toLocaleString("fr-FR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}`
+                    : undefined
+                }
+              >
+                {new Date(slot.startsAt).toLocaleTimeString("fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
+                –{" "}
+                {new Date(slot.endsAt).toLocaleTimeString("fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                {isEarly && <small> · anticipée</small>}
+              </button>
+            );
+          })}
         </div>
       )}
       {!loading && slots.length === 0 && (
