@@ -88,6 +88,7 @@ export type MyChampionshipMatch = {
   resultComment: string | null;
   submission: MyChampionshipResultSubmission | null;
   reservation: MyChampionshipMatchReservation | null;
+  playsAtMyClub: boolean;
 };
 
 export type MyChampionship = {
@@ -197,16 +198,18 @@ const mapChampionship = (row: Row): MyChampionship => ({
     resultComment: nullableString(match.result_comment),
     submission: null,
     reservation: null,
+    playsAtMyClub: false,
   })),
 });
 
 export const myChampionshipsService = {
   async list(): Promise<MyChampionship[]> {
-    const [championshipsResult, submissionsResult, reservationsResult] =
+    const [championshipsResult, submissionsResult, reservationsResult, venueOverridesResult] =
       await Promise.all([
         supabase.rpc("get_my_championships"),
         supabase.rpc("get_my_championship_result_submissions"),
         supabase.rpc("get_my_championship_match_reservations"),
+        supabase.rpc("get_my_championship_venue_overrides"),
       ]);
 
     if (championshipsResult.error) {
@@ -233,6 +236,22 @@ export const myChampionshipsService = {
         ),
       );
     }
+
+    if (venueOverridesResult.error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          venueOverridesResult.error,
+          "Impossible de charger les lieux de vos parties.",
+        ),
+      );
+    }
+
+    const venueOverrides = new Map(
+      rows(venueOverridesResult.data).map((row) => [
+        String(row.match_id ?? ""),
+        row.enabled === true,
+      ] as const),
+    );
 
     const submissions = new Map(
       rows(submissionsResult.data).map((row) => {
@@ -265,9 +284,25 @@ export const myChampionshipsService = {
           ...match,
           submission: submissions.get(match.id) ?? null,
           reservation: reservations.get(match.id) ?? null,
+          playsAtMyClub: venueOverrides.get(match.id) ?? false,
         })),
       }))
       .filter((item) => item.teamId);
+  },
+
+  async setHomeVenue(matchId: string, enabled: boolean): Promise<void> {
+    const { error } = await supabase.rpc("set_my_championship_home_venue", {
+      target_match_id: matchId,
+      target_enabled: enabled,
+    });
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de modifier le lieu de cette partie.",
+        ),
+      );
+    }
   },
 
   async submitResult(
