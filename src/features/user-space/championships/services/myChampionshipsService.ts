@@ -53,6 +53,12 @@ export type MyChampionshipResultSubmission = {
   resolvedAt: string | null;
 };
 
+export type MyChampionshipManualSchedule = {
+  scheduledOn: string;
+  scheduledTime: string;
+  venue: string | null;
+};
+
 export type MyChampionshipMatchReservation = {
   reservationId: string;
   resourceId: string;
@@ -88,6 +94,7 @@ export type MyChampionshipMatch = {
   resultComment: string | null;
   submission: MyChampionshipResultSubmission | null;
   reservation: MyChampionshipMatchReservation | null;
+  manualSchedule: MyChampionshipManualSchedule | null;
   playsAtMyClub: boolean;
 };
 
@@ -198,18 +205,20 @@ const mapChampionship = (row: Row): MyChampionship => ({
     resultComment: nullableString(match.result_comment),
     submission: null,
     reservation: null,
+    manualSchedule: null,
     playsAtMyClub: false,
   })),
 });
 
 export const myChampionshipsService = {
   async list(): Promise<MyChampionship[]> {
-    const [championshipsResult, submissionsResult, reservationsResult, venueOverridesResult] =
+    const [championshipsResult, submissionsResult, reservationsResult, venueOverridesResult, manualSchedulesResult] =
       await Promise.all([
         supabase.rpc("get_my_championships"),
         supabase.rpc("get_my_championship_result_submissions"),
         supabase.rpc("get_my_championship_match_reservations"),
         supabase.rpc("get_my_championship_venue_overrides"),
+        supabase.rpc("get_my_championship_manual_schedules"),
       ]);
 
     if (championshipsResult.error) {
@@ -237,6 +246,15 @@ export const myChampionshipsService = {
       );
     }
 
+    if (manualSchedulesResult.error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          manualSchedulesResult.error,
+          "Impossible de charger la programmation réelle de vos parties.",
+        ),
+      );
+    }
+
     if (venueOverridesResult.error) {
       throw new Error(
         getSupabaseErrorMessage(
@@ -250,6 +268,17 @@ export const myChampionshipsService = {
       rows(venueOverridesResult.data).map((row) => [
         String(row.match_id ?? ""),
         row.enabled === true,
+      ] as const),
+    );
+
+    const manualSchedules = new Map(
+      rows(manualSchedulesResult.data).map((row) => [
+        String(row.match_id ?? ""),
+        {
+          scheduledOn: String(row.scheduled_on ?? ""),
+          scheduledTime: String(row.scheduled_time ?? ""),
+          venue: nullableString(row.venue),
+        } satisfies MyChampionshipManualSchedule,
       ] as const),
     );
 
@@ -284,6 +313,7 @@ export const myChampionshipsService = {
           ...match,
           submission: submissions.get(match.id) ?? null,
           reservation: reservations.get(match.id) ?? null,
+          manualSchedule: manualSchedules.get(match.id) ?? null,
           playsAtMyClub: venueOverrides.get(match.id) ?? false,
         })),
       }))
@@ -301,6 +331,25 @@ export const myChampionshipsService = {
           error,
           "Impossible de modifier le lieu de cette partie.",
         ),
+      );
+    }
+  },
+
+  async setManualSchedule(
+    matchId: string,
+    scheduledOn: string,
+    scheduledTime: string,
+    venue: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("set_my_championship_manual_schedule", {
+      target_match_id: matchId,
+      target_scheduled_on: scheduledOn,
+      target_scheduled_time: scheduledTime,
+      target_venue: venue || null,
+    });
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible d’enregistrer la programmation de cette partie."),
       );
     }
   },
