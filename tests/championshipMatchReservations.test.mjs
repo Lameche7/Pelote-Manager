@@ -21,6 +21,7 @@ const [
   tvService,
   tvWeeklyStyles,
   awayHomeVenueMigration,
+  effectiveScheduleMigration,
 ] = await Promise.all([
   read(
     "../supabase/migrations/20260916143000_add_championship_match_reservations.sql",
@@ -58,6 +59,7 @@ const [
   read("../src/features/tv/services/tvDisplayService.ts"),
   read("../src/features/tv/pages/TvWeeklyView.css"),
   read("../supabase/migrations/20260926102000_allow_away_championship_match_at_home_venue.sql"),
+  read("../supabase/migrations/20260928170000_add_championship_manual_schedules.sql"),
 ]);
 
 test("une réservation peut être rattachée à une rencontre et décorée par série", () => {
@@ -176,4 +178,16 @@ test("une partie extérieure peut être déclarée dans notre trinquet sans chan
   assert.match(awayHomeVenueMigration, /venue_override\.enabled/);
   assert.match(awayHomeVenueMigration, /match\.team2_id/);
   assert.doesNotMatch(awayHomeVenueMigration, /update public\.championship_matches/);
+});
+
+
+test("Mes championnats utilise la programmation réelle sans afficher de date limite fédérale", () => {
+  assert.match(championshipsPage, /reservationDateTimeParts/);
+  assert.match(championshipsPage, /match\.manualSchedule/);
+  assert.match(championshipsPage, /Renseigner la programmation/);
+  assert.match(championshipsPage, /Modifier la programmation/);
+  assert.doesNotMatch(championshipsPage, /Date limite fédérale/);
+  assert.match(championshipsService, /get_my_championship_manual_schedules/);
+  assert.match(championshipsService, /set_my_championship_manual_schedule/);
+  assert.match(effectiveScheduleMigration, /championship_match_manual_schedules/);
 });
