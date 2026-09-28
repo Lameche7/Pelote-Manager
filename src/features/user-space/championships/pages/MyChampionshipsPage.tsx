@@ -63,10 +63,40 @@ const reservationDateFormatter = new Intl.DateTimeFormat("fr-FR", {
   minute: "2-digit",
 });
 
-const dateTimeParts = (match: MyChampionshipMatch) => ({
-  date: match.agreementOn ?? match.reportOn ?? match.scheduledOn,
-  time: match.agreementTime ?? match.reportTime ?? match.scheduledTime,
-});
+const reservationDateTimeParts = (match: MyChampionshipMatch) => {
+  if (!match.reservation?.startsAt) return null;
+  const startsAt = new Date(match.reservation.startsAt);
+  if (Number.isNaN(startsAt.getTime())) return null;
+
+  const parts = new Intl.DateTimeFormat("fr-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(startsAt);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return {
+    date: `${value("year")}-${value("month")}-${value("day")}`,
+    time: `${value("hour")}:${value("minute")}`,
+  };
+};
+
+const dateTimeParts = (match: MyChampionshipMatch) =>
+  reservationDateTimeParts(match) ??
+  (match.manualSchedule
+    ? {
+        date: match.manualSchedule.scheduledOn,
+        time: match.manualSchedule.scheduledTime,
+      }
+    : {
+        date: match.agreementOn ?? match.reportOn ?? match.scheduledOn,
+        time: match.agreementTime ?? match.reportTime ?? match.scheduledTime,
+      });
 
 const matchTimestamp = (match: MyChampionshipMatch) => {
   const { date, time } = dateTimeParts(match);
@@ -349,15 +379,48 @@ function MatchRow({
   readOnly?: boolean;
 }) {
   const { date, time } = dateTimeParts(match);
-  const place = match.agreementVenue ?? match.venue;
+  const place =
+    match.reservation?.resourceName ??
+    match.manualSchedule?.venue ??
+    match.agreementVenue ??
+    match.venue;
   const tone = resultTone(match);
   const [venueSaving, setVenueSaving] = useState(false);
+  const [scheduleEditing, setScheduleEditing] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState(match.manualSchedule?.scheduledOn ?? "");
+  const [scheduleTime, setScheduleTime] = useState(match.manualSchedule?.scheduledTime?.slice(0, 5) ?? "");
+  const [scheduleVenue, setScheduleVenue] = useState(match.manualSchedule?.venue ?? "");
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [scheduleError, setScheduleError] = useState("");
   const canChooseHomeVenue =
     !readOnly &&
     match.teamSide === "b" &&
     !match.reservation &&
     !hasOfficialResult(match) &&
     !["played", "forfeit", "cancelled"].includes(match.status);
+
+  const saveManualSchedule = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!scheduleDate || !scheduleTime) return;
+    setScheduleSaving(true);
+    setScheduleError("");
+    try {
+      await myChampionshipsService.setManualSchedule(
+        match.id,
+        scheduleDate,
+        scheduleTime,
+        scheduleVenue.trim(),
+      );
+      setScheduleEditing(false);
+      await onResultSaved();
+    } catch (cause) {
+      setScheduleError(
+        cause instanceof Error ? cause.message : "Impossible d’enregistrer la programmation.",
+      );
+    } finally {
+      setScheduleSaving(false);
+    }
+  };
 
   const toggleHomeVenue = async () => {
     setVenueSaving(true);
@@ -462,6 +525,43 @@ function MatchRow({
           Réserver un terrain pour cette partie
         </Link>
       ) : null}
+
+      {!readOnly && match.teamSide === "b" && !match.playsAtMyClub && !match.reservation && !hasOfficialResult(match) && (
+        <div className="my-championships__submission">
+          {!scheduleEditing ? (
+            <button
+              type="button"
+              className="my-championships__submission-toggle"
+              onClick={() => setScheduleEditing(true)}
+            >
+              <CalendarPlus aria-hidden="true" />
+              {match.manualSchedule ? "Modifier la programmation" : "Renseigner la programmation"}
+            </button>
+          ) : (
+            <form className="my-championships__submission-form" onSubmit={saveManualSchedule}>
+              <div className="my-championships__score-fields">
+                <label>
+                  <span>Date <RequiredFieldMark /></span>
+                  <input type="date" value={scheduleDate} onChange={(event) => setScheduleDate(event.target.value)} required />
+                </label>
+                <label>
+                  <span>Heure <RequiredFieldMark /></span>
+                  <input type="time" value={scheduleTime} onChange={(event) => setScheduleTime(event.target.value)} required />
+                </label>
+              </div>
+              <label className="my-championships__submission-comment">
+                <span>Lieu facultatif</span>
+                <input type="text" maxLength={160} value={scheduleVenue} onChange={(event) => setScheduleVenue(event.target.value)} placeholder="Ex. Trinquet de Pau" />
+              </label>
+              {scheduleError && <div className="my-championships__submission-error" role="alert">{scheduleError}</div>}
+              <div className="my-championships__submission-actions">
+                <button type="submit" disabled={scheduleSaving}>{scheduleSaving ? "Enregistrement…" : "Enregistrer"}</button>
+                <button type="button" onClick={() => setScheduleEditing(false)} disabled={scheduleSaving}>Annuler</button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
 
       {canChooseHomeVenue && (
         <button
