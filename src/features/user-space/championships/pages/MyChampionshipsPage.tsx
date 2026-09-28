@@ -8,7 +8,7 @@ import {
   Send,
   Trophy,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import {
   myChampionshipResultSettingsService,
@@ -370,6 +370,7 @@ function MatchRow({
   onResultSaved,
   reservationHref,
   readOnly = false,
+  targeted = false,
 }: {
   match: MyChampionshipMatch;
   settings: MyChampionshipResultSettings | null;
@@ -377,6 +378,7 @@ function MatchRow({
   onResultSaved: () => Promise<void>;
   reservationHref?: string | null;
   readOnly?: boolean;
+  targeted?: boolean;
 }) {
   const { date, time } = dateTimeParts(match);
   const place =
@@ -434,9 +436,10 @@ function MatchRow({
 
   return (
     <article
+      id={`championship-match-${match.id}`}
       className={`my-championships__match${
         emphasis ? ` my-championships__match--${emphasis}` : ""
-      }`}
+      }${targeted ? " my-championships__match--targeted" : ""}`}
     >
       <div className="my-championships__match-summary">
         <div className="my-championships__match-date">
@@ -920,11 +923,13 @@ function ChampionshipCard({
   settings,
   rankingContext,
   onResultSaved,
+  targetMatchId,
 }: {
   championship: MyChampionship;
   settings: MyChampionshipResultSettings | null;
   rankingContext: MyChampionshipRankingContext | null;
   onResultSaved: () => Promise<void>;
+  targetMatchId?: string | null;
 }) {
   const now = Date.now();
   const readOnly = championship.championshipStatus === "archived";
@@ -1057,6 +1062,7 @@ function ChampionshipCard({
                 onResultSaved={onResultSaved}
                 reservationHref={reservationHref(nextMatch)}
                 readOnly={readOnly}
+                targeted={nextMatch.id === targetMatchId}
               />
             </div>
           )}
@@ -1070,13 +1076,14 @@ function ChampionshipCard({
                 onResultSaved={onResultSaved}
                 reservationHref={reservationHref(lastResult)}
                 readOnly={readOnly}
+                targeted={lastResult.id === targetMatchId}
               />
             </div>
           )}
         </section>
       )}
       <Standings championship={championship} context={rankingContext} />
-      <details className="my-championships__calendar">
+      <details className="my-championships__calendar" open={otherMatches.some((match) => match.id === targetMatchId) ? true : undefined}>
         <summary>
           Voir toutes mes parties <span>{championship.matches.length}</span>
         </summary>
@@ -1090,6 +1097,7 @@ function ChampionshipCard({
                 onResultSaved={onResultSaved}
                 reservationHref={reservationHref(match)}
                 readOnly={readOnly}
+                targeted={match.id === targetMatchId}
               />
             ))
           ) : (
@@ -1104,6 +1112,8 @@ function ChampionshipCard({
 }
 
 export function MyChampionshipsPage() {
+  const [searchParams] = useSearchParams();
+  const targetMatchId = searchParams.get("match");
   const [championships, setChampionships] = useState<MyChampionship[]>([]);
   const [resultSettings, setResultSettings] = useState(
     new Map<string, MyChampionshipResultSettings>(),
@@ -1214,6 +1224,12 @@ export function MyChampionshipsPage() {
     };
   }, [applyLoadedData]);
 
+  useEffect(() => {
+    if (loading || !targetMatchId) return;
+    const target = document.getElementById(`championship-match-${targetMatchId}`);
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [loading, targetMatchId, championships]);
+
   const championshipCard = (championship: MyChampionship) => (
     <ChampionshipCard
       key={`${championship.championshipId}-${championship.teamId}`}
@@ -1225,6 +1241,7 @@ export function MyChampionshipsPage() {
         ) ?? null
       }
       onResultSaved={refresh}
+      targetMatchId={targetMatchId}
     />
   );
 
