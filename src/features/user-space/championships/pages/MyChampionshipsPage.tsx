@@ -63,10 +63,34 @@ const reservationDateFormatter = new Intl.DateTimeFormat("fr-FR", {
   minute: "2-digit",
 });
 
-const dateTimeParts = (match: MyChampionshipMatch) => ({
-  date: match.agreementOn ?? match.reportOn ?? match.scheduledOn,
-  time: match.agreementTime ?? match.reportTime ?? match.scheduledTime,
-});
+const reservationDateTimeParts = (match: MyChampionshipMatch) => {
+  if (!match.reservation?.startsAt) return null;
+  const startsAt = new Date(match.reservation.startsAt);
+  if (Number.isNaN(startsAt.getTime())) return null;
+
+  const parts = new Intl.DateTimeFormat("fr-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(startsAt);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return {
+    date: `${value("year")}-${value("month")}-${value("day")}`,
+    time: `${value("hour")}:${value("minute")}`,
+  };
+};
+
+const dateTimeParts = (match: MyChampionshipMatch) =>
+  reservationDateTimeParts(match) ?? {
+    date: match.agreementOn ?? match.reportOn ?? match.scheduledOn,
+    time: match.agreementTime ?? match.reportTime ?? match.scheduledTime,
+  };
 
 const matchTimestamp = (match: MyChampionshipMatch) => {
   const { date, time } = dateTimeParts(match);
