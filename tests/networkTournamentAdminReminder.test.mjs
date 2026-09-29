@@ -10,21 +10,23 @@ const migration = fs.readFileSync(
   "utf8",
 );
 
-test("le rappel admin résout la fiche locale dans le club du tournoi", () => {
-  assert.match(
-    migration,
-    /public\.profile_club_member_id\(\s*profile\.id,\s*target\.club_id\s*\)/i,
-  );
+test("résout la fiche locale du club du tournoi", () => {
+  const resolver =
+    /public\.profile_club_member_id\(\s*profile\.id,\s*target\.club_id\s*\)/i;
+
+  assert.match(migration, resolver);
   assert.doesNotMatch(migration, /member\.id = profile\.member_id/i);
 });
 
-test("les destinataires restent fondés sur le rôle tournaments.manage du club", () => {
+test("conserve les droits tournaments.manage du club", () => {
+  const permission = /permission\.permission_key = 'tournaments\.manage'/i;
+
   assert.match(migration, /public\.club_memberships as membership/i);
-  assert.match(migration, /permission\.permission_key = 'tournaments\.manage'/i);
+  assert.match(migration, permission);
   assert.match(migration, /membership\.club_id = target\.club_id/i);
 });
 
-test("le rappel conserve son anti-doublon et son audit", () => {
+test("conserve l'anti-doublon et l'audit", () => {
   assert.match(migration, /tournament_admin_reminder_events/i);
   assert.match(migration, /'registrations_closed'/i);
   assert.match(migration, /'tournament_registration_closed'/i);
