@@ -101,6 +101,38 @@
   background: var(--brand-green);
   font-size: 0.82rem;
 }
+
+.my-profile__clubs {
+  display: grid;
+  gap: 0.75rem;
+  border-top: 1px solid var(--line);
+  padding: 0 1.5rem 1.5rem;
+}
+.my-profile__clubs article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  padding: 0.9rem 1rem;
+  background: var(--surface-subtle, #f8faf9);
+}
+.my-profile__clubs strong {
+  color: var(--brand-green);
+}
+.my-profile__clubs span {
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  color: var(--brand-green);
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.my-profile__clubs small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+
 .my-profile__connections {
   margin-top: 1.5rem;
   border: 1px solid var(--line);
@@ -298,6 +330,13 @@
   }
   .my-profile__connection-panel-heading {
     flex-direction: column;
+  }
+  .my-profile__clubs article {
+    grid-template-columns: 1fr;
+  }
+  .my-profile__clubs span,
+  .my-profile__clubs small {
+    grid-column: auto;
   }
 }
 
