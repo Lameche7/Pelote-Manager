@@ -271,6 +271,33 @@ export type Database = {
         };
         Returns: string;
       };
+      get_my_member_profile: {
+        Args: Record<string, never>;
+        Returns: {
+          licence_number: string;
+          first_name: string;
+          last_name: string;
+          is_active: boolean;
+          season: string | null;
+          is_licensed: boolean;
+        }[];
+      };
+      list_my_member_clubs: {
+        Args: Record<string, never>;
+        Returns: {
+          club_id: string;
+          club_name: string;
+          member_id: string;
+          licence_number: string;
+          first_name: string;
+          last_name: string;
+          is_active: boolean;
+          season: string | null;
+          is_licensed: boolean;
+          affiliation_type: string | null;
+          is_default: boolean;
+        }[];
+      };
       admin_list_club_members: {
         Args: { filters?: Json };
         Returns: AdminMemberRpcRow[];
