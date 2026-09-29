@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/shared/hooks/useAuth";
 import {
   licenceService,
+  type LicenceClubOption,
   type LicencePaymentMode,
   type LicencePortal,
   type LicenceRequestStatus,
@@ -40,22 +41,37 @@ const STATUS_LABELS: Record<LicenceRequestStatus, string> = {
 export function MyLicencePage() {
   const { profile } = useAuth();
   const [portal, setPortal] = useState<LicencePortal | null>(null);
+  const [clubOptions, setClubOptions] = useState<LicenceClubOption[]>([]);
+  const [selectedClubId, setSelectedClubId] = useState("");
   const [paymentMode, setPaymentMode] = useState<LicencePaymentMode>("test");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const load = async () => {
+  const load = async (preferredClubId?: string) => {
     setLoading(true);
     setError("");
     try {
-      const [nextPortal, nextPaymentMode] = await Promise.all([
-        licenceService.getMyPortal(),
-        licenceService.getPaymentMode(),
-      ]);
+      const nextClubOptions = await licenceService.listMyClubs();
+      const selectedClub =
+        nextClubOptions.find((club) => club.clubId === preferredClubId) ??
+        nextClubOptions.find((club) => club.isDefault) ??
+        nextClubOptions.find((club) => club.memberId !== null) ??
+        nextClubOptions[0];
+
+      setClubOptions(nextClubOptions);
+      setSelectedClubId(selectedClub?.clubId ?? "");
+
+      if (!selectedClub) {
+        setPortal(null);
+        setPaymentMode("test");
+        return;
+      }
+
+      const nextPortal = await licenceService.getMyPortal(selectedClub.clubId);
       setPortal(nextPortal);
-      setPaymentMode(nextPaymentMode);
+      setPaymentMode(nextPortal.campaign?.paymentMode ?? "test");
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -82,8 +98,8 @@ export function MyLicencePage() {
     setBusy(true);
     setError("");
     try {
-      await licenceService.startMyRequest();
-      await load();
+      await licenceService.startMyRequest(selectedClubId);
+      await load(selectedClubId);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -101,14 +117,14 @@ export function MyLicencePage() {
     setBusy(true);
     setError("");
     try {
-      await licenceService.startMyRequest({
+      await licenceService.startMyRequest(selectedClubId, {
         firstName: String(form.get("firstName") || ""),
         lastName: String(form.get("lastName") || ""),
         birthDate: String(form.get("birthDate") || ""),
         gender: String(form.get("gender") || ""),
         phone: String(form.get("phone") || ""),
       });
-      await load();
+      await load(selectedClubId);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -160,7 +176,7 @@ export function MyLicencePage() {
       await licenceService.uploadMyDocument(request.id, file);
       setMessage("Document transmis au club.");
       formElement.reset();
-      await load();
+      await load(selectedClubId);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -194,7 +210,7 @@ export function MyLicencePage() {
     } else {
       setMessage("Paiement simulé annulé. Vous pouvez réessayer.");
     }
-    await load();
+    await load(selectedClubId);
   };
 
   const pay = async () => {
@@ -237,12 +253,29 @@ export function MyLicencePage() {
           <button
             type="button"
             className="secondary"
-            onClick={() => void load()}
+            onClick={() => void load(selectedClubId)}
             disabled={loading || busy}
           >
             <RefreshCcw aria-hidden="true" /> Actualiser
           </button>
         </header>
+
+        {clubOptions.length > 1 && (
+          <label className="my-licence__club-picker">
+            <span>Club concerné</span>
+            <select
+              value={selectedClubId}
+              disabled={loading || busy}
+              onChange={(event) => void load(event.target.value)}
+            >
+              {clubOptions.map((club) => (
+                <option key={club.clubId} value={club.clubId}>
+                  {club.clubName} · {club.seasonName}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         {error && (
           <p

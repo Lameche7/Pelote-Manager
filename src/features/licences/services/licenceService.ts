@@ -27,7 +27,18 @@ export type PreparedLicencePayment = {
   redirectUrl?: string;
 };
 
+export type LicenceClubOption = {
+  clubId: string;
+  clubName: string;
+  memberId: string | null;
+  isDefault: boolean;
+  campaignId: string;
+  seasonName: string;
+  campaignIsOpen: boolean;
+};
+
 export type LicencePortal = {
+  clubId?: string;
   campaign: null | {
     id: string;
     clubId: string;
@@ -40,6 +51,7 @@ export type LicencePortal = {
     firstApplicationPriceCents: number;
     applicationFormPath: string | null;
     instructions: string | null;
+    paymentMode: LicencePaymentMode;
   };
   member: null | {
     id: string;
@@ -179,16 +191,56 @@ const signedUrl = async (path: string, expiresIn = 300) => {
 };
 
 export const licenceService = {
-  getMyPortal: async () =>
-    value<LicencePortal>(await rpc("get_my_licence_portal")),
+  listMyClubs: async (): Promise<LicenceClubOption[]> => {
+    const rows = value<
+      Array<{
+        club_id: string;
+        club_name: string;
+        member_id: string | null;
+        is_default: boolean;
+        campaign_id: string;
+        season_name: string;
+        campaign_is_open: boolean;
+      }>
+    >(await rpc("list_my_licence_clubs"));
 
-  getPaymentMode: async (): Promise<LicencePaymentMode> => {
-    const mode = value<string>(await rpc("get_licence_payment_mode"));
+    return rows.map((row) => ({
+      clubId: row.club_id,
+      clubName: row.club_name,
+      memberId: row.member_id,
+      isDefault: row.is_default,
+      campaignId: row.campaign_id,
+      seasonName: row.season_name,
+      campaignIsOpen: row.campaign_is_open,
+    }));
+  },
+
+  getMyPortal: async (clubId: string) =>
+    value<LicencePortal>(
+      await rpc("get_my_licence_portal_for_club", {
+        target_club_id: clubId,
+      }),
+    ),
+
+  getPaymentMode: async (paymentId: string): Promise<LicencePaymentMode> => {
+    const mode = value<string>(
+      await rpc("get_licence_payment_mode", {
+        target_payment_id: paymentId,
+      }),
+    );
     return mode === "helloasso" ? "helloasso" : "test";
   },
 
-  startMyRequest: async (payload: Record<string, unknown> = {}) =>
-    value<string>(await rpc("start_my_licence_request", { payload })),
+  startMyRequest: async (
+    clubId: string,
+    payload: Record<string, unknown> = {},
+  ) =>
+    value<string>(
+      await rpc("start_my_licence_request_for_club", {
+        target_club_id: clubId,
+        payload,
+      }),
+    ),
 
   uploadMyDocument: async (requestId: string, file: File) => {
     const {
@@ -223,7 +275,7 @@ export const licenceService = {
     const paymentId = result[0]?.payment_id;
     if (!paymentId) throw new Error("Paiement introuvable.");
 
-    const mode = await licenceService.getPaymentMode();
+    const mode = await licenceService.getPaymentMode(paymentId);
     if (mode === "test") return { paymentId, mode };
 
     const existingRedirectUrl = result[0]?.redirect_url;
