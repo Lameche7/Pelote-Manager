@@ -11,13 +11,21 @@ const migration = fs.readFileSync(
 );
 
 test("les disponibilités résolvent le réservant dans le club de la ressource", () => {
+  assert.match(
+    migration,
+    /join public\.reservable_resources as slot_resource\s+on slot_resource\.id = slot\.resource_id/,
+  );
+  assert.match(
+    migration,
+    /profile_club_member_id\(profile\.id, slot_resource\.club_id\)/,
+  );
   assert.equal(
     (
       migration.match(
         /profile_club_member_id\(profile\.id, resource\.club_id\)/g,
       ) ?? []
     ).length,
-    3,
+    2,
   );
 });
 

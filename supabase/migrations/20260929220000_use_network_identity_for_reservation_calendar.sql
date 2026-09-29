@@ -124,6 +124,8 @@ AS $function$
         else null
       end as booked_by_name
     from slots_with_terms as slot
+    join public.reservable_resources as slot_resource
+      on slot_resource.id = slot.resource_id
     left join public.calendar_occupations as occupation
       on occupation.resource_id = slot.resource_id
      and occupation.cancelled_at is null
@@ -131,7 +133,7 @@ AS $function$
      and occupation.ends_at = slot.ends_at
     left join public.reservations as reservation on reservation.id = occupation.reservation_id
     left join public.profiles as profile on profile.id = reservation.user_id
-    left join public.club_members as club_member on club_member.id = public.profile_club_member_id(profile.id, resource.club_id)
+    left join public.club_members as club_member on club_member.id = public.profile_club_member_id(profile.id, slot_resource.club_id)
     where not exists (
       select 1
       from public.calendar_occupations as overlapping_occupation
