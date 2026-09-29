@@ -18,11 +18,14 @@ test("le rappel admin résout la fiche locale dans le club du tournoi", () => {
   assert.doesNotMatch(migration, /member\.id = profile\.member_id/i);
 });
 
-test("les destinataires restent fondés sur le rôle tournaments.manage du club", () => {
-  assert.match(migration, /public\.club_memberships as membership/i);
-  assert.match(migration, /permission\.permission_key = 'tournaments\.manage'/i);
-  assert.match(migration, /membership\.club_id = target\.club_id/i);
-});
+test(
+  "les destinataires restent fondés sur le rôle tournaments.manage du club",
+  () => {
+    assert.match(migration, /public\.club_memberships as membership/i);
+    assert.match(migration, /permission\.permission_key = 'tournaments\.manage'/i);
+    assert.match(migration, /membership\.club_id = target\.club_id/i);
+  },
+);
 
 test("le rappel conserve son anti-doublon et son audit", () => {
   assert.match(migration, /tournament_admin_reminder_events/i);
