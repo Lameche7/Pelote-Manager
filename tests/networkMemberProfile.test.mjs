@@ -50,15 +50,15 @@ test("le contrat historique get_my_member_profile reste disponible", () => {
 test(
   "le rattachement utilisateur renseigne aussi l'identité sportive globale",
   () => {
-  assert.match(linkingMigration, /from public\.sport_players as player/);
-  assert.match(
-    linkingMigration,
-    /set sport_player_id = target_player_id|sport_player_id = target_player_id/,
-  );
-  assert.match(
-    linkingMigration,
-    /set_config\('app\.allow_profile_sport_player_link', 'on', true\)/,
-  );
+    assert.match(linkingMigration, /from public\.sport_players as player/);
+    assert.match(
+      linkingMigration,
+      /set sport_player_id = target_player_id|sport_player_id = target_player_id/,
+    );
+    assert.match(
+      linkingMigration,
+      /set_config\('app\.allow_profile_sport_player_link', 'on', true\)/,
+    );
     assert.match(
       linkingMigration,
       /member\.sport_player_id = target_player_id/,
