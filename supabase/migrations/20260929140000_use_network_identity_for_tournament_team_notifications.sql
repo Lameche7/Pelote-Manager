@@ -271,7 +271,7 @@ begin
 
   return target_recipient_count;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.publish_tournament_match_day_reminder(target_match_id uuid, target_team_id uuid)
@@ -527,7 +527,7 @@ begin
 
   return target_recipient_count;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.publish_tournament_match_result_reminder(target_match_id uuid, target_team_id uuid)
@@ -769,7 +769,7 @@ begin
 
   return target_recipient_count;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.publish_tournament_planning_notification(target_tournament_id uuid)
@@ -978,7 +978,7 @@ begin
 
   return target_recipient_count;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.publish_tournament_reschedule_approval_notification(target_request_id uuid, target_team_id uuid)
