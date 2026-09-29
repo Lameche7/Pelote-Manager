@@ -47,7 +47,9 @@ test("le contrat historique get_my_member_profile reste disponible", () => {
   assert.match(profileMigration, /limit 1/);
 });
 
-test("le rattachement utilisateur renseigne aussi l'identité sportive globale", () => {
+test(
+  "le rattachement utilisateur renseigne aussi l'identité sportive globale",
+  () => {
   assert.match(linkingMigration, /from public\.sport_players as player/);
   assert.match(
     linkingMigration,
@@ -57,11 +59,12 @@ test("le rattachement utilisateur renseigne aussi l'identité sportive globale",
     linkingMigration,
     /set_config\('app\.allow_profile_sport_player_link', 'on', true\)/,
   );
-  assert.match(
-    linkingMigration,
-    /member\.sport_player_id = target_player_id/,
-  );
-});
+    assert.match(
+      linkingMigration,
+      /member\.sport_player_id = target_player_id/,
+    );
+  },
+);
 
 test("Mon profil n'affiche plus un nom de club statique", () => {
   assert.match(service, /list_my_member_clubs/);
