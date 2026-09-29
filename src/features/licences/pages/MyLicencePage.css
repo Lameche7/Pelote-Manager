@@ -40,6 +40,20 @@
   opacity: 0.75;
 }
 
+.my-licence__club-picker {
+  display: grid;
+  grid-template-columns: auto minmax(14rem, 24rem);
+  align-items: center;
+  gap: 0.75rem;
+  width: fit-content;
+  max-width: 100%;
+  font-weight: 750;
+}
+
+.my-licence__club-picker select {
+  min-width: 0;
+}
+
 .my-licence__alert {
   margin: 0;
   padding: 0.85rem 1rem;
@@ -118,6 +132,11 @@
 }
 
 @media (max-width: 640px) {
+  .my-licence__club-picker {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
   .my-licence__header,
   .my-licence__request-head,
   .my-licence__actions {
