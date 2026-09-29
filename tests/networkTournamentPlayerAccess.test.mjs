@@ -15,10 +15,7 @@ test("les droits joueur tournoi résolvent l'adhésion dans le club organisateur
     migration,
     /public\.profile_club_member_id\(\s*actor\.id,\s*tournament\.club_id\s*\)/i,
   );
-  assert.doesNotMatch(
-    migration,
-    /player\.member_id\s*=\s*actor\.member_id/i,
-  );
+  assert.doesNotMatch(migration, /player\.member_id\s*=\s*actor\.member_id/i);
 });
 
 test("le comptage optimisé relie les profils par identité sportive globale", () => {
