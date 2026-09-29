@@ -1198,7 +1198,7 @@ begin
 
   return target_recipient_count;
 end;
-$function$
+$function$;
 
 
 commit;
