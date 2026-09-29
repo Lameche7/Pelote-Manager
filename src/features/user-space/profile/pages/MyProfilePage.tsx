@@ -13,13 +13,13 @@ import {
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import {
   memberProfileService,
+  type MemberClubProfile,
   type MemberProfileDetails,
 } from "@/features/user-space/profile/services/memberProfileService";
 import {
   RequiredFieldMark,
   RequiredFieldsNotice,
 } from "@/shared/components/forms/RequiredField";
-import { CLUB_CONFIG } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MyProfilePage.css";
 
@@ -45,6 +45,7 @@ const roleLabel = (candidate: ExternalParticipationCandidate) =>
 export function MyProfilePage() {
   const { profile, refreshProfile } = useAuth();
   const [member, setMember] = useState<MemberProfileDetails | null>(null);
+  const [memberClubs, setMemberClubs] = useState<MemberClubProfile[]>([]);
   const [identityAction, setIdentityAction] = useState<IdentityAction>(null);
   const [candidates, setCandidates] = useState<
     ExternalParticipationCandidate[]
@@ -66,16 +67,23 @@ export function MyProfilePage() {
   useEffect(() => {
     if (!profile?.memberId) {
       setMember(null);
+      setMemberClubs([]);
       return;
     }
     let active = true;
-    void memberProfileService
-      .get(profile.memberId)
-      .then((details) => {
-        if (active) setMember(details);
+    void Promise.all([
+      memberProfileService.get(profile.memberId),
+      memberProfileService.listClubs(),
+    ])
+      .then(([details, clubs]) => {
+        if (!active) return;
+        setMember(details);
+        setMemberClubs(clubs);
       })
       .catch(() => {
-        if (active) setMember(null);
+        if (!active) return;
+        setMember(null);
+        setMemberClubs([]);
       });
     return () => {
       active = false;
@@ -307,7 +315,11 @@ export function MyProfilePage() {
                   <dt>
                     <Building2 aria-hidden="true" /> Club
                   </dt>
-                  <dd>{CLUB_CONFIG.name}</dd>
+                  <dd>
+                    {memberClubs.length > 0
+                      ? memberClubs.map((club) => club.clubName).join(" · ")
+                      : "—"}
+                  </dd>
                 </div>
                 <div>
                   <dt>Saison</dt>
@@ -320,6 +332,26 @@ export function MyProfilePage() {
               </>
             )}
           </dl>
+          {memberClubs.length > 1 && (
+            <div className="my-profile__clubs" aria-label="Affiliations club">
+              {memberClubs.map((club) => (
+                <article key={club.clubId}>
+                  <strong>{club.clubName}</strong>
+                  <span>
+                    {club.affiliationType === "primary"
+                      ? "Club principal"
+                      : club.affiliationType === "extension"
+                        ? "Extension"
+                        : "Affiliation"}
+                  </span>
+                  <small>
+                    Licence {club.licenceNumber} · Saison {club.season} ·{" "}
+                    {club.isActive ? "active" : "inactive"}
+                  </small>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
 
         <section
