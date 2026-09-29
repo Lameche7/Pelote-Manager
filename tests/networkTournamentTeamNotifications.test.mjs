@@ -18,27 +18,33 @@ const functions = [
   "publish_tournament_reschedule_approval_notification",
 ];
 
-test("résout le profil membre via l'identité sportive globale", () => {
+test("résout le profil par l'identité sportive globale", () => {
+  const globalLink = /profile\.sport_player_id = member\.sport_player_id/;
+
   assert.match(migration, /function public\.club_member_profile_id/);
-  assert.match(migration, /profile\.sport_player_id = member\.sport_player_id/);
+  assert.match(migration, globalLink);
   assert.match(migration, /profile\.sport_player_id is null/);
 });
 
 test("migre les cinq notifications d'équipe", () => {
   for (const name of functions) {
-    assert.match(migration, new RegExp(`function public\\.${name}`));
+    const declaration = new RegExp(`function public\\.${name}`);
+
+    assert.match(migration, declaration);
   }
 
-  const resolverUses = migration.match(
-    /member_profile\.id = public\.club_member_profile_id\(member\.id\)/g,
-  );
+  const resolver =
+    /member_profile\.id = public\.club_member_profile_id\(member\.id\)/g;
+  const resolverUses = migration.match(resolver);
 
   assert.equal(resolverUses?.length, functions.length);
   assert.doesNotMatch(migration, /member_profile\.member_id = member\.id/);
 });
 
 test("conserve les sécurités des fonctions", () => {
+  const revoke = /revoke all on function public\.club_member_profile_id/;
+
   assert.match(migration, /security definer/);
   assert.match(migration, /set search_path = ''/);
-  assert.match(migration, /revoke all on function public\.club_member_profile_id/);
+  assert.match(migration, revoke);
 });
