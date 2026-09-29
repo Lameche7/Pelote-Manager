@@ -26,10 +26,7 @@ test("le claim résout l'adhésion locale du club du tournoi", () => {
 });
 
 test("le claim refuse une identité externe couvrant plusieurs clubs", () => {
-  assert.match(
-    migration,
-    /having count\(distinct tournament\.club_id\) = 1/i,
-  );
+  assert.match(migration, /having count\(distinct tournament\.club_id\) = 1/i);
   assert.match(migration, /External participation club is ambiguous/i);
 });
 
