@@ -15,8 +15,11 @@ const tournamentDetail = read(
 
 test("the public homepage includes the tournament section", () => {
   assert.match(homePage, /HomeTournaments/);
-  assert.match(homePage, /<HomeTournaments \/>/);
-  assert.match(homeTournaments, /tournamentService\.listPublic\(\)/);
+  assert.match(homePage, /<HomeTournaments clubSlug=\{publicClubSlug\} \/>/);
+  assert.match(
+    homeTournaments,
+    /tournamentService\.listPublic\(clubSlug\)/,
+  );
   assert.match(homeTournaments, /Tournois du club/);
 });
 
