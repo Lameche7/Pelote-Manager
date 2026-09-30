@@ -11,10 +11,7 @@ const migration = fs.readFileSync(
 );
 
 test("les créneaux visés par un report actif sont considérés occupés", () => {
-  assert.match(
-    migration,
-    /request\.status in \('pending', 'approved'\)/,
-  );
+  assert.match(migration, /request\.status in \('pending', 'approved'\)/);
   assert.match(migration, /request\.expires_at > now\(\)/);
   assert.match(
     migration,
@@ -31,10 +28,7 @@ test("les propositions joueur et admin filtrent les créneaux tenus", () => {
     migration,
     /create or replace function public\.admin_get_tournament_manual_reschedule_slots/,
   );
-  assert.match(
-    migration,
-    /not public\.tournament_reschedule_slot_is_held/,
-  );
+  assert.match(migration, /not public\.tournament_reschedule_slot_is_held/);
 });
 
 test("les échanges excluent aussi les matchs déjà engagés dans un report", () => {
@@ -50,8 +44,5 @@ test("la base sérialise et rejette deux demandes concurrentes sur le même cré
     migration,
     /Tournament reschedule target slot already has an active request/,
   );
-  assert.match(
-    migration,
-    /create trigger guard_tournament_reschedule_target_slot/,
-  );
+  assert.match(migration, /create trigger guard_tournament_reschedule_target_slot/);
 });
