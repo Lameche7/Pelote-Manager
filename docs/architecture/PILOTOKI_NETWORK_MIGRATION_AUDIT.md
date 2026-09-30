@@ -115,7 +115,7 @@ Les familles suivantes sont déjà naturellement privées par club ou dérivable
 
 - `reservable_resources` et horaires associés ;
 - `reservations` et audits associés ;
-- `reservation_settings` ;
+- `club_reservation_settings` ;
 - `permanent_slots` et tables associées ;
 - `club_prices` ;
 - `club_seasons` ;
@@ -267,3 +267,39 @@ Pendant la transition :
 - tests d'isolation avec deux clubs fictifs.
 
 Les numéros sont indicatifs tant que les PR ne sont pas ouvertes.
+
+
+## État de migration — 30 septembre 2026
+
+Le socle PILOTOKI Network est désormais opérationnel sur les domaines critiques :
+
+- identité sportive globale et affiliations club ;
+- tournois ;
+- championnats ;
+- réservations ;
+- licences / espace membre ;
+- événements ;
+- communications / notifications ;
+- administration transversale.
+
+Les anciens réglages Réservations singleton ont été remplacés par
+`club_reservation_settings`, avec une ligne par club et création automatique
+des valeurs par défaut lors de l'ajout d'un club.
+
+Un test transactionnel avec un deuxième club fictif a validé simultanément :
+
+- deux fiches locales pour une même identité sportive globale ;
+- la résolution `profile -> club_member` et `club_member -> profile` ;
+- une licence active indépendante dans le deuxième club ;
+- des tarifs et délais de réservation différents par club ;
+- une configuration de paiement indépendante par club ;
+- le refus des anciennes RPC ambiguës lorsqu'il existe plusieurs clubs.
+
+Le test a été exécuté avec `ROLLBACK` : aucune donnée fictive n'est conservée.
+
+Les références restantes à `profiles.member_id` sont limitées aux couches de
+compatibilité et aux contrôles de conflit autour de `sport_player_id`. Elles
+ne servent plus à déterminer implicitement le club propriétaire d'une donnée.
+
+Le singleton historique `reservation_settings` est supprimé une fois tous ses
+lecteurs migrés vers `club_reservation_settings`.

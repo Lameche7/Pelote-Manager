@@ -59,7 +59,7 @@ begin
   where id = target_club_id;
 
   -- Valeurs neutres modifiables ensuite par l'administrateur du club.
-  update public.reservation_settings
+  update public.club_reservation_settings
   set licensee_advance_hours = 72,
       public_advance_hours = 48,
       licensee_price_cents = 1200,
@@ -67,9 +67,15 @@ begin
       default_duration_minutes = 60,
       booking_step_minutes = 60,
       minimum_notice_minutes = 60,
+      cancellation_notice_hours = 24,
+      licensee_max_active_reservations = 3,
+      public_max_active_reservations = 2,
+      payment_mode = 'test',
+      online_payment_enabled = false,
+      split_payment_timeout_minutes = 45,
       updated_at = now(),
       updated_by = null
-  where id;
+  where club_id = target_club_id;
 end;
 $$;
 
