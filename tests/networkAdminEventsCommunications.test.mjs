@@ -9,6 +9,13 @@ const migration = fs.readFileSync(
   ),
   "utf8",
 );
+const dashboardMigration = fs.readFileSync(
+  new URL(
+    "../supabase/migrations/20260930005000_network_admin_dashboard_links.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 test("les responsables d'événement passent par l'identité Network", () => {
   assert.match(
@@ -60,4 +67,15 @@ test("les RPC admin restent limitées aux utilisateurs authentifiés", () => {
       ),
     );
   }
+});
+
+test("le tableau de bord compte les comptes liés via l'identité Network", () => {
+  assert.match(
+    dashboardMigration,
+    /club_member_profile_id\(members\.id\) is not null/,
+  );
+  assert.doesNotMatch(
+    dashboardMigration,
+    /join public\.profiles profiles on profiles\.member_id = members\.id/,
+  );
 });
