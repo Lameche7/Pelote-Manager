@@ -158,7 +158,9 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
 });
 
 export const tournamentService = {
-  async listPublic(clubSlug?: string | null): Promise<PublicTournamentSummary[]> {
+  async listPublic(
+    clubSlug?: string | null,
+  ): Promise<PublicTournamentSummary[]> {
     const request = clubSlug
       ? supabase.rpc("list_public_tournaments_for_club", {
           target_slug: clubSlug,
