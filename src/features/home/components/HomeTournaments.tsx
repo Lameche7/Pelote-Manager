@@ -39,14 +39,18 @@ const tournamentIsCurrent = (
   today: string,
 ) => tournament.endsOn >= today && tournament.status !== "archived";
 
-export function HomeTournaments() {
+type HomeTournamentsProps = {
+  clubSlug?: string | null;
+};
+
+export function HomeTournaments({ clubSlug }: HomeTournamentsProps) {
   const [tournaments, setTournaments] = useState<PublicTournamentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
 
   const load = useCallback(async () => {
     try {
-      const items = await tournamentService.listPublic();
+      const items = await tournamentService.listPublic(clubSlug);
       setTournaments(items);
       setNow(Date.now());
     } catch {
@@ -54,7 +58,7 @@ export function HomeTournaments() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clubSlug]);
 
   useEffect(() => {
     void load();
