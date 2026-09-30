@@ -16,8 +16,13 @@ export type PublicEvent = {
 };
 
 export const publicEventService = {
-  async listUpcomingEvents(): Promise<PublicEvent[]> {
-    const { data, error } = await supabase.rpc("list_upcoming_events");
+  async listUpcomingEvents(clubSlug?: string | null): Promise<PublicEvent[]> {
+    const request = clubSlug
+      ? supabase.rpc("list_upcoming_events_for_club", {
+          target_slug: clubSlug,
+        })
+      : supabase.rpc("list_upcoming_events");
+    const { data, error } = await request;
 
     if (error) {
       throw new Error(
