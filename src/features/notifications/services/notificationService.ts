@@ -78,8 +78,13 @@ export const notificationService = {
     notifyChanged();
   },
 
-  async listHomeBanners(): Promise<MemberHomeBanner[]> {
-    const { data, error } = await supabase.rpc("list_my_home_banners");
+  async listHomeBanners(clubSlug?: string | null): Promise<MemberHomeBanner[]> {
+    const request = clubSlug
+      ? supabase.rpc("list_my_home_banners_for_club", {
+          target_slug: clubSlug,
+        })
+      : supabase.rpc("list_my_home_banners");
+    const { data, error } = await request;
     if (error) fail(error, "Impossible de charger les informations du club.");
     return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
       communicationId: String(row.communication_id),
