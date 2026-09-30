@@ -18,10 +18,7 @@ const dashboardMigration = fs.readFileSync(
 );
 
 test("les responsables d'événement passent par l'identité Network", () => {
-  assert.match(
-    migration,
-    /club_member_profile_id\(members\.id\)/,
-  );
+  assert.match(migration, /club_member_profile_id\(members\.id\)/);
   assert.match(
     migration,
     /profile_club_member_id\(profile\.id, event\.club_id\)/,
@@ -32,25 +29,28 @@ test("les responsables d'événement passent par l'identité Network", () => {
   );
 });
 
-test("la publication de communication rattache la fiche locale au compte global", () => {
-  assert.match(
-    migration,
-    /profiles\.id = public\.club_member_profile_id\(members\.id\)/,
-  );
-  assert.doesNotMatch(
-    migration,
-    /profiles\.member_id = members\.id/,
-  );
-});
+test(
+  "la publication de communication rattache la fiche locale au compte global",
+  () => {
+    assert.match(
+      migration,
+      /profiles\.id = public\.club_member_profile_id\(members\.id\)/,
+    );
+    assert.doesNotMatch(migration, /profiles\.member_id = members\.id/);
+  },
+);
 
-test("les statistiques de communication reconnaissent les comptes multi-clubs", () => {
-  assert.match(
-    migration,
-    /club_member_profile_id\(deliveries\.club_member_id\)/,
-  );
-  assert.match(migration, /in_app_recipients/);
-  assert.match(migration, /without_account/);
-});
+test(
+  "les statistiques de communication reconnaissent les comptes multi-clubs",
+  () => {
+    assert.match(
+      migration,
+      /club_member_profile_id\(deliveries\.club_member_id\)/,
+    );
+    assert.match(migration, /in_app_recipients/);
+    assert.match(migration, /without_account/);
+  },
+);
 
 test("les RPC admin restent limitées aux utilisateurs authentifiés", () => {
   for (const fn of [
