@@ -137,10 +137,17 @@ function simulateWithDialog(
 }
 
 export const reservationBookingService = {
-  async getTerms(startsAt: string): Promise<ReservationTerms> {
-    const { data, error } = await supabase.rpc("get_current_reservation_terms", {
-      target_starts_at: startsAt,
-    });
+  async getTerms(
+    resourceId: string,
+    startsAt: string,
+  ): Promise<ReservationTerms> {
+    const { data, error } = await supabase.rpc(
+      "get_current_reservation_terms_for_resource",
+      {
+        target_resource_id: resourceId,
+        target_starts_at: startsAt,
+      },
+    );
     if (error) throw error;
 
     const row = (data as TermsRow[] | null)?.[0];
@@ -154,19 +161,43 @@ export const reservationBookingService = {
     };
   },
 
-  async getPaymentConfig(): Promise<ReservationPaymentConfig> {
-    const [
-      { data: enabled, error: enabledError },
-      { data: mode, error: modeError },
-    ] = await Promise.all([
-      supabase.rpc("get_online_payment_enabled"),
-      supabase.rpc("get_payment_mode"),
-    ]);
-    if (enabledError) throw enabledError;
-    if (modeError) throw modeError;
+  async getPaymentConfig(
+    resourceId: string,
+  ): Promise<ReservationPaymentConfig> {
+    const { data, error } = await supabase.rpc(
+      "get_reservation_payment_config",
+      { target_resource_id: resourceId },
+    );
+    if (error) throw error;
+
+    const row = (
+      data as Array<{ enabled: boolean; mode: string }> | null
+    )?.[0];
+    if (!row) throw new Error("Configuration de paiement introuvable.");
+
     return {
-      enabled: enabled === true,
-      mode: mode === "helloasso" ? "helloasso" : "test",
+      enabled: row.enabled === true,
+      mode: row.mode === "helloasso" ? "helloasso" : "test",
+    };
+  },
+
+  async getPaymentConfigForPayment(
+    paymentId: string,
+  ): Promise<ReservationPaymentConfig> {
+    const { data, error } = await supabase.rpc(
+      "get_reservation_payment_config_for_payment",
+      { target_payment_id: paymentId },
+    );
+    if (error) throw error;
+
+    const row = (
+      data as Array<{ enabled: boolean; mode: string }> | null
+    )?.[0];
+    if (!row) throw new Error("Configuration de paiement introuvable.");
+
+    return {
+      enabled: row.enabled === true,
+      mode: row.mode === "helloasso" ? "helloasso" : "test",
     };
   },
 
@@ -277,7 +308,7 @@ export const reservationBookingService = {
       throw new Error("Le paiement partagé n’a pas pu être préparé.");
     }
 
-    const config = await this.getPaymentConfig();
+    const config = await this.getPaymentConfig(resourceId);
     return {
       reservationId: payment.reservation_id,
       paymentId: payment.payment_id,
@@ -324,7 +355,7 @@ export const reservationBookingService = {
     if (!prepared) throw new Error("Cette part de paiement est introuvable.");
     if (prepared.payment_status === "paid") return;
 
-    const config = await this.getPaymentConfig();
+    const config = await this.getPaymentConfigForPayment(paymentId);
     if (config.mode === "test") {
       await simulateWithDialog(paymentId);
       return;
@@ -356,7 +387,7 @@ export const reservationBookingService = {
   },
 
   async create(resourceId: string, startsAt: string): Promise<void> {
-    const config = await this.getPaymentConfig();
+    const config = await this.getPaymentConfig(resourceId);
 
     if (!config.enabled) {
       await this.createDirect(resourceId, startsAt);

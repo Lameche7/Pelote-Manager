@@ -315,10 +315,10 @@ function BookingModal({
     }
 
     const requests: Promise<unknown>[] = [
-      reservationBookingService.getTerms(slot.startsAt),
+      reservationBookingService.getTerms(resource.id, slot.startsAt),
     ];
     if (!championshipContext) {
-      requests.push(reservationBookingService.getPaymentConfig());
+      requests.push(reservationBookingService.getPaymentConfig(resource.id));
     }
 
     void Promise.all(requests)
@@ -339,7 +339,12 @@ function BookingModal({
     return () => {
       isCurrent = false;
     };
-  }, [championshipContext, isFreeChampionshipMatch, slot.startsAt]);
+  }, [
+    championshipContext,
+    isFreeChampionshipMatch,
+    resource.id,
+    slot.startsAt,
+  ]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
