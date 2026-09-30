@@ -57,8 +57,13 @@ function brandingAssetUrl(input: unknown, defaultValue: string) {
 
 export const clubBrandingService = {
   fallback,
-  async getPublicBranding(): Promise<ClubBranding> {
-    const { data, error } = await supabase.rpc("get_public_club_branding");
+  async getPublicBranding(clubSlug?: string | null): Promise<ClubBranding> {
+    const request = clubSlug
+      ? supabase.rpc("get_public_club_branding_for_slug", {
+          target_slug: clubSlug,
+        })
+      : supabase.rpc("get_public_club_branding");
+    const { data, error } = await request;
     if (error) throw error;
 
     const row = (data ?? {}) as ClubBrandingRow;

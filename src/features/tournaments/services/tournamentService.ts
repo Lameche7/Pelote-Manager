@@ -158,8 +158,15 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
 });
 
 export const tournamentService = {
-  async listPublic(): Promise<PublicTournamentSummary[]> {
-    const { data, error } = await supabase.rpc("list_public_tournaments");
+  async listPublic(
+    clubSlug?: string | null,
+  ): Promise<PublicTournamentSummary[]> {
+    const request = clubSlug
+      ? supabase.rpc("list_public_tournaments_for_club", {
+          target_slug: clubSlug,
+        })
+      : supabase.rpc("list_public_tournaments");
+    const { data, error } = await request;
     if (error) fail(error, "Impossible de charger les tournois.");
     return rows(data).map(mapSummary);
   },

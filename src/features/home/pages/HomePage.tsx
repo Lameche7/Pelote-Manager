@@ -59,6 +59,10 @@ type PublicEventCardStyle = CSSProperties & { "--event-accent": string };
 
 export function HomePage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const publicClubSlug =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("club")?.trim() || null;
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
@@ -78,7 +82,8 @@ export function HomePage() {
   useEffect(() => {
     let active = true;
     const loadBranding = () => {
-      const brandingRequest = clubBrandingService.getPublicBranding();
+      const brandingRequest =
+        clubBrandingService.getPublicBranding(publicClubSlug);
       brandingRequest
         .then((value) => {
           if (active) setBranding(value);
@@ -91,7 +96,7 @@ export function HomePage() {
       active = false;
       window.removeEventListener("club-branding-updated", loadBranding);
     };
-  }, []);
+  }, [publicClubSlug]);
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -100,7 +105,7 @@ export function HomePage() {
     setEventsLoading(true);
     setEventsAvailable(true);
     publicEventService
-      .listUpcomingEvents()
+      .listUpcomingEvents(publicClubSlug)
       .then((upcomingEvents) => {
         if (!active) return;
         setEvents(upcomingEvents);
@@ -116,7 +121,7 @@ export function HomePage() {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, isAuthLoading]);
+  }, [isAuthenticated, isAuthLoading, publicClubSlug]);
 
   useEffect(() => {
     if (isAuthLoading || !isAuthenticated) {
@@ -125,7 +130,7 @@ export function HomePage() {
     }
     let active = true;
     notificationService
-      .listHomeBanners()
+      .listHomeBanners(publicClubSlug)
       .then((clubBanners) => {
         if (active) setBanners(clubBanners);
       })
@@ -135,7 +140,7 @@ export function HomePage() {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, isAuthLoading]);
+  }, [isAuthenticated, isAuthLoading, publicClubSlug]);
 
   const showEventsSection =
     eventsAvailable && (eventsLoading || events.length > 0);
@@ -227,7 +232,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <HomeTournaments />
+      <HomeTournaments clubSlug={publicClubSlug} />
 
       {showEventsSection && (
         <section
