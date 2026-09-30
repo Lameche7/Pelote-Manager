@@ -210,7 +210,8 @@ language sql
 stable
 security definer
 set search_path = ''
-as $$1  select
+as $
+  select
     notification.communication_id,
     notification.title,
     notification.body,
