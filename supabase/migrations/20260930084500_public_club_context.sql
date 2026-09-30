@@ -194,4 +194,51 @@ revoke all on function public.list_public_tournaments_for_club(text)
 grant execute on function public.list_public_tournaments_for_club(text)
   to anon, authenticated;
 
+
+create or replace function public.list_my_home_banners_for_club(
+  target_slug text
+)
+returns table (
+  communication_id uuid,
+  title text,
+  body text,
+  priority public.communication_priority,
+  published_at timestamptz,
+  expires_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select
+    notification.communication_id,
+    notification.title,
+    notification.body,
+    notification.priority,
+    notification.published_at,
+    notification.expires_at
+  from public.list_my_notifications_v2() as notification
+  join public.club_communications as communication
+    on communication.id = notification.communication_id
+  join public.clubs as club
+    on club.id = communication.club_id
+   and club.slug = nullif(btrim(target_slug), '')
+  where notification.is_active
+    and communication.show_on_home
+  order by
+    case notification.priority
+      when 'urgent' then 1
+      when 'important' then 2
+      else 3
+    end,
+    notification.published_at desc
+  limit 3;
+$;
+
+revoke all on function public.list_my_home_banners_for_club(text)
+  from public, anon, authenticated;
+grant execute on function public.list_my_home_banners_for_club(text)
+  to authenticated;
+
 commit;
