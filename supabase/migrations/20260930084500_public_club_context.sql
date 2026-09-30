@@ -210,8 +210,7 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
-  select
+as $$1  select
     notification.communication_id,
     notification.title,
     notification.body,
@@ -234,7 +233,7 @@ as $
     end,
     notification.published_at desc
   limit 3;
-$;
+$$;
 
 revoke all on function public.list_my_home_banners_for_club(text)
   from public, anon, authenticated;
