@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import { ChampionshipResultsExplorer } from "@/features/user-space/championships/components/ChampionshipResultsExplorer";
 import {
   myChampionshipResultSettingsService,
   type MyChampionshipResultSettings,
@@ -365,6 +366,8 @@ function ResultSubmission({
 
 function MatchRow({
   match,
+  teamLabel,
+  clubName,
   settings,
   emphasis,
   onResultSaved,
@@ -373,6 +376,8 @@ function MatchRow({
   targeted = false,
 }: {
   match: MyChampionshipMatch;
+  teamLabel: string;
+  clubName: string;
   settings: MyChampionshipResultSettings | null;
   emphasis?: "next" | "last";
   onResultSaved: () => Promise<void>;
@@ -387,6 +392,19 @@ function MatchRow({
     match.agreementVenue ??
     match.venue;
   const tone = resultTone(match);
+  const displayedMine = match.scoreMine ?? match.submission?.scoreMine ?? null;
+  const displayedOpponent =
+    match.scoreOpponent ?? match.submission?.scoreOpponent ?? null;
+  const hasDisplayedScore =
+    displayedMine !== null && displayedOpponent !== null;
+  const outcomeLabel =
+    tone === "win"
+      ? "Victoire"
+      : tone === "loss"
+        ? "Défaite"
+        : tone === "draw"
+          ? "Égalité"
+          : "En attente";
   const [venueSaving, setVenueSaving] = useState(false);
   const [scheduleEditing, setScheduleEditing] = useState(false);
   const [scheduleDate, setScheduleDate] = useState(match.manualSchedule?.scheduledOn ?? "");
@@ -497,7 +515,43 @@ function MatchRow({
           {place && <small>{place}</small>}
         </div>
         <div className={`my-championships__match-result is-${tone}`}>
-          <strong>{displayScore(match)}</strong>
+          <strong className="my-championships__outcome">{outcomeLabel}</strong>
+          {hasDisplayedScore ? (
+            <div className="my-championships__result-board">
+              <div
+                className={
+                  displayedMine !== null &&
+                  displayedOpponent !== null &&
+                  displayedMine > displayedOpponent
+                    ? "is-winner"
+                    : undefined
+                }
+              >
+                <span>
+                  <strong>{teamLabel}</strong>
+                  <small>{clubName}</small>
+                </span>
+                <strong>{displayedMine}</strong>
+              </div>
+              <div
+                className={
+                  displayedMine !== null &&
+                  displayedOpponent !== null &&
+                  displayedOpponent > displayedMine
+                    ? "is-winner"
+                    : undefined
+                }
+              >
+                <span>
+                  <strong>{match.opponentLabel || "Adversaire"}</strong>
+                  {match.opponentClubName && <small>{match.opponentClubName}</small>}
+                </span>
+                <strong>{displayedOpponent}</strong>
+              </div>
+            </div>
+          ) : (
+            <strong>{displayScore(match)}</strong>
+          )}
           <span>
             {hasOfficialResult(match)
               ? "Résultat officiel"
@@ -1057,6 +1111,8 @@ function ChampionshipCard({
               <p className="my-championships__label">Prochaine partie</p>
               <MatchRow
                 match={nextMatch}
+                teamLabel={championship.teamLabel}
+                clubName={championship.clubName}
                 settings={settings}
                 emphasis="next"
                 onResultSaved={onResultSaved}
@@ -1071,6 +1127,8 @@ function ChampionshipCard({
               <p className="my-championships__label">Dernier résultat</p>
               <MatchRow
                 match={lastResult}
+                teamLabel={championship.teamLabel}
+                clubName={championship.clubName}
                 settings={settings}
                 emphasis="last"
                 onResultSaved={onResultSaved}
@@ -1093,6 +1151,8 @@ function ChampionshipCard({
               <MatchRow
                 key={match.id}
                 match={match}
+                teamLabel={championship.teamLabel}
+                clubName={championship.clubName}
                 settings={settings}
                 onResultSaved={onResultSaved}
                 reservationHref={reservationHref(match)}
@@ -1268,6 +1328,7 @@ export function MyChampionshipsPage() {
             </p>
           </div>
         </header>
+        <ChampionshipResultsExplorer />
         {loading ? (
           <div className="my-championships__state">Chargement…</div>
         ) : error ? (
