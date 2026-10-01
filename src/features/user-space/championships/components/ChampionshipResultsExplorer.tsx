@@ -30,7 +30,7 @@ const resultOutcome = (
   scope: ResultsScope,
 ) => {
   if (result.scoreTeam1 === null || result.scoreTeam2 === null) return null;
-  if (result.scoreTeam1 === result.scoreTeam2) return "Égalité";
+  if (result.scoreTeam1 === result.scoreTeam2) return "Résultat à vérifier";
 
   const winner =
     result.scoreTeam1 > result.scoreTeam2 ? ("team1" as const) : ("team2" as const);
@@ -136,7 +136,7 @@ function ResultCard({
               ? "win"
               : outcome.toLowerCase().startsWith("défaite")
                 ? "loss"
-                : "draw"}`}
+                : "invalid"}`}
           >
             {outcome}
           </strong>
