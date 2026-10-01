@@ -878,7 +878,7 @@
   color: rgb(185 28 28);
 }
 
-.my-championships__match-result.is-draw .my-championships__outcome,
+.my-championships__match-result.is-invalid .my-championships__outcome,
 .my-championships__match-result.is-pending .my-championships__outcome {
   background: rgb(148 163 184 / 14%);
 }
