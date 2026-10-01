@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
+import { ChampionshipDayResultsRecap } from "@/features/admin/championships/components/ChampionshipDayResultsRecap";
 import { ChampionshipResultSettingsCard } from "@/features/admin/championships/components/ChampionshipResultSettingsCard";
 import {
   buildChampionshipMatchesUpdatePayload,
@@ -601,6 +602,8 @@ export function AdminChampionshipsPage() {
               </div>
             </div>
           )}
+
+          <ChampionshipDayResultsRecap championshipId={detail.id} />
 
           <div className="admin-card admin-championships__consultation">
             <div className="admin-championships__consultation-head">
