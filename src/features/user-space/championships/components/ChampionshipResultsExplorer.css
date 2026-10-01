@@ -151,7 +151,7 @@
   color: rgb(185 28 28);
 }
 
-.championship-results__outcome.is-draw {
+.championship-results__outcome.is-invalid {
   background: rgb(148 163 184 / 14%);
 }
 
