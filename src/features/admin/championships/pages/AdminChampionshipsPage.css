@@ -287,3 +287,181 @@
 .admin-championships__engagement-update p {
   margin: 0.2rem 0 0;
 }
+
+
+.admin-championships__day-results {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-championships__day-results-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+}
+
+.admin-championships__day-results-head h2,
+.admin-championships__day-results-head p {
+  margin: 0.2rem 0 0;
+}
+
+.admin-championships__day-results-actions {
+  display: flex;
+  align-items: end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.admin-championships__day-results-actions label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.admin-championships__day-results-actions select {
+  min-height: 2.6rem;
+  min-width: 16rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  background: inherit;
+  color: inherit;
+}
+
+.admin-championships__day-results-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.admin-championships__day-results-summary span {
+  color: var(--text-muted, #667085);
+}
+
+.admin-championships__day-results-groups {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-championships__day-results-series {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-championships__day-results-series h3 {
+  margin: 0;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid #111827;
+  font-size: 1rem;
+}
+
+.admin-championships__day-result-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #e4e7ec;
+}
+
+.admin-championships__day-result-team {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.admin-championships__day-result-team:last-child {
+  text-align: right;
+}
+
+.admin-championships__day-result-team small {
+  color: var(--text-muted, #667085);
+}
+
+.admin-championships__day-result-team.is-club > strong {
+  color: #1d4ed8;
+}
+
+.admin-championships__day-result-score {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 6.5rem;
+}
+
+.admin-championships__day-result-score > strong {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.admin-championships__day-result-score > small {
+  padding: 0.18rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.admin-championships__day-result-score > small.is-proposed {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.admin-championships__day-result-score > small.is-confirmed,
+.admin-championships__day-result-score > small.is-official {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.admin-championships__day-result-score > small.is-conflict {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.admin-championships__day-result-score > small.is-missing {
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.admin-championships__day-results-copy {
+  margin: 0;
+  color: #027a48;
+  font-weight: 700;
+}
+
+.admin-championships__day-results-empty {
+  padding: 0.8rem;
+  border: 1px dashed #d0d5dd;
+  border-radius: 0.7rem;
+  color: var(--text-muted, #667085);
+}
+
+@media (max-width: 720px) {
+  .admin-championships__day-results-head,
+  .admin-championships__day-results-summary {
+    display: grid;
+  }
+
+  .admin-championships__day-results-actions {
+    display: grid;
+    width: 100%;
+  }
+
+  .admin-championships__day-results-actions select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-championships__day-result-row {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.45rem;
+  }
+
+  .admin-championships__day-result-score {
+    min-width: 5.3rem;
+  }
+}
