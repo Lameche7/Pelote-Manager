@@ -383,6 +383,45 @@ export type Database = {
           result_count: number;
         }[];
       };
+      list_championship_match_browser: {
+        Args: { target_championship_id: string };
+        Returns: {
+          match_id: string;
+          division_id: string;
+          division_name: string;
+          division_display_order: number;
+          pool_id: string | null;
+          pool_code: string | null;
+          pool_name: string | null;
+          phase: string;
+          match_status: string;
+          theoretical_on: string | null;
+          effective_on: string | null;
+          effective_time: string | null;
+          schedule_source: string;
+          venue: string | null;
+          team1_id: string;
+          team1_label: string;
+          team1_club_name: string;
+          team1_players: string[];
+          team1_is_my_team: boolean;
+          team1_is_my_club: boolean;
+          team2_id: string;
+          team2_label: string;
+          team2_club_name: string;
+          team2_players: string[];
+          team2_is_my_team: boolean;
+          team2_is_my_club: boolean;
+          official_score_team1: number | null;
+          official_score_team2: number | null;
+          proposed_score_team1: number | null;
+          proposed_score_team2: number | null;
+          proposed_by_team_label: string | null;
+          displayed_score_team1: number | null;
+          displayed_score_team2: number | null;
+          result_source: string;
+        }[];
+      };
       list_championship_results: {
         Args: { target_championship_id: string };
         Returns: {

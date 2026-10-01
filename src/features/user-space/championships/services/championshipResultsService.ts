@@ -30,7 +30,7 @@ export type ChampionshipResultsCatalogItem = {
   resultCount: number;
 };
 
-export type ChampionshipOfficialResult = {
+export type ChampionshipBrowserMatch = {
   matchId: string;
   divisionId: string;
   divisionName: string;
@@ -39,8 +39,11 @@ export type ChampionshipOfficialResult = {
   poolCode: string | null;
   poolName: string | null;
   phase: string;
-  playedOn: string | null;
-  playedTime: string | null;
+  matchStatus: string;
+  theoreticalOn: string | null;
+  effectiveOn: string | null;
+  effectiveTime: string | null;
+  scheduleSource: string;
   venue: string | null;
   team1Id: string;
   team1Label: string;
@@ -54,9 +57,14 @@ export type ChampionshipOfficialResult = {
   team2Players: string[];
   team2IsMyTeam: boolean;
   team2IsMyClub: boolean;
-  scoreTeam1: number | null;
-  scoreTeam2: number | null;
-  scoreRaw: string | null;
+  officialScoreTeam1: number | null;
+  officialScoreTeam2: number | null;
+  proposedScoreTeam1: number | null;
+  proposedScoreTeam2: number | null;
+  proposedByTeamLabel: string | null;
+  displayedScoreTeam1: number | null;
+  displayedScoreTeam2: number | null;
+  resultSource: "official" | "proposed" | "none";
 };
 
 const mapCatalog = (row: Row): ChampionshipResultsCatalogItem => ({
@@ -79,7 +87,7 @@ const mapCatalog = (row: Row): ChampionshipResultsCatalogItem => ({
   resultCount: Number(row.result_count ?? 0),
 });
 
-const mapResult = (row: Row): ChampionshipOfficialResult => ({
+const mapMatch = (row: Row): ChampionshipBrowserMatch => ({
   matchId: String(row.match_id ?? ""),
   divisionId: String(row.division_id ?? ""),
   divisionName: String(row.division_name ?? ""),
@@ -88,60 +96,50 @@ const mapResult = (row: Row): ChampionshipOfficialResult => ({
   poolCode: nullableString(row.pool_code),
   poolName: nullableString(row.pool_name),
   phase: String(row.phase ?? ""),
-  playedOn: nullableString(row.played_on),
-  playedTime: nullableString(row.played_time),
+  matchStatus: String(row.match_status ?? ""),
+  theoreticalOn: nullableString(row.theoretical_on),
+  effectiveOn: nullableString(row.effective_on),
+  effectiveTime: nullableString(row.effective_time),
+  scheduleSource: String(row.schedule_source ?? "unknown"),
   venue: nullableString(row.venue),
   team1Id: String(row.team1_id ?? ""),
   team1Label: String(row.team1_label ?? ""),
   team1ClubName: String(row.team1_club_name ?? ""),
-  team1Players: Array.isArray(row.team1_players)
-    ? row.team1_players.map(String)
-    : [],
+  team1Players: Array.isArray(row.team1_players) ? row.team1_players.map(String) : [],
   team1IsMyTeam: Boolean(row.team1_is_my_team),
   team1IsMyClub: Boolean(row.team1_is_my_club),
   team2Id: String(row.team2_id ?? ""),
   team2Label: String(row.team2_label ?? ""),
   team2ClubName: String(row.team2_club_name ?? ""),
-  team2Players: Array.isArray(row.team2_players)
-    ? row.team2_players.map(String)
-    : [],
+  team2Players: Array.isArray(row.team2_players) ? row.team2_players.map(String) : [],
   team2IsMyTeam: Boolean(row.team2_is_my_team),
   team2IsMyClub: Boolean(row.team2_is_my_club),
-  scoreTeam1: nullableNumber(row.score_team1),
-  scoreTeam2: nullableNumber(row.score_team2),
-  scoreRaw: nullableString(row.score_raw),
+  officialScoreTeam1: nullableNumber(row.official_score_team1),
+  officialScoreTeam2: nullableNumber(row.official_score_team2),
+  proposedScoreTeam1: nullableNumber(row.proposed_score_team1),
+  proposedScoreTeam2: nullableNumber(row.proposed_score_team2),
+  proposedByTeamLabel: nullableString(row.proposed_by_team_label),
+  displayedScoreTeam1: nullableNumber(row.displayed_score_team1),
+  displayedScoreTeam2: nullableNumber(row.displayed_score_team2),
+  resultSource: String(row.result_source ?? "none") as ChampionshipBrowserMatch["resultSource"],
 });
 
 export const championshipResultsService = {
   async listCatalog(): Promise<ChampionshipResultsCatalogItem[]> {
-    const { data, error } = await supabase.rpc(
-      "list_championship_results_catalog",
-    );
+    const { data, error } = await supabase.rpc("list_championship_results_catalog");
     if (error) {
-      throw new Error(
-        getSupabaseErrorMessage(
-          error,
-          "Impossible de charger les championnats disponibles.",
-        ),
-      );
+      throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les championnats."));
     }
     return rows(data).map(mapCatalog);
   },
 
-  async listResults(
-    championshipId: string,
-  ): Promise<ChampionshipOfficialResult[]> {
-    const { data, error } = await supabase.rpc("list_championship_results", {
+  async listMatches(championshipId: string): Promise<ChampionshipBrowserMatch[]> {
+    const { data, error } = await supabase.rpc("list_championship_match_browser", {
       target_championship_id: championshipId,
     });
     if (error) {
-      throw new Error(
-        getSupabaseErrorMessage(
-          error,
-          "Impossible de charger les résultats du championnat.",
-        ),
-      );
+      throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les rencontres."));
     }
-    return rows(data).map(mapResult);
+    return rows(data).map(mapMatch);
   },
 };

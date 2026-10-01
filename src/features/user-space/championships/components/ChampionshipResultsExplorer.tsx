@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import {
   championshipResultsService,
-  type ChampionshipOfficialResult,
+  type ChampionshipBrowserMatch,
   type ChampionshipResultsCatalogItem,
 } from "@/features/user-space/championships/services/championshipResultsService";
 import "./ChampionshipResultsExplorer.css";
 
-type ResultsScope = "mine" | "club" | "all";
+type MatchScope = "mine" | "club" | "all";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   weekday: "short",
@@ -25,28 +25,29 @@ const displayDate = (value: string | null) => {
 const displayTime = (value: string | null) =>
   value ? value.slice(0, 5) : null;
 
-const resultOutcome = (
-  result: ChampionshipOfficialResult,
-  scope: ResultsScope,
-) => {
-  if (result.scoreTeam1 === null || result.scoreTeam2 === null) return null;
-  if (result.scoreTeam1 === result.scoreTeam2) return "Résultat à vérifier";
+const outcomeLabel = (match: ChampionshipBrowserMatch, scope: MatchScope) => {
+  const left = match.displayedScoreTeam1;
+  const right = match.displayedScoreTeam2;
+  if (left === null || right === null) return null;
+  if (left === right) return "Résultat à vérifier";
 
-  const winner =
-    result.scoreTeam1 > result.scoreTeam2 ? ("team1" as const) : ("team2" as const);
+  const winner = left > right ? "team1" : "team2";
 
   if (scope === "mine") {
-    const mine =
-      result.team1IsMyTeam ? "team1" : result.team2IsMyTeam ? "team2" : null;
+    const mine = match.team1IsMyTeam
+      ? "team1"
+      : match.team2IsMyTeam
+        ? "team2"
+        : null;
     if (!mine) return null;
     return winner === mine ? "Victoire" : "Défaite";
   }
 
   if (scope === "club") {
     const clubSide =
-      result.team1IsMyClub && !result.team2IsMyClub
+      match.team1IsMyClub && !match.team2IsMyClub
         ? "team1"
-        : result.team2IsMyClub && !result.team1IsMyClub
+        : match.team2IsMyClub && !match.team1IsMyClub
           ? "team2"
           : null;
     if (!clubSide) return null;
@@ -56,87 +57,49 @@ const resultOutcome = (
   return null;
 };
 
-function ResultTeam({
-  label,
-  club,
-  players,
-  score,
-  winner,
-  mine,
-  myClub,
-}: {
-  label: string;
-  club: string;
-  players: string[];
-  score: number | null;
-  winner: boolean;
-  mine: boolean;
-  myClub: boolean;
-}) {
-  return (
-    <div
-      className={[
-        "championship-results__team",
-        winner ? "is-winner" : "",
-        mine ? "is-mine" : "",
-        myClub ? "is-my-club" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <div>
-        <strong>{label}</strong>
-        <span>{club}</span>
-        {players.length > 0 && <small>{players.join(" · ")}</small>}
-      </div>
-      <div className="championship-results__team-score">
-        {winner && <Trophy aria-label="Vainqueur" />}
-        <strong>{score ?? "—"}</strong>
-      </div>
-    </div>
-  );
-}
-
-function ResultCard({
-  result,
+function MatchCard({
+  match,
   scope,
 }: {
-  result: ChampionshipOfficialResult;
-  scope: ResultsScope;
+  match: ChampionshipBrowserMatch;
+  scope: MatchScope;
 }) {
-  const hasNumericScore =
-    result.scoreTeam1 !== null && result.scoreTeam2 !== null;
-  const team1Wins =
-    hasNumericScore && Number(result.scoreTeam1) > Number(result.scoreTeam2);
-  const team2Wins =
-    hasNumericScore && Number(result.scoreTeam2) > Number(result.scoreTeam1);
-  const outcome = resultOutcome(result, scope);
+  const left = match.displayedScoreTeam1;
+  const right = match.displayedScoreTeam2;
+  const leftWins = left !== null && right !== null && left > right;
+  const rightWins = left !== null && right !== null && right > left;
+  const outcome = outcomeLabel(match, scope);
+  const theoreticalOnly = match.scheduleSource === "theoretical";
 
   return (
     <article className="championship-results__result">
       <header>
         <div>
-          <strong>{displayDate(result.playedOn)}</strong>
-          {displayTime(result.playedTime) && (
-            <span>{displayTime(result.playedTime)}</span>
+          <strong>{displayDate(match.effectiveOn)}</strong>
+          {displayTime(match.effectiveTime) ? (
+            <span>{displayTime(match.effectiveTime)}</span>
+          ) : theoreticalOnly ? (
+            <span>Date théorique · dimanche</span>
+          ) : (
+            <span>Horaire à définir</span>
           )}
         </div>
         <div>
-          <span>{result.divisionName}</span>
+          <span>{match.divisionName}</span>
           <span>
-            {result.phase}
-            {result.poolCode ? ` · Poule ${result.poolCode}` : ""}
+            {match.phase}
+            {match.poolCode ? ` · Poule ${match.poolCode}` : ""}
           </span>
         </div>
         {outcome && (
           <strong
-            className={`championship-results__outcome is-${outcome
-              .toLowerCase()
-              .startsWith("victoire")
-              ? "win"
-              : outcome.toLowerCase().startsWith("défaite")
-                ? "loss"
-                : "invalid"}`}
+            className={`championship-results__outcome is-${
+              outcome.startsWith("Victoire")
+                ? "win"
+                : outcome.startsWith("Défaite")
+                  ? "loss"
+                  : "invalid"
+            }`}
           >
             {outcome}
           </strong>
@@ -144,48 +107,81 @@ function ResultCard({
       </header>
 
       <div className="championship-results__scoreboard">
-        <ResultTeam
-          label={result.team1Label}
-          club={result.team1ClubName}
-          players={result.team1Players}
-          score={result.scoreTeam1}
-          winner={Boolean(team1Wins)}
-          mine={result.team1IsMyTeam}
-          myClub={result.team1IsMyClub}
-        />
-        <ResultTeam
-          label={result.team2Label}
-          club={result.team2ClubName}
-          players={result.team2Players}
-          score={result.scoreTeam2}
-          winner={Boolean(team2Wins)}
-          mine={result.team2IsMyTeam}
-          myClub={result.team2IsMyClub}
-        />
+        <div
+          className={[
+            "championship-results__team",
+            leftWins ? "is-winner" : "",
+            match.team1IsMyTeam ? "is-mine" : "",
+            match.team1IsMyClub ? "is-my-club" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div>
+            <strong>{match.team1Label}</strong>
+            <span>{match.team1ClubName}</span>
+            {match.team1Players.length > 0 && (
+              <small>{match.team1Players.join(" · ")}</small>
+            )}
+          </div>
+          <div className="championship-results__team-score">
+            {leftWins && <Trophy aria-label="Vainqueur" />}
+            <strong>{left ?? "—"}</strong>
+          </div>
+        </div>
+
+        <div
+          className={[
+            "championship-results__team",
+            rightWins ? "is-winner" : "",
+            match.team2IsMyTeam ? "is-mine" : "",
+            match.team2IsMyClub ? "is-my-club" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div>
+            <strong>{match.team2Label}</strong>
+            <span>{match.team2ClubName}</span>
+            {match.team2Players.length > 0 && (
+              <small>{match.team2Players.join(" · ")}</small>
+            )}
+          </div>
+          <div className="championship-results__team-score">
+            {rightWins && <Trophy aria-label="Vainqueur" />}
+            <strong>{right ?? "—"}</strong>
+          </div>
+        </div>
       </div>
 
-      {!hasNumericScore && result.scoreRaw && (
-        <small className="championship-results__raw-score">
-          Résultat officiel : {result.scoreRaw}
-        </small>
-      )}
-      {result.venue && (
-        <small className="championship-results__venue">{result.venue}</small>
-      )}
+      <div className="championship-results__meta">
+        {match.resultSource === "official" ? (
+          <strong>Résultat officiel</strong>
+        ) : match.resultSource === "proposed" ? (
+          <strong>
+            Résultat proposé
+            {match.proposedByTeamLabel
+              ? ` par ${match.proposedByTeamLabel}`
+              : ""}
+          </strong>
+        ) : (
+          <strong>Résultat en attente</strong>
+        )}
+        {match.venue && <span>{match.venue}</span>}
+      </div>
     </article>
   );
 }
 
 export function ChampionshipResultsExplorer() {
   const [catalog, setCatalog] = useState<ChampionshipResultsCatalogItem[]>([]);
-  const [results, setResults] = useState<ChampionshipOfficialResult[]>([]);
+  const [matches, setMatches] = useState<ChampionshipBrowserMatch[]>([]);
   const [selectedChampionshipId, setSelectedChampionshipId] = useState("");
-  const [selectedDivisionId, setSelectedDivisionId] = useState("");
+  const [selectedDivisionId, setSelectedDivisionId] = useState("all");
   const [selectedPoolId, setSelectedPoolId] = useState("all");
-  const [scope, setScope] = useState<ResultsScope>("mine");
-  const [visibleCount, setVisibleCount] = useState(50);
+  const [scope, setScope] = useState<MatchScope>("club");
   const [loading, setLoading] = useState(true);
-  const [resultsLoading, setResultsLoading] = useState(false);
+  const [matchesLoading, setMatchesLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -198,11 +194,10 @@ export function ChampionshipResultsExplorer() {
         const preferred =
           items.find(
             (item) =>
-              item.championshipStatus === "active" && item.hasMyTeam,
+              item.championshipStatus === "active" && item.hasMyClubTeam,
           ) ??
           items.find(
-            (item) =>
-              item.championshipStatus === "active" && item.hasMyClubTeam,
+            (item) => item.championshipStatus === "active" && item.hasMyTeam,
           ) ??
           items.find((item) => item.championshipStatus === "active") ??
           items[0];
@@ -213,7 +208,7 @@ export function ChampionshipResultsExplorer() {
         setError(
           cause instanceof Error
             ? cause.message
-            : "Impossible de charger les résultats des championnats.",
+            : "Impossible de charger les championnats.",
         );
       })
       .finally(() => {
@@ -234,100 +229,88 @@ export function ChampionshipResultsExplorer() {
 
   useEffect(() => {
     if (!selectedChampionship) return;
-
-    setScope(
-      selectedChampionship.hasMyTeam
-        ? "mine"
-        : selectedChampionship.hasMyClubTeam
-          ? "club"
-          : "all",
-    );
-
-    const preferredDivision =
-      selectedChampionship.divisions.find((division) =>
-        selectedChampionship.myDivisionIds.includes(division.id),
-      ) ?? selectedChampionship.divisions[0];
-    setSelectedDivisionId(preferredDivision?.id ?? "");
+    setSelectedDivisionId("all");
     setSelectedPoolId("all");
+    setScope(selectedChampionship.hasMyClubTeam ? "club" : "all");
   }, [selectedChampionship]);
 
   useEffect(() => {
-    if (!selectedChampionshipId) {
-      setResults([]);
-      return;
-    }
-
+    if (!selectedChampionshipId) return;
     let active = true;
-    setResultsLoading(true);
+    setMatchesLoading(true);
     setError("");
     championshipResultsService
-      .listResults(selectedChampionshipId)
+      .listMatches(selectedChampionshipId)
       .then((items) => {
-        if (active) setResults(items);
+        if (active) setMatches(items);
       })
       .catch((cause) => {
         if (!active) return;
         setError(
           cause instanceof Error
             ? cause.message
-            : "Impossible de charger les résultats.",
+            : "Impossible de charger les rencontres.",
         );
       })
       .finally(() => {
-        if (active) setResultsLoading(false);
+        if (active) setMatchesLoading(false);
       });
     return () => {
       active = false;
     };
   }, [selectedChampionshipId]);
 
-  const scopedResults = useMemo(
+  const scopedMatches = useMemo(
     () =>
-      results.filter((result) => {
+      matches.filter((match) => {
         if (scope === "mine") {
-          return result.team1IsMyTeam || result.team2IsMyTeam;
+          return match.team1IsMyTeam || match.team2IsMyTeam;
         }
         if (scope === "club") {
-          return result.team1IsMyClub || result.team2IsMyClub;
+          return match.team1IsMyClub || match.team2IsMyClub;
         }
         return true;
       }),
-    [results, scope],
+    [matches, scope],
   );
 
   const poolOptions = useMemo(() => {
     const pools = new Map<string, string>();
-    for (const result of scopedResults) {
-      if (result.divisionId !== selectedDivisionId || !result.poolId) continue;
+    for (const match of scopedMatches) {
+      if (
+        selectedDivisionId !== "all" &&
+        match.divisionId !== selectedDivisionId
+      ) {
+        continue;
+      }
+      if (!match.poolId) continue;
       pools.set(
-        result.poolId,
-        result.poolName ?? `Poule ${result.poolCode ?? "—"}`,
+        match.poolId,
+        match.poolName ?? `Poule ${match.poolCode ?? "—"}`,
       );
     }
     return [...pools.entries()].sort((left, right) =>
       left[1].localeCompare(right[1], "fr", { numeric: true }),
     );
-  }, [scopedResults, selectedDivisionId]);
+  }, [scopedMatches, selectedDivisionId]);
 
-  const filteredResults = useMemo(
+  const filteredMatches = useMemo(
     () =>
-      scopedResults.filter(
-        (result) =>
-          (!selectedDivisionId || result.divisionId === selectedDivisionId) &&
-          (selectedPoolId === "all" || result.poolId === selectedPoolId),
+      scopedMatches.filter(
+        (match) =>
+          (selectedDivisionId === "all" ||
+            match.divisionId === selectedDivisionId) &&
+          (selectedPoolId === "all" || match.poolId === selectedPoolId),
       ),
-    [scopedResults, selectedDivisionId, selectedPoolId],
+    [scopedMatches, selectedDivisionId, selectedPoolId],
   );
-
-  useEffect(() => {
-    setVisibleCount(50);
-    setSelectedPoolId("all");
-  }, [scope, selectedChampionshipId, selectedDivisionId]);
 
   if (loading) {
     return (
       <section className="championship-results">
-        <div className="championship-results__state">Chargement des résultats…</div>
+        <div className="championship-results__state">
+          Chargement des championnats…
+        </div>
       </section>
     );
   }
@@ -341,16 +324,16 @@ export function ChampionshipResultsExplorer() {
     >
       <header className="championship-results__heading">
         <div>
-          <p>Résultats officiels</p>
+          <p>Navigation globale</p>
           <h2 id="championship-results-title">
-            Résultats du club et du championnat
+            Toutes les rencontres du championnat
           </h2>
           <span>
-            Consultez votre équipe, les autres équipes du club ou toutes les
-            séries et poules.
+            Calendrier, scores proposés par les équipes puis résultats officiels
+            dès leur mise à jour.
           </span>
         </div>
-        <strong>{filteredResults.length} résultat(s)</strong>
+        <strong>{filteredMatches.length} partie(s)</strong>
       </header>
 
       <div className="championship-results__scope" role="tablist">
@@ -368,7 +351,7 @@ export function ChampionshipResultsExplorer() {
           onClick={() => setScope("club")}
           disabled={!selectedChampionship?.hasMyClubTeam}
         >
-          Équipes du club
+          Toutes les équipes du club
         </button>
         <button
           type="button"
@@ -400,8 +383,12 @@ export function ChampionshipResultsExplorer() {
           <span>Série</span>
           <select
             value={selectedDivisionId}
-            onChange={(event) => setSelectedDivisionId(event.target.value)}
+            onChange={(event) => {
+              setSelectedDivisionId(event.target.value);
+              setSelectedPoolId("all");
+            }}
           >
+            <option value="all">Toutes les séries</option>
             {selectedChampionship?.divisions.map((division) => (
               <option key={division.id} value={division.id}>
                 {division.name}
@@ -430,31 +417,20 @@ export function ChampionshipResultsExplorer() {
         <div className="championship-results__state is-error" role="alert">
           {error}
         </div>
-      ) : resultsLoading ? (
+      ) : matchesLoading ? (
         <div className="championship-results__state">
-          Chargement des résultats…
+          Chargement des rencontres…
         </div>
-      ) : filteredResults.length === 0 ? (
+      ) : filteredMatches.length === 0 ? (
         <div className="championship-results__state">
-          Aucun résultat officiel avec ces filtres.
+          Aucune rencontre avec ces filtres.
         </div>
       ) : (
-        <>
-          <div className="championship-results__list">
-            {filteredResults.slice(0, visibleCount).map((result) => (
-              <ResultCard key={result.matchId} result={result} scope={scope} />
-            ))}
-          </div>
-          {visibleCount < filteredResults.length && (
-            <button
-              type="button"
-              className="championship-results__more"
-              onClick={() => setVisibleCount((current) => current + 50)}
-            >
-              Afficher plus de résultats
-            </button>
-          )}
-        </>
+        <div className="championship-results__list">
+          {filteredMatches.map((match) => (
+            <MatchCard key={match.matchId} match={match} scope={scope} />
+          ))}
+        </div>
       )}
     </section>
   );
