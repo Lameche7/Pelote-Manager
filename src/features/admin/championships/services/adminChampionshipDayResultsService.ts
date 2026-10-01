@@ -24,10 +24,13 @@ export type AdminChampionshipDayResult = {
   poolCode: string | null;
   team1Id: string;
   team1Label: string;
+  team1Players: string[];
   team1IsClub: boolean;
   team2Id: string;
   team2Label: string;
+  team2Players: string[];
   team2IsClub: boolean;
+  clubIsHome: boolean;
   proposedScoreTeam1: number | null;
   proposedScoreTeam2: number | null;
   proposedByTeamLabel: string | null;
@@ -48,10 +51,17 @@ const mapRow = (row: Row): AdminChampionshipDayResult => ({
   poolCode: nullableString(row.pool_code),
   team1Id: String(row.team1_id ?? ""),
   team1Label: String(row.team1_label ?? ""),
+  team1Players: Array.isArray(row.team1_players)
+    ? row.team1_players.map(String)
+    : [],
   team1IsClub: Boolean(row.team1_is_club),
   team2Id: String(row.team2_id ?? ""),
   team2Label: String(row.team2_label ?? ""),
+  team2Players: Array.isArray(row.team2_players)
+    ? row.team2_players.map(String)
+    : [],
   team2IsClub: Boolean(row.team2_is_club),
+  clubIsHome: Boolean(row.club_is_home),
   proposedScoreTeam1: nullableNumber(row.proposed_score_team1),
   proposedScoreTeam2: nullableNumber(row.proposed_score_team2),
   proposedByTeamLabel: nullableString(row.proposed_by_team_label),
@@ -63,7 +73,7 @@ const mapRow = (row: Row): AdminChampionshipDayResult => ({
 export const adminChampionshipDayResultsService = {
   async list(championshipId: string): Promise<AdminChampionshipDayResult[]> {
     const { data, error } = await supabase.rpc(
-      "admin_list_championship_day_results",
+      "admin_list_championship_day_results_v2",
       { target_id: championshipId },
     );
     if (error) {

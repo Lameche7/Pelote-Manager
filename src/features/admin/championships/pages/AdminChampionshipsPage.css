@@ -465,3 +465,32 @@
     min-width: 5.3rem;
   }
 }
+
+
+.admin-championships__day-result-row.is-home {
+  margin: 0.25rem 0;
+  padding: 0.8rem 0.75rem;
+  border: 1px solid #93c5fd;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+  box-shadow: inset 4px 0 0 #2563eb;
+}
+
+.admin-championships__day-result-row.is-away {
+  opacity: 0.82;
+}
+
+.admin-championships__home-badge {
+  display: inline-flex;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.65rem !important;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.admin-championships__day-result-team small:first-of-type {
+  font-weight: 600;
+}

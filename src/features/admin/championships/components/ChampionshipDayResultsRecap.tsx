@@ -74,6 +74,7 @@ const scoreFor = (row: AdminChampionshipDayResult) => {
 
 export function ChampionshipDayResultsRecap({ championshipId }: Props) {
   const [rows, setRows] = useState<AdminChampionshipDayResult[]>([]);
+  const [selectedDivisionId, setSelectedDivisionId] = useState("");
   const [selectedDay, setSelectedDay] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -89,24 +90,30 @@ export function ChampionshipDayResultsRecap({ championshipId }: Props) {
         if (!active) return;
         setRows(items);
 
-        const days = [...new Set(items.map((item) => item.dayOn).filter(Boolean))] as string[];
-        days.sort();
+        const divisions = [
+          ...new Map(
+            items.map((item) => [
+              item.divisionId,
+              {
+                id: item.divisionId,
+                name: item.divisionName,
+                order: item.divisionDisplayOrder,
+              },
+            ]),
+          ).values(),
+        ].sort((left, right) => left.order - right.order);
 
-        const dayWithProposal =
-          [...days]
-            .reverse()
-            .find((day) =>
-              items.some(
-                (item) =>
-                  item.dayOn === day &&
-                  item.proposedScoreTeam1 !== null &&
-                  item.proposedScoreTeam2 !== null,
-              ),
-            ) ?? null;
+        const preferredDivision =
+          divisions.find((division) =>
+            items.some(
+              (item) =>
+                item.divisionId === division.id &&
+                item.proposedScoreTeam1 !== null &&
+                item.proposedScoreTeam2 !== null,
+            ),
+          ) ?? divisions[0];
 
-        const today = new Date().toISOString().slice(0, 10);
-        const nextDay = days.find((day) => day >= today) ?? null;
-        setSelectedDay(dayWithProposal ?? nextDay ?? days.at(-1) ?? "");
+        setSelectedDivisionId(preferredDivision?.id ?? "");
       })
       .catch((cause) => {
         if (!active) return;
@@ -125,34 +132,77 @@ export function ChampionshipDayResultsRecap({ championshipId }: Props) {
     };
   }, [championshipId]);
 
-  const days = useMemo(
+  const divisions = useMemo(
     () =>
-      [...new Set(rows.map((row) => row.dayOn).filter(Boolean) as string[])].sort(),
+      [
+        ...new Map(
+          rows.map((row) => [
+            row.divisionId,
+            {
+              id: row.divisionId,
+              name: row.divisionName,
+              order: row.divisionDisplayOrder,
+            },
+          ]),
+        ).values(),
+      ].sort((left, right) => left.order - right.order),
     [rows],
   );
 
-  const selectedRows = useMemo(
-    () => rows.filter((row) => row.dayOn === selectedDay),
-    [rows, selectedDay],
+  const divisionRows = useMemo(
+    () => rows.filter((row) => row.divisionId === selectedDivisionId),
+    [rows, selectedDivisionId],
   );
 
-  const grouped = useMemo(() => {
-    const groups = new Map<
-      string,
-      { order: number; rows: AdminChampionshipDayResult[] }
-    >();
-    for (const row of selectedRows) {
-      const current = groups.get(row.divisionName) ?? {
-        order: row.divisionDisplayOrder,
-        rows: [],
-      };
-      current.rows.push(row);
-      groups.set(row.divisionName, current);
+  const days = useMemo(
+    () =>
+      [
+        ...new Set(
+          divisionRows
+            .map((row) => row.dayOn)
+            .filter(Boolean) as string[],
+        ),
+      ].sort(),
+    [divisionRows],
+  );
+
+  useEffect(() => {
+    if (days.length === 0) {
+      setSelectedDay("");
+      return;
     }
-    return [...groups.entries()].sort(
-      (left, right) => left[1].order - right[1].order,
-    );
-  }, [selectedRows]);
+
+    const dayWithProposal =
+      [...days]
+        .reverse()
+        .find((day) =>
+          divisionRows.some(
+            (item) =>
+              item.dayOn === day &&
+              item.proposedScoreTeam1 !== null &&
+              item.proposedScoreTeam2 !== null,
+          ),
+        ) ?? null;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const nextDay = days.find((day) => day >= today) ?? null;
+    setSelectedDay(dayWithProposal ?? nextDay ?? days.at(-1) ?? "");
+  }, [days, divisionRows]);
+
+  const selectedRows = useMemo(
+    () =>
+      divisionRows
+        .filter((row) => row.dayOn === selectedDay)
+        .sort((left, right) => {
+          if (left.clubIsHome !== right.clubIsHome) {
+            return left.clubIsHome ? -1 : 1;
+          }
+          return left.team1Label.localeCompare(right.team1Label, "fr", {
+            numeric: true,
+          });
+        }),
+    [divisionRows, selectedDay],
+  );
 
   const receivedCount = selectedRows.filter((row) => {
     const score = scoreFor(row);
@@ -166,19 +216,21 @@ export function ChampionshipDayResultsRecap({ championshipId }: Props) {
       "",
     ];
 
-    for (const [divisionName, group] of grouped) {
-      lines.push(divisionName);
-      for (const row of group.rows) {
-        const score = scoreFor(row);
-        const scoreText =
-          score.left !== null && score.right !== null
-            ? `${score.left} - ${score.right}`
-            : "Résultat manquant";
-        lines.push(
-          `${row.team1Label}  ${scoreText}  ${row.team2Label}`,
-        );
-      }
-      lines.push("");
+    const selectedDivision = divisions.find(
+      (division) => division.id === selectedDivisionId,
+    );
+    if (selectedDivision) {
+      lines.push(selectedDivision.name, "");
+    }
+    for (const row of selectedRows) {
+      const score = scoreFor(row);
+      const scoreText =
+        score.left !== null && score.right !== null
+          ? `${score.left} - ${score.right}`
+          : "Résultat manquant";
+      lines.push(
+        `${row.clubIsHome ? "[DOMICILE] " : ""}${row.team1Label}  ${scoreText}  ${row.team2Label}`,
+      );
     }
 
     try {
@@ -197,11 +249,25 @@ export function ChampionshipDayResultsRecap({ championshipId }: Props) {
           <p className="admin-page__eyebrow">Transmission ligue</p>
           <h2>Résultats de la journée</h2>
           <p>
-            Toutes les parties du club, regroupées par série, avec les scores
-            proposés par les équipes.
+            Choisissez une série puis une journée. Les matchs à domicile, que
+            le club doit saisir, sont mis en évidence.
           </p>
         </div>
         <div className="admin-championships__day-results-actions">
+          <label>
+            Série
+            <select
+              value={selectedDivisionId}
+              onChange={(event) => setSelectedDivisionId(event.target.value)}
+              disabled={loading || divisions.length === 0}
+            >
+              {divisions.map((division) => (
+                <option key={division.id} value={division.id}>
+                  {division.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label>
             Journée
             <select
@@ -254,65 +320,77 @@ export function ChampionshipDayResultsRecap({ championshipId }: Props) {
           </div>
 
           <div className="admin-championships__day-results-groups">
-            {grouped.map(([divisionName, group]) => (
-              <section
-                key={divisionName}
-                className="admin-championships__day-results-series"
-              >
-                <h3>{divisionName}</h3>
-                <div>
-                  {group.rows.map((row) => {
-                    const score = scoreFor(row);
-                    return (
-                      <article
-                        key={row.matchId}
-                        className="admin-championships__day-result-row"
+            <section className="admin-championships__day-results-series">
+              <h3>
+                {divisions.find(
+                  (division) => division.id === selectedDivisionId,
+                )?.name ?? "Série"}
+              </h3>
+              <div>
+                {selectedRows.map((row) => {
+                  const score = scoreFor(row);
+                  return (
+                    <article
+                      key={row.matchId}
+                      className={[
+                        "admin-championships__day-result-row",
+                        row.clubIsHome ? "is-home" : "is-away",
+                      ].join(" ")}
+                    >
+                      <div
+                        className={
+                          row.team1IsClub
+                            ? "admin-championships__day-result-team is-club"
+                            : "admin-championships__day-result-team"
+                        }
                       >
-                        <div
-                          className={
-                            row.team1IsClub
-                              ? "admin-championships__day-result-team is-club"
-                              : "admin-championships__day-result-team"
-                          }
-                        >
-                          <strong>{row.team1Label}</strong>
-                          {row.poolCode && <small>Poule {row.poolCode}</small>}
-                        </div>
+                        <strong>{row.team1Label}</strong>
+                        {row.team1Players.length > 0 && (
+                          <small>{row.team1Players.join(" / ")}</small>
+                        )}
+                        {row.poolCode && <small>Poule {row.poolCode}</small>}
+                      </div>
 
-                        <div className="admin-championships__day-result-score">
-                          <strong>
-                            {score.left ?? "—"} <span>–</span>{" "}
-                            {score.right ?? "—"}
+                      <div className="admin-championships__day-result-score">
+                        {row.clubIsHome && (
+                          <strong className="admin-championships__home-badge">
+                            À DOMICILE · À SAISIR
                           </strong>
-                          <small className={`is-${score.kind}`}>
-                            {score.label}
-                          </small>
-                        </div>
+                        )}
+                        <strong>
+                          {score.left ?? "—"} <span>–</span>{" "}
+                          {score.right ?? "—"}
+                        </strong>
+                        <small className={`is-${score.kind}`}>
+                          {score.label}
+                        </small>
+                      </div>
 
-                        <div
-                          className={
-                            row.team2IsClub
-                              ? "admin-championships__day-result-team is-club"
-                              : "admin-championships__day-result-team"
-                          }
-                        >
-                          <strong>{row.team2Label}</strong>
-                          {row.actualOn &&
-                            row.actualOn !== row.dayOn && (
-                              <small>
-                                Jouée le {shortDay(row.actualOn)}
-                                {row.actualTime
-                                  ? ` à ${row.actualTime.slice(0, 5)}`
-                                  : ""}
-                              </small>
-                            )}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+                      <div
+                        className={
+                          row.team2IsClub
+                            ? "admin-championships__day-result-team is-club"
+                            : "admin-championships__day-result-team"
+                        }
+                      >
+                        <strong>{row.team2Label}</strong>
+                        {row.team2Players.length > 0 && (
+                          <small>{row.team2Players.join(" / ")}</small>
+                        )}
+                        {row.actualOn && row.actualOn !== row.dayOn && (
+                          <small>
+                            Jouée le {shortDay(row.actualOn)}
+                            {row.actualTime
+                              ? ` à ${row.actualTime.slice(0, 5)}`
+                              : ""}
+                          </small>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           </div>
         </>
       )}

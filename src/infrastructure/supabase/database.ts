@@ -367,6 +367,35 @@ export type Database = {
         Args: { payload: Json };
         Returns: Json;
       };
+      admin_list_championship_day_results_v2: {
+        Args: { target_id: string };
+        Returns: {
+          match_id: string;
+          championship_id: string;
+          day_on: string | null;
+          actual_on: string | null;
+          actual_time: string | null;
+          division_id: string;
+          division_name: string;
+          division_display_order: number;
+          pool_code: string | null;
+          team1_id: string;
+          team1_label: string;
+          team1_players: string[];
+          team1_is_club: boolean;
+          team2_id: string;
+          team2_label: string;
+          team2_players: string[];
+          team2_is_club: boolean;
+          club_is_home: boolean;
+          proposed_score_team1: number | null;
+          proposed_score_team2: number | null;
+          proposed_by_team_label: string | null;
+          proposal_status: string | null;
+          official_score_team1: number | null;
+          official_score_team2: number | null;
+        }[];
+      };
       admin_list_championship_day_results: {
         Args: { target_id: string };
         Returns: {
