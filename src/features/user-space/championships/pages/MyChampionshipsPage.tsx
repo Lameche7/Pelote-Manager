@@ -518,14 +518,30 @@ function MatchRow({
           <strong className="my-championships__outcome">{outcomeLabel}</strong>
           {hasDisplayedScore ? (
             <div className="my-championships__result-board">
-              <div className={displayedMine > displayedOpponent ? "is-winner" : undefined}>
+              <div
+                className={
+                  displayedMine !== null &&
+                  displayedOpponent !== null &&
+                  displayedMine > displayedOpponent
+                    ? "is-winner"
+                    : undefined
+                }
+              >
                 <span>
                   <strong>{teamLabel}</strong>
                   <small>{clubName}</small>
                 </span>
                 <strong>{displayedMine}</strong>
               </div>
-              <div className={displayedOpponent > displayedMine ? "is-winner" : undefined}>
+              <div
+                className={
+                  displayedMine !== null &&
+                  displayedOpponent !== null &&
+                  displayedOpponent > displayedMine
+                    ? "is-winner"
+                    : undefined
+                }
+              >
                 <span>
                   <strong>{match.opponentLabel || "Adversaire"}</strong>
                   {match.opponentClubName && <small>{match.opponentClubName}</small>}
