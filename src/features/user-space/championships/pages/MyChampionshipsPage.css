@@ -944,3 +944,48 @@
     width: 100%;
   }
 }
+
+
+.my-championships__next-account {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 1rem;
+  background: var(--surface-elevated, #fff);
+}
+
+.my-championships__advanced {
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.9rem;
+  background: var(--surface-elevated, #fff);
+}
+
+.my-championships__advanced > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.my-championships__advanced > summary > span {
+  display: grid;
+  min-width: 1.7rem;
+  min-height: 1.7rem;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(148 163 184 / 14%);
+  font-size: 0.76rem;
+}
+
+.my-championships__advanced[open] > summary {
+  border-bottom: 1px solid var(--border-color, #d7dde5);
+}
+
+.my-championships__advanced > .my-championships__list,
+.my-championships__advanced > .my-championships__standings-wrap {
+  padding: 1rem;
+}
