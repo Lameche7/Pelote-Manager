@@ -138,7 +138,7 @@ const resultTone = (match: MyChampionshipMatch) => {
   if (mine === null || opponent === null) return "pending";
   if (mine > opponent) return "win";
   if (mine < opponent) return "loss";
-  return "draw";
+  return "invalid";
 };
 
 const officialSourceHref = (value: string) =>
@@ -402,8 +402,8 @@ function MatchRow({
       ? "Victoire"
       : tone === "loss"
         ? "Défaite"
-        : tone === "draw"
-          ? "Égalité"
+        : tone === "invalid"
+          ? "Résultat à vérifier"
           : "En attente";
   const [venueSaving, setVenueSaving] = useState(false);
   const [scheduleEditing, setScheduleEditing] = useState(false);
