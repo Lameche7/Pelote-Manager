@@ -1195,6 +1195,28 @@ export function MyChampionshipsPage() {
     [championships],
   );
 
+  const nextAccountMatch = useMemo(() => {
+    const now = Date.now();
+    return currentChampionships
+      .flatMap((championship) =>
+        championship.matches.map((match) => ({ championship, match })),
+      )
+      .filter(({ match }) => {
+        const timestamp = matchTimestamp(match);
+        return (
+          timestamp !== null &&
+          timestamp >= now &&
+          !hasOfficialResult(match) &&
+          !["played", "forfeit", "cancelled"].includes(match.status)
+        );
+      })
+      .sort((left, right) => {
+        const leftTime = matchTimestamp(left.match) ?? Number.MAX_SAFE_INTEGER;
+        const rightTime = matchTimestamp(right.match) ?? Number.MAX_SAFE_INTEGER;
+        return leftTime - rightTime;
+      })[0] ?? null;
+  }, [currentChampionships]);
+
   const archivedBySeason = useMemo(() => {
     const grouped = new Map<string, MyChampionship[]>();
     for (const championship of championships) {
@@ -1328,7 +1350,6 @@ export function MyChampionshipsPage() {
             </p>
           </div>
         </header>
-        <ChampionshipResultsExplorer />
         {loading ? (
           <div className="my-championships__state">Chargement…</div>
         ) : error ? (
@@ -1345,67 +1366,103 @@ export function MyChampionshipsPage() {
           </div>
         ) : (
           <>
-            {currentChampionships.length > 0 ? (
-              <div className="my-championships__list">
-                {currentChampionships.map(championshipCard)}
-              </div>
-            ) : (
-              <div className="my-championships__empty-block">
-                Aucun championnat en cours ou à venir.
-              </div>
-            )}
-
-            {historySeasons.length > 0 && (
-              <section
-                className="my-championships__standings-wrap"
-                aria-labelledby="my-championships-history-title"
-              >
+            {nextAccountMatch && (
+              <section className="my-championships__next-account">
                 <div className="my-championships__standings-heading">
                   <div>
-                    <p className="my-championships__label">Archives</p>
-                    <strong id="my-championships-history-title">
-                      Historique
-                    </strong>
+                    <p className="my-championships__label">À venir</p>
+                    <strong>Ma prochaine partie de championnat</strong>
                   </div>
-                  <span>Saisons terminées</span>
+                  <span>
+                    {nextAccountMatch.championship.divisionName}
+                    {nextAccountMatch.championship.poolCode
+                      ? ` · Poule ${nextAccountMatch.championship.poolCode}`
+                      : ""}
+                  </span>
                 </div>
-                <div
-                  className="my-championships__ranking-tabs"
-                  role="tablist"
-                  aria-label="Saisons archivées"
-                >
-                  {historySeasons.map((season) => (
-                    <button
-                      type="button"
-                      role="tab"
-                      key={season}
-                      aria-selected={selectedHistorySeason === season}
-                      className={
-                        selectedHistorySeason === season
-                          ? "is-active"
-                          : undefined
-                      }
-                      onClick={() =>
-                        setSelectedHistorySeason((current) =>
-                          current === season ? null : season,
-                        )
-                      }
-                    >
-                      {season}
-                    </button>
-                  ))}
-                </div>
-                {selectedHistorySeason ? (
-                  <div className="my-championships__list">
-                    {selectedHistory.map(championshipCard)}
-                  </div>
-                ) : (
-                  <div className="my-championships__empty-block">
-                    Choisissez une saison pour consulter vos anciens
-                    championnats.
-                  </div>
-                )}
+                <MatchRow
+                  match={nextAccountMatch.match}
+                  teamLabel={nextAccountMatch.championship.teamLabel}
+                  clubName={nextAccountMatch.championship.clubName}
+                  settings={
+                    resultSettings.get(
+                      nextAccountMatch.championship.championshipId,
+                    ) ?? null
+                  }
+                  emphasis="next"
+                  onResultSaved={refresh}
+                  readOnly={false}
+                  targeted={nextAccountMatch.match.id === targetMatchId}
+                />
               </section>
+            )}
+
+            <ChampionshipResultsExplorer />
+
+            <details
+              className="my-championships__advanced"
+              open={Boolean(targetMatchId)}
+            >
+              <summary>
+                Mon championnat, classement et actions
+                <span>{currentChampionships.length}</span>
+              </summary>
+              {currentChampionships.length > 0 ? (
+                <div className="my-championships__list">
+                  {currentChampionships.map(championshipCard)}
+                </div>
+              ) : (
+                <div className="my-championships__empty-block">
+                  Aucun championnat en cours ou à venir.
+                </div>
+              )}
+            </details>
+
+            {historySeasons.length > 0 && (
+              <details className="my-championships__advanced">
+                <summary>Historique</summary>
+                <section
+                  className="my-championships__standings-wrap"
+                  aria-labelledby="my-championships-history-title"
+                >
+                  <div
+                    className="my-championships__ranking-tabs"
+                    role="tablist"
+                    aria-label="Saisons archivées"
+                  >
+                    {historySeasons.map((season) => (
+                      <button
+                        type="button"
+                        role="tab"
+                        key={season}
+                        aria-selected={selectedHistorySeason === season}
+                        className={
+                          selectedHistorySeason === season
+                            ? "is-active"
+                            : undefined
+                        }
+                        onClick={() =>
+                          setSelectedHistorySeason((current) =>
+                            current === season ? null : season,
+                          )
+                        }
+                      >
+                        {season}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedHistorySeason ? (
+                    <div className="my-championships__list">
+                      {selectedHistory.map(championshipCard)}
+                    </div>
+                  ) : (
+                    <div className="my-championships__empty-block">
+                      Choisissez une saison pour consulter vos anciens
+                      championnats.
+                    </div>
+                  )}
+                </section>
+              </details>
             )}
           </>
         )}
