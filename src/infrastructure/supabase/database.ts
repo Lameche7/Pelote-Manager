@@ -367,6 +367,53 @@ export type Database = {
         Args: { payload: Json };
         Returns: Json;
       };
+      list_championship_results_catalog: {
+        Args: Record<string, never>;
+        Returns: {
+          championship_id: string;
+          championship_name: string;
+          specialty: string;
+          season_label: string;
+          championship_status: string;
+          source_url: string | null;
+          has_my_team: boolean;
+          has_my_club_team: boolean;
+          my_division_ids: string[];
+          divisions: Json;
+          result_count: number;
+        }[];
+      };
+      list_championship_results: {
+        Args: { target_championship_id: string };
+        Returns: {
+          match_id: string;
+          division_id: string;
+          division_name: string;
+          division_display_order: number;
+          pool_id: string | null;
+          pool_code: string | null;
+          pool_name: string | null;
+          phase: string;
+          played_on: string | null;
+          played_time: string | null;
+          venue: string | null;
+          team1_id: string;
+          team1_label: string;
+          team1_club_name: string;
+          team1_players: string[];
+          team1_is_my_team: boolean;
+          team1_is_my_club: boolean;
+          team2_id: string;
+          team2_label: string;
+          team2_club_name: string;
+          team2_players: string[];
+          team2_is_my_team: boolean;
+          team2_is_my_club: boolean;
+          score_team1: number | null;
+          score_team2: number | null;
+          score_raw: string | null;
+        }[];
+      };
     };
     Enums: {
       user_role: UserRole;
