@@ -1,0 +1,279 @@
+.championship-results {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 1rem;
+  background: var(--surface-elevated, #fff);
+}
+
+.championship-results__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.championship-results__heading > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.championship-results__heading p,
+.championship-results__heading h2 {
+  margin: 0;
+}
+
+.championship-results__heading p {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.championship-results__heading span {
+  font-size: 0.86rem;
+  opacity: 0.72;
+}
+
+.championship-results__heading > strong {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: rgb(148 163 184 / 12%);
+  font-size: 0.8rem;
+}
+
+.championship-results__scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.85rem;
+  background: rgb(148 163 184 / 7%);
+}
+
+.championship-results__scope button {
+  padding: 0.62rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.championship-results__scope button.is-active {
+  border-color: var(--border-color, #d7dde5);
+  background: var(--surface-elevated, #fff);
+  box-shadow: 0 4px 12px rgb(15 23 42 / 5%);
+}
+
+.championship-results__scope button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.championship-results__filters {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.championship-results__filters label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.championship-results__filters label > span {
+  font-size: 0.76rem;
+  font-weight: 800;
+  opacity: 0.68;
+}
+
+.championship-results__filters select {
+  min-width: 0;
+  padding: 0.62rem 0.7rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.65rem;
+  background: var(--surface-elevated, #fff);
+  color: inherit;
+  font: inherit;
+}
+
+.championship-results__list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.championship-results__result {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.85rem;
+}
+
+.championship-results__result > header {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(10rem, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.championship-results__result > header > div {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.championship-results__result > header span {
+  font-size: 0.78rem;
+  opacity: 0.68;
+}
+
+.championship-results__outcome {
+  padding: 0.32rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.championship-results__outcome.is-win {
+  background: rgb(34 197 94 / 12%);
+  color: rgb(21 128 61);
+}
+
+.championship-results__outcome.is-loss {
+  background: rgb(239 68 68 / 10%);
+  color: rgb(185 28 28);
+}
+
+.championship-results__outcome.is-draw {
+  background: rgb(148 163 184 / 14%);
+}
+
+.championship-results__scoreboard {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.championship-results__team {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.7rem;
+  background: rgb(148 163 184 / 7%);
+}
+
+.championship-results__team.is-winner {
+  background: rgb(34 197 94 / 9%);
+  box-shadow: inset 3px 0 0 rgb(34 197 94 / 58%);
+}
+
+.championship-results__team.is-mine {
+  outline: 1px solid rgb(59 130 246 / 28%);
+}
+
+.championship-results__team.is-my-club:not(.is-mine) {
+  box-shadow: inset 3px 0 0 rgb(59 130 246 / 38%);
+}
+
+.championship-results__team > div:first-child {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.championship-results__team > div:first-child strong,
+.championship-results__team > div:first-child span,
+.championship-results__team > div:first-child small {
+  overflow-wrap: anywhere;
+}
+
+.championship-results__team > div:first-child span {
+  font-size: 0.76rem;
+  opacity: 0.68;
+}
+
+.championship-results__team > div:first-child small {
+  font-size: 0.74rem;
+  opacity: 0.62;
+}
+
+.championship-results__team-score {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.championship-results__team-score > strong {
+  min-width: 2ch;
+  font-size: 1.7rem;
+  line-height: 1;
+  text-align: right;
+}
+
+.championship-results__team-score svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.championship-results__raw-score,
+.championship-results__venue {
+  font-size: 0.78rem;
+  opacity: 0.68;
+}
+
+.championship-results__more {
+  justify-self: center;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.65rem;
+  background: var(--surface-elevated, #fff);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.championship-results__state {
+  padding: 0.85rem;
+  border: 1px dashed var(--border-color, #d7dde5);
+  border-radius: 0.75rem;
+}
+
+.championship-results__state.is-error {
+  border-style: solid;
+}
+
+@media (max-width: 760px) {
+  .championship-results__heading,
+  .championship-results__result > header {
+    grid-template-columns: 1fr;
+  }
+
+  .championship-results__heading {
+    display: grid;
+  }
+
+  .championship-results__heading > strong {
+    justify-self: start;
+  }
+
+  .championship-results__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .championship-results__scope {
+    display: grid;
+  }
+
+  .championship-results__scope button {
+    width: 100%;
+    text-align: left;
+  }
+}
