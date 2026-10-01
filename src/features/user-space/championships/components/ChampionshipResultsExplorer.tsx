@@ -177,7 +177,7 @@ export function ChampionshipResultsExplorer() {
   const [catalog, setCatalog] = useState<ChampionshipResultsCatalogItem[]>([]);
   const [matches, setMatches] = useState<ChampionshipBrowserMatch[]>([]);
   const [selectedChampionshipId, setSelectedChampionshipId] = useState("");
-  const [selectedDivisionId, setSelectedDivisionId] = useState("");
+  const [selectedDivisionId, setSelectedDivisionId] = useState("all");
   const [selectedPoolId, setSelectedPoolId] = useState("all");
   const [scope, setScope] = useState<MatchScope>("club");
   const [loading, setLoading] = useState(true);
@@ -229,11 +229,7 @@ export function ChampionshipResultsExplorer() {
 
   useEffect(() => {
     if (!selectedChampionship) return;
-    const preferredDivision =
-      selectedChampionship.divisions.find((division) =>
-        selectedChampionship.myDivisionIds.includes(division.id),
-      ) ?? selectedChampionship.divisions[0];
-    setSelectedDivisionId(preferredDivision?.id ?? "");
+    setSelectedDivisionId("all");
     setSelectedPoolId("all");
     setScope(selectedChampionship.hasMyClubTeam ? "club" : "all");
   }, [selectedChampionship]);
@@ -281,7 +277,13 @@ export function ChampionshipResultsExplorer() {
   const poolOptions = useMemo(() => {
     const pools = new Map<string, string>();
     for (const match of scopedMatches) {
-      if (match.divisionId !== selectedDivisionId || !match.poolId) continue;
+      if (
+        selectedDivisionId !== "all" &&
+        match.divisionId !== selectedDivisionId
+      ) {
+        continue;
+      }
+      if (!match.poolId) continue;
       pools.set(
         match.poolId,
         match.poolName ?? `Poule ${match.poolCode ?? "—"}`,
@@ -296,7 +298,8 @@ export function ChampionshipResultsExplorer() {
     () =>
       scopedMatches.filter(
         (match) =>
-          (!selectedDivisionId || match.divisionId === selectedDivisionId) &&
+          (selectedDivisionId === "all" ||
+            match.divisionId === selectedDivisionId) &&
           (selectedPoolId === "all" || match.poolId === selectedPoolId),
       ),
     [scopedMatches, selectedDivisionId, selectedPoolId],
@@ -385,6 +388,7 @@ export function ChampionshipResultsExplorer() {
               setSelectedPoolId("all");
             }}
           >
+            <option value="all">Toutes les séries</option>
             {selectedChampionship?.divisions.map((division) => (
               <option key={division.id} value={division.id}>
                 {division.name}
