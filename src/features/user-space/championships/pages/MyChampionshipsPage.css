@@ -852,3 +852,95 @@
     margin-inline: 0;
   }
 }
+
+
+.my-championships__match-result {
+  min-width: 13rem;
+}
+
+.my-championships__outcome {
+  width: fit-content;
+  justify-self: end;
+  padding: 0.2rem 0.48rem;
+  border-radius: 999px;
+  font-size: 0.74rem !important;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.my-championships__match-result.is-win .my-championships__outcome {
+  background: rgb(34 197 94 / 12%);
+  color: rgb(21 128 61);
+}
+
+.my-championships__match-result.is-loss .my-championships__outcome {
+  background: rgb(239 68 68 / 10%);
+  color: rgb(185 28 28);
+}
+
+.my-championships__match-result.is-draw .my-championships__outcome,
+.my-championships__match-result.is-pending .my-championships__outcome {
+  background: rgb(148 163 184 / 14%);
+}
+
+.my-championships__result-board {
+  display: grid;
+  width: min(100%, 22rem);
+  gap: 0.28rem;
+}
+
+.my-championships__result-board > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.48rem 0.58rem;
+  border-radius: 0.58rem;
+  background: rgb(148 163 184 / 8%);
+}
+
+.my-championships__result-board > div.is-winner {
+  background: rgb(34 197 94 / 10%);
+  box-shadow: inset 3px 0 0 rgb(34 197 94 / 60%);
+}
+
+.my-championships__result-board > div > span {
+  display: grid;
+  min-width: 0;
+  gap: 0.05rem;
+  text-align: left;
+}
+
+.my-championships__result-board > div > span > strong,
+.my-championships__result-board > div > span > small {
+  overflow-wrap: anywhere;
+}
+
+.my-championships__result-board > div > span > strong {
+  font-size: 0.8rem;
+}
+
+.my-championships__result-board > div > span > small {
+  font-size: 0.7rem;
+  opacity: 0.65;
+}
+
+.my-championships__result-board > div > strong {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .my-championships__match-result {
+    min-width: 0;
+    justify-items: stretch;
+  }
+
+  .my-championships__outcome {
+    justify-self: start;
+  }
+
+  .my-championships__result-board {
+    width: 100%;
+  }
+}
