@@ -13,6 +13,17 @@ const cookieFrom = (response) => {
   return values.map((value) => String(value).split(";", 1)[0]).join("; ");
 };
 
+const mergeCookies = (...cookies) => {
+  const values = new Map();
+  for (const cookie of cookies.filter(Boolean)) {
+    for (const part of String(cookie).split(/;\s*/u)) {
+      const index = part.indexOf("=");
+      if (index > 0) values.set(part.slice(0, index), part.slice(index + 1));
+    }
+  }
+  return Array.from(values, ([key, value]) => `${key}=${value}`).join("; ");
+};
+
 const decodeHtml = (value) =>
   String(value ?? "")
     .replace(/&nbsp;/giu, " ")
@@ -53,32 +64,53 @@ const parseSelects = (html) =>
               selected: /\bselected\b/iu.test(optionAttrs),
             };
           },
-        ).slice(0, 80),
+        ).slice(0, 120),
       };
     },
-  ).slice(0, 30);
+  );
 
-const parseButtons = (html) =>
-  Array.from(
-    html.matchAll(/<(button|input)\b([^>]*)>([\s\S]*?)(?:<\/button>|$)/giu),
-    (match) => {
-      const tag = match[1].toLowerCase();
-      const attrs = match[2];
-      const value = decodeHtml(
-        attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "",
-      );
-      return {
-        tag,
-        id: attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
-        name: attrs.match(/\bname=["']([^"']+)["']/iu)?.[1] ?? null,
-        type: attrs.match(/\btype=["']([^"']+)["']/iu)?.[1] ?? null,
-        value,
-        text: tag === "button" ? stripTags(match[3]) : value,
-      };
-    },
+const parseFormValues = (html) => {
+  const values = new Map();
+  for (const select of parseSelects(html)) {
+    const selected =
+      select.options.find((option) => option.selected) ?? select.options[0];
+    if (select.name && selected) values.set(select.name, selected.value);
+  }
+  for (const match of html.matchAll(/<input\b([^>]*)>/giu)) {
+    const attrs = match[1];
+    const name = attrs.match(/\bname=["']([^"']+)["']/iu)?.[1];
+    if (!name) continue;
+    const type = (
+      attrs.match(/\btype=["']([^"']+)["']/iu)?.[1] ?? "text"
+    ).toLowerCase();
+    if ((type === "checkbox" || type === "radio") && !/\bchecked\b/iu.test(attrs)) {
+      continue;
+    }
+    values.set(
+      name,
+      decodeHtml(attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? ""),
+    );
+  }
+  return values;
+};
+
+const optionValue = (selects, id, label) =>
+  selects
+    .find((select) => select.id === id)
+    ?.options.find((option) => option.label.toLowerCase() === label.toLowerCase())
+    ?.value ?? null;
+
+const htmlToLines = (html) =>
+  decodeHtml(
+    html
+      .replace(/<script\b[\s\S]*?<\/script>/giu, " ")
+      .replace(/<style\b[\s\S]*?<\/style>/giu, " ")
+      .replace(/<(?:br|\/td|\/tr|\/div|\/p|\/li|\/table|\/h\d)>/giu, "\n")
+      .replace(/<[^>]+>/gu, " "),
   )
-    .filter((item) => item.id || item.text)
-    .slice(0, 120);
+    .split(/\r?\n/gu)
+    .map((line) => line.replace(/\s+/gu, " ").trim())
+    .filter(Boolean);
 
 export default async function handler(request, response) {
   try {
@@ -89,52 +121,84 @@ export default async function handler(request, response) {
       return response.status(400).json({ error: "unsupported host" });
     }
 
-    const first = await fetch(source, { redirect: "follow", headers });
-    const firstHtml = await first.text();
-    const cookie = cookieFrom(first);
     const root = new URL("/FFPB_COMPETITION/", source.origin);
-    const second = await fetch(root, {
-      redirect: "follow",
-      headers: { ...headers, ...(cookie ? { cookie } : {}) },
-    });
-    const secondHtml = await second.text();
+    const page = await fetch(root, { redirect: "follow", headers });
+    const html = await page.text();
+    const cookie = cookieFrom(page);
+    const actionRaw = decodeHtml(
+      html.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1] ?? "",
+    );
+    if (!page.ok || !actionRaw) {
+      return response.status(500).json({ error: "landing page unavailable" });
+    }
+    const action = new URL(actionRaw, root.origin);
+    const selects = parseSelects(html);
+    const values = parseFormValues(html);
+    const selected = {
+      year: optionValue(selects, "A34", "2027"),
+      competition: optionValue(selects, "A33", "CHAMPIONNAT HIVER"),
+      division: optionValue(selects, "A36", "4ème série"),
+      specialty: optionValue(
+        selects,
+        "A38",
+        "Trinquet Paleta Pelote de Gomme Pleine",
+      ),
+    };
+    if (selected.year) values.set("A34", selected.year);
+    if (selected.competition) values.set("A33", selected.competition);
+    if (selected.division) values.set("A36", selected.division);
+    if (selected.specialty) {
+      values.set("A38", selected.specialty);
+      values.set("A39", selected.specialty);
+    }
+    values.set("WD_ACTION_", "");
+    values.set("WD_BUTTON_CLICK_", "A32");
 
-    const action = decodeHtml(
-      secondHtml.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1] ?? "",
+    const body = new URLSearchParams();
+    for (const [key, value] of values) body.set(key, value);
+    const result = await fetch(action, {
+      method: "POST",
+      redirect: "follow",
+      headers: {
+        ...headers,
+        "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+        ...(cookie ? { cookie } : {}),
+        referer: root.toString(),
+      },
+      body,
+    });
+    const resultHtml = await result.text();
+    const lines = htmlToLines(resultHtml);
+    const interesting = lines.filter(
+      (line) =>
+        /lourdes|4(?:e|è)me série|poule|\b\d{1,3}\s*[-–—]\s*\d{1,3}\b|résultat|rencontre/iu.test(
+          line,
+        ),
     );
 
-    const competitionControls = Array.from(
-      secondHtml.matchAll(/.{0,180}(?:CHAMPIONNAT HIVER|Championnat Hiver|2027).{0,260}/giu),
-      (match) => stripTags(match[0]),
-    ).slice(0, 50);
-
     return response.status(200).json({
-      first: {
-        status: first.status,
-        finalUrl: first.url,
-        cookieNames: cookie
+      landing: {
+        status: page.status,
+        action: action.toString(),
+        selected,
+      },
+      search: {
+        status: result.status,
+        finalUrl: result.url,
+        title: resultHtml.match(/<title[^>]*>([^<]*)<\/title>/iu)?.[1] ?? null,
+        length: resultHtml.length,
+        hasI7: /id=["']I7["']/iu.test(resultHtml),
+        cookieNames: mergeCookies(cookie, cookieFrom(result))
           .split(/;\s*/u)
           .filter(Boolean)
           .map((item) => item.split("=", 1)[0]),
-        hasI7: /id=["']I7["']/iu.test(firstHtml),
-        hasForm: /<form\b/iu.test(firstHtml),
-        title: firstHtml.match(/<title[^>]*>([^<]*)<\/title>/iu)?.[1] ?? null,
-        length: firstHtml.length,
-      },
-      root: {
-        status: second.status,
-        finalUrl: second.url,
-        action,
-        hasI7: /id=["']I7["']/iu.test(secondHtml),
-        hasForm: /<form\b/iu.test(secondHtml),
-        title: secondHtml.match(/<title[^>]*>([^<]*)<\/title>/iu)?.[1] ?? null,
-        length: secondHtml.length,
-        selects: parseSelects(secondHtml),
-        buttons: parseButtons(secondHtml),
-        competitionControls,
+        interesting: interesting.slice(0, 120),
+        firstLines: lines.slice(0, 180),
       },
     });
   } catch (error) {
-    return response.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+    return response.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
