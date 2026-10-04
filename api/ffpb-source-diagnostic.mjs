@@ -27,6 +27,59 @@ const stripTags = (value) =>
     .replace(/\s+/gu, " ")
     .trim();
 
+const parseSelects = (html) =>
+  Array.from(
+    html.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/giu),
+    (match) => {
+      const attrs = match[1];
+      const body = match[2];
+      return {
+        id: attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
+        name: attrs.match(/\bname=["']([^"']+)["']/iu)?.[1] ?? null,
+        options: Array.from(
+          body.matchAll(/<option\b([^>]*)>([\s\S]*?)<\/option>/giu),
+          (optionMatch) => {
+            const optionAttrs = optionMatch[1];
+            return {
+              value:
+                decodeHtml(
+                  optionAttrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "",
+                ),
+              memory:
+                decodeHtml(
+                  optionAttrs.match(/\bdata-wb-valmem=["']([^"']*)["']/iu)?.[1] ?? "",
+                ),
+              label: stripTags(optionMatch[2]),
+              selected: /\bselected\b/iu.test(optionAttrs),
+            };
+          },
+        ).slice(0, 80),
+      };
+    },
+  ).slice(0, 30);
+
+const parseButtons = (html) =>
+  Array.from(
+    html.matchAll(/<(button|input)\b([^>]*)>([\s\S]*?)(?:<\/button>|$)/giu),
+    (match) => {
+      const tag = match[1].toLowerCase();
+      const attrs = match[2];
+      const value = decodeHtml(
+        attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "",
+      );
+      return {
+        tag,
+        id: attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
+        name: attrs.match(/\bname=["']([^"']+)["']/iu)?.[1] ?? null,
+        type: attrs.match(/\btype=["']([^"']+)["']/iu)?.[1] ?? null,
+        value,
+        text: tag === "button" ? stripTags(match[3]) : value,
+      };
+    },
+  )
+    .filter((item) => item.id || item.text)
+    .slice(0, 120);
+
 export default async function handler(request, response) {
   try {
     const raw = String(request.query?.url ?? "").trim();
@@ -46,31 +99,14 @@ export default async function handler(request, response) {
     });
     const secondHtml = await second.text();
 
-    const competitionLinks = Array.from(
-      secondHtml.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/giu),
-      (match) => {
-        const attrs = match[1];
-        const href = decodeHtml(
-          attrs.match(/\bhref=["']([^"']+)["']/iu)?.[1] ?? "",
-        );
-        return { href, label: stripTags(match[2]) };
-      },
-    )
-      .filter((item) => /PAGE_ACCUEIL_INVITE|COMPETITION/iu.test(item.href))
-      .slice(0, 50);
+    const action = decodeHtml(
+      secondHtml.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1] ?? "",
+    );
 
-    const selects = Array.from(
-      secondHtml.matchAll(/<select\b([^>]*)>/giu),
-      (match) => ({
-        id: match[1].match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
-        name: match[1].match(/\bname=["']([^"']+)["']/iu)?.[1] ?? null,
-      }),
-    ).slice(0, 30);
-
-    const accueilSnippets = Array.from(
-      secondHtml.matchAll(/.{0,120}(?:Championnat|Hiver|2027).{0,180}/giu),
+    const competitionControls = Array.from(
+      secondHtml.matchAll(/.{0,180}(?:CHAMPIONNAT HIVER|Championnat Hiver|2027).{0,260}/giu),
       (match) => stripTags(match[0]),
-    ).slice(0, 30);
+    ).slice(0, 50);
 
     return response.status(200).json({
       first: {
@@ -88,13 +124,14 @@ export default async function handler(request, response) {
       root: {
         status: second.status,
         finalUrl: second.url,
+        action,
         hasI7: /id=["']I7["']/iu.test(secondHtml),
         hasForm: /<form\b/iu.test(secondHtml),
         title: secondHtml.match(/<title[^>]*>([^<]*)<\/title>/iu)?.[1] ?? null,
         length: secondHtml.length,
-        selects,
-        competitionLinks,
-        accueilSnippets,
+        selects: parseSelects(secondHtml),
+        buttons: parseButtons(secondHtml),
+        competitionControls,
       },
     });
   } catch (error) {
