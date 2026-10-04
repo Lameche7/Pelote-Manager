@@ -66,13 +66,24 @@ const matchHasStarted = (match: AdminChampionshipDayResult) => {
 type ResultEditorProps = {
   match: AdminChampionshipDayResult;
   settings: ChampionshipResultSettings | null;
+  isEditing: boolean;
   onCancel: () => void;
   onSaved: () => Promise<void>;
 };
 
-function ResultEditor({ match, settings, onCancel, onSaved }: ResultEditorProps) {
-  const [scoreTeam1, setScoreTeam1] = useState("");
-  const [scoreTeam2, setScoreTeam2] = useState("");
+function ResultEditor({
+  match,
+  settings,
+  isEditing,
+  onCancel,
+  onSaved,
+}: ResultEditorProps) {
+  const [scoreTeam1, setScoreTeam1] = useState(
+    match.proposedScoreTeam1 === null ? "" : String(match.proposedScoreTeam1),
+  );
+  const [scoreTeam2, setScoreTeam2] = useState(
+    match.proposedScoreTeam2 === null ? "" : String(match.proposedScoreTeam2),
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -81,7 +92,12 @@ function ResultEditor({ match, settings, onCancel, onSaved }: ResultEditorProps)
     const second = Number(scoreTeam2);
     const winningScore = settings?.winningScore ?? null;
 
-    if (!Number.isInteger(first) || !Number.isInteger(second) || first < 0 || second < 0) {
+    if (
+      !Number.isInteger(first) ||
+      !Number.isInteger(second) ||
+      first < 0 ||
+      second < 0
+    ) {
       setError("Saisissez deux scores entiers positifs.");
       return;
     }
@@ -91,7 +107,8 @@ function ResultEditor({ match, settings, onCancel, onSaved }: ResultEditorProps)
     }
     if (
       winningScore !== null &&
-      (Math.max(first, second) !== winningScore || Math.min(first, second) >= winningScore)
+      (Math.max(first, second) !== winningScore ||
+        Math.min(first, second) >= winningScore)
     ) {
       setError(`Le vainqueur doit atteindre ${winningScore}.`);
       return;
@@ -100,10 +117,18 @@ function ResultEditor({ match, settings, onCancel, onSaved }: ResultEditorProps)
     setSaving(true);
     setError("");
     try {
-      await adminChampionshipDayResultsService.submit(match.matchId, first, second);
+      await adminChampionshipDayResultsService.submit(
+        match.matchId,
+        first,
+        second,
+      );
       await onSaved();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Impossible d’enregistrer ce résultat.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible d’enregistrer ce résultat.",
+      );
     } finally {
       setSaving(false);
     }
@@ -112,7 +137,7 @@ function ResultEditor({ match, settings, onCancel, onSaved }: ResultEditorProps)
   return (
     <div className="admin-championship-results__editor">
       <p>
-        Saisir le résultat
+        {isEditing ? "Modifier le résultat" : "Saisir le résultat"}
         {settings?.winningScore ? ` · ${settings.winningScore} à gagner` : ""}
       </p>
       <div className="admin-championship-results__score-inputs">
@@ -145,11 +170,24 @@ function ResultEditor({ match, settings, onCancel, onSaved }: ResultEditorProps)
       </div>
       {error && <p className="admin-championship-results__error">{error}</p>}
       <div className="admin-championship-results__editor-actions">
-        <button type="button" className="secondary" onClick={onCancel} disabled={saving}>
+        <button
+          type="button"
+          className="secondary"
+          onClick={onCancel}
+          disabled={saving}
+        >
           Annuler
         </button>
-        <button type="button" onClick={() => void save()} disabled={saving || !scoreTeam1 || !scoreTeam2}>
-          {saving ? "Enregistrement…" : "Enregistrer le résultat"}
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={saving || !scoreTeam1 || !scoreTeam2}
+        >
+          {saving
+            ? "Enregistrement…"
+            : isEditing
+              ? "Enregistrer la modification"
+              : "Enregistrer le résultat"}
         </button>
       </div>
     </div>
@@ -157,10 +195,14 @@ function ResultEditor({ match, settings, onCancel, onSaved }: ResultEditorProps)
 }
 
 export function AdminChampionshipResultsPage() {
-  const [championships, setChampionships] = useState<AdminChampionshipSummary[]>([]);
+  const [championships, setChampionships] = useState<AdminChampionshipSummary[]>(
+    [],
+  );
   const [championshipId, setChampionshipId] = useState("");
   const [matches, setMatches] = useState<AdminChampionshipDayResult[]>([]);
-  const [settings, setSettings] = useState<ChampionshipResultSettings | null>(null);
+  const [settings, setSettings] = useState<ChampionshipResultSettings | null>(
+    null,
+  );
   const [selectedDay, setSelectedDay] = useState("");
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [loadingChampionships, setLoadingChampionships] = useState(true);
@@ -174,12 +216,17 @@ export function AdminChampionshipResultsPage() {
       .then((items) => {
         if (!active) return;
         setChampionships(items);
-        const preferred = items.find((item) => item.status === "active") ?? items[0];
+        const preferred =
+          items.find((item) => item.status === "active") ?? items[0];
         if (preferred) setChampionshipId(preferred.id);
       })
       .catch((cause) => {
         if (active) {
-          setError(cause instanceof Error ? cause.message : "Impossible de charger les championnats.");
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Impossible de charger les championnats.",
+          );
         }
       })
       .finally(() => {
@@ -215,13 +262,21 @@ export function AdminChampionshipResultsPage() {
       .then((nextMatches) => {
         if (!active) return;
         const days = Array.from(
-          new Set(nextMatches.map((match) => match.dayOn).filter((day): day is string => Boolean(day))),
+          new Set(
+            nextMatches
+              .map((match) => match.dayOn)
+              .filter((day): day is string => Boolean(day)),
+          ),
         ).sort((a, b) => a.localeCompare(b));
         setSelectedDay(defaultDay(days));
       })
       .catch((cause) => {
         if (active) {
-          setError(cause instanceof Error ? cause.message : "Impossible de charger les résultats.");
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Impossible de charger les résultats.",
+          );
         }
       })
       .finally(() => {
@@ -235,7 +290,11 @@ export function AdminChampionshipResultsPage() {
   const days = useMemo(
     () =>
       Array.from(
-        new Set(matches.map((match) => match.dayOn).filter((day): day is string => Boolean(day))),
+        new Set(
+          matches
+            .map((match) => match.dayOn)
+            .filter((day): day is string => Boolean(day)),
+        ),
       ).sort((a, b) => a.localeCompare(b)),
     [matches],
   );
@@ -252,7 +311,9 @@ export function AdminChampionshipResultsPage() {
       }
     });
     return Array.from(map.values()).sort(
-      (first, second) => first.order - second.order || first.name.localeCompare(second.name, "fr"),
+      (first, second) =>
+        first.order - second.order ||
+        first.name.localeCompare(second.name, "fr"),
     );
   }, [matches]);
 
@@ -268,7 +329,8 @@ export function AdminChampionshipResultsPage() {
     setEditingMatchId(null);
   };
 
-  const selectedChampionship = championships.find((item) => item.id === championshipId) ?? null;
+  const selectedChampionship =
+    championships.find((item) => item.id === championshipId) ?? null;
 
   return (
     <section className="admin-page admin-championship-results">
@@ -277,12 +339,18 @@ export function AdminChampionshipResultsPage() {
           <p className="admin-page__eyebrow">Championnats</p>
           <h1>Résultats Championnats</h1>
           <p className="admin-page__lead">
-            Sélectionnez un championnat et une journée pour retrouver, série par série, toutes les parties du club et compléter les résultats manquants.
+            Sélectionnez un championnat et une journée pour retrouver, série par
+            série, toutes les parties du club et compléter les résultats
+            manquants.
           </p>
         </div>
       </header>
 
-      {error && <p className="admin-championship-results__alert" role="alert">{error}</p>}
+      {error && (
+        <p className="admin-championship-results__alert" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="admin-card admin-championship-results__filters">
         <label>
@@ -292,7 +360,9 @@ export function AdminChampionshipResultsPage() {
             onChange={(event) => setChampionshipId(event.target.value)}
             disabled={loadingChampionships}
           >
-            {championships.length === 0 && <option value="">Aucun championnat</option>}
+            {championships.length === 0 && (
+              <option value="">Aucun championnat</option>
+            )}
             {championships.map((championship) => (
               <option key={championship.id} value={championship.id}>
                 {championship.name} · {championship.specialty}
@@ -322,12 +392,18 @@ export function AdminChampionshipResultsPage() {
 
         <div className="admin-championship-results__selection-summary">
           <span>{selectedChampionship?.seasonLabel || "Saison"}</span>
-          <strong>{selectedDay ? formatDate(selectedDay) : "Sélectionnez une journée"}</strong>
+          <strong>
+            {selectedDay
+              ? formatDate(selectedDay)
+              : "Sélectionnez une journée"}
+          </strong>
           <small>{matchesForDay.length} partie(s) du club</small>
         </div>
       </div>
 
-      {loadingResults && <div className="admin-card">Chargement des parties du club…</div>}
+      {loadingResults && (
+        <div className="admin-card">Chargement des parties du club…</div>
+      )}
 
       {!loadingChampionships && championships.length === 0 && !error && (
         <div className="admin-card admin-championship-results__empty">
@@ -342,11 +418,19 @@ export function AdminChampionshipResultsPage() {
       )}
 
       {!loadingResults && selectedDay && divisions.length > 0 && (
-        <div className="admin-championship-results__columns" aria-label="Résultats par série">
+        <div
+          className="admin-championship-results__columns"
+          aria-label="Résultats par série"
+        >
           {divisions.map((division) => {
-            const divisionMatches = matchesForDay.filter((match) => match.divisionId === division.id);
+            const divisionMatches = matchesForDay.filter(
+              (match) => match.divisionId === division.id,
+            );
             return (
-              <section className="admin-championship-results__division" key={division.id}>
+              <section
+                className="admin-championship-results__division"
+                key={division.id}
+              >
                 <header>
                   <div>
                     <span>Série</span>
@@ -357,71 +441,111 @@ export function AdminChampionshipResultsPage() {
 
                 <div className="admin-championship-results__cards">
                   {divisionMatches.length === 0 && (
-                    <p className="admin-championship-results__no-match">Aucune partie du club cette journée.</p>
+                    <p className="admin-championship-results__no-match">
+                      Aucune partie du club cette journée.
+                    </p>
                   )}
 
                   {divisionMatches.map((match) => {
                     const official = hasOfficialResult(match);
                     const proposed = hasPlayerProposal(match);
                     const started = matchHasStarted(match);
-                    const displayedScore1 = official ? match.officialScoreTeam1 : match.proposedScoreTeam1;
-                    const displayedScore2 = official ? match.officialScoreTeam2 : match.proposedScoreTeam2;
+                    const displayedScore1 = official
+                      ? match.officialScoreTeam1
+                      : match.proposedScoreTeam1;
+                    const displayedScore2 = official
+                      ? match.officialScoreTeam2
+                      : match.proposedScoreTeam2;
+                    const editorOpen = editingMatchId === match.matchId;
                     return (
                       <article
-                        className={`admin-championship-results__match${official ? " admin-championship-results__match--official" : proposed ? " admin-championship-results__match--proposed" : " admin-championship-results__match--missing"}`}
+                        className={`admin-championship-results__match${
+                          official
+                            ? " admin-championship-results__match--official"
+                            : proposed
+                              ? " admin-championship-results__match--proposed"
+                              : " admin-championship-results__match--missing"
+                        }`}
                         key={match.matchId}
                       >
                         <div className="admin-championship-results__match-meta">
-                          <span>{match.poolCode ? `Poule ${match.poolCode}` : "Championnat"}</span>
                           <span>
-                            {match.actualOn && match.actualOn !== match.dayOn ? `${formatShortDate(match.actualOn)} · ` : ""}
-                            {formatTime(match.actualTime) ?? "Horaire à confirmer"}
+                            {match.poolCode
+                              ? `Poule ${match.poolCode}`
+                              : "Championnat"}
+                          </span>
+                          <span>
+                            {match.actualOn && match.actualOn !== match.dayOn
+                              ? `${formatShortDate(match.actualOn)} · `
+                              : ""}
+                            {formatTime(match.actualTime) ??
+                              "Horaire à confirmer"}
                           </span>
                         </div>
 
                         <div className="admin-championship-results__teams">
                           <div className={match.team1IsClub ? "club-team" : ""}>
                             <strong>{match.team1Label}</strong>
-                            {match.team1Players.length > 0 && <small>{match.team1Players.join(" · ")}</small>}
+                            {match.team1Players.length > 0 && (
+                              <small>{match.team1Players.join(" · ")}</small>
+                            )}
                           </div>
                           <span>contre</span>
                           <div className={match.team2IsClub ? "club-team" : ""}>
                             <strong>{match.team2Label}</strong>
-                            {match.team2Players.length > 0 && <small>{match.team2Players.join(" · ")}</small>}
+                            {match.team2Players.length > 0 && (
+                              <small>{match.team2Players.join(" · ")}</small>
+                            )}
                           </div>
                         </div>
 
                         <div className="admin-championship-results__result">
-                          {displayedScore1 !== null && displayedScore2 !== null ? (
-                            <strong>{displayedScore1} <span>—</span> {displayedScore2}</strong>
+                          {displayedScore1 !== null &&
+                          displayedScore2 !== null ? (
+                            <strong>
+                              {displayedScore1} <span>—</span> {displayedScore2}
+                            </strong>
                           ) : (
-                            <strong className="missing">Résultat non saisi</strong>
+                            <strong className="missing">
+                              Résultat non saisi
+                            </strong>
                           )}
                           {official ? (
-                            <span className="admin-championship-results__status official">Résultat officiel</span>
+                            <span className="admin-championship-results__status official">
+                              Résultat officiel
+                            </span>
                           ) : proposed ? (
-                            <span className="admin-championship-results__status proposed">Saisi par les joueurs</span>
+                            <span className="admin-championship-results__status proposed">
+                              Résultat proposé
+                            </span>
                           ) : !started ? (
-                            <span className="admin-championship-results__status future">Partie à venir</span>
+                            <span className="admin-championship-results__status future">
+                              Partie à venir
+                            </span>
                           ) : (
-                            <span className="admin-championship-results__status missing">À compléter</span>
+                            <span className="admin-championship-results__status missing">
+                              À compléter
+                            </span>
                           )}
                         </div>
 
-                        {!official && !proposed && started && editingMatchId !== match.matchId && (
+                        {!official && started && !editorOpen && (
                           <button
                             type="button"
                             className="admin-championship-results__submit-button"
                             onClick={() => setEditingMatchId(match.matchId)}
                           >
-                            Saisir le résultat
+                            {proposed
+                              ? "Modifier le résultat"
+                              : "Saisir le résultat"}
                           </button>
                         )}
 
-                        {editingMatchId === match.matchId && (
+                        {editorOpen && (
                           <ResultEditor
                             match={match}
                             settings={settings}
+                            isEditing={proposed}
                             onCancel={() => setEditingMatchId(null)}
                             onSaved={refresh}
                           />
