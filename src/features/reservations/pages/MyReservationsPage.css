@@ -199,9 +199,190 @@
     width: 100%;
   }
 }
-.cancellation-dialog { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(8 43 33 / 58%); backdrop-filter: blur(5px); }
-.cancellation-dialog section { width: min(100%, 32rem); border-radius: 1.25rem; padding: 1.5rem; background: #fff; box-shadow: 0 2rem 5rem rgb(0 0 0 / 25%); }
-.cancellation-dialog section h2 { color: var(--brand-green); }
-.cancellation-dialog section > div { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.5rem; }
-.cancellation-dialog button { border: 0; border-radius: .7rem; padding: .75rem 1rem; cursor: pointer; font-weight: 800; }
-.cancellation-dialog .my-reservations__danger { color: #fff; background: #b91c1c; }
+
+.cancellation-dialog {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(8 43 33 / 58%);
+  backdrop-filter: blur(5px);
+}
+
+.cancellation-dialog section {
+  width: min(100%, 32rem);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  background: #fff;
+  box-shadow: 0 2rem 5rem rgb(0 0 0 / 25%);
+}
+
+.cancellation-dialog section h2 {
+  color: var(--brand-green);
+}
+
+.cancellation-dialog section > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.cancellation-dialog button {
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.cancellation-dialog .my-reservations__danger {
+  color: #fff;
+  background: #b91c1c;
+}
+
+.reservation-edit-dialog {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgb(8 43 33 / 62%);
+  backdrop-filter: blur(6px);
+}
+
+.reservation-edit-dialog > section {
+  width: min(100%, 42rem);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: 1.25rem;
+  padding: clamp(1rem, 3vw, 1.6rem);
+  background: #fff;
+  box-shadow: 0 2rem 5rem rgb(0 0 0 / 28%);
+}
+
+.reservation-edit-dialog h2 {
+  margin: 0.35rem 0 0;
+  color: var(--brand-green);
+}
+
+.reservation-edit-dialog__current {
+  border-radius: 0.8rem;
+  padding: 0.8rem;
+  background: #f8fafc;
+}
+
+.reservation-edit-dialog form {
+  display: grid;
+  gap: 1rem;
+}
+
+.reservation-edit-dialog__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.reservation-edit-dialog__fields label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 750;
+}
+
+.reservation-edit-dialog__fields select,
+.reservation-edit-dialog__fields input {
+  width: 100%;
+  min-height: 2.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.reservation-edit-dialog__slots {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.reservation-edit-dialog__slots > p {
+  margin: 0;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  color: #64748b;
+}
+
+.reservation-edit-dialog__slots > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.4rem, 1fr));
+  gap: 0.55rem;
+}
+
+.reservation-edit-dialog__slots button {
+  display: grid;
+  gap: 0.15rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.55rem;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.reservation-edit-dialog__slots button:hover,
+.reservation-edit-dialog__slots button.is-selected {
+  border-color: #1d4ed8;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.reservation-edit-dialog__slots button small {
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.reservation-edit-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.reservation-edit-dialog footer button {
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.reservation-edit-dialog footer button[type="submit"] {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.reservation-edit-dialog footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 40rem) {
+  .reservation-edit-dialog__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-edit-dialog footer {
+    flex-direction: column-reverse;
+  }
+
+  .reservation-edit-dialog footer button {
+    width: 100%;
+  }
+}
