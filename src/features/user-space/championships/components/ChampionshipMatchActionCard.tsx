@@ -29,14 +29,6 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "short",
-  day: "2-digit",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
 const displayDate = (value: string | null) => {
   if (!value) return "Date à définir";
   const date = new Date(`${value}T12:00:00`);
@@ -93,20 +85,16 @@ const resultTone = (match: MyChampionshipMatch) => {
 
 const matchEndTimestamp = (match: MyChampionshipMatch): number | null => {
   if (match.status === "played" || hasOfficialResult(match)) return Date.now() - 1;
-
   if (match.reservation?.endsAt) {
     const end = new Date(match.reservation.endsAt).getTime();
     if (!Number.isNaN(end)) return end;
   }
-
   const { date, time } = dateTimeParts(match);
   if (!date) return null;
-
   if (time) {
     const start = new Date(`${date}T${time.slice(0, 5)}:00`).getTime();
     if (!Number.isNaN(start)) return start + 60 * 60 * 1000;
   }
-
   const endOfDay = new Date(`${date}T23:59:59`).getTime();
   return Number.isNaN(endOfDay) ? null : endOfDay;
 };
@@ -168,9 +156,8 @@ export function ChampionshipMatchActionCard({
     match.status === "played" ||
     officialResult ||
     (endTimestamp !== null && endTimestamp <= Date.now());
-  const configuredResult = Boolean(
-    settings?.inputMode && settings.winningScore !== null,
-  );
+  const winningScore = settings?.winningScore ?? null;
+  const configuredResult = Boolean(settings?.inputMode && winningScore !== null);
   const place =
     match.reservation?.resourceName ??
     match.manualSchedule?.venue ??
@@ -280,7 +267,6 @@ export function ChampionshipMatchActionCard({
 
   const submitResult = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const winningScore = settings?.winningScore ?? null;
     const scoreA = Number(scoreMine);
     const scoreB = Number(scoreOpponent);
     if (
@@ -300,7 +286,6 @@ export function ChampionshipMatchActionCard({
       );
       return;
     }
-
     setResultSaving(true);
     setResultError("");
     try {
@@ -459,7 +444,9 @@ export function ChampionshipMatchActionCard({
         >
           <Clock3 aria-hidden="true" />
           <span>
-            <strong>{match.manualSchedule ? "Modifier la programmation" : "Renseigner la programmation"}</strong>
+            <strong>
+              {match.manualSchedule ? "Modifier la programmation" : "Renseigner la programmation"}
+            </strong>
             <small>{programmingReason}</small>
           </span>
         </button>
@@ -551,7 +538,7 @@ export function ChampionshipMatchActionCard({
         </form>
       )}
 
-      {resultEditing && canSubmitResult && settings?.winningScore !== null && (
+      {resultEditing && canSubmitResult && winningScore !== null && (
         <form className="championship-match-action__form" onSubmit={submitResult}>
           <header>
             <strong>Saisir le résultat</strong>
@@ -567,7 +554,7 @@ export function ChampionshipMatchActionCard({
               <input
                 type="number"
                 min="0"
-                max={settings.winningScore}
+                max={winningScore}
                 value={scoreMine}
                 onChange={(event) => setScoreMine(event.target.value)}
                 required
@@ -578,7 +565,7 @@ export function ChampionshipMatchActionCard({
               <input
                 type="number"
                 min="0"
-                max={settings.winningScore}
+                max={winningScore}
                 value={scoreOpponent}
                 onChange={(event) => setScoreOpponent(event.target.value)}
                 required
