@@ -24,6 +24,10 @@ declare
   v_issue_count integer := 0;
   v_issues jsonb := '[]'::jsonb;
   v_processed_count integer := 0;
+  v_confirmed_proposal_count integer := 0;
+  v_conflict_proposal_count integer := 0;
+  v_conflicts jsonb := '[]'::jsonb;
+  v_submission record;
 begin
   if not public.championship_club_can_manage(target_id, v_target_club_id) then
     raise exception 'Forbidden' using errcode = '42501';
@@ -54,6 +58,12 @@ begin
       ));
       continue;
     end if;
+
+    v_division_id := null;
+    v_team1_id := null;
+    v_team2_id := null;
+    v_target_match_id := null;
+    v_candidate_count := 0;
 
     select division.id into v_division_id
     from public.championship_divisions as division
@@ -145,18 +155,45 @@ begin
         and match.status = 'played'
     ) then
       v_unchanged_count := v_unchanged_count + 1;
-      continue;
+    else
+      update public.championship_matches as match
+      set score_team1 = v_score1,
+          score_team2 = v_score2,
+          score_raw = v_score1::text || '-' || v_score2::text,
+          status = 'played',
+          updated_at = now()
+      where match.id = v_target_match_id;
+
+      v_updated_count := v_updated_count + 1;
     end if;
 
-    update public.championship_matches as match
-    set score_team1 = v_score1,
-        score_team2 = v_score2,
-        score_raw = v_score1::text || '-' || v_score2::text,
-        status = 'played',
-        updated_at = now()
-    where match.id = v_target_match_id;
-
-    v_updated_count := v_updated_count + 1;
+    for v_submission in
+      select
+        submission.status::text as status,
+        submission.score_team1,
+        submission.score_team2,
+        submission.official_score_team1,
+        submission.official_score_team2
+      from public.championship_result_submissions as submission
+      where submission.match_id = v_target_match_id
+        and submission.status in ('confirmed_official', 'conflict_official')
+      order by submission.created_at desc
+    loop
+      if v_submission.status = 'confirmed_official' then
+        v_confirmed_proposal_count := v_confirmed_proposal_count + 1;
+      elsif v_submission.status = 'conflict_official' then
+        v_conflict_proposal_count := v_conflict_proposal_count + 1;
+        v_conflicts := v_conflicts || jsonb_build_array(jsonb_build_object(
+          'division', v_source_row ->> 'division',
+          'team1Label', coalesce(v_source_row ->> 'team1Label', v_source_row #>> '{team1,clubName}'),
+          'team2Label', coalesce(v_source_row ->> 'team2Label', v_source_row #>> '{team2,clubName}'),
+          'proposedScoreTeam1', v_submission.score_team1,
+          'proposedScoreTeam2', v_submission.score_team2,
+          'officialScoreTeam1', v_submission.official_score_team1,
+          'officialScoreTeam2', v_submission.official_score_team2
+        ));
+      end if;
+    end loop;
   end loop;
 
   insert into public.championship_audit_log (
@@ -175,6 +212,9 @@ begin
       'updatedCount', v_updated_count,
       'unchangedCount', v_unchanged_count,
       'issueCount', v_issue_count,
+      'confirmedProposalCount', v_confirmed_proposal_count,
+      'conflictProposalCount', v_conflict_proposal_count,
+      'conflicts', v_conflicts,
       'issues', v_issues
     )
   );
@@ -184,6 +224,9 @@ begin
     'updatedCount', v_updated_count,
     'unchangedCount', v_unchanged_count,
     'issueCount', v_issue_count,
+    'confirmedProposalCount', v_confirmed_proposal_count,
+    'conflictProposalCount', v_conflict_proposal_count,
+    'conflicts', v_conflicts,
     'issues', v_issues
   );
 end;
