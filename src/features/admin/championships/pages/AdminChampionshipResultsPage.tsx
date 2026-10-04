@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ChampionshipSourceUrlEditor } from "@/features/admin/championships/components/ChampionshipSourceUrlEditor";
 import {
   adminChampionshipDayResultsService,
   type AdminChampionshipDayResult,
@@ -338,6 +339,18 @@ export function AdminChampionshipResultsPage() {
   const selectedChampionship =
     championships.find((item) => item.id === championshipId) ?? null;
 
+  const updateSelectedSourceUrl = (sourceUrl: string | null) => {
+    setChampionships((current) =>
+      current.map((championship) =>
+        championship.id === championshipId
+          ? { ...championship, sourceUrl }
+          : championship,
+      ),
+    );
+    setOfficialUpdateError("");
+    setOfficialUpdateMessage("");
+  };
+
   const verifyOfficialSource = async () => {
     if (!selectedChampionship?.sourceUrl || divisions.length === 0) return;
     setOfficialUpdateBusy(true);
@@ -486,6 +499,12 @@ export function AdminChampionshipResultsPage() {
             )}
           </div>
 
+          <ChampionshipSourceUrlEditor
+            championshipId={selectedChampionship.id}
+            sourceUrl={selectedChampionship.sourceUrl}
+            onSaved={updateSelectedSourceUrl}
+          />
+
           <div className="admin-championship-results__official-controls">
             <div className="admin-championship-results__file-picker">
               <span>Planification</span>
@@ -506,7 +525,7 @@ export function AdminChampionshipResultsPage() {
 
           {!selectedChampionship.sourceUrl && (
             <p className="admin-championship-results__alert" role="alert">
-              Aucune source officielle n’est configurée pour ce championnat.
+              Renseignez l’URL officielle FFPB ci-dessus pour activer la synchronisation.
             </p>
           )}
 
