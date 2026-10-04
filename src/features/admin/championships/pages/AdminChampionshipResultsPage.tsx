@@ -8,7 +8,10 @@ import {
   championshipImportService,
   type AdminChampionshipSummary,
 } from "@/features/admin/championships/services/championshipImportService";
-import { championshipOfficialResultsSyncService } from "@/features/admin/championships/services/championshipOfficialResultsSyncService";
+import {
+  championshipOfficialResultsSyncService,
+  type OfficialResultConflict,
+} from "@/features/admin/championships/services/championshipOfficialResultsSyncService";
 import {
   championshipResultSettingsService,
   type ChampionshipResultSettings,
@@ -222,6 +225,7 @@ export function AdminChampionshipResultsPage() {
   const [officialUpdateBusy, setOfficialUpdateBusy] = useState(false);
   const [officialUpdateError, setOfficialUpdateError] = useState("");
   const [officialUpdateMessage, setOfficialUpdateMessage] = useState("");
+  const [officialConflicts, setOfficialConflicts] = useState<OfficialResultConflict[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -264,6 +268,7 @@ export function AdminChampionshipResultsPage() {
   useEffect(() => {
     setOfficialUpdateError("");
     setOfficialUpdateMessage("");
+    setOfficialConflicts([]);
     if (!championshipId) {
       setMatches([]);
       setSettings(null);
@@ -341,6 +346,7 @@ export function AdminChampionshipResultsPage() {
     );
     setOfficialUpdateError("");
     setOfficialUpdateMessage("");
+    setOfficialConflicts([]);
   };
 
   const verifyOfficialSource = async () => {
@@ -348,6 +354,7 @@ export function AdminChampionshipResultsPage() {
     setOfficialUpdateBusy(true);
     setOfficialUpdateError("");
     setOfficialUpdateMessage("");
+    setOfficialConflicts([]);
     try {
       const source = await championshipOfficialResultsSyncService.read({
         sourceUrl: selectedChampionship.sourceUrl,
@@ -368,16 +375,24 @@ export function AdminChampionshipResultsPage() {
               unchangedCount: 0,
               issueCount: 0,
               issues: [],
+              confirmedProposalCount: 0,
+              conflictProposalCount: 0,
+              conflicts: [],
             };
       await refresh();
+      setOfficialConflicts(applied.conflicts);
 
       const warningCount = source.warnings.length + applied.issueCount;
       const warningSuffix =
         warningCount > 0
           ? ` · ${warningCount} correspondance(s) à vérifier`
           : "";
+      const proposalSuffix =
+        applied.confirmedProposalCount > 0 || applied.conflictProposalCount > 0
+          ? ` · ${applied.confirmedProposalCount} proposition(s) confirmée(s) · ${applied.conflictProposalCount} divergente(s)`
+          : "";
       setOfficialUpdateMessage(
-        `FFPB vérifiée : ${source.summary.officialResultCount} résultat(s) officiel(s) trouvé(s) · ${applied.updatedCount} mis à jour · ${applied.unchangedCount} déjà à jour${warningSuffix}.`,
+        `FFPB vérifiée : ${source.summary.officialResultCount} résultat(s) officiel(s) trouvé(s) · ${applied.updatedCount} mis à jour · ${applied.unchangedCount} déjà à jour${proposalSuffix}${warningSuffix}.`,
       );
     } catch (cause) {
       setOfficialUpdateError(
@@ -540,6 +555,19 @@ export function AdminChampionshipResultsPage() {
             <p className="admin-championship-results__official-success">
               {officialUpdateMessage}
             </p>
+          )}
+
+          {officialConflicts.length > 0 && (
+            <div className="admin-championship-results__alert" role="alert">
+              <strong>
+                ⚠️ {officialConflicts.length} résultat(s) proposé(s) diffèrent de la FFPB
+              </strong>
+              {officialConflicts.map((conflict, index) => (
+                <p key={`${conflict.division}-${conflict.team1Label}-${conflict.team2Label}-${index}`}>
+                  <strong>{conflict.division}</strong> · {conflict.team1Label} – {conflict.team2Label} · proposé {conflict.proposedScoreTeam1}–{conflict.proposedScoreTeam2} → officiel {conflict.officialScoreTeam1}–{conflict.officialScoreTeam2}
+                </p>
+              ))}
+            </div>
           )}
         </section>
       )}
