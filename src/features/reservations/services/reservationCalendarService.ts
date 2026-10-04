@@ -10,6 +10,7 @@ import { mapCalendarOccupation } from "@/features/reservations/domain/calendar";
 
 type ResourceRow = {
   id: string;
+  club_id: string;
   name: string;
   description: string | null;
   timezone: string;
@@ -32,7 +33,7 @@ export const reservationCalendarService = {
   async listResources(): Promise<ReservableResource[]> {
     const { data, error } = await supabase
       .from("reservable_resources")
-      .select("id, name, description, timezone")
+      .select("id, club_id, name, description, timezone")
       .eq("is_active", true)
       .order("name");
 
@@ -43,6 +44,7 @@ export const reservationCalendarService = {
 
     return ((data ?? []) as ResourceRow[]).map((resource) => ({
       id: resource.id,
+      clubId: resource.club_id,
       name: resource.name,
       description: resource.description,
       timezone: resource.timezone,
