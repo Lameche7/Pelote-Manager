@@ -1,22 +1,16 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   adminChampionshipDayResultsService,
   type AdminChampionshipDayResult,
 } from "@/features/admin/championships/services/adminChampionshipDayResultsService";
 import {
-  buildChampionshipMatchesUpdatePayload,
-  type ChampionshipMatchesUpdatePayload,
-} from "@/features/admin/championships/domain/championshipMatchesUpdate";
-import {
   championshipImportService,
   type AdminChampionshipSummary,
-  type ChampionshipUpdatePreview,
 } from "@/features/admin/championships/services/championshipImportService";
 import {
   championshipResultSettingsService,
   type ChampionshipResultSettings,
 } from "@/features/admin/championships/services/championshipResultSettingsService";
-import { championshipSourceFileService } from "@/features/admin/championships/services/championshipSourceFileService";
 import "./AdminChampionshipResultsPage.css";
 
 const formatDate = (value: string | null) => {
@@ -209,6 +203,15 @@ function ResultEditor({
   );
 }
 
+type SourceCheckResponse = {
+  summary?: {
+    teamCount?: number;
+    divisionCount?: number;
+  };
+  warnings?: string[];
+  error?: string;
+};
+
 export function AdminChampionshipResultsPage() {
   const [championships, setChampionships] = useState<AdminChampionshipSummary[]>(
     [],
@@ -223,24 +226,9 @@ export function AdminChampionshipResultsPage() {
   const [loadingChampionships, setLoadingChampionships] = useState(true);
   const [loadingResults, setLoadingResults] = useState(false);
   const [error, setError] = useState("");
-
-  const [officialUpdateOpen, setOfficialUpdateOpen] = useState(false);
-  const [officialUpdateFile, setOfficialUpdateFile] = useState<File | null>(null);
-  const [officialUpdatePayload, setOfficialUpdatePayload] =
-    useState<ChampionshipMatchesUpdatePayload | null>(null);
-  const [officialUpdatePreview, setOfficialUpdatePreview] =
-    useState<ChampionshipUpdatePreview | null>(null);
   const [officialUpdateBusy, setOfficialUpdateBusy] = useState(false);
   const [officialUpdateError, setOfficialUpdateError] = useState("");
   const [officialUpdateMessage, setOfficialUpdateMessage] = useState("");
-
-  const resetOfficialUpdate = () => {
-    setOfficialUpdateFile(null);
-    setOfficialUpdatePayload(null);
-    setOfficialUpdatePreview(null);
-    setOfficialUpdateError("");
-    setOfficialUpdateMessage("");
-  };
 
   useEffect(() => {
     let active = true;
@@ -281,8 +269,8 @@ export function AdminChampionshipResultsPage() {
   };
 
   useEffect(() => {
-    resetOfficialUpdate();
-    setOfficialUpdateOpen(false);
+    setOfficialUpdateError("");
+    setOfficialUpdateMessage("");
     if (!championshipId) {
       setMatches([]);
       setSettings(null);
@@ -347,107 +335,49 @@ export function AdminChampionshipResultsPage() {
     setEditingMatchId(null);
   };
 
-  const selectOfficialUpdateFile = (event: ChangeEvent<HTMLInputElement>) => {
-    setOfficialUpdateFile(event.target.files?.[0] ?? null);
-    setOfficialUpdatePayload(null);
-    setOfficialUpdatePreview(null);
-    setOfficialUpdateError("");
-    setOfficialUpdateMessage("");
-  };
-
-  const analyseOfficialUpdate = async () => {
-    if (!championshipId || !officialUpdateFile) return;
-    setOfficialUpdateBusy(true);
-    setOfficialUpdateError("");
-    setOfficialUpdateMessage("");
-    setOfficialUpdatePreview(null);
-    setOfficialUpdatePayload(null);
-    try {
-      const parsed =
-        await championshipSourceFileService.parseMatchesUpdate(
-          officialUpdateFile,
-        );
-      if (!parsed.valid) {
-        const details = parsed.issues
-          .filter((issue) => issue.severity === "error")
-          .slice(0, 4)
-          .map((issue) => issue.message)
-          .join(" ");
-        throw new Error(
-          details || "Le fichier officiel ne peut pas être utilisé.",
-        );
-      }
-      const descriptor =
-        await championshipSourceFileService.describeMatchesUpdate(
-          officialUpdateFile,
-          parsed.matches.length,
-        );
-      const payload = buildChampionshipMatchesUpdatePayload(parsed, descriptor);
-      const preview = await championshipImportService.previewMatchesUpdate(
-        championshipId,
-        payload,
-      );
-      setOfficialUpdatePayload(payload);
-      setOfficialUpdatePreview(preview);
-    } catch (cause) {
-      setOfficialUpdateError(
-        cause instanceof Error
-          ? cause.message
-          : "Impossible d’analyser le fichier officiel.",
-      );
-    } finally {
-      setOfficialUpdateBusy(false);
-    }
-  };
-
-  const applyOfficialUpdate = async () => {
-    if (
-      !championshipId ||
-      !officialUpdatePayload ||
-      !officialUpdatePreview?.valid
-    ) {
-      return;
-    }
-    setOfficialUpdateBusy(true);
-    setOfficialUpdateError("");
-    try {
-      const result = await championshipImportService.applyMatchesUpdate(
-        championshipId,
-        officialUpdatePayload,
-      );
-      const [nextMatches, nextChampionships] = await Promise.all([
-        loadResults(championshipId),
-        championshipImportService.list(),
-      ]);
-      setMatches(nextMatches);
-      setChampionships(nextChampionships);
-      setSelectedDay((current) =>
-        current && nextMatches.some((match) => match.dayOn === current)
-          ? current
-          : defaultDay(matchDays(nextMatches)),
-      );
-      setEditingMatchId(null);
-      setOfficialUpdateMessage(
-        result.alreadyImported
-          ? "Ce fichier officiel avait déjà été appliqué : aucune donnée n’a été dupliquée."
-          : `Mise à jour officielle appliquée : ${result.summary.resultAddedCount} nouveau(x) résultat(s), ${result.summary.changedCount} rencontre(s) modifiée(s).`,
-      );
-      setOfficialUpdatePayload(null);
-      setOfficialUpdatePreview(null);
-      setOfficialUpdateFile(null);
-    } catch (cause) {
-      setOfficialUpdateError(
-        cause instanceof Error
-          ? cause.message
-          : "Impossible d’appliquer la mise à jour officielle.",
-      );
-    } finally {
-      setOfficialUpdateBusy(false);
-    }
-  };
-
   const selectedChampionship =
     championships.find((item) => item.id === championshipId) ?? null;
+
+  const verifyOfficialSource = async () => {
+    if (!selectedChampionship?.sourceUrl || divisions.length === 0) return;
+    setOfficialUpdateBusy(true);
+    setOfficialUpdateError("");
+    setOfficialUpdateMessage("");
+    try {
+      const response = await fetch("/api/championship-standings-source", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sourceUrl: selectedChampionship.sourceUrl,
+          divisions: divisions.map((division) => ({ name: division.name })),
+        }),
+      });
+      const payload = (await response.json()) as SourceCheckResponse;
+      if (!response.ok) {
+        throw new Error(
+          payload.error || "La source FFPB n’a pas pu être vérifiée.",
+        );
+      }
+      await refresh();
+      const teamCount = payload.summary?.teamCount;
+      const divisionCount = payload.summary?.divisionCount;
+      const detail =
+        typeof teamCount === "number"
+          ? ` ${teamCount} équipe(s) lue(s)${typeof divisionCount === "number" ? ` sur ${divisionCount} série(s)` : ""}.`
+          : "";
+      setOfficialUpdateMessage(
+        `Source FFPB vérifiée directement.${detail} La synchronisation automatique utilisera cette même source.`,
+      );
+    } catch (cause) {
+      setOfficialUpdateError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible de vérifier la source FFPB.",
+      );
+    } finally {
+      setOfficialUpdateBusy(false);
+    }
+  };
 
   return (
     <section className="admin-page admin-championship-results">
@@ -464,14 +394,15 @@ export function AdminChampionshipResultsPage() {
         <button
           type="button"
           className="admin-championship-results__official-trigger"
-          disabled={!championshipId}
-          onClick={() => {
-            setOfficialUpdateOpen((current) => !current);
-            setOfficialUpdateError("");
-          }}
+          disabled={
+            !selectedChampionship?.sourceUrl ||
+            divisions.length === 0 ||
+            officialUpdateBusy
+          }
+          onClick={() => void verifyOfficialSource()}
         >
           <span aria-hidden="true">↻</span>
-          Actualiser depuis la source officielle
+          {officialUpdateBusy ? "Vérification…" : "Vérifier maintenant"}
         </button>
       </header>
 
@@ -530,16 +461,17 @@ export function AdminChampionshipResultsPage() {
         </div>
       </div>
 
-      {officialUpdateOpen && selectedChampionship && (
+      {selectedChampionship && (
         <section className="admin-card admin-championship-results__official-update">
           <div className="admin-championship-results__official-update-head">
             <div>
-              <p className="admin-page__eyebrow">Source officielle</p>
-              <h2>Actualiser les résultats officiels</h2>
+              <p className="admin-page__eyebrow">Source officielle FFPB</p>
+              <h2>Synchronisation automatique activée</h2>
               <p>
-                Téléchargez le nouveau <strong>parties.xlsx</strong>, puis
-                comparez-le avant d’appliquer les changements. Aucun résultat
-                n’est modifié pendant l’analyse.
+                Du jeudi au dimanche, PILOTOKI vérifiera directement la source
+                fédérale chaque soir vers 23 h. Les correspondances sûres seront
+                appliquées automatiquement et un résultat officiel restera
+                toujours prioritaire sur un résultat proposé dans l’application.
               </p>
             </div>
             {selectedChampionship.sourceUrl && (
@@ -555,26 +487,28 @@ export function AdminChampionshipResultsPage() {
           </div>
 
           <div className="admin-championship-results__official-controls">
-            <label className="admin-championship-results__file-picker">
-              <span>Nouveau fichier officiel parties.xlsx</span>
-              <input
-                type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                onChange={selectOfficialUpdateFile}
-                disabled={officialUpdateBusy}
-              />
-              <strong>
-                {officialUpdateFile?.name ?? "Choisir le fichier officiel"}
-              </strong>
-            </label>
+            <div className="admin-championship-results__file-picker">
+              <span>Planification</span>
+              <strong>Jeudi → dimanche · vérification vers 23 h</strong>
+            </div>
             <button
               type="button"
-              onClick={() => void analyseOfficialUpdate()}
-              disabled={!officialUpdateFile || officialUpdateBusy}
+              onClick={() => void verifyOfficialSource()}
+              disabled={
+                officialUpdateBusy ||
+                !selectedChampionship.sourceUrl ||
+                divisions.length === 0
+              }
             >
-              {officialUpdateBusy ? "Analyse en cours…" : "Comparer les résultats"}
+              {officialUpdateBusy ? "Vérification en cours…" : "Vérifier maintenant"}
             </button>
           </div>
+
+          {!selectedChampionship.sourceUrl && (
+            <p className="admin-championship-results__alert" role="alert">
+              Aucune source officielle n’est configurée pour ce championnat.
+            </p>
+          )}
 
           {officialUpdateError && (
             <p className="admin-championship-results__alert" role="alert">
@@ -586,86 +520,6 @@ export function AdminChampionshipResultsPage() {
             <p className="admin-championship-results__official-success">
               {officialUpdateMessage}
             </p>
-          )}
-
-          {officialUpdatePreview && (
-            <div className="admin-championship-results__official-preview">
-              <div className="admin-championship-results__official-kpis">
-                <div className="primary">
-                  <strong>{officialUpdatePreview.summary.resultAddedCount}</strong>
-                  <span>nouveaux résultats officiels</span>
-                </div>
-                <div>
-                  <strong>{officialUpdatePreview.summary.changedCount}</strong>
-                  <span>rencontres modifiées</span>
-                </div>
-                <div>
-                  <strong>{officialUpdatePreview.summary.rescheduledCount}</strong>
-                  <span>dates / reports modifiés</span>
-                </div>
-                <div>
-                  <strong>{officialUpdatePreview.summary.newCount}</strong>
-                  <span>nouvelles rencontres</span>
-                </div>
-                <div>
-                  <strong>{officialUpdatePreview.summary.unchangedCount}</strong>
-                  <span>inchangées</span>
-                </div>
-              </div>
-
-              {officialUpdatePreview.alreadyImported && (
-                <p className="admin-championship-results__official-info">
-                  Ce fichier a déjà été appliqué. Il ne sera pas importé une
-                  seconde fois.
-                </p>
-              )}
-
-              {officialUpdatePreview.issues.length > 0 && (
-                <div className="admin-championship-results__official-issues">
-                  {officialUpdatePreview.issues.map((issue, index) => (
-                    <p key={`${issue.code}-${index}`}>{issue.message}</p>
-                  ))}
-                </div>
-              )}
-
-              {officialUpdatePreview.changes.length > 0 && (
-                <div className="admin-championship-results__official-changes">
-                  <h3>Changements détectés</h3>
-                  {officialUpdatePreview.changes.slice(0, 30).map((change, index) => (
-                    <div key={`${change.kind}-${index}`}>
-                      <div>
-                        <strong>
-                          {change.category} · {change.phase}
-                        </strong>
-                        <span>
-                          {change.team1} {change.team1Number} — {change.team2}{" "}
-                          {change.team2Number}
-                        </span>
-                      </div>
-                      <div className="admin-championship-results__official-change-detail">
-                        {change.score && <strong>{change.score}</strong>}
-                        <small>{change.fields.join(" · ")}</small>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <button
-                type="button"
-                className="admin-championship-results__official-apply"
-                onClick={() => void applyOfficialUpdate()}
-                disabled={
-                  officialUpdateBusy ||
-                  !officialUpdatePreview.valid ||
-                  officialUpdatePreview.alreadyImported
-                }
-              >
-                {officialUpdateBusy
-                  ? "Mise à jour…"
-                  : `Appliquer la mise à jour officielle${officialUpdatePreview.summary.resultAddedCount > 0 ? ` · ${officialUpdatePreview.summary.resultAddedCount} résultat(s)` : ""}`}
-              </button>
-            </div>
           )}
         </section>
       )}
