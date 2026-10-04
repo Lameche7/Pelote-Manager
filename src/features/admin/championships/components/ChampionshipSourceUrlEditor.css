@@ -1,0 +1,72 @@
+.admin-championship-results__source-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: end;
+  border: 1px solid #dbeafe;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0.9rem;
+}
+
+.admin-championship-results__source-editor label {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.admin-championship-results__source-editor label > span {
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.admin-championship-results__source-editor input {
+  width: 100%;
+  min-width: 0;
+  min-height: 3rem;
+  box-sizing: border-box;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0 0.85rem;
+  font: inherit;
+}
+
+.admin-championship-results__source-editor > button {
+  min-height: 3rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #1d4ed8;
+  color: #fff;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-championship-results__source-editor > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-championship-results__source-editor > p,
+.admin-championship-results__source-editor > small {
+  grid-column: 1 / -1;
+}
+
+.admin-championship-results__source-editor > small {
+  color: #64748b;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .admin-championship-results__source-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-championship-results__source-editor > button {
+    width: 100%;
+  }
+}
