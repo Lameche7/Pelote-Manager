@@ -1,6 +1,7 @@
 create or replace function public.list_my_reservations_v2()
 returns table (
   id uuid,
+  club_id uuid,
   resource_id uuid,
   resource_name text,
   starts_at timestamptz,
@@ -25,6 +26,7 @@ set search_path = ''
 as $function$
   select
     reservation.id,
+    resource.club_id,
     reservation.resource_id,
     resource.name,
     reservation.starts_at,
