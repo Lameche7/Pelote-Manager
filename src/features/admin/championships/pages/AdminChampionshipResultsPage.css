@@ -4,6 +4,38 @@
 
 .admin-championship-results__header {
   align-items: flex-start;
+  gap: 1rem;
+}
+
+.admin-championship-results__header > div {
+  min-width: 0;
+}
+
+.admin-championship-results__official-trigger {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3rem;
+  border: 0;
+  border-radius: 0.85rem;
+  background: #0f172a;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16);
+}
+
+.admin-championship-results__official-trigger span {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.admin-championship-results__official-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .admin-championship-results__alert,
@@ -56,6 +88,228 @@
 .admin-championship-results__selection-summary span,
 .admin-championship-results__selection-summary small {
   color: #6b7280;
+}
+
+.admin-championship-results__official-update {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 58%);
+}
+
+.admin-championship-results__official-update-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.admin-championship-results__official-update-head > div {
+  min-width: 0;
+}
+
+.admin-championship-results__official-update-head h2,
+.admin-championship-results__official-update-head p {
+  margin-top: 0;
+}
+
+.admin-championship-results__official-update-head h2 {
+  margin-bottom: 0.4rem;
+}
+
+.admin-championship-results__official-update-head p:last-child {
+  margin-bottom: 0;
+  color: #475569;
+}
+
+.admin-championship-results__source-link {
+  flex: 0 0 auto;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #1d4ed8;
+  padding: 0.7rem 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-championship-results__official-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: stretch;
+}
+
+.admin-championship-results__file-picker {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+  border: 1px dashed #93c5fd;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.8rem 0.9rem;
+  cursor: pointer;
+}
+
+.admin-championship-results__file-picker > span {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-championship-results__file-picker > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-championship-results__file-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-championship-results__official-controls > button,
+.admin-championship-results__official-apply {
+  border: 0;
+  border-radius: 0.8rem;
+  background: #1d4ed8;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-championship-results__official-controls > button:disabled,
+.admin-championship-results__official-apply:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-championship-results__official-success,
+.admin-championship-results__official-info {
+  margin: 0;
+  border-radius: 0.8rem;
+  padding: 0.75rem 0.9rem;
+  font-weight: 700;
+}
+
+.admin-championship-results__official-success {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.admin-championship-results__official-info {
+  border: 1px solid #bae6fd;
+  background: #f0f9ff;
+  color: #075985;
+}
+
+.admin-championship-results__official-preview {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-championship-results__official-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.admin-championship-results__official-kpis > div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.8rem;
+  background: #fff;
+  padding: 0.75rem;
+}
+
+.admin-championship-results__official-kpis > div.primary {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.admin-championship-results__official-kpis strong {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.admin-championship-results__official-kpis span {
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.admin-championship-results__official-issues {
+  border: 1px solid #fecaca;
+  border-radius: 0.8rem;
+  background: #fff7f7;
+  color: #991b1b;
+  padding: 0.65rem 0.8rem;
+}
+
+.admin-championship-results__official-issues p {
+  margin: 0.25rem 0;
+}
+
+.admin-championship-results__official-changes {
+  display: grid;
+  gap: 0.55rem;
+  max-height: 330px;
+  overflow: auto;
+  border-top: 1px solid #dbeafe;
+  padding-top: 0.8rem;
+}
+
+.admin-championship-results__official-changes h3 {
+  margin: 0 0 0.15rem;
+}
+
+.admin-championship-results__official-changes > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.7rem;
+  background: #fff;
+  padding: 0.65rem 0.75rem;
+}
+
+.admin-championship-results__official-changes > div > div:first-child {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.admin-championship-results__official-changes span,
+.admin-championship-results__official-changes small {
+  color: #64748b;
+}
+
+.admin-championship-results__official-change-detail {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 0.15rem;
+  justify-items: end;
+  text-align: right;
+}
+
+.admin-championship-results__official-change-detail > strong {
+  font-size: 1.05rem;
+}
+
+.admin-championship-results__official-apply {
+  min-height: 3rem;
+  background: #15803d;
 }
 
 .admin-championship-results__columns {
@@ -327,6 +581,20 @@
   font-size: 0.82rem;
 }
 
+@media (max-width: 1050px) {
+  .admin-championship-results__header {
+    display: grid;
+  }
+
+  .admin-championship-results__official-trigger {
+    justify-self: start;
+  }
+
+  .admin-championship-results__official-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .admin-championship-results__filters {
     grid-template-columns: 1fr;
@@ -338,7 +606,40 @@
     padding: 0.75rem 0 0;
   }
 
+  .admin-championship-results__official-update-head,
+  .admin-championship-results__official-changes > div {
+    display: grid;
+  }
+
+  .admin-championship-results__source-link {
+    justify-self: start;
+  }
+
+  .admin-championship-results__official-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-championship-results__official-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-championship-results__official-change-detail {
+    justify-items: start;
+    text-align: left;
+  }
+
   .admin-championship-results__columns {
     grid-auto-columns: minmax(86vw, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-championship-results__official-trigger {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-championship-results__official-kpis {
+    grid-template-columns: 1fr;
   }
 }
