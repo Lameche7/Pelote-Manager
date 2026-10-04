@@ -53,6 +53,33 @@
   height: 1.3rem;
 }
 
+.championship-standings-browser__mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.3rem;
+  border-radius: 0.85rem;
+  background: rgb(148 163 184 / 10%);
+}
+
+.championship-standings-browser__mode-tabs button {
+  min-height: 2.8rem;
+  padding: 0.6rem 0.8rem;
+  border: 0;
+  border-radius: 0.68rem;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.championship-standings-browser__mode-tabs button.is-active {
+  color: #fff;
+  background: var(--brand-blue, #0d2b6c);
+  box-shadow: 0 4px 12px rgb(15 23 42 / 12%);
+}
+
 .championship-standings-browser__filters {
   display: grid;
   grid-template-columns: minmax(12rem, 20rem);
@@ -126,6 +153,11 @@
   background: rgb(148 163 184 / 8%);
 }
 
+.championship-standings-browser__summary--general {
+  border: 1px solid rgb(37 99 235 / 15%);
+  background: rgb(37 99 235 / 5%);
+}
+
 .championship-standings-browser__summary > div {
   display: grid;
   gap: 0.08rem;
@@ -156,6 +188,38 @@
   background: rgb(239 68 68 / 9%);
 }
 
+.championship-standings-browser__qualification-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgb(22 163 74 / 20%);
+  border-radius: 0.85rem;
+  background: rgb(22 163 74 / 8%);
+}
+
+.championship-standings-browser__qualification-status > svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.championship-standings-browser__qualification-status > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.championship-standings-browser__qualification-status span,
+.championship-standings-browser__qualification-status small {
+  line-height: 1.4;
+  opacity: 0.76;
+}
+
+.championship-standings-browser__qualification-status small {
+  font-size: 0.72rem;
+}
+
 .championship-standings-browser__list {
   display: grid;
   gap: 0.55rem;
@@ -172,10 +236,43 @@
   background: var(--surface-elevated, #fff);
 }
 
+.championship-standings-browser__row.is-qualified {
+  border-color: rgb(22 163 74 / 25%);
+  background: rgb(22 163 74 / 5%);
+}
+
 .championship-standings-browser__row.is-mine {
   border-width: 2px;
   border-color: var(--brand-blue, #0d2b6c);
   background: rgb(37 99 235 / 5%);
+}
+
+.championship-standings-browser__row.is-mine.is-qualified {
+  box-shadow: inset 4px 0 0 rgb(22 163 74 / 75%);
+}
+
+.championship-standings-browser__qualification-cut {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0.35rem 0;
+  color: rgb(185 28 28);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.championship-standings-browser__qualification-cut::before,
+.championship-standings-browser__qualification-cut::after {
+  height: 2px;
+  flex: 1;
+  content: "";
+  background: rgb(239 68 68 / 45%);
+}
+
+.championship-standings-browser__qualification-cut span {
+  flex: 0 0 auto;
 }
 
 .championship-standings-browser__rank {
@@ -184,6 +281,10 @@
   min-height: 3rem;
   border-radius: 0.7rem;
   background: rgb(148 163 184 / 9%);
+}
+
+.championship-standings-browser__row.is-qualified .championship-standings-browser__rank {
+  background: rgb(22 163 74 / 10%);
 }
 
 .championship-standings-browser__rank strong {
@@ -197,7 +298,7 @@
 
 .championship-standings-browser__rank small {
   font-size: 0.62rem;
-  opacity: 0.5;
+  opacity: 0.62;
 }
 
 .championship-standings-browser__team {
@@ -243,6 +344,7 @@
     padding: 0.9rem;
   }
 
+  .championship-standings-browser__mode-tabs,
   .championship-standings-browser__filters {
     grid-template-columns: 1fr;
   }
