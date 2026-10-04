@@ -1,991 +1,327 @@
 .my-championships {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.35rem;
 }
 
 .my-championships__page-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.9rem;
 }
 
-.my-championships__page-header h1,
-.my-championships__card h2 {
-  margin: 0;
-}
-
-.my-championships__page-header p,
-.my-championships__card-header p {
-  margin: 0.25rem 0 0;
-}
-
-.my-championships__page-icon {
-  display: grid;
-  width: 3rem;
-  height: 3rem;
-  place-items: center;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.9rem;
-  background: var(--surface-elevated, #fff);
-}
-
-.my-championships__page-icon svg {
-  width: 1.35rem;
-  height: 1.35rem;
-}
-
-.my-championships__eyebrow,
-.my-championships__label {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  opacity: 0.68;
-}
-
-.my-championships__list {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.my-championships__card {
-  display: grid;
-  gap: 1.25rem;
-  padding: 1.25rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 1rem;
-  background: var(--surface-elevated, #fff);
-  box-shadow: 0 10px 30px rgb(15 23 42 / 5%);
-}
-
-.my-championships__card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.my-championships__header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.55rem;
-}
-
-.my-championships__header-actions > span,
-.my-championships__header-actions a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 2rem;
-  padding: 0.35rem 0.65rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 999px;
-  font-size: 0.82rem;
-  text-decoration: none;
-}
-
-.my-championships__header-actions a svg {
-  width: 0.9rem;
-  height: 0.9rem;
-}
-
-.my-championships__identity-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.my-championships__identity-grid > div {
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.85rem;
-  border-radius: 0.8rem;
-  background: rgb(148 163 184 / 10%);
-}
-
-.my-championships__identity-grid span,
-.my-championships__standings-heading span {
-  font-size: 0.8rem;
-  opacity: 0.68;
-}
-
-.my-championships__players {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.my-championships__players > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.my-championships__players > div > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.7rem;
-}
-
-.my-championships__players small {
-  padding: 0.12rem 0.35rem;
-  border-radius: 999px;
-  background: rgb(34 197 94 / 12%);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.my-championships__highlights {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.my-championships__highlights > div {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.my-championships__match {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0.85rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.85rem;
-}
-
-.my-championships__match-summary {
-  display: grid;
-  grid-template-columns: minmax(8rem, 0.8fr) minmax(12rem, 1.5fr) minmax(
-      7rem,
-      0.7fr
-    );
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.my-championships__match--next {
-  border-width: 2px;
-}
-
-.my-championships__match-date,
-.my-championships__match-main,
-.my-championships__match-result {
+.my-championships__page-header > div:nth-child(2) {
   display: grid;
   gap: 0.18rem;
 }
 
-.my-championships__match-date span,
-.my-championships__match-main span,
-.my-championships__match-main small,
-.my-championships__match-result span {
-  font-size: 0.8rem;
-  opacity: 0.7;
+.my-championships__page-header h1,
+.my-championships__page-header p {
+  margin: 0;
 }
 
-.my-championships__match-result {
-  justify-items: end;
-  text-align: right;
+.my-championships__page-header > div:nth-child(2) > p:last-child {
+  line-height: 1.45;
+  opacity: 0.72;
 }
 
-.my-championships__match-result strong {
-  font-size: 1.1rem;
+.my-championships__eyebrow {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.62;
 }
 
-.my-championships__match-result.is-win strong {
+.my-championships__page-icon,
+.my-championships__section-icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: rgb(37 99 235 / 9%);
+}
+
+.my-championships__page-icon svg,
+.my-championships__section-icon svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.my-championships__refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.65rem;
+  color: inherit;
+  background: var(--surface-elevated, #fff);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
   font-weight: 800;
 }
 
-.my-championships__submission {
-  display: grid;
-  gap: 0.65rem;
-  border-top: 1px solid var(--border-color, #d7dde5);
-  padding-top: 0.7rem;
+.my-championships__refresh svg {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
-.my-championships__submission:empty {
-  display: none;
+.my-championships__refresh:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
-.my-championships__submission-status {
+.my-championships__committee-note {
   display: flex;
   align-items: flex-start;
-  gap: 0.55rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 0.7rem;
-  background: rgb(148 163 184 / 10%);
+  gap: 0.65rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgb(245 158 11 / 22%);
+  border-radius: 0.85rem;
+  background: rgb(245 158 11 / 7%);
 }
 
-.my-championships__submission-status svg,
-.my-championships__submission-toggle svg {
+.my-championships__committee-note svg {
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
-  margin-top: 0.1rem;
+  margin-top: 0.15rem;
 }
 
-.my-championships__submission-status span {
+.my-championships__committee-note span {
+  display: grid;
+  gap: 0.1rem;
+  line-height: 1.4;
+  font-size: 0.78rem;
+}
+
+.my-championships__weekend-focus,
+.my-championships__other-matches {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.my-championships__weekend-focus {
+  padding: 1rem;
+  border: 1px solid rgb(37 99 235 / 24%);
+  border-radius: 1rem;
+  background: linear-gradient(
+    180deg,
+    rgb(37 99 235 / 5%),
+    rgb(255 255 255 / 0%) 15rem
+  );
+}
+
+.my-championships__section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.my-championships__section-heading.is-compact {
+  justify-content: space-between;
+}
+
+.my-championships__section-heading > div:not(.my-championships__section-icon) {
   display: grid;
   gap: 0.12rem;
-  font-size: 0.82rem;
-  line-height: 1.4;
-}
-
-.my-championships__submission-status.is-confirmed {
-  background: rgb(34 197 94 / 10%);
-}
-
-.my-championships__submission-status.is-conflict {
-  background: rgb(245 158 11 / 12%);
-}
-
-.my-championships__submission-toggle {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.65rem;
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.my-championships__submission-form {
-  display: grid;
-  gap: 0.7rem;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  background: rgb(148 163 184 / 8%);
-}
-
-.my-championships__score-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.my-championships__submission-form label {
-  display: grid;
-  gap: 0.28rem;
-}
-
-.my-championships__submission-form label > span {
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.my-championships__submission-form input {
   min-width: 0;
-  padding: 0.6rem 0.65rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.6rem;
-  background: var(--surface-elevated, #fff);
-  color: inherit;
-  font: inherit;
 }
 
-.my-championships__submission-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.my-championships__section-heading p,
+.my-championships__section-heading h2,
+.my-championships__section-heading span {
+  margin: 0;
 }
 
-.my-championships__submission-actions button {
-  padding: 0.55rem 0.75rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.6rem;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.my-championships__submission-actions button:first-child {
-  border-color: var(--brand-blue, #0d2b6c);
-  color: #fff;
-  background: var(--brand-blue, #0d2b6c);
-}
-
-.my-championships__submission-actions button:not(:first-child) {
-  color: inherit;
-  background: var(--surface-elevated, #fff);
-}
-
-.my-championships__submission-actions button:disabled {
-  cursor: wait;
+.my-championships__section-heading p {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   opacity: 0.6;
 }
 
-.my-championships__submission-form > small {
+.my-championships__section-heading span {
   line-height: 1.4;
-  opacity: 0.68;
+  font-size: 0.78rem;
+  opacity: 0.7;
 }
 
-.my-championships__submission-error {
-  font-size: 0.82rem;
-  font-weight: 700;
+.my-championships__section-heading > strong {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgb(148 163 184 / 10%);
+  font-size: 0.75rem;
 }
 
-.my-championships__standings-wrap {
+.my-championships__section-icon.is-weekend {
+  background: var(--brand-blue, #0d2b6c);
+  color: #fff;
+}
+
+.my-championships__focus-list,
+.my-championships__other-list {
   display: grid;
   gap: 0.85rem;
-  padding-top: 0.25rem;
 }
 
-.my-championships__standings-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
+.my-championships__other-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.my-championships__standings-heading > div {
+.my-championships__state {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.18rem;
+  padding: 0.9rem;
+  border: 1px dashed var(--border-color, #d7dde5);
+  border-radius: 0.8rem;
+  line-height: 1.45;
 }
 
-.my-championships__ranking-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  padding: 0.35rem;
+.my-championships__state.is-error {
+  border-style: solid;
+  background: rgb(239 68 68 / 7%);
+}
+
+.my-championships__history-block {
   border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.85rem;
-  background: rgb(148 163 184 / 7%);
-}
-
-.my-championships__ranking-tabs button,
-.my-championships__pool-tabs button {
-  border: 1px solid transparent;
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-}
-
-.my-championships__ranking-tabs button {
-  padding: 0.6rem 0.85rem;
-  border-radius: 0.65rem;
-}
-
-.my-championships__ranking-tabs button.is-active {
-  border-color: var(--border-color, #d7dde5);
+  border-radius: 0.9rem;
   background: var(--surface-elevated, #fff);
-  box-shadow: 0 4px 12px rgb(15 23 42 / 5%);
+  overflow: hidden;
 }
 
-.my-championships__ranking-tabs button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-.my-championships__pool-tabs {
-  display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  padding: 0.2rem 0 0.35rem;
-}
-
-.my-championships__pool-tabs button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.48rem 0.68rem;
-  border-color: var(--border-color, #d7dde5);
-  border-radius: 999px;
-  background: var(--surface-elevated, #fff);
-  font-size: 0.8rem;
-}
-
-.my-championships__pool-tabs button.is-active {
-  border-color: var(--brand-blue, #0d2b6c);
-  box-shadow: inset 0 0 0 1px var(--brand-blue, #0d2b6c);
-}
-
-.my-championships__pool-tabs small {
-  padding: 0.08rem 0.3rem;
-  border-radius: 999px;
-  background: rgb(59 130 246 / 10%);
-  font-size: 0.68rem;
-}
-
-.my-championships__ranking-subtitle {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin: 0.15rem 0 0.55rem;
-}
-
-.my-championships__ranking-subtitle span {
-  font-size: 0.8rem;
-  opacity: 0.65;
-}
-
-.my-championships__qualification {
+.my-championships__history-block > summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 1rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.85rem;
-}
-
-.my-championships__qualification > div {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.my-championships__qualification span {
-  font-size: 0.76rem;
-  opacity: 0.65;
-}
-
-.my-championships__qualification strong {
-  font-size: 1.2rem;
-}
-
-.my-championships__qualification p {
-  margin: 0;
+  cursor: pointer;
   font-weight: 800;
+  list-style: none;
 }
 
-.my-championships__qualification.is-direct {
-  border-color: rgb(34 197 94 / 38%);
-  background: rgb(34 197 94 / 8%);
+.my-championships__history-block > summary::-webkit-details-marker {
+  display: none;
 }
 
-.my-championships__qualification.is-barrage {
-  border-color: rgb(245 158 11 / 42%);
-  background: rgb(245 158 11 / 9%);
-}
-
-.my-championships__qualification.is-outside {
-  background: rgb(148 163 184 / 8%);
-}
-
-.my-championships__qualification-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.my-championships__qualification-legend span {
-  padding: 0.3rem 0.55rem;
+.my-championships__history-block > summary span {
+  padding: 0.2rem 0.45rem;
   border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 700;
+  background: rgb(148 163 184 / 10%);
+  font-size: 0.72rem;
 }
 
-.my-championships__qualification-legend .is-direct {
-  background: rgb(34 197 94 / 10%);
-}
-
-.my-championships__qualification-legend .is-barrage {
-  background: rgb(245 158 11 / 12%);
-}
-
-.my-championships__table-scroll {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.my-championships table {
-  width: 100%;
-  min-width: 34rem;
-  border-collapse: collapse;
-}
-
-.my-championships th,
-.my-championships td {
-  padding: 0.65rem 0.7rem;
+.my-championships__history-block[open] > summary {
   border-bottom: 1px solid var(--border-color, #d7dde5);
-  text-align: center;
 }
 
-.my-championships th:nth-child(2),
-.my-championships td:nth-child(2) {
-  text-align: left;
+.my-championships__history-block > .my-championships__other-list,
+.my-championships__archive-list {
+  padding: 0.9rem;
 }
 
-.my-championships td:nth-child(2) {
+.my-championships__archive-list {
   display: grid;
-  gap: 0.1rem;
+  gap: 0.9rem;
 }
 
-.my-championships td:nth-child(2) span {
-  font-size: 0.76rem;
+.my-championships__archive-list > section {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 0.8rem;
+}
+
+.my-championships__archive-list > section > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.my-championships__archive-list > section > header > div {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.my-championships__archive-list > section > header span {
+  font-size: 0.73rem;
   opacity: 0.66;
 }
 
-.my-championships tbody tr.is-mine {
-  background: rgb(59 130 246 / 9%);
-  box-shadow: inset 3px 0 0 rgb(59 130 246 / 70%);
+.my-championships__archive-list > section > header > strong {
+  font-size: 0.76rem;
 }
 
-.my-championships tbody tr.qualification-boundary-direct td {
-  border-bottom: 2px solid rgb(34 197 94 / 60%);
-}
-
-.my-championships tbody tr.qualification-boundary-barrage td {
-  border-bottom: 2px solid rgb(245 158 11 / 65%);
-}
-
-.my-championships__standings-wrap > small,
-.my-championships__standings-wrap > div > small {
-  line-height: 1.45;
-  opacity: 0.68;
-}
-
-.my-championships__calendar {
-  border-top: 1px solid var(--border-color, #d7dde5);
-  padding-top: 1rem;
-}
-
-.my-championships__calendar summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.my-championships__calendar summary span {
+.my-championships__archive-list > section > div {
   display: grid;
-  min-width: 1.8rem;
-  min-height: 1.8rem;
-  place-items: center;
-  border-radius: 999px;
-  background: rgb(148 163 184 / 14%);
-  font-size: 0.8rem;
-}
-
-.my-championships__calendar > div {
-  display: grid;
-  gap: 0.6rem;
-  margin-top: 0.85rem;
-}
-
-.my-championships__state,
-.my-championships__empty-block {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem;
-  border: 1px dashed var(--border-color, #d7dde5);
-  border-radius: 0.85rem;
-}
-
-.my-championships__state.is-error {
-  border-style: solid;
-}
-
-@media (max-width: 900px) {
-  .my-championships__identity-grid,
-  .my-championships__highlights {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .my-championships__match-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .my-championships__match-result {
-    justify-items: start;
-    text-align: left;
-  }
-}
-
-@media (max-width: 620px) {
-  .my-championships__card-header,
-  .my-championships__standings-heading,
-  .my-championships__qualification,
-  .my-championships__ranking-subtitle {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .my-championships__header-actions {
-    justify-content: flex-start;
-  }
-
-  .my-championships__identity-grid,
-  .my-championships__highlights,
-  .my-championships__score-fields {
-    grid-template-columns: 1fr;
-  }
-
-  .my-championships__ranking-tabs {
-    display: grid;
-  }
-
-  .my-championships__ranking-tabs button {
-    width: 100%;
-    text-align: left;
-  }
-
-  .my-championships__card {
-    padding: 1rem;
-  }
-}
-
-.my-championships__phone,
-.my-championships__opponent-contacts a {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
   gap: 0.3rem;
-  color: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
-  opacity: 0.78;
 }
 
-.my-championships__phone:hover,
-.my-championships__opponent-contacts a:hover {
-  text-decoration: underline;
-  opacity: 1;
-}
-
-.my-championships__phone svg,
-.my-championships__opponent-contacts svg {
-  width: 0.85rem;
-  height: 0.85rem;
-  flex: 0 0 auto;
-}
-
-.my-championships__opponent-contacts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
-}
-
-
-.my-championships__match-opponent-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.my-championships__venue-badge {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  min-height: 1.6rem;
-  padding: 0.18rem 0.48rem;
-  border-radius: 999px;
-  font-size: 0.72rem !important;
-  font-weight: 800;
-  opacity: 1 !important;
-}
-
-.my-championships__venue-badge.is-home {
-  background: rgb(34 197 94 / 12%);
-}
-
-.my-championships__venue-badge.is-away {
-  background: rgb(59 130 246 / 12%);
-}
-
-.my-championships__opponent-club {
-  width: fit-content;
-  font-weight: 700;
-  opacity: 0.82 !important;
-}
-
-.my-championships__opponent-players {
+.my-championships__archive-list > section > div > div {
   display: grid;
-  gap: 0.35rem;
-  margin-top: 0.2rem;
-}
-
-.my-championships__opponent-players > div {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.65rem;
-}
-
-.my-championships__opponent-players > div > strong {
-  font-size: 0.84rem;
-}
-
-.my-championships__opponent-players a {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 0.3rem;
-  color: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
-  opacity: 0.78;
-}
-
-.my-championships__opponent-players a:hover {
-  text-decoration: underline;
-  opacity: 1;
-}
-
-.my-championships__opponent-players a svg {
-  width: 0.85rem;
-  height: 0.85rem;
-  flex: 0 0 auto;
-}
-
-.my-championships__opponent-players small {
-  font-size: 0.75rem;
-  opacity: 0.58;
-}
-
-
-/* Stabilise la largeur sans masquer le contenu qui dépasse. */
-.my-championships {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.my-championships__card,
-.my-championships__highlights,
-.my-championships__highlights > div,
-.my-championships__match,
-.my-championships__match-summary,
-.my-championships__match-main,
-.my-championships__calendar,
-.my-championships__calendar > div {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.my-championships__match-opponent-heading strong,
-.my-championships__opponent-club,
-.my-championships__opponent-players strong {
-  overflow-wrap: anywhere;
-}
-
-.my-championships__opponent-responsible {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem 0.55rem;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: 0.65rem;
-  background: rgb(148 163 184 / 10%);
-}
-
-.my-championships__opponent-responsible > span {
-  font-size: 0.72rem !important;
-  font-weight: 800;
-  text-transform: uppercase;
-  opacity: 0.62 !important;
-}
-
-.my-championships__opponent-responsible > strong {
-  font-size: 0.82rem;
-  overflow-wrap: anywhere;
-}
-
-.my-championships__opponent-responsible a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.my-championships__opponent-responsible a:hover {
-  text-decoration: underline;
-}
-
-.my-championships__opponent-responsible svg {
-  width: 0.85rem;
-  height: 0.85rem;
-  flex: 0 0 auto;
-}
-
-
-.my-championships__list,
-.my-championships__standings-wrap {
-  min-width: 0;
-  max-width: 100%;
-}
-
-/*
- * Les vues "Ma poule" / "Toutes les poules" sont des enfants directs de la
- * grille. Sans cette contrainte, leur largeur minimale suit le tableau (34rem)
- * et le swipe horizontal part sur la page au lieu de rester dans le scroller.
- */
-.my-championships__standings-wrap > div {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.my-championships__card,
-.my-championships__match {
-  box-sizing: border-box;
-  width: 100%;
-}
-
-@media (max-width: 620px) {
-  .my-championships__table-scroll {
-    margin-inline: 0;
-  }
-}
-
-
-.my-championships__match-result {
-  min-width: 13rem;
-}
-
-.my-championships__outcome {
-  width: fit-content;
-  justify-self: end;
-  padding: 0.2rem 0.48rem;
-  border-radius: 999px;
-  font-size: 0.74rem !important;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.my-championships__match-result.is-win .my-championships__outcome {
-  background: rgb(34 197 94 / 12%);
-  color: rgb(21 128 61);
-}
-
-.my-championships__match-result.is-loss .my-championships__outcome {
-  background: rgb(239 68 68 / 10%);
-  color: rgb(185 28 28);
-}
-
-.my-championships__match-result.is-invalid .my-championships__outcome,
-.my-championships__match-result.is-pending .my-championships__outcome {
-  background: rgb(148 163 184 / 14%);
-}
-
-.my-championships__result-board {
-  display: grid;
-  width: min(100%, 22rem);
-  gap: 0.28rem;
-}
-
-.my-championships__result-board > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 7rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.48rem 0.58rem;
-  border-radius: 0.58rem;
-  background: rgb(148 163 184 / 8%);
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.6rem;
+  background: rgb(148 163 184 / 6%);
 }
 
-.my-championships__result-board > div.is-winner {
-  background: rgb(34 197 94 / 10%);
-  box-shadow: inset 3px 0 0 rgb(34 197 94 / 60%);
-}
-
-.my-championships__result-board > div > span {
-  display: grid;
-  min-width: 0;
-  gap: 0.05rem;
-  text-align: left;
-}
-
-.my-championships__result-board > div > span > strong,
-.my-championships__result-board > div > span > small {
-  overflow-wrap: anywhere;
-}
-
-.my-championships__result-board > div > span > strong {
-  font-size: 0.8rem;
-}
-
-.my-championships__result-board > div > span > small {
+.my-championships__archive-list > section > div span {
   font-size: 0.7rem;
   opacity: 0.65;
 }
 
-.my-championships__result-board > div > strong {
-  font-size: 1.35rem;
-  line-height: 1;
+.my-championships__archive-list > section > div strong {
+  overflow-wrap: anywhere;
+  font-size: 0.77rem;
 }
 
-@media (max-width: 900px) {
-  .my-championships__match-result {
-    min-width: 0;
-    justify-items: stretch;
+.my-championships__archive-list > section > div b {
+  font-size: 0.82rem;
+}
+
+@media (max-width: 1050px) {
+  .my-championships__other-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .my-championships {
+    gap: 1rem;
   }
 
-  .my-championships__outcome {
+  .my-championships__page-header {
+    grid-template-columns: 2.8rem minmax(0, 1fr);
+  }
+
+  .my-championships__refresh {
+    grid-column: 1 / -1;
     justify-self: start;
   }
 
-  .my-championships__result-board {
-    width: 100%;
+  .my-championships__weekend-focus {
+    padding: 0.8rem;
   }
-}
 
+  .my-championships__archive-list > section > header {
+    display: grid;
+  }
 
-.my-championships__next-account {
-  display: grid;
-  gap: 0.8rem;
-  padding: 1rem;
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 1rem;
-  background: var(--surface-elevated, #fff);
-}
+  .my-championships__archive-list > section > div > div {
+    grid-template-columns: 1fr auto;
+  }
 
-.my-championships__advanced {
-  border: 1px solid var(--border-color, #d7dde5);
-  border-radius: 0.9rem;
-  background: var(--surface-elevated, #fff);
-}
-
-.my-championships__advanced > summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.my-championships__advanced > summary > span {
-  display: grid;
-  min-width: 1.7rem;
-  min-height: 1.7rem;
-  place-items: center;
-  border-radius: 999px;
-  background: rgb(148 163 184 / 14%);
-  font-size: 0.76rem;
-}
-
-.my-championships__advanced[open] > summary {
-  border-bottom: 1px solid var(--border-color, #d7dde5);
-}
-
-.my-championships__advanced > .my-championships__list,
-.my-championships__advanced > .my-championships__standings-wrap {
-  padding: 1rem;
+  .my-championships__archive-list > section > div span {
+    grid-column: 1 / -1;
+  }
 }
