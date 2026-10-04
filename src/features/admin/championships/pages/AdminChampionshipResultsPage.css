@@ -1,0 +1,335 @@
+.admin-championship-results {
+  gap: 1.25rem;
+}
+
+.admin-championship-results__header {
+  align-items: flex-start;
+}
+
+.admin-championship-results__alert,
+.admin-championship-results__error {
+  border: 1px solid #fecaca;
+  border-radius: 0.8rem;
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 0.75rem 0.9rem;
+}
+
+.admin-championship-results__filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.35fr) minmax(220px, 1fr) minmax(240px, 1fr);
+  gap: 1rem;
+  align-items: end;
+}
+
+.admin-championship-results__filters label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 700;
+}
+
+.admin-championship-results__filters select {
+  min-height: 3rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.8rem;
+  background: #fff;
+  padding: 0 0.85rem;
+  font: inherit;
+}
+
+.admin-championship-results__selection-summary {
+  display: grid;
+  gap: 0.2rem;
+  border-left: 3px solid #111827;
+  padding-left: 0.9rem;
+}
+
+.admin-championship-results__selection-summary span,
+.admin-championship-results__selection-summary small {
+  color: #6b7280;
+}
+
+.admin-championship-results__columns {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(310px, 1fr);
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0 0.1rem 0.8rem;
+  scroll-snap-type: x proximity;
+}
+
+.admin-championship-results__division {
+  min-width: 0;
+  border-radius: 1rem;
+  background: #f3f4f6;
+  padding: 0.8rem;
+  scroll-snap-align: start;
+}
+
+.admin-championship-results__division > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.2rem 0.2rem 0.8rem;
+}
+
+.admin-championship-results__division > header span {
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-championship-results__division > header h2 {
+  margin: 0.1rem 0 0;
+  font-size: 1.15rem;
+}
+
+.admin-championship-results__division > header > strong {
+  display: grid;
+  place-items: center;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+}
+
+.admin-championship-results__cards {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-championship-results__no-match,
+.admin-championship-results__empty {
+  color: #6b7280;
+}
+
+.admin-championship-results__no-match {
+  margin: 0;
+  border: 1px dashed #d1d5db;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 1rem;
+  text-align: center;
+}
+
+.admin-championship-results__match {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-left-width: 5px;
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 0.9rem;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+}
+
+.admin-championship-results__match--official {
+  border-left-color: #15803d;
+}
+
+.admin-championship-results__match--proposed {
+  border-left-color: #d97706;
+}
+
+.admin-championship-results__match--missing {
+  border-left-color: #b91c1c;
+}
+
+.admin-championship-results__match-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-championship-results__teams {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-championship-results__teams > span {
+  color: #9ca3af;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-championship-results__teams > div {
+  display: grid;
+  gap: 0.18rem;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.admin-championship-results__teams > div.club-team {
+  background: #eff6ff;
+  outline: 1px solid #bfdbfe;
+}
+
+.admin-championship-results__teams strong {
+  line-height: 1.25;
+}
+
+.admin-championship-results__teams small {
+  color: #6b7280;
+  line-height: 1.35;
+}
+
+.admin-championship-results__result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 0.7rem;
+}
+
+.admin-championship-results__result > strong {
+  font-size: 1.45rem;
+}
+
+.admin-championship-results__result > strong span {
+  color: #9ca3af;
+}
+
+.admin-championship-results__result > strong.missing {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.admin-championship-results__status {
+  border-radius: 999px;
+  padding: 0.32rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-championship-results__status.official {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-championship-results__status.proposed {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-championship-results__status.missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-championship-results__status.future {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.admin-championship-results__submit-button,
+.admin-championship-results__editor-actions button {
+  min-height: 2.7rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #111827;
+  color: #fff;
+  padding: 0.65rem 0.85rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-championship-results__submit-button {
+  width: 100%;
+}
+
+.admin-championship-results__editor {
+  display: grid;
+  gap: 0.7rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.8rem;
+}
+
+.admin-championship-results__editor > p:first-child {
+  margin: 0;
+  font-weight: 800;
+}
+
+.admin-championship-results__score-inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 0.55rem;
+}
+
+.admin-championship-results__score-inputs label {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.admin-championship-results__score-inputs label span {
+  overflow: hidden;
+  color: #4b5563;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-championship-results__score-inputs input {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  padding: 0.4rem;
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.admin-championship-results__editor-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 0.55rem;
+}
+
+.admin-championship-results__editor-actions button.secondary {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.admin-championship-results__editor-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-championship-results__error {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 900px) {
+  .admin-championship-results__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-championship-results__selection-summary {
+    border-left: 0;
+    border-top: 3px solid #111827;
+    padding: 0.75rem 0 0;
+  }
+
+  .admin-championship-results__columns {
+    grid-auto-columns: minmax(86vw, 1fr);
+  }
+}
