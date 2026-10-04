@@ -13,17 +13,6 @@ const cookieFrom = (response) => {
   return values.map((value) => String(value).split(";", 1)[0]).join("; ");
 };
 
-const mergeCookies = (...cookies) => {
-  const values = new Map();
-  for (const cookie of cookies.filter(Boolean)) {
-    for (const part of String(cookie).split(/;\s*/u)) {
-      const index = part.indexOf("=");
-      if (index > 0) values.set(part.slice(0, index), part.slice(index + 1));
-    }
-  }
-  return Array.from(values, ([key, value]) => `${key}=${value}`).join("; ");
-};
-
 const decodeHtml = (value) =>
   String(value ?? "")
     .replace(/&nbsp;/giu, " ")
@@ -52,19 +41,14 @@ const parseSelects = (html) =>
           (optionMatch) => {
             const optionAttrs = optionMatch[1];
             return {
-              value:
-                decodeHtml(
-                  optionAttrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "",
-                ),
-              memory:
-                decodeHtml(
-                  optionAttrs.match(/\bdata-wb-valmem=["']([^"']*)["']/iu)?.[1] ?? "",
-                ),
+              value: decodeHtml(
+                optionAttrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? "",
+              ),
               label: stripTags(optionMatch[2]),
               selected: /\bselected\b/iu.test(optionAttrs),
             };
           },
-        ).slice(0, 120),
+        ),
       };
     },
   );
@@ -83,9 +67,7 @@ const parseFormValues = (html) => {
     const type = (
       attrs.match(/\btype=["']([^"']+)["']/iu)?.[1] ?? "text"
     ).toLowerCase();
-    if ((type === "checkbox" || type === "radio") && !/\bchecked\b/iu.test(attrs)) {
-      continue;
-    }
+    if ((type === "checkbox" || type === "radio") && !/\bchecked\b/iu.test(attrs)) continue;
     values.set(
       name,
       decodeHtml(attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? ""),
@@ -100,26 +82,12 @@ const optionValue = (selects, id, label) =>
     ?.options.find((option) => option.label.toLowerCase() === label.toLowerCase())
     ?.value ?? null;
 
-const htmlToLines = (html) =>
-  decodeHtml(
-    html
-      .replace(/<script\b[\s\S]*?<\/script>/giu, " ")
-      .replace(/<style\b[\s\S]*?<\/style>/giu, " ")
-      .replace(/<(?:br|\/td|\/tr|\/div|\/p|\/li|\/table|\/h\d)>/giu, "\n")
-      .replace(/<[^>]+>/gu, " "),
-  )
-    .split(/\r?\n/gu)
-    .map((line) => line.replace(/\s+/gu, " ").trim())
-    .filter(Boolean);
-
 export default async function handler(request, response) {
   try {
     const raw = String(request.query?.url ?? "").trim();
     if (!raw) return response.status(400).json({ error: "missing url" });
     const source = new URL(raw);
-    if (!ALLOWED_HOSTS.has(source.hostname)) {
-      return response.status(400).json({ error: "unsupported host" });
-    }
+    if (!ALLOWED_HOSTS.has(source.hostname)) return response.status(400).json({ error: "unsupported host" });
 
     const root = new URL("/FFPB_COMPETITION/", source.origin);
     const page = await fetch(root, { redirect: "follow", headers });
@@ -128,28 +96,20 @@ export default async function handler(request, response) {
     const actionRaw = decodeHtml(
       html.match(/<form[^>]*action=["']([^"']+)["']/iu)?.[1] ?? "",
     );
-    if (!page.ok || !actionRaw) {
-      return response.status(500).json({ error: "landing page unavailable" });
-    }
+    if (!page.ok || !actionRaw) return response.status(500).json({ error: "landing page unavailable" });
     const action = new URL(actionRaw, root.origin);
     const selects = parseSelects(html);
     const values = parseFormValues(html);
-    const selected = {
-      year: optionValue(selects, "A34", "2027"),
-      competition: optionValue(selects, "A33", "CHAMPIONNAT HIVER"),
-      division: optionValue(selects, "A36", "4ème série"),
-      specialty: optionValue(
-        selects,
-        "A38",
-        "Trinquet Paleta Pelote de Gomme Pleine",
-      ),
-    };
-    if (selected.year) values.set("A34", selected.year);
-    if (selected.competition) values.set("A33", selected.competition);
-    if (selected.division) values.set("A36", selected.division);
-    if (selected.specialty) {
-      values.set("A38", selected.specialty);
-      values.set("A39", selected.specialty);
+    const chosen = [
+      ["A34", "2027"],
+      ["A33", "CHAMPIONNAT HIVER"],
+      ["A36", "4ème série"],
+      ["A38", "Trinquet Paleta Pelote de Gomme Pleine"],
+      ["A39", "Trinquet Paleta Pelote de Gomme Pleine"],
+    ];
+    for (const [id, label] of chosen) {
+      const value = optionValue(selects, id, label);
+      if (value) values.set(id, value);
     }
     values.set("WD_ACTION_", "");
     values.set("WD_BUTTON_CLICK_", "A32");
@@ -168,37 +128,18 @@ export default async function handler(request, response) {
       body,
     });
     const resultHtml = await result.text();
-    const lines = htmlToLines(resultHtml);
-    const interesting = lines.filter(
-      (line) =>
-        /lourdes|4(?:e|è)me série|poule|\b\d{1,3}\s*[-–—]\s*\d{1,3}\b|résultat|rencontre/iu.test(
-          line,
-        ),
-    );
+    const needle = "PELOTARI CLUB LOURDAIS 01";
+    const index = resultHtml.indexOf(needle);
+    const snippet = index >= 0 ? resultHtml.slice(Math.max(0, index - 5000), index + 9000) : "";
 
     return response.status(200).json({
-      landing: {
-        status: page.status,
-        action: action.toString(),
-        selected,
-      },
-      search: {
-        status: result.status,
-        finalUrl: result.url,
-        title: resultHtml.match(/<title[^>]*>([^<]*)<\/title>/iu)?.[1] ?? null,
-        length: resultHtml.length,
-        hasI7: /id=["']I7["']/iu.test(resultHtml),
-        cookieNames: mergeCookies(cookie, cookieFrom(result))
-          .split(/;\s*/u)
-          .filter(Boolean)
-          .map((item) => item.split("=", 1)[0]),
-        interesting: interesting.slice(0, 120),
-        firstLines: lines.slice(0, 180),
-      },
+      status: result.status,
+      finalUrl: result.url,
+      length: resultHtml.length,
+      foundAt: index,
+      snippet,
     });
   } catch (error) {
-    return response.status(500).json({
-      error: error instanceof Error ? error.message : String(error),
-    });
+    return response.status(500).json({ error: error instanceof Error ? error.message : String(error) });
   }
 }
