@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Trophy } from "lucide-react";
+import { CalendarRange, Trophy } from "lucide-react";
 import {
   championshipResultsService,
   type ChampionshipBrowserMatch,
@@ -7,179 +7,135 @@ import {
 } from "@/features/user-space/championships/services/championshipResultsService";
 import "./ChampionshipResultsExplorer.css";
 
-type MatchScope = "mine" | "club" | "all";
+type Props = {
+  preferredChampionshipId?: string | null;
+  preferredDivisionId?: string | null;
+  preferredPoolId?: string | null;
+  focusDay?: string | null;
+};
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   weekday: "short",
   day: "2-digit",
   month: "short",
-  year: "numeric",
+});
+
+const compactDateFormatter = new Intl.DateTimeFormat("fr-FR", {
+  day: "2-digit",
+  month: "short",
 });
 
 const displayDate = (value: string | null) => {
-  if (!value) return "Date non renseignée";
+  if (!value) return "Date à définir";
   const date = new Date(`${value}T12:00:00`);
   return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
+};
+
+const displayCompactDate = (value: string) => {
+  const date = new Date(`${value}T12:00:00`);
+  return Number.isNaN(date.getTime()) ? value : compactDateFormatter.format(date);
 };
 
 const displayTime = (value: string | null) =>
   value ? value.slice(0, 5) : null;
 
-const outcomeLabel = (match: ChampionshipBrowserMatch, scope: MatchScope) => {
-  const left = match.displayedScoreTeam1;
-  const right = match.displayedScoreTeam2;
-  if (left === null || right === null) return null;
-  if (left === right) return "Résultat à vérifier";
+const playersLabel = (players: string[], fallback: string) =>
+  players.length > 0 ? players.join(" / ") : fallback;
 
-  const winner = left > right ? "team1" : "team2";
-
-  if (scope === "mine") {
-    const mine = match.team1IsMyTeam
-      ? "team1"
-      : match.team2IsMyTeam
-        ? "team2"
-        : null;
-    if (!mine) return null;
-    return winner === mine ? "Victoire" : "Défaite";
-  }
-
-  if (scope === "club") {
-    const clubSide =
-      match.team1IsMyClub && !match.team2IsMyClub
-        ? "team1"
-        : match.team2IsMyClub && !match.team1IsMyClub
-          ? "team2"
-          : null;
-    if (!clubSide) return null;
-    return winner === clubSide ? "Victoire du club" : "Défaite du club";
-  }
-
-  return null;
-};
-
-function MatchCard({
-  match,
-  scope,
-}: {
-  match: ChampionshipBrowserMatch;
-  scope: MatchScope;
-}) {
+function MatchCard({ match }: { match: ChampionshipBrowserMatch }) {
   const left = match.displayedScoreTeam1;
   const right = match.displayedScoreTeam2;
   const leftWins = left !== null && right !== null && left > right;
   const rightWins = left !== null && right !== null && right > left;
-  const outcome = outcomeLabel(match, scope);
-  const theoreticalOnly = match.scheduleSource === "theoretical";
+  const hasScore = left !== null && right !== null;
+  const actualDiffers =
+    Boolean(match.effectiveOn) && match.effectiveOn !== match.theoreticalOn;
 
   return (
-    <article className="championship-results__result">
-      <header>
-        <div>
-          <strong>{displayDate(match.effectiveOn)}</strong>
-          {displayTime(match.effectiveTime) ? (
-            <span>{displayTime(match.effectiveTime)}</span>
-          ) : theoreticalOnly ? (
-            <span>Date théorique · dimanche</span>
-          ) : (
-            <span>Horaire à définir</span>
-          )}
-        </div>
-        <div>
-          <span>{match.divisionName}</span>
+    <article className="championship-results__match-card">
+      <div className="championship-results__match-meta">
+        {actualDiffers ? (
           <span>
-            {match.phase}
-            {match.poolCode ? ` · Poule ${match.poolCode}` : ""}
-          </span>
-        </div>
-        {outcome && (
-          <strong
-            className={`championship-results__outcome is-${
-              outcome.startsWith("Victoire")
-                ? "win"
-                : outcome.startsWith("Défaite")
-                  ? "loss"
-                  : "invalid"
-            }`}
-          >
-            {outcome}
-          </strong>
-        )}
-      </header>
-
-      <div className="championship-results__scoreboard">
-        <div
-          className={[
-            "championship-results__team",
-            leftWins ? "is-winner" : "",
-            match.team1IsMyTeam ? "is-mine" : "",
-            match.team1IsMyClub ? "is-my-club" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <div>
-            <strong>{match.team1Label}</strong>
-            <span>{match.team1ClubName}</span>
-            {match.team1Players.length > 0 && (
-              <small>{match.team1Players.join(" · ")}</small>
-            )}
-          </div>
-          <div className="championship-results__team-score">
-            {leftWins && <Trophy aria-label="Vainqueur" />}
-            <strong>{left ?? "—"}</strong>
-          </div>
-        </div>
-
-        <div
-          className={[
-            "championship-results__team",
-            rightWins ? "is-winner" : "",
-            match.team2IsMyTeam ? "is-mine" : "",
-            match.team2IsMyClub ? "is-my-club" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <div>
-            <strong>{match.team2Label}</strong>
-            <span>{match.team2ClubName}</span>
-            {match.team2Players.length > 0 && (
-              <small>{match.team2Players.join(" · ")}</small>
-            )}
-          </div>
-          <div className="championship-results__team-score">
-            {rightWins && <Trophy aria-label="Vainqueur" />}
-            <strong>{right ?? "—"}</strong>
-          </div>
-        </div>
-      </div>
-
-      <div className="championship-results__meta">
-        {match.resultSource === "official" ? (
-          <strong>Résultat officiel</strong>
-        ) : match.resultSource === "proposed" ? (
-          <strong>
-            Résultat proposé
-            {match.proposedByTeamLabel
-              ? ` par ${match.proposedByTeamLabel}`
+            Programmée le {displayDate(match.effectiveOn)}
+            {displayTime(match.effectiveTime)
+              ? ` · ${displayTime(match.effectiveTime)}`
               : ""}
-          </strong>
+          </span>
+        ) : displayTime(match.effectiveTime) ? (
+          <span>{displayTime(match.effectiveTime)}</span>
         ) : (
-          <strong>Résultat en attente</strong>
+          <span>Horaire à définir</span>
         )}
         {match.venue && <span>{match.venue}</span>}
       </div>
+
+      <div className="championship-results__versus">
+        <div
+          className={`championship-results__side${
+            match.team1IsMyTeam ? " is-mine" : ""
+          }${match.team1IsMyClub ? " is-my-club" : ""}`}
+        >
+          <div>
+            <strong>{playersLabel(match.team1Players, match.team1Label)}</strong>
+            <span>{match.team1ClubName}</span>
+            <small>{match.team1Label}</small>
+          </div>
+          <strong className={leftWins ? "is-winner" : undefined}>
+            {left ?? "—"}
+          </strong>
+        </div>
+
+        <div className="championship-results__versus-separator">
+          <span>VS</span>
+        </div>
+
+        <div
+          className={`championship-results__side${
+            match.team2IsMyTeam ? " is-mine" : ""
+          }${match.team2IsMyClub ? " is-my-club" : ""}`}
+        >
+          <div>
+            <strong>{playersLabel(match.team2Players, match.team2Label)}</strong>
+            <span>{match.team2ClubName}</span>
+            <small>{match.team2Label}</small>
+          </div>
+          <strong className={rightWins ? "is-winner" : undefined}>
+            {right ?? "—"}
+          </strong>
+        </div>
+      </div>
+
+      <footer className="championship-results__result-state">
+        {match.resultSource === "official" ? (
+          <strong className="is-official">
+            <Trophy aria-hidden="true" /> Résultat officiel
+          </strong>
+        ) : match.resultSource === "proposed" ? (
+          <strong className="is-proposed">
+            Résultat saisi · en attente de la mise à jour du comité
+          </strong>
+        ) : hasScore ? (
+          <strong>Résultat à vérifier</strong>
+        ) : (
+          <span>Résultat non saisi</span>
+        )}
+      </footer>
     </article>
   );
 }
 
-export function ChampionshipResultsExplorer() {
+export function ChampionshipResultsExplorer({
+  preferredChampionshipId,
+  preferredDivisionId,
+  preferredPoolId,
+  focusDay,
+}: Props) {
   const [catalog, setCatalog] = useState<ChampionshipResultsCatalogItem[]>([]);
   const [matches, setMatches] = useState<ChampionshipBrowserMatch[]>([]);
   const [selectedChampionshipId, setSelectedChampionshipId] = useState("");
-  const [selectedDivisionId, setSelectedDivisionId] = useState("all");
+  const [selectedDivisionId, setSelectedDivisionId] = useState("");
   const [selectedPoolId, setSelectedPoolId] = useState("all");
-  const [scope, setScope] = useState<MatchScope>("club");
+  const [selectedDay, setSelectedDay] = useState("");
   const [loading, setLoading] = useState(true);
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [error, setError] = useState("");
@@ -192,10 +148,7 @@ export function ChampionshipResultsExplorer() {
         if (!active) return;
         setCatalog(items);
         const preferred =
-          items.find(
-            (item) =>
-              item.championshipStatus === "active" && item.hasMyClubTeam,
-          ) ??
+          items.find((item) => item.championshipId === preferredChampionshipId) ??
           items.find(
             (item) => item.championshipStatus === "active" && item.hasMyTeam,
           ) ??
@@ -217,22 +170,31 @@ export function ChampionshipResultsExplorer() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [preferredChampionshipId]);
 
   const selectedChampionship = useMemo(
     () =>
-      catalog.find(
-        (item) => item.championshipId === selectedChampionshipId,
-      ) ?? null,
+      catalog.find((item) => item.championshipId === selectedChampionshipId) ??
+      null,
     [catalog, selectedChampionshipId],
   );
 
   useEffect(() => {
     if (!selectedChampionship) return;
-    setSelectedDivisionId("all");
+    const division =
+      selectedChampionship.divisions.find(
+        (item) =>
+          selectedChampionship.championshipId === preferredChampionshipId &&
+          item.id === preferredDivisionId,
+      ) ??
+      selectedChampionship.divisions.find((item) =>
+        selectedChampionship.myDivisionIds.includes(item.id),
+      ) ??
+      selectedChampionship.divisions[0];
+    setSelectedDivisionId(division?.id ?? "");
     setSelectedPoolId("all");
-    setScope(selectedChampionship.hasMyClubTeam ? "club" : "all");
-  }, [selectedChampionship]);
+    setSelectedDay("");
+  }, [selectedChampionship, preferredChampionshipId, preferredDivisionId]);
 
   useEffect(() => {
     if (!selectedChampionshipId) return;
@@ -260,62 +222,139 @@ export function ChampionshipResultsExplorer() {
     };
   }, [selectedChampionshipId]);
 
-  const scopedMatches = useMemo(
-    () =>
-      matches.filter((match) => {
-        if (scope === "mine") {
-          return match.team1IsMyTeam || match.team2IsMyTeam;
-        }
-        if (scope === "club") {
-          return match.team1IsMyClub || match.team2IsMyClub;
-        }
-        return true;
-      }),
-    [matches, scope],
+  const divisionMatches = useMemo(
+    () => matches.filter((match) => match.divisionId === selectedDivisionId),
+    [matches, selectedDivisionId],
   );
 
   const poolOptions = useMemo(() => {
-    const pools = new Map<string, string>();
-    for (const match of scopedMatches) {
-      if (
-        selectedDivisionId !== "all" &&
-        match.divisionId !== selectedDivisionId
-      ) {
-        continue;
-      }
+    const pools = new Map<
+      string,
+      { id: string; label: string; code: string; isMine: boolean }
+    >();
+    for (const match of divisionMatches) {
       if (!match.poolId) continue;
-      pools.set(
-        match.poolId,
-        match.poolName ?? `Poule ${match.poolCode ?? "—"}`,
-      );
+      const current = pools.get(match.poolId);
+      pools.set(match.poolId, {
+        id: match.poolId,
+        label: match.poolName ?? `Poule ${match.poolCode ?? "—"}`,
+        code: match.poolCode ?? "",
+        isMine:
+          Boolean(current?.isMine) || match.team1IsMyTeam || match.team2IsMyTeam,
+      });
     }
-    return [...pools.entries()].sort((left, right) =>
-      left[1].localeCompare(right[1], "fr", { numeric: true }),
+    return [...pools.values()].sort((left, right) =>
+      left.code.localeCompare(right.code, "fr", { numeric: true }),
     );
-  }, [scopedMatches, selectedDivisionId]);
+  }, [divisionMatches]);
 
-  const filteredMatches = useMemo(
+  useEffect(() => {
+    if (poolOptions.length === 0) {
+      setSelectedPoolId("all");
+      return;
+    }
+    const preferred =
+      poolOptions.find(
+        (pool) =>
+          selectedChampionshipId === preferredChampionshipId &&
+          selectedDivisionId === preferredDivisionId &&
+          pool.id === preferredPoolId,
+      ) ?? poolOptions.find((pool) => pool.isMine);
+    setSelectedPoolId(preferred?.id ?? "all");
+  }, [
+    poolOptions,
+    preferredChampionshipId,
+    preferredDivisionId,
+    preferredPoolId,
+    selectedChampionshipId,
+    selectedDivisionId,
+  ]);
+
+  const poolFilteredMatches = useMemo(
     () =>
-      scopedMatches.filter(
-        (match) =>
-          (selectedDivisionId === "all" ||
-            match.divisionId === selectedDivisionId) &&
-          (selectedPoolId === "all" || match.poolId === selectedPoolId),
+      divisionMatches.filter(
+        (match) => selectedPoolId === "all" || match.poolId === selectedPoolId,
       ),
-    [scopedMatches, selectedDivisionId, selectedPoolId],
+    [divisionMatches, selectedPoolId],
   );
 
-  if (loading) {
-    return (
+  const divisionDays = useMemo(
+    () =>
+      [
+        ...new Set(
+          divisionMatches
+            .map((match) => match.theoreticalOn)
+            .filter((day): day is string => Boolean(day)),
+        ),
+      ].sort(),
+    [divisionMatches],
+  );
+
+  const availableDays = useMemo(
+    () =>
+      [
+        ...new Set(
+          poolFilteredMatches
+            .map((match) => match.theoreticalOn)
+            .filter((day): day is string => Boolean(day)),
+        ),
+      ].sort(),
+    [poolFilteredMatches],
+  );
+
+  useEffect(() => {
+    if (availableDays.length === 0) {
+      setSelectedDay("");
+      return;
+    }
+    const preferred =
+      (focusDay && availableDays.includes(focusDay) ? focusDay : null) ??
+      availableDays.find((day) => !focusDay || day >= focusDay) ??
+      availableDays.at(-1) ??
+      "";
+    setSelectedDay((current) =>
+      availableDays.includes(current) ? current : preferred,
+    );
+  }, [availableDays, focusDay]);
+
+  const visibleMatches = useMemo(
+    () =>
+      poolFilteredMatches.filter(
+        (match) => !selectedDay || match.theoreticalOn === selectedDay,
+      ),
+    [poolFilteredMatches, selectedDay],
+  );
+
+  const groups = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; label: string; code: string; matches: ChampionshipBrowserMatch[] }
+    >();
+    for (const match of visibleMatches) {
+      const key = match.poolId ?? "no-pool";
+      const group = map.get(key) ?? {
+        id: key,
+        label: match.poolName ?? (match.poolCode ? `Poule ${match.poolCode}` : match.phase),
+        code: match.poolCode ?? "",
+        matches: [],
+      };
+      group.matches.push(match);
+      map.set(key, group);
+    }
+    return [...map.values()].sort((left, right) =>
+      left.code.localeCompare(right.code, "fr", { numeric: true }),
+    );
+  }, [visibleMatches]);
+
+  if (loading || catalog.length === 0) {
+    return loading ? (
       <section className="championship-results">
         <div className="championship-results__state">
           Chargement des championnats…
         </div>
       </section>
-    );
+    ) : null;
   }
-
-  if (catalog.length === 0) return null;
 
   return (
     <section
@@ -323,62 +362,34 @@ export function ChampionshipResultsExplorer() {
       aria-labelledby="championship-results-title"
     >
       <header className="championship-results__heading">
+        <div className="championship-results__heading-icon">
+          <CalendarRange aria-hidden="true" />
+        </div>
         <div>
-          <p>Navigation globale</p>
-          <h2 id="championship-results-title">
-            Toutes les rencontres du championnat
-          </h2>
+          <p>Explorer le championnat</p>
+          <h2 id="championship-results-title">Rencontres par journée</h2>
           <span>
-            Calendrier, scores proposés par les équipes puis résultats officiels
-            dès leur mise à jour.
+            Choisissez une série, une poule et une journée. Les résultats saisis
+            par les équipes restent visibles jusqu’à leur remplacement par le
+            résultat officiel du comité.
           </span>
         </div>
-        <strong>{filteredMatches.length} partie(s)</strong>
       </header>
-
-      <div className="championship-results__scope" role="tablist">
-        <button
-          type="button"
-          className={scope === "mine" ? "is-active" : undefined}
-          onClick={() => setScope("mine")}
-          disabled={!selectedChampionship?.hasMyTeam}
-        >
-          Mon équipe
-        </button>
-        <button
-          type="button"
-          className={scope === "club" ? "is-active" : undefined}
-          onClick={() => setScope("club")}
-          disabled={!selectedChampionship?.hasMyClubTeam}
-        >
-          Toutes les équipes du club
-        </button>
-        <button
-          type="button"
-          className={scope === "all" ? "is-active" : undefined}
-          onClick={() => setScope("all")}
-        >
-          Tout le championnat
-        </button>
-      </div>
 
       <div className="championship-results__filters">
         <label>
           <span>Championnat</span>
           <select
             value={selectedChampionshipId}
-            onChange={(event) =>
-              setSelectedChampionshipId(event.target.value)
-            }
+            onChange={(event) => setSelectedChampionshipId(event.target.value)}
           >
             {catalog.map((item) => (
               <option key={item.championshipId} value={item.championshipId}>
-                {item.seasonLabel} · {item.specialty}
+                {item.seasonLabel} · {item.championshipName}
               </option>
             ))}
           </select>
         </label>
-
         <label>
           <span>Série</span>
           <select
@@ -386,31 +397,56 @@ export function ChampionshipResultsExplorer() {
             onChange={(event) => {
               setSelectedDivisionId(event.target.value);
               setSelectedPoolId("all");
+              setSelectedDay("");
             }}
           >
-            <option value="all">Toutes les séries</option>
             {selectedChampionship?.divisions.map((division) => (
               <option key={division.id} value={division.id}>
                 {division.name}
+                {selectedChampionship.myDivisionIds.includes(division.id)
+                  ? " · Ma série"
+                  : ""}
               </option>
             ))}
           </select>
         </label>
-
         <label>
           <span>Poule</span>
           <select
             value={selectedPoolId}
-            onChange={(event) => setSelectedPoolId(event.target.value)}
+            onChange={(event) => {
+              setSelectedPoolId(event.target.value);
+              setSelectedDay("");
+            }}
           >
             <option value="all">Toutes les poules</option>
-            {poolOptions.map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
+            {poolOptions.map((pool) => (
+              <option key={pool.id} value={pool.id}>
+                {pool.label}{pool.isMine ? " · Ma poule" : ""}
               </option>
             ))}
           </select>
         </label>
+      </div>
+
+      <div className="championship-results__days" role="tablist">
+        {availableDays.map((day) => {
+          const dayIndex = divisionDays.indexOf(day);
+          return (
+            <button
+              type="button"
+              role="tab"
+              key={day}
+              aria-selected={selectedDay === day}
+              className={selectedDay === day ? "is-active" : undefined}
+              onClick={() => setSelectedDay(day)}
+            >
+              <strong>{dayIndex >= 0 ? `J${dayIndex + 1}` : "Journée"}</strong>
+              <span>{displayCompactDate(day)}</span>
+              {day === focusDay && <small>Week-end affiché</small>}
+            </button>
+          );
+        })}
       </div>
 
       {error ? (
@@ -421,14 +457,27 @@ export function ChampionshipResultsExplorer() {
         <div className="championship-results__state">
           Chargement des rencontres…
         </div>
-      ) : filteredMatches.length === 0 ? (
+      ) : groups.length === 0 ? (
         <div className="championship-results__state">
-          Aucune rencontre avec ces filtres.
+          Aucune rencontre pour cette journée.
         </div>
       ) : (
-        <div className="championship-results__list">
-          {filteredMatches.map((match) => (
-            <MatchCard key={match.matchId} match={match} scope={scope} />
+        <div className="championship-results__groups">
+          {groups.map((group) => (
+            <section key={group.id} className="championship-results__pool-group">
+              <header>
+                <div>
+                  <strong>{group.label}</strong>
+                  <span>{displayDate(selectedDay)}</span>
+                </div>
+                <strong>{group.matches.length} partie(s)</strong>
+              </header>
+              <div>
+                {group.matches.map((match) => (
+                  <MatchCard key={match.matchId} match={match} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}
