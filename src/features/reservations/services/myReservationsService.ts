@@ -22,6 +22,7 @@ export type PaymentStatus =
 
 export type MyReservation = {
   id: string;
+  clubId: string;
   resourceId: string;
   resourceName: string;
   startsAt: string;
@@ -42,6 +43,7 @@ export type MyReservation = {
 
 type MyReservationRow = {
   id: string;
+  club_id: string;
   resource_id: string;
   resource_name: string;
   starts_at: string;
@@ -85,6 +87,7 @@ export const myReservationsService = {
 
     return ((data ?? []) as MyReservationRow[]).map((row) => ({
       id: row.id,
+      clubId: row.club_id,
       resourceId: row.resource_id,
       resourceName: row.resource_name,
       startsAt: row.starts_at,
