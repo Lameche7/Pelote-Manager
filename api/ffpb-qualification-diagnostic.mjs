@@ -128,23 +128,44 @@ const selectOption = async (session, id, matcher) => {
   return postForm(session, values);
 };
 
-const describe = (html) => ({
-  lines: stripHtml(html).slice(0, 700),
-  buttons: Array.from(html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/giu), (match) => ({
-    id: match[1].match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
-    text: stripHtml(match[2]).join(" "),
-  })).filter((item) => item.text),
-  links: Array.from(html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/giu), (match) => ({
-    id: match[1].match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
-    href: decodeHtml(match[1].match(/\bhref=["']([^"']+)["']/iu)?.[1] ?? ""),
-    text: stripHtml(match[2]).join(" "),
-  })).filter((item) => item.text),
-  selects: parseSelects(html).map((item) => ({
-    id: item.id,
-    selected: item.options.find((option) => option.selected)?.label ?? null,
-    options: item.options.map((option) => option.label).slice(0, 50),
-  })),
-});
+const describe = (html) => {
+  const needle = "Quotas 2026-27";
+  const quotaIndex = html.indexOf(needle);
+  const quotaSnippets = quotaIndex >= 0
+    ? [decodeHtml(html.slice(Math.max(0, quotaIndex - 5000), Math.min(html.length, quotaIndex + 5000)))]
+    : [];
+  const possibleFiles = Array.from(
+    html.matchAll(/[^"'\s<>]+\.(?:pdf|xlsx?|ods|csv)(?:\?[^"'\s<>]*)?/giu),
+    (match) => decodeHtml(match[0]),
+  );
+  const relevantInputs = Array.from(html.matchAll(/<input\b([^>]*)>/giu), (match) => {
+    const attrs = match[1];
+    return {
+      id: attrs.match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
+      name: attrs.match(/\bname=["']([^"']+)["']/iu)?.[1] ?? null,
+      value: decodeHtml(attrs.match(/\bvalue=["']([^"']*)["']/iu)?.[1] ?? ""),
+      type: attrs.match(/\btype=["']([^"']+)["']/iu)?.[1] ?? null,
+    };
+  }).filter((item) => /quota|fich|pj|info|doc|attach|a2[0-9]/iu.test(`${item.id} ${item.name} ${item.value}`));
+
+  return {
+    lines: stripHtml(html).slice(0, 700),
+    quotaSnippets,
+    possibleFiles,
+    relevantInputs,
+    buttons: Array.from(html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/giu), (match) => ({
+      id: match[1].match(/\bid=["']([^"']+)["']/iu)?.[1] ?? null,
+      name: match[1].match(/\bname=["']([^"']+)["']/iu)?.[1] ?? null,
+      onclick: decodeHtml(match[1].match(/\bonclick=["']([^"']+)["']/iu)?.[1] ?? ""),
+      text: stripHtml(match[2]).join(" "),
+    })).filter((item) => item.text),
+    selects: parseSelects(html).map((item) => ({
+      id: item.id,
+      selected: item.options.find((option) => option.selected)?.label ?? null,
+      options: item.options.map((option) => option.label).slice(0, 50),
+    })),
+  };
+};
 
 export default async function handler(request, response) {
   try {
