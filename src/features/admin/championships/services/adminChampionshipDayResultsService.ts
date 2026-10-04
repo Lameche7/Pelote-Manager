@@ -86,4 +86,25 @@ export const adminChampionshipDayResultsService = {
     }
     return rows(data).map(mapRow);
   },
+
+  async submit(
+    matchId: string,
+    scoreTeam1: number,
+    scoreTeam2: number,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("admin_submit_championship_result", {
+      target_match_id: matchId,
+      target_score_team1: scoreTeam1,
+      target_score_team2: scoreTeam2,
+      target_comment: null,
+    });
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible d’enregistrer ce résultat.",
+        ),
+      );
+    }
+  },
 };
