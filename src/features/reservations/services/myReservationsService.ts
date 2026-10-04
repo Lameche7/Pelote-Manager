@@ -22,6 +22,7 @@ export type PaymentStatus =
 
 export type MyReservation = {
   id: string;
+  resourceId: string;
   resourceName: string;
   startsAt: string;
   endsAt: string;
@@ -35,11 +36,13 @@ export type MyReservation = {
   paymentRedirectUrl: string | null;
   cancellationDeadline: string;
   canCancel: boolean;
+  canModify: boolean;
   createdAt: string;
 };
 
 type MyReservationRow = {
   id: string;
+  resource_id: string;
   resource_name: string;
   starts_at: string;
   ends_at: string;
@@ -53,8 +56,19 @@ type MyReservationRow = {
   payment_redirect_url: string | null;
   cancellation_deadline: string;
   can_cancel: boolean;
+  can_modify: boolean;
   created_at: string;
 };
+
+type UntypedRpcResult = {
+  data: unknown;
+  error: { message?: string } | null;
+};
+
+const rpc = supabase.rpc.bind(supabase) as unknown as (
+  functionName: string,
+  args?: Record<string, unknown>,
+) => Promise<UntypedRpcResult>;
 
 export type CancellationResult = {
   refundRequired: boolean;
@@ -62,7 +76,7 @@ export type CancellationResult = {
 
 export const myReservationsService = {
   async list(): Promise<MyReservation[]> {
-    const { data, error } = await supabase.rpc("list_my_reservations");
+    const { data, error } = await rpc("list_my_reservations_v2");
     if (error) {
       throw new Error(
         getSupabaseErrorMessage(error, "Impossible de charger vos réservations."),
@@ -71,6 +85,7 @@ export const myReservationsService = {
 
     return ((data ?? []) as MyReservationRow[]).map((row) => ({
       id: row.id,
+      resourceId: row.resource_id,
       resourceName: row.resource_name,
       startsAt: row.starts_at,
       endsAt: row.ends_at,
@@ -84,8 +99,26 @@ export const myReservationsService = {
       paymentRedirectUrl: row.payment_redirect_url,
       cancellationDeadline: row.cancellation_deadline,
       canCancel: row.can_cancel,
+      canModify: row.can_modify,
       createdAt: row.created_at,
     }));
+  },
+
+  async modify(
+    reservationId: string,
+    resourceId: string,
+    startsAt: string,
+  ): Promise<void> {
+    const { error } = await rpc("modify_reservation", {
+      target_reservation_id: reservationId,
+      target_resource_id: resourceId,
+      target_starts_at: startsAt,
+    });
+    if (error) {
+      throw new Error(
+        getSupabaseErrorMessage(error, "Cette réservation n’a pas pu être modifiée."),
+      );
+    }
   },
 
   async cancel(reservationId: string): Promise<CancellationResult> {
