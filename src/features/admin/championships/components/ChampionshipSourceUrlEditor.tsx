@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { championshipSourceUrlService } from "@/features/admin/championships/services/championshipSourceUrlService";
+import "./ChampionshipSourceUrlEditor.css";
 
 type Props = {
   championshipId: string;
