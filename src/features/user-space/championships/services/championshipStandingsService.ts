@@ -76,7 +76,7 @@ const mapRow = (row: Row): ChampionshipStandingBrowserRow => ({
   isMyPool: Boolean(row.is_my_pool),
 });
 
-const rpc = supabase.rpc as unknown as (
+const rpc = supabase.rpc.bind(supabase) as unknown as (
   functionName: string,
   args: Record<string, unknown>,
 ) => Promise<RpcResult>;
