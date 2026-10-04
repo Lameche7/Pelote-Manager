@@ -53,6 +53,7 @@ export function mapCalendarOccupation(
 
 export type ReservableResource = {
   id: string;
+  clubId?: string;
   name: string;
   description: string | null;
   timezone: string;
