@@ -42,12 +42,25 @@ export type OfficialResultsSourceResponse = {
   warnings: string[];
 };
 
+export type OfficialResultConflict = {
+  division: string;
+  team1Label: string;
+  team2Label: string;
+  proposedScoreTeam1: number;
+  proposedScoreTeam2: number;
+  officialScoreTeam1: number;
+  officialScoreTeam2: number;
+};
+
 export type OfficialResultsApplyResponse = {
   processedCount: number;
   updatedCount: number;
   unchangedCount: number;
   issueCount: number;
   issues: Array<Record<string, unknown>>;
+  confirmedProposalCount: number;
+  conflictProposalCount: number;
+  conflicts: OfficialResultConflict[];
 };
 
 const sourceError = async (response: Response) => {
@@ -58,6 +71,27 @@ const sourceError = async (response: Response) => {
     // Ignore malformed error bodies and use the generic message below.
   }
   return "Impossible de lire les résultats officiels FFPB.";
+};
+
+const asConflict = (value: unknown): OfficialResultConflict | null => {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Row;
+  const proposed1 = Number(row.proposedScoreTeam1);
+  const proposed2 = Number(row.proposedScoreTeam2);
+  const official1 = Number(row.officialScoreTeam1);
+  const official2 = Number(row.officialScoreTeam2);
+  if (![proposed1, proposed2, official1, official2].every(Number.isFinite)) {
+    return null;
+  }
+  return {
+    division: String(row.division ?? "Série"),
+    team1Label: String(row.team1Label ?? "Équipe 1"),
+    team2Label: String(row.team2Label ?? "Équipe 2"),
+    proposedScoreTeam1: proposed1,
+    proposedScoreTeam2: proposed2,
+    officialScoreTeam1: official1,
+    officialScoreTeam2: official2,
+  };
 };
 
 export const championshipOfficialResultsSyncService = {
@@ -115,6 +149,13 @@ export const championshipOfficialResultsSyncService = {
       issueCount: Number(row.issueCount ?? 0),
       issues: Array.isArray(row.issues)
         ? (row.issues as Array<Record<string, unknown>>)
+        : [],
+      confirmedProposalCount: Number(row.confirmedProposalCount ?? 0),
+      conflictProposalCount: Number(row.conflictProposalCount ?? 0),
+      conflicts: Array.isArray(row.conflicts)
+        ? row.conflicts
+            .map(asConflict)
+            .filter((conflict): conflict is OfficialResultConflict => Boolean(conflict))
         : [],
     };
   },
