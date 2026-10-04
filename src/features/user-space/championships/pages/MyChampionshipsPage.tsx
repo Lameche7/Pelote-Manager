@@ -227,6 +227,10 @@ export function MyChampionshipsPage() {
   const primaryChampionship =
     focusEntries[0]?.championship ?? currentChampionships[0] ?? null;
 
+  const targetedOtherMatch = otherActionEntries.some(
+    ({ match }) => match.id === targetMatchId,
+  );
+
   useEffect(() => {
     if (loading || !targetMatchId) return;
     window.setTimeout(() => {
@@ -337,19 +341,14 @@ export function MyChampionshipsPage() {
               )}
             </section>
 
-            <section className="my-championships__other-matches">
-              <header className="my-championships__section-heading is-compact">
-                <div>
-                  <p>Anticiper</p>
-                  <h2>Mes autres parties</h2>
-                  <span>
-                    Réservez ou programmez vos prochaines rencontres longtemps à
-                    l’avance : les mêmes actions restent disponibles sur chaque
-                    partie.
-                  </span>
-                </div>
-                <strong>{otherActionEntries.length}</strong>
-              </header>
+            <details
+              className="my-championships__history-block"
+              open={targetedOtherMatch || undefined}
+            >
+              <summary>
+                Mes autres parties · réserver / programmer à l’avance
+                <span>{otherActionEntries.length}</span>
+              </summary>
               {otherActionEntries.length > 0 ? (
                 <div className="my-championships__other-list">
                   {otherActionEntries.map((entry) => renderActionCard(entry))}
@@ -359,7 +358,7 @@ export function MyChampionshipsPage() {
                   Aucune autre partie à organiser pour le moment.
                 </div>
               )}
-            </section>
+            </details>
 
             {primaryChampionship && (
               <>
