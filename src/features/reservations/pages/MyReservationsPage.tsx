@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import type {
+  CalendarSlot,
+  ReservableResource,
+} from "@/features/reservations/domain/calendar";
+import { formatTime } from "@/features/reservations/domain/calendar";
+import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import {
   myReservationsService,
   type MyReservation,
@@ -55,14 +61,256 @@ function isUpcoming(reservation: MyReservation) {
   return new Date(reservation.endsAt).getTime() >= Date.now();
 }
 
+function localDateValue(iso: string, timezone = "Europe/Paris") {
+  return new Intl.DateTimeFormat("fr-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(iso));
+}
+
+function ReservationModificationDialog({
+  reservation,
+  onClose,
+  onSaved,
+}: {
+  reservation: MyReservation;
+  onClose: () => void;
+  onSaved: () => Promise<void>;
+}) {
+  const [resources, setResources] = useState<ReservableResource[]>([]);
+  const [resourceId, setResourceId] = useState(reservation.resourceId);
+  const [date, setDate] = useState(localDateValue(reservation.startsAt));
+  const [slots, setSlots] = useState<CalendarSlot[]>([]);
+  const [selectedStartsAt, setSelectedStartsAt] = useState(reservation.startsAt);
+  const [loadingResources, setLoadingResources] = useState(true);
+  const [loadingSlots, setLoadingSlots] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    reservationCalendarService
+      .listResources()
+      .then((items) => {
+        if (!active) return;
+        setResources(items.filter((resource) => resource.clubId === reservation.clubId));
+      })
+      .catch((cause) => {
+        if (!active) return;
+        setError(
+          cause instanceof Error ? cause.message : "Impossible de charger les terrains.",
+        );
+      })
+      .finally(() => {
+        if (active) setLoadingResources(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [reservation.clubId]);
+
+  const selectedResource = useMemo(
+    () => resources.find((resource) => resource.id === resourceId) ?? null,
+    [resources, resourceId],
+  );
+
+  useEffect(() => {
+    if (!resourceId || !date) return;
+    let active = true;
+    setLoadingSlots(true);
+    setError("");
+    reservationCalendarService
+      .listSlots(resourceId, date, date)
+      .then((items) => {
+        if (!active) return;
+        setSlots(items);
+      })
+      .catch((cause) => {
+        if (!active) return;
+        setError(
+          cause instanceof Error ? cause.message : "Impossible de charger les créneaux.",
+        );
+        setSlots([]);
+      })
+      .finally(() => {
+        if (active) setLoadingSlots(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [date, resourceId]);
+
+  const timezone = selectedResource?.timezone ?? "Europe/Paris";
+  const currentStart = new Date(reservation.startsAt).getTime();
+  const selectableSlots = useMemo(
+    () =>
+      slots
+        .filter((slot) => {
+          const slotStart = new Date(slot.startsAt).getTime();
+          const isCurrent =
+            slot.resourceId === reservation.resourceId &&
+            Math.abs(slotStart - currentStart) < 60_000;
+          return isCurrent || slot.status === "available";
+        })
+        .sort(
+          (left, right) =>
+            new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime(),
+        ),
+    [currentStart, reservation.resourceId, slots],
+  );
+
+  useEffect(() => {
+    if (loadingSlots) return;
+    if (!selectableSlots.some((slot) => slot.startsAt === selectedStartsAt)) {
+      setSelectedStartsAt("");
+    }
+  }, [loadingSlots, selectableSlots, selectedStartsAt]);
+
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedStartsAt) {
+      setError("Choisissez un créneau disponible.");
+      return;
+    }
+    if (
+      resourceId === reservation.resourceId &&
+      new Date(selectedStartsAt).getTime() === new Date(reservation.startsAt).getTime()
+    ) {
+      onClose();
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      await myReservationsService.modify(reservation.id, resourceId, selectedStartsAt);
+      await onSaved();
+      onClose();
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Modification impossible.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="reservation-edit-dialog" role="presentation" onMouseDown={onClose}>
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reservation-edit-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <p className="my-reservations__eyebrow">Modifier la réservation</p>
+        <h2 id="reservation-edit-title">
+          Choisir un nouveau terrain ou un nouveau créneau
+        </h2>
+        <p className="reservation-edit-dialog__current">
+          Actuellement : <strong>{reservation.resourceName}</strong> ·{" "}
+          {dateTime.format(new Date(reservation.startsAt))}
+        </p>
+
+        <form onSubmit={save}>
+          <div className="reservation-edit-dialog__fields">
+            <label>
+              <span>Terrain</span>
+              <select
+                value={resourceId}
+                disabled={loadingResources || saving}
+                onChange={(event) => {
+                  setResourceId(event.target.value);
+                  setSelectedStartsAt("");
+                }}
+              >
+                {resources.length === 0 && (
+                  <option value={reservation.resourceId}>{reservation.resourceName}</option>
+                )}
+                {resources.map((resource) => (
+                  <option key={resource.id} value={resource.id}>
+                    {resource.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Date</span>
+              <input
+                type="date"
+                value={date}
+                disabled={saving}
+                onChange={(event) => {
+                  setDate(event.target.value);
+                  setSelectedStartsAt("");
+                }}
+              />
+            </label>
+          </div>
+
+          <div className="reservation-edit-dialog__slots">
+            <strong>Créneaux disponibles</strong>
+            {loadingSlots ? (
+              <p>Chargement…</p>
+            ) : selectableSlots.length === 0 ? (
+              <p>Aucun créneau disponible ce jour-là.</p>
+            ) : (
+              <div>
+                {selectableSlots.map((slot) => {
+                  const isCurrent =
+                    slot.resourceId === reservation.resourceId &&
+                    Math.abs(
+                      new Date(slot.startsAt).getTime() -
+                        new Date(reservation.startsAt).getTime(),
+                    ) < 60_000;
+                  return (
+                    <button
+                      type="button"
+                      key={`${slot.resourceId}-${slot.startsAt}`}
+                      className={selectedStartsAt === slot.startsAt ? "is-selected" : undefined}
+                      onClick={() => setSelectedStartsAt(slot.startsAt)}
+                    >
+                      {formatTime(slot.startsAt, timezone)}
+                      {isCurrent && <small>Actuel</small>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <p className="my-reservations__alert my-reservations__alert--error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <footer>
+            <button type="button" onClick={onClose} disabled={saving}>
+              Annuler
+            </button>
+            <button type="submit" disabled={saving || !selectedStartsAt}>
+              {saving ? "Modification…" : "Modifier la réservation"}
+            </button>
+          </footer>
+        </form>
+      </section>
+    </div>
+  );
+}
+
 function ReservationCard({
   reservation,
   busyId,
+  onModify,
   onCancel,
   onResumePayment,
 }: {
   reservation: MyReservation;
   busyId: string | null;
+  onModify: (reservation: MyReservation) => void;
   onCancel: (reservation: MyReservation) => Promise<void>;
   onResumePayment: (reservation: MyReservation) => Promise<void>;
 }) {
@@ -143,6 +391,15 @@ function ReservationCard({
         )}
 
       <div className="my-reservations__actions">
+        {reservation.canModify && (
+          <button
+            type="button"
+            onClick={() => onModify(reservation)}
+            disabled={busyId === reservation.id}
+          >
+            Modifier la réservation
+          </button>
+        )}
         {paymentCanResume && (
           <button
             type="button"
@@ -168,6 +425,7 @@ function ReservationCard({
 }
 
 export function MyReservationsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [reservations, setReservations] = useState<MyReservation[]>([]);
   const [view, setView] = useState<"upcoming" | "history">("upcoming");
   const [isLoading, setIsLoading] = useState(true);
@@ -175,6 +433,7 @@ export function MyReservationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pendingCancellation, setPendingCancellation] = useState<MyReservation | null>(null);
+  const [editingReservation, setEditingReservation] = useState<MyReservation | null>(null);
 
   async function load() {
     setIsLoading(true);
@@ -194,6 +453,19 @@ export function MyReservationsPage() {
     void load();
   }, []);
 
+  useEffect(() => {
+    if (isLoading || editingReservation) return;
+    const requestedId = searchParams.get("edit");
+    if (!requestedId) return;
+    const reservation = reservations.find((item) => item.id === requestedId);
+    if (!reservation) return;
+    if (!reservation.canModify) {
+      setError("Cette réservation ne peut plus être modifiée.");
+      return;
+    }
+    setEditingReservation(reservation);
+  }, [editingReservation, isLoading, reservations, searchParams]);
+
   const displayed = useMemo(
     () =>
       reservations.filter((reservation) =>
@@ -201,6 +473,20 @@ export function MyReservationsPage() {
       ),
     [reservations, view],
   );
+
+  function closeModification() {
+    setEditingReservation(null);
+    if (searchParams.has("edit")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  }
+
+  async function modifiedReservation() {
+    setMessage("La réservation a été modifiée.");
+    await load();
+  }
 
   async function cancelReservation(reservation: MyReservation) {
     setBusyId(reservation.id);
@@ -293,11 +579,20 @@ export function MyReservationsPage() {
                 key={reservation.id}
                 reservation={reservation}
                 busyId={busyId}
+                onModify={setEditingReservation}
                 onCancel={async (reservation) => setPendingCancellation(reservation)}
                 onResumePayment={resumePayment}
               />
             ))}
           </div>
+        )}
+
+        {editingReservation && (
+          <ReservationModificationDialog
+            reservation={editingReservation}
+            onClose={closeModification}
+            onSaved={modifiedReservation}
+          />
         )}
 
         {pendingCancellation && (
