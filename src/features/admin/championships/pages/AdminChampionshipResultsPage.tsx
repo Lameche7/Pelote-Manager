@@ -8,6 +8,7 @@ import {
   championshipImportService,
   type AdminChampionshipSummary,
 } from "@/features/admin/championships/services/championshipImportService";
+import { championshipOfficialResultsSyncService } from "@/features/admin/championships/services/championshipOfficialResultsSyncService";
 import {
   championshipResultSettingsService,
   type ChampionshipResultSettings,
@@ -204,15 +205,6 @@ function ResultEditor({
   );
 }
 
-type SourceCheckResponse = {
-  summary?: {
-    teamCount?: number;
-    divisionCount?: number;
-  };
-  warnings?: string[];
-  error?: string;
-};
-
 export function AdminChampionshipResultsPage() {
   const [championships, setChampionships] = useState<AdminChampionshipSummary[]>(
     [],
@@ -357,35 +349,41 @@ export function AdminChampionshipResultsPage() {
     setOfficialUpdateError("");
     setOfficialUpdateMessage("");
     try {
-      const response = await fetch("/api/championship-standings-source", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          sourceUrl: selectedChampionship.sourceUrl,
-          divisions: divisions.map((division) => ({ name: division.name })),
-        }),
+      const source = await championshipOfficialResultsSyncService.read({
+        sourceUrl: selectedChampionship.sourceUrl,
+        seasonLabel: selectedChampionship.seasonLabel,
+        competitionName: selectedChampionship.name,
+        specialty: selectedChampionship.specialty,
+        divisions: divisions.map((division) => division.name),
       });
-      const payload = (await response.json()) as SourceCheckResponse;
-      if (!response.ok) {
-        throw new Error(
-          payload.error || "La source FFPB n’a pas pu être vérifiée.",
-        );
-      }
+      const applied =
+        source.results.length > 0
+          ? await championshipOfficialResultsSyncService.apply(
+              selectedChampionship.id,
+              source.results,
+            )
+          : {
+              processedCount: 0,
+              updatedCount: 0,
+              unchangedCount: 0,
+              issueCount: 0,
+              issues: [],
+            };
       await refresh();
-      const teamCount = payload.summary?.teamCount;
-      const divisionCount = payload.summary?.divisionCount;
-      const detail =
-        typeof teamCount === "number"
-          ? ` ${teamCount} équipe(s) lue(s)${typeof divisionCount === "number" ? ` sur ${divisionCount} série(s)` : ""}.`
+
+      const warningCount = source.warnings.length + applied.issueCount;
+      const warningSuffix =
+        warningCount > 0
+          ? ` · ${warningCount} correspondance(s) à vérifier`
           : "";
       setOfficialUpdateMessage(
-        `Source FFPB vérifiée directement.${detail} La synchronisation automatique utilisera cette même source.`,
+        `FFPB vérifiée : ${source.summary.officialResultCount} résultat(s) officiel(s) trouvé(s) · ${applied.updatedCount} mis à jour · ${applied.unchangedCount} déjà à jour${warningSuffix}.`,
       );
     } catch (cause) {
       setOfficialUpdateError(
         cause instanceof Error
           ? cause.message
-          : "Impossible de vérifier la source FFPB.",
+          : "Impossible de synchroniser les résultats FFPB.",
       );
     } finally {
       setOfficialUpdateBusy(false);
@@ -482,9 +480,9 @@ export function AdminChampionshipResultsPage() {
               <h2>Synchronisation automatique activée</h2>
               <p>
                 Du jeudi au dimanche, PILOTOKI vérifiera directement la source
-                fédérale chaque soir vers 23 h. Les correspondances sûres seront
-                appliquées automatiquement et un résultat officiel restera
-                toujours prioritaire sur un résultat proposé dans l’application.
+                fédérale chaque soir vers 23 h. Les résultats identifiés sans
+                ambiguïté seront appliqués automatiquement et resteront
+                prioritaires sur les résultats proposés dans l’application.
               </p>
             </div>
             {selectedChampionship.sourceUrl && (
@@ -519,13 +517,16 @@ export function AdminChampionshipResultsPage() {
                 divisions.length === 0
               }
             >
-              {officialUpdateBusy ? "Vérification en cours…" : "Vérifier maintenant"}
+              {officialUpdateBusy
+                ? "Synchronisation en cours…"
+                : "Vérifier maintenant"}
             </button>
           </div>
 
           {!selectedChampionship.sourceUrl && (
             <p className="admin-championship-results__alert" role="alert">
-              Renseignez l’URL officielle FFPB ci-dessus pour activer la synchronisation.
+              Renseignez l’URL officielle FFPB ci-dessus pour activer la
+              synchronisation.
             </p>
           )}
 
