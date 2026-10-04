@@ -191,6 +191,14 @@ export function ChampionshipMatchActionCard({
     return `${ROUTES.reservations}?${params.toString()}`;
   }, [finished, finalStatus, match, officialResult, readOnly]);
 
+  const reservationEditHref = useMemo(() => {
+    if (readOnly || !match.reservation || finished || finalStatus || officialResult) {
+      return null;
+    }
+    const params = new URLSearchParams({ edit: match.reservation.reservationId });
+    return `${ROUTES.myReservations}?${params.toString()}`;
+  }, [finished, finalStatus, match.reservation, officialResult, readOnly]);
+
   const canProgram =
     !readOnly &&
     match.teamSide === "b" &&
@@ -418,7 +426,20 @@ export function ChampionshipMatchActionCard({
       )}
 
       <div className="championship-match-action__actions">
-        {reservationHref ? (
+        {reservationEditHref ? (
+          <Link
+            className="championship-match-action__action is-primary"
+            to={reservationEditHref}
+          >
+            <CalendarCheck2 aria-hidden="true" />
+            <span>
+              <strong>Modifier la réservation</strong>
+              <small>
+                {match.reservation?.resourceName} · {displayDate(date)} · {displayTime(time)}
+              </small>
+            </span>
+          </Link>
+        ) : reservationHref ? (
           <Link className="championship-match-action__action is-primary" to={reservationHref}>
             <CalendarPlus aria-hidden="true" />
             <span>
