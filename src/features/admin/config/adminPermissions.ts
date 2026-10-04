@@ -201,6 +201,11 @@ export const adminNavigation = [
         to: ROUTES.adminChampionshipReservations,
         permission: ADMIN_PERMISSIONS.championships,
       },
+      {
+        label: "Résultats Championnats",
+        to: ROUTES.adminChampionshipResults,
+        permission: ADMIN_PERMISSIONS.championships,
+      },
     ],
     permission: ADMIN_PERMISSIONS.championships,
   },

@@ -42,6 +42,7 @@ export const ROUTES = {
   adminChampionships: "/admin/championnats",
   adminChampionshipImport: "/admin/championnats/importer",
   adminChampionshipReservations: "/admin/championnats/reservations",
+  adminChampionshipResults: "/admin/championnats/resultats",
   adminCommunication: "/admin/communication",
   adminStatistics: "/admin/statistiques",
   adminSettings: "/admin/parametres",
