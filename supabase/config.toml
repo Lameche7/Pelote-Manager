@@ -3,3 +3,6 @@ verify_jwt = false
 
 [functions.send-push-notifications]
 verify_jwt = false
+
+[functions.championship-official-sync]
+verify_jwt = false

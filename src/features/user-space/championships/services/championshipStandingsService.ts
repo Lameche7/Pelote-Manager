@@ -45,6 +45,33 @@ export type ChampionshipStandingBrowserRow = {
   isMyPool: boolean;
 };
 
+export type ChampionshipGeneralStandingBrowserRow = {
+  divisionId: string;
+  divisionName: string;
+  divisionDisplayOrder: number;
+  qualificationCutoff: number | null;
+  qualificationSource: string | null;
+  poolId: string;
+  poolCode: string;
+  teamId: string;
+  teamLabel: string;
+  teamNumber: string;
+  clubName: string;
+  players: string[];
+  generalRank: number;
+  poolRank: number | null;
+  points: number | null;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  scoreFor: number;
+  scoreAgainst: number;
+  scoreDifference: number;
+  isMyTeam: boolean;
+  isMyDivision: boolean;
+};
+
 const mapRow = (row: Row): ChampionshipStandingBrowserRow => ({
   divisionId: String(row.division_id ?? ""),
   divisionName: String(row.division_name ?? ""),
@@ -76,6 +103,36 @@ const mapRow = (row: Row): ChampionshipStandingBrowserRow => ({
   isMyPool: Boolean(row.is_my_pool),
 });
 
+const mapGeneralRow = (row: Row): ChampionshipGeneralStandingBrowserRow => ({
+  divisionId: String(row.division_id ?? ""),
+  divisionName: String(row.division_name ?? ""),
+  divisionDisplayOrder: Number(row.division_display_order ?? 0),
+  qualificationCutoff: nullableNumber(row.qualification_cutoff),
+  qualificationSource:
+    row.qualification_source === null || row.qualification_source === undefined
+      ? null
+      : String(row.qualification_source),
+  poolId: String(row.pool_id ?? ""),
+  poolCode: String(row.pool_code ?? ""),
+  teamId: String(row.team_id ?? ""),
+  teamLabel: String(row.team_label ?? ""),
+  teamNumber: String(row.team_number ?? ""),
+  clubName: String(row.club_name ?? ""),
+  players: Array.isArray(row.players) ? row.players.map(String) : [],
+  generalRank: Number(row.general_rank ?? 0),
+  poolRank: nullableNumber(row.pool_rank),
+  points: nullableNumber(row.points),
+  played: Number(row.played ?? 0),
+  wins: Number(row.wins ?? 0),
+  draws: Number(row.draws ?? 0),
+  losses: Number(row.losses ?? 0),
+  scoreFor: Number(row.score_for ?? 0),
+  scoreAgainst: Number(row.score_against ?? 0),
+  scoreDifference: Number(row.score_difference ?? 0),
+  isMyTeam: Boolean(row.is_my_team),
+  isMyDivision: Boolean(row.is_my_division),
+});
+
 const rpc = supabase.rpc.bind(supabase) as unknown as (
   functionName: string,
   args: Record<string, unknown>,
@@ -94,5 +151,26 @@ export const championshipStandingsService = {
     }
 
     return rows(data).map(mapRow).filter((row) => row.teamId && row.poolId);
+  },
+
+  async listGeneral(
+    championshipId: string,
+  ): Promise<ChampionshipGeneralStandingBrowserRow[]> {
+    const { data, error } = await rpc(
+      "list_championship_general_standings_browser",
+      {
+        target_championship_id: championshipId,
+      },
+    );
+
+    if (error) {
+      throw new Error(
+        error.message || "Impossible de charger le classement général.",
+      );
+    }
+
+    return rows(data)
+      .map(mapGeneralRow)
+      .filter((row) => row.teamId && row.divisionId && row.generalRank > 0);
   },
 };

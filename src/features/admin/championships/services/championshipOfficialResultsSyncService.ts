@@ -46,6 +46,11 @@ export type OfficialChampionshipStanding = {
   sourcePayload: Record<string, string>;
 };
 
+export type OfficialChampionshipGeneralStanding =
+  OfficialChampionshipStanding & {
+    poolRank: number;
+  };
+
 export type OfficialResultsSourceResponse = {
   checkedAt: string;
   checksum: string;
@@ -64,6 +69,10 @@ export type OfficialResultsSourceResponse = {
   standingsSummary?: {
     divisionCount: number;
     poolCount: number;
+    teamCount: number;
+  };
+  generalStandingsSummary?: {
+    divisionCount: number;
     teamCount: number;
   };
 };
@@ -90,6 +99,8 @@ export type OfficialResultsApplyResponse = {
   standingsUpdatedCount: number;
   standingsUnchangedCount: number;
   standingsIssueCount: number;
+  generalStandingsUpdatedCount: number;
+  generalStandingsIssueCount: number;
 };
 
 type OfficialStandingsSourceResponse = {
@@ -102,29 +113,32 @@ type OfficialStandingsSourceResponse = {
   };
 };
 
+type OfficialGeneralStandingsSourceResponse = {
+  generalStandings: OfficialChampionshipGeneralStanding[];
+  warnings: string[];
+  summary: {
+    divisionCount: number;
+    teamCount: number;
+  };
+};
+
 const standingsByResults = new WeakMap<
   OfficialChampionshipResult[],
   OfficialChampionshipStanding[]
 >();
+const generalStandingsByResults = new WeakMap<
+  OfficialChampionshipResult[],
+  OfficialChampionshipGeneralStanding[]
+>();
 
-const sourceError = async (response: Response) => {
+const sourceError = async (response: Response, fallback: string) => {
   try {
     const payload = (await response.json()) as { error?: unknown };
     if (payload.error) return String(payload.error);
   } catch {
-    // Ignore malformed error bodies and use the generic message below.
+    // Ignore malformed error bodies and use the fallback below.
   }
-  return "Impossible de lire les résultats officiels FFPB.";
-};
-
-const standingsSourceError = async (response: Response) => {
-  try {
-    const payload = (await response.json()) as { error?: unknown };
-    if (payload.error) return String(payload.error);
-  } catch {
-    // Ignore malformed error bodies and use the generic message below.
-  }
-  return "Impossible de lire les classements officiels FFPB.";
+  return fallback;
 };
 
 const asConflict = (value: unknown): OfficialResultConflict | null => {
@@ -148,6 +162,20 @@ const asConflict = (value: unknown): OfficialResultConflict | null => {
   };
 };
 
+const sourceBody = (params: {
+  sourceUrl: string;
+  seasonLabel: string;
+  competitionName: string;
+  specialty: string;
+  divisions: string[];
+}) => ({
+  sourceUrl: params.sourceUrl,
+  seasonLabel: params.seasonLabel,
+  competitionName: params.competitionName,
+  specialty: params.specialty,
+  divisions: params.divisions.map((name) => ({ name })),
+});
+
 const readStandings = async (params: {
   sourceUrl: string;
   seasonLabel: string;
@@ -158,19 +186,52 @@ const readStandings = async (params: {
   const response = await fetch("/api/championship-pool-standings-source", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      sourceUrl: params.sourceUrl,
-      seasonLabel: params.seasonLabel,
-      competitionName: params.competitionName,
-      specialty: params.specialty,
-      divisions: params.divisions.map((name) => ({ name })),
-    }),
+    body: JSON.stringify(sourceBody(params)),
   });
 
-  if (!response.ok) throw new Error(await standingsSourceError(response));
+  if (!response.ok) {
+    throw new Error(
+      await sourceError(
+        response,
+        "Impossible de lire les classements officiels FFPB.",
+      ),
+    );
+  }
   const payload = (await response.json()) as OfficialStandingsSourceResponse;
   if (!payload || !Array.isArray(payload.standings)) {
     throw new Error("La réponse des classements officiels est incomplète.");
+  }
+  return payload;
+};
+
+const readGeneralStandings = async (params: {
+  sourceUrl: string;
+  seasonLabel: string;
+  competitionName: string;
+  specialty: string;
+  divisions: string[];
+}): Promise<OfficialGeneralStandingsSourceResponse> => {
+  const response = await fetch(
+    "/api/championship-general-standings-public-source",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(sourceBody(params)),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await sourceError(
+        response,
+        "Impossible de lire le classement général officiel FFPB.",
+      ),
+    );
+  }
+  const payload =
+    (await response.json()) as OfficialGeneralStandingsSourceResponse;
+  if (!payload || !Array.isArray(payload.generalStandings)) {
+    throw new Error("La réponse du classement général est incomplète.");
   }
   return payload;
 };
@@ -186,22 +247,24 @@ export const championshipOfficialResultsSyncService = {
     const response = await fetch("/api/championship-results-source", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        sourceUrl: params.sourceUrl,
-        seasonLabel: params.seasonLabel,
-        competitionName: params.competitionName,
-        specialty: params.specialty,
-        divisions: params.divisions.map((name) => ({ name })),
-      }),
+      body: JSON.stringify(sourceBody(params)),
     });
 
-    if (!response.ok) throw new Error(await sourceError(response));
+    if (!response.ok) {
+      throw new Error(
+        await sourceError(
+          response,
+          "Impossible de lire les résultats officiels FFPB.",
+        ),
+      );
+    }
     const payload = (await response.json()) as OfficialResultsSourceResponse;
     if (!payload || !Array.isArray(payload.results)) {
       throw new Error("La réponse de la source officielle est incomplète.");
     }
 
     payload.warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+
     try {
       const standings = await readStandings(params);
       standingsByResults.set(payload.results, standings.standings);
@@ -211,8 +274,22 @@ export const championshipOfficialResultsSyncService = {
       standingsByResults.set(payload.results, []);
       payload.warnings.push(
         cause instanceof Error
-          ? `Classements : ${cause.message}`
-          : "Classements : synchronisation impossible.",
+          ? `Classements par poule : ${cause.message}`
+          : "Classements par poule : synchronisation impossible.",
+      );
+    }
+
+    try {
+      const general = await readGeneralStandings(params);
+      generalStandingsByResults.set(payload.results, general.generalStandings);
+      payload.generalStandingsSummary = general.summary;
+      payload.warnings.push(...(general.warnings ?? []));
+    } catch (cause) {
+      generalStandingsByResults.set(payload.results, []);
+      payload.warnings.push(
+        cause instanceof Error
+          ? `Classement général : ${cause.message}`
+          : "Classement général : synchronisation impossible.",
       );
     }
 
@@ -243,20 +320,19 @@ export const championshipOfficialResultsSyncService = {
     let standingsUpdatedCount = 0;
     let standingsUnchangedCount = 0;
     let standingsIssueCount = 0;
-    const standingsIssues: Array<Record<string, unknown>> = [];
-    const standings = standingsByResults.get(results) ?? [];
+    let generalStandingsUpdatedCount = 0;
+    let generalStandingsIssueCount = 0;
+    const extraIssues: Array<Record<string, unknown>> = [];
 
+    const standings = standingsByResults.get(results) ?? [];
     if (standings.length > 0) {
       const standingsRpc = await rpc(
         "admin_sync_championship_official_standings",
-        {
-          target_id: championshipId,
-          payload: standings,
-        },
+        { target_id: championshipId, payload: standings },
       );
       if (standingsRpc.error) {
         standingsIssueCount = 1;
-        standingsIssues.push({
+        extraIssues.push({
           code: "standings_sync_failed",
           message: getSupabaseErrorMessage(
             standingsRpc.error,
@@ -269,8 +345,35 @@ export const championshipOfficialResultsSyncService = {
         standingsUnchangedCount = Number(standingsRow.unchangedCount ?? 0);
         standingsIssueCount = Number(standingsRow.issueCount ?? 0);
         if (Array.isArray(standingsRow.issues)) {
-          standingsIssues.push(
+          extraIssues.push(
             ...(standingsRow.issues as Array<Record<string, unknown>>),
+          );
+        }
+      }
+    }
+
+    const generalStandings = generalStandingsByResults.get(results) ?? [];
+    if (generalStandings.length > 0) {
+      const generalRpc = await rpc(
+        "admin_sync_championship_official_general_standings",
+        { target_id: championshipId, payload: generalStandings },
+      );
+      if (generalRpc.error) {
+        generalStandingsIssueCount = 1;
+        extraIssues.push({
+          code: "general_standings_sync_failed",
+          message: getSupabaseErrorMessage(
+            generalRpc.error,
+            "Impossible d’appliquer le classement général officiel.",
+          ),
+        });
+      } else {
+        const generalRow = (generalRpc.data ?? {}) as Row;
+        generalStandingsUpdatedCount = Number(generalRow.updatedCount ?? 0);
+        generalStandingsIssueCount = Number(generalRow.issueCount ?? 0);
+        if (Array.isArray(generalRow.issues)) {
+          extraIssues.push(
+            ...(generalRow.issues as Array<Record<string, unknown>>),
           );
         }
       }
@@ -284,18 +387,25 @@ export const championshipOfficialResultsSyncService = {
       processedCount: Number(row.processedCount ?? 0),
       updatedCount: Number(row.updatedCount ?? 0),
       unchangedCount: Number(row.unchangedCount ?? 0),
-      issueCount: Number(row.issueCount ?? 0) + standingsIssueCount,
-      issues: [...resultIssues, ...standingsIssues],
+      issueCount:
+        Number(row.issueCount ?? 0) +
+        standingsIssueCount +
+        generalStandingsIssueCount,
+      issues: [...resultIssues, ...extraIssues],
       confirmedProposalCount: Number(row.confirmedProposalCount ?? 0),
       conflictProposalCount: Number(row.conflictProposalCount ?? 0),
       conflicts: Array.isArray(row.conflicts)
         ? row.conflicts
             .map(asConflict)
-            .filter((conflict): conflict is OfficialResultConflict => Boolean(conflict))
+            .filter(
+              (conflict): conflict is OfficialResultConflict => Boolean(conflict),
+            )
         : [],
       standingsUpdatedCount,
       standingsUnchangedCount,
       standingsIssueCount,
+      generalStandingsUpdatedCount,
+      generalStandingsIssueCount,
     };
   },
 };
