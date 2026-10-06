@@ -25,125 +25,57 @@ export function LoginPage() {
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
-  }
+  if (isAuthenticated) return <Navigate to={ROUTES.home} replace />;
 
-  const confirmationRequired =
-    location.state?.accountCreated === "confirmation_required" ||
-    error?.includes("confirmer votre adresse email") === true;
+  const confirmationRequired = location.state?.accountCreated === "confirmation_required" || error?.includes("confirmer votre adresse email") === true;
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-    setResendStatus(null);
-
+    event.preventDefault(); setIsSubmitting(true); setError(null); setResendStatus(null);
     try {
       await login(email, password);
       const memberFinalized = await finalization.mutateAsync();
-      const participationFinalized =
-        await finalizePendingExternalParticipation();
+      const participationFinalized = await finalizePendingExternalParticipation();
       if (memberFinalized || participationFinalized) await refreshProfile();
       navigate(ROUTES.home, { replace: true });
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "La connexion a échoué. Veuillez réessayer.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+      setError(caughtError instanceof Error ? caughtError.message : "La connexion a échoué. Veuillez réessayer.");
+    } finally { setIsSubmitting(false); }
   }
 
   async function handleResendConfirmation() {
-    setIsResendingConfirmation(true);
-    setError(null);
-    setResendStatus(null);
-
+    setIsResendingConfirmation(true); setError(null); setResendStatus(null);
     try {
       await resendSignupConfirmation(email);
-      setResendStatus(
-        "Un nouvel email de confirmation vient de vous être envoyé. Vérifiez aussi vos courriers indésirables.",
-      );
+      setResendStatus("Un nouvel email de confirmation vient de vous être envoyé. Vérifiez aussi vos courriers indésirables.");
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Impossible de renvoyer l’email de confirmation.",
-      );
-    } finally {
-      setIsResendingConfirmation(false);
-    }
+      setError(caughtError instanceof Error ? caughtError.message : "Impossible de renvoyer l’email de confirmation.");
+    } finally { setIsResendingConfirmation(false); }
   }
 
   return (
     <section className="simple-page" aria-labelledby="login-title">
       <h1 id="login-title">Connexion</h1>
-      {location.state?.accountCreated === "completed" && (
-        <p role="status">
-          Votre compte a bien été créé. Vous pouvez maintenant vous connecter.
-        </p>
-      )}
-      {location.state?.accountCreated === "confirmation_required" && (
-        <p role="status">
-          Votre compte a été créé. Un email de confirmation vient de vous être
-          envoyé. Cliquez sur le lien reçu avant de vous connecter.
-        </p>
-      )}
+      {location.state?.passwordReset && <p role="status">Votre mot de passe a bien été modifié. Vous pouvez maintenant vous connecter.</p>}
+      {location.state?.accountCreated === "completed" && <p role="status">Votre compte a bien été créé. Vous pouvez maintenant vous connecter.</p>}
+      {location.state?.accountCreated === "confirmation_required" && <p role="status">Votre compte a été créé. Un email de confirmation vient de vous être envoyé. Cliquez sur le lien reçu avant de vous connecter.</p>}
       <form onSubmit={(event) => void handleLogin(event)}>
         <RequiredFieldsNotice />
-        <label htmlFor="email">
-          Adresse e-mail <RequiredFieldMark />
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
-        <label htmlFor="password">
-          Mot de passe <RequiredFieldMark />
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Connexion…" : "Se connecter"}
-        </button>
+        <label htmlFor="email">Adresse e-mail <RequiredFieldMark /></label>
+        <input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+        <label htmlFor="password">Mot de passe <RequiredFieldMark /></label>
+        <input id="password" name="password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+        <p><Link to={ROUTES.forgotPassword}>Mot de passe oublié ?</Link></p>
+        <button type="submit" disabled={isSubmitting}>{isSubmitting ? "Connexion…" : "Se connecter"}</button>
         {error && <p role="alert">{error}</p>}
       </form>
       {confirmationRequired && (
         <div>
-          <p>
-            Vous n’avez pas reçu l’email ? Saisissez votre adresse ci-dessus et
-            demandez un nouvel envoi.
-          </p>
-          <button
-            type="button"
-            disabled={isResendingConfirmation || !email.trim()}
-            onClick={() => void handleResendConfirmation()}
-          >
-            {isResendingConfirmation
-              ? "Envoi…"
-              : "Renvoyer l’email de confirmation"}
-          </button>
+          <p>Vous n’avez pas reçu l’email ? Saisissez votre adresse ci-dessus et demandez un nouvel envoi.</p>
+          <button type="button" disabled={isResendingConfirmation || !email.trim()} onClick={() => void handleResendConfirmation()}>{isResendingConfirmation ? "Envoi…" : "Renvoyer l’email de confirmation"}</button>
           {resendStatus && <p role="status">{resendStatus}</p>}
         </div>
       )}
-      <p>
-        Pas encore de compte ? <Link to={ROUTES.register}>Créer un compte</Link>
-      </p>
+      <p>Pas encore de compte ? <Link to={ROUTES.register}>Créer un compte</Link></p>
     </section>
   );
 }
