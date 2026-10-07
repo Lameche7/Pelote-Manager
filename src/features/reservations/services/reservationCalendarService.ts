@@ -16,6 +16,12 @@ type ResourceRow = {
   timezone: string;
 };
 
+type RefereedIntervalRow = {
+  starts_at: string;
+  ends_at: string;
+  source_type: "championship" | "tournament";
+};
+
 type SlotRow = {
   resource_id: string;
   starts_at: string;
@@ -87,7 +93,7 @@ export const reservationCalendarService = {
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
       resultDisplay: slot.result_display,
-      hasReferee: (refereedIntervals ?? []).some((item) => new Date(item.starts_at).getTime() < new Date(slot.ends_at).getTime() && new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()),
+      hasReferee: ((refereedIntervals ?? []) as RefereedIntervalRow[]).some((item) => new Date(item.starts_at).getTime() < new Date(slot.ends_at).getTime() && new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()),
     }));
   },
 
