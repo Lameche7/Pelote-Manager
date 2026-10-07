@@ -82,7 +82,7 @@ export const reservationCalendarService = {
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
       resultDisplay: slot.result_display,
-      hasReferee: refereedReservations.some((item) => item.starts_at < slot.ends_at && item.ends_at > slot.starts_at),
+      hasReferee: refereedReservations.some((item) => new Date(item.starts_at).getTime() < new Date(slot.ends_at).getTime() && new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()),
     }));
   },
 
