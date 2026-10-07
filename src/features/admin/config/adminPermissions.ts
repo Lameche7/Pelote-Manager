@@ -202,6 +202,11 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.championships,
       },
       {
+        label: "Gestion des arbitrages",
+        to: ROUTES.adminRefereeing,
+        permission: ADMIN_PERMISSIONS.championships,
+      },
+      {
         label: "Résultats Championnats",
         to: ROUTES.adminChampionshipResults,
         permission: ADMIN_PERMISSIONS.championships,
