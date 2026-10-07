@@ -6,7 +6,17 @@ import "./RefereeingPage.css";
 const date=(v:string|null)=>v?new Intl.DateTimeFormat("fr-FR",{weekday:"short",day:"numeric",month:"long"}).format(new Date(v+"T12:00:00")):"Date à confirmer";
 const time=(v:string|null)=>v?v.slice(0,5).replace(":","h"):"Horaire à confirmer";
 export function RefereeingPage(){const [items,setItems]=useState<RefereeingMatch[]>([]),[participation,setParticipation]=useState<RefereeingParticipation[]>([]),[statsOpen,setStatsOpen]=useState(false),[groupsOpen,setGroupsOpen]=useState({championship:false,tournament:false}),[loading,setLoading]=useState(true),[error,setError]=useState(""),[busy,setBusy]=useState("");
-const load=async()=>{const [matches,stats]=await Promise.all([refereeingService.list(),refereeingService.participation()]);setItems(matches);setParticipation(stats)};useEffect(()=>{load().catch(e=>setError(e instanceof Error?e.message:"Erreur")).finally(()=>setLoading(false))},[]);
+const load=async()=>{const [matches,stats]=await Promise.all([refereeingService.list(),refereeingService.participation()]);setItems(matches);setParticipation(stats)};
+useEffect(()=>{
+ let active=true;
+ const refresh=()=>load().catch(e=>{if(active)setError(e instanceof Error?e.message:"Erreur")});
+ refresh().finally(()=>{if(active)setLoading(false)});
+ const intervalId=window.setInterval(()=>{if(document.visibilityState==="visible")void refresh()},60000);
+ const onVisibilityChange=()=>{if(document.visibilityState==="visible")void refresh()};
+ window.addEventListener("focus",onVisibilityChange);
+ document.addEventListener("visibilitychange",onVisibilityChange);
+ return()=>{active=false;window.clearInterval(intervalId);window.removeEventListener("focus",onVisibilityChange);document.removeEventListener("visibilitychange",onVisibilityChange)};
+},[]);
 const upcoming=useMemo(()=>items.filter(x=>!x.play_date||x.play_date>=new Date().toISOString().slice(0,10)),[items]);const championship=upcoming.filter(x=>x.source_type==="championship"),tournaments=upcoming.filter(x=>x.source_type==="tournament");const mine=upcoming.filter(x=>x.is_mine),open=upcoming.filter(x=>!x.referee_profile_id);
 const take=async(x:RefereeingMatch)=>{setBusy(x.match_id);setError("");try{await refereeingService.volunteer(x);await load()}catch(e){setError(e instanceof Error?e.message:"Impossible de prendre cet arbitrage.")}finally{setBusy("")}};
 const withdraw=async(x:RefereeingMatch)=>{if(!window.confirm("Tu veux vraiment te retirer de cet arbitrage ?"))return;setBusy(x.match_id);setError("");try{await refereeingService.withdraw(x);await load()}catch(e){setError(e instanceof Error?e.message:"Impossible de retirer cet arbitrage.")}finally{setBusy("")}};
