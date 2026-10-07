@@ -100,6 +100,39 @@ export async function resendSignupConfirmation(email: string): Promise<void> {
   }
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) throw new Error("Saisissez votre adresse email.");
+
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: `${currentApplicationOrigin()}/reinitialiser-mot-de-passe`,
+  });
+  if (error) {
+    throw new Error(
+      getSupabaseErrorMessage(
+        error,
+        "Impossible d’envoyer le lien de réinitialisation. Merci de réessayer.",
+      ),
+    );
+  }
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  if (password.length < 8) {
+    throw new Error("Le mot de passe doit contenir au moins 8 caractères.");
+  }
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    throw new Error(
+      getSupabaseErrorMessage(
+        error,
+        "Impossible de modifier le mot de passe. Le lien est peut-être expiré.",
+      ),
+    );
+  }
+  await supabase.auth.signOut();
+}
+
 const pendingExternalIdentityId = (user: User): string | null => {
   const value = user.user_metadata?.pending_external_identity_id;
   return typeof value === "string" && value.trim() ? value.trim() : null;
