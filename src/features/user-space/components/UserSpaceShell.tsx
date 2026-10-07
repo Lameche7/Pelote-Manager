@@ -8,6 +8,7 @@ import {
   Trophy,
   TrendingUp,
   UserRound,
+  Gavel,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
@@ -35,6 +36,9 @@ export function UserSpaceShell({ children }: PropsWithChildren) {
         </NavLink>
         <NavLink to={ROUTES.myChampionships}>
           <TrendingUp aria-hidden="true" /> Mes championnats
+        </NavLink>
+        <NavLink to={ROUTES.myRefereeing}>
+          <Gavel aria-hidden="true" /> Arbitrage
         </NavLink>
         <NavLink to={ROUTES.myStatistics}>
           <BarChart3 aria-hidden="true" /> Mes statistiques
