@@ -1,10 +1,11 @@
 import type { SVGProps } from "react";
 
-/** Material Design Icons — whistle silhouette. */
+/** Referee: bust with one arm raised. */
 export function WhistleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" focusable="false" {...props}>
-      <path d="M12 2C11.45 2 11 2.45 11 3V7.07C8.72 7.54 7 9.56 7 12C7 14.76 9.24 17 12 17C14.44 17 16.46 15.28 16.93 13H20C21.1 13 22 12.1 22 11V7C22 5.9 21.1 5 20 5H16.41L13.71 2.29C13.53 2.11 13.28 2 13 2H12M12 9C13.66 9 15 10.34 15 12C15 13.66 13.66 15 12 15C10.34 15 9 13.66 9 12C9 10.34 10.34 9 12 9M17 7H20V11H17V7Z" />
+      <circle cx="9" cy="6.2" r="3.1" />
+      <path d="M3.6 21v-6.2c0-2.7 2.2-4.9 4.9-4.9h2.1c1.1 0 2.2.4 3 1l2.1-2.1V3.1c0-.9.7-1.6 1.6-1.6s1.6.7 1.6 1.6v6.4c0 .5-.2.9-.5 1.2l-4.2 4.2V21H3.6Z" />
     </svg>
   );
 }
