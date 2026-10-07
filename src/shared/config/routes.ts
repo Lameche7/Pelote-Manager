@@ -3,6 +3,8 @@ export const ROUTES = {
   tv: "/tv",
   login: "/connexion",
   register: "/inscription",
+  forgotPassword: "/mot-de-passe-oublie",
+  resetPassword: "/reinitialiser-mot-de-passe",
   legalNotice: "/mentions-legales",
   privacy: "/confidentialite",
   terms: "/conditions-utilisation",
