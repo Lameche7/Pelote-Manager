@@ -33,9 +33,10 @@ export function ResetPasswordPage() {
       <h1 id="reset-password-title">Nouveau mot de passe</h1>
       <form onSubmit={(event) => void handleSubmit(event)}>
         <label htmlFor="new-password">Nouveau mot de passe</label>
-        <input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={6} required />
+        <input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} required />
         <label htmlFor="confirm-password">Confirmer le mot de passe</label>
-        <input id="confirm-password" type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} minLength={6} required />
+        <input id="confirm-password" type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} minLength={8} required />
+        <small>8 caractères minimum.</small>
         <button type="submit" disabled={isSubmitting}>{isSubmitting ? "Modification…" : "Modifier le mot de passe"}</button>
         {error && <p role="alert">{error}</p>}
       </form>
