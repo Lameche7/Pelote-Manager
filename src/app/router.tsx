@@ -48,6 +48,8 @@ import { AdminTournamentResultsPage } from "@/features/admin/tournaments/pages/A
 import { AdminTournamentTeamsPage } from "@/features/admin/tournaments/pages/AdminTournamentTeamsPage";
 import { AdminTournamentsPage } from "@/features/admin/tournaments/pages/AdminTournamentsPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
+import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import {
   LegalNoticePage,
   PrivacyPage,
@@ -112,6 +114,8 @@ export const routes = [
       { index: true, element: <HomePage /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage /> },
+      { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
+      { path: ROUTES.resetPassword, element: <ResetPasswordPage /> },
       { path: ROUTES.legalNotice, element: <LegalNoticePage /> },
       { path: ROUTES.privacy, element: <PrivacyPage /> },
       { path: ROUTES.terms, element: <TermsPage /> },
