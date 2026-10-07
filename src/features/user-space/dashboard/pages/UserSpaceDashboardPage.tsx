@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import type { ComponentType, SVGProps } from "react";
 import type { LucideIcon } from "lucide-react";
+import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
 import {
   BadgeCheck,
   BarChart3,
@@ -10,7 +12,6 @@ import {
   Trophy,
   TrendingUp,
   UserRound,
-  Gavel,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { permanentSlotService } from "@/features/reservations/services/permanentSlotService";
@@ -23,7 +24,7 @@ import "./UserSpaceDashboardPage.css";
 type DashboardCard = {
   title: string;
   description?: string;
-  icon: LucideIcon;
+  icon: LucideIcon | ComponentType<SVGProps<SVGSVGElement>>;
   to?: string;
 };
 
@@ -71,7 +72,7 @@ const standardCards: DashboardCard[] = [
   {
     title: "Arbitrage",
     description: "Voir les parties à arbitrer et prendre un arbitrage à domicile.",
-    icon: Gavel,
+    icon: WhistleIcon,
     to: ROUTES.myRefereeing,
   },
   {
