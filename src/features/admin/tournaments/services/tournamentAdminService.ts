@@ -394,6 +394,24 @@ export const tournamentAdminService = {
       fail(error, "Impossible d’enregistrer la configuration du tournoi.");
   },
 
+  async getRefereeingEnabled(id: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from("tournaments")
+      .select("refereeing_enabled")
+      .eq("id", id)
+      .single();
+    if (error) fail(error, "Impossible de charger le réglage d’arbitrage.");
+    return Boolean(data?.refereeing_enabled);
+  },
+
+  async setRefereeingEnabled(id: string, enabled: boolean): Promise<void> {
+    const { error } = await supabase.rpc("admin_set_tournament_refereeing", {
+      target_id: id,
+      enabled,
+    });
+    if (error) fail(error, "Impossible de modifier l’arbitrage du tournoi.");
+  },
+
   async getSportingRules(id: string): Promise<TournamentSportingRules> {
     const { data, error } = await supabase.rpc(
       "admin_get_tournament_sporting_rules",
