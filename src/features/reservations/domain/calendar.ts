@@ -11,6 +11,7 @@ export type CalendarSlot = {
   displayColor?: string | null;
   reservationAccess?: "standard" | "championship" | null;
   resultDisplay?: string | null;
+  hasReferee?: boolean;
 };
 
 export type CalendarOccupation = {
