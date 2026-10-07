@@ -10,7 +10,9 @@ export const refereeingService={
   const base=Array.isArray(data)?data as RefereeingMatch[]:[];
   const {data:tournamentData,error:tournamentError}=await supabase.rpc("list_tournament_refereeing_matches");
   if(tournamentError)throw new Error(getSupabaseErrorMessage(tournamentError,"Impossible de charger les arbitrages des tournois."));
-  const tournaments=Array.isArray(tournamentData)?tournamentData as RefereeingMatch[]:[];
+  const tournamentFallback=Array.isArray(tournamentData)?tournamentData as RefereeingMatch[]:[];
+  const baseTournamentIds=new Set(base.filter(x=>x.source_type==="tournament").map(x=>x.match_id));
+  const tournaments=tournamentFallback.filter(x=>!baseTournamentIds.has(x.match_id));
   const ids=base.filter((x)=>x.source_type==="championship").map((x)=>x.match_id);
   if(ids.length===0)return [...base,...tournaments].sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
   const {data:reservations}=await supabase.from("reservations").select("championship_match_id,starts_at,resource_id").in("championship_match_id",ids).in("status",["pending","confirmed"]);
