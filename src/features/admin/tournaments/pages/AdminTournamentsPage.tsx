@@ -275,6 +275,7 @@ export function AdminTournamentsPage() {
   const [playWindows, setPlayWindows] = useState<TournamentPlayWindow[]>([]);
   const [sportingRules, setSportingRules] =
     useState<TournamentSportingRules | null>(null);
+  const [refereeingEnabled, setRefereeingEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -288,9 +289,10 @@ export function AdminTournamentsPage() {
     setSaving(true);
     setError("");
     try {
-      const [loaded, loadedSportingRules] = await Promise.all([
+      const [loaded, loadedSportingRules, loadedRefereeingEnabled] = await Promise.all([
         tournamentAdminService.get(id),
         tournamentAdminService.getSportingRules(id),
+        tournamentAdminService.getRefereeingEnabled(id),
       ]);
       setDetail(loaded);
       setForm(detailToForm(loaded));
@@ -298,6 +300,7 @@ export function AdminTournamentsPage() {
       setSeries(loaded.series);
       setPlayWindows(loaded.playWindows);
       setSportingRules(loadedSportingRules);
+      setRefereeingEnabled(loadedRefereeingEnabled);
     } catch (openError) {
       setError(
         openError instanceof Error
@@ -370,6 +373,7 @@ export function AdminTournamentsPage() {
     setSeries([]);
     setPlayWindows([]);
     setSportingRules(blankSportingRules());
+    setRefereeingEnabled(false);
     setError("");
     setMessage("");
   };
@@ -381,6 +385,7 @@ export function AdminTournamentsPage() {
     setSeries([]);
     setPlayWindows([]);
     setSportingRules(null);
+    setRefereeingEnabled(false);
     setError("");
     setMessage("");
   };
@@ -915,6 +920,39 @@ export function AdminTournamentsPage() {
                 />
               )}
             </form>
+
+            {detail && (
+              <section className="admin-card tournament-refereeing-setting">
+                <div>
+                  <h3>Arbitrage des parties</h3>
+                  <p>Lorsque l’arbitrage est activé, les parties programmées de ce tournoi pourront être proposées aux arbitres du club.</p>
+                </div>
+                <label className="tournament-refereeing-toggle">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    checked={refereeingEnabled}
+                    disabled={saving}
+                    onChange={async (event) => {
+                      const next = event.target.checked;
+                      setSaving(true);
+                      setError("");
+                      setMessage("");
+                      try {
+                        await tournamentAdminService.setRefereeingEnabled(detail.id, next);
+                        setRefereeingEnabled(next);
+                        setMessage(next ? "Arbitrage activé pour ce tournoi." : "Arbitrage désactivé pour ce tournoi.");
+                      } catch (toggleError) {
+                        setError(toggleError instanceof Error ? toggleError.message : "Modification impossible.");
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                  />
+                  <span>{refereeingEnabled ? "Activé" : "Désactivé"}</span>
+                </label>
+              </section>
+            )}
 
             {detail && sportingRules && (
               <TournamentSportingRulesSection
