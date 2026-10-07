@@ -10,6 +10,7 @@ import {
   Trophy,
   TrendingUp,
   UserRound,
+  Gavel,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { permanentSlotService } from "@/features/reservations/services/permanentSlotService";
@@ -66,6 +67,12 @@ const standardCards: DashboardCard[] = [
       "Consulter votre équipe, vos parties, vos résultats et votre poule.",
     icon: TrendingUp,
     to: ROUTES.myChampionships,
+  },
+  {
+    title: "Arbitrage",
+    description: "Voir les parties à arbitrer et prendre un arbitrage à domicile.",
+    icon: Gavel,
+    to: ROUTES.myRefereeing,
   },
   {
     title: "Mes statistiques",
