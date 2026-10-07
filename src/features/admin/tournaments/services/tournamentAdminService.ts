@@ -407,7 +407,7 @@ export const tournamentAdminService = {
   async setRefereeingEnabled(id: string, enabled: boolean): Promise<void> {
     const { error } = await supabase.rpc("admin_set_tournament_refereeing", {
       target_id: id,
-      enabled,
+      target_enabled: enabled,
     });
     if (error) fail(error, "Impossible de modifier l’arbitrage du tournoi.");
   },
