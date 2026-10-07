@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
 import {
@@ -149,6 +150,7 @@ function SlotCard({
               : "Occupé"}
         </span>
         <small>{bookedByDetails}</small>
+        {isChampionshipMatch && slot.hasReferee && <span className="reservation-slot__referee" title="Partie arbitrée"><WhistleIcon aria-label="Partie arbitrée" width="18" height="18" /></span>}
         {slot.resultDisplay && (
           <span className="reservation-slot__result">{slot.resultDisplay}</span>
         )}
