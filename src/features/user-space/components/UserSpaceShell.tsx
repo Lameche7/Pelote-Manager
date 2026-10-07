@@ -8,9 +8,9 @@ import {
   Trophy,
   TrendingUp,
   UserRound,
-  Gavel,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ROUTES } from "@/shared/config";
 import "./UserSpaceShell.css";
@@ -38,7 +38,7 @@ export function UserSpaceShell({ children }: PropsWithChildren) {
           <TrendingUp aria-hidden="true" /> Mes championnats
         </NavLink>
         <NavLink to={ROUTES.myRefereeing}>
-          <Gavel aria-hidden="true" /> Arbitrage
+          <WhistleIcon aria-hidden="true" /> Arbitrage
         </NavLink>
         <NavLink to={ROUTES.myStatistics}>
           <BarChart3 aria-hidden="true" /> Mes statistiques
