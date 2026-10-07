@@ -67,6 +67,8 @@ import { MyPermanentSlotsPage } from "@/features/reservations/pages/MyPermanentS
 import { MyReservationsPage } from "@/features/reservations/pages/MyReservationsPage";
 import { MyChampionshipsPage } from "@/features/user-space/championships/pages/MyChampionshipsPage";
 import { MyStatisticsPage } from "@/features/user-space/statistics/pages/MyStatisticsPage";
+import { RefereeingPage } from "@/features/refereeing/pages/RefereeingPage";
+import { AdminRefereeingPage } from "@/features/admin/refereeing/pages/AdminRefereeingPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
 import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
 import { ReservationSharePaymentPage } from "@/features/reservations/pages/ReservationSharePaymentPage";
@@ -148,6 +150,10 @@ export const routes = [
             <MyChampionshipsPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: ROUTES.myRefereeing,
+        element: (<ProtectedRoute allowedRoles={allAuthenticatedRoles}><RefereeingPage /></ProtectedRoute>),
       },
       {
         path: ROUTES.myStatistics,
@@ -434,6 +440,10 @@ export const routes = [
               ADMIN_PERMISSIONS.championships,
               <AdminChampionshipReservationsPage />,
             ),
+          },
+          {
+            path: "championnats/arbitrage",
+            element: permitted(ADMIN_PERMISSIONS.championships, <AdminRefereeingPage />),
           },
           {
             path: "championnats/resultats",
