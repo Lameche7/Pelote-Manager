@@ -1,0 +1,2 @@
+import type { SVGProps } from "react";
+export function WhistleIcon(props:SVGProps<SVGSVGElement>){return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M10.5 9.5 14 6h4l3 3v4l-3 3h-5.2"/><circle cx="7.5" cy="14.5" r="4.5"/><path d="M11.5 12 15 8.5M4.5 10.8 2 8.5"/></svg>}
