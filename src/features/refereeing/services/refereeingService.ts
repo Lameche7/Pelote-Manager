@@ -8,26 +8,7 @@ export const refereeingService={
   const {data,error}=await supabase.rpc("get_refereeing_workspace");
   if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de charger les arbitrages."));
   const base=Array.isArray(data)?data as RefereeingMatch[]:[];
-  const ids=base.filter((x)=>x.source_type==="championship").map((x)=>x.match_id);
-  if(ids.length===0)return base.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
-  const {data:reservations}=await supabase.from("reservations").select("championship_match_id,starts_at,resource_id").in("championship_match_id",ids).in("status",["pending","confirmed"]);
-  if(!reservations?.length)return base.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
-  const resourceIds=Array.from(new Set(reservations.map((x)=>x.resource_id).filter(Boolean)));
-  const {data:resources}=resourceIds.length?await supabase.from("reservable_resources").select("id,name,timezone").in("id",resourceIds):{data:[]};
-  const resourceMap=new Map((resources??[]).map((x)=>[x.id,x]));
-  const reservationMap=new Map(reservations.map((x)=>[x.championship_match_id,x]));
-  const championships=base.map((x)=>{
-   if(x.source_type!=="championship")return x;
-   const reservation=reservationMap.get(x.match_id);
-   if(!reservation)return x;
-   const resource=resourceMap.get(reservation.resource_id);
-   const instant=new Date(reservation.starts_at);
-   const timezone=resource?.timezone??"Europe/Paris";
-   const playDate=new Intl.DateTimeFormat("fr-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(instant);
-   const playTime=new Intl.DateTimeFormat("fr-FR",{timeZone:timezone,hour:"2-digit",minute:"2-digit",hour12:false}).format(instant).replace("h",":");
-   return {...x,play_date:playDate,play_time:playTime,venue:resource?.name??x.venue};
-  });
-  return championships.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
+  return base.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
  },
  async volunteer(match:RefereeingMatch){const {error}=await supabase.rpc("volunteer_for_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de prendre cet arbitrage."));},
  async withdraw(match:RefereeingMatch){const {error}=await supabase.rpc("withdraw_from_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de retirer cet arbitrage."));},
