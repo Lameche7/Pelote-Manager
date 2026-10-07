@@ -395,13 +395,11 @@ export const tournamentAdminService = {
   },
 
   async getRefereeingEnabled(id: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from("tournaments")
-      .select("refereeing_enabled")
-      .eq("id", id)
-      .single();
+    const { data, error } = await supabase.rpc("admin_get_tournament_refereeing", {
+      target_id: id,
+    });
     if (error) fail(error, "Impossible de charger le réglage d’arbitrage.");
-    return Boolean(data?.refereeing_enabled);
+    return Boolean(data);
   },
 
   async setRefereeingEnabled(id: string, enabled: boolean): Promise<void> {
