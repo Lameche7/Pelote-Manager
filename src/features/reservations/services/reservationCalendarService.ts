@@ -16,6 +16,12 @@ type ResourceRow = {
   timezone: string;
 };
 
+type RefereedIntervalRow = {
+  starts_at: string;
+  ends_at: string;
+  source_type: "championship" | "tournament";
+};
+
 type SlotRow = {
   resource_id: string;
   starts_at: string;
@@ -67,10 +73,15 @@ export const reservationCalendarService = {
         getSupabaseErrorMessage(error, "Impossible de charger le calendrier."),
       );
 
-    const refereeResponse = await supabase.from("referee_assignments").select("championship_match_id").not("referee_profile_id", "is", null);
-    const refereeIds = new Set((refereeResponse.data ?? []).map((item) => item.championship_match_id).filter(Boolean));
-    const reservationResponse = await supabase.from("reservations").select("championship_match_id, starts_at, ends_at").eq("resource_id", resourceId).in("status", ["pending", "confirmed"]).not("championship_match_id", "is", null);
-    const refereedReservations = (reservationResponse.data ?? []).filter((item) => refereeIds.has(item.championship_match_id));
+    const { data: refereedIntervals, error: refereeError } = await supabase.rpc("list_refereed_calendar_intervals", {
+      target_resource_id: resourceId,
+      range_start: fromDate,
+      range_end: toDate,
+    });
+    if (refereeError)
+      throw new Error(
+        getSupabaseErrorMessage(refereeError, "Impossible de charger les arbitrages du calendrier."),
+      );
     return ((data ?? []) as SlotRow[]).map((slot) => ({
       resourceId: slot.resource_id,
       startsAt: slot.starts_at,
@@ -82,7 +93,7 @@ export const reservationCalendarService = {
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
       resultDisplay: slot.result_display,
-      hasReferee: refereedReservations.some((item) => new Date(item.starts_at).getTime() < new Date(slot.ends_at).getTime() && new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()),
+      hasReferee: ((refereedIntervals ?? []) as RefereedIntervalRow[]).some((item) => new Date(item.starts_at).getTime() < new Date(slot.ends_at).getTime() && new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()),
     }));
   },
 
