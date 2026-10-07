@@ -1,2 +1,9 @@
 import type { SVGProps } from "react";
-export function WhistleIcon(props:SVGProps<SVGSVGElement>){return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M10.5 9.5 14 6h4l3 3v4l-3 3h-5.2"/><circle cx="7.5" cy="14.5" r="4.5"/><path d="M11.5 12 15 8.5M4.5 10.8 2 8.5"/></svg>}
+export function WhistleIcon(props:SVGProps<SVGSVGElement>){
+ return <svg viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...props}>
+  <path d="M3 10h11l4-5h9l3 4v5l-4 4H14"/>
+  <circle cx="9" cy="16" r="6"/>
+  <circle cx="9" cy="16" r="2"/>
+  <path d="M18 5v5h11"/>
+ </svg>;
+}
