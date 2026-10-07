@@ -8,15 +8,10 @@ export const refereeingService={
   const {data,error}=await supabase.rpc("get_refereeing_workspace");
   if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de charger les arbitrages."));
   const base=Array.isArray(data)?data as RefereeingMatch[]:[];
-  const {data:tournamentData,error:tournamentError}=await supabase.rpc("list_tournament_refereeing_matches");
-  if(tournamentError)throw new Error(getSupabaseErrorMessage(tournamentError,"Impossible de charger les arbitrages des tournois."));
-  const tournamentFallback=Array.isArray(tournamentData)?tournamentData as RefereeingMatch[]:[];
-  const baseTournamentIds=new Set(base.filter(x=>x.source_type==="tournament").map(x=>x.match_id));
-  const tournaments=tournamentFallback.filter(x=>!baseTournamentIds.has(x.match_id));
   const ids=base.filter((x)=>x.source_type==="championship").map((x)=>x.match_id);
-  if(ids.length===0)return [...base,...tournaments].sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
+  if(ids.length===0)return base.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
   const {data:reservations}=await supabase.from("reservations").select("championship_match_id,starts_at,resource_id").in("championship_match_id",ids).in("status",["pending","confirmed"]);
-  if(!reservations?.length)return [...base,...tournaments].sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
+  if(!reservations?.length)return base.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
   const resourceIds=Array.from(new Set(reservations.map((x)=>x.resource_id).filter(Boolean)));
   const {data:resources}=resourceIds.length?await supabase.from("reservable_resources").select("id,name,timezone").in("id",resourceIds):{data:[]};
   const resourceMap=new Map((resources??[]).map((x)=>[x.id,x]));
@@ -32,7 +27,7 @@ export const refereeingService={
    const playTime=new Intl.DateTimeFormat("fr-FR",{timeZone:timezone,hour:"2-digit",minute:"2-digit",hour12:false}).format(instant).replace("h",":");
    return {...x,play_date:playDate,play_time:playTime,venue:resource?.name??x.venue};
   });
-  return [...championships,...tournaments].sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
+  return championships.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
  },
  async volunteer(match:RefereeingMatch){const {error}=await supabase.rpc("volunteer_for_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de prendre cet arbitrage."));},
  async withdraw(match:RefereeingMatch){const {error}=await supabase.rpc("withdraw_from_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de retirer cet arbitrage."));},
