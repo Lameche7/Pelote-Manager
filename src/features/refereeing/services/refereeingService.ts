@@ -28,6 +28,7 @@ export const refereeingService={
   });
  },
  async volunteer(match:RefereeingMatch){const {error}=await supabase.rpc("volunteer_for_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de prendre cet arbitrage."));},
+ async withdraw(match:RefereeingMatch){const {error}=await supabase.rpc("withdraw_from_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de retirer cet arbitrage."));},
  async candidates():Promise<RefereeCandidate[]>{const {data,error}=await supabase.rpc("list_referee_candidates");if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de charger les arbitres."));return Array.isArray(data)?data as RefereeCandidate[]:[];},
  async assign(match:RefereeingMatch,profileId:string|null){const {error}=await supabase.rpc("admin_set_referee",{target_source_type:match.source_type,target_match_id:match.match_id,target_profile_id:profileId});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible d’affecter cet arbitre."));}
 };
