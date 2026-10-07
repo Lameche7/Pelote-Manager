@@ -78,6 +78,7 @@ export const reservationCalendarService = {
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
       resultDisplay: slot.result_display,
+      hasReferee: false,
     }));
   },
 
