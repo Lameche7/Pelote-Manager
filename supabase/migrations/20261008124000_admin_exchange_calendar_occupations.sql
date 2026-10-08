@@ -28,7 +28,7 @@ begin
  end if;
  select timezone into tz_a from public.reservable_resources where id=a.resource_id and is_active;
  select timezone into tz_b from public.reservable_resources where id=b.resource_id and is_active;
- if tz_a is null or tz_b is null or tz_a <> tz_b
+ if a.resource_id <> b.resource_id or tz_a is null or tz_b is null or tz_a <> tz_b
     or (select club_id from public.reservable_resources where id=a.resource_id)
        is distinct from (select club_id from public.reservable_resources where id=b.resource_id)
     or (select club_id from public.reservable_resources where id=a.resource_id)
@@ -92,7 +92,7 @@ begin
  -- original slot is released above; the other side stays released until sync.
 
  if a_kind='reservation' then
-   update public.reservations set resource_id=b.resource_id,starts_at=b.starts_at,ends_at=b.ends_at,
+   update public.reservations set starts_at=b.starts_at,ends_at=b.ends_at,
      updated_by=auth.uid(),updated_at=now() where id=ar.id;
    if ar.championship_match_id is not null then
      insert into public.championship_match_manual_schedules(match_id,scheduled_on,scheduled_time,updated_by,updated_at)
@@ -111,7 +111,7 @@ begin
      (b.ends_at at time zone tz_b)::time);
  end if;
  if b_kind='reservation' then
-   update public.reservations set resource_id=a.resource_id,starts_at=a.starts_at,ends_at=a.ends_at,
+   update public.reservations set starts_at=a.starts_at,ends_at=a.ends_at,
      updated_by=auth.uid(),updated_at=now() where id=br.id;
    if br.championship_match_id is not null then
      insert into public.championship_match_manual_schedules(match_id,scheduled_on,scheduled_time,updated_by,updated_at)
