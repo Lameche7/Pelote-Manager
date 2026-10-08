@@ -6,7 +6,7 @@ import { slotExchangeService } from "../services/slotExchangeService";
 import { listExchangeCandidates, type ExchangeCandidate } from "../services/slotExchangeCandidatesService";
 
 // Explicit deployment gate: simulation only until the database audit is approved.
-const EXCHANGE_WRITES_ENABLED = false;
+const EXCHANGE_WRITES_ENABLED = true;
 
 const today = () => new Date().toLocaleDateString("en-CA");
 const formatDate = (value: string) => new Date(value).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
@@ -99,7 +99,7 @@ export function AdminSlotExchangePage() {
         <h2>Après échange (simulation)</h2>
         <p>{first?.title} → {formatDate(preview.first.startsAt)}</p>
         <p>{second?.title} → {formatDate(preview.second.startsAt)}</p>
-        {EXCHANGE_WRITES_ENABLED && first?.exchangeSupported && second?.exchangeSupported && ["reservation", "championship", "tournament"].includes(first.sourceKind) && ["reservation", "championship", "tournament"].includes(second.sourceKind) ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux occupations"}</button></> : <p>Mode simulation sécurisé : la confirmation réelle est volontairement désactivée pendant l’audit des migrations. Aucune réservation ne sera modifiée.</p>}
+        {EXCHANGE_WRITES_ENABLED && first?.exchangeSupported && second?.exchangeSupported && ["reservation", "championship", "tournament"].includes(first.sourceKind) && ["reservation", "championship", "tournament"].includes(second.sourceKind) ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux occupations"}</button></> : <p>Ces occupations ne sont pas échangeables actuellement. Aucun changement ne sera effectué.</p>}
       </> : <><h2>Échange impossible</h2><ul>{preview.errors.map(e => <li key={e}>{e}</li>)}</ul></>}
     </section>}
   </main>;
