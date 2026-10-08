@@ -46,6 +46,47 @@ $function$;
 revoke all on function public.list_profiles_for_admin() from public, anon;
 grant execute on function public.list_profiles_for_admin() to authenticated;
 
+-- Interdiction valable sur toutes les voies d'écriture, pas seulement le RPC admin.
+-- Verrouillage du profil pour sérialiser les nominations simultanées.
+create or replace function public.enforce_single_club_administrator()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $function$
+declare
+  nominated_key public.club_role_key;
+begin
+  select cr.key into nominated_key
+  from public.club_roles cr
+  where cr.id = new.role_id and cr.club_id = new.club_id;
+  if nominated_key is distinct from 'administrator'::public.club_role_key then
+    return new;
+  end if;
+
+  perform 1 from public.profiles p where p.id = new.profile_id for update;
+  if exists (
+    select 1
+    from public.club_memberships cm
+    join public.club_roles cr on cr.id = cm.role_id and cr.club_id = cm.club_id
+    where cm.profile_id = new.profile_id
+      and cm.club_id <> new.club_id
+      and cr.key = 'administrator'::public.club_role_key
+  ) then
+    raise exception 'This account already administers another club'
+      using errcode = '23514';
+  end if;
+  return new;
+end
+$function$;
+
+revoke all on function public.enforce_single_club_administrator() from public, anon, authenticated;
+drop trigger if exists enforce_single_club_administrator on public.club_memberships;
+create trigger enforce_single_club_administrator
+before insert or update of club_id, profile_id, role_id
+on public.club_memberships
+for each row execute function public.enforce_single_club_administrator();
+
 -- Compatibilité signature RPC : seuls les changements de droit administrateur sont admis.
 -- N'écrit jamais dans profiles.role ; les droits sont uniquement club-scopés.
 create or replace function public.set_profile_role(target_profile_id uuid,new_role public.user_role)
