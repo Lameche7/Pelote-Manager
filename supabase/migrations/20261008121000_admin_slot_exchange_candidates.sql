@@ -24,9 +24,17 @@ begin
         when tme.match_id is not null then 'tournament'
         else c.occupation_type::text
       end,
-      (c.occupation_type = 'reservation' and r.id is not null
-       and r.status = 'confirmed'
-       and c.starts_at > now()) as exchange_supported
+      (c.starts_at > now() and (
+        (c.occupation_type = 'reservation' and r.id is not null and r.status = 'confirmed')
+        or (tme.match_id is not null and exists (
+          select 1 from public.tournament_match_planning tp
+          join public.tournament_matches tm on tm.id=tp.match_id
+          join public.tournaments t on t.id=tp.tournament_id
+          where tp.match_id=tme.match_id and tm.phase is distinct from 'finals'
+            and t.club_id=public.admin_current_club_id()
+            and tp.resource_id=c.resource_id
+        ))
+      )) as exchange_supported
     from public.calendar_occupations c
     left join public.reservations r on r.id = c.reservation_id
     left join public.event_resources er on er.calendar_occupation_id = c.id
