@@ -88,10 +88,31 @@ header{background:linear-gradient(105deg,#082b21,var(--primary),#092f27);min-hei
 .pill{background:color-mix(in srgb,var(--accent) 15%,white);color:var(--primary)}
 .demo-benefits{background:linear-gradient(105deg,var(--primary),color-mix(in srgb,var(--primary) 72%,black))}
 .demo-home__actions button:focus-visible,.tabs button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+/* Bandeau vitrine : signature commerciale plus premium et lisible */
+.marketing-topbar{min-height:82px;display:flex;justify-content:space-between;gap:20px;align-items:center;background:#071f19;padding:16px clamp(24px,5vw,90px);border-bottom:1px solid #ffffff22}
+.marketing-brand{display:flex;align-items:center;gap:20px}
+.marketing-brand__symbol{font-size:27px;font-weight:950;letter-spacing:.065em;color:#fff;position:relative;line-height:1}
+.marketing-brand__dot{color:#ed3434;font-size:12px;position:relative;top:-12px;left:-1px}
+.marketing-brand__descriptor{color:#b5ccc4;font-size:12px;font-weight:600;padding-left:20px;border-left:1px solid #ffffff35}
+.marketing-topbar__right{display:flex;align-items:center;gap:18px}
+.marketing-preview-label{font-size:12px;font-weight:700;color:#b8dbcb}
+.marketing-topbar__cta{display:inline-flex;align-items:center;justify-content:center;background:#fff;color:#0c2920;border-radius:10px;text-decoration:none;padding:11px 15px;font-size:12px;font-weight:850}
+.hero{background:radial-gradient(ellipse 70% 120% at 50% 110%,#1e5a47 0%,#0b3026 46%,#061c16 100%);padding:48px 24px 56px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#d62828 28%,#f5f5f5 52%,#d62828 72%,transparent)}
+.hero__eyebrow{font-size:11px;font-weight:850;letter-spacing:.18em;color:#a8e3c6;margin:0 auto 18px}
+.hero__eyebrow span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#e83c3c;vertical-align:middle;margin-right:8px}
+.hero h1{font-size:clamp(35px,4.7vw,66px);font-weight:950;letter-spacing:-.045em;line-height:1.05;max-width:1050px;margin:0 auto 16px}
+.hero h1 em{font-style:normal;color:#f4d58a}
+.hero p.hero__lead{font-size:clamp(15px,1.45vw,19px);font-weight:750;color:#fff;max-width:760px;margin:0 auto 12px}
+.hero p.hero__sub{font-size:14px;line-height:1.65;color:#b8d2c8;max-width:660px;margin:0 auto}
+.hero__action{display:inline-flex;gap:24px;align-items:center;background:#fff;color:#12362c;padding:12px 18px;margin-top:24px;border-radius:10px;font-weight:850;font-size:13px;text-decoration:none;box-shadow:0 8px 22px #0003}
+.hero__action span{font-size:19px}
+@media(max-width:700px){.marketing-topbar{padding:15px 18px;min-height:68px}.marketing-brand__symbol{font-size:21px}.marketing-brand__descriptor,.marketing-preview-label{display:none}.marketing-topbar__cta{padding:9px 11px;font-size:11px}.hero{padding:42px 18px 45px}.hero__eyebrow{font-size:9px;letter-spacing:.12em}}
 </style></head><body>
-<header><strong>PILOTOKI</strong><span>Expérience de démonstration</span></header>
-<section class="hero"><h1>Une application créée par un joueur, pour les clubs et les joueurs.</h1><p>Votre club est unique. Votre application aussi. Personnalisez PILOTOKI et découvrez à quoi pourrait ressembler votre espace club.</p></section>
-<main class="layout"><aside class="panel"><h2>Imaginez votre PILOTOKI</h2><p class="hint">Modifiez l'identité visuelle. Votre aperçu évolue immédiatement, sans inscription.</p>
+<header class="marketing-topbar"><div class="marketing-brand"><span class="marketing-brand__symbol">PILOTOKI<span class="marketing-brand__dot">●</span></span><span class="marketing-brand__descriptor">La plateforme des clubs de pelote</span></div><div class="marketing-topbar__right"><span class="marketing-preview-label">● Démonstration interactive</span><a href="#customizer" class="marketing-topbar__cta">Personnaliser mon club ↗</a></div></header>
+<section class="hero"><div class="hero__eyebrow"><span></span> PENSÉ SUR LE TERRAIN, POUR VOTRE CLUB</div><h1>Votre club mérite <em>son application.</em></h1><p class="hero__lead">PILOTOKI — Une application créée par un joueur, pour les clubs et les joueurs.</p><p class="hero__sub">Votre identité, vos couleurs, votre organisation. Personnalisez votre espace et explorez PILOTOKI comme si c'était déjà l'application de votre club.</p><a href="#customizer" class="hero__action">Créer mon aperçu <span>↓</span></a></section>
+<main class="layout"><aside class="panel" id="customizer"><h2>Imaginez votre PILOTOKI</h2><p class="hint">Modifiez l'identité visuelle. Votre aperçu évolue immédiatement, sans inscription.</p>
 <div class="field"><label for="club">Nom de votre club</label><input id="club" type="text" maxlength="70" value="Mon Club de Pelote"></div>
 <div class="field"><label for="logo">Logo du club</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></div>
 <div class="field"><label for="wall">Fond d'écran</label><input id="wall" type="file" accept="image/png,image/jpeg,image/webp"></div>
