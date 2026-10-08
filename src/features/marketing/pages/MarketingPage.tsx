@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import {
   BarChart3,
   BellRing,
+  Clock3,
+  Pencil,
+  LockKeyhole,
   CalendarDays,
   CheckCircle2,
   MonitorPlay,
@@ -12,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import "./MarketingPage.css";
+import "./MarketingReservations.css";
 import "./MarketingPilotGuide.css";
 
 const features = [
@@ -219,6 +223,36 @@ export function MarketingPage() {
                 <p>{text}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section className="marketing-reservations" id="reservations-joueurs" aria-labelledby="marketing-reservations-title">
+          <div className="marketing-reservations__intro">
+            <p className="marketing-kicker">Pour les joueurs · Réservations</p>
+            <h2 id="marketing-reservations-title">Votre prochain créneau, en quelques clics.</h2>
+            <p>Plus besoin de demander si le trinquet est libre : consultez le planning, choisissez votre horaire et retrouvez vos réservations depuis votre téléphone ou votre ordinateur.</p>
+            <a className="marketing-button marketing-button--primary" href="#guide-pcl">
+              <CalendarDays aria-hidden="true" />
+              Comment réserver ?
+            </a>
+          </div>
+          <div className="marketing-reservations__benefits">
+            <article>
+              <CalendarDays aria-hidden="true" />
+              <div><h3>Des disponibilités claires</h3><p>Parcourez les terrains et les semaines. Les créneaux libres, occupés ou pas encore ouverts sont identifiés dans le calendrier.</p></div>
+            </article>
+            <article>
+              <Clock3 aria-hidden="true" />
+              <div><h3>Réservez au bon moment</h3><p>Les dates d'ouverture des réservations et les règles du club sont prises en compte automatiquement.</p></div>
+            </article>
+            <article>
+              <Pencil aria-hidden="true" />
+              <div><h3>Gardez la main</h3><p>Dans « Mes réservations », consultez vos créneaux, modifiez-les ou annulez-les lorsque les conditions du club le permettent.</p></div>
+            </article>
+            <article>
+              <LockKeyhole aria-hidden="true" />
+              <div><h3>Un planning partagé et fiable</h3><p>Les réservations cohabitent avec les tournois, championnats et autres occupations pour éviter les conflits de créneaux.</p></div>
+            </article>
           </div>
         </section>
 
