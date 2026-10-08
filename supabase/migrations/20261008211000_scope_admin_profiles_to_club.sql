@@ -64,7 +64,7 @@ begin
   if target_profile_id=auth.uid() then
     raise exception 'Administrators cannot change their own role' using errcode='42501';
   end if;
-  if new_role not in ('admin'::public.user_role,'visitor'::public.user_role) then
+  if new_role is null or new_role not in ('admin'::public.user_role,'visitor'::public.user_role) then
     raise exception 'Only club administrator permission can be changed here' using errcode='22023';
   end if;
   select p.* into target_profile from public.profiles p
