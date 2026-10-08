@@ -5,6 +5,9 @@ import { previewSwap, type Slot } from "../services/slotExchangePreview";
 import { slotExchangeService } from "../services/slotExchangeService";
 import { listExchangeCandidates, type ExchangeCandidate } from "../services/slotExchangeCandidatesService";
 
+// Explicit deployment gate: simulation only until the database audit is approved.
+const EXCHANGE_WRITES_ENABLED = false;
+
 const today = () => new Date().toLocaleDateString("en-CA");
 const formatDate = (value: string) => new Date(value).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
 const classify = (item: CalendarOccupation): Slot["kind"] =>
@@ -51,7 +54,7 @@ export function AdminSlotExchangePage() {
   const second = items.find(item => item.id === secondId);
   const preview = useMemo(() => showPreview && first && second ? previewSwap(toSlot(first), toSlot(second)) : null, [showPreview, first, second]);
   async function confirmExchange() {
-    if (!first || !second || !preview?.valid) return;
+    if (!EXCHANGE_WRITES_ENABLED || !first || !second || !preview?.valid) return;
     if (!window.confirm("Confirmer l'échange définitif des deux occupations ?")) return;
     setBusy(true); setError(""); setSuccess("");
     try {
@@ -96,7 +99,7 @@ export function AdminSlotExchangePage() {
         <h2>Après échange (simulation)</h2>
         <p>{first?.title} → {formatDate(preview.first.startsAt)}</p>
         <p>{second?.title} → {formatDate(preview.second.startsAt)}</p>
-        {first?.exchangeSupported && second?.exchangeSupported && ["reservation", "championship", "tournament"].includes(first.sourceKind) && ["reservation", "championship", "tournament"].includes(second.sourceKind) ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux occupations"}</button></> : <p>Simulation uniquement : les fonctions SQL d’échange et de classification ne sont pas encore installées sur cette base. Aucune modification réelle ne sera effectuée.</p>}
+        {EXCHANGE_WRITES_ENABLED && first?.exchangeSupported && second?.exchangeSupported && ["reservation", "championship", "tournament"].includes(first.sourceKind) && ["reservation", "championship", "tournament"].includes(second.sourceKind) ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux occupations"}</button></> : <p>Mode simulation sécurisé : la confirmation réelle est volontairement désactivée pendant l’audit des migrations. Aucune réservation ne sera modifiée.</p>}
       </> : <><h2>Échange impossible</h2><ul>{preview.errors.map(e => <li key={e}>{e}</li>)}</ul></>}
     </section>}
   </main>;
