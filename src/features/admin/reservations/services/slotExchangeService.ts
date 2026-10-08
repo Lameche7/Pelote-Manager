@@ -2,7 +2,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 
 export const slotExchangeService = {
   async exchangeTwoReservations(firstOccupationId: string, secondOccupationId: string): Promise<{ exchangeId: string; notificationsPublished: number }> {
-    const { data, error } = await supabase.rpc("admin_exchange_reservation_slots", {
+    const { data, error } = await supabase.rpc("admin_exchange_calendar_occupations", {
       first_occupation_id: firstOccupationId,
       second_occupation_id: secondOccupationId,
     });
