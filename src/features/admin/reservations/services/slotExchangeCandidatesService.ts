@@ -18,7 +18,7 @@ export async function listExchangeCandidates(
   if (error) {
     // The read-only candidate RPC may not yet be installed on the preview database.
     // Keep simulation usable without ever enabling writes based on inferred types.
-    if (error.code !== "PGRST202") throw new Error(error.message);
+    if (error.code !== "PGRST202" && !/could not find the function|schema cache/i.test(error.message)) throw new Error(error.message);
     const occupations = await reservationCalendarService.listOccupations(resourceId, rangeStart, rangeEnd);
     return occupations.map(item => ({
       ...item,
