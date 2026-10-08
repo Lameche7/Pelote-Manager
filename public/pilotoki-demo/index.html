@@ -151,8 +151,8 @@ function render(){
  $("player").className=role==="player"?"active":"";$("admin").className=role==="admin"?"active":"";
 }
 function upload(id,callback){$(id).addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>5*1024*1024){alert("Image trop volumineuse (5 Mo maximum).");e.target.value="";return}callback(URL.createObjectURL(f))})}
-upload("logo",url=>{if(logoUrl)URL.revokeObjectURL(logoUrl);logoUrl=url;$("logoPreview").src=url;$("logoPreview").hidden=false;$("placeholder").hidden=true});
-upload("wall",url=>{if(wallUrl)URL.revokeObjectURL(wallUrl);wallUrl=url;$("apphead").style.backgroundImage='url("'+url+'")'});
+upload("logo",url=>{if(logoUrl)URL.revokeObjectURL(logoUrl);logoUrl=url;$("logoPreview").src=url;$("logoPreview").hidden=false;$("placeholder").hidden=true;render()});
+upload("wall",url=>{if(wallUrl)URL.revokeObjectURL(wallUrl);wallUrl=url;$("apphead").style.backgroundImage='url("'+url+'")';render()});
 ["club","primary","accent"].forEach(id=>$(id).addEventListener("input",render));
 ["player","admin"].forEach(id=>$(id).onclick=()=>{role=id;render()});
 $("reset").onclick=()=>{$("club").value="Mon Club de Pelote";$("primary").value="#0f3d2e";$("accent").value="#d62828";["logo","wall"].forEach(id=>$(id).value="");$("logoPreview").hidden=true;$("placeholder").hidden=false;$("apphead").style.backgroundImage="none";reserved=false;current="Accueil";role="player";render()};render();
