@@ -77,6 +77,17 @@ begin
     raise exception 'Profile is not associated with this club' using errcode='42501';
   end if;
   if new_role='admin'::public.user_role then
+    -- Un administrateur de club ne peut administrer qu'un seul club.
+    -- La super-administration réseau relève d'une autorisation distincte.
+    if exists (
+      select 1 from public.club_memberships other_membership
+      join public.club_roles other_role on other_role.id=other_membership.role_id
+      where other_membership.profile_id=target_profile_id
+        and other_membership.club_id<>actor_club_id
+        and other_role.key='administrator'::public.club_role_key
+    ) then
+      raise exception 'This account already administers another club' using errcode='42501';
+    end if;
     select cr.id into administrator_role_id from public.club_roles cr
     where cr.club_id=actor_club_id and cr.key='administrator'::public.club_role_key;
     if administrator_role_id is null then raise exception 'Administrator club role not found' using errcode='P0002'; end if;
