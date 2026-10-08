@@ -41,8 +41,8 @@ begin
   -- the exchange; recipient identity is resolved independently of membership.
   insert into public.admin_slot_exchange_notification_outbox
     (exchange_id, tournament_match_id, recipient_profile_id, recipient_email, payload)
-  select distinct on (match_id, lower(email))
-    new.id, match_id, profile_id, email,
+  select distinct on (match_id, lower(recipient.email))
+    new.id, match_id, p.id, recipient.email,
     jsonb_build_object('kind','slot_exchanged','title','Votre partie de tournoi a changé de créneau',
       'tournament_match_id',match_id,'starts_at',new.after_state -> side ->> 'starts_at',
       'resource_id',new.after_state -> side ->> 'resource_id')
@@ -57,7 +57,7 @@ begin
     (select cm.sport_player_id from public.club_members cm where cm.id=tp.member_id)
   cross join lateral (select coalesce(nullif(btrim(tp.email),''),nullif(btrim(p.email),'')) as email) recipient
   where recipient.email is not null
-  order by match_id, lower(email), p.id nulls last
+  order by match_id, lower(recipient.email), p.id nulls last
   on conflict do nothing;
   return new;
 end;
