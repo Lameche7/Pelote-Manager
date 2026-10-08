@@ -32,6 +32,7 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
+import { AdminSlotExchangePage } from "@/features/admin/reservations/pages/AdminSlotExchangePage";
 import { AdminUsersPage } from "@/features/admin/pages/AdminUsersPage";
 import { AdminPermanentSlotsPage } from "@/features/admin/reservations/pages/AdminPermanentSlotsPage";
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
@@ -265,6 +266,13 @@ export const routes = [
             element: permitted(
               ADMIN_PERMISSIONS.reservations,
               <AdminReservationsManagementPage />,
+            ),
+          },
+          {
+            path: "reservations/echanges",
+            element: permitted(
+              ADMIN_PERMISSIONS.reservations,
+              <AdminSlotExchangePage />,
             ),
           },
           {

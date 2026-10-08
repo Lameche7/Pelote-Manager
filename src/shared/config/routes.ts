@@ -53,6 +53,7 @@ export const ROUTES = {
   adminUsers: "/admin/utilisateurs",
   adminReservations: "/admin/reservations",
   adminPermanentSlots: "/admin/reservations/creneaux-permanents",
+  adminSlotExchange: "/admin/reservations/echanges",
   adminReservationOperations: "/admin/reservations/suivi",
   adminReservationSettings: "/admin/reservations/parametres",
   adminPayments: "/admin/paiements",
