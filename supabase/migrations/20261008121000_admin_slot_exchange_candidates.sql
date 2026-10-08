@@ -25,7 +25,7 @@ begin
         else c.occupation_type::text
       end,
       (c.occupation_type = 'reservation' and r.id is not null
-       and r.championship_match_id is null and r.status = 'confirmed'
+       and r.status = 'confirmed'
        and c.starts_at > now()) as exchange_supported
     from public.calendar_occupations c
     left join public.reservations r on r.id = c.reservation_id
@@ -33,6 +33,8 @@ begin
     left join public.tournament_match_events tme on tme.event_id = er.event_id
     where c.cancelled_at is null
       and c.resource_id = target_resource_id
+      and exists (select 1 from public.reservable_resources rr
+        where rr.id=c.resource_id and rr.club_id=public.admin_current_club_id())
       and c.starts_at < range_end and c.ends_at > range_start
     order by c.starts_at, c.id;
 end;
