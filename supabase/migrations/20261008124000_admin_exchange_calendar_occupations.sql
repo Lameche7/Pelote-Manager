@@ -81,6 +81,11 @@ begin
  if a_kind='reservation' then
    update public.reservations set resource_id=b.resource_id,starts_at=b.starts_at,ends_at=b.ends_at,
      updated_by=auth.uid(),updated_at=now() where id=ar.id;
+   if ar.championship_match_id is not null then
+     insert into public.championship_match_manual_schedules(match_id,scheduled_on,scheduled_time,updated_by,updated_at)
+     values(ar.championship_match_id,(b.starts_at at time zone tz_b)::date,(b.starts_at at time zone tz_b)::time,auth.uid(),now())
+     on conflict(match_id) do update set scheduled_on=excluded.scheduled_on,scheduled_time=excluded.scheduled_time,updated_by=excluded.updated_by,updated_at=now();
+   end if;
    update public.calendar_occupations set resource_id=b.resource_id,starts_at=b.starts_at,ends_at=b.ends_at,
      cancelled_at=null,updated_by=auth.uid(),updated_at=now() where id=a.id;
  else
@@ -95,6 +100,11 @@ begin
  if b_kind='reservation' then
    update public.reservations set resource_id=a.resource_id,starts_at=a.starts_at,ends_at=a.ends_at,
      updated_by=auth.uid(),updated_at=now() where id=br.id;
+   if br.championship_match_id is not null then
+     insert into public.championship_match_manual_schedules(match_id,scheduled_on,scheduled_time,updated_by,updated_at)
+     values(br.championship_match_id,(a.starts_at at time zone tz_a)::date,(a.starts_at at time zone tz_a)::time,auth.uid(),now())
+     on conflict(match_id) do update set scheduled_on=excluded.scheduled_on,scheduled_time=excluded.scheduled_time,updated_by=excluded.updated_by,updated_at=now();
+   end if;
    update public.calendar_occupations set resource_id=a.resource_id,starts_at=a.starts_at,ends_at=a.ends_at,
      cancelled_at=null,updated_by=auth.uid(),updated_at=now() where id=b.id;
  else
