@@ -1,5 +1,6 @@
 import { supabase } from "@/infrastructure/supabase/client";
 import type { CalendarOccupation } from "@/features/reservations/domain/calendar";
+import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 
 export type ExchangeCandidate = CalendarOccupation & {
   sourceKind: string;
@@ -14,7 +15,17 @@ export async function listExchangeCandidates(
     range_start: rangeStart,
     range_end: rangeEnd,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    // The read-only candidate RPC may not yet be installed on the preview database.
+    // Keep simulation usable without ever enabling writes based on inferred types.
+    if (error.code !== "PGRST202") throw new Error(error.message);
+    const occupations = await reservationCalendarService.listOccupations(resourceId, rangeStart, rangeEnd);
+    return occupations.map(item => ({
+      ...item,
+      sourceKind: item.occupationType === "reservation" ? "reservation" : "unclassified",
+      exchangeSupported: false,
+    }));
+  }
   return ((data ?? []) as Record<string, unknown>[]).map(row => ({
     id: String(row.occupation_id),
     resourceId: String(row.resource_id),
