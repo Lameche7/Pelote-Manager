@@ -17,7 +17,18 @@ begin
     raise exception 'Période invalide (31 jours maximum)' using errcode = '22023';
   end if;
   return query
-    select c.id, c.resource_id, c.starts_at, c.ends_at, c.title,
+    select c.id, c.resource_id, c.starts_at, c.ends_at,
+      case when r.championship_match_id is not null then
+        coalesce((select
+          coalesce((select string_agg(concat_ws(' ', cp.first_name, cp.last_name), ' / ' order by cp.last_name, cp.first_name)
+            from public.championship_team_players ctp join public.championship_players cp on cp.id=ctp.player_id
+            where ctp.team_id=m.team1_id), 'Équipe 1')
+          || ' — ' ||
+          coalesce((select string_agg(concat_ws(' ', cp.first_name, cp.last_name), ' / ' order by cp.last_name, cp.first_name)
+            from public.championship_team_players ctp join public.championship_players cp on cp.id=ctp.player_id
+            where ctp.team_id=m.team2_id), 'Équipe 2')
+          from public.championship_matches m where m.id=r.championship_match_id), c.title)
+        else c.title end as title,
       case
         when c.occupation_type = 'reservation' and r.championship_match_id is not null then 'championship'
         when c.occupation_type = 'reservation' then 'reservation'
