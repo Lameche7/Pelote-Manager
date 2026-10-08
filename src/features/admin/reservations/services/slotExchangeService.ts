@@ -1,7 +1,7 @@
 import { supabase } from "@/infrastructure/supabase/client";
 
 export const slotExchangeService = {
-  async exchangeTwoReservations(firstOccupationId: string, secondOccupationId: string): Promise<{ exchangeId: string; notificationsPublished: number }> {
+  async exchangeTwoReservations(firstOccupationId: string, secondOccupationId: string): Promise<{ exchangeId: string; notificationsPublished: number; notificationWarning?: string }> {
     const { data, error } = await supabase.rpc("admin_exchange_calendar_occupations", {
       first_occupation_id: firstOccupationId,
       second_occupation_id: secondOccupationId,
@@ -13,7 +13,7 @@ export const slotExchangeService = {
     const published = await supabase.rpc("admin_publish_slot_exchange_notifications", {
       target_exchange_id: result.exchange_id,
     });
-    if (published.error) throw new Error("Échange enregistré, mais notifications non publiées : " + published.error.message);
+    if (published.error) return { exchangeId: result.exchange_id, notificationsPublished: 0, notificationWarning: "Échange effectué, mais publication des notifications à reprendre : " + published.error.message };
     return { exchangeId: result.exchange_id, notificationsPublished: Number(published.data ?? 0) };
   },
 };
