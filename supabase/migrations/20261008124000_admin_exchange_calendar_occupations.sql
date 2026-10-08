@@ -57,7 +57,10 @@ begin
    end if;
  else
    select * into atp from public.tournament_match_planning where match_id=amid for update;
-   if atp.match_id is null or atp.resource_id<>a.resource_id
+   if atp.match_id is null or not exists
+      (select 1 from public.tournaments t where t.id=atp.tournament_id
+       and t.club_id=public.admin_current_club_id())
+     or atp.resource_id<>a.resource_id
      or public.tournament_planning_starts_at(atp.play_date,atp.starts_at,tz_a)<>a.starts_at
      or public.tournament_planning_starts_at(atp.play_date,atp.ends_at,tz_a)<>a.ends_at
      or exists(select 1 from public.tournament_matches m where m.id=amid and m.phase='finals') then
@@ -72,7 +75,10 @@ begin
    end if;
  else
    select * into btp from public.tournament_match_planning where match_id=bmid for update;
-   if btp.match_id is null or btp.resource_id<>b.resource_id
+   if btp.match_id is null or not exists
+      (select 1 from public.tournaments t where t.id=btp.tournament_id
+       and t.club_id=public.admin_current_club_id())
+     or btp.resource_id<>b.resource_id
      or public.tournament_planning_starts_at(btp.play_date,btp.starts_at,tz_b)<>b.starts_at
      or public.tournament_planning_starts_at(btp.play_date,btp.ends_at,tz_b)<>b.ends_at
      or exists(select 1 from public.tournament_matches m where m.id=bmid and m.phase='finals') then
