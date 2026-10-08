@@ -21,31 +21,40 @@ begin
     raise exception 'Échange introuvable' using errcode = '22023';
   end if;
   for entry in
-    select o.*, r.resource_id, r.starts_at, r.ends_at
+    select o.*, coalesce(r.resource_id, (o.payload ->> 'resource_id')::uuid) as resource_id,
+      coalesce(r.starts_at, (o.payload ->> 'starts_at')::timestamptz) as starts_at,
+      r.ends_at
     from public.admin_slot_exchange_notification_outbox o
-    join public.reservations r on r.id = o.reservation_id
+    left join public.reservations r on r.id = o.reservation_id
     where o.exchange_id = target_exchange_id and o.delivered_at is null
     order by o.id for update of o
   loop
     select rr.club_id into target_club_id
     from public.reservable_resources rr where rr.id = entry.resource_id;
     if target_club_id is null or target_club_id is distinct from public.admin_current_club_id()
-      or entry.recipient_profile_id is null then
+      or (entry.recipient_profile_id is null and entry.recipient_email is null) then
       continue;
     end if;
-    select cm.id, coalesce(nullif(btrim(cm.email), ''), nullif(btrim(p.email), ''))
-    into target_member_id, target_email
-    from public.profiles p
-    left join public.club_members cm on cm.id = p.member_id
-      and cm.club_id = target_club_id and cm.is_active
-    where p.id = entry.recipient_profile_id;
-    if not found then continue; end if;
+    target_member_id := null;
+    target_email := nullif(btrim(entry.recipient_email), '');
+    if entry.recipient_profile_id is not null then
+      select cm.id, coalesce(target_email, nullif(btrim(p.email), ''), nullif(btrim(cm.email), ''))
+      into target_member_id, target_email
+      from public.profiles p
+      left join public.club_members cm on cm.id = p.member_id
+        and cm.club_id = target_club_id and cm.is_active
+      where p.id = entry.recipient_profile_id;
+    end if;
     insert into public.club_communications
       (club_id, title, body, priority, status, show_on_home, expires_at, created_by, updated_by)
     values (
       target_club_id,
-      'Modification de votre réservation',
-      'Votre réservation a été déplacée au ' ||
+      case when entry.tournament_match_id is not null
+        then 'Modification de votre partie de tournoi'
+        else 'Modification de votre réservation' end,
+      case when entry.tournament_match_id is not null
+        then 'Votre partie de tournoi a été déplacée au '
+        else 'Votre réservation a été déplacée au ' end ||
       to_char(entry.starts_at at time zone 'Europe/Paris', 'DD/MM/YYYY à HH24:MI') ||
       '. Consultez votre calendrier pour les détails.',
       'important', 'draft', false, now() + interval '14 days', auth.uid(), auth.uid()
