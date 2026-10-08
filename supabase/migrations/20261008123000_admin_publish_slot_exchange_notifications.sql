@@ -45,6 +45,12 @@ begin
         and cm.club_id = target_club_id and cm.is_active
       where p.id = entry.recipient_profile_id;
     end if;
+    -- The in-app delivery table requires a linked profile or club member.
+    -- Keep email-only external players pending in the durable outbox rather
+    -- than failing the entire publication transaction or marking them sent.
+    if target_member_id is null and entry.recipient_profile_id is null then
+      continue;
+    end if;
     insert into public.club_communications
       (club_id, title, body, priority, status, show_on_home, expires_at, created_by, updated_by)
     values (
