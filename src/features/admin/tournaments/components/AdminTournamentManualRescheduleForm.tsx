@@ -36,6 +36,11 @@ export function AdminTournamentManualRescheduleForm({
   const [slots, setSlots] = useState<AdminManualRescheduleSlot[]>([]);
   const [selectedSlotKey, setSelectedSlotKey] = useState("");
   const [contactNote, setContactNote] = useState("");
+  const [exceptional, setExceptional] = useState(false);
+  const [exceptionalDate, setExceptionalDate] = useState("");
+  const [exceptionalStart, setExceptionalStart] = useState("19:30");
+  const [exceptionalEnd, setExceptionalEnd] = useState("20:30");
+  const [exceptionalResource, setExceptionalResource] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -137,7 +142,7 @@ export function AdminTournamentManualRescheduleForm({
 
   const create = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!match || !requesterTeamId || !selectedSlot) {
+    if (!match || !requesterTeamId || (!exceptional && !selectedSlot)) {
       setError(
         "Choisissez la partie, l’équipe demandeuse et le nouveau créneau.",
       );
@@ -154,7 +159,22 @@ export function AdminTournamentManualRescheduleForm({
     setError("");
     setSuccess("");
     try {
-      await adminTournamentManualRescheduleService.create({
+      if (exceptional) {
+        if (!exceptionalDate || !exceptionalResource || !exceptionalStart || !exceptionalEnd) {
+          setError("Renseignez la date, le terrain et les horaires du report exceptionnel.");
+          setSaving(false);
+          return;
+        }
+        await adminTournamentManualRescheduleService.createExceptional({
+          matchId: match.id,
+          requesterTeamId,
+          resourceId: exceptionalResource,
+          playDate: exceptionalDate,
+          startsAt: exceptionalStart,
+          endsAt: exceptionalEnd,
+          contactNote,
+        });
+      } else await adminTournamentManualRescheduleService.create({
         matchId: match.id,
         requesterTeamId,
         slot: selectedSlot,
@@ -267,6 +287,24 @@ export function AdminTournamentManualRescheduleForm({
             </select>
           </label>
 
+          <label className="admin-manual-reschedule__exceptional-toggle">
+            <input type="checkbox" checked={exceptional} onChange={(event) => setExceptional(event.target.checked)} disabled={saving} />
+            <span><strong>Report exceptionnel hors créneaux du tournoi</strong> — réservé aux administrateurs. Ne modifie pas la grille habituelle.</span>
+          </label>
+          {exceptional ? (
+            <div className="admin-manual-reschedule__exceptional">
+              <label><span>Date exceptionnelle</span><input type="date" value={exceptionalDate} onChange={(event) => setExceptionalDate(event.target.value)} required disabled={saving} /></label>
+              <label><span>Terrain</span>
+                <select value={exceptionalResource} onChange={(event) => setExceptionalResource(event.target.value)} required disabled={saving}>
+                  <option value="">Choisir un terrain du tournoi</option>
+                  {Array.from(new Map([...(tournament?.matches ?? []).map((item) => [item.resourceId, item.resourceName] as const), ...slots.map((item) => [item.resourceId, item.resourceName] as const)]).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                </select>
+              </label>
+              <label><span>Début</span><input type="time" value={exceptionalStart} onChange={(event) => setExceptionalStart(event.target.value)} required disabled={saving} /></label>
+              <label><span>Fin</span><input type="time" value={exceptionalEnd} onChange={(event) => setExceptionalEnd(event.target.value)} required disabled={saving} /></label>
+              <small>La disponibilité du terrain, les conflits de parties et les accords sont vérifiés côté serveur. L'application finale du report nécessite toujours les deux accords.</small>
+            </div>
+          ) : (
           <label>
             <span>Nouveau créneau</span>
             <select
@@ -292,6 +330,7 @@ export function AdminTournamentManualRescheduleForm({
             )}
           </label>
 
+          )}
           <label className="admin-manual-reschedule__note">
             <span>Comment la demande a-t-elle été recueillie ?</span>
             <input
@@ -325,7 +364,7 @@ export function AdminTournamentManualRescheduleForm({
           <button
             className="admin-manual-reschedule__submit"
             type="submit"
-            disabled={saving || !match || !requesterTeamId || !selectedSlot}
+            disabled={saving || !match || !requesterTeamId || (exceptional ? !exceptionalDate || !exceptionalResource || !exceptionalStart || !exceptionalEnd : !selectedSlot)}
           >
             {saving ? "Création…" : "Créer la demande de report"}
           </button>
