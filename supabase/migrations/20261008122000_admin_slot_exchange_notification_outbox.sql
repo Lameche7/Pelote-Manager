@@ -22,21 +22,26 @@ revoke all on public.admin_slot_exchange_notification_outbox from public,anon,au
 create or replace function public.queue_admin_slot_exchange_notifications()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
+  -- For championships, the team-player notification below takes precedence.
+  -- Avoid sending the booking owner a second notification for the same match.
   insert into public.admin_slot_exchange_notification_outbox
     (exchange_id, reservation_id, recipient_profile_id, payload)
   select new.id, r.id, r.user_id,
-    jsonb_build_object(
-      'kind', 'slot_exchanged',
-      'title', 'Votre réservation a changé de créneau',
-      'starts_at', r.starts_at,
-      'ends_at', r.ends_at,
-      'resource_id', r.resource_id,
-      'reservation_id', r.id
-    )
+    jsonb_build_object('kind','slot_exchanged',
+      'title','Votre réservation a changé de créneau',
+      'starts_at',r.starts_at,'ends_at',r.ends_at,
+      'resource_id',r.resource_id,'reservation_id',r.id)
   from public.calendar_occupations c
-  join public.reservations r on r.id = c.reservation_id
-  where c.id in (new.first_occupation_id, new.second_occupation_id)
+  join public.reservations r on r.id=c.reservation_id
+  where c.id in (new.first_occupation_id,new.second_occupation_id)
     and r.user_id is not null
+    and (r.championship_match_id is null or not exists (
+      select 1 from public.championship_matches m
+      join public.championship_team_players ctp on ctp.team_id in (m.team1_id,m.team2_id)
+      join public.championship_players cp on cp.id=ctp.player_id
+      left join public.profiles p on p.id=cp.profile_id or p.sport_player_id=cp.sport_player_id
+      where m.id=r.championship_match_id and p.id=r.user_id
+    ))
   on conflict (exchange_id, reservation_id) do nothing;
   -- Notify linked PILOTOKI accounts, including players from other clubs.
   -- Unlinked participants are deliberately excluded.
