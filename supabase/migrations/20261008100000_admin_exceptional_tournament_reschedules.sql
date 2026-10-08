@@ -288,16 +288,15 @@ $$;
 
 revoke all on function public.admin_create_tournament_exceptional_reschedule_request(uuid,uuid,uuid,date,time,time,text) from public,anon,authenticated;
 grant execute on function public.admin_create_tournament_exceptional_reschedule_request(uuid,uuid,uuid,date,time,time,text) to authenticated;
-create or replace function public.admin_apply_tournament_reschedule_request(
-  target_request_id uuid
-)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
+CREATE OR REPLACE FUNCTION public.admin_apply_tournament_reschedule_request(target_request_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
 declare
-  target_club_id uuid := public.admin_current_club_id();
+  target_club_id uuid;
+  caller_can_apply boolean := false;
   request public.tournament_reschedule_requests%rowtype;
   tournament public.tournaments%rowtype;
   target_match public.tournament_matches%rowtype;
@@ -324,9 +323,10 @@ declare
   target_node_exists boolean := false;
   swap_node_exists boolean := false;
   mutation_conflict boolean := false;
+  manual_agreement_override boolean := false;
 begin
-  if not public.has_club_permission(target_club_id, 'tournaments.manage') then
-    raise exception 'Forbidden' using errcode = '42501';
+  if auth.uid() is null then
+    raise exception 'Authentication required' using errcode = '42501';
   end if;
 
   select item.*
@@ -343,12 +343,24 @@ begin
   into tournament
   from public.tournaments as item
   where item.id = request.tournament_id
-    and item.club_id = target_club_id
   for update;
 
   if tournament.id is null then
-    raise exception 'Tournament reschedule request is outside this club'
-      using errcode = '42501';
+    raise exception 'Tournament reschedule tournament not found'
+      using errcode = 'P0002';
+  end if;
+
+  target_club_id := tournament.club_id;
+  caller_can_apply := public.has_club_permission(target_club_id, 'tournaments.manage')
+    or exists (
+      select 1
+      from public.tournament_reschedule_approvals as approval
+      where approval.request_id = request.id
+        and public.tournament_profile_can_act_for_team(approval.team_id, auth.uid())
+    );
+
+  if not caller_can_apply then
+    raise exception 'Forbidden' using errcode = '42501';
   end if;
 
   if request.status <> 'approved' then
@@ -365,6 +377,15 @@ begin
     raise exception 'Tournament reschedule request still misses an approval'
       using errcode = 'P0001';
   end if;
+
+  manual_agreement_override :=
+    coalesce((request.proposal_snapshot#>>'{policy,admin_manual}')::boolean, false)
+    and exists (
+      select 1 from public.tournament_reschedule_approvals as approval
+      where approval.request_id = request.id
+        and approval.decision = 'approved'
+        and approval.decision_source = 'offline_admin'
+    );
 
   if request.expires_at <= now() then
     perform public.mark_tournament_reschedule_stale(request.id, 'request_expired');
@@ -567,8 +588,6 @@ begin
     end if;
   end if;
 
-  -- Aucun terrain ne peut accueillir deux rencontres qui se chevauchent, même
-  -- si l'autre rencontre n'est pas encore publiée dans le calendrier global.
   if exists (
     select 1
     from public.tournament_match_planning as planning
@@ -644,9 +663,6 @@ begin
     return jsonb_build_object('status', 'stale', 'reason', 'calendar_conflict');
   end if;
 
-  -- Les quatre équipes éventuellement concernées ne peuvent jamais avoir deux
-  -- matchs qui se chevauchent. Le demandeur peut seulement accepter une charge
-  -- plus forte sur la journée, pas deux matchs simultanés.
   if exists (
     select 1
     from public.tournament_matches as other_match
@@ -684,8 +700,6 @@ begin
     return jsonb_build_object('status', 'stale', 'reason', 'team_overlap');
   end if;
 
-  -- La charge quotidienne des équipes qui subissent la demande ne doit pas
-  -- augmenter. Aucun temps de repos minimum n'est introduit ici.
   select count(*)::integer into opponent_original_other
   from public.tournament_matches as match
   join public.tournament_match_planning as planning on planning.match_id = match.id
@@ -709,7 +723,7 @@ begin
     return jsonb_build_object('status', 'stale', 'reason', 'other_team_daily_load_increased');
   end if;
 
-  if exists (
+  if not manual_agreement_override and exists (
     select 1 from public.tournament_team_availability_slots as availability
     where availability.team_id = opponent_team_id
   ) and not exists (
@@ -762,7 +776,7 @@ begin
       return jsonb_build_object('status', 'stale', 'reason', 'other_team_daily_load_increased');
     end if;
 
-    if (
+    if not manual_agreement_override and (
       exists (
         select 1 from public.tournament_team_availability_slots as availability
         where availability.team_id = swap_team_a_id
@@ -1010,6 +1024,14 @@ begin
         end if;
       end if;
 
+      -- Les deux occupations source appartiennent aux deux matchs de l'échange.
+      -- On les libère ensemble avant de recréer l'une ou l'autre, sinon le
+      -- premier déplacement entre en conflit avec le second créneau encore occupé.
+      delete from public.calendar_occupations as occupation
+      using public.event_resources as event_resource
+      where event_resource.event_id in (target_event_id, swap_event_id)
+        and event_resource.calendar_occupation_id = occupation.id;
+
       perform public.sync_tournament_reschedule_match_event(
         request.match_id,
         request.target_resource_id,
@@ -1102,14 +1124,6 @@ begin
     'applied_at', now()
   );
 end;
-$$;
-
-revoke all on function public.admin_apply_tournament_reschedule_request(uuid)
-from public, anon;
-grant execute on function public.admin_apply_tournament_reschedule_request(uuid)
-to authenticated;
-
--- Enrichit le suivi admin avec la provenance des accords et l'heure
--- d'application, sans exposer les tables internes directement au navigateur.
-
+$function$
+;
 commit;
