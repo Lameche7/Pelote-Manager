@@ -177,7 +177,7 @@ export function AdminTournamentManualRescheduleForm({
       } else await adminTournamentManualRescheduleService.create({
         matchId: match.id,
         requesterTeamId,
-        slot: selectedSlot,
+        slot: selectedSlot!,
         contactNote,
       });
       setSuccess(
