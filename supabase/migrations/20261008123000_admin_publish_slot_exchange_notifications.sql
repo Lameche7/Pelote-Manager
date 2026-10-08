@@ -29,7 +29,8 @@ begin
   loop
     select rr.club_id into target_club_id
     from public.reservable_resources rr where rr.id = entry.resource_id;
-    if target_club_id is null or entry.recipient_profile_id is null then
+    if target_club_id is null or target_club_id is distinct from public.admin_current_club_id()
+      or entry.recipient_profile_id is null then
       continue;
     end if;
     select cm.id, coalesce(nullif(btrim(cm.email), ''), nullif(btrim(p.email), ''))
