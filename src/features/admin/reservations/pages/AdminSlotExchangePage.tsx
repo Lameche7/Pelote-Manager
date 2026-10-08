@@ -52,7 +52,7 @@ export function AdminSlotExchangePage() {
   const preview = useMemo(() => showPreview && first && second ? previewSwap(toSlot(first), toSlot(second)) : null, [showPreview, first, second]);
   async function confirmExchange() {
     if (!first || !second || !preview?.valid) return;
-    if (!window.confirm("Confirmer l'échange définitif des deux réservations ?")) return;
+    if (!window.confirm("Confirmer l'échange définitif des deux occupations ?")) return;
     setBusy(true); setError(""); setSuccess("");
     try {
       const outcome = await slotExchangeService.exchangeTwoReservations(first.id, second.id);
@@ -60,7 +60,7 @@ export function AdminSlotExchangePage() {
       setShowPreview(false); setFirstId(""); setSecondId("");
       const from = new Date(date + "T00:00:00");
       const until = new Date(from); until.setDate(until.getDate() + 7);
-      setItems(await reservationCalendarService.listOccupations(resourceId, from.toISOString(), until.toISOString()));
+      setItems(await listExchangeCandidates(resourceId, from.toISOString(), until.toISOString()));
     } catch (e) { setError(e instanceof Error ? e.message : "Échange impossible."); }
     finally { setBusy(false); }
   }
