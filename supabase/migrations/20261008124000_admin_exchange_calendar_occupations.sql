@@ -82,6 +82,9 @@ begin
  previous:=jsonb_build_object('first',to_jsonb(a),'second',to_jsonb(b));
  -- Release both occupied slots within the same transaction before republishing.
  update public.calendar_occupations set cancelled_at=now() where id in (a.id,b.id);
+ -- The tournament sync helper deletes and recreates its projection. Its own
+ -- original slot is released above; the other side stays released until sync.
+
  if a_kind='reservation' then
    update public.reservations set resource_id=b.resource_id,starts_at=b.starts_at,ends_at=b.ends_at,
      updated_by=auth.uid(),updated_at=now() where id=ar.id;
