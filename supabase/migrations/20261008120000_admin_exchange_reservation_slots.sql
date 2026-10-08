@@ -60,6 +60,7 @@ begin
   select * into ra from public.reservations where id = a.reservation_id for update;
   select * into rb from public.reservations where id = b.reservation_id for update;
   if ra.id is null or rb.id is null or ra.status <> 'confirmed' or rb.status <> 'confirmed'
+    or ra.championship_match_id is not null or rb.championship_match_id is not null
     or ra.resource_id <> a.resource_id or rb.resource_id <> b.resource_id
     or ra.starts_at <> a.starts_at or rb.starts_at <> b.starts_at
     or ra.ends_at <> a.ends_at or rb.ends_at <> b.ends_at then
