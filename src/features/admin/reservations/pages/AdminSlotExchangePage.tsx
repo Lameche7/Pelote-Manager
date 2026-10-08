@@ -15,6 +15,8 @@ const toSlot = (item: CalendarOccupation): Slot => ({
 export function AdminSlotExchangePage() {
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
+  const [days, setDays] = useState(14);
+  const [search, setSearch] = useState("");
   const [date, setDate] = useState(today);
   const [items, setItems] = useState<CalendarOccupation[]>([]);
   const [firstId, setFirstId] = useState("");
@@ -36,24 +38,26 @@ export function AdminSlotExchangePage() {
     setFirstId(""); setSecondId("");
     const from = new Date(date + "T00:00:00");
     const until = new Date(from);
-    until.setDate(until.getDate() + 7);
+    until.setDate(until.getDate() + days);
     reservationCalendarService.listOccupations(resourceId, from.toISOString(), until.toISOString())
       .then(data => { if (active) setItems(data); })
       .catch(e => { if (active) setError(e instanceof Error ? e.message : "Impossible de charger le planning."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [resourceId, date]);
+  }, [resourceId, date, days]);
+  const filtered = items.filter(item => item.title.toLocaleLowerCase("fr").includes(search.toLocaleLowerCase("fr")));
   const first = items.find(item => item.id === firstId);
   const second = items.find(item => item.id === secondId);
   const preview = useMemo(() => showPreview && first && second ? previewSwap(toSlot(first), toSlot(second)) : null, [showPreview, first, second]);
-  const option = (item: CalendarOccupation) => `${formatDate(item.startsAt)} — ${item.title}`;
+  const option = (item: CalendarOccupation) => `${formatDate(item.startsAt)} — ${item.title} (${item.occupationType === "reservation" ? "Réservation" : "Occupation"})`;
   return <main style={{ maxWidth: 1050, margin: "0 auto", padding: 24 }}>
     <h1>Échanger deux créneaux</h1>
     <p>Choisis deux occupations réelles du calendrier. Cette page simule l'échange, sans modifier les réservations.</p>
     <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
       <label>Terrain <select value={resourceId} onChange={e => setResourceId(e.target.value)}>{resources.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
       <label>À partir du <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
-      <span>Occupations sur 7 jours</span>
+      <label>Période <select value={days} onChange={e => setDays(Number(e.target.value))}><option value={7}>7 jours</option><option value={14}>14 jours</option><option value={30}>30 jours</option></select></label>
+      <label>Rechercher un joueur ou une occupation <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Nom ou partie…" /></label>
     </div>
     {error && <p role="alert">{error}</p>}
     {loading ? <p>Chargement du planning…</p> : <p>{items.length} occupation(s) trouvée(s).</p>}
@@ -65,7 +69,7 @@ export function AdminSlotExchangePage() {
         <legend>{field.label}</legend>
         <select aria-label={field.label} style={{ width: "100%", padding: 8 }} value={field.value} onChange={e => { field.set(e.target.value); setShowPreview(false); }}>
           <option value="">Sélectionner une occupation…</option>
-          {items.filter(item => item.id !== (field.label === "Occupation A" ? secondId : firstId)).map(item =>
+          {filtered.filter(item => item.id !== (field.label === "Occupation A" ? secondId : firstId)).map(item =>
             <option key={item.id} value={item.id}>{option(item)}</option>)}
         </select>
         {items.find(item => item.id === field.value) && <p>{items.find(item => item.id === field.value)?.title}</p>}
