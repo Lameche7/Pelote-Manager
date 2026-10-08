@@ -3,21 +3,22 @@ import { reservationCalendarService } from "@/features/reservations/services/res
 import type { CalendarOccupation, ReservableResource } from "@/features/reservations/domain/calendar";
 import { previewSwap, type Slot } from "../services/slotExchangePreview";
 import { slotExchangeService } from "../services/slotExchangeService";
+import { listExchangeCandidates, type ExchangeCandidate } from "../services/slotExchangeCandidatesService";
 
 const today = () => new Date().toLocaleDateString("en-CA");
 const formatDate = (value: string) => new Date(value).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
 const classify = (item: CalendarOccupation): Slot["kind"] =>
   item.occupationType === "reservation" ? "reservation" : "tournament";
-const toSlot = (item: CalendarOccupation): Slot => ({
-  id: item.id, kind: classify(item), resourceId: item.resourceId,
-  startsAt: item.startsAt, endsAt: item.endsAt, editable: true,
+const toSlot = (item: ExchangeCandidate): Slot => ({
+  id: item.id, kind: item.sourceKind === "championship" ? "championship" : item.sourceKind === "reservation" ? "reservation" : item.sourceKind === "tournament" ? "tournament" : classify(item), resourceId: item.resourceId,
+  startsAt: item.startsAt, endsAt: item.endsAt, editable: item.startsAt > new Date().toISOString(),
 });
 
 export function AdminSlotExchangePage() {
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
   const [date, setDate] = useState(today);
-  const [items, setItems] = useState<CalendarOccupation[]>([]);
+  const [items, setItems] = useState<ExchangeCandidate[]>([]);
   const [firstId, setFirstId] = useState("");
   const [secondId, setSecondId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,7 @@ export function AdminSlotExchangePage() {
     const from = new Date(date + "T00:00:00");
     const until = new Date(from);
     until.setDate(until.getDate() + 7);
-    reservationCalendarService.listOccupations(resourceId, from.toISOString(), until.toISOString())
+    listExchangeCandidates(resourceId, from.toISOString(), until.toISOString())
       .then(data => { if (active) setItems(data); })
       .catch(e => { if (active) setError(e instanceof Error ? e.message : "Impossible de charger le planning."); })
       .finally(() => { if (active) setLoading(false); });
@@ -51,7 +52,7 @@ export function AdminSlotExchangePage() {
   const second = items.find(item => item.id === secondId);
   const preview = useMemo(() => showPreview && first && second ? previewSwap(toSlot(first), toSlot(second)) : null, [showPreview, first, second]);
   async function confirmExchange() {
-    if (!first || !second || !preview?.valid || first.occupationType !== "reservation" || second.occupationType !== "reservation") return;
+    if (!first || !second || !preview?.valid || !first.exchangeSupported || !second.exchangeSupported) return;
     if (!window.confirm("Confirmer l'échange définitif des deux réservations ?")) return;
     setBusy(true); setError(""); setSuccess("");
     try {
@@ -64,7 +65,7 @@ export function AdminSlotExchangePage() {
     } catch (e) { setError(e instanceof Error ? e.message : "Échange impossible."); }
     finally { setBusy(false); }
   }
-  const option = (item: CalendarOccupation) => `${formatDate(item.startsAt)} — ${item.title} (${item.occupationType === "reservation" ? "Réservation" : "Occupation"})`;
+  const option = (item: ExchangeCandidate) => `${formatDate(item.startsAt)} — ${item.title} (${item.sourceKind === "championship" ? "Championnat" : item.sourceKind === "tournament" ? "Tournoi" : item.sourceKind === "reservation" ? "Réservation" : item.sourceKind})`;
   return <main style={{ maxWidth: 1050, margin: "0 auto", padding: 24 }}>
     <h1>Échanger deux créneaux</h1>
     <p>Choisis deux occupations réelles du calendrier. La simulation est disponible pour toutes les occupations. Seul l'échange de deux réservations classiques est actuellement prévu côté serveur.</p>
@@ -96,7 +97,7 @@ export function AdminSlotExchangePage() {
         <h2>Après échange (simulation)</h2>
         <p>{first?.title} → {formatDate(preview.first.startsAt)}</p>
         <p>{second?.title} → {formatDate(preview.second.startsAt)}</p>
-        {first?.occupationType === "reservation" && second?.occupationType === "reservation" ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux réservations"}</button></> : <p>Échange réel entre championnats, tournois et autres occupations : moteur métier en cours de développement.</p>}
+        {first?.exchangeSupported && second?.exchangeSupported ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux réservations"}</button></> : <p>Échange réel entre championnats, tournois et autres occupations : moteur métier en cours de développement.</p>}
       </> : <><h2>Échange impossible</h2><ul>{preview.errors.map(e => <li key={e}>{e}</li>)}</ul></>}
     </section>}
   </main>;
