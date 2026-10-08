@@ -69,6 +69,25 @@ header{background:linear-gradient(105deg,#082b21,var(--primary),#092f27);min-hei
 .demo-content>p{color:#65717c;margin:0 0 18px}
 .demo-content .tiles{margin:0}
 @media(max-width:850px){.layout{grid-template-columns:1fr;padding:12px}.panel{position:static}.tabs{justify-content:flex-start;overflow-x:auto}.tabs:before{flex-basis:120px;width:120px}.demo-benefits{grid-template-columns:repeat(2,1fr)}.demo-home{min-height:540px}.demo-content{padding:16px}.workspace>.guide{margin:16px}}
+
+/* Trois couleurs configurables, sans teintes imposées dans l'interface */
+:root{--tertiary:#1d4ed8}
+.demo-home__actions button{background:var(--accent)}
+.demo-home__actions button:nth-child(2){background:var(--tertiary)}
+.demo-home__actions button:nth-child(3){background:var(--primary)}
+.demo-home__actions button:hover{filter:brightness(1.12)}
+.demo-home__wordmark{filter:brightness(0) invert(1) drop-shadow(0 3px 8px #0008);opacity:1}
+.tabs:before{filter:brightness(0) invert(1);opacity:1}
+.demo-home__logo[hidden],.demo-home__placeholder[hidden],#logoPreview[hidden]{display:none!important}
+.demo-home__logo{display:block}
+.demo-home__placeholder{display:grid}
+.reservation-slot.occupied{border-left:5px solid var(--accent)}
+.reservation-slot:not(.occupied){border-left:5px solid var(--primary)}
+.ref-card:not(.assigned){border-color:var(--accent)}
+.ref-card.assigned{border-color:var(--primary)}
+.pill{background:color-mix(in srgb,var(--accent) 15%,white);color:var(--primary)}
+.demo-benefits{background:linear-gradient(105deg,var(--primary),color-mix(in srgb,var(--primary) 72%,black))}
+.demo-home__actions button:focus-visible,.tabs button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 </style></head><body>
 <header><strong>PILOTOKI</strong><span>Expérience de démonstration</span></header>
 <section class="hero"><h1>Une application créée par un joueur, pour les clubs et les joueurs.</h1><p>Votre club est unique. Votre application aussi. Personnalisez PILOTOKI et découvrez à quoi pourrait ressembler votre espace club.</p></section>
@@ -77,6 +96,7 @@ header{background:linear-gradient(105deg,#082b21,var(--primary),#092f27);min-hei
 <div class="field"><label for="logo">Logo du club</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></div>
 <div class="field"><label for="wall">Fond d'écran</label><input id="wall" type="file" accept="image/png,image/jpeg,image/webp"></div>
 <div class="field"><label for="primary">Couleur principale</label><div class="colors"><input id="primary" type="color" value="#0f3d2e"><span>Menus et boutons</span></div></div>
+<div class="field"><label for="tertiary">Troisième couleur</label><div class="colors"><input id="tertiary" type="color" value="#1d4ed8"><span>Boutons secondaires</span></div></div>
 <div class="field"><label for="accent">Couleur secondaire</label><div class="colors"><input id="accent" type="color" value="#d62828"><span>Accents et sélection</span></div></div>
 <button id="reset" style="border:1px solid #cbd5e1;background:white;padding:10px 13px;border-radius:9px">Réinitialiser</button>
 <p class="hint">Les images restent dans votre navigateur. Aucun fichier n'est envoyé à un serveur.</p></aside>
@@ -96,6 +116,7 @@ const $=id=>document.getElementById(id);
 function render(){
  document.documentElement.style.setProperty("--primary",$("primary").value);
  document.documentElement.style.setProperty("--accent",$("accent").value);
+ document.documentElement.style.setProperty("--tertiary",$("tertiary").value);
  $("clubPreview").textContent=$("club").value.trim()||"Votre club";
  $("tabs").replaceChildren();
  const nav={"Accueil":"Accueil","Réservations":"Réservations","Tournois":"Mon espace · Tournois","Championnats":"Championnats","Arbitrage":"Arbitrage","Communication":"Administration · Communication"};
@@ -153,7 +174,7 @@ function render(){
 function upload(id,callback){$(id).addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>5*1024*1024){alert("Image trop volumineuse (5 Mo maximum).");e.target.value="";return}callback(URL.createObjectURL(f))})}
 upload("logo",url=>{if(logoUrl)URL.revokeObjectURL(logoUrl);logoUrl=url;$("logoPreview").src=url;$("logoPreview").hidden=false;$("placeholder").hidden=true;render()});
 upload("wall",url=>{if(wallUrl)URL.revokeObjectURL(wallUrl);wallUrl=url;$("apphead").style.backgroundImage='url("'+url+'")';render()});
-["club","primary","accent"].forEach(id=>$(id).addEventListener("input",render));
+["club","primary","accent","tertiary"].forEach(id=>$(id).addEventListener("input",render));
 ["player","admin"].forEach(id=>$(id).onclick=()=>{role=id;render()});
-$("reset").onclick=()=>{$("club").value="Mon Club de Pelote";$("primary").value="#0f3d2e";$("accent").value="#d62828";["logo","wall"].forEach(id=>$(id).value="");$("logoPreview").hidden=true;$("placeholder").hidden=false;$("apphead").style.backgroundImage="none";reserved=false;current="Accueil";role="player";render()};render();
+$("reset").onclick=()=>{$("club").value="Mon Club de Pelote";$("primary").value="#0f3d2e";$("accent").value="#d62828";$("tertiary").value="#1d4ed8";["logo","wall"].forEach(id=>$(id).value="");$("logoPreview").hidden=true;$("placeholder").hidden=false;$("apphead").style.backgroundImage="none";reserved=false;current="Accueil";role="player";render()};render();
 </script></body></html>
