@@ -28,7 +28,11 @@ begin
  end if;
  select timezone into tz_a from public.reservable_resources where id=a.resource_id and is_active;
  select timezone into tz_b from public.reservable_resources where id=b.resource_id and is_active;
- if tz_a is null or tz_b is null or tz_a <> tz_b then
+ if tz_a is null or tz_b is null or tz_a <> tz_b
+    or (select club_id from public.reservable_resources where id=a.resource_id)
+       is distinct from (select club_id from public.reservable_resources where id=b.resource_id)
+    or (select club_id from public.reservable_resources where id=a.resource_id)
+       is distinct from public.admin_current_club_id() then
    raise exception 'Terrains incompatibles ou fuseaux horaires différents' using errcode='22023';
  end if;
  -- A published tournament event is identified by its event-resource projection.
