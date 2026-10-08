@@ -22,3 +22,9 @@ test("licence distincte de l'administration", () => {
   assert.match(page, /Nommer administrateur/);
   assert.match(page, /Retirer l’administration/);
 });
+
+test("un administrateur de club ne peut pas être nommé administrateur d'un second club", () => {
+  assert.match(migration, /other_membership.club_id<>actor_club_id/);
+  assert.match(migration, /other_role.key='administrator'/);
+  assert.match(migration, /already administers another club/);
+});
