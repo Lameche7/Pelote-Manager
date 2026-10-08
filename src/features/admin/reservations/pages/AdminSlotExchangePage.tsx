@@ -47,7 +47,6 @@ export function AdminSlotExchangePage() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [resourceId, date]);
-  const filtered = items.filter(item => item.title.toLocaleLowerCase("fr").includes(search.toLocaleLowerCase("fr")));
   const first = items.find(item => item.id === firstId);
   const second = items.find(item => item.id === secondId);
   const preview = useMemo(() => showPreview && first && second ? previewSwap(toSlot(first), toSlot(second)) : null, [showPreview, first, second]);
