@@ -5,6 +5,7 @@ create table if not exists public.admin_slot_exchange_notification_outbox (
   exchange_id uuid not null references public.admin_slot_exchange_audit(id) on delete cascade,
   reservation_id uuid references public.reservations(id),
   tournament_match_id uuid references public.tournament_matches(id),
+  championship_match_id uuid references public.championship_matches(id),
   recipient_profile_id uuid references public.profiles(id),
   event_kind text not null default 'slot_exchanged',
   payload jsonb not null,
@@ -12,7 +13,8 @@ create table if not exists public.admin_slot_exchange_notification_outbox (
   delivered_at timestamptz,
   unique(exchange_id, reservation_id),
   unique(exchange_id, tournament_match_id, recipient_profile_id),
-  check (reservation_id is not null or tournament_match_id is not null)
+  unique(exchange_id, championship_match_id, recipient_profile_id),
+  check (reservation_id is not null or tournament_match_id is not null or championship_match_id is not null)
 );
 alter table public.admin_slot_exchange_notification_outbox enable row level security;
 revoke all on public.admin_slot_exchange_notification_outbox from public,anon,authenticated;
@@ -57,6 +59,23 @@ begin
   join public.club_members cm on cm.id=tp.member_id
   join public.profiles p on p.sport_player_id=cm.sport_player_id
   order by moved.match_id,p.id
+  on conflict do nothing;
+  -- Notify both championship teams when their players have linked accounts.
+  insert into public.admin_slot_exchange_notification_outbox
+    (exchange_id, championship_match_id, recipient_profile_id, payload)
+  select distinct on (m.id,p.id) new.id,m.id,p.id,
+    jsonb_build_object('kind','slot_exchanged',
+      'title','Votre partie de championnat a changé de créneau',
+      'championship_match_id',m.id,
+      'starts_at',r.starts_at,'resource_id',r.resource_id)
+  from public.calendar_occupations c
+  join public.reservations r on r.id=c.reservation_id
+  join public.championship_matches m on m.id=r.championship_match_id
+  join public.championship_team_players ctp on ctp.team_id in (m.team1_id,m.team2_id)
+  join public.championship_players cp on cp.id=ctp.player_id
+  join public.profiles p on p.id=cp.profile_id or p.sport_player_id=cp.sport_player_id
+  where c.id in (new.first_occupation_id,new.second_occupation_id)
+  order by m.id,p.id
   on conflict do nothing;
   return new;
 end;
