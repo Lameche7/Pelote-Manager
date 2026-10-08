@@ -32,19 +32,15 @@ begin
     select rr.club_id into target_club_id
     from public.reservable_resources rr where rr.id = entry.resource_id;
     if target_club_id is null or target_club_id is distinct from public.admin_current_club_id()
-      or (entry.recipient_profile_id is null and entry.recipient_email is null) then
+      or entry.recipient_profile_id is null then
       continue;
     end if;
-    target_member_id := null;
-    target_email := nullif(btrim(entry.recipient_email), '');
-    if entry.recipient_profile_id is not null then
-      select cm.id, coalesce(target_email, nullif(btrim(p.email), ''), nullif(btrim(cm.email), ''))
-      into target_member_id, target_email
-      from public.profiles p
-      left join public.club_members cm on cm.id = p.member_id
-        and cm.club_id = target_club_id and cm.is_active
-      where p.id = entry.recipient_profile_id;
-    end if;
+    select cm.id, coalesce(nullif(btrim(p.email), ''), nullif(btrim(cm.email), ''))
+    into target_member_id, target_email
+    from public.profiles p
+    left join public.club_members cm on cm.id = p.member_id
+      and cm.club_id = target_club_id and cm.is_active
+    where p.id = entry.recipient_profile_id;
     -- The in-app delivery table requires a linked profile or club member.
     -- Keep email-only external players pending in the durable outbox rather
     -- than failing the entire publication transaction or marking them sent.
