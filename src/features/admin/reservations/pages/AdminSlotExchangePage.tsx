@@ -96,7 +96,7 @@ export function AdminSlotExchangePage() {
         <h2>Après échange (simulation)</h2>
         <p>{first?.title} → {formatDate(preview.first.startsAt)}</p>
         <p>{second?.title} → {formatDate(preview.second.startsAt)}</p>
-        {first && second && ["reservation", "championship", "tournament"].includes(first.sourceKind) && ["reservation", "championship", "tournament"].includes(second.sourceKind) ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux occupations"}</button></> : <p>Échange réel entre championnats, tournois et autres occupations : moteur métier en cours de développement.</p>}
+        {first?.exchangeSupported && second?.exchangeSupported && ["reservation", "championship", "tournament"].includes(first.sourceKind) && ["reservation", "championship", "tournament"].includes(second.sourceKind) ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux occupations"}</button></> : <p>Échange réel entre championnats, tournois et autres occupations : moteur métier en cours de développement.</p>}
       </> : <><h2>Échange impossible</h2><ul>{preview.errors.map(e => <li key={e}>{e}</li>)}</ul></>}
     </section>}
   </main>;
