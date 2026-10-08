@@ -1,47 +1,83 @@
-import { useState } from "react";
-import { previewSwap, type Slot, type SlotKind } from "../services/slotExchangePreview";
+import { useEffect, useMemo, useState } from "react";
+import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
+import type { CalendarOccupation, ReservableResource } from "@/features/reservations/domain/calendar";
+import { previewSwap, type Slot } from "../services/slotExchangePreview";
 
-const kinds: { value: SlotKind; label: string }[] = [
-  { value: "championship", label: "Championnat" },
-  { value: "tournament", label: "Tournoi" },
-  { value: "reservation", label: "Réservation classique" },
-  { value: "permanent", label: "Créneau permanent" },
-];
-const empty = (): Slot => ({ id: "", kind: "championship", resourceId: "", startsAt: "", endsAt: "", editable: true });
-
-function SlotFields({ title, slot, change }: { title: string; slot: Slot; change: (slot: Slot) => void }) {
-  return <fieldset style={{ display: "grid", gap: 12, padding: 20, border: "1px solid #888", borderRadius: 12 }}>
-    <legend>{title}</legend>
-    <label>Type d'occupation <select value={slot.kind} onChange={e => change({ ...slot, kind: e.target.value as SlotKind })}>
-      {kinds.map(k => <option key={k.value} value={k.value}>{k.label}</option>)}
-    </select></label>
-    <label>Identifiant de l'occupation <input value={slot.id} onChange={e => change({ ...slot, id: e.target.value })} placeholder="À sélectionner dans le calendrier" /></label>
-    <label>Identifiant du terrain <input value={slot.resourceId} onChange={e => change({ ...slot, resourceId: e.target.value })} /></label>
-    <label>Début <input type="datetime-local" value={slot.startsAt} onChange={e => change({ ...slot, startsAt: e.target.value })} /></label>
-    <label>Fin <input type="datetime-local" value={slot.endsAt} onChange={e => change({ ...slot, endsAt: e.target.value })} /></label>
-  </fieldset>;
-}
+const today = () => new Date().toLocaleDateString("en-CA");
+const formatDate = (value: string) => new Date(value).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
+const classify = (item: CalendarOccupation): Slot["kind"] =>
+  item.occupationType === "reservation" ? "reservation" : "tournament";
+const toSlot = (item: CalendarOccupation): Slot => ({
+  id: item.id, kind: classify(item), resourceId: item.resourceId,
+  startsAt: item.startsAt, endsAt: item.endsAt, editable: true,
+});
 
 export function AdminSlotExchangePage() {
-  const [first, setFirst] = useState<Slot>(empty);
-  const [second, setSecond] = useState<Slot>(empty);
+  const [resources, setResources] = useState<ReservableResource[]>([]);
+  const [resourceId, setResourceId] = useState("");
+  const [date, setDate] = useState(today);
+  const [items, setItems] = useState<CalendarOccupation[]>([]);
+  const [firstId, setFirstId] = useState("");
+  const [secondId, setSecondId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  const preview = showPreview ? previewSwap(first, second) : null;
-  return <main style={{ maxWidth: 1100, margin: "0 auto", padding: 24 }}>
+  useEffect(() => {
+    let active = true;
+    reservationCalendarService.listResources().then(data => {
+      if (active) { setResources(data); setResourceId(data[0]?.id ?? ""); }
+    }).catch(e => { if (active) setError(e instanceof Error ? e.message : "Terrains indisponibles."); });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (!resourceId || !date) return;
+    let active = true;
+    setLoading(true); setError(""); setShowPreview(false);
+    setFirstId(""); setSecondId("");
+    const from = new Date(date + "T00:00:00");
+    const until = new Date(from);
+    until.setDate(until.getDate() + 7);
+    reservationCalendarService.listOccupations(resourceId, from.toISOString(), until.toISOString())
+      .then(data => { if (active) setItems(data); })
+      .catch(e => { if (active) setError(e instanceof Error ? e.message : "Impossible de charger le planning."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [resourceId, date]);
+  const first = items.find(item => item.id === firstId);
+  const second = items.find(item => item.id === secondId);
+  const preview = useMemo(() => showPreview && first && second ? previewSwap(toSlot(first), toSlot(second)) : null, [showPreview, first, second]);
+  const option = (item: CalendarOccupation) => `${formatDate(item.startsAt)} — ${item.title}`;
+  return <main style={{ maxWidth: 1050, margin: "0 auto", padding: 24 }}>
     <h1>Échanger deux créneaux</h1>
-    <p>Prototype de simulation uniquement : aucun déplacement n'est enregistré.</p>
-    <p>La sélection automatique dans le calendrier et la validation des conflits en base restent à connecter.</p>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-      <SlotFields title="Occupation A" slot={first} change={v => { setFirst(v); setShowPreview(false); }} />
-      <SlotFields title="Occupation B" slot={second} change={v => { setSecond(v); setShowPreview(false); }} />
+    <p>Choisis deux occupations réelles du calendrier. Cette page simule l'échange, sans modifier les réservations.</p>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+      <label>Terrain <select value={resourceId} onChange={e => setResourceId(e.target.value)}>{resources.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
+      <label>À partir du <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
+      <span>Occupations sur 7 jours</span>
     </div>
-    <button type="button" onClick={() => setShowPreview(true)} style={{ marginTop: 20 }}>Simuler l'échange</button>
+    {error && <p role="alert">{error}</p>}
+    {loading ? <p>Chargement du planning…</p> : <p>{items.length} occupation(s) trouvée(s).</p>}
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16 }}>
+      {([
+        { label: "Occupation A", value: firstId, set: setFirstId },
+        { label: "Occupation B", value: secondId, set: setSecondId },
+      ] as const).map(field => <fieldset key={field.label} style={{ padding: 20, borderRadius: 12, border: "1px solid #888" }}>
+        <legend>{field.label}</legend>
+        <select aria-label={field.label} style={{ width: "100%", padding: 8 }} value={field.value} onChange={e => { field.set(e.target.value); setShowPreview(false); }}>
+          <option value="">Sélectionner une occupation…</option>
+          {items.filter(item => item.id !== (field.label === "Occupation A" ? secondId : firstId)).map(item =>
+            <option key={item.id} value={item.id}>{option(item)}</option>)}
+        </select>
+        {items.find(item => item.id === field.value) && <p>{items.find(item => item.id === field.value)?.title}</p>}
+      </fieldset>)}
+    </div>
+    <button type="button" disabled={!first || !second || loading} onClick={() => setShowPreview(true)} style={{ marginTop: 20 }}>Simuler l'échange</button>
     {preview && <section aria-live="polite" style={{ marginTop: 20 }}>
       {preview.valid ? <>
-        <h2>Simulation avant / après</h2>
-        <p>A → {preview.first.resourceId}, {preview.first.startsAt} – {preview.first.endsAt}</p>
-        <p>B → {preview.second.resourceId}, {preview.second.startsAt} – {preview.second.endsAt}</p>
-        <p>Simulation locale uniquement. Les conflits et autorisations restent à vérifier en base.</p>
+        <h2>Après échange (simulation)</h2>
+        <p>{first?.title} → {formatDate(preview.first.startsAt)}</p>
+        <p>{second?.title} → {formatDate(preview.second.startsAt)}</p>
+        <p>Simulation indicative : les contraintes métier et conflits doivent encore être vérifiés en base.</p>
       </> : <><h2>Échange impossible</h2><ul>{preview.errors.map(e => <li key={e}>{e}</li>)}</ul></>}
     </section>}
   </main>;
