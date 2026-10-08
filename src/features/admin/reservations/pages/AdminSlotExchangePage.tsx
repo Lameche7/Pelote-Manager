@@ -56,8 +56,8 @@ export function AdminSlotExchangePage() {
     if (!window.confirm("Confirmer l'échange définitif des deux réservations ?")) return;
     setBusy(true); setError(""); setSuccess("");
     try {
-      await slotExchangeService.exchangeTwoReservations(first.id, second.id);
-      setSuccess("Échange enregistré. Rechargez le planning pour vérifier les deux créneaux.");
+      const outcome = await slotExchangeService.exchangeTwoReservations(first.id, second.id);
+      setSuccess(`Échange enregistré. ${outcome.notificationsPublished} notification(s) publiée(s).`);
       setShowPreview(false); setFirstId(""); setSecondId("");
       const from = new Date(date + "T00:00:00");
       const until = new Date(from); until.setDate(until.getDate() + 7);
