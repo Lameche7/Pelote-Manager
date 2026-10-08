@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import type { CalendarOccupation, ReservableResource } from "@/features/reservations/domain/calendar";
 import { previewSwap, type Slot } from "../services/slotExchangePreview";
+import { slotExchangeService } from "../services/slotExchangeService";
 
 const today = () => new Date().toLocaleDateString("en-CA");
 const formatDate = (value: string) => new Date(value).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
@@ -22,6 +23,8 @@ export function AdminSlotExchangePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [success, setSuccess] = useState("");
   useEffect(() => {
     let active = true;
     reservationCalendarService.listResources().then(data => {
@@ -47,16 +50,31 @@ export function AdminSlotExchangePage() {
   const first = items.find(item => item.id === firstId);
   const second = items.find(item => item.id === secondId);
   const preview = useMemo(() => showPreview && first && second ? previewSwap(toSlot(first), toSlot(second)) : null, [showPreview, first, second]);
+  async function confirmExchange() {
+    if (!first || !second || !preview?.valid || first.occupationType !== "reservation" || second.occupationType !== "reservation") return;
+    if (!window.confirm("Confirmer l'échange définitif des deux réservations ?")) return;
+    setBusy(true); setError(""); setSuccess("");
+    try {
+      await slotExchangeService.exchangeTwoReservations(first.id, second.id);
+      setSuccess("Échange enregistré. Rechargez le planning pour vérifier les deux créneaux.");
+      setShowPreview(false); setFirstId(""); setSecondId("");
+      const from = new Date(date + "T00:00:00");
+      const until = new Date(from); until.setDate(until.getDate() + 7);
+      setItems(await reservationCalendarService.listOccupations(resourceId, from.toISOString(), until.toISOString()));
+    } catch (e) { setError(e instanceof Error ? e.message : "Échange impossible."); }
+    finally { setBusy(false); }
+  }
   const option = (item: CalendarOccupation) => `${formatDate(item.startsAt)} — ${item.title} (${item.occupationType === "reservation" ? "Réservation" : "Occupation"})`;
   return <main style={{ maxWidth: 1050, margin: "0 auto", padding: 24 }}>
     <h1>Échanger deux créneaux</h1>
-    <p>Choisis deux occupations réelles du calendrier. Cette page simule l'échange, sans modifier les réservations.</p>
+    <p>Choisis deux occupations réelles du calendrier. La simulation est disponible pour toutes les occupations. Seul l'échange de deux réservations classiques est actuellement prévu côté serveur.</p>
     <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
       <label>Terrain <select value={resourceId} onChange={e => setResourceId(e.target.value)}>{resources.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
       <label>À partir du <input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
       <span>Occupations sur 7 jours</span>
     </div>
     {error && <p role="alert">{error}</p>}
+    {success && <p role="status">{success}</p>}
     {loading ? <p>Chargement du planning…</p> : <p>{items.length} occupation(s) trouvée(s).</p>}
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16 }}>
       {([
@@ -78,7 +96,7 @@ export function AdminSlotExchangePage() {
         <h2>Après échange (simulation)</h2>
         <p>{first?.title} → {formatDate(preview.first.startsAt)}</p>
         <p>{second?.title} → {formatDate(preview.second.startsAt)}</p>
-        <p>Simulation indicative : les contraintes métier et conflits doivent encore être vérifiés en base.</p>
+        {first?.occupationType === "reservation" && second?.occupationType === "reservation" ? <><p>La confirmation demande au serveur de vérifier les droits et les conflits avant tout changement.</p><button type="button" disabled={busy} onClick={() => void confirmExchange()}>{busy ? "Échange en cours…" : "Confirmer l’échange des deux réservations"}</button></> : <p>Échange réel entre championnats, tournois et autres occupations : moteur métier en cours de développement.</p>}
       </> : <><h2>Échange impossible</h2><ul>{preview.errors.map(e => <li key={e}>{e}</li>)}</ul></>}
     </section>}
   </main>;
