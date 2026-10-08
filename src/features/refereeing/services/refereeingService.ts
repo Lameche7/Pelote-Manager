@@ -10,6 +10,7 @@ export const refereeingService={
   const base=Array.isArray(data)?data as RefereeingMatch[]:[];
   return base.sort((a,b)=>`${a.play_date??"9999"} ${a.play_time??""}`.localeCompare(`${b.play_date??"9999"} ${b.play_time??""}`));
  },
+ async submitChampionshipScore(matchId:string,scoreTeam1:number,scoreTeam2:number){const {error}=await supabase.rpc("referee_submit_championship_result",{target_match_id:matchId,target_score_team1:scoreTeam1,target_score_team2:scoreTeam2});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible d'enregistrer le résultat."));},
  async volunteer(match:RefereeingMatch){const {error}=await supabase.rpc("volunteer_for_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de prendre cet arbitrage."));},
  async withdraw(match:RefereeingMatch){const {error}=await supabase.rpc("withdraw_from_refereeing",{target_source_type:match.source_type,target_match_id:match.match_id});if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de retirer cet arbitrage."));},
  async participation():Promise<RefereeingParticipation[]>{const {data,error}=await supabase.rpc("list_refereeing_participation");if(error)throw new Error(getSupabaseErrorMessage(error,"Impossible de charger les statistiques d’arbitrage."));return Array.isArray(data)?data as RefereeingParticipation[]:[];},
