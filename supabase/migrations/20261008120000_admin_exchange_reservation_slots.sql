@@ -29,6 +29,7 @@ declare
   ra public.reservations%rowtype;
   rb public.reservations%rowtype;
   previous jsonb;
+  exchange_id uuid;
   current_state jsonb;
   actor uuid := auth.uid();
 begin
@@ -100,13 +101,13 @@ begin
   );
   insert into public.admin_slot_exchange_audit
     (actor_id, first_occupation_id, second_occupation_id, before_state, after_state)
-    values (actor, a.id, b.id, previous, current_state);
+    values (actor, a.id, b.id, previous, current_state) returning id into exchange_id;
   insert into public.reservation_audit_log (reservation_id, action, actor_id, previous_data, new_data)
     values (ra.id, 'admin_slot_exchange', actor, to_jsonb(ra),
       (select to_jsonb(r) from public.reservations r where r.id = ra.id)),
            (rb.id, 'admin_slot_exchange', actor, to_jsonb(rb),
       (select to_jsonb(r) from public.reservations r where r.id = rb.id));
-  return jsonb_build_object('status', 'exchanged', 'first', a.id, 'second', b.id);
+  return jsonb_build_object('status', 'exchanged', 'first', a.id, 'second', b.id, 'exchange_id', exchange_id);
 exception
   when exclusion_violation then
     raise exception 'Conflit avec une autre occupation : échange annulé' using errcode = '23P01';
