@@ -2,6 +2,46 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PILOTOKI — Imaginez votre club</title>
 <style>
 :root{font-family:Inter,system-ui,sans-serif;color:#142235;background:#f3f6fa;--primary:#174e7d;--accent:#eabf4b}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}header{padding:18px max(24px,calc((100vw - 1180px)/2));background:#0c2035;color:white;display:flex;justify-content:space-between;align-items:center}header strong{letter-spacing:.2em}header span{font-size:12px;opacity:.75}.hero{background:#0c2035;color:white;padding:62px 24px 78px;text-align:center}.hero h1{font-size:clamp(32px,5vw,56px);max-width:850px;margin:0 auto 18px;line-height:1.12}.hero p{color:#d6e3ef;max-width:660px;margin:0 auto;font-size:18px}.layout{max-width:1180px;margin:-42px auto 60px;padding:0 18px;display:grid;grid-template-columns:315px minmax(0,1fr);gap:20px}.panel,.app{background:white;border-radius:18px;box-shadow:0 12px 38px #13253b16;overflow:hidden}.panel{padding:25px;align-self:start}.panel h2{font-size:20px;margin:0 0 8px}.hint{font-size:13px;color:#607086;line-height:1.55}.field{margin:18px 0}.field label{display:block;font-weight:650;font-size:13px;margin-bottom:8px}.field input[type=text]{width:100%;border:1px solid #cbd5e1;padding:11px;border-radius:9px}.field input[type=file]{max-width:100%;font-size:12px}.colors{display:flex;gap:9px;align-items:center}.colors input{width:54px;height:39px;border:0;background:none}.colors span{font-size:12px;color:#607086}.apphead{background:var(--primary);color:white;padding:22px 25px;position:relative;background-size:cover;background-position:center}.apphead:before{content:"";position:absolute;inset:0;background:#061d3580;pointer-events:none}.apphead>*{position:relative}.identity{display:flex;gap:13px;align-items:center}.identity img{width:58px;height:58px;object-fit:contain;background:white;border-radius:12px;padding:6px}.identity .placeholder{width:58px;height:58px;border-radius:12px;background:var(--accent);color:#172337;display:grid;place-items:center;font-size:26px}.identity strong{font-size:20px}.identity small{display:block;opacity:.8;margin-top:4px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-top:22px}.tabs button{background:#ffffff28;border:0;color:white;padding:9px 12px;border-radius:8px}.tabs button.active{background:var(--accent);color:#142235;font-weight:750}.workspace{padding:25px}.workspace h2{margin:0 0 7px}.workspace>p{color:#64748b;margin:0 0 18px}.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tile{padding:20px;border:1px solid #dbe3ed;border-radius:12px;min-height:112px;background:#f8fafc}.tile b{display:block;margin-bottom:10px}.tile span{font-size:13px;color:#65758b}.tile button{border:0;background:var(--primary);color:white;padding:8px 12px;border-radius:8px;margin-top:8px}.guide{margin-top:20px;background:#eff5fb;border-left:4px solid var(--primary);padding:18px;border-radius:8px}.guide strong{display:block;margin-bottom:6px}.guide p{margin:0;line-height:1.6;color:#42556a;font-size:14px}.switch{display:flex;gap:8px;margin-top:12px}.switch button{border:1px solid #cbd5e1;background:white;border-radius:7px;padding:7px 12px}.switch button.active{background:var(--primary);color:white;border-color:var(--primary)}.notice{font-size:12px;color:#64748b;text-align:center;margin-top:15px}footer{text-align:center;padding:30px;color:#64748b;font-size:13px}@media(max-width:780px){.layout{grid-template-columns:1fr}.hero{padding-bottom:78px}.tiles{grid-template-columns:1fr}header{padding:16px 22px}}
+
+/* Reprise des codes visuels de l'application : header, nav, calendrier, arbitrage */
+:root{--primary:#0f3d2e;--accent:#d62828;--brand-green:var(--primary);--brand-red:var(--accent)}
+body{background:#f5f7f8;color:#17202a}
+header{background:linear-gradient(105deg,#082b21,var(--primary),#092f27);min-height:74px;box-shadow:0 8px 28px #051c1533}
+.hero{background:linear-gradient(105deg,#082b21,var(--primary),#092f27);padding:45px 24px 75px}
+.hero h1{font-size:clamp(28px,4vw,47px)}.hero p{font-size:16px}
+.layout{max-width:1440px;grid-template-columns:290px minmax(0,1fr);gap:16px}
+.panel,.app{border-radius:16px;box-shadow:0 8px 24px #0000000d}
+.app{background:#f5f7f8}.apphead{min-height:110px;background:linear-gradient(105deg,#082b21,var(--primary),#092f27);padding:18px 26px}
+.apphead:before{background:#061d3544}.identity strong{font-size:18px;text-transform:uppercase;letter-spacing:.03em}
+.tabs{background:white;margin:0 22px;padding:8px;display:flex;gap:8px;overflow-x:auto;border:1px solid #dfe5e8;border-radius:15px;box-shadow:0 8px 24px #0f3d2e0f;transform:translateY(12px)}
+.tabs button{flex:0 0 auto;background:transparent;color:#65717c;font-weight:750;padding:12px 14px;border-radius:11px;white-space:nowrap}
+.tabs button.active{background:var(--primary);color:#fff}.workspace{padding:32px 26px 26px}
+.workspace h2{font-size:30px;color:var(--primary);letter-spacing:-.03em}.workspace>p{line-height:1.6}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px}
+.tile{background:#fff;border:1px solid #e1e7e9;border-radius:16px;box-shadow:0 6px 18px #0f3d2e0a;padding:16px;min-height:110px}
+.tile b{font-size:15px}.tile span{font-size:13px}
+.tile button{background:var(--primary);font-weight:800}
+.guide{background:white;border:1px solid #dfe5e8;border-left:4px solid var(--primary);border-radius:14px;box-shadow:0 6px 18px #0000000a}
+.guide strong{color:var(--primary)}.switch button.active{background:var(--primary);border-color:var(--primary)}
+.reservation-week{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));gap:10px;overflow-x:auto;padding:4px 2px 12px}
+.reservation-day{background:white;border:1px solid #dfe5e8;border-radius:17px;overflow:hidden;box-shadow:0 10px 25px #0f3d2e0c}
+.reservation-day h3{background:linear-gradient(135deg,#0a3227,var(--primary));color:white;text-align:center;margin:0;padding:14px 8px;font-size:14px}
+.reservation-slots{display:grid;gap:8px;padding:9px}
+.reservation-slot{display:grid;gap:3px;text-align:left;border-radius:13px;padding:13px 10px;border:1px solid #a7dfbb;background:linear-gradient(135deg,#f3fcf6,#e4f7ea);color:#14532d;min-height:72px}
+.reservation-slot b{font-size:15px}.reservation-slot small{font-size:11px;font-weight:700}
+.reservation-slot.occupied{background:linear-gradient(135deg,#fff7f7,#fceaea);border-color:#efc2c2;color:#8d2424;cursor:default}
+.reservation-slot.champ{background:#fef3c7;border-color:#e9ca7c;color:#7b4e08}
+.ref-group{margin-top:12px;border-top:2px solid #e5e7eb;padding-top:12px}
+.ref-group h3{font-size:21px}.ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.ref-card{padding:16px;border-radius:16px;background:white;border:2px solid #ef4444;box-shadow:0 8px 24px #0000000d}
+.ref-card.assigned{border-color:#22c55e}.ref-card h4{font-size:15px;margin:16px 0 8px}.ref-card p{font-size:13px;color:#65717c}.ref-card .status{display:flex;justify-content:space-between;font-size:12px;gap:6px}.ref-card button{width:100%;border:0;border-radius:10px;background:var(--primary);color:white;font-weight:800;padding:11px}
+.tournament-card{background:white;border:1px solid #dfe5e8;border-radius:16px;padding:18px;box-shadow:0 8px 24px #0000000a}
+.tournament-card h3{margin:0 0 8px}.match-row{display:grid;grid-template-columns:90px 1fr 130px;gap:10px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:9px;font-size:13px}
+.match-row strong{font-size:14px}.match-row button{border:0;border-radius:9px;padding:10px;color:white;background:var(--primary);font-weight:750}
+.demo-toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.demo-toolbar button{background:white;border:1px solid #dfe5e8;border-radius:12px;padding:10px;font-weight:750;color:var(--primary)}
+.pill{border-radius:99px;background:#eef6f2;color:var(--primary);font-size:12px;font-weight:800;padding:6px 10px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.workspace{padding:30px 14px}.tabs{margin:0 10px}.match-row{grid-template-columns:1fr}}
 </style></head><body>
 <header><strong>PILOTOKI</strong><span>Expérience de démonstration</span></header>
 <section class="hero"><h1>Une application créée par un joueur, pour les clubs et les joueurs.</h1><p>Votre club est unique. Votre application aussi. Personnalisez PILOTOKI et découvrez à quoi pourrait ressembler votre espace club.</p></section>
@@ -9,11 +49,11 @@
 <div class="field"><label for="club">Nom de votre club</label><input id="club" type="text" maxlength="70" value="Mon Club de Pelote"></div>
 <div class="field"><label for="logo">Logo du club</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></div>
 <div class="field"><label for="wall">Fond d'écran</label><input id="wall" type="file" accept="image/png,image/jpeg,image/webp"></div>
-<div class="field"><label for="primary">Couleur principale</label><div class="colors"><input id="primary" type="color" value="#174e7d"><span>Menus et boutons</span></div></div>
-<div class="field"><label for="accent">Couleur secondaire</label><div class="colors"><input id="accent" type="color" value="#eabf4b"><span>Accents et sélection</span></div></div>
+<div class="field"><label for="primary">Couleur principale</label><div class="colors"><input id="primary" type="color" value="#0f3d2e"><span>Menus et boutons</span></div></div>
+<div class="field"><label for="accent">Couleur secondaire</label><div class="colors"><input id="accent" type="color" value="#d62828"><span>Accents et sélection</span></div></div>
 <button id="reset" style="border:1px solid #cbd5e1;background:white;padding:10px 13px;border-radius:9px">Réinitialiser</button>
 <p class="hint">Les images restent dans votre navigateur. Aucun fichier n'est envoyé à un serveur.</p></aside>
-<section><div class="app"><div class="apphead" id="apphead"><div class="identity"><div class="placeholder" id="placeholder">✦</div><img id="logoPreview" alt="Logo du club" hidden><div><strong id="clubPreview">Mon Club de Pelote</strong><small>Propulsé par PILOTOKI</small></div></div><nav class="tabs" id="tabs" aria-label="Découvrir les modules"></nav></div><div class="workspace"><h2 id="pageTitle"></h2><p id="pageIntro"></p><div class="tiles" id="tiles"></div><div class="guide"><strong>💡 Votre guide PILOTOKI</strong><p id="guide"></p><div class="switch"><button id="player" class="active">Vue joueur</button><button id="admin">Vue administrateur</button></div></div></div></div><p class="notice">Simulation interactive : données fictives, aucune réservation réelle.</p></section></main>
+<section><div class="app"><div class="apphead" id="apphead"><div class="identity"><div class="placeholder" id="placeholder">✦</div><img id="logoPreview" alt="Logo du club" hidden><div><strong id="clubPreview">Mon Club de Pelote</strong><small>Propulsé par PILOTOKI</small></div></div></div><nav class="tabs" id="tabs" aria-label="Découvrir les modules"></nav><div class="workspace"><h2 id="pageTitle"></h2><p id="pageIntro"></p><div class="tiles" id="tiles"></div><div class="guide"><strong>💡 Votre guide PILOTOKI</strong><p id="guide"></p><div class="switch"><button id="player" class="active">Vue joueur</button><button id="admin">Vue administrateur</button></div></div></div></div><p class="notice">Simulation interactive : données fictives, aucune réservation réelle.</p></section></main>
 <footer>PILOTOKI · Une application pensée sur le terrain, pour les clubs et leurs joueurs.</footer>
 <script>
 const sections={
@@ -26,11 +66,55 @@ const sections={
 };
 let current="Accueil",role="player",reserved=false,logoUrl=null,wallUrl=null;
 const $=id=>document.getElementById(id);
-function render(){document.documentElement.style.setProperty("--primary",$("primary").value);document.documentElement.style.setProperty("--accent",$("accent").value);$("clubPreview").textContent=$("club").value.trim()||"Votre club";$("tabs").replaceChildren();Object.keys(sections).forEach(k=>{const b=document.createElement("button");b.textContent=k;b.className=k===current?"active":"";b.onclick=()=>{current=k;render()};$("tabs").append(b)});const s=sections[current];$("pageTitle").textContent=current;$("pageIntro").textContent=s.intro;$("guide").textContent=s[role];$("tiles").replaceChildren();s.tiles.forEach((t,i)=>{const el=document.createElement("div");el.className="tile";const title=document.createElement("b");title.textContent=t;el.append(title);const info=document.createElement("span");info.textContent="Exemple interactif";el.append(info);if(current==="Réservations"&&i===0){const b=document.createElement("button");b.textContent=reserved?"Réservation simulée ✓":"Simuler une réservation";b.onclick=()=>{reserved=!reserved;render()};el.append(document.createElement("br"),b)}$("tiles").append(el)});$("player").className=role==="player"?"active":"";$("admin").className=role==="admin"?"active":""}
+function render(){
+ document.documentElement.style.setProperty("--primary",$("primary").value);
+ document.documentElement.style.setProperty("--accent",$("accent").value);
+ $("clubPreview").textContent=$("club").value.trim()||"Votre club";
+ $("tabs").replaceChildren();
+ const nav={"Accueil":"▦ Tableau de bord","Réservations":"▦ Mes réservations","Tournois":"🏆 Mes tournois","Championnats":"↗ Mes championnats","Arbitrage":"♧ Arbitrage","Communication":"♧ Notifications"};
+ Object.keys(sections).forEach(k=>{const b=document.createElement("button");b.textContent=nav[k];b.className=k===current?"active":"";b.onclick=()=>{current=k;render()};$("tabs").append(b)});
+ const s=sections[current];$("pageTitle").textContent=current==="Accueil"?"Tableau de bord":current==="Réservations"?"Réservations":current==="Tournois"?"Mes tournois":current==="Championnats"?"Mes championnats":current;
+ $("pageIntro").textContent=s.intro;$("guide").textContent=s[role];$("tiles").replaceChildren();
+ const root=$("tiles");root.className="tiles";
+ if(current==="Réservations"){
+  root.className="reservation-week";
+  ["Lundi 12","Mardi 13","Mercredi 14","Jeudi 15","Vendredi 16","Samedi 17","Dimanche 18"].forEach((day,d)=>{
+   const col=document.createElement("section");col.className="reservation-day";const h=document.createElement("h3");h.textContent=day+" oct.";col.append(h);
+   const slots=document.createElement("div");slots.className="reservation-slots";
+   ["17h30","18h30","19h30","20h30"].forEach((hour,i)=>{
+    const booked=(d+i)%4===1,champ=(d+i)%6===0,active=reserved&&d===0&&i===0;
+    const el=document.createElement(booked?"div":"button");el.className="reservation-slot"+(booked?" occupied":champ?" champ":"");
+    const title=document.createElement("b");title.textContent=hour;const detail=document.createElement("small");detail.textContent=active?"Réservé (simulation)":booked?"Partie tournoi · Occupé":champ?"Créneau championnat":"Réserver";
+    el.append(title,detail);
+    if(!booked)el.onclick=()=>{reserved=!reserved;render()};
+    slots.append(el);
+   });col.append(slots);root.append(col)
+  });
+ }else if(current==="Arbitrage"){
+  root.className="ref-group";
+  const stats=document.createElement("div");stats.className="tournament-card";stats.innerHTML="<b>Participation à l'arbitrage</b><p>18 arbitres différents · 42 arbitrages attribués · Voir le détail ▼</p>";root.append(stats);
+  const title=document.createElement("h3");title.textContent="Championnat · Mes prochains arbitrages";root.append(title);
+  const cards=document.createElement("div");cards.className="ref-grid";
+  [["3ème série · Poule B","Lourdes 09","Coarraze Nay 01","Arbitre confirmé",true],["2ème série · Poule A","Lourdes 04","Pau 02","Arbitre recherché",false]].forEach(([comp,t1,t2,status,assigned])=>{
+   const el=document.createElement("article");el.className="ref-card"+(assigned?" assigned":"");
+   el.innerHTML='<div class="status"><span>Championnat</span><strong>'+status+'</strong></div><h4>'+t1+' contre '+t2+'</h4><p><b>Sam. 17 oct. · 17h30</b> · Trinquet du club</p><small>'+comp+'</small>';
+   const btn=document.createElement("button");btn.textContent=assigned?"Saisie Résultat":"Je peux arbitrer";btn.onclick=()=>alert("Action simulée : aucune donnée réelle modifiée.");el.append(btn);cards.append(el)
+  });root.append(cards)
+ }else if(current==="Tournois"||current==="Championnats"){
+  root.className="tournament-card";const h=document.createElement("h3");h.textContent=current==="Tournois"?"Tournoi du club · Série 1":"Championnat · 3ème série";root.append(h);
+  const pill=document.createElement("span");pill.className="pill";pill.textContent=current==="Tournois"?"Phase de poules · Planning publié":"Journée 4 · Rencontre à venir";root.append(pill);
+  [["Sam. 17 oct.","Équipe Martin / Dupont  —  Équipe Bernard / Petit","Programmer"],["Mar. 20 oct.","Équipe Laurent / Moreau  —  Équipe Garcia / Lopez","Résultats"],["Ven. 23 oct.","Équipe Thomas / Pierre  —  Équipe Jean / Paul","Détails"]].forEach(([date,teams,action])=>{
+   const row=document.createElement("div");row.className="match-row";const dateEl=document.createElement("span");dateEl.textContent=date;const teamsEl=document.createElement("strong");teamsEl.textContent=teams;const btn=document.createElement("button");btn.textContent=action;btn.onclick=()=>alert("Démonstration uniquement.");row.append(dateEl,teamsEl,btn);root.append(row)
+  })
+ }else{
+  s.tiles.forEach((t,i)=>{const el=document.createElement("div");el.className="tile";const title=document.createElement("b");title.textContent=t;el.append(title);const info=document.createElement("span");info.textContent=["Accéder au module","Suivre les informations","Consulter les détails","Découvrir les actions"][i];el.append(info);root.append(el)})
+ }
+ $("player").className=role==="player"?"active":"";$("admin").className=role==="admin"?"active":"";
+}
 function upload(id,callback){$(id).addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>5*1024*1024){alert("Image trop volumineuse (5 Mo maximum).");e.target.value="";return}callback(URL.createObjectURL(f))})}
 upload("logo",url=>{if(logoUrl)URL.revokeObjectURL(logoUrl);logoUrl=url;$("logoPreview").src=url;$("logoPreview").hidden=false;$("placeholder").hidden=true});
 upload("wall",url=>{if(wallUrl)URL.revokeObjectURL(wallUrl);wallUrl=url;$("apphead").style.backgroundImage='url("'+url+'")'});
 ["club","primary","accent"].forEach(id=>$(id).addEventListener("input",render));
 ["player","admin"].forEach(id=>$(id).onclick=()=>{role=id;render()});
-$("reset").onclick=()=>{$("club").value="Mon Club de Pelote";$("primary").value="#174e7d";$("accent").value="#eabf4b";["logo","wall"].forEach(id=>$(id).value="");$("logoPreview").hidden=true;$("placeholder").hidden=false;$("apphead").style.backgroundImage="none";reserved=false;current="Accueil";role="player";render()};render();
+$("reset").onclick=()=>{$("club").value="Mon Club de Pelote";$("primary").value="#0f3d2e";$("accent").value="#d62828";["logo","wall"].forEach(id=>$(id).value="");$("logoPreview").hidden=true;$("placeholder").hidden=false;$("apphead").style.backgroundImage="none";reserved=false;current="Accueil";role="player";render()};render();
 </script></body></html>
