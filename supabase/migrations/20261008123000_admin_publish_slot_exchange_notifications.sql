@@ -51,10 +51,14 @@ begin
       (club_id, title, body, priority, status, show_on_home, expires_at, created_by, updated_by)
     values (
       target_club_id,
-      case when entry.tournament_match_id is not null
+      case when entry.championship_match_id is not null
+        then 'Modification de votre partie de championnat'
+        when entry.tournament_match_id is not null
         then 'Modification de votre partie de tournoi'
         else 'Modification de votre réservation' end,
-      case when entry.tournament_match_id is not null
+      case when entry.championship_match_id is not null
+        then 'Votre partie de championnat a été déplacée au '
+        when entry.tournament_match_id is not null
         then 'Votre partie de tournoi a été déplacée au '
         else 'Votre réservation a été déplacée au ' end ||
       to_char(entry.starts_at at time zone 'Europe/Paris', 'DD/MM/YYYY à HH24:MI') ||
