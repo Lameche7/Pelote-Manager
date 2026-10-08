@@ -42,6 +42,33 @@ header{background:linear-gradient(105deg,#082b21,var(--primary),#092f27);min-hei
 .demo-toolbar button{background:white;border:1px solid #dfe5e8;border-radius:12px;padding:10px;font-weight:750;color:var(--primary)}
 .pill{border-radius:99px;background:#eef6f2;color:var(--primary);font-size:12px;font-weight:800;padding:6px 10px}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.workspace{padding:30px 14px}.tabs{margin:0 10px}.match-row{grid-template-columns:1fr}}
+
+/* Démonstration immersive inspirée de PremiumHomePage et du shell PILOTOKI */
+.layout{max-width:none;margin:0 auto 60px;grid-template-columns:minmax(260px,310px) minmax(0,1fr);align-items:start;padding:24px;gap:20px}
+.hero{padding:28px 20px 32px}.hero h1{font-size:clamp(24px,3vw,36px)}.hero p{font-size:14px}
+.app{border-radius:0;background:#f7f7f3;box-shadow:none}.panel{position:sticky;top:20px;z-index:2}
+.apphead{display:none}.tabs{transform:none;margin:0;min-height:74px;border-radius:0;background:linear-gradient(105deg,#082b21,var(--primary),#092f27);border:0;box-shadow:0 8px 28px #051c1533;justify-content:flex-end;align-items:center;padding:12px 25px}
+.tabs button{color:#fff;font-size:14px}.tabs button.active{background:#ffffff20;color:#fff}
+.tabs:before{content:"";width:185px;height:44px;background:url('/branding/pilotoki-wordmark.png') center / contain no-repeat;margin-right:auto;flex:0 0 185px}
+.workspace{padding:0}.workspace>h2,.workspace>p{display:none}.workspace>.tiles{margin:28px}
+.demo-home{position:relative;isolation:isolate;min-height:clamp(520px,70vh,780px);display:flex;align-items:center;justify-content:center;text-align:center;background:#12362e center / cover no-repeat;color:white;overflow:hidden;padding:45px 20px}
+.demo-home:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#05171155,#061710c7);z-index:-1}
+.demo-home__content{display:flex;flex-direction:column;align-items:center;max-width:1000px}
+.demo-home__logo{max-width:175px;max-height:190px;object-fit:contain;margin-bottom:18px;filter:drop-shadow(0 6px 14px #0008)}
+.demo-home h1{font-size:clamp(42px,6vw,88px);font-weight:900;text-transform:uppercase;line-height:1.02;letter-spacing:.01em;text-shadow:0 6px 16px #0008;margin:8px 0 14px}
+.demo-home__wordmark{width:235px;max-width:65%;height:auto;object-fit:contain;margin:4px auto 10px}
+.demo-home__signature{font-size:clamp(16px,1.7vw,22px);margin:10px 0 26px;text-shadow:0 3px 8px #000}
+.demo-home__actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.demo-home__actions button{border:0;color:white;background:#d62828;padding:15px 20px;border-radius:8px;font-weight:800;box-shadow:0 7px 20px #0003}
+.demo-home__actions button:nth-child(n+2){background:#1d4ed8}
+.demo-home__placeholder{height:160px;width:160px;border-radius:50%;background:#ffffff28;display:grid;place-items:center;font-size:75px;margin-bottom:18px}
+.demo-benefits{display:grid;grid-template-columns:repeat(4,1fr);background:linear-gradient(105deg,#082b21,var(--primary),#092f27);color:white}
+.demo-benefits div{padding:22px 16px;border-right:1px solid #ffffff30;text-align:center;font-weight:750;font-size:14px}
+.workspace>.guide{margin:22px 28px 28px}
+.demo-content{padding:28px}.demo-content>h2{font-size:32px;color:var(--primary);margin:0 0 8px}
+.demo-content>p{color:#65717c;margin:0 0 18px}
+.demo-content .tiles{margin:0}
+@media(max-width:850px){.layout{grid-template-columns:1fr;padding:12px}.panel{position:static}.tabs{justify-content:flex-start;overflow-x:auto}.tabs:before{flex-basis:120px;width:120px}.demo-benefits{grid-template-columns:repeat(2,1fr)}.demo-home{min-height:540px}.demo-content{padding:16px}.workspace>.guide{margin:16px}}
 </style></head><body>
 <header><strong>PILOTOKI</strong><span>Expérience de démonstration</span></header>
 <section class="hero"><h1>Une application créée par un joueur, pour les clubs et les joueurs.</h1><p>Votre club est unique. Votre application aussi. Personnalisez PILOTOKI et découvrez à quoi pourrait ressembler votre espace club.</p></section>
@@ -53,7 +80,7 @@ header{background:linear-gradient(105deg,#082b21,var(--primary),#092f27);min-hei
 <div class="field"><label for="accent">Couleur secondaire</label><div class="colors"><input id="accent" type="color" value="#d62828"><span>Accents et sélection</span></div></div>
 <button id="reset" style="border:1px solid #cbd5e1;background:white;padding:10px 13px;border-radius:9px">Réinitialiser</button>
 <p class="hint">Les images restent dans votre navigateur. Aucun fichier n'est envoyé à un serveur.</p></aside>
-<section><div class="app"><div class="apphead" id="apphead"><div class="identity"><div class="placeholder" id="placeholder">✦</div><img id="logoPreview" alt="Logo du club" hidden><div><strong id="clubPreview">Mon Club de Pelote</strong><small>Propulsé par PILOTOKI</small></div></div></div><nav class="tabs" id="tabs" aria-label="Découvrir les modules"></nav><div class="workspace"><h2 id="pageTitle"></h2><p id="pageIntro"></p><div class="tiles" id="tiles"></div><div class="guide"><strong>💡 Votre guide PILOTOKI</strong><p id="guide"></p><div class="switch"><button id="player" class="active">Vue joueur</button><button id="admin">Vue administrateur</button></div></div></div></div><p class="notice">Simulation interactive : données fictives, aucune réservation réelle.</p></section></main>
+<section><div class="app"><div class="apphead" id="apphead"><div class="identity"><div class="placeholder" id="placeholder">✦</div><img id="logoPreview" alt="Logo du club" hidden><div><strong id="clubPreview">Mon Club de Pelote</strong><small>Propulsé par PILOTOKI</small></div></div></div><nav class="tabs" id="tabs" aria-label="Découvrir les modules"></nav><div class="workspace"><div id="demoScreen"><div class="demo-content"><h2 id="pageTitle"></h2><p id="pageIntro"></p><div class="tiles" id="tiles"></div></div></div><div class="guide"><strong>💡 Votre guide PILOTOKI</strong><p id="guide"></p><div class="switch"><button id="player" class="active">Vue joueur</button><button id="admin">Vue administrateur</button></div></div></div></div><p class="notice">Simulation interactive : données fictives, aucune réservation réelle.</p></section></main>
 <footer>PILOTOKI · Une application pensée sur le terrain, pour les clubs et leurs joueurs.</footer>
 <script>
 const sections={
@@ -71,10 +98,22 @@ function render(){
  document.documentElement.style.setProperty("--accent",$("accent").value);
  $("clubPreview").textContent=$("club").value.trim()||"Votre club";
  $("tabs").replaceChildren();
- const nav={"Accueil":"▦ Tableau de bord","Réservations":"▦ Mes réservations","Tournois":"🏆 Mes tournois","Championnats":"↗ Mes championnats","Arbitrage":"♧ Arbitrage","Communication":"♧ Notifications"};
+ const nav={"Accueil":"Accueil","Réservations":"Réservations","Tournois":"Mon espace · Tournois","Championnats":"Championnats","Arbitrage":"Arbitrage","Communication":"Administration · Communication"};
  Object.keys(sections).forEach(k=>{const b=document.createElement("button");b.textContent=nav[k];b.className=k===current?"active":"";b.onclick=()=>{current=k;render()};$("tabs").append(b)});
- const s=sections[current];$("pageTitle").textContent=current==="Accueil"?"Tableau de bord":current==="Réservations"?"Réservations":current==="Tournois"?"Mes tournois":current==="Championnats"?"Mes championnats":current;
- $("pageIntro").textContent=s.intro;$("guide").textContent=s[role];$("tiles").replaceChildren();
+ const s=sections[current];const screen=$("demoScreen");
+ if(current==="Accueil"){
+  screen.innerHTML='<section class="demo-home" id="demoHome"><div class="demo-home__content"><div class="demo-home__placeholder" id="demoPlaceholder">✦</div><img class="demo-home__logo" id="demoLogo" hidden alt="Logo du club"><h1 id="demoClub"></h1><img class="demo-home__wordmark" src="/branding/pilotoki-wordmark.png" alt="PILOTOKI"><p class="demo-home__signature">Votre club, votre histoire, votre application.</p><div class="demo-home__actions"><button data-go="Réservations">▦ Réserver un créneau</button><button data-go="Tournois">♙ Accéder à mon espace</button><button data-go="Arbitrage">↗ Découvrir PILOTOKI</button></div></div></section><div class="demo-benefits"><div>▦ Réservations simples</div><div>✓ Gestion des compétitions</div><div>◉ Infos en direct</div><div>◎ Club & communauté</div></div>';
+  $("demoClub").textContent=$("club").value.trim()||"Votre club";
+  if(logoUrl){$("demoLogo").src=logoUrl;$("demoLogo").hidden=false;$("demoPlaceholder").hidden=true}
+  $("demoHome").style.backgroundImage=wallUrl?'url("'+wallUrl+'")':"url('/branding/trinquet-hero.jpg')";
+  screen.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{current=b.dataset.go;render()});
+ }else{
+  screen.innerHTML='<div class="demo-content"><h2 id="pageTitle"></h2><p id="pageIntro"></p><div class="tiles" id="tiles"></div></div>';
+  $("pageTitle").textContent=current==="Réservations"?"Réservations":current==="Tournois"?"Mes tournois":current==="Championnats"?"Mes championnats":current;
+  $("pageIntro").textContent=s.intro;
+ }
+ $("guide").textContent=s[role];
+ if(current==="Accueil"){$("player").className=role==="player"?"active":"";$("admin").className=role==="admin"?"active":"";return;}
  const root=$("tiles");root.className="tiles";
  if(current==="Réservations"){
   root.className="reservation-week";
