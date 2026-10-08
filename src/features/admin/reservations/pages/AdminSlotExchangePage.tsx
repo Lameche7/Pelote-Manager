@@ -59,7 +59,7 @@ export function AdminSlotExchangePage() {
     setBusy(true); setError(""); setSuccess("");
     try {
       const outcome = await slotExchangeService.exchangeTwoReservations(first.id, second.id);
-      setSuccess(`Échange enregistré. ${outcome.notificationsPublished} notification(s) publiée(s).`);
+      setSuccess(outcome.notificationWarning ?? `Échange enregistré. ${outcome.notificationsPublished} notification(s) publiée(s).`);
       setShowPreview(false); setFirstId(""); setSecondId("");
       const from = new Date(date + "T00:00:00");
       const until = new Date(from); until.setDate(until.getDate() + 7);
