@@ -17,6 +17,9 @@ begin
   if not public.is_profile_admin() then
     raise exception 'Accès administrateur requis' using errcode = '42501';
   end if;
+  if not exists (select 1 from public.admin_slot_exchange_audit a where a.id = target_exchange_id) then
+    raise exception 'Échange introuvable' using errcode = '22023';
+  end if;
   for entry in
     select o.*, r.resource_id, r.starts_at, r.ends_at
     from public.admin_slot_exchange_notification_outbox o
