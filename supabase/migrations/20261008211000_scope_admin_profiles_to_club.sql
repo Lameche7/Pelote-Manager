@@ -51,7 +51,7 @@ grant execute on function public.list_profiles_for_admin() to authenticated;
 create or replace function public.enforce_single_club_administrator()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $function$
 declare
