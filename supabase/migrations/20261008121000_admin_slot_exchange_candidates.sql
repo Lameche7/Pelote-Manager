@@ -30,7 +30,7 @@ begin
           select 1 from public.tournament_match_planning tp
           join public.tournament_matches tm on tm.id=tp.match_id
           join public.tournaments t on t.id=tp.tournament_id
-          where tp.match_id=tme.match_id and tm.phase is distinct from 'finals'
+          where tp.match_id=tme.match_id and tm.phase is distinct from 'finals' and tm.status='scheduled'
             and t.club_id=public.admin_current_club_id()
             and tp.resource_id=c.resource_id
         ))
