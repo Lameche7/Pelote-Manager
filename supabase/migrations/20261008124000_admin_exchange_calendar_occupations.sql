@@ -120,13 +120,43 @@ begin
      (a.starts_at at time zone tz_a)::date,(a.starts_at at time zone tz_a)::time,
      (a.ends_at at time zone tz_a)::time);
  end if;
- current_state:=jsonb_build_object(
-   'first',(select to_jsonb(c) from public.calendar_occupations c where c.id=a.id),
-   'second',(select to_jsonb(c) from public.calendar_occupations c where c.id=b.id));
- if (current_state->'first'->>'starts_at')::timestamptz<>b.starts_at
-    or (current_state->'second'->>'starts_at')::timestamptz<>a.starts_at then
-   raise exception 'Synchronisation du calendrier incomplète' using errcode='P0001';
+ -- Tournament synchronization recreates calendar occupation IDs.
+ -- Verify by the underlying business object, not the original projection ID.
+ if a_kind='tournament' then
+   if not exists (
+     select 1 from public.tournament_match_planning p
+     join public.tournament_match_events link on link.match_id=p.match_id
+     join public.event_resources er on er.event_id=link.event_id
+     join public.calendar_occupations c on c.id=er.calendar_occupation_id
+     where p.match_id=amid and c.cancelled_at is null
+       and c.resource_id=b.resource_id and c.starts_at=b.starts_at and c.ends_at=b.ends_at
+   ) then raise exception 'Projection tournoi A non synchronisée'; end if;
+ else
+   if not exists (select 1 from public.calendar_occupations c
+     where c.id=a.id and c.cancelled_at is null
+       and c.resource_id=b.resource_id and c.starts_at=b.starts_at and c.ends_at=b.ends_at)
+   then raise exception 'Projection réservation A non synchronisée'; end if;
  end if;
+ if b_kind='tournament' then
+   if not exists (
+     select 1 from public.tournament_match_planning p
+     join public.tournament_match_events link on link.match_id=p.match_id
+     join public.event_resources er on er.event_id=link.event_id
+     join public.calendar_occupations c on c.id=er.calendar_occupation_id
+     where p.match_id=bmid and c.cancelled_at is null
+       and c.resource_id=a.resource_id and c.starts_at=a.starts_at and c.ends_at=a.ends_at
+   ) then raise exception 'Projection tournoi B non synchronisée'; end if;
+ else
+   if not exists (select 1 from public.calendar_occupations c
+     where c.id=b.id and c.cancelled_at is null
+       and c.resource_id=a.resource_id and c.starts_at=a.starts_at and c.ends_at=a.ends_at)
+   then raise exception 'Projection réservation B non synchronisée'; end if;
+ end if;
+ current_state:=jsonb_build_object(
+   'first',jsonb_build_object('kind',a_kind,'reservation_id',ar.id,'tournament_match_id',amid,
+      'resource_id',b.resource_id,'starts_at',b.starts_at,'ends_at',b.ends_at),
+   'second',jsonb_build_object('kind',b_kind,'reservation_id',br.id,'tournament_match_id',bmid,
+      'resource_id',a.resource_id,'starts_at',a.starts_at,'ends_at',a.ends_at));
  insert into public.admin_slot_exchange_audit(actor_id,first_occupation_id,second_occupation_id,before_state,after_state)
  values(auth.uid(),a.id,b.id,previous,current_state) returning id into exchange_id;
  return jsonb_build_object('status','exchanged','exchange_id',exchange_id,'first',a.id,'second',b.id);
