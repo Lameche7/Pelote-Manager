@@ -63,7 +63,7 @@ begin
      or atp.resource_id<>a.resource_id
      or public.tournament_planning_starts_at(atp.play_date,atp.starts_at,tz_a)<>a.starts_at
      or public.tournament_planning_starts_at(atp.play_date,atp.ends_at,tz_a)<>a.ends_at
-     or exists(select 1 from public.tournament_matches m where m.id=amid and m.phase='finals') then
+     or exists(select 1 from public.tournament_matches m where m.id=amid and (m.phase='finals' or m.status <> 'scheduled')) then
      raise exception 'Planning tournoi A incompatible ou phase finale' using errcode='22023';
    end if;
  end if;
@@ -81,7 +81,7 @@ begin
      or btp.resource_id<>b.resource_id
      or public.tournament_planning_starts_at(btp.play_date,btp.starts_at,tz_b)<>b.starts_at
      or public.tournament_planning_starts_at(btp.play_date,btp.ends_at,tz_b)<>b.ends_at
-     or exists(select 1 from public.tournament_matches m where m.id=bmid and m.phase='finals') then
+     or exists(select 1 from public.tournament_matches m where m.id=bmid and (m.phase='finals' or m.status <> 'scheduled')) then
      raise exception 'Planning tournoi B incompatible ou phase finale' using errcode='22023';
    end if;
  end if;
