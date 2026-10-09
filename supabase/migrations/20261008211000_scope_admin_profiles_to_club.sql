@@ -40,7 +40,7 @@ begin
       where cm.profile_id=p.id and cm.club_id=actor_club_id
     )
     order by coalesce(p.display_name,p.last_name,p.first_name,p.email),p.email;
-end
+end;
 $function$;
 
 revoke all on function public.list_profiles_for_admin() from public, anon;
@@ -77,7 +77,7 @@ begin
       using errcode = '23514';
   end if;
   return new;
-end
+end;
 $function$;
 
 revoke all on function public.enforce_single_club_administrator() from public, anon, authenticated;
@@ -142,7 +142,7 @@ begin
       and cr.key='administrator'::public.club_role_key;
   end if;
   return target_profile;
-end
+end;
 $function$;
 
 revoke all on function public.set_profile_role(uuid, public.user_role) from public, anon;
