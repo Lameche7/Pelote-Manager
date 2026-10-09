@@ -254,7 +254,7 @@ test("le back-office possède un suivi dédié des reports sans bouton de força
   assert.match(requestMigration, /admin_list_tournament_reschedule_requests/);
   assert.match(adminPage, /Reports de parties/);
   assert.match(adminPage, /Prêt à appliquer/);
-  assert.match(adminPage, /À contacter hors application/);
+  assert.match(adminPage, /à contacter/);
   assert.doesNotMatch(adminPage, /Forcer l’accord/);
   assert.doesNotMatch(adminPage, /Appliquer le report/);
 });
