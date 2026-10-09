@@ -57,8 +57,14 @@ type ClubHeroStyle = CSSProperties & {
 
 type PublicEventCardStyle = CSSProperties & { "--event-accent": string };
 
+const showOctoberRose = () => {
+  const today = new Date();
+  return today.getFullYear() === 2026 && today.getMonth() === 9;
+};
+
 export function HomePage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const octoberRoseVisible = showOctoberRose();
   const publicClubSlug =
     typeof window === "undefined"
       ? null
@@ -161,6 +167,12 @@ export function HomePage() {
             src="/branding/pilotoki-wordmark.png"
             alt="PILOTOKI"
           />
+          {octoberRoseVisible && (
+            <div className="premium-home__october-rose" aria-label="Octobre Rose — soutien à la sensibilisation au cancer du sein">
+              <img src="/branding/octobre-rose-ribbon.svg" alt="" aria-hidden="true" />
+              <span>Octobre Rose</span>
+            </div>
+          )}
           <p className="premium-home__signature">
             {CLUB_CONFIG.foundedYear && (
               <>
