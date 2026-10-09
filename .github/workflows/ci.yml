@@ -116,7 +116,5 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Afficher le formatage attendu pour le test
-        run: npx prettier tests/networkClubUserAdmin.test.mjs | base64 -w0
       - name: Vérifier uniquement les fichiers applicatifs du correctif
         run: npx prettier --check src/features/admin/pages/AdminUsersPage.tsx tests/networkClubUserAdmin.test.mjs tests/adminAccessHardening.test.mjs
