@@ -312,7 +312,10 @@ export function TvDisplayPage() {
       }
     };
     void loadBranding();
-    const refresh = window.setInterval(() => void loadBranding(), 24 * 60 * 60 * 1_000);
+    const refresh = window.setInterval(
+      () => void loadBranding(),
+      24 * 60 * 60 * 1_000,
+    );
     return () => {
       active = false;
       window.clearInterval(refresh);
