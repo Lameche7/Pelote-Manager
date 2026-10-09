@@ -105,4 +105,4 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261008211000_scope_admin_profiles_to_club.sql
-          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -c "select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',false); select count(*) from public.list_profiles_for_admin();"
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-cases.sql
