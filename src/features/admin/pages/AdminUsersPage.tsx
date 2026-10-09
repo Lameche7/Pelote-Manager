@@ -4,7 +4,6 @@ import {
   filterAdminProfiles,
   getProfileDisplayName,
   USER_ROLE_LABELS,
-  USER_ROLE_OPTIONS,
 } from "@/features/admin/utils/adminUsers";
 import { USER_ROLES, type UserRole } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
@@ -65,15 +64,9 @@ export function AdminUsersPage() {
     setSuccess(null);
 
     try {
-      const updatedProfile = await adminUserService.setRole(profile.id, role);
-      setProfiles((currentProfiles) =>
-        currentProfiles.map((currentProfile) =>
-          currentProfile.id === updatedProfile.id ? updatedProfile : currentProfile,
-        ),
-      );
-      setSuccess(
-        `Le rôle et les habilitations de ${getProfileDisplayName(updatedProfile)} ont été modifiés.`,
-      );
+      await adminUserService.setRole(profile.id, role);
+      setProfiles(await adminUserService.listProfiles());
+      setSuccess(`Les droits administrateur de ${getProfileDisplayName(profile)} ont été mis à jour pour ce club.`);
     } catch (updateError: unknown) {
       setError(
         updateError instanceof Error
@@ -88,11 +81,9 @@ export function AdminUsersPage() {
   return (
     <section className="simple-page" aria-labelledby="admin-users-title">
       <h1 id="admin-users-title">Gestion des utilisateurs</h1>
-      <p>Consultez les profils et attribuez les droits applicatifs.</p>
+      <p>Consultez les comptes rattachés à ce club et gérez leurs droits administrateur.</p>
       <p>
-        Attribuer le rôle Administrateur donne automatiquement l’habilitation
-        complète du club. Retirer ce rôle retire également cette habilitation,
-        sans intervention dans Supabase.
+        La qualité de licencié dépend de la licence de la saison en cours. Les droits administrateur sont propres à ce club et indépendants du statut sportif.
       </p>
 
       <div>
@@ -116,11 +107,9 @@ export function AdminUsersPage() {
           }
         >
           <option value="all">Tous les rôles</option>
-          {USER_ROLE_OPTIONS.map((role) => (
-            <option key={role} value={role}>
-              {USER_ROLE_LABELS[role]}
-            </option>
-          ))}
+          <option value={USER_ROLES.visitor}>Sans accès administrateur</option>
+          <option value={USER_ROLES.member}>Licencié</option>
+          <option value={USER_ROLES.admin}>Administrateur</option>
         </select>
       </div>
 
@@ -150,23 +139,17 @@ export function AdminUsersPage() {
                     <td>{getProfileDisplayName(profile)}</td>
                     <td>{profile.email}</td>
                     <td>
-                      <select
-                        aria-label={`Rôle de ${getProfileDisplayName(profile)}`}
-                        value={profile.role}
+                      <span>{USER_ROLE_LABELS[profile.role]}</span>{" "}
+                      <button
+                        type="button"
                         disabled={isCurrentUser || isSaving}
-                        onChange={(event) =>
-                          void handleRoleChange(
-                            profile,
-                            event.target.value as UserRole,
-                          )
-                        }
+                        onClick={() => void handleRoleChange(
+                          profile,
+                          profile.role === USER_ROLES.admin ? USER_ROLES.visitor : USER_ROLES.admin,
+                        )}
                       >
-                        {USER_ROLE_OPTIONS.map((role) => (
-                          <option key={role} value={role}>
-                            {USER_ROLE_LABELS[role]}
-                          </option>
-                        ))}
-                      </select>
+                        {profile.role === USER_ROLES.admin ? "Retirer l’administration" : "Nommer administrateur"}
+                      </button>
                       {isCurrentUser && " (votre compte)"}
                       {isSaving && " Enregistrement…"}
                     </td>
@@ -184,7 +167,7 @@ export function AdminUsersPage() {
       )}
 
       <p>
-        Les comptes commencent avec le rôle {USER_ROLE_LABELS[USER_ROLES.visitor]}.
+        Le statut licencié et les droits administrateur sont calculés pour le club courant.
       </p>
     </section>
   );

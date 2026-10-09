@@ -77,8 +77,8 @@ test("le lien et la route Administration exigent une permission réelle", () => 
   );
 });
 
-test("l'écran utilisateurs annonce la synchronisation automatique", () => {
-  assert.match(usersPage, /Attribuer le rôle Administrateur/);
-  assert.match(usersPage, /sans intervention dans Supabase/);
-  assert.match(usersPage, /rôle et les habilitations/);
+test("l'écran utilisateurs sépare le statut de licencié des permissions administrateur", () => {
+  assert.match(usersPage, /qualité de licencié dépend de la licence/);
+  assert.match(usersPage, /Nommer administrateur/);
+  assert.match(usersPage, /Retirer l’administration/);
 });
