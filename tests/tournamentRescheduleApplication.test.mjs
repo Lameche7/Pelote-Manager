@@ -177,9 +177,11 @@ test("un échange libère les deux occupations calendrier avant de recréer les 
   );
   const targetSyncIndex = atomicSwapMigration.indexOf(
     "public.sync_tournament_reschedule_match_event(\n        request.match_id",
+    releaseIndex,
   );
   const swapSyncIndex = atomicSwapMigration.indexOf(
     "public.sync_tournament_reschedule_match_event(\n        request.swap_match_id",
+    targetSyncIndex,
   );
 
   assert.ok(releaseIndex >= 0);
