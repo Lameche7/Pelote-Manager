@@ -158,9 +158,9 @@ test("le serveur garde Equipe2 bloquée sans dérogation explicite de lieu", asy
     migration,
     /team_player\.team_id = match\.team1_id/,
   );
-  assert.doesNotMatch(
+  assert.match(
     migration,
-    /team_player\.team_id in \(match\.team1_id, match\.team2_id\)/,
+    /new_fragment text := \$new\$[\s\S]*team_player\.team_id = match\.team1_id[\s\S]*\$new\$;/,
   );
   assert.match(
     migration,
