@@ -175,18 +175,15 @@ test("un échange libère les deux occupations calendrier avant de recréer les 
   const releaseIndex = atomicSwapMigration.indexOf(
     "event_resource.event_id in (target_event_id, swap_event_id)",
   );
-  const targetSyncIndex = atomicSwapMigration.indexOf(
-    "public.sync_tournament_reschedule_match_event(\n        request.match_id",
-    releaseIndex,
-  );
-  const swapSyncIndex = atomicSwapMigration.indexOf(
-    "public.sync_tournament_reschedule_match_event(\n        request.swap_match_id",
-    targetSyncIndex,
-  );
+  const syncCall = "perform public.sync_tournament_reschedule_match_event(";
+  const targetSyncIndex = atomicSwapMigration.indexOf(syncCall, releaseIndex);
+  const swapSyncIndex = atomicSwapMigration.indexOf(syncCall, targetSyncIndex + 1);
 
   assert.ok(releaseIndex >= 0);
   assert.ok(targetSyncIndex > releaseIndex);
   assert.ok(swapSyncIndex > targetSyncIndex);
+  assert.match(atomicSwapMigration.slice(targetSyncIndex, swapSyncIndex), /request\.match_id/);
+  assert.match(atomicSwapMigration.slice(swapSyncIndex), /request\.swap_match_id/);
   assert.match(
     atomicSwapMigration,
     /delete from public\.calendar_occupations as occupation[\s\S]*using public\.event_resources as event_resource/,
