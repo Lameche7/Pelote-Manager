@@ -68,7 +68,7 @@ test("une réservation peut être rattachée à une rencontre et décorée par s
   assert.match(baseMigration, /list_available_slots_v3/);
   assert.match(baseMigration, /'championship_match'/);
   assert.match(baseMigration, /get_public_tv_championship_slot_decorations/);
-  assert.match(calendarService, /list_available_slots_v3/);
+  assert.match(calendarService, /list_available_slots_v4/);
 });
 
 test("le paiement des rencontres est paramétrable par club", () => {
