@@ -68,7 +68,7 @@ test("la page résultats sépare résultats récents et prochains matchs", () =>
   assert.match(seriesView, /<MatchTeamLabel label=\{match\.teamALabel\} \/>/);
   assert.match(seriesView, /<MatchTeamLabel label=\{match\.teamBLabel\} \/>/);
   assert.match(seriesView, /<h3>Résultats<\/h3>/);
-  assert.match(seriesView, /<h3>Prochains matchs<\/h3>/);
+  assert.match(seriesView, /<h3>Prochaines parties<\/h3>/);
   assert.match(seriesView, /match\.resultStatus !== null/);
   assert.match(seriesView, /match\.resultStatus === null/);
   assert.match(seriesView, /scoreLabel\(match\)/);
