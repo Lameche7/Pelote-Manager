@@ -82,3 +82,27 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: node --test tests/networkClubUserAdmin.test.mjs tests/adminAccessHardening.test.mjs
+
+  sql-network-user-admin:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Préparer le schéma isolé et valider la migration SQL
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261008211000_scope_admin_profiles_to_club.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -c "select count(*) from public.list_profiles_for_admin();" >/dev/null && exit 1 || true
