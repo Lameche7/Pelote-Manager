@@ -35,3 +35,9 @@ test("la limite d'un administrateur par club est aussi appliquée aux écritures
   assert.match(migration, /where p.id = new.profile_id for update/);
   assert.match(migration, /cm.club_id <> new.club_id/);
 });
+
+test("les trois fonctions PL/pgSQL se terminent avec END point-virgule", () => {
+  const bodies = migration.match(/end;\s*\$function\$;/gi) ?? [];
+  assert.equal(bodies.length, 3);
+  assert.doesNotMatch(migration, /end\s*\n\$function\$;/i);
+});
