@@ -30,7 +30,7 @@ test("la page résultats devient sportive après publication", async () => {
   assert.match(page, /<TournamentResultsBoard/);
   assert.match(board, /Séries du tournoi/);
   assert.match(board, /Poule \{pool\.number\}/);
-  assert.match(board, />Matchs</);
+  assert.match(board, /<h3>Parties<\/h3>/);
   assert.match(board, />Classement</);
   assert.match(board, /Score attendu/);
   assert.match(board, /À valider/);
