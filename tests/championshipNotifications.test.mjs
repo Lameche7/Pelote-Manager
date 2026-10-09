@@ -31,8 +31,8 @@ test("les rappels championnat utilisent la programmation réelle", async () => {
 test("une proposition de résultat supprime la relance après-partie", async () => {
   const migration = await readFile(reminderMigration, "utf8");
   assert.match(migration, /archive_championship_result_entry_reminders/);
-  assert.match(migration, /submission\.status = 'pending'/);
-  assert.match(migration, /communication\.status = 'archived'/);
+  assert.match(migration, /if new\.status = 'pending' then/);
+  assert.match(migration, /set status = 'archived'/);
 });
 
 test("le serveur ouvre la saisie selon la programmation réelle", async () => {
