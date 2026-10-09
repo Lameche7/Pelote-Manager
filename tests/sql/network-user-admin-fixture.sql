@@ -24,7 +24,7 @@ create function public.admin_current_club_id() returns uuid
  language plpgsql stable security definer set search_path='' as $$
  declare n int; cid uuid;
  begin
- select count(*),min(club_id) into n,cid from public.club_memberships
+ select count(*),(array_agg(club_id))[1] into n,cid from public.club_memberships
  where profile_id=auth.uid();
  if n!=1 then raise exception 'Club selection required' using errcode='P0003'; end if;
  return cid;
