@@ -159,7 +159,7 @@ test("un joueur peut être remplacé sans reconstruire le planning", async () =>
   assert.match(service, /admin_replace_tournament_player/);
   assert.match(page, />\s*Remplacer\s*</);
   assert.match(page, /Son futur compte PILOTOKI pourra reconnaître cette participation/);
-  assert.match(page, /la série, la poule, le planning et les matchs sont[\s\S]*conservés/i);
+  assert.match(page, /L’équipe, la série, la poule, le planning et les parties sont[\s\S]*conservés/i);
 });
 
 
