@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { RouteScrollReset } from "@/app/router/RouteScrollReset";
 import { ExternalParticipationPrompt } from "@/features/auth/components/ExternalParticipationPrompt";
@@ -11,6 +11,7 @@ import {
   NOTIFICATIONS_CHANGED_EVENT,
   notificationService,
 } from "@/features/notifications/services/notificationService";
+import { clubBrandingService } from "@/features/home/services/clubBrandingService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
@@ -19,9 +20,42 @@ import "./MainLayout.css";
 const navClassName = ({ isActive }: { isActive: boolean }) =>
   `app-navigation__link${isActive ? " app-navigation__link--active" : ""}`;
 
+type ClubLayoutStyle = CSSProperties & {
+  "--club-primary": string;
+  "--club-secondary": string;
+  "--club-accent": string;
+  "--club-neutral": string;
+};
+
 export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const [branding, setBranding] = useState(clubBrandingService.fallback);
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
+  const clubSlug =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("club")?.trim() || null;
+  const layoutStyle: ClubLayoutStyle = {
+    "--club-primary": branding.primaryColor,
+    "--club-secondary": branding.secondaryColor,
+    "--club-accent": branding.accentColor,
+    "--club-neutral": branding.neutralColor,
+  };
+
+  useEffect(() => {
+    let active = true;
+    const reloadBranding = () => {
+      void clubBrandingService.getPublicBranding(clubSlug).then((value) => {
+        if (active) setBranding(value);
+      }).catch(() => undefined);
+    };
+    reloadBranding();
+    window.addEventListener("club-branding-updated", reloadBranding);
+    return () => {
+      active = false;
+      window.removeEventListener("club-branding-updated", reloadBranding);
+    };
+  }, [clubSlug]);
   const [isAdminAccessLoading, setIsAdminAccessLoading] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
@@ -95,7 +129,7 @@ export function MainLayout() {
   }, [isAuthenticated, isLoading, user]);
 
   return (
-    <div className="app-layout">
+    <div className="app-layout" style={layoutStyle}>
       <RouteScrollReset />
       <ExternalParticipationPrompt />
       <header className="app-header">

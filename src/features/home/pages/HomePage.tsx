@@ -57,8 +57,14 @@ type ClubHeroStyle = CSSProperties & {
 
 type PublicEventCardStyle = CSSProperties & { "--event-accent": string };
 
+const showOctoberRose = () => {
+  const today = new Date();
+  return today.getFullYear() === 2026 && today.getMonth() === 9;
+};
+
 export function HomePage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const octoberRoseVisible = showOctoberRose();
   const publicClubSlug =
     typeof window === "undefined"
       ? null
@@ -150,11 +156,20 @@ export function HomePage() {
       <section className="premium-home__hero" aria-labelledby="home-title">
         <div className="premium-home__veil" aria-hidden="true" />
         <div className="premium-home__content">
-          <img
-            className="premium-home__logo"
-            src={branding.logoUrl}
-            alt={branding.name}
-          />
+          <div className="premium-home__identity">
+            <img
+              className="premium-home__logo"
+              src={branding.logoUrl}
+              alt={branding.name}
+            />
+            {octoberRoseVisible && (
+              <img
+                className="premium-home__october-rose-ribbon"
+                src="/branding/octobre-rose-ribbon.svg"
+                alt="Octobre Rose — sensibilisation au cancer du sein"
+              />
+            )}
+          </div>
           <h1 id="home-title">{branding.name}</h1>
           <img
             className="premium-home__pilotoki-logo"

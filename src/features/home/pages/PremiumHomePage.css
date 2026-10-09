@@ -71,6 +71,28 @@
     drop-shadow(0 0.4rem 0.9rem rgb(0 0 0 / 32%));
 }
 
+.premium-home__identity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.2rem, 3vw, 2.5rem);
+  max-width: 100%;
+  margin-bottom: 0.7rem;
+}
+
+.premium-home__identity .premium-home__logo {
+  margin-bottom: 0;
+}
+
+.premium-home__october-rose-ribbon {
+  display: block;
+  width: clamp(7rem, 15vw, 11rem);
+  height: clamp(10rem, 21vw, 15rem);
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0.4rem 0.8rem rgb(0 0 0 / 32%));
+}
+
 .premium-home__eyebrow {
   margin: 0;
   color: rgb(255 255 255 / 80%);
@@ -363,6 +385,19 @@
 
   .premium-home__pilotoki-logo {
     width: min(14rem, 72vw);
+  }
+
+  .premium-home__identity {
+    gap: 0.8rem;
+  }
+
+  .premium-home__identity .premium-home__logo {
+    width: min(38vw, 9rem);
+  }
+
+  .premium-home__october-rose-ribbon {
+    width: min(30vw, 7.5rem);
+    height: min(45vw, 11rem);
   }
 
   .premium-home__actions {

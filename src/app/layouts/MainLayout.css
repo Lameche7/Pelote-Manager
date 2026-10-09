@@ -1,3 +1,44 @@
+/* Palette propre au club, chargée à l'échelle de l'application. */
+.app-layout {
+  --brand-green: var(--club-primary, #0f3d2e);
+  --brand-blue: var(--club-secondary, #1e5aa8);
+  --brand-red: var(--club-accent, #b22525);
+  --muted: var(--club-neutral, #6b7280);
+}
+
+.app-layout .app-header {
+  background: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--club-primary, #0f3d2e) 72%, #000),
+    color-mix(in srgb, var(--club-primary, #0f3d2e) 84%, #000) 52%,
+    color-mix(in srgb, var(--club-primary, #0f3d2e) 68%, #000)
+  );
+}
+
+.app-layout .app-footer {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--club-primary, #0f3d2e) 72%, #000),
+    color-mix(in srgb, var(--club-primary, #0f3d2e) 85%, #000)
+  );
+}
+
+.app-layout .button--primary {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--club-accent, #b22525) 80%, #fff),
+    var(--club-accent, #b22525)
+  );
+}
+
+.app-layout .button--secondary {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--club-secondary, #1e5aa8) 82%, #000),
+    var(--club-secondary, #1e5aa8)
+  );
+}
+
 .app-navigation__link {
   display: inline-flex;
   align-items: center;
