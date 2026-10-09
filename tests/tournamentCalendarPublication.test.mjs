@@ -87,7 +87,7 @@ test("l administration expose une étape Publication distincte du Planning", () 
   assert.match(service, /admin_publish_tournament_planning/);
   assert.match(service, /admin_unpublish_tournament_planning/);
   assert.match(page, /Publication du planning/);
-  assert.match(page, /Publier .* matchs dans le calendrier/);
+  assert.match(page, /Publier .* parties dans le calendrier/);
   assert.match(page, /Retirer du calendrier pour modifier/);
   assert.match(
     routes,
