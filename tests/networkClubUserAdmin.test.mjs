@@ -32,8 +32,8 @@ test("licence distincte de l'administration", () => {
 test(
   "un administrateur de club ne peut pas être nommé administrateur d'un second club",
   () => {
-  assert.match(migration, /other_membership.club_id<>actor_club_id/);
-  assert.match(migration, /other_role.key='administrator'/);
+    assert.match(migration, /other_membership.club_id<>actor_club_id/);
+    assert.match(migration, /other_role.key='administrator'/);
     assert.match(migration, /already administers another club/);
   },
 );
@@ -41,12 +41,12 @@ test(
 test(
   "la limite d'un administrateur par club est aussi appliquée aux écritures directes",
   () => {
-  assert.match(migration, /create trigger enforce_single_club_administrator/);
-  assert.match(
-    migration,
-    /before insert or update of club_id, profile_id, role_id/,
-  );
-  assert.match(migration, /where p.id = new.profile_id for update/);
+    assert.match(migration, /create trigger enforce_single_club_administrator/);
+    assert.match(
+      migration,
+      /before insert or update of club_id, profile_id, role_id/,
+    );
+    assert.match(migration, /where p.id = new.profile_id for update/);
     assert.match(migration, /cm.club_id <> new.club_id/);
   },
 );
