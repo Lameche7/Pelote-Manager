@@ -132,19 +132,3 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  main-baseline:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - name: Baseline tests main
-        run: npm run test
-      - name: Baseline format main
-        if: always()
-        run: npm run format:check
