@@ -415,7 +415,8 @@ export function TvDisplayPage() {
   }, [activeView, display?.status, display?.viewDurationSeconds, viewOrder]);
 
   const clubName = display?.clubName || CLUB_CONFIG.name;
-  const logoUrl = branding.logoUrl || display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
+  const logoUrl =
+    branding.logoUrl || display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
   const isOctoberRose = now.getFullYear() === 2026 && now.getMonth() === 9;
   const tvBrandStyle = {
     "--tv-club-primary": branding.primaryColor,
