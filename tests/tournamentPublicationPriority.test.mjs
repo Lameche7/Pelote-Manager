@@ -63,6 +63,6 @@ test("l'interface publie en priorité au lieu de bloquer sur les impacts", () =>
     page,
     /preview\?\.tournament\.status === "planning_generated" && complete/,
   );
-  assert.match(page, /Publier \$\{preview\.matchCount\} matchs en priorité/);
+  assert.match(page, /Publier \$\{preview\.matchCount\} parties en priorité/);
   assert.match(page, /Le tournoi est prioritaire/);
 });
