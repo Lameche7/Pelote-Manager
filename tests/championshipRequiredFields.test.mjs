@@ -4,7 +4,7 @@ import test from "node:test";
 
 const source = await readFile(
   new URL(
-    "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
+    "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
     import.meta.url,
   ),
   "utf8",
@@ -25,9 +25,9 @@ test("signale les scores obligatoires de la saisie de résultat", () => {
 });
 
 test("conserve le commentaire de résultat facultatif", () => {
-  assert.match(source, /Commentaire facultatif/);
+  assert.match(source, /<span>Commentaire<\/span>/);
   assert.doesNotMatch(
     source,
-    /Commentaire facultatif[^<]*<RequiredFieldMark \/>/,
+    /<span>Commentaire<\/span>\s*<RequiredFieldMark \/>/,
   );
 });
