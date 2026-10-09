@@ -149,6 +149,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format
+      - name: Show workflow formatting changes
+        run: git diff -- .github/workflows/ci.yml
       - name: Commit normalized files
         run: |
           git config user.name 'github-actions[bot]'
