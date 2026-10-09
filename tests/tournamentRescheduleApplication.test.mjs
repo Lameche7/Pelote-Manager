@@ -176,10 +176,10 @@ test("un échange libère les deux occupations calendrier avant de recréer les 
     "event_resource.event_id in (target_event_id, swap_event_id)",
   );
   const targetSyncIndex = atomicSwapMigration.indexOf(
-    "public.sync_tournament_reschedule_match_event(\\n        request.match_id",
+    "public.sync_tournament_reschedule_match_event(\n        request.match_id",
   );
   const swapSyncIndex = atomicSwapMigration.indexOf(
-    "public.sync_tournament_reschedule_match_event(\\n        request.swap_match_id",
+    "public.sync_tournament_reschedule_match_event(\n        request.swap_match_id",
   );
 
   assert.ok(releaseIndex >= 0);
