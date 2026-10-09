@@ -126,7 +126,7 @@ test("l interface réserve directement et garde la réactivation admin", async (
 
   assert.match(bookingPage, /paymentEnabled/);
   assert.match(bookingPage, /: "Réserver"/);
-  assert.match(bookingService, /get_online_payment_enabled/);
+  assert.match(bookingService, /getPaymentConfig/);
   assert.match(bookingService, /createDirect/);
   assert.match(adminPage, /Paiement en ligne/);
   assert.match(adminPage, /Désactivé — réservation confirmée directement/);
