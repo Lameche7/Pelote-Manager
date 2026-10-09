@@ -41,7 +41,10 @@ test(
 test(
   "la limite d'un administrateur par club est aussi appliquée aux écritures directes",
   () => {
-    assert.match(migration, /create trigger enforce_single_club_administrator/);
+    assert.match(
+      migration,
+      /create trigger enforce_single_club_administrator/,
+    );
     assert.match(
       migration,
       /before insert or update of club_id, profile_id, role_id/,
