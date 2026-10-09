@@ -156,23 +156,26 @@ export function HomePage() {
       <section className="premium-home__hero" aria-labelledby="home-title">
         <div className="premium-home__veil" aria-hidden="true" />
         <div className="premium-home__content">
-          <img
-            className="premium-home__logo"
-            src={branding.logoUrl}
-            alt={branding.name}
-          />
+          <div className="premium-home__identity">
+            <img
+              className="premium-home__logo"
+              src={branding.logoUrl}
+              alt={branding.name}
+            />
+            {octoberRoseVisible && (
+              <img
+                className="premium-home__october-rose-ribbon"
+                src="/branding/octobre-rose-ribbon.svg"
+                alt="Octobre Rose — sensibilisation au cancer du sein"
+              />
+            )}
+          </div>
           <h1 id="home-title">{branding.name}</h1>
           <img
             className="premium-home__pilotoki-logo"
             src="/branding/pilotoki-wordmark.png"
             alt="PILOTOKI"
           />
-          {octoberRoseVisible && (
-            <div className="premium-home__october-rose" aria-label="Octobre Rose — soutien à la sensibilisation au cancer du sein">
-              <img src="/branding/octobre-rose-ribbon.svg" alt="" aria-hidden="true" />
-              <span>Octobre Rose</span>
-            </div>
-          )}
           <p className="premium-home__signature">
             {CLUB_CONFIG.foundedYear && (
               <>
