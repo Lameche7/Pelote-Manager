@@ -21,7 +21,10 @@ test("l'écran TV récupère la palette du club au démarrage puis quotidienneme
 
 test("le ruban saisonnier est placé à droite du nom du club TV", async () => {
   const page = await read("../src/features/tv/pages/TvDisplayPage.tsx");
-  assert.match(page, /now\.getFullYear\(\) === 2026 && now\.getMonth\(\) === 9/);
+  assert.match(
+    page,
+    /now\.getFullYear\(\) === 2026 && now\.getMonth\(\) === 9/,
+  );
   assert.match(page, /<h1>\{clubName\}<\/h1>[\s\S]*isOctoberRose/);
   assert.match(page, /\/branding\/octobre-rose-ribbon\.svg/);
 });
