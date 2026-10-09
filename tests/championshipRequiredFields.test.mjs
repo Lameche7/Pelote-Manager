@@ -13,15 +13,9 @@ const source = await readFile(
 test("signale les scores obligatoires de la saisie de résultat", () => {
   assert.match(source, /RequiredFieldMark/);
   assert.match(source, /RequiredFieldsNotice/);
-  assert.match(
-    source,
-    /\{isSets \? "Nos manches" : "Nos points"\} <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    source,
-    /\{isSets \? "Manches adverses" : "Points adverses"\}\{" "\}\s*<RequiredFieldMark \/>/,
-  );
-  assert.match(source, /<RequiredFieldsNotice \/>/);
+  assert.match(source, /Notre score <RequiredFieldMark \\/>/);
+  assert.match(source, /Score adverse <RequiredFieldMark \\/>/);
+  assert.match(source, /<RequiredFieldsNotice \\/>/);
 });
 
 test("conserve le commentaire de résultat facultatif", () => {
