@@ -12,7 +12,10 @@ type ChampionshipRpc = (
 const rpc = supabase.rpc.bind(supabase) as unknown as ChampionshipRpc;
 
 export const championshipSourceUrlService = {
-  async update(championshipId: string, sourceUrl: string): Promise<string | null> {
+  async update(
+    championshipId: string,
+    sourceUrl: string,
+  ): Promise<string | null> {
     const { data, error } = await rpc("admin_update_championship_source_url", {
       target_id: championshipId,
       source_url: sourceUrl,

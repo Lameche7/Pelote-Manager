@@ -74,7 +74,9 @@ export function ChampionshipSourceUrlEditor({
       </button>
       {error && <p className="admin-championship-results__error">{error}</p>}
       {message && (
-        <p className="admin-championship-results__official-success">{message}</p>
+        <p className="admin-championship-results__official-success">
+          {message}
+        </p>
       )}
       <small>
         Une seule URL suffit : PILOTOKI parcourt ensuite les différentes séries

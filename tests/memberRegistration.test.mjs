@@ -192,5 +192,8 @@ test("un compte déjà lié ne rejoue jamais le cleanup d'inscription", () => {
 
 test("les licences numériques courtes sont complétées à 6 chiffres", () => {
   assert.match(memberServiceSource, /compact\.padStart\(6, "0"\)/);
-  assert.match(memberServiceSource, /licence_number: normalizeLicenceNumber\(identity\.licenceNumber\)/);
+  assert.match(
+    memberServiceSource,
+    /licence_number: normalizeLicenceNumber\(identity\.licenceNumber\)/,
+  );
 });

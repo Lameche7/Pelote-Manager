@@ -71,7 +71,8 @@ const standardCards: DashboardCard[] = [
   },
   {
     title: "Arbitrage",
-    description: "Voir les parties à arbitrer et prendre un arbitrage à domicile.",
+    description:
+      "Voir les parties à arbitrer et prendre un arbitrage à domicile.",
     icon: WhistleIcon,
     to: ROUTES.myRefereeing,
   },

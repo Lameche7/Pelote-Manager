@@ -672,7 +672,9 @@ export function AdminTournamentResultsPage() {
                   {editingMatch.seriesName} · {matchStageLabel(editingMatch)}
                 </span>
                 <h2 id="tournament-score-editor-title">
-                  {editingMatch.result ? "Modifier le score" : "Saisir le score"}
+                  {editingMatch.result
+                    ? "Modifier le score"
+                    : "Saisir le score"}
                 </h2>
                 <p>
                   {editingMatch.teamALabel} — {editingMatch.teamBLabel}

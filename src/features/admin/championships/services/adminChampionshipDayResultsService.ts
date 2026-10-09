@@ -100,10 +100,7 @@ export const adminChampionshipDayResultsService = {
     });
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(
-          error,
-          "Impossible d’enregistrer ce résultat.",
-        ),
+        getSupabaseErrorMessage(error, "Impossible d’enregistrer ce résultat."),
       );
     }
   },

@@ -10,7 +10,10 @@ const migration = fs.readFileSync(
   "utf8",
 );
 const service = fs.readFileSync(
-  new URL("../src/features/licences/services/licenceService.ts", import.meta.url),
+  new URL(
+    "../src/features/licences/services/licenceService.ts",
+    import.meta.url,
+  ),
   "utf8",
 );
 const page = fs.readFileSync(
@@ -22,10 +25,7 @@ test("le portail licence est explicitement scoped par club", () => {
   assert.match(migration, /list_my_licence_clubs/);
   assert.match(migration, /get_my_licence_portal_for_club/);
   assert.match(migration, /start_my_licence_request_for_club/);
-  assert.match(
-    migration,
-    /profile_club_member_id\(actor_id, target_club_id\)/,
-  );
+  assert.match(migration, /profile_club_member_id\(actor_id, target_club_id\)/);
 });
 
 test("les nouvelles RPC licence ne sont pas exposées à anon", () => {

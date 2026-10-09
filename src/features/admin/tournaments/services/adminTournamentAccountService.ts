@@ -21,11 +21,7 @@ export type TournamentAccountAuditRow = {
   externalIdentityId: string;
   firstName: string;
   lastName: string;
-  status:
-    | "recognized"
-    | "pending_confirmation"
-    | "probable"
-    | "unmatched";
+  status: "recognized" | "pending_confirmation" | "probable" | "unmatched";
   linkedProfile: TournamentAccountCandidate | null;
   participations: Array<{
     teamId: string;

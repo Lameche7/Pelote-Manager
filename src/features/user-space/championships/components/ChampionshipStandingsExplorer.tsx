@@ -171,7 +171,8 @@ export function ChampionshipStandingsExplorer({
   const hasOfficialStanding = standings.some((row) => row.hasOfficialStanding);
   const qualificationCutoff = generalStandings[0]?.qualificationCutoff ?? null;
   const qualificationSource = generalStandings[0]?.qualificationSource ?? null;
-  const myGeneralStanding = generalStandings.find((row) => row.isMyTeam) ?? null;
+  const myGeneralStanding =
+    generalStandings.find((row) => row.isMyTeam) ?? null;
 
   return (
     <section
@@ -186,8 +187,8 @@ export function ChampionshipStandingsExplorer({
           <p>Classements officiels</p>
           <h2 id="championship-standings-browser-title">Classements</h2>
           <span>
-            Consultez votre poule puis le classement général à l’issue des poules
-            pour suivre la zone de qualification.
+            Consultez votre poule puis le classement général à l’issue des
+            poules pour suivre la zone de qualification.
           </span>
         </div>
       </header>
@@ -209,7 +210,10 @@ export function ChampionshipStandingsExplorer({
         </div>
       ) : (
         <>
-          <div className="championship-standings-browser__mode-tabs" role="tablist">
+          <div
+            className="championship-standings-browser__mode-tabs"
+            role="tablist"
+          >
             <button
               type="button"
               role="tab"
@@ -263,7 +267,9 @@ export function ChampionshipStandingsExplorer({
                     key={pool.id}
                     role="tab"
                     aria-selected={pool.id === selectedPoolId}
-                    className={pool.id === selectedPoolId ? "is-active" : undefined}
+                    className={
+                      pool.id === selectedPoolId ? "is-active" : undefined
+                    }
                     onClick={() => setSelectedPoolId(pool.id)}
                   >
                     Poule {pool.code}
@@ -289,7 +295,8 @@ export function ChampionshipStandingsExplorer({
 
               {!hasOfficialStanding && (
                 <div className="championship-standings-browser__pending">
-                  Le classement officiel n’a pas encore été publié par le comité.
+                  Le classement officiel n’a pas encore été publié par le
+                  comité.
                 </div>
               )}
 
@@ -303,7 +310,9 @@ export function ChampionshipStandingsExplorer({
                   >
                     <div className="championship-standings-browser__rank">
                       <strong>{team.standingRank ?? "—"}</strong>
-                      {team.standingRank === 1 && <Trophy aria-label="Premier" />}
+                      {team.standingRank === 1 && (
+                        <Trophy aria-label="Premier" />
+                      )}
                       {!hasOfficialStanding && <small>{index + 1}</small>}
                     </div>
                     <TeamIdentity team={team} />
@@ -332,8 +341,9 @@ export function ChampionshipStandingsExplorer({
                   <CheckCircle2 aria-hidden="true" />
                   <div>
                     <strong>
-                      {qualificationCutoff} équipe{qualificationCutoff > 1 ? "s" : ""}{" "}
-                      qualifiée{qualificationCutoff > 1 ? "s" : ""}
+                      {qualificationCutoff} équipe
+                      {qualificationCutoff > 1 ? "s" : ""} qualifiée
+                      {qualificationCutoff > 1 ? "s" : ""}
                     </strong>
                     <span>
                       {myGeneralStanding
@@ -342,7 +352,9 @@ export function ChampionshipStandingsExplorer({
                           : `Votre équipe est actuellement hors de la zone de qualification (${myGeneralStanding.generalRank}e).`
                         : "La zone verte correspond aux places qualificatives."}
                     </span>
-                    {qualificationSource && <small>Source : {qualificationSource}</small>}
+                    {qualificationSource && (
+                      <small>Source : {qualificationSource}</small>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -374,7 +386,9 @@ export function ChampionshipStandingsExplorer({
                       >
                         <div className="championship-standings-browser__rank">
                           <strong>{team.generalRank}</strong>
-                          {team.generalRank === 1 && <Trophy aria-label="Premier" />}
+                          {team.generalRank === 1 && (
+                            <Trophy aria-label="Premier" />
+                          )}
                           {qualified && <small>Qualif.</small>}
                         </div>
                         <div className="championship-standings-browser__team">

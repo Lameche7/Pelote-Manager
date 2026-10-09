@@ -36,8 +36,14 @@ test("le Mode TV PCL accepte directement /tv/pcl sans réécriture bootstrap", a
   assert.match(publicLink, /export const isPublicTvIdentifier/);
   assert.match(publicLink, /export const canonicalizePclTvUrl/);
 
-  assert.match(displayPage, /const tokenIsValid = isPublicTvIdentifier\(token\)/);
-  assert.match(displayPage, /const resolvedToken = resolvePublicTvToken\(token\)/);
+  assert.match(
+    displayPage,
+    /const tokenIsValid = isPublicTvIdentifier\(token\)/,
+  );
+  assert.match(
+    displayPage,
+    /const resolvedToken = resolvePublicTvToken\(token\)/,
+  );
   assert.match(displayPage, /tvDisplayService\.getDisplay\(resolvedToken\)/);
   assert.match(displayPage, /tvMediaService\.list\(resolvedToken\)/);
   assert.match(displayPage, /canonicalizePclTvUrl\(token\)/);

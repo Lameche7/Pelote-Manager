@@ -226,9 +226,7 @@ export function AdminTournamentPlayerFields({
         <label>
           <span>
             E-mail{" "}
-            {!player.emailFromMember && (
-              <strong aria-hidden="true">*</strong>
-            )}
+            {!player.emailFromMember && <strong aria-hidden="true">*</strong>}
           </span>
           <input
             required={!player.emailFromMember}
@@ -246,9 +244,7 @@ export function AdminTournamentPlayerFields({
         <label>
           <span>
             Téléphone{" "}
-            {!player.phoneFromMember && (
-              <strong aria-hidden="true">*</strong>
-            )}
+            {!player.phoneFromMember && <strong aria-hidden="true">*</strong>}
           </span>
           <input
             required={!player.phoneFromMember}

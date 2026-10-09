@@ -58,8 +58,12 @@ const [
   ),
   read("../src/features/tv/services/tvDisplayService.ts"),
   read("../src/features/tv/pages/TvWeeklyView.css"),
-  read("../supabase/migrations/20260926102000_allow_away_championship_match_at_home_venue.sql"),
-  read("../supabase/migrations/20260928170000_add_championship_manual_schedules.sql"),
+  read(
+    "../supabase/migrations/20260926102000_allow_away_championship_match_at_home_venue.sql",
+  ),
+  read(
+    "../supabase/migrations/20260928170000_add_championship_manual_schedules.sql",
+  ),
 ]);
 
 test("une réservation peut être rattachée à une rencontre et décorée par série", () => {
@@ -100,12 +104,24 @@ test("le PCL peut réserver gratuitement sans contourner les contrôles de club"
 
 test("Mes championnats réserve à domicile ou dans notre trinquet après choix explicite", () => {
   assert.match(championshipsPage, /Réserver un créneau/);
-  assert.match(championshipsPage, /Finalement jouer cette partie dans notre trinquet/);
-  assert.match(championshipsPage, /match\.teamSide !== "a" && !match\.playsAtMyClub/);
+  assert.match(
+    championshipsPage,
+    /Finalement jouer cette partie dans notre trinquet/,
+  );
+  assert.match(
+    championshipsPage,
+    /match\.teamSide !== "a" && !match\.playsAtMyClub/,
+  );
   assert.match(championshipsService, /get_my_championship_venue_overrides/);
   assert.match(championshipsService, /set_my_championship_home_venue/);
-  assert.match(awayHomeVenueMigration, /championship_match_club_venue_overrides/);
-  assert.match(awayHomeVenueMigration, /team_player\.team_id = match\.team2_id/);
+  assert.match(
+    awayHomeVenueMigration,
+    /championship_match_club_venue_overrides/,
+  );
+  assert.match(
+    awayHomeVenueMigration,
+    /team_player\.team_id = match\.team2_id/,
+  );
   assert.match(championshipsPage, /championshipMatch/);
   assert.match(championshipsPage, /match\.reservation/);
   assert.match(championshipsService, /get_my_championship_match_reservations/);
@@ -148,38 +164,29 @@ test("les réservations championnat affichent championnat, série et équipes en
   );
 });
 
-
 test("le serveur garde Equipe2 bloquée sans dérogation explicite de lieu", async () => {
   const migration = await read(
     "../supabase/migrations/20260922103000_championship_home_away_and_opponent_details.sql",
   );
 
-  assert.match(
-    migration,
-    /team_player\.team_id = match\.team1_id/,
-  );
+  assert.match(migration, /team_player\.team_id = match\.team1_id/);
   assert.match(
     migration,
     /new_fragment text := \$new\$[\s\S]*team_player\.team_id = match\.team1_id[\s\S]*\$new\$;/,
   );
-  assert.match(
-    migration,
-    /validate_championship_match_reservation/,
-  );
-  assert.match(
-    migration,
-    /link_my_championship_match_reservation/,
-  );
+  assert.match(migration, /validate_championship_match_reservation/);
+  assert.match(migration, /link_my_championship_match_reservation/);
 });
-
 
 test("une partie extérieure peut être déclarée dans notre trinquet sans changer domicile extérieur", () => {
   assert.match(awayHomeVenueMigration, /set_my_championship_home_venue/);
   assert.match(awayHomeVenueMigration, /venue_override\.enabled/);
   assert.match(awayHomeVenueMigration, /match\.team2_id/);
-  assert.doesNotMatch(awayHomeVenueMigration, /update public\.championship_matches/);
+  assert.doesNotMatch(
+    awayHomeVenueMigration,
+    /update public\.championship_matches/,
+  );
 });
-
 
 test("Mes championnats utilise la programmation réelle sans afficher de date limite fédérale", () => {
   assert.match(championshipsPage, /reservationDateTimeParts/);
@@ -189,5 +196,8 @@ test("Mes championnats utilise la programmation réelle sans afficher de date li
   assert.doesNotMatch(championshipsPage, /Date limite fédérale/);
   assert.match(championshipsService, /get_my_championship_manual_schedules/);
   assert.match(championshipsService, /set_my_championship_manual_schedule/);
-  assert.match(effectiveScheduleMigration, /championship_match_manual_schedules/);
+  assert.match(
+    effectiveScheduleMigration,
+    /championship_match_manual_schedules/,
+  );
 });

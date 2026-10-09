@@ -42,7 +42,8 @@ const staleReasonLabels: Record<string, string> = {
   swap_match_has_result:
     "La partie proposée pour l’échange possède désormais un résultat.",
   match_unpublished: "La partie n’est plus publiée.",
-  swap_match_unpublished: "La partie proposée pour l’échange n’est plus publié.",
+  swap_match_unpublished:
+    "La partie proposée pour l’échange n’est plus publié.",
   target_slot_invalid:
     "Le créneau demandé n’est plus disponible dans le tournoi.",
   target_slot_started: "Le créneau demandé a déjà commencé.",

@@ -69,11 +69,16 @@ const knownErrors: Record<string, string> = {
     "Choisissez l’équipe à l’origine de la demande.",
   "Tournament reschedule offline contact note is required":
     "Indiquez comment la demande a été recueillie hors application.",
-  "Exceptional reschedule slot occupied": "Le terrain est déjà occupé sur ce créneau.",
-  "Exceptional reschedule match conflict": "Conflit avec une autre partie ou une équipe.",
-  "Exceptional reschedule resource is not authorized": "Ce terrain n’est pas autorisé pour le tournoi.",
-  "Exceptional reschedule must be in the future": "Choisissez un créneau futur.",
-  "Exceptional reschedule end must be after start": "L’heure de fin doit être postérieure au début.",
+  "Exceptional reschedule slot occupied":
+    "Le terrain est déjà occupé sur ce créneau.",
+  "Exceptional reschedule match conflict":
+    "Conflit avec une autre partie ou une équipe.",
+  "Exceptional reschedule resource is not authorized":
+    "Ce terrain n’est pas autorisé pour le tournoi.",
+  "Exceptional reschedule must be in the future":
+    "Choisissez un créneau futur.",
+  "Exceptional reschedule end must be after start":
+    "L’heure de fin doit être postérieure au début.",
   "Tournament reschedule proposal is no longer available":
     "Ce créneau n’est plus disponible. Rechargez les créneaux puis réessayez.",
 };

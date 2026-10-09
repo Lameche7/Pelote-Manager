@@ -134,7 +134,6 @@ test("les coordonnées d'équipe sont dérivées des joueurs et ne sont plus sai
   assert.match(page, /Coordonnées joueurs/);
 });
 
-
 test("un joueur peut être remplacé sans reconstruire le planning", async () => {
   const [migration, service, page] = await Promise.all([
     read(
@@ -151,17 +150,31 @@ test("un joueur peut être remplacé sans reconstruire le planning", async () =>
   assert.match(migration, /admin_replace_tournament_player/);
   assert.match(migration, /tournament_player_replaced/);
   assert.match(migration, /identity\.source = 'admin_replacement'/);
-  assert.match(migration, /Replacement participation email does not match profile/);
-  assert.match(migration, /target_tournament\.status in \('completed', 'archived', 'cancelled'\)/);
+  assert.match(
+    migration,
+    /Replacement participation email does not match profile/,
+  );
+  assert.match(
+    migration,
+    /target_tournament\.status in \('completed', 'archived', 'cancelled'\)/,
+  );
   assert.doesNotMatch(migration, /delete from public\.tournament_matches/);
-  assert.doesNotMatch(migration, /delete from public\.tournament_match_planning/);
+  assert.doesNotMatch(
+    migration,
+    /delete from public\.tournament_match_planning/,
+  );
   assert.doesNotMatch(migration, /delete from public\.tournament_pools/);
   assert.match(service, /admin_replace_tournament_player/);
   assert.match(page, />\s*Remplacer\s*</);
-  assert.match(page, /Son futur compte PILOTOKI pourra reconnaître cette participation/);
-  assert.match(page, /L’équipe, la série, la poule, le planning et les parties sont[\s\S]*conservés/i);
+  assert.match(
+    page,
+    /Son futur compte PILOTOKI pourra reconnaître cette participation/,
+  );
+  assert.match(
+    page,
+    /L’équipe, la série, la poule, le planning et les parties sont[\s\S]*conservés/i,
+  );
 });
-
 
 test("le remplacement indique les champs obligatoires et rend le club facultatif", async () => {
   const [migration, playerFields, page, service] = await Promise.all([
@@ -186,11 +199,20 @@ test("le remplacement indique les champs obligatoires et rend le club facultatif
   assert.match(playerFields, /champ obligatoire/);
   assert.match(page, /clubRequired=\{false\}/);
   assert.match(page, /Le prénom et le nom du remplaçant sont obligatoires/);
-  assert.match(page, /L’e-mail et le téléphone du remplaçant sont obligatoires/);
-  assert.match(service, /Le prénom, le nom, l’e-mail et le téléphone du remplaçant sont obligatoires/);
+  assert.match(
+    page,
+    /L’e-mail et le téléphone du remplaçant sont obligatoires/,
+  );
+  assert.match(
+    service,
+    /Le prénom, le nom, l’e-mail et le téléphone du remplaçant sont obligatoires/,
+  );
   const replacementGuard = migration.slice(
     migration.indexOf("new_fragment text := $new$"),
-    migration.indexOf("$new$;", migration.indexOf("new_fragment text := $new$")) + 6,
+    migration.indexOf(
+      "$new$;",
+      migration.indexOf("new_fragment text := $new$"),
+    ) + 6,
   );
   assert.doesNotMatch(replacementGuard, /replacement_club_name = ''/);
   assert.match(
@@ -199,16 +221,24 @@ test("le remplacement indique les champs obligatoires et rend le club facultatif
   );
 });
 
-
 test("un remplacement resynchronise les libellés du calendrier Réservations", async () => {
   const migration = await read(
     "../supabase/migrations/20260922090000_sync_replacement_labels_to_calendar.sql",
   );
 
   assert.match(migration, /sync_tournament_team_calendar_labels/);
-  assert.match(migration, /public\.tournament_team_public_label\(match\.team_a_id\)/);
-  assert.match(migration, /public\.tournament_team_public_label\(match\.team_b_id\)/);
+  assert.match(
+    migration,
+    /public\.tournament_team_public_label\(match\.team_a_id\)/,
+  );
+  assert.match(
+    migration,
+    /public\.tournament_team_public_label\(match\.team_b_id\)/,
+  );
   assert.match(migration, /update public\.events as event/);
   assert.match(migration, /update public\.calendar_occupations as occupation/);
-  assert.match(migration, /perform public\.sync_tournament_team_calendar_labels\(target_team\.id\)/);
+  assert.match(
+    migration,
+    /perform public\.sync_tournament_team_calendar_labels\(target_team\.id\)/,
+  );
 });

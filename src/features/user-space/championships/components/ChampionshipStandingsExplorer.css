@@ -283,7 +283,8 @@
   background: rgb(148 163 184 / 9%);
 }
 
-.championship-standings-browser__row.is-qualified .championship-standings-browser__rank {
+.championship-standings-browser__row.is-qualified
+  .championship-standings-browser__rank {
   background: rgb(22 163 74 / 10%);
 }
 

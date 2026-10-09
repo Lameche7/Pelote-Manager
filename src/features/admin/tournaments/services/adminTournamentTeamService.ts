@@ -133,8 +133,7 @@ const knownErrors: Record<string, string> = {
     "Ce joueur participe déjà à une autre équipe de cette série.",
   "Tournament player replacement is closed":
     "Les remplacements ne sont plus possibles pour ce tournoi.",
-  "Tournament team is not active":
-    "Cette équipe n’est plus active.",
+  "Tournament team is not active": "Cette équipe n’est plus active.",
 };
 
 const fail = (error: unknown, fallback: string): never => {

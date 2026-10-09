@@ -32,7 +32,10 @@ const rememberDismissed = (profileId: string, value: string) => {
   try {
     const current = readDismissed(profileId);
     current.add(value);
-    window.sessionStorage.setItem(storageKey(profileId), JSON.stringify([...current]));
+    window.sessionStorage.setItem(
+      storageKey(profileId),
+      JSON.stringify([...current]),
+    );
   } catch {
     // Le stockage de session peut être indisponible en navigation privée stricte.
   }
@@ -51,9 +54,9 @@ const roleLabel = (candidate: ExternalParticipationCandidate) =>
 export function ExternalParticipationPrompt() {
   const { isAuthenticated, isLoading, profile } = useAuth();
   const location = useLocation();
-  const [candidates, setCandidates] = useState<ExternalParticipationCandidate[]>(
-    [],
-  );
+  const [candidates, setCandidates] = useState<
+    ExternalParticipationCandidate[]
+  >([]);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState("");
 

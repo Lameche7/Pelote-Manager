@@ -56,7 +56,9 @@ export const clubMediaService = {
     const clubId = await currentClubId();
     const { data, error } = await supabase
       .from("club_tv_media")
-      .select("id, club_id, kind, storage_path, original_name, active_until, created_at")
+      .select(
+        "id, club_id, kind, storage_path, original_name, active_until, created_at",
+      )
       .eq("club_id", clubId)
       .order("created_at", { ascending: true });
 
@@ -64,7 +66,11 @@ export const clubMediaService = {
     return (data ?? []).map((row) => mapMedia(row as Record<string, unknown>));
   },
 
-  async upload(kind: ClubTvMediaKind, file: File, activeUntil: string | null = null): Promise<ClubTvMedia> {
+  async upload(
+    kind: ClubTvMediaKind,
+    file: File,
+    activeUntil: string | null = null,
+  ): Promise<ClubTvMedia> {
     validateFile(file);
     const clubId = await currentClubId();
     const extension = extensionByMimeType[file.type];

@@ -72,8 +72,18 @@ test("l’espace personnel expose la route Mes championnats", async () => {
 test("l’interface expose les classements officiels et la navigation joueur", async () => {
   const [page, standings, results] = await Promise.all([
     read(pageUrl),
-    read(new URL("../src/features/user-space/championships/components/ChampionshipStandingsExplorer.tsx", import.meta.url)),
-    read(new URL("../src/features/user-space/championships/components/ChampionshipResultsExplorer.tsx", import.meta.url)),
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipStandingsExplorer.tsx",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipResultsExplorer.tsx",
+        import.meta.url,
+      ),
+    ),
   ]);
   assert.match(page, /ChampionshipStandingsExplorer/);
   assert.match(page, /ChampionshipResultsExplorer/);
@@ -86,9 +96,24 @@ test("l’interface expose les classements officiels et la navigation joueur", a
 
 test("les rencontres indiquent domicile extérieur et la composition adverse", async () => {
   const [card, service, migration] = await Promise.all([
-    read(new URL("../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx", import.meta.url)),
-    read(new URL("../src/features/user-space/championships/services/myChampionshipsService.ts", import.meta.url)),
-    read(new URL("../supabase/migrations/20260922103000_championship_home_away_and_opponent_details.sql", import.meta.url)),
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../src/features/user-space/championships/services/myChampionshipsService.ts",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../supabase/migrations/20260922103000_championship_home_away_and_opponent_details.sql",
+        import.meta.url,
+      ),
+    ),
   ]);
   assert.match(card, /À domicile/);
   assert.match(card, /À l’extérieur/);
@@ -102,10 +127,30 @@ test("les rencontres indiquent domicile extérieur et la composition adverse", a
 
 test("les championnats utilisent le responsable d'équipe et restent stables en largeur", async () => {
   const [card, service, styles, migration] = await Promise.all([
-    read(new URL("../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx", import.meta.url)),
-    read(new URL("../src/features/user-space/championships/services/myChampionshipsService.ts", import.meta.url)),
-    read(new URL("../src/features/user-space/championships/pages/MyChampionshipsPage.css", import.meta.url)),
-    read(new URL("../supabase/migrations/20260922110000_add_championship_team_responsible_contacts.sql", import.meta.url)),
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../src/features/user-space/championships/services/myChampionshipsService.ts",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../src/features/user-space/championships/pages/MyChampionshipsPage.css",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../supabase/migrations/20260922110000_add_championship_team_responsible_contacts.sql",
+        import.meta.url,
+      ),
+    ),
   ]);
   assert.match(card, /Responsable adverse/);
   assert.match(card, /opponentResponsibleName/);

@@ -209,9 +209,9 @@ function ResultEditor({
 }
 
 export function AdminChampionshipResultsPage() {
-  const [championships, setChampionships] = useState<AdminChampionshipSummary[]>(
-    [],
-  );
+  const [championships, setChampionships] = useState<
+    AdminChampionshipSummary[]
+  >([]);
   const [championshipId, setChampionshipId] = useState("");
   const [matches, setMatches] = useState<AdminChampionshipDayResult[]>([]);
   const [settings, setSettings] = useState<ChampionshipResultSettings | null>(
@@ -225,7 +225,9 @@ export function AdminChampionshipResultsPage() {
   const [officialUpdateBusy, setOfficialUpdateBusy] = useState(false);
   const [officialUpdateError, setOfficialUpdateError] = useState("");
   const [officialUpdateMessage, setOfficialUpdateMessage] = useState("");
-  const [officialConflicts, setOfficialConflicts] = useState<OfficialResultConflict[]>([]);
+  const [officialConflicts, setOfficialConflicts] = useState<
+    OfficialResultConflict[]
+  >([]);
 
   useEffect(() => {
     let active = true;
@@ -479,9 +481,7 @@ export function AdminChampionshipResultsPage() {
         <div className="admin-championship-results__selection-summary">
           <span>{selectedChampionship?.seasonLabel || "Saison"}</span>
           <strong>
-            {selectedDay
-              ? formatDate(selectedDay)
-              : "Sélectionnez une journée"}
+            {selectedDay ? formatDate(selectedDay) : "Sélectionnez une journée"}
           </strong>
           <small>{matchesForDay.length} partie(s) du club</small>
         </div>
@@ -560,11 +560,17 @@ export function AdminChampionshipResultsPage() {
           {officialConflicts.length > 0 && (
             <div className="admin-championship-results__alert" role="alert">
               <strong>
-                ⚠️ {officialConflicts.length} résultat(s) proposé(s) diffèrent de la FFPB
+                ⚠️ {officialConflicts.length} résultat(s) proposé(s) diffèrent
+                de la FFPB
               </strong>
               {officialConflicts.map((conflict, index) => (
-                <p key={`${conflict.division}-${conflict.team1Label}-${conflict.team2Label}-${index}`}>
-                  <strong>{conflict.division}</strong> · {conflict.team1Label} – {conflict.team2Label} · proposé {conflict.proposedScoreTeam1}–{conflict.proposedScoreTeam2} → officiel {conflict.officialScoreTeam1}–{conflict.officialScoreTeam2}
+                <p
+                  key={`${conflict.division}-${conflict.team1Label}-${conflict.team2Label}-${index}`}
+                >
+                  <strong>{conflict.division}</strong> · {conflict.team1Label} –{" "}
+                  {conflict.team2Label} · proposé {conflict.proposedScoreTeam1}–
+                  {conflict.proposedScoreTeam2} → officiel{" "}
+                  {conflict.officialScoreTeam1}–{conflict.officialScoreTeam2}
                 </p>
               ))}
             </div>

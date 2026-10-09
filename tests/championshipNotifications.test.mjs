@@ -37,7 +37,10 @@ test("une proposition de résultat supprime la relance après-partie", async () 
 
 test("le serveur ouvre la saisie selon la programmation réelle", async () => {
   const migration = await readFile(resultMigration, "utf8");
-  assert.match(migration, /championship_match_effective_schedule\(target_match_id\)/);
+  assert.match(
+    migration,
+    /championship_match_effective_schedule\(target_match_id\)/,
+  );
   assert.match(migration, /effective_starts_at > now\(\)/);
   assert.doesNotMatch(
     migration,

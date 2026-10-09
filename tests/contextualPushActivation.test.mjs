@@ -8,9 +8,7 @@ const [nudge, shell, tournaments, reservations, pushService] =
   await Promise.all([
     read("../src/features/notifications/components/PushActivationNudge.tsx"),
     read("../src/features/user-space/components/UserSpaceShell.tsx"),
-    read(
-      "../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx",
-    ),
+    read("../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx"),
     read("../src/features/reservations/pages/ReservationsPage.tsx"),
     read("../src/features/notifications/services/pushNotificationService.ts"),
   ]);

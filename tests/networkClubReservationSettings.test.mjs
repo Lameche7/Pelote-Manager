@@ -25,7 +25,10 @@ const page = fs.readFileSync(
 );
 
 test("les paramètres de réservation sont stockés par club", () => {
-  assert.match(migration, /create table if not exists public\.club_reservation_settings/);
+  assert.match(
+    migration,
+    /create table if not exists public\.club_reservation_settings/,
+  );
   assert.match(migration, /club_id uuid primary key/);
   assert.match(migration, /enable row level security/);
   assert.match(migration, /after insert on public\.clubs/);
@@ -51,7 +54,10 @@ test("le front ne dépend plus des RPC globales pour le parcours principal", () 
   assert.match(service, /get_current_reservation_terms_for_resource/);
   assert.match(service, /get_reservation_payment_config/);
   assert.match(service, /get_reservation_payment_config_for_payment/);
-  assert.doesNotMatch(service, /supabase\.rpc\("get_current_reservation_terms"/);
+  assert.doesNotMatch(
+    service,
+    /supabase\.rpc\("get_current_reservation_terms"/,
+  );
   assert.doesNotMatch(service, /supabase\.rpc\("get_online_payment_enabled"/);
   assert.doesNotMatch(service, /supabase\.rpc\("get_payment_mode"/);
   assert.match(page, /getTerms\(resource\.id, slot\.startsAt\)/);

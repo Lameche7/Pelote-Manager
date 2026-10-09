@@ -49,7 +49,6 @@ test("la première connexion attend obligatoirement la finalisation du profil", 
   );
 });
 
-
 test("toute session authentifiée finalise aussi la participation tournoi en attente", () => {
   assert.match(
     authProviderSource,

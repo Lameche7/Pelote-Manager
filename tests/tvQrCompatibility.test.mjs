@@ -14,7 +14,10 @@ test("le mode TV remplace les QR QuickChart par un proxy PILOTOKI de même origi
   assert.match(compatibilitySource, /quickchart\.io/);
   assert.match(compatibilitySource, /TV_QR_PROXY_PATH = "\/api\/tv-qr"/);
   assert.match(compatibilitySource, /searchParams\.get\("text"\)/);
-  assert.match(compatibilitySource, /proxyUrl\.searchParams\.set\("text", text\)/);
+  assert.match(
+    compatibilitySource,
+    /proxyUrl\.searchParams\.set\("text", text\)/,
+  );
 });
 
 test("le proxy TV renvoie explicitement un QR PNG noir sur fond blanc", () => {
@@ -22,7 +25,10 @@ test("le proxy TV renvoie explicitement un QR PNG noir sur fond blanc", () => {
   assert.match(proxySource, /url\.searchParams\.set\("format", "png"\)/);
   assert.match(proxySource, /url\.searchParams\.set\("dark", "000000"\)/);
   assert.match(proxySource, /url\.searchParams\.set\("light", "ffffff"\)/);
-  assert.match(proxySource, /response\.setHeader\("Content-Type", "image\/png"\)/);
+  assert.match(
+    proxySource,
+    /response\.setHeader\("Content-Type", "image\/png"\)/,
+  );
 });
 
 test("la compatibilité QR reste limitée aux routes du mode TV", () => {

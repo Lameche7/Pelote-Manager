@@ -25,8 +25,14 @@ import {
   type PlanningMatch,
   type PlanningSlot,
 } from "@/features/tournaments/domain/planningEngine";
-import { adminTournamentRescheduleService, type AdminTournamentRescheduleRequest } from "@/features/admin/tournaments/services/adminTournamentRescheduleService";
-import { tournamentResultsAdminService, type AdminTournamentResultsWorkspace } from "@/features/admin/tournaments/services/tournamentResultsAdminService";
+import {
+  adminTournamentRescheduleService,
+  type AdminTournamentRescheduleRequest,
+} from "@/features/admin/tournaments/services/adminTournamentRescheduleService";
+import {
+  tournamentResultsAdminService,
+  type AdminTournamentResultsWorkspace,
+} from "@/features/admin/tournaments/services/tournamentResultsAdminService";
 import "./AdminTournamentPlanningPage.css";
 
 const statusLabels: Record<string, string> = {
@@ -100,7 +106,9 @@ const eventStyle = (color: string): CSSProperties => ({
 
 export function AdminTournamentPlanningPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
-  const [printWorkspaces, setPrintWorkspaces] = useState<AdminTournamentResultsWorkspace[]>([]);
+  const [printWorkspaces, setPrintWorkspaces] = useState<
+    AdminTournamentResultsWorkspace[]
+  >([]);
   const [selectedId, setSelectedId] = useState("");
   const [workspace, setWorkspace] =
     useState<TournamentPlanningWorkspace | null>(null);
@@ -360,7 +368,9 @@ export function AdminTournamentPlanningPage() {
       setAssignments([]);
       setSavedAssignments([]);
       setLoading(false);
-      setMessage("Planning existant chargé en lecture seule. Vous pouvez l’imprimer.");
+      setMessage(
+        "Planning existant chargé en lecture seule. Vous pouvez l’imprimer.",
+      );
       return;
     }
     setLoading(true);
@@ -382,7 +392,6 @@ export function AdminTournamentPlanningPage() {
     }
   };
 
-
   const printPlanning = async () => {
     const printable = selectedPrintWorkspace;
     if (!printable) {
@@ -393,13 +402,22 @@ export function AdminTournamentPlanningPage() {
     setPrinting(true);
     setError("");
     try {
-      const requests = await adminTournamentRescheduleService.list(printable.id);
-      const activeRequests = requests.filter((request) =>
-        request.status === "pending" || request.status === "approved",
+      const requests = await adminTournamentRescheduleService.list(
+        printable.id,
       );
-      const requestsByMatch = new Map<string, AdminTournamentRescheduleRequest[]>();
+      const activeRequests = requests.filter(
+        (request) =>
+          request.status === "pending" || request.status === "approved",
+      );
+      const requestsByMatch = new Map<
+        string,
+        AdminTournamentRescheduleRequest[]
+      >();
       activeRequests.forEach((request) => {
-        requestsByMatch.set(request.matchId, [...(requestsByMatch.get(request.matchId) ?? []), request]);
+        requestsByMatch.set(request.matchId, [
+          ...(requestsByMatch.get(request.matchId) ?? []),
+          request,
+        ]);
       });
 
       const date = (value: string) => {
@@ -462,15 +480,41 @@ export function AdminTournamentPlanningPage() {
       const rowHeight = 12;
       const rowsPerPage = 39;
       const widths = [83, 62, 35, 135, 42, 42, 135, 264];
-      const headers = ["Créneau", "Série", "Poule", "Équipe 1", "Score 1", "Score 2", "Équipe 2", "Report en cours"];
+      const headers = [
+        "Créneau",
+        "Série",
+        "Poule",
+        "Équipe 1",
+        "Score 1",
+        "Score 2",
+        "Équipe 2",
+        "Report en cours",
+      ];
       const pages: string[] = [];
 
-      for (let pageStart = 0; pageStart < matches.length; pageStart += rowsPerPage) {
+      for (
+        let pageStart = 0;
+        pageStart < matches.length;
+        pageStart += rowsPerPage
+      ) {
         const pageMatches = matches.slice(pageStart, pageStart + rowsPerPage);
         let stream = "";
-        stream += line(left, top + 14, 11, `${printable.name} - Planning des rencontres`);
-        const stamp = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date());
-        stream += line(left, top + 2, 6.5, `PDF généré le ${stamp} · ${matches.length} rencontre(s) · ${activeRequests.length} report(s) en cours`);
+        stream += line(
+          left,
+          top + 14,
+          11,
+          `${printable.name} - Planning des rencontres`,
+        );
+        const stamp = new Intl.DateTimeFormat("fr-FR", {
+          dateStyle: "short",
+          timeStyle: "short",
+        }).format(new Date());
+        stream += line(
+          left,
+          top + 2,
+          6.5,
+          `PDF généré le ${stamp} · ${matches.length} rencontre(s) · ${activeRequests.length} report(s) en cours`,
+        );
 
         let x = left;
         stream += "0.31 0.51 0.74 rg\n";
@@ -483,14 +527,17 @@ export function AdminTournamentPlanningPage() {
 
         pageMatches.forEach((match, rowIndex) => {
           const y = top - 14 - (rowIndex + 1) * rowHeight;
-          const shade = rowIndex % 2 === 0 ? "0.86 0.90 0.95" : "0.72 0.80 0.89";
+          const shade =
+            rowIndex % 2 === 0 ? "0.86 0.90 0.95" : "0.72 0.80 0.89";
           stream += `${shade} rg\n${left} ${y} ${widths.reduce((sum, width) => sum + width, 0)} ${rowHeight} re f\n`;
           const reports = requestsByMatch.get(match.id) ?? [];
           const score = match.result?.score.sets ?? [];
           const values = [
             `${date(match.playDate)} ${match.startsAt}`,
             match.seriesName,
-            match.phase === "pools" ? String(match.poolNumber ?? "") : "Finales",
+            match.phase === "pools"
+              ? String(match.poolNumber ?? "")
+              : "Finales",
             match.teamALabel,
             score.length ? score.map((set) => set.teamA).join("/") : "",
             score.length ? score.map((set) => set.teamB).join("/") : "",
@@ -500,8 +547,16 @@ export function AdminTournamentPlanningPage() {
           x = left;
           values.forEach((value, index) => {
             stream += "0.09 0.13 0.20 rg\n";
-            const minimumSize = index === 3 || index === 6 || index === 7 ? 3.8 : 4.6;
-            stream += fittedLine(x + 2, y + 3.5, widths[index], value, 5.8, minimumSize);
+            const minimumSize =
+              index === 3 || index === 6 || index === 7 ? 3.8 : 4.6;
+            stream += fittedLine(
+              x + 2,
+              y + 3.5,
+              widths[index],
+              value,
+              5.8,
+              minimumSize,
+            );
             x += widths[index];
           });
         });
@@ -517,11 +572,14 @@ export function AdminTournamentPlanningPage() {
         pageObjectIds.push(nextId++);
         contentObjectIds.push(nextId++);
       });
-      objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+      objects[3] =
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
       objects[2] = `<< /Type /Pages /Count ${pages.length} /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(" ")}] >>`;
       pages.forEach((stream, index) => {
-        objects[pageObjectIds[index]] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectIds[index]} 0 R >>`;
-        objects[contentObjectIds[index]] = `<< /Length ${stream.length} >>\nstream\n${stream}endstream`;
+        objects[pageObjectIds[index]] =
+          `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectIds[index]} 0 R >>`;
+        objects[contentObjectIds[index]] =
+          `<< /Length ${stream.length} >>\nstream\n${stream}endstream`;
       });
 
       let pdf = "%PDF-1.4\n%âãÏÓ\n";
@@ -537,18 +595,32 @@ export function AdminTournamentPlanningPage() {
       }
       pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
 
-      const bytes = Uint8Array.from(pdf, (character) => character.charCodeAt(0) & 0xff);
-      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      const bytes = Uint8Array.from(
+        pdf,
+        (character) => character.charCodeAt(0) & 0xff,
+      );
+      const url = URL.createObjectURL(
+        new Blob([bytes], { type: "application/pdf" }),
+      );
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `planning-${printable.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "tournoi"}.pdf`;
+      anchor.download = `planning-${
+        printable.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") || "tournoi"
+      }.pdf`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
       setMessage("PDF du planning généré.");
     } catch (printError) {
-      setError(printError instanceof Error ? printError.message : "Impossible de générer le PDF du planning.");
+      setError(
+        printError instanceof Error
+          ? printError.message
+          : "Impossible de générer le PDF du planning.",
+      );
     } finally {
       setPrinting(false);
     }
@@ -785,7 +857,11 @@ export function AdminTournamentPlanningPage() {
         <div className="admin-tournament-planning__toolbar-actions">
           <button
             type="button"
-            disabled={!selectedPrintWorkspace || printing || selectedPrintWorkspace.matches.length === 0}
+            disabled={
+              !selectedPrintWorkspace ||
+              printing ||
+              selectedPrintWorkspace.matches.length === 0
+            }
             onClick={() => void printPlanning()}
           >
             <Printer aria-hidden="true" />

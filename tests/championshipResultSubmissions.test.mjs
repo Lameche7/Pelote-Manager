@@ -90,5 +90,8 @@ test("l’interface distingue proposition et résultat officiel", async () => {
   assert.match(page, /Résultat officiel/);
   assert.match(page, /Résultat saisi · en attente du comité/);
   assert.match(page, /match\.submission\?\.status === "confirmed_official"/);
-  assert.match(page, /Votre résultat saisi a été confirmé par la mise à jour officielle/);
+  assert.match(
+    page,
+    /Votre résultat saisi a été confirmé par la mise à jour officielle/,
+  );
 });

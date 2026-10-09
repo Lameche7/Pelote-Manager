@@ -27,10 +27,7 @@ test("les conditions de réservation sont résolues depuis la ressource", () => 
 });
 
 test("le plafond de réservations actives est limité au club cible", () => {
-  assert.match(
-    migration,
-    /active_resource\.club_id = target_club_id/,
-  );
+  assert.match(migration, /active_resource\.club_id = target_club_id/);
 });
 
 test("les opérations admin sont limitées au club courant", () => {
@@ -42,12 +39,6 @@ test("les opérations admin sont limitées au club courant", () => {
 });
 
 test("annulation et liste Mes réservations utilisent le club de la ressource", () => {
-  assert.match(
-    migration,
-    /settings\.club_id = resource\.club_id/,
-  );
-  assert.match(
-    migration,
-    /settings\.club_id = target_club_id/,
-  );
+  assert.match(migration, /settings\.club_id = resource\.club_id/);
+  assert.match(migration, /settings\.club_id = target_club_id/);
 });

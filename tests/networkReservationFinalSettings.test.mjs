@@ -16,29 +16,14 @@ test("aucune fonction du lot final ne lit le singleton historique", () => {
 });
 
 test("TV, permanents et championnat utilisent le club concerné", () => {
-  assert.match(
-    migration,
-    /reservation_settings\.club_id = settings\.club_id/,
-  );
-  assert.match(
-    migration,
-    /settings\.club_id = target_club_id/,
-  );
-  assert.match(
-    migration,
-    /global_settings\.club_id = club_link\.club_id/,
-  );
+  assert.match(migration, /reservation_settings\.club_id = settings\.club_id/);
+  assert.match(migration, /settings\.club_id = target_club_id/);
+  assert.match(migration, /global_settings\.club_id = club_link\.club_id/);
 });
 
 test("la simulation de paiement distingue réservation et licence", () => {
-  assert.match(
-    migration,
-    /payment_row\.payment_context = 'reservation'/,
-  );
-  assert.match(
-    migration,
-    /payment_row\.payment_context = 'licence'/,
-  );
+  assert.match(migration, /payment_row\.payment_context = 'reservation'/);
+  assert.match(migration, /payment_row\.payment_context = 'licence'/);
   assert.match(migration, /campaign\.payment_mode/);
   assert.match(migration, /settings\.payment_mode/);
 });

@@ -33,7 +33,9 @@ const displayDate = (value: string | null) => {
 
 const displayCompactDate = (value: string) => {
   const date = new Date(`${value}T12:00:00`);
-  return Number.isNaN(date.getTime()) ? value : compactDateFormatter.format(date);
+  return Number.isNaN(date.getTime())
+    ? value
+    : compactDateFormatter.format(date);
 };
 
 const displayTime = (value: string | null) =>
@@ -76,7 +78,9 @@ function MatchCard({ match }: { match: ChampionshipBrowserMatch }) {
           }${match.team1IsMyClub ? " is-my-club" : ""}`}
         >
           <div>
-            <strong>{playersLabel(match.team1Players, match.team1Label)}</strong>
+            <strong>
+              {playersLabel(match.team1Players, match.team1Label)}
+            </strong>
             <span>{match.team1ClubName}</span>
             <small>{match.team1Label}</small>
           </div>
@@ -95,7 +99,9 @@ function MatchCard({ match }: { match: ChampionshipBrowserMatch }) {
           }${match.team2IsMyClub ? " is-my-club" : ""}`}
         >
           <div>
-            <strong>{playersLabel(match.team2Players, match.team2Label)}</strong>
+            <strong>
+              {playersLabel(match.team2Players, match.team2Label)}
+            </strong>
             <span>{match.team2ClubName}</span>
             <small>{match.team2Label}</small>
           </div>
@@ -148,7 +154,9 @@ export function ChampionshipResultsExplorer({
         if (!active) return;
         setCatalog(items);
         const preferred =
-          items.find((item) => item.championshipId === preferredChampionshipId) ??
+          items.find(
+            (item) => item.championshipId === preferredChampionshipId,
+          ) ??
           items.find(
             (item) => item.championshipStatus === "active" && item.hasMyTeam,
           ) ??
@@ -240,7 +248,9 @@ export function ChampionshipResultsExplorer({
         label: match.poolName ?? `Poule ${match.poolCode ?? "—"}`,
         code: match.poolCode ?? "",
         isMine:
-          Boolean(current?.isMine) || match.team1IsMyTeam || match.team2IsMyTeam,
+          Boolean(current?.isMine) ||
+          match.team1IsMyTeam ||
+          match.team2IsMyTeam,
       });
     }
     return [...pools.values()].sort((left, right) =>
@@ -328,13 +338,20 @@ export function ChampionshipResultsExplorer({
   const groups = useMemo(() => {
     const map = new Map<
       string,
-      { id: string; label: string; code: string; matches: ChampionshipBrowserMatch[] }
+      {
+        id: string;
+        label: string;
+        code: string;
+        matches: ChampionshipBrowserMatch[];
+      }
     >();
     for (const match of visibleMatches) {
       const key = match.poolId ?? "no-pool";
       const group = map.get(key) ?? {
         id: key,
-        label: match.poolName ?? (match.poolCode ? `Poule ${match.poolCode}` : match.phase),
+        label:
+          match.poolName ??
+          (match.poolCode ? `Poule ${match.poolCode}` : match.phase),
         code: match.poolCode ?? "",
         matches: [],
       };
@@ -422,7 +439,8 @@ export function ChampionshipResultsExplorer({
             <option value="all">Toutes les poules</option>
             {poolOptions.map((pool) => (
               <option key={pool.id} value={pool.id}>
-                {pool.label}{pool.isMine ? " · Ma poule" : ""}
+                {pool.label}
+                {pool.isMine ? " · Ma poule" : ""}
               </option>
             ))}
           </select>
@@ -464,7 +482,10 @@ export function ChampionshipResultsExplorer({
       ) : (
         <div className="championship-results__groups">
           {groups.map((group) => (
-            <section key={group.id} className="championship-results__pool-group">
+            <section
+              key={group.id}
+              className="championship-results__pool-group"
+            >
               <header>
                 <div>
                   <strong>{group.label}</strong>

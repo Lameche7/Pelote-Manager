@@ -249,9 +249,7 @@ export function MyChampionshipsPage() {
       key={`${entry.championship.championshipId}-${entry.match.id}`}
       championship={entry.championship}
       match={entry.match}
-      settings={
-        resultSettings.get(entry.championship.championshipId) ?? null
-      }
+      settings={resultSettings.get(entry.championship.championshipId) ?? null}
       onChanged={refresh}
       featured={featured}
       readOnly={readOnly}
@@ -294,7 +292,8 @@ export function MyChampionshipsPage() {
             <strong>Résultats du week-end</strong>
             Vous pouvez saisir votre score dès la fin de la partie. Il reste
             affiché comme résultat proposé puis, lors de la mise à jour du site
-            du comité, le résultat officiel devient automatiquement la référence.
+            du comité, le résultat officiel devient automatiquement la
+            référence.
           </span>
         </div>
 
@@ -323,9 +322,9 @@ export function MyChampionshipsPage() {
                   <p>Priorité</p>
                   <h2>Ma partie du week-end</h2>
                   <span>
-                    Journée du {displayRoundDate(focusDay)} · cette journée reste
-                    affichée jusqu’au lundi soir, puis la suivante prend sa place
-                    à partir du mardi.
+                    Journée du {displayRoundDate(focusDay)} · cette journée
+                    reste affichée jusqu’au lundi soir, puis la suivante prend
+                    sa place à partir du mardi.
                   </span>
                 </div>
               </header>
@@ -408,7 +407,8 @@ export function MyChampionshipsPage() {
                         <div>
                           <strong>{championship.championshipName}</strong>
                           <span>
-                            {championship.seasonLabel} · {championship.divisionName}
+                            {championship.seasonLabel} ·{" "}
+                            {championship.divisionName}
                             {championship.poolCode
                               ? ` · Poule ${championship.poolCode}`
                               : ""}

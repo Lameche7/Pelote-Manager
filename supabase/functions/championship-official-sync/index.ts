@@ -70,7 +70,7 @@ const sha256 = async (value: string) => {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0")
+    byte.toString(16).padStart(2, "0"),
   ).join("");
 };
 
@@ -91,7 +91,11 @@ const parisSchedule = () => {
   }).formatToParts(new Date());
   const weekday = parts.find((part) => part.type === "weekday")?.value ?? "";
   const hour = parts.find((part) => part.type === "hour")?.value ?? "";
-  return { weekday, hour, allowed: ALLOWED_WEEKDAYS.has(weekday) && hour === "23" };
+  return {
+    weekday,
+    hour,
+    allowed: ALLOWED_WEEKDAYS.has(weekday) && hour === "23",
+  };
 };
 
 const normalizeSourceBaseUrl = (value: unknown) => {
@@ -115,7 +119,9 @@ const fetchSource = async (baseUrl: string, path: string, body: JsonRow) => {
   });
   const payload = (await response.json().catch(() => ({}))) as JsonRow;
   if (!response.ok) {
-    throw new Error(String(payload.error ?? `FFPB parser failed (${response.status}).`));
+    throw new Error(
+      String(payload.error ?? `FFPB parser failed (${response.status}).`),
+    );
   }
   return payload;
 };
@@ -145,7 +151,11 @@ Deno.serve(async (request) => {
     const force = body.force === true;
     const local = parisSchedule();
     if (!force && !local.allowed) {
-      return Response.json({ skipped: true, reason: "outside_schedule", local });
+      return Response.json({
+        skipped: true,
+        reason: "outside_schedule",
+        local,
+      });
     }
 
     const sourceBaseUrl = normalizeSourceBaseUrl(body.sourceBaseUrl);
@@ -204,12 +214,16 @@ Deno.serve(async (request) => {
         };
 
         const [resultsSource, poolSource, generalSource] = await Promise.all([
-          fetchSource(sourceBaseUrl, "/api/championship-results-source", sourceBody).catch(
-            (error) => {
-              warnings.push(`Results: ${error instanceof Error ? error.message : String(error)}`);
-              return null;
-            },
-          ),
+          fetchSource(
+            sourceBaseUrl,
+            "/api/championship-results-source",
+            sourceBody,
+          ).catch((error) => {
+            warnings.push(
+              `Results: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            return null;
+          }),
           fetchSource(
             sourceBaseUrl,
             "/api/championship-pool-standings-source",
@@ -232,17 +246,19 @@ Deno.serve(async (request) => {
           }),
         ]);
 
-        const [{ data: poolsData, error: poolsError }, { data: teamsData, error: teamsError }]
-          = await Promise.all([
-            admin
-              .from("championship_pools")
-              .select("id,division_id,code")
-              .in("division_id", divisionIds),
-            admin
-              .from("championship_teams")
-              .select("id,division_id,federation_club_id,pool_id,team_number")
-              .in("division_id", divisionIds),
-          ]);
+        const [
+          { data: poolsData, error: poolsError },
+          { data: teamsData, error: teamsError },
+        ] = await Promise.all([
+          admin
+            .from("championship_pools")
+            .select("id,division_id,code")
+            .in("division_id", divisionIds),
+          admin
+            .from("championship_teams")
+            .select("id,division_id,federation_club_id,pool_id,team_number")
+            .in("division_id", divisionIds),
+        ]);
         if (poolsError) throw poolsError;
         if (teamsError) throw teamsError;
         const pools = (poolsData ?? []) as PoolRow[];
@@ -259,20 +275,28 @@ Deno.serve(async (request) => {
                 .in("id", federationClubIds)
             : { data: [], error: null };
         if (federationClubsError) throw federationClubsError;
-        const federationClubs = (federationClubsData ?? []) as FederationClubRow[];
+        const federationClubs = (federationClubsData ??
+          []) as FederationClubRow[];
 
         const divisionByName = new Map<string, DivisionRow>();
         for (const division of divisions) {
           divisionByName.set(fold(division.name), division);
           divisionByName.set(fold(division.normalized_name), division);
         }
-        const poolByKey = new Map(pools.map((pool) => [poolKey(pool.division_id, pool.code), pool]));
-        const clubById = new Map(federationClubs.map((club) => [club.id, club]));
+        const poolByKey = new Map(
+          pools.map((pool) => [poolKey(pool.division_id, pool.code), pool]),
+        );
+        const clubById = new Map(
+          federationClubs.map((club) => [club.id, club]),
+        );
         const teamByKey = new Map<string, TeamRow>();
         for (const team of teams) {
           const club = clubById.get(team.federation_club_id);
           if (!club) continue;
-          teamByKey.set(teamKey(team.division_id, club.name, team.team_number), team);
+          teamByKey.set(
+            teamKey(team.division_id, club.name, team.team_number),
+            team,
+          );
           teamByKey.set(
             teamKey(team.division_id, club.normalized_name, team.team_number),
             team,
@@ -321,7 +345,9 @@ Deno.serve(async (request) => {
               score2 < 0 ||
               score1 === score2
             ) {
-              warnings.push(`Result row could not be matched: ${String(raw.team1Label ?? "?")} / ${String(raw.team2Label ?? "?")}.`);
+              warnings.push(
+                `Result row could not be matched: ${String(raw.team1Label ?? "?")} / ${String(raw.team2Label ?? "?")}.`,
+              );
               continue;
             }
 
@@ -335,11 +361,17 @@ Deno.serve(async (request) => {
             const sourceDate = String(raw.sourceDate ?? "");
             if (candidates.length > 1 && sourceDate) {
               candidates = candidates.filter((match) =>
-                [match.scheduled_on, match.report_on, match.agreement_on].includes(sourceDate),
+                [
+                  match.scheduled_on,
+                  match.report_on,
+                  match.agreement_on,
+                ].includes(sourceDate),
               );
             }
             if (candidates.length !== 1) {
-              warnings.push(`Ambiguous result match: ${String(raw.team1Label ?? "?")} / ${String(raw.team2Label ?? "?")}.`);
+              warnings.push(
+                `Ambiguous result match: ${String(raw.team1Label ?? "?")} / ${String(raw.team2Label ?? "?")}.`,
+              );
               continue;
             }
             const match = candidates[0];
@@ -373,10 +405,14 @@ Deno.serve(async (request) => {
               ? poolByKey.get(poolKey(division.id, raw.poolCode))
               : undefined;
             const team = division
-              ? teamByKey.get(teamKey(division.id, raw.clubName, raw.teamNumber))
+              ? teamByKey.get(
+                  teamKey(division.id, raw.clubName, raw.teamNumber),
+                )
               : undefined;
             if (!division || !pool || !team || team.pool_id !== pool.id) {
-              warnings.push(`Pool standing row could not be matched: ${String(raw.teamLabel ?? "?")}.`);
+              warnings.push(
+                `Pool standing row could not be matched: ${String(raw.teamLabel ?? "?")}.`,
+              );
               continue;
             }
             standingRows.push({
@@ -413,10 +449,14 @@ Deno.serve(async (request) => {
               ? poolByKey.get(poolKey(division.id, raw.poolCode))
               : undefined;
             const team = division
-              ? teamByKey.get(teamKey(division.id, raw.clubName, raw.teamNumber))
+              ? teamByKey.get(
+                  teamKey(division.id, raw.clubName, raw.teamNumber),
+                )
               : undefined;
             if (!division || !pool || !team || team.pool_id !== pool.id) {
-              warnings.push(`General standing row could not be matched: ${String(raw.teamLabel ?? "?")}.`);
+              warnings.push(
+                `General standing row could not be matched: ${String(raw.teamLabel ?? "?")}.`,
+              );
               continue;
             }
             const target = rowsByDivision.get(division.id) ?? [];
@@ -443,11 +483,16 @@ Deno.serve(async (request) => {
 
           for (const [divisionId, rows] of rowsByDivision) {
             if (rows.length === 0) continue;
-            const incomingForDivision = (generalSource.generalStandings as JsonRow[]).filter(
-              (raw) => divisionByName.get(fold(raw.division))?.id === divisionId,
+            const incomingForDivision = (
+              generalSource.generalStandings as JsonRow[]
+            ).filter(
+              (raw) =>
+                divisionByName.get(fold(raw.division))?.id === divisionId,
             ).length;
             if (rows.length !== incomingForDivision) {
-              warnings.push(`General standings for division ${divisionId} were not fully matched; previous data kept.`);
+              warnings.push(
+                `General standings for division ${divisionId} were not fully matched; previous data kept.`,
+              );
               continue;
             }
             const { error: deleteError } = await admin

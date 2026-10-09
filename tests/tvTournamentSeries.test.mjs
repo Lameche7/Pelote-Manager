@@ -30,20 +30,11 @@ test("le Mode TV conserve les séries publiques du tournoi", () => {
 });
 
 test("chaque série génère deux écrans successifs classement puis matchs", () => {
-  assert.match(
-    page,
-    /tournamentSeries\.flatMap\(\(series\) => \[/,
-  );
+  assert.match(page, /tournamentSeries\.flatMap\(\(series\) => \[/);
   assert.match(page, /tournamentViewKey\(series, "ranking"\)/);
   assert.match(page, /tournamentViewKey\(series, "matches"\)/);
-  assert.match(
-    page,
-    /activeView === tournamentViewKey\(series, "ranking"\)/,
-  );
-  assert.match(
-    page,
-    /activeView === tournamentViewKey\(series, "matches"\)/,
-  );
+  assert.match(page, /activeView === tournamentViewKey\(series, "ranking"\)/);
+  assert.match(page, /activeView === tournamentViewKey\(series, "matches"\)/);
   assert.match(page, /page=\{activeTournamentPage\}/);
 });
 
@@ -91,10 +82,7 @@ test("la géométrie du classement reste limitée à trois colonnes et deux lign
     seriesView,
     /gridTemplateColumns: "repeat\(3, minmax\(0, 1fr\)\)"/,
   );
-  assert.match(
-    seriesView,
-    /gridTemplateRows: "repeat\(2, minmax\(0, 1fr\)\)"/,
-  );
+  assert.match(seriesView, /gridTemplateRows: "repeat\(2, minmax\(0, 1fr\)\)"/);
   assert.match(seriesView, /style=\{poolGridStyle\(visiblePools\.length\)\}/);
 });
 

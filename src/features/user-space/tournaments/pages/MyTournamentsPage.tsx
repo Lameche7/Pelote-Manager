@@ -670,9 +670,7 @@ export function MyTournamentsPage() {
           </p>
         )}
 
-        {view === "current" && (
-          <PushActivationNudge context="tournament" />
-        )}
+        {view === "current" && <PushActivationNudge context="tournament" />}
 
         <TournamentRescheduleRequestsPanel refreshKey={rescheduleRefreshKey} />
 

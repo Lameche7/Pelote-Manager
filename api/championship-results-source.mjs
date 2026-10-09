@@ -152,7 +152,8 @@ const optionValue = (html, id, expectedLabel) => {
   const select = parseSelects(html).find((item) => item.id === id);
   if (!select) return null;
   return (
-    select.options.find((option) => fold(option.label) === target)?.value ?? null
+    select.options.find((option) => fold(option.label) === target)?.value ??
+    null
   );
 };
 
@@ -274,13 +275,13 @@ const searchDivision = async ({
   let session = await openPublicSession(sourceUrl);
   session = await selectOption(session, "A34", seasonLabel);
 
-  const competitionOptions = parseSelects(session.html).find(
-    (item) => item.id === "A33",
-  )?.options ?? [];
+  const competitionOptions =
+    parseSelects(session.html).find((item) => item.id === "A33")?.options ?? [];
   const foldedName = fold(competitionName);
   const competitionOption = competitionOptions.find(
     (option) =>
-      fold(option.label) !== "toutes" && foldedName.includes(fold(option.label)),
+      fold(option.label) !== "toutes" &&
+      foldedName.includes(fold(option.label)),
   );
   if (!competitionOption) {
     throw new Error("Le type de championnat FFPB n’a pas été reconnu.");
@@ -313,7 +314,8 @@ const fieldHtml = (html, row, attributeId) => {
   return html.match(pattern)?.[1] ?? "";
 };
 
-const fieldText = (html, row, attributeId) => stripTags(fieldHtml(html, row, attributeId));
+const fieldText = (html, row, attributeId) =>
+  stripTags(fieldHtml(html, row, attributeId));
 
 const teamLabel = (html, row, attributeId) => {
   const source = fieldHtml(html, row, attributeId);
@@ -328,19 +330,24 @@ const parseDate = (value) => {
 };
 
 const parseTeam = (label) => {
-  const match = String(label ?? "").trim().match(/^(.*\S)\s+(\d{1,3})$/u);
+  const match = String(label ?? "")
+    .trim()
+    .match(/^(.*\S)\s+(\d{1,3})$/u);
   if (!match) return null;
   return { clubName: match[1].trim(), teamNumber: match[2] };
 };
 
 const parseScore = (value) => {
-  const raw = String(value ?? "").replace(/\s+/gu, " ").trim();
+  const raw = String(value ?? "")
+    .replace(/\s+/gu, " ")
+    .trim();
   if (!raw) return null;
   const match = raw.match(/(\d{1,3})\s*(?:\/|-|–|—)\s*(\d{1,3})/u);
   if (!match) return null;
   const scoreTeam1 = Number(match[1]);
   const scoreTeam2 = Number(match[2]);
-  if (!Number.isInteger(scoreTeam1) || !Number.isInteger(scoreTeam2)) return null;
+  if (!Number.isInteger(scoreTeam1) || !Number.isInteger(scoreTeam2))
+    return null;
   if (scoreTeam1 === scoreTeam2) return null;
   return {
     scoreRaw: `${scoreTeam1}-${scoreTeam2}`,
@@ -370,7 +377,10 @@ const parseDivisionResults = (html, divisionName) => {
     results.push({
       division: divisionName,
       phase: "Poules",
-      poolCode: fieldText(html, row, "I220").replace(/^Poule\s+/iu, "").trim() || null,
+      poolCode:
+        fieldText(html, row, "I220")
+          .replace(/^Poule\s+/iu, "")
+          .trim() || null,
       sourceDate: parseDate(fieldText(html, row, "I163")),
       team1Label: firstLabel,
       team2Label: secondLabel,
@@ -405,7 +415,12 @@ export default async function handler(request, response) {
           .filter((item) => item.name)
       : [];
 
-    if (!seasonLabel || !competitionName || !specialty || divisions.length === 0) {
+    if (
+      !seasonLabel ||
+      !competitionName ||
+      !specialty ||
+      divisions.length === 0
+    ) {
       return response.status(400).json({
         error: "Les informations du championnat sont incomplètes.",
       });
