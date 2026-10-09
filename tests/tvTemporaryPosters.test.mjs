@@ -8,7 +8,7 @@ test("les affiches temporaires proposent 24h 48h 72h et une durée personnalisé
   const [migration, service, admin, tv, styles] = await Promise.all([
     read("../supabase/migrations/20260924130000_add_temporary_tv_posters.sql"),
     read("../src/features/admin/club/services/clubMediaService.ts"),
-    read("../src/features/admin/club/components/ClubMediaManager.tsx"),
+    read("../src/features/admin/settings/pages/AdminTvSettingsPage.tsx"),
     read("../src/features/tv/pages/TvDisplayPage.tsx"),
     read("../src/features/tv/pages/TvMediaGallery.css"),
   ]);
