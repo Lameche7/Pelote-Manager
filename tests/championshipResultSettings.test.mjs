@@ -11,7 +11,7 @@ const adminPageUrl = new URL(
   import.meta.url,
 );
 const playerPageUrl = new URL(
-  "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
+  "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
   import.meta.url,
 );
 const playerSettingsServiceUrl = new URL(
@@ -76,8 +76,8 @@ test("l’espace joueur charge le réglage et adapte les libellés", async () =>
   ]);
 
   assert.match(service, /get_my_championship_result_settings/);
-  assert.match(page, /Nos manches/);
-  assert.match(page, /Nos points/);
-  assert.match(page, /Saisie du résultat non paramétrée/);
-  assert.match(page, /Format attendu : premier à/);
+  assert.match(page, /Notre score/);
+  assert.match(page, /Score adverse/);
+  assert.match(page, /Format de score non paramétré/);
+  assert.match(page, /La partie doit avoir un vainqueur à/);
 });
