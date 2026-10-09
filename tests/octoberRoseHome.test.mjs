@@ -11,7 +11,10 @@ test("le ruban Octobre Rose s'affiche sur l'accueil public uniquement en octobre
     read("../public/branding/octobre-rose-ribbon.svg"),
   ]);
 
-  assert.match(home, /today\.getFullYear\(\) === 2026 && today\.getMonth\(\) === 9/);
+  assert.match(
+    home,
+    /today\.getFullYear\(\) === 2026 && today\.getMonth\(\) === 9/,
+  );
   assert.match(home, /\{octoberRoseVisible && \(/);
   assert.match(home, /octobre-rose-ribbon\.svg/);
   assert.match(home, /Octobre Rose/);
