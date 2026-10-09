@@ -24,6 +24,7 @@ import {
   type PublicEvent,
 } from "@/features/home/services/publicEventService";
 import { CLUB_CONFIG } from "@/shared/config";
+import { clubBrandingService } from "@/features/home/services/clubBrandingService";
 import { currentApplicationOrigin } from "@/shared/config/domains";
 import {
   tvDisplayService,
@@ -215,6 +216,7 @@ export function TvDisplayPage() {
   const tokenIsValid = isPublicTvIdentifier(token);
   const resolvedToken = resolvePublicTvToken(token);
   const [display, setDisplay] = useState<TvDisplay | null>(null);
+  const [branding, setBranding] = useState(clubBrandingService.fallback);
   const [upcomingEvents, setUpcomingEvents] = useState<PublicEvent[]>([]);
   const [tvMedia, setTvMedia] = useState<TvMediaAsset[]>([]);
   const [tournamentSeries, setTournamentSeries] = useState<
@@ -297,6 +299,28 @@ export function TvDisplayPage() {
   useEffect(() => {
     canonicalizePclTvUrl(token);
   }, [token]);
+
+  useEffect(() => {
+    if (!tokenIsValid) return;
+    let active = true;
+    const loadBranding = async () => {
+      try {
+        const next = await clubBrandingService.getPublicBranding();
+        if (active) setBranding(next);
+      } catch {
+        // Conserver les dernières couleurs si le réseau est momentanément indisponible.
+      }
+    };
+    void loadBranding();
+    const refresh = window.setInterval(
+      () => void loadBranding(),
+      24 * 60 * 60 * 1_000,
+    );
+    return () => {
+      active = false;
+      window.clearInterval(refresh);
+    };
+  }, [tokenIsValid]);
 
   useEffect(() => {
     void loadDisplay(true);
@@ -391,7 +415,12 @@ export function TvDisplayPage() {
   }, [activeView, display?.status, display?.viewDurationSeconds, viewOrder]);
 
   const clubName = display?.clubName || CLUB_CONFIG.name;
-  const logoUrl = display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
+  const logoUrl =
+    branding.logoUrl || display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
+  const isOctoberRose = now.getFullYear() === 2026 && now.getMonth() === 9;
+  const tvBrandStyle = {
+    "--tv-club-primary": branding.primaryColor,
+  } as CSSProperties;
   const appUrl = currentApplicationOrigin();
   const shopMedia = useMemo(
     () =>
@@ -467,7 +496,7 @@ export function TvDisplayPage() {
   }
 
   return (
-    <main className="tv-display" aria-live="polite">
+    <main className="tv-display" style={tvBrandStyle} aria-live="polite">
       <header className="tv-display__header">
         <div className="tv-display__identity">
           <img className="tv-display__logo" src={logoUrl} alt="" />
@@ -475,7 +504,16 @@ export function TvDisplayPage() {
             <p className="tv-display__eyebrow">
               {viewEyebrow(activeView, activeTournamentSeries)}
             </p>
-            <h1>{clubName}</h1>
+            <div className="tv-display__club-name-row">
+              <h1>{clubName}</h1>
+              {isOctoberRose && (
+                <img
+                  className="tv-display__october-ribbon"
+                  src="/branding/octobre-rose-ribbon.svg"
+                  alt="Ruban rose de sensibilisation au cancer du sein"
+                />
+              )}
+            </div>
           </div>
         </div>
 

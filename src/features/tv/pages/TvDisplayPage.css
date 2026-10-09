@@ -18,7 +18,7 @@
       rgb(220 38 38 / 18%),
       transparent 32%
     ),
-    #071b17;
+    color-mix(in srgb, var(--tv-club-primary, #0f3d2e) 38%, #050b13);
 }
 
 .tv-display *,
@@ -65,6 +65,29 @@
   min-width: 0;
   padding-bottom: clamp(0.55rem, 1.1vmin, 1rem);
   border-bottom: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 0.7rem;
+  padding: clamp(0.5rem, 1vmin, 0.85rem);
+  margin-bottom: 0.4rem;
+  background: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--tv-club-primary, #0f3d2e) 75%, #000),
+    color-mix(in srgb, var(--tv-club-primary, #0f3d2e) 88%, #000)
+  );
+}
+
+.tv-display__club-name-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 1.4vmin, 1.1rem);
+  min-width: 0;
+}
+
+.tv-display__october-ribbon {
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(2.2rem, 4.6vmin, 4.2rem);
+  height: clamp(3.1rem, 6.3vmin, 5.5rem);
+  object-fit: contain;
 }
 
 .tv-display__identity {
