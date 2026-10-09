@@ -467,33 +467,27 @@ export default async function handler(request, response) {
       }
     }
     if (generalStandings.length === 0)
-      return response
-        .status(422)
-        .json({
-          error:
-            "Aucun classement général officiel exploitable n’a pu être lu automatiquement.",
-          warnings,
-        });
-    return response
-      .status(200)
-      .json({
-        generalStandings,
-        warnings,
-        summary: {
-          divisionCount: new Set(
-            generalStandings.map((row) => row.divisionNormalized),
-          ).size,
-          teamCount: generalStandings.length,
-        },
-      });
-  } catch (error) {
-    return response
-      .status(500)
-      .json({
+      return response.status(422).json({
         error:
-          error instanceof Error
-            ? error.message
-            : "Lecture automatique du classement général impossible.",
+          "Aucun classement général officiel exploitable n’a pu être lu automatiquement.",
+        warnings,
       });
+    return response.status(200).json({
+      generalStandings,
+      warnings,
+      summary: {
+        divisionCount: new Set(
+          generalStandings.map((row) => row.divisionNormalized),
+        ).size,
+        teamCount: generalStandings.length,
+      },
+    });
+  } catch (error) {
+    return response.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Lecture automatique du classement général impossible.",
+    });
   }
 }
