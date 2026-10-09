@@ -49,6 +49,6 @@ test("le deep-link de notification cible la partie dans Mes championnats", async
   const page = await readFile(pageFile, "utf8");
   assert.match(page, /useSearchParams/);
   assert.match(page, /searchParams\.get\("match"\)/);
-  assert.match(page, /championship-match-\$\{match\.id\}/);
+  assert.match(page, /championship-match-\$\{targetMatchId\}/);
   assert.match(page, /scrollIntoView/);
 });
