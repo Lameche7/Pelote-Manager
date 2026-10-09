@@ -388,10 +388,7 @@ export const championshipImportService = {
       },
     );
     if (error) {
-      fail(
-        error,
-        "Impossible d’actualiser les responsables des équipes.",
-      );
+      fail(error, "Impossible d’actualiser les responsables des équipes.");
     }
     const row = (data ?? {}) as Row;
     return {

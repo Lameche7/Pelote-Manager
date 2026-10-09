@@ -49,9 +49,10 @@ test("chaque déploiement peut recevoir l’identité propre de son club", () =>
 });
 
 test("les écrans principaux lisent la configuration de l’instance", () => {
-  for (const source of [clubLogo, mainLayout, homePage, profilePage]) {
+  for (const source of [clubLogo, mainLayout, homePage]) {
     assert.match(source, /CLUB_CONFIG/);
   }
+  assert.match(profilePage, /club\.clubName/);
   assert.match(homePage, /heroImageUrl/);
   assert.match(homeStyles, /--club-hero-image/);
   assert.doesNotMatch(mainLayout, /Pelotaris Club Lourdais/);

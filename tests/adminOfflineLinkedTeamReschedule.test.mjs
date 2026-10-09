@@ -12,7 +12,10 @@ const page = fs.readFileSync(
 );
 
 test("admin can record an offline answer even for a linked team", () => {
-  assert.match(migration, /admin_record_tournament_reschedule_offline_decision/);
+  assert.match(
+    migration,
+    /admin_record_tournament_reschedule_offline_decision/,
+  );
   assert.match(migration, /tournament_team_app_actor_count/);
   assert.match(migration, /replace/);
   assert.match(page, /pendingApprovals/);

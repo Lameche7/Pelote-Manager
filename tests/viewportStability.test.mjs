@@ -42,10 +42,7 @@ test("stabilise le shell sans couper un débordement horizontal réel", () => {
 });
 
 test("le calendrier mobile conserve son défilement horizontal autonome", () => {
-  assert.match(
-    reservationsPage,
-    /import "\.\/ReservationsResponsive\.css";/,
-  );
+  assert.match(reservationsPage, /import "\.\/ReservationsResponsive\.css";/);
   assert.match(
     reservationsResponsive,
     /\.reservation-calendar__grid,[\s\S]*overflow-x: auto;/,

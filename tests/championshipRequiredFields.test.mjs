@@ -4,7 +4,7 @@ import test from "node:test";
 
 const source = await readFile(
   new URL(
-    "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
+    "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
     import.meta.url,
   ),
   "utf8",
@@ -13,21 +13,15 @@ const source = await readFile(
 test("signale les scores obligatoires de la saisie de résultat", () => {
   assert.match(source, /RequiredFieldMark/);
   assert.match(source, /RequiredFieldsNotice/);
-  assert.match(
-    source,
-    /\{isSets \? "Nos manches" : "Nos points"\} <RequiredFieldMark \/>/,
-  );
-  assert.match(
-    source,
-    /\{isSets \? "Manches adverses" : "Points adverses"\}\{" "\}\s*<RequiredFieldMark \/>/,
-  );
+  assert.match(source, /Notre score <RequiredFieldMark \/>/);
+  assert.match(source, /Score adverse <RequiredFieldMark \/>/);
   assert.match(source, /<RequiredFieldsNotice \/>/);
 });
 
 test("conserve le commentaire de résultat facultatif", () => {
-  assert.match(source, /Commentaire facultatif/);
+  assert.match(source, /<span>Commentaire<\/span>/);
   assert.doesNotMatch(
     source,
-    /Commentaire facultatif[^<]*<RequiredFieldMark \/>/,
+    /<span>Commentaire<\/span>\s*<RequiredFieldMark \/>/,
   );
 });

@@ -31,7 +31,10 @@ export function reservationRange(period: ReservationPeriod, now = new Date()) {
   return { from: recent.toISOString(), to: start.toISOString() };
 }
 
-export function canManageReservation(status: string, _accountType: AccountType) {
+export function canManageReservation(
+  status: string,
+  _accountType: AccountType,
+) {
   return status === "pending" || status === "confirmed";
 }
 

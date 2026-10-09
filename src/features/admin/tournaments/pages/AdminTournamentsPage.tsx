@@ -289,11 +289,12 @@ export function AdminTournamentsPage() {
     setSaving(true);
     setError("");
     try {
-      const [loaded, loadedSportingRules, loadedRefereeingEnabled] = await Promise.all([
-        tournamentAdminService.get(id),
-        tournamentAdminService.getSportingRules(id),
-        tournamentAdminService.getRefereeingEnabled(id),
-      ]);
+      const [loaded, loadedSportingRules, loadedRefereeingEnabled] =
+        await Promise.all([
+          tournamentAdminService.get(id),
+          tournamentAdminService.getSportingRules(id),
+          tournamentAdminService.getRefereeingEnabled(id),
+        ]);
       setDetail(loaded);
       setForm(detailToForm(loaded));
       setResourceIds(loaded.resources.map((resource) => resource.id));
@@ -925,7 +926,10 @@ export function AdminTournamentsPage() {
               <section className="admin-card tournament-refereeing-setting">
                 <div>
                   <h3>Arbitrage des parties</h3>
-                  <p>Lorsque l’arbitrage est activé, les parties programmées de ce tournoi pourront être proposées aux arbitres du club.</p>
+                  <p>
+                    Lorsque l’arbitrage est activé, les parties programmées de
+                    ce tournoi pourront être proposées aux arbitres du club.
+                  </p>
                 </div>
                 <label className="tournament-refereeing-toggle">
                   <input
@@ -939,11 +943,22 @@ export function AdminTournamentsPage() {
                       setError("");
                       setMessage("");
                       try {
-                        await tournamentAdminService.setRefereeingEnabled(detail.id, next);
+                        await tournamentAdminService.setRefereeingEnabled(
+                          detail.id,
+                          next,
+                        );
                         setRefereeingEnabled(next);
-                        setMessage(next ? "Arbitrage activé pour ce tournoi." : "Arbitrage désactivé pour ce tournoi.");
+                        setMessage(
+                          next
+                            ? "Arbitrage activé pour ce tournoi."
+                            : "Arbitrage désactivé pour ce tournoi.",
+                        );
                       } catch (toggleError) {
-                        setError(toggleError instanceof Error ? toggleError.message : "Modification impossible.");
+                        setError(
+                          toggleError instanceof Error
+                            ? toggleError.message
+                            : "Modification impossible.",
+                        );
                       } finally {
                         setSaving(false);
                       }

@@ -147,7 +147,8 @@ const optionValue = (html, id, expectedLabel) => {
   const select = parseSelects(html).find((item) => item.id === id);
   if (!select) return null;
   return (
-    select.options.find((option) => fold(option.label) === target)?.value ?? null
+    select.options.find((option) => fold(option.label) === target)?.value ??
+    null
   );
 };
 
@@ -261,13 +262,13 @@ const searchDivisionRanking = async ({
   let session = await openPublicSession(sourceUrl);
   session = await selectOption(session, "A34", seasonLabel);
 
-  const competitionOptions = parseSelects(session.html).find(
-    (item) => item.id === "A33",
-  )?.options ?? [];
+  const competitionOptions =
+    parseSelects(session.html).find((item) => item.id === "A33")?.options ?? [];
   const foldedName = fold(competitionName);
   const competitionOption = competitionOptions.find(
     (option) =>
-      fold(option.label) !== "toutes" && foldedName.includes(fold(option.label)),
+      fold(option.label) !== "toutes" &&
+      foldedName.includes(fold(option.label)),
   );
   if (!competitionOption) {
     throw new Error("Le type de championnat FFPB n’a pas été reconnu.");
@@ -291,7 +292,9 @@ const searchDivisionRanking = async ({
   }
 
   if (!/<button\b[^>]*id=["']I54["']/iu.test(session.html)) {
-    throw new Error(`Le classement FFPB de « ${divisionName} » n’est pas disponible.`);
+    throw new Error(
+      `Le classement FFPB de « ${divisionName} » n’est pas disponible.`,
+    );
   }
   {
     const values = parseFormValues(session.html);
@@ -451,7 +454,8 @@ export default async function handler(request, response) {
 
     if (!seasonLabel || !competitionName || !specialty) {
       return response.status(400).json({
-        error: "Saison, championnat et spécialité sont nécessaires pour lire les classements.",
+        error:
+          "Saison, championnat et spécialité sont nécessaires pour lire les classements.",
       });
     }
     if (divisions.length === 0 || divisions.length > 30) {

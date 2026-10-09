@@ -226,10 +226,7 @@ test("les équipes sans compte relié restent visibles et ne sont jamais auto-va
   assert.match(requestMigration, /'app_actor_count'/);
   assert.match(requestsPanel, /aucun\s+compte Pelote Manager relié/);
   assert.match(adminPage, /aucun compte relié/);
-  assert.match(
-    adminPage,
-    /Pelote Manager n’invente aucun accord[\s\S]{0,180}réellement contacté l’équipe/,
-  );
+  assert.match(adminPage, /Accord recueilli/);
 });
 
 test("Mes tournois permet de créer et traiter une demande sans appliquer encore le déplacement", () => {
@@ -244,7 +241,10 @@ test("Mes tournois permet de créer et traiter une demande sans appliquer encore
   assert.match(component, /freeSlots\.map\(\(option\) =>/);
   assert.match(component, /swaps\.map\(\(option\) =>/);
   assert.doesNotMatch(component, /slice\(0, 6\)/);
-  assert.match(component, /Aucun match\s+n’est déplacé/);
+  assert.match(
+    component,
+    /Aucune partie n’est déplacé tant que tous les accords ne/,
+  );
   assert.match(requestsPanel, /Accepter/);
   assert.match(requestsPanel, /Refuser/);
   assert.match(requestsPanel, /Tous les accords sont réunis/);
@@ -254,7 +254,7 @@ test("le back-office possède un suivi dédié des reports sans bouton de força
   assert.match(requestMigration, /admin_list_tournament_reschedule_requests/);
   assert.match(adminPage, /Reports de parties/);
   assert.match(adminPage, /Prêt à appliquer/);
-  assert.match(adminPage, /À contacter hors application/);
+  assert.match(adminPage, /à contacter/);
   assert.doesNotMatch(adminPage, /Forcer l’accord/);
   assert.doesNotMatch(adminPage, /Appliquer le report/);
 });

@@ -273,8 +273,8 @@ export function ErrebotTournamentImportFinalize({
 
         <p className="admin-tournament-import__privacy-note">
           Le planning est importé mais pas encore publié dans le calendrier du
-          club. Les couleurs choisies pour chaque série suivront les parties dans
-          les réservations, les résultats et le Mode TV.
+          club. Les couleurs choisies pour chaque série suivront les parties
+          dans les réservations, les résultats et le Mode TV.
         </p>
 
         <div className="admin-tournament-import__actions">

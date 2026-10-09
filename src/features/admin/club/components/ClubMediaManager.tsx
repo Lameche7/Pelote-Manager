@@ -128,7 +128,6 @@ export function ClubMediaManager() {
                 </div>
               </header>
 
-
               <label className="club-media-upload">
                 <ImagePlus aria-hidden="true" />
                 <span>

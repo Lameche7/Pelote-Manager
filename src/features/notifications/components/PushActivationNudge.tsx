@@ -26,20 +26,17 @@ const copy: Record<
   general: {
     eyebrow: "Alertes PILOTOKI",
     title: "Restez informé sans ouvrir l’application",
-    body:
-      "Activez les alertes pour être prévenu lorsqu’une information importante concerne vos réservations, vos tournois ou votre club.",
+    body: "Activez les alertes pour être prévenu lorsqu’une information importante concerne vos réservations, vos tournois ou votre club.",
   },
   tournament: {
     eyebrow: "Tournoi · alertes instantanées",
     title: "Ne ratez pas une demande de report",
-    body:
-      "PILOTOKI peut vous prévenir immédiatement lorsqu’une équipe demande à déplacer une partie, qu’un horaire change ou qu’une action attend votre réponse.",
+    body: "PILOTOKI peut vous prévenir immédiatement lorsqu’une équipe demande à déplacer une partie, qu’un horaire change ou qu’une action attend votre réponse.",
   },
   championship: {
     eyebrow: "Rencontre réservée",
     title: "Soyez prévenu si quelque chose change",
-    body:
-      "Activez les alertes pour recevoir les informations importantes liées à vos rencontres et à vos réservations sans avoir à revenir vérifier l’application.",
+    body: "Activez les alertes pour recevoir les informations importantes liées à vos rencontres et à vos réservations sans avoir à revenir vérifier l’application.",
   },
 };
 
@@ -163,7 +160,13 @@ export function PushActivationNudge({
       aria-label="Activation des notifications"
     >
       <div className="push-nudge__icon" aria-hidden="true">
-        {iosNeedsInstall ? <Smartphone /> : permissionDenied ? <Clock3 /> : <BellRing />}
+        {iosNeedsInstall ? (
+          <Smartphone />
+        ) : permissionDenied ? (
+          <Clock3 />
+        ) : (
+          <BellRing />
+        )}
       </div>
       <div className="push-nudge__content">
         <p className="push-nudge__eyebrow">{content.eyebrow}</p>
@@ -178,9 +181,9 @@ export function PushActivationNudge({
         )}
         {permissionDenied && (
           <small>
-            Les notifications sont actuellement bloquées sur cet appareil.
-            Elles peuvent être réactivées depuis les réglages du navigateur ou
-            du téléphone.
+            Les notifications sont actuellement bloquées sur cet appareil. Elles
+            peuvent être réactivées depuis les réglages du navigateur ou du
+            téléphone.
           </small>
         )}
         {!state.supported && (

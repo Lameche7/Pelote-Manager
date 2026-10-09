@@ -139,18 +139,23 @@ const rpc = supabase.rpc.bind(supabase) as unknown as (
 ) => Promise<RpcResult>;
 
 export const championshipStandingsService = {
-  async list(championshipId: string): Promise<ChampionshipStandingBrowserRow[]> {
+  async list(
+    championshipId: string,
+  ): Promise<ChampionshipStandingBrowserRow[]> {
     const { data, error } = await rpc("list_championship_standings_browser", {
       target_championship_id: championshipId,
     });
 
     if (error) {
       throw new Error(
-        error.message || "Impossible de charger les classements du championnat.",
+        error.message ||
+          "Impossible de charger les classements du championnat.",
       );
     }
 
-    return rows(data).map(mapRow).filter((row) => row.teamId && row.poolId);
+    return rows(data)
+      .map(mapRow)
+      .filter((row) => row.teamId && row.poolId);
   },
 
   async listGeneral(

@@ -373,7 +373,9 @@ export function AdminReservationsManagementPage() {
           <div className="admin-dialog__form">
             {dialog.kind === "create" && (
               <p className="price-preview">
-                Les créneaux marqués <strong>anticipée</strong> peuvent être réservés par l’admin avant leur ouverture. Ils resteront masqués aux utilisateurs jusqu’à l’heure normale d’ouverture.
+                Les créneaux marqués <strong>anticipée</strong> peuvent être
+                réservés par l’admin avant leur ouverture. Ils resteront masqués
+                aux utilisateurs jusqu’à l’heure normale d’ouverture.
               </p>
             )}
             {dialog.kind === "create" && (

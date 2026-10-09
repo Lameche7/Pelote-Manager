@@ -399,7 +399,8 @@ export function TvDisplayPage() {
     [tvMedia],
   );
   const activePoster = useMemo(
-    () => activePosters.find((item) => activeView === `poster:${item.id}`) ?? null,
+    () =>
+      activePosters.find((item) => activeView === `poster:${item.id}`) ?? null,
     [activePosters, activeView],
   );
   const partnerMedia = useMemo(
@@ -659,7 +660,11 @@ export function TvDisplayPage() {
       )}
 
       {activePoster && (
-        <section className="tv-display__poster tv-display__view" aria-label="Affiche temporaire du club" key={activePoster.id}>
+        <section
+          className="tv-display__poster tv-display__view"
+          aria-label="Affiche temporaire du club"
+          key={activePoster.id}
+        >
           <img src={activePoster.publicUrl} alt={activePoster.originalName} />
         </section>
       )}

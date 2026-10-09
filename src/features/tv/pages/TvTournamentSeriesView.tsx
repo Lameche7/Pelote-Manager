@@ -135,7 +135,8 @@ function TournamentHeading({
         <h2>{series.tournamentName}</h2>
       </div>
       <strong style={{ borderColor: series.color }}>
-        {series.seriesName} · {page === "ranking" ? "Poules & classement" : "Résultats & parties"}
+        {series.seriesName} ·{" "}
+        {page === "ranking" ? "Poules & classement" : "Résultats & parties"}
         {page === "ranking" && poolPageCount > 1
           ? ` · ${poolPage + 1}/${poolPageCount}`
           : ""}

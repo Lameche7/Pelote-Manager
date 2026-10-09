@@ -144,7 +144,8 @@ export const championshipSourceFileService = {
         source: "engagements",
         row: 0,
         severity: "error",
-        message: "Aucune équipe n’a été détectée dans le fichier d’engagements.",
+        message:
+          "Aucune équipe n’a été détectée dans le fichier d’engagements.",
       });
     } else {
       parsed.rows.forEach((engagement) => {

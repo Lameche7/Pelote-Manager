@@ -408,4 +408,40 @@
   }
 }
 
-.tournament-refereeing-setting{display:flex;align-items:center;justify-content:space-between;gap:1.25rem;margin:1rem 0}.tournament-refereeing-setting h3{margin:0 0 .3rem}.tournament-refereeing-setting p{margin:0;opacity:.72}.tournament-refereeing-toggle{display:flex!important;align-items:center;gap:.65rem;white-space:nowrap;font-weight:800;cursor:pointer}.tournament-refereeing-toggle input{width:2.8rem!important;height:1.45rem;accent-color:#16a34a;cursor:pointer}@media(max-width:650px){.tournament-refereeing-setting{align-items:flex-start;flex-direction:column}.tournament-refereeing-toggle{align-self:flex-end}}
+.tournament-refereeing-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin: 1rem 0;
+}
+.tournament-refereeing-setting h3 {
+  margin: 0 0 0.3rem;
+}
+.tournament-refereeing-setting p {
+  margin: 0;
+  opacity: 0.72;
+}
+.tournament-refereeing-toggle {
+  display: flex !important;
+  align-items: center;
+  gap: 0.65rem;
+  white-space: nowrap;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tournament-refereeing-toggle input {
+  width: 2.8rem !important;
+  height: 1.45rem;
+  accent-color: #16a34a;
+  cursor: pointer;
+}
+@media (max-width: 650px) {
+  .tournament-refereeing-setting {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .tournament-refereeing-toggle {
+    align-self: flex-end;
+  }
+}

@@ -355,7 +355,8 @@
   margin-top: 1rem;
 }
 
-.admin-tv-settings__poster-controls > label:not(.admin-tv-settings__poster-upload) {
+.admin-tv-settings__poster-controls
+  > label:not(.admin-tv-settings__poster-upload) {
   display: grid;
   gap: 0.4rem;
   min-width: 12rem;
@@ -462,7 +463,8 @@
     width: 100%;
   }
 
-  .admin-tv-settings__poster-controls > label:not(.admin-tv-settings__poster-upload) {
+  .admin-tv-settings__poster-controls
+    > label:not(.admin-tv-settings__poster-upload) {
     width: 100%;
   }
 }

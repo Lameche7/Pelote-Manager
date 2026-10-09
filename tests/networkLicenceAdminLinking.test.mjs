@@ -11,10 +11,7 @@ const migration = fs.readFileSync(
 );
 
 test("le preview admin accepte une identité déjà présente dans un autre club", () => {
-  assert.doesNotMatch(
-    migration,
-    /Ce compte est déjà rattaché à un autre club/,
-  );
+  assert.doesNotMatch(migration, /Ce compte est déjà rattaché à un autre club/);
   assert.match(
     migration,
     /profile_club_member_id\(profile_id_value, current_club\)/,
@@ -33,10 +30,7 @@ test("le rattachement admin préserve le membre historique du profil", () => {
 });
 
 test("le club de licence par défaut vient de l'affiliation sportive", () => {
-  assert.match(
-    migration,
-    /affiliation\.affiliation_type = 'primary'/,
-  );
+  assert.match(migration, /affiliation\.affiliation_type = 'primary'/);
   assert.doesNotMatch(
     migration,
     /public\.profiles profile\s+left join public\.club_members member on member\.id = profile\.member_id/,

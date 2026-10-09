@@ -28,7 +28,7 @@ test("résout le profil par l'identité sportive globale", () => {
 
 test("migre les cinq notifications d'équipe", () => {
   for (const name of functions) {
-    const declaration = new RegExp(`function public\\.${name}`);
+    const declaration = new RegExp(`function public\\.${name}`, "i");
 
     assert.match(migration, declaration);
   }

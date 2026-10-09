@@ -22,7 +22,11 @@ export function ResetPasswordPage() {
       await updatePassword(password);
       navigate(ROUTES.login, { replace: true, state: { passwordReset: true } });
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Impossible de modifier le mot de passe.");
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Impossible de modifier le mot de passe.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -33,14 +37,34 @@ export function ResetPasswordPage() {
       <h1 id="reset-password-title">Nouveau mot de passe</h1>
       <form onSubmit={(event) => void handleSubmit(event)}>
         <label htmlFor="new-password">Nouveau mot de passe</label>
-        <input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} required />
+        <input
+          id="new-password"
+          type="password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          minLength={8}
+          required
+        />
         <label htmlFor="confirm-password">Confirmer le mot de passe</label>
-        <input id="confirm-password" type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} minLength={8} required />
+        <input
+          id="confirm-password"
+          type="password"
+          autoComplete="new-password"
+          value={confirmation}
+          onChange={(event) => setConfirmation(event.target.value)}
+          minLength={8}
+          required
+        />
         <small>8 caractères minimum.</small>
-        <button type="submit" disabled={isSubmitting}>{isSubmitting ? "Modification…" : "Modifier le mot de passe"}</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Modification…" : "Modifier le mot de passe"}
+        </button>
         {error && <p role="alert">{error}</p>}
       </form>
-      <p><Link to={ROUTES.login}>Retour à la connexion</Link></p>
+      <p>
+        <Link to={ROUTES.login}>Retour à la connexion</Link>
+      </p>
     </section>
   );
 }

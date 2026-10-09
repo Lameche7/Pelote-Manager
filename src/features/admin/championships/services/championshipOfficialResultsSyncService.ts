@@ -397,8 +397,8 @@ export const championshipOfficialResultsSyncService = {
       conflicts: Array.isArray(row.conflicts)
         ? row.conflicts
             .map(asConflict)
-            .filter(
-              (conflict): conflict is OfficialResultConflict => Boolean(conflict),
+            .filter((conflict): conflict is OfficialResultConflict =>
+              Boolean(conflict),
             )
         : [],
       standingsUpdatedCount,

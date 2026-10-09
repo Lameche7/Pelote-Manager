@@ -60,7 +60,7 @@ test("la recherche tardive dérive l'identité du profil authentifié", () => {
 
 test("l'application vérifie les nouvelles participations au fil de la navigation", () => {
   assert.match(service, /get_my_unclaimed_external_participations/);
-  assert.match(prompt, /externalParticipationService\.listUnclaimed\(\)/);
+  assert.match(prompt, /externalParticipationService\s*\.listUnclaimed\(\)/);
   assert.match(prompt, /location\.key/);
   assert.match(prompt, /Oui, c’est bien moi/);
   assert.match(prompt, /Plus tard/);

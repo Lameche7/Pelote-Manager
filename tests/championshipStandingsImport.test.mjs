@@ -39,7 +39,7 @@ const playerRankingServiceUrl = new URL(
   import.meta.url,
 );
 const playerPageUrl = new URL(
-  "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
+  "../src/features/user-space/championships/components/ChampionshipStandingsExplorer.tsx",
   import.meta.url,
 );
 const migrationUrl = new URL(
@@ -187,9 +187,8 @@ test("le joueur peut naviguer entre sa poule, les autres poules et le général"
   assert.match(contextService, /generalStandings/);
   assert.match(contextService, /qualification/);
   assert.match(page, /Ma poule/);
-  assert.match(page, /Toutes les poules/);
-  assert.match(page, /Classement général/);
-  assert.match(page, /Zone de qualification directe/);
-  assert.match(page, /Zone barrage/);
-  assert.match(page, /officialPoints/);
+  assert.match(page, /Classement par poule/);
+  assert.match(page, /Classement général après poules/);
+  assert.match(page, /qualificationCutoff/);
+  assert.match(page, /generalStandings/);
 });

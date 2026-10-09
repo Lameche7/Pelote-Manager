@@ -3,7 +3,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 const migration = fs.readFileSync(
-  new URL("../supabase/migrations/20260929190000_use_network_identity_for_championships.sql", import.meta.url),
+  new URL(
+    "../supabase/migrations/20260929190000_use_network_identity_for_championships.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 

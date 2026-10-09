@@ -81,17 +81,16 @@ test("l'écran commence par le jour et insère les séries de tournoi dans la ro
     read("../src/features/tv/pages/TvWeeklyView.css"),
   ]);
 
+  assert.match(page, /type TvTournamentView =/);
+  assert.match(page, /type TvPosterView =/);
   assert.match(
     page,
-    /type TvView = "today" \| "week" \| "club" \| `tournament:\$\{string\}:\$\{string\}`/,
+    /type TvView = "today" \| "week" \| "club" \| TvTournamentView \| TvPosterView/,
   );
   assert.match(page, /useState<TvView>\("today"\)/);
   assert.match(page, /const viewOrder = useMemo<TvView\[]>/);
   assert.match(page, /"today",\s*"week",/);
-  assert.match(
-    page,
-    /\.\.\.tournamentSeries\.map\(\(series\) => series\.viewKey as TvView\)/,
-  );
+  assert.match(page, /\.\.\.tournamentSeries\.flatMap\(\(series\) => \[/);
   assert.match(page, /"club",/);
   assert.match(page, /nextTvView\(current, viewOrder\)/);
   assert.match(page, /display\.viewDurationSeconds \* 1_000/);

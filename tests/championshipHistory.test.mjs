@@ -7,24 +7,25 @@ const page = await readFile(
   "utf8",
 );
 
-test("les championnats archivés sont retirés de la liste principale", () => {
+test("les championnats archivés sont retirés des parties courantes", () => {
+  assert.match(page, /const currentChampionships = useMemo/);
   assert.match(page, /championshipStatus !== "archived"/);
-  assert.match(page, /currentChampionships\.map\(championshipCard\)/);
+  assert.match(page, /currentChampionships\.flatMap/);
+  assert.match(page, /const archivedChampionships = useMemo/);
+  assert.match(page, /championshipStatus === "archived"/);
 });
 
-test("les archives sont regroupées et accessibles par saison", () => {
-  assert.match(page, /const archivedBySeason = useMemo/);
-  assert.match(page, /const historySeasons = useMemo/);
-  assert.match(page, /selectedHistorySeason/);
-  assert.match(page, />\s*Historique\s*</);
-  assert.match(page, /Saisons terminées/);
+test("les archives sont accessibles dans un historique repliable avec la saison", () => {
+  assert.match(page, /archivedChampionships\.length > 0/);
+  assert.match(page, /<details className="my-championships__history-block">/);
+  assert.match(page, /Historique des saisons/);
+  assert.match(page, /archivedChampionships\.map/);
+  assert.match(page, /championship\.seasonLabel/);
 });
 
-test("un championnat archivé reste consultable sans saisie de résultat", () => {
-  assert.match(
-    page,
-    /const readOnly = championship\.championshipStatus === "archived"/,
-  );
-  assert.match(page, /!readOnly && \(/);
-  assert.match(page, /readOnly=\{readOnly\}/);
+test("les archives affichent les scores sans actions de saisie", () => {
+  assert.match(page, /className="my-championships__archive-list"/);
+  assert.match(page, /championship\.matches/);
+  assert.match(page, /archivedScore\(match\)/);
+  assert.match(page, /championship\.opponentLabel|match\.opponentLabel/);
 });

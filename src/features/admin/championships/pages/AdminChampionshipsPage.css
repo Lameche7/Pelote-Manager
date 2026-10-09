@@ -275,7 +275,6 @@
   }
 }
 
-
 .admin-championships__engagement-update {
   display: grid;
   gap: 0.85rem;
@@ -287,7 +286,6 @@
 .admin-championships__engagement-update p {
   margin: 0.2rem 0 0;
 }
-
 
 .admin-championships__day-results {
   display: grid;
@@ -465,7 +463,6 @@
     min-width: 5.3rem;
   }
 }
-
 
 .admin-championships__day-result-row.is-home {
   margin: 0.25rem 0;

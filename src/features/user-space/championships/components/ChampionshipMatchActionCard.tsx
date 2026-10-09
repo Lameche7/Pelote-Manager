@@ -84,7 +84,8 @@ const resultTone = (match: MyChampionshipMatch) => {
 };
 
 const matchEndTimestamp = (match: MyChampionshipMatch): number | null => {
-  if (match.status === "played" || hasOfficialResult(match)) return Date.now() - 1;
+  if (match.status === "played" || hasOfficialResult(match))
+    return Date.now() - 1;
   if (match.reservation?.endsAt) {
     const end = new Date(match.reservation.endsAt).getTime();
     if (!Number.isNaN(end)) return end;
@@ -142,7 +143,9 @@ export function ChampionshipMatchActionCard({
       : "",
   );
   const [resultComment, setResultComment] = useState(
-    match.submission?.status === "pending" ? (match.submission.comment ?? "") : "",
+    match.submission?.status === "pending"
+      ? (match.submission.comment ?? "")
+      : "",
   );
   const [resultSaving, setResultSaving] = useState(false);
   const [resultError, setResultError] = useState("");
@@ -157,7 +160,9 @@ export function ChampionshipMatchActionCard({
     officialResult ||
     (endTimestamp !== null && endTimestamp <= Date.now());
   const winningScore = settings?.winningScore ?? null;
-  const configuredResult = Boolean(settings?.inputMode && winningScore !== null);
+  const configuredResult = Boolean(
+    settings?.inputMode && winningScore !== null,
+  );
   const place =
     match.reservation?.resourceName ??
     match.manualSchedule?.venue ??
@@ -165,7 +170,8 @@ export function ChampionshipMatchActionCard({
     match.venue;
   const tone = resultTone(match);
   const mine = match.scoreMine ?? match.submission?.scoreMine ?? null;
-  const opponent = match.scoreOpponent ?? match.submission?.scoreOpponent ?? null;
+  const opponent =
+    match.scoreOpponent ?? match.submission?.scoreOpponent ?? null;
   const scoreVisible = mine !== null && opponent !== null;
 
   const reservationHref = useMemo(() => {
@@ -192,10 +198,18 @@ export function ChampionshipMatchActionCard({
   }, [finished, finalStatus, match, officialResult, readOnly]);
 
   const reservationEditHref = useMemo(() => {
-    if (readOnly || !match.reservation || finished || finalStatus || officialResult) {
+    if (
+      readOnly ||
+      !match.reservation ||
+      finished ||
+      finalStatus ||
+      officialResult
+    ) {
       return null;
     }
-    const params = new URLSearchParams({ edit: match.reservation.reservationId });
+    const params = new URLSearchParams({
+      edit: match.reservation.reservationId,
+    });
     return `${ROUTES.myReservations}?${params.toString()}`;
   }, [finished, finalStatus, match.reservation, officialResult, readOnly]);
 
@@ -248,7 +262,9 @@ export function ChampionshipMatchActionCard({
           ? "Corriger le résultat saisi"
           : "Saisir le résultat";
 
-  const saveManualSchedule = async (event: React.FormEvent<HTMLFormElement>) => {
+  const saveManualSchedule = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
     if (!scheduleDate || !scheduleTime) return;
     setScheduleSaving(true);
@@ -435,12 +451,16 @@ export function ChampionshipMatchActionCard({
             <span>
               <strong>Modifier la réservation</strong>
               <small>
-                {match.reservation?.resourceName} · {displayDate(date)} · {displayTime(time)}
+                {match.reservation?.resourceName} · {displayDate(date)} ·{" "}
+                {displayTime(time)}
               </small>
             </span>
           </Link>
         ) : reservationHref ? (
-          <Link className="championship-match-action__action is-primary" to={reservationHref}>
+          <Link
+            className="championship-match-action__action is-primary"
+            to={reservationHref}
+          >
             <CalendarPlus aria-hidden="true" />
             <span>
               <strong>Réserver un créneau</strong>
@@ -448,7 +468,11 @@ export function ChampionshipMatchActionCard({
             </span>
           </Link>
         ) : (
-          <button type="button" className="championship-match-action__action" disabled>
+          <button
+            type="button"
+            className="championship-match-action__action"
+            disabled
+          >
             <CalendarPlus aria-hidden="true" />
             <span>
               <strong>Réserver un créneau</strong>
@@ -466,7 +490,9 @@ export function ChampionshipMatchActionCard({
           <Clock3 aria-hidden="true" />
           <span>
             <strong>
-              {match.manualSchedule ? "Modifier la programmation" : "Renseigner la programmation"}
+              {match.manualSchedule
+                ? "Modifier la programmation"
+                : "Renseigner la programmation"}
             </strong>
             <small>{programmingReason}</small>
           </span>
@@ -512,14 +538,21 @@ export function ChampionshipMatchActionCard({
         )}
 
       {scheduleEditing && canProgram && (
-        <form className="championship-match-action__form" onSubmit={saveManualSchedule}>
+        <form
+          className="championship-match-action__form"
+          onSubmit={saveManualSchedule}
+        >
           <header>
             <strong>Renseigner la programmation réelle</strong>
-            <span>Date, heure et éventuellement lieu convenus avec l’adversaire.</span>
+            <span>
+              Date, heure et éventuellement lieu convenus avec l’adversaire.
+            </span>
           </header>
           <div className="championship-match-action__form-grid">
             <label>
-              <span>Date <RequiredFieldMark /></span>
+              <span>
+                Date <RequiredFieldMark />
+              </span>
               <input
                 type="date"
                 value={scheduleDate}
@@ -528,7 +561,9 @@ export function ChampionshipMatchActionCard({
               />
             </label>
             <label>
-              <span>Heure <RequiredFieldMark /></span>
+              <span>
+                Heure <RequiredFieldMark />
+              </span>
               <input
                 type="time"
                 value={scheduleTime}
@@ -560,7 +595,10 @@ export function ChampionshipMatchActionCard({
       )}
 
       {resultEditing && canSubmitResult && winningScore !== null && (
-        <form className="championship-match-action__form" onSubmit={submitResult}>
+        <form
+          className="championship-match-action__form"
+          onSubmit={submitResult}
+        >
           <header>
             <strong>Saisir le résultat</strong>
             <span>
@@ -571,7 +609,9 @@ export function ChampionshipMatchActionCard({
           <RequiredFieldsNotice />
           <div className="championship-match-action__form-grid is-score">
             <label>
-              <span>Notre score <RequiredFieldMark /></span>
+              <span>
+                Notre score <RequiredFieldMark />
+              </span>
               <input
                 type="number"
                 min="0"
@@ -582,7 +622,9 @@ export function ChampionshipMatchActionCard({
               />
             </label>
             <label>
-              <span>Score adverse <RequiredFieldMark /></span>
+              <span>
+                Score adverse <RequiredFieldMark />
+              </span>
               <input
                 type="number"
                 min="0"

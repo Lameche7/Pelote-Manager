@@ -320,9 +320,9 @@ export function TournamentRescheduleSuggestions({
                 <>
                   Errebot n’a pas fourni les créneaux choisis par les équipes
                   lors de l’inscription. Ces disponibilités sont donc inconnues
-                  : les échanges de parties sont désactivés et seuls les créneaux
-                  réellement libres sont proposés, sous réserve d’accord des
-                  deux équipes.
+                  : les échanges de parties sont désactivés et seuls les
+                  créneaux réellement libres sont proposés, sous réserve
+                  d’accord des deux équipes.
                 </>
               )}
             </p>

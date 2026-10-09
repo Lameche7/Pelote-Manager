@@ -132,7 +132,6 @@ test("les équipes reliées sont notifiées après application sans bloquer le r
   );
 });
 
-
 test("un report supprime l'ancienne occupation avant de recréer le créneau", async () => {
   const fixMigration = readFileSync(
     new URL(
@@ -162,7 +161,6 @@ test("un report supprime l'ancienne occupation avant de recréer le créneau", a
   assert.match(fixMigration, /reschedule_orphan_released/);
 });
 
-
 test("un échange libère les deux occupations calendrier avant de recréer les créneaux", () => {
   const atomicSwapMigration = readFileSync(
     new URL(
@@ -175,26 +173,30 @@ test("un échange libère les deux occupations calendrier avant de recréer les 
   const releaseIndex = atomicSwapMigration.indexOf(
     "event_resource.event_id in (target_event_id, swap_event_id)",
   );
-  const targetSyncIndex = atomicSwapMigration.indexOf(
-    "public.sync_tournament_reschedule_match_event(\\n        request.match_id",
-  );
+  const syncCall = "perform public.sync_tournament_reschedule_match_event(";
+  const targetSyncIndex = atomicSwapMigration.indexOf(syncCall, releaseIndex);
   const swapSyncIndex = atomicSwapMigration.indexOf(
-    "public.sync_tournament_reschedule_match_event(\\n        request.swap_match_id",
+    syncCall,
+    targetSyncIndex + 1,
   );
 
   assert.ok(releaseIndex >= 0);
   assert.ok(targetSyncIndex > releaseIndex);
   assert.ok(swapSyncIndex > targetSyncIndex);
   assert.match(
-    atomicSwapMigration,
-    /delete from public\.calendar_occupations as occupation[\s\S]*using public\.event_resources as event_resource/,
+    atomicSwapMigration.slice(targetSyncIndex, swapSyncIndex),
+    /request\.match_id/,
+  );
+  assert.match(
+    atomicSwapMigration.slice(swapSyncIndex),
+    /request\.swap_match_id/,
   );
   assert.match(
     atomicSwapMigration,
-    /calendar_occupations_no_overlap/,
+    /delete from public\.calendar_occupations as occupation[\s\S]*using public\.event_resources as event_resource/,
   );
+  assert.match(atomicSwapMigration, /calendar_occupations_no_overlap/);
 });
-
 
 test("le chargement admin des reports utilise un comptage ensembliste des comptes reliés", () => {
   const perfMigration = readFileSync(

@@ -207,8 +207,7 @@ export function AdminChampionshipsPage() {
           .map((issue) => issue.message)
           .join(" ");
         throw new Error(
-          details ||
-            "Le fichier engagements.csv ne peut pas être utilisé.",
+          details || "Le fichier engagements.csv ne peut pas être utilisé.",
         );
       }
       const descriptor =

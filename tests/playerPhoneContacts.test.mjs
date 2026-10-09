@@ -42,7 +42,7 @@ test("Mes tournois et Mes championnats affichent les contacts disponibles", asyn
     tournamentService,
     tournamentPage,
     championshipService,
-    championshipPage,
+    championshipCard,
   ] = await Promise.all([
     read(
       "src/features/user-space/tournaments/services/myTournamentsService.ts",
@@ -51,7 +51,9 @@ test("Mes tournois et Mes championnats affichent les contacts disponibles", asyn
     read(
       "src/features/user-space/championships/services/myChampionshipsService.ts",
     ),
-    read("src/features/user-space/championships/pages/MyChampionshipsPage.tsx"),
+    read(
+      "src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
+    ),
   ]);
 
   assert.match(tournamentService, /get_my_tournament_player_contacts/);
@@ -68,9 +70,15 @@ test("Mes tournois et Mes championnats affichent les contacts disponibles", asyn
   assert.match(tournamentPage, /my-tournaments__opponent-contacts/);
   assert.match(tournamentPage, /phoneHref\(contact\.phone\)/);
 
-  assert.doesNotMatch(championshipService, /get_my_championship_player_contacts/);
+  assert.doesNotMatch(
+    championshipService,
+    /get_my_championship_player_contacts/,
+  );
   assert.match(championshipService, /opponentResponsibleName/);
   assert.match(championshipService, /opponentResponsiblePhone/);
-  assert.match(championshipPage, /my-championships__opponent-responsible/);
-  assert.match(championshipPage, /phoneHref\(match\.opponentResponsiblePhone\)/);
+  assert.match(championshipCard, /Responsable adverse/);
+  assert.match(
+    championshipCard,
+    /phoneHref\(match\.opponentResponsiblePhone\)/,
+  );
 });

@@ -119,7 +119,6 @@ export type MyChampionship = {
   matches: MyChampionshipMatch[];
 };
 
-
 const mapSubmission = (row: Row): MyChampionshipResultSubmission => ({
   id: String(row.id ?? ""),
   matchId: String(row.match_id ?? ""),
@@ -212,14 +211,19 @@ const mapChampionship = (row: Row): MyChampionship => ({
 
 export const myChampionshipsService = {
   async list(): Promise<MyChampionship[]> {
-    const [championshipsResult, submissionsResult, reservationsResult, venueOverridesResult, manualSchedulesResult] =
-      await Promise.all([
-        supabase.rpc("get_my_championships"),
-        supabase.rpc("get_my_championship_result_submissions"),
-        supabase.rpc("get_my_championship_match_reservations"),
-        supabase.rpc("get_my_championship_venue_overrides"),
-        supabase.rpc("get_my_championship_manual_schedules"),
-      ]);
+    const [
+      championshipsResult,
+      submissionsResult,
+      reservationsResult,
+      venueOverridesResult,
+      manualSchedulesResult,
+    ] = await Promise.all([
+      supabase.rpc("get_my_championships"),
+      supabase.rpc("get_my_championship_result_submissions"),
+      supabase.rpc("get_my_championship_match_reservations"),
+      supabase.rpc("get_my_championship_venue_overrides"),
+      supabase.rpc("get_my_championship_manual_schedules"),
+    ]);
 
     if (championshipsResult.error) {
       throw new Error(
@@ -265,21 +269,23 @@ export const myChampionshipsService = {
     }
 
     const venueOverrides = new Map(
-      rows(venueOverridesResult.data).map((row) => [
-        String(row.match_id ?? ""),
-        row.enabled === true,
-      ] as const),
+      rows(venueOverridesResult.data).map(
+        (row) => [String(row.match_id ?? ""), row.enabled === true] as const,
+      ),
     );
 
     const manualSchedules = new Map(
-      rows(manualSchedulesResult.data).map((row) => [
-        String(row.match_id ?? ""),
-        {
-          scheduledOn: String(row.scheduled_on ?? ""),
-          scheduledTime: String(row.scheduled_time ?? ""),
-          venue: nullableString(row.venue),
-        } satisfies MyChampionshipManualSchedule,
-      ] as const),
+      rows(manualSchedulesResult.data).map(
+        (row) =>
+          [
+            String(row.match_id ?? ""),
+            {
+              scheduledOn: String(row.scheduled_on ?? ""),
+              scheduledTime: String(row.scheduled_time ?? ""),
+              venue: nullableString(row.venue),
+            } satisfies MyChampionshipManualSchedule,
+          ] as const,
+      ),
     );
 
     const submissions = new Map(
@@ -341,15 +347,21 @@ export const myChampionshipsService = {
     scheduledTime: string,
     venue: string,
   ): Promise<void> {
-    const { error } = await supabase.rpc("set_my_championship_manual_schedule", {
-      target_match_id: matchId,
-      target_scheduled_on: scheduledOn,
-      target_scheduled_time: scheduledTime,
-      target_venue: venue || null,
-    });
+    const { error } = await supabase.rpc(
+      "set_my_championship_manual_schedule",
+      {
+        target_match_id: matchId,
+        target_scheduled_on: scheduledOn,
+        target_scheduled_time: scheduledTime,
+        target_venue: venue || null,
+      },
+    );
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(error, "Impossible d’enregistrer la programmation de cette partie."),
+        getSupabaseErrorMessage(
+          error,
+          "Impossible d’enregistrer la programmation de cette partie.",
+        ),
       );
     }
   },

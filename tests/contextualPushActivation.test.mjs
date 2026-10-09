@@ -8,9 +8,7 @@ const [nudge, shell, tournaments, reservations, pushService] =
   await Promise.all([
     read("../src/features/notifications/components/PushActivationNudge.tsx"),
     read("../src/features/user-space/components/UserSpaceShell.tsx"),
-    read(
-      "../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx",
-    ),
+    read("../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx"),
     read("../src/features/reservations/pages/ReservationsPage.tsx"),
     read("../src/features/notifications/services/pushNotificationService.ts"),
   ]);
@@ -20,8 +18,8 @@ test("la permission push n'est demandée qu'après un clic utilisateur", () => {
   assert.match(nudge, /onClick=\{\(\) => void enable\(\)\}/);
   assert.match(nudge, /pushNotificationService\.enable\(\)/);
   assert.doesNotMatch(
-    nudge,
-    /useEffect\([\s\S]*pushNotificationService\.enable\(\)/,
+    nudge.slice(0, nudge.indexOf("const enable = async")),
+    /pushNotificationService\.enable\(\)/,
   );
   assert.match(pushService, /Notification\.requestPermission\(\)/);
 });

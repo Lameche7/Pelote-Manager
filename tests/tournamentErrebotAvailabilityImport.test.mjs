@@ -263,7 +263,10 @@ test("le back-office explique que l onglet final apporte seulement des disponibi
     component,
     /Le tournoi Errebot importé reste un tournoi de poules/,
   );
-  assert.match(component, /Aucun match final Errebot n’a été importé/);
+  assert.match(
+    component,
+    /Les disponibilités finales n’importent aucun match Errebot/,
+  );
   assert.match(component, /moteur natif de génération et de planification/);
   assert.match(teamsPage, /AdminErrebotAvailabilityImport/);
   assert.match(teamsPage, /onImported=\{reloadSelected\}/);

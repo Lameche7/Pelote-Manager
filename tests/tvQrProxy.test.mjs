@@ -10,6 +10,9 @@ const source = await readFile(
 test("le proxy QR TV reste un endpoint GET borné et cacheable", () => {
   assert.match(source, /request\.method !== "GET"/);
   assert.match(source, /const MAX_QR_TEXT_LENGTH = 2048/);
-  assert.match(source, /contentType\.toLowerCase\(\)\.includes\("image\/png"\)/);
+  assert.match(
+    source,
+    /contentType\.toLowerCase\(\)\.includes\("image\/png"\)/,
+  );
   assert.match(source, /s-maxage=604800/);
 });

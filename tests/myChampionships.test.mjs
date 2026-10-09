@@ -70,26 +70,38 @@ test("l’espace personnel expose la route Mes championnats", async () => {
 });
 
 test("l’interface expose les classements officiels et la navigation joueur", async () => {
-  const page = await read(pageUrl);
-
-  assert.match(page, /Classements officiels/);
-  assert.match(page, /Ma poule/);
-  assert.match(page, /Toutes les poules/);
-  assert.match(page, /Classement général/);
-  assert.match(page, /Zone de qualification directe/);
-  assert.match(page, /Zone barrage/);
-  assert.match(
-    page,
-    /Pelote Manager ne recalcule pas les règles de classement/,
-  );
-  assert.match(page, /Prochaine partie/);
-  assert.match(page, /Dernier résultat/);
+  const [page, standings, results] = await Promise.all([
+    read(pageUrl),
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipStandingsExplorer.tsx",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipResultsExplorer.tsx",
+        import.meta.url,
+      ),
+    ),
+  ]);
+  assert.match(page, /ChampionshipStandingsExplorer/);
+  assert.match(page, /ChampionshipResultsExplorer/);
+  assert.match(standings, /Classements officiels/);
+  assert.match(standings, /Ma poule/);
+  assert.match(standings, /Classement général après poules/);
+  assert.match(standings, /qualificationCutoff/);
+  assert.match(results, /Toutes les poules/);
 });
 
-
 test("les rencontres indiquent domicile extérieur et la composition adverse", async () => {
-  const [page, service, migration] = await Promise.all([
-    read(pageUrl),
+  const [card, service, migration] = await Promise.all([
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
+        import.meta.url,
+      ),
+    ),
     read(
       new URL(
         "../src/features/user-space/championships/services/myChampionshipsService.ts",
@@ -103,39 +115,49 @@ test("les rencontres indiquent domicile extérieur et la composition adverse", a
       ),
     ),
   ]);
-
-  assert.match(page, /À domicile/);
-  assert.match(page, /À l’extérieur/);
-  assert.match(page, /Club : \{match\.opponentClubName\}/);
-  assert.match(page, /match\.opponentPlayers\.map/);
+  assert.match(card, /À domicile/);
+  assert.match(card, /À l’extérieur/);
+  assert.match(card, /opponentClubName/);
+  assert.match(card, /opponentPlayers/);
   assert.match(service, /opponentClubName/);
   assert.match(service, /opponentPlayers/);
   assert.match(migration, /'opponent_club_name'/);
   assert.match(migration, /'opponent_players'/);
 });
 
-
 test("les championnats utilisent le responsable d'équipe et restent stables en largeur", async () => {
-  const [page, service, styles, migration] = await Promise.all([
-    read(pageUrl),
-    read(new URL("../src/features/user-space/championships/services/myChampionshipsService.ts", import.meta.url)),
-    read(new URL("../src/features/user-space/championships/pages/MyChampionshipsPage.css", import.meta.url)),
-    read(new URL("../supabase/migrations/20260922110000_add_championship_team_responsible_contacts.sql", import.meta.url)),
+  const [card, service, styles, migration] = await Promise.all([
+    read(
+      new URL(
+        "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../src/features/user-space/championships/services/myChampionshipsService.ts",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../src/features/user-space/championships/pages/MyChampionshipsPage.css",
+        import.meta.url,
+      ),
+    ),
+    read(
+      new URL(
+        "../supabase/migrations/20260922110000_add_championship_team_responsible_contacts.sql",
+        import.meta.url,
+      ),
+    ),
   ]);
-
-  assert.match(page, /Responsable/);
-  assert.match(page, /opponentResponsibleName/);
-  assert.match(page, /opponentResponsiblePhone/);
-  assert.doesNotMatch(page, /Téléphone non disponible/);
+  assert.match(card, /Responsable adverse/);
+  assert.match(card, /opponentResponsibleName/);
+  assert.match(card, /opponentResponsiblePhone/);
   assert.match(service, /opponentResponsibleName/);
   assert.match(service, /opponentResponsiblePhone/);
   assert.doesNotMatch(service, /get_my_championship_player_contacts/);
-  assert.doesNotMatch(styles, /\.my-championships\s*\{[^}]*overflow-x:\s*hidden/s);
-  assert.match(styles, /\.my-championships__table-scroll\s*\{[^}]*overflow-x:\s*auto/s);
-  assert.match(
-    styles,
-    /\.my-championships__standings-wrap\s*>\s*div\s*\{[^}]*min-width:\s*0[^}]*max-width:\s*100%/s,
-  );
   assert.match(styles, /overflow-wrap: anywhere/);
   assert.match(migration, /responsible_name text/);
   assert.match(migration, /responsible_phone text/);

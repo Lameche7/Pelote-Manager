@@ -160,8 +160,15 @@ export function AdminTournamentManualRescheduleForm({
     setSuccess("");
     try {
       if (exceptional) {
-        if (!exceptionalDate || !exceptionalResource || !exceptionalStart || !exceptionalEnd) {
-          setError("Renseignez la date, le terrain et les horaires du report exceptionnel.");
+        if (
+          !exceptionalDate ||
+          !exceptionalResource ||
+          !exceptionalStart ||
+          !exceptionalEnd
+        ) {
+          setError(
+            "Renseignez la date, le terrain et les horaires du report exceptionnel.",
+          );
           setSaving(false);
           return;
         }
@@ -174,12 +181,13 @@ export function AdminTournamentManualRescheduleForm({
           endsAt: exceptionalEnd,
           contactNote,
         });
-      } else await adminTournamentManualRescheduleService.create({
-        matchId: match.id,
-        requesterTeamId,
-        slot: selectedSlot!,
-        contactNote,
-      });
+      } else
+        await adminTournamentManualRescheduleService.create({
+          matchId: match.id,
+          requesterTeamId,
+          slot: selectedSlot!,
+          contactNote,
+        });
       setSuccess(
         "Demande créée. L’accord de l’équipe demandeuse est enregistré hors application ; l’autre équipe peut maintenant répondre dans PILOTOKI ou être contactée par l’organisation.",
       );
@@ -288,48 +296,107 @@ export function AdminTournamentManualRescheduleForm({
           </label>
 
           <label className="admin-manual-reschedule__exceptional-toggle">
-            <input type="checkbox" checked={exceptional} onChange={(event) => setExceptional(event.target.checked)} disabled={saving} />
-            <span><strong>Report exceptionnel hors créneaux du tournoi</strong> — réservé aux administrateurs. Ne modifie pas la grille habituelle.</span>
+            <input
+              type="checkbox"
+              checked={exceptional}
+              onChange={(event) => setExceptional(event.target.checked)}
+              disabled={saving}
+            />
+            <span>
+              <strong>Report exceptionnel hors créneaux du tournoi</strong> —
+              réservé aux administrateurs. Ne modifie pas la grille habituelle.
+            </span>
           </label>
           {exceptional ? (
             <div className="admin-manual-reschedule__exceptional">
-              <label><span>Date exceptionnelle</span><input type="date" value={exceptionalDate} onChange={(event) => setExceptionalDate(event.target.value)} required disabled={saving} /></label>
-              <label><span>Terrain</span>
-                <select value={exceptionalResource} onChange={(event) => setExceptionalResource(event.target.value)} required disabled={saving}>
+              <label>
+                <span>Date exceptionnelle</span>
+                <input
+                  type="date"
+                  value={exceptionalDate}
+                  onChange={(event) => setExceptionalDate(event.target.value)}
+                  required
+                  disabled={saving}
+                />
+              </label>
+              <label>
+                <span>Terrain</span>
+                <select
+                  value={exceptionalResource}
+                  onChange={(event) =>
+                    setExceptionalResource(event.target.value)
+                  }
+                  required
+                  disabled={saving}
+                >
                   <option value="">Choisir un terrain du tournoi</option>
-                  {Array.from(new Map([...(tournament?.matches ?? []).map((item) => [item.resourceId, item.resourceName] as const), ...slots.map((item) => [item.resourceId, item.resourceName] as const)]).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                  {Array.from(
+                    new Map([
+                      ...(tournament?.matches ?? []).map(
+                        (item) => [item.resourceId, item.resourceName] as const,
+                      ),
+                      ...slots.map(
+                        (item) => [item.resourceId, item.resourceName] as const,
+                      ),
+                    ]).entries(),
+                  ).map(([id, name]) => (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  ))}
                 </select>
               </label>
-              <label><span>Début</span><input type="time" value={exceptionalStart} onChange={(event) => setExceptionalStart(event.target.value)} required disabled={saving} /></label>
-              <label><span>Fin</span><input type="time" value={exceptionalEnd} onChange={(event) => setExceptionalEnd(event.target.value)} required disabled={saving} /></label>
-              <small>La disponibilité du terrain, les conflits de parties et les accords sont vérifiés côté serveur. L'application finale du report nécessite toujours les deux accords.</small>
+              <label>
+                <span>Début</span>
+                <input
+                  type="time"
+                  value={exceptionalStart}
+                  onChange={(event) => setExceptionalStart(event.target.value)}
+                  required
+                  disabled={saving}
+                />
+              </label>
+              <label>
+                <span>Fin</span>
+                <input
+                  type="time"
+                  value={exceptionalEnd}
+                  onChange={(event) => setExceptionalEnd(event.target.value)}
+                  required
+                  disabled={saving}
+                />
+              </label>
+              <small>
+                La disponibilité du terrain, les conflits de parties et les
+                accords sont vérifiés côté serveur. L'application finale du
+                report nécessite toujours les deux accords.
+              </small>
             </div>
           ) : (
-          <label>
-            <span>Nouveau créneau</span>
-            <select
-              value={selectedSlotKey}
-              onChange={(event) => setSelectedSlotKey(event.target.value)}
-              disabled={saving || loadingSlots || !match}
-              required
-            >
-              <option value="">
-                {loadingSlots
-                  ? "Recherche des créneaux…"
-                  : "Choisir un créneau disponible"}
-              </option>
-              {slots.map((slot) => (
-                <option key={slotKey(slot)} value={slotKey(slot)}>
-                  {dateLabel(slot.playDate)} · {slot.startsAt}–{slot.endsAt} ·{" "}
-                  {slot.resourceName}
+            <label>
+              <span>Nouveau créneau</span>
+              <select
+                value={selectedSlotKey}
+                onChange={(event) => setSelectedSlotKey(event.target.value)}
+                disabled={saving || loadingSlots || !match}
+                required
+              >
+                <option value="">
+                  {loadingSlots
+                    ? "Recherche des créneaux…"
+                    : "Choisir un créneau disponible"}
                 </option>
-              ))}
-            </select>
-            {match && !loadingSlots && slots.length === 0 && (
-              <small>Aucun créneau libre compatible n’est disponible.</small>
-            )}
-          </label>
-
+                {slots.map((slot) => (
+                  <option key={slotKey(slot)} value={slotKey(slot)}>
+                    {dateLabel(slot.playDate)} · {slot.startsAt}–{slot.endsAt} ·{" "}
+                    {slot.resourceName}
+                  </option>
+                ))}
+              </select>
+              {match && !loadingSlots && slots.length === 0 && (
+                <small>Aucun créneau libre compatible n’est disponible.</small>
+              )}
+            </label>
           )}
           <label className="admin-manual-reschedule__note">
             <span>Comment la demande a-t-elle été recueillie ?</span>
@@ -364,7 +431,17 @@ export function AdminTournamentManualRescheduleForm({
           <button
             className="admin-manual-reschedule__submit"
             type="submit"
-            disabled={saving || !match || !requesterTeamId || (exceptional ? !exceptionalDate || !exceptionalResource || !exceptionalStart || !exceptionalEnd : !selectedSlot)}
+            disabled={
+              saving ||
+              !match ||
+              !requesterTeamId ||
+              (exceptional
+                ? !exceptionalDate ||
+                  !exceptionalResource ||
+                  !exceptionalStart ||
+                  !exceptionalEnd
+                : !selectedSlot)
+            }
           >
             {saving ? "Création…" : "Créer la demande de report"}
           </button>
