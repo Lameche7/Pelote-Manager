@@ -11,7 +11,7 @@ const serviceUrl = new URL(
   import.meta.url,
 );
 const pageUrl = new URL(
-  "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
+  "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
   import.meta.url,
 );
 
@@ -87,11 +87,8 @@ test("l’interface distingue proposition et résultat officiel", async () => {
   const page = await read(pageUrl);
 
   assert.match(page, /Saisir le résultat/);
-  assert.match(page, /En attente de confirmation par la source officielle/);
-  assert.match(page, /La proposition de votre équipe a été confirmée/);
-  assert.match(page, /Résultat officiel différent/);
-  assert.match(
-    page,
-    /Cette proposition n’écrase\s+jamais le résultat officiel/,
-  );
+  assert.match(page, /Résultat officiel/);
+  assert.match(page, /Résultat saisi · en attente du comité/);
+  assert.match(page, /match\.submission\?\.status === "confirmed_official"/);
+  assert.match(page, /Votre résultat saisi a été confirmé par la mise à jour officielle/);
 });
