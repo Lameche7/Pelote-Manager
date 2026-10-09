@@ -39,7 +39,7 @@ const [
   read("../src/features/reservations/pages/ReservationsPage.tsx"),
   read("../src/features/reservations/pages/ReservationLockedSlots.css"),
   read(
-    "../src/features/user-space/championships/pages/MyChampionshipsPage.tsx",
+    "../src/features/user-space/championships/components/ChampionshipMatchActionCard.tsx",
   ),
   read(
     "../src/features/user-space/championships/services/myChampionshipsService.ts",
@@ -99,8 +99,8 @@ test("le PCL peut réserver gratuitement sans contourner les contrôles de club"
 });
 
 test("Mes championnats réserve à domicile ou dans notre trinquet après choix explicite", () => {
-  assert.match(championshipsPage, /Réserver un terrain pour cette partie/);
-  assert.match(championshipsPage, /Jouer cette partie dans notre trinquet/);
+  assert.match(championshipsPage, /Réserver un créneau/);
+  assert.match(championshipsPage, /Finalement jouer cette partie dans notre trinquet/);
   assert.match(championshipsPage, /match\.teamSide !== "a" && !match\.playsAtMyClub/);
   assert.match(championshipsService, /get_my_championship_venue_overrides/);
   assert.match(championshipsService, /set_my_championship_home_venue/);
