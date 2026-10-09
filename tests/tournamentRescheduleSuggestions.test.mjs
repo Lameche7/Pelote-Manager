@@ -244,7 +244,7 @@ test("Mes tournois permet de créer et traiter une demande sans appliquer encore
   assert.match(component, /freeSlots\.map\(\(option\) =>/);
   assert.match(component, /swaps\.map\(\(option\) =>/);
   assert.doesNotMatch(component, /slice\(0, 6\)/);
-  assert.match(component, /Aucun match\s+n’est déplacé/);
+  assert.match(component, /Aucune partie n’est déplacé tant que tous les accords ne/);
   assert.match(requestsPanel, /Accepter/);
   assert.match(requestsPanel, /Refuser/);
   assert.match(requestsPanel, /Tous les accords sont réunis/);
