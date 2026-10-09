@@ -106,3 +106,15 @@ jobs:
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261008211000_scope_admin_profiles_to_club.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-cases.sql
+
+  formatting-user-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Vérifier uniquement les fichiers applicatifs du correctif
+        run: npx prettier --check src/features/admin/pages/AdminUsersPage.tsx tests/networkClubUserAdmin.test.mjs tests/adminAccessHardening.test.mjs
