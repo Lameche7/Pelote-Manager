@@ -29,21 +29,27 @@ test("licence distincte de l'administration", () => {
   assert.match(page, /Retirer l’administration/);
 });
 
-test("un administrateur de club ne peut pas être nommé administrateur d'un second club", () => {
+test(
+  "un administrateur de club ne peut pas être nommé administrateur d'un second club",
+  () => {
   assert.match(migration, /other_membership.club_id<>actor_club_id/);
   assert.match(migration, /other_role.key='administrator'/);
-  assert.match(migration, /already administers another club/);
-});
+    assert.match(migration, /already administers another club/);
+  },
+);
 
-test("la limite d'un administrateur par club est aussi appliquée aux écritures directes", () => {
+test(
+  "la limite d'un administrateur par club est aussi appliquée aux écritures directes",
+  () => {
   assert.match(migration, /create trigger enforce_single_club_administrator/);
   assert.match(
     migration,
     /before insert or update of club_id, profile_id, role_id/,
   );
   assert.match(migration, /where p.id = new.profile_id for update/);
-  assert.match(migration, /cm.club_id <> new.club_id/);
-});
+    assert.match(migration, /cm.club_id <> new.club_id/);
+  },
+);
 
 test("les trois fonctions PL/pgSQL se terminent avec END point-virgule", () => {
   const bodies = migration.match(/end;\s*\$function\$;/gi) ?? [];
