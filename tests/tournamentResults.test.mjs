@@ -135,7 +135,7 @@ test("le back-office résultats ouvre un tableau de traitement priorisé", async
   assert.match(adminPage, /type ResultsView = "todo" \| "today" \| "pending" \| "all"/);
   assert.match(adminPage, /À traiter/);
   assert.match(adminPage, /Aujourd’hui/);
-  assert.match(adminPage, /Tous les matchs/);
+  assert.match(adminPage, /Tous les parties/);
   assert.match(adminPage, /Joueur ou équipe/);
   assert.match(adminPage, /Toutes les séries/);
   assert.match(adminPage, /Toutes les poules/);
