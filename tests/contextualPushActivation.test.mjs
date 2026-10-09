@@ -20,8 +20,8 @@ test("la permission push n'est demandée qu'après un clic utilisateur", () => {
   assert.match(nudge, /onClick=\{\(\) => void enable\(\)\}/);
   assert.match(nudge, /pushNotificationService\.enable\(\)/);
   assert.doesNotMatch(
-    nudge,
-    /useEffect\([\s\S]*pushNotificationService\.enable\(\)/,
+    nudge.slice(0, nudge.indexOf("const enable = async")),
+    /pushNotificationService\.enable\(\)/,
   );
   assert.match(pushService, /Notification\.requestPermission\(\)/);
 });
