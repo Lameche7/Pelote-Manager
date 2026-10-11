@@ -219,7 +219,8 @@ export function AdminTournamentManualRescheduleForm({
           <h2 id="admin-manual-reschedule-title">Créer un report de A à Z</h2>
           <p>
             Pour une demande reçue par téléphone, au club ou par message, même
-            si les joueurs n’ont pas encore de compte PILOTOKI.
+            si les joueurs n’ont pas encore de compte PILOTOKI. Les parties
+            passées sans résultat validé restent proposées.
           </p>
         </div>
       </header>
@@ -263,7 +264,7 @@ export function AdminTournamentManualRescheduleForm({
               ))}
             </select>
             {tournament && tournament.matches.length === 0 && (
-              <small>Aucune partie future disponible dans ce tournoi.</small>
+              <small>Aucune partie sans résultat validé disponible dans ce tournoi.</small>
             )}
           </label>
 
