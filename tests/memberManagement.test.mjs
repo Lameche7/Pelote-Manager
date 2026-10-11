@@ -13,6 +13,7 @@ import {
   detectSeparator,
   findFileDuplicates,
   mapMemberRow,
+  normalizeCsvLicenceNumber,
   parseCsv,
 } from "../.test-dist/src/features/admin/members/domain/csvImport.js";
 import {
@@ -55,7 +56,7 @@ test("détecte séparateur, encodage et mapping", () => {
   const rows = parseCsv(source);
   const mapping = autoMapColumns(rows[0]);
   assert.deepEqual(mapMemberRow(rows[1], mapping), {
-    licenceNumber: "001",
+    licenceNumber: "000001",
     firstName: "Élodie",
     lastName: "Durand",
     birthDate: "2000-02-01",
@@ -67,6 +68,36 @@ test("détecte séparateur, encodage et mapping", () => {
   const cp = new Uint8Array([0x4a, 0x6f, 0x73, 0xe9]).buffer;
   assert.equal(decodeCsv(cp).encoding, "windows-1252");
 });
+test("restitue six chiffres aux licences numériques CSV sans altérer les autres", () => {
+  assert.equal(normalizeCsvLicenceNumber("1234"), "001234");
+  assert.equal(normalizeCsvLicenceNumber("12345"), "012345");
+  assert.equal(normalizeCsvLicenceNumber("123456"), "123456");
+  assert.equal(normalizeCsvLicenceNumber("001234"), "001234");
+  assert.equal(normalizeCsvLicenceNumber(" ab 00123 "), "AB00123");
+  assert.equal(normalizeCsvLicenceNumber(""), "");
+});
+
+test("le CSV identifie les doublons après normalisation des zéros", () => {
+  const csv =
+    "Licence;Nom;Prénom;Date de naissance;Sexe\n1234;Durand;Alice;01/02/2000;F\n001234;Durand;Alice;01/02/2000;F";
+  const parsed = parseCsv(csv);
+  const mapping = autoMapColumns(parsed[0]);
+  const rows = parsed.slice(1).map((row) => mapMemberRow(row, mapping));
+  assert.equal(rows[0].licenceNumber, "001234");
+  assert.deepEqual([...findFileDuplicates(rows)], [0, 1]);
+  const existing = {
+    ...rows[0],
+    id: "member",
+    clubId: "club",
+    isActive: true,
+    updatedAt: "v1",
+  };
+  assert.equal(
+    buildImportPreview([rows[0]], [existing], "club")[0].action,
+    "unchanged",
+  );
+});
+
 test("bloque tous les doublons internes", () => {
   const row = {
     licenceNumber: "001",
@@ -112,7 +143,7 @@ test("applique un mapping manuel et révèle les colonnes obligatoires absentes"
     last_name: 0,
     licence_number: 1,
   });
-  assert.equal(mapped.licenceNumber, "001");
+  assert.equal(mapped.licenceNumber, "000001");
   assert.equal(mapped.birthDate, null);
   assert.equal(mapped.gender, null);
 });
