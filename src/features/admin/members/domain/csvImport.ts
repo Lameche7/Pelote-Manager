@@ -134,7 +134,7 @@ export function autoMapColumns(headers: string[]): ColumnMapping {
 // Les exports FFPB numériques perdent parfois leurs zéros de tête dans Excel.
 export function normalizeCsvLicenceNumber(value: string): string {
   const normalized = normalizeLicenceNumber(value);
-  return /^\\d{1,6}$/.test(normalized)
+  return /^\d{1,6}$/.test(normalized)
     ? normalized.padStart(6, "0")
     : normalized;
 }
