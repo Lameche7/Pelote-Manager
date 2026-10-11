@@ -131,6 +131,14 @@ export function autoMapColumns(headers: string[]): ColumnMapping {
   });
   return mapping;
 }
+// Les exports FFPB numériques perdent parfois leurs zéros de tête dans Excel.
+export function normalizeCsvLicenceNumber(value: string): string {
+  const normalized = normalizeLicenceNumber(value);
+  return /^\\d{1,6}$/.test(normalized)
+    ? normalized.padStart(6, "0")
+    : normalized;
+}
+
 export function mapMemberRow(
   row: string[],
   mapping: ColumnMapping,
@@ -138,7 +146,7 @@ export function mapMemberRow(
   const get = (key: MemberColumn) =>
     (mapping[key] === undefined ? "" : (row[mapping[key]!] ?? "")).trim();
   return {
-    licenceNumber: normalizeLicenceNumber(get("licence_number")),
+    licenceNumber: normalizeCsvLicenceNumber(get("licence_number")),
     lastName: get("last_name"),
     firstName: get("first_name"),
     birthDate: parseMemberDate(get("birth_date")),
