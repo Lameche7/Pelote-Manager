@@ -78,7 +78,8 @@ test("restitue six chiffres aux licences numériques CSV sans altérer les autre
 });
 
 test("le CSV identifie les doublons après normalisation des zéros", () => {
-  const csv = "Licence;Nom;Prénom;Date de naissance;Sexe\\n1234;Durand;Alice;01/02/2000;F\\n001234;Durand;Alice;01/02/2000;F";
+  const csv =
+    "Licence;Nom;Prénom;Date de naissance;Sexe\n1234;Durand;Alice;01/02/2000;F\n001234;Durand;Alice;01/02/2000;F";
   const parsed = parseCsv(csv);
   const mapping = autoMapColumns(parsed[0]);
   const rows = parsed.slice(1).map((row) => mapMemberRow(row, mapping));
@@ -91,7 +92,10 @@ test("le CSV identifie les doublons après normalisation des zéros", () => {
     isActive: true,
     updatedAt: "v1",
   };
-  assert.equal(buildImportPreview([rows[0]], [existing], "club")[0].action, "unchanged");
+  assert.equal(
+    buildImportPreview([rows[0]], [existing], "club")[0].action,
+    "unchanged",
+  );
 });
 
 test("bloque tous les doublons internes", () => {
