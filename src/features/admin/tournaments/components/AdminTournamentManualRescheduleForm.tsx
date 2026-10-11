@@ -263,7 +263,7 @@ export function AdminTournamentManualRescheduleForm({
               ))}
             </select>
             {tournament && tournament.matches.length === 0 && (
-              <small>Aucune partie future disponible dans ce tournoi.</small>
+              <small>Aucune partie à reporter dans ce tournoi.</small>
             )}
           </label>
 
