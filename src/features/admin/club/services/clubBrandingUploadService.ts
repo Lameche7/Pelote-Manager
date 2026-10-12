@@ -40,4 +40,12 @@ export const clubBrandingUploadService = {
   async discardUploadedImage(clubId: string, url: string): Promise<void> {
     const publicPrefix = supabase.storage.from(BUCKET).getPublicUrl("")
       .data.publicUrl;
-    const prefix =ֻǱ˞
+    const prefix = publicPrefix.endsWith("/")
+      ? publicPrefix
+      : `${publicPrefix}/`;
+    if (!url.startsWith(prefix)) return;
+    const path = url.slice(prefix.length);
+    if (!path.startsWith(`${clubId}/dotation/branding-`)) return;
+    await supabase.storage.from(BUCKET).remove([path]);
+  },
+};
