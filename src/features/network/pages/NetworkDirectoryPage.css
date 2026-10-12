@@ -267,8 +267,16 @@
   padding: 18px clamp(20px, 5vw, 80px);
   background: #103a30;
 }
-.network-directory__header img { width: 145px; background: white; border-radius: 9px; padding: 7px 10px; }
-.network-directory__header nav a { color: white; font-weight: 650; }
+.network-directory__header img {
+  width: 145px;
+  background: white;
+  border-radius: 9px;
+  padding: 7px 10px;
+}
+.network-directory__header nav a {
+  color: white;
+  font-weight: 650;
+}
 .network-directory__specialty {
   font-weight: 700;
   color: #145d43;
