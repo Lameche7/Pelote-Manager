@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/infrastructure/supabase/client";
+import { clubAdminService } from "../services/clubAdminService";
 
 type PublicProfile = {
   is_published: boolean;
@@ -46,6 +47,27 @@ export function NetworkClubPublishing({ clubId }: { clubId: string }) {
     };
   }, [clubId]);
 
+  const importExisting = async () => {
+    setBusy(true);
+    setStatus("");
+    try {
+      const club = await clubAdminService.getClub();
+      if (club.id !== clubId) throw new Error("Le club sélectionné a changé.");
+      setProfile((existing) => ({
+        ...existing,
+        public_address: existing.public_address || club.address,
+        public_email: existing.public_email || club.email,
+        public_phone: existing.public_phone || club.phone,
+        public_website: existing.public_website || club.website,
+      }));
+      setStatus("Informations reprises. Vérifiez-les, cochez la publication puis enregistrez. Les notes internes ne sont pas copiées.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Import impossible.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
@@ -83,6 +105,9 @@ export function NetworkClubPublishing({ clubId }: { clubId: string }) {
         Ces informations sont indépendantes de la fiche administrative interne.
         Rien n'est publié tant que vous n'activez pas la publication.
       </p>
+      <button type="button" disabled={busy} onClick={() => void importExisting()}>
+        Reprendre les informations déjà saisies dans le club
+      </button>
       {fields.map(({ key, label }) => (
         <label key={key} style={{ display: "grid", gap: 5 }}>
           {label}
