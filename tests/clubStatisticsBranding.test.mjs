@@ -46,7 +46,7 @@ test("club information page edits images and the four-color palette", () => {
   assert.match(clubPage, /Logo du club/);
   assert.match(clubPage, /type="file"/);
   assert.match(clubPage, /clubBrandingUploadService\.upload/);
-  assert.match(clubPage, /photo d’arrière-plan/);
+  assert.match(clubPage, /Photo d’arrière-plan/);
   assert.match(clubPage, /primaryColor/);
   assert.match(clubPage, /secondaryColor/);
   assert.match(clubPage, /accentColor/);
