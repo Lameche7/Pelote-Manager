@@ -18,6 +18,7 @@ const formatDate = (date: string) =>
 export function NetworkDirectoryPage() {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [tournaments, setTournaments] = useState<TournamentListing[]>([]);
+  const [specialties, setSpecialties] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -38,6 +39,8 @@ export function NetworkDirectoryPage() {
         );
         if (!current) return;
         setClubs(directory);
+        const { data: specialtyRows } = await supabase.from("network_tournament_profiles").select("tournament_id,specialty");
+        if (current) setSpecialties(Object.fromEntries((specialtyRows ?? []).filter((item) => item.specialty).map((item) => [item.tournament_id, item.specialty as string])));
         setTournaments(
           lists.flatMap((result, index) =>
             result.status === "fulfilled"
@@ -122,7 +125,7 @@ export function NetworkDirectoryPage() {
                   <span>{club.name}</span>
                 </div>
                 <span className="network-directory__status">Tournoi publié</span>
-                <span className="network-directory__specialty">Spécialité à préciser</span>
+                <span className="network-directory__specialty">{specialties[tournament.id] ?? "Spécialité à préciser"}</span>
                 <h3>{tournament.name}</h3>
                 <p>Début : {formatDate(tournament.startsOn)}</p>
                 <p className="network-directory__date-note">
