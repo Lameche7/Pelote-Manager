@@ -536,8 +536,8 @@ export function TournamentResultsBoard({
                               <th>Cl.</th>
                               <th>Équipe</th>
                               <th>MJ</th>
-                              <th>{rankingLabel}</th>
-                              <th>{goalAverageLabel}</th>
+                              <th title="Total des points de classement obtenus">Pts totaux</th>
+                              <th title="Différence totale entre points marqués et encaissés">+/− total</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -551,10 +551,10 @@ export function TournamentResultsBoard({
                                 </td>
                                 <td>{team.teamLabel}</td>
                                 <td>{team.matchesPlayed}</td>
-                                <td>{metric(team.rankingValue)}</td>
+                                <td>{team.rankingPoints}</td>
                                 <td>
-                                  {team.goalAverageValue > 0 ? "+" : ""}
-                                  {metric(team.goalAverageValue)}
+                                  {team.pointDifference > 0 ? "+" : ""}
+                                  {metric(team.pointDifference)}
                                 </td>
                               </tr>
                             ))}
