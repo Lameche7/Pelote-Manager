@@ -65,9 +65,18 @@
   border-radius: 18px;
   padding: 28px;
 }
-.network-directory__info-sections h2 { margin: 6px 0 12px; }
-.network-directory__info-sections p { line-height: 1.6; }
-#tournois, #clubs, #decouvrir, #abonnement { scroll-margin-top: 25px; }
+.network-directory__info-sections h2 {
+  margin: 6px 0 12px;
+}
+.network-directory__info-sections p {
+  line-height: 1.6;
+}
+#tournois,
+#clubs,
+#decouvrir,
+#abonnement {
+  scroll-margin-top: 25px;
+}
 .network-directory__hero h1 {
   font-size: clamp(2.1rem, 5vw, 3.7rem);
   line-height: 1.1;
@@ -215,10 +224,19 @@
   .network-directory__hero {
     padding: 24px 16px 50px;
   }
-  .network-directory__hero-header { margin-bottom: 44px; }
-  .network-directory__hero-nav { gap: 6px 16px; font-size: .9rem; }
-  .network-directory__brand { padding: 12px 18px; }
-  .network-directory__info-sections { grid-template-columns: 1fr; }
+  .network-directory__hero-header {
+    margin-bottom: 44px;
+}
+  .network-directory__hero-nav {
+    gap: 6px 16px;
+    font-size: 0.9rem;
+}
+  .network-directory__brand {
+    padding: 12px 18px;
+}
+  .network-directory__info-sections {
+    grid-template-columns: 1fr;
+}
   .network-directory__section {
     padding: 38px 17px;
   }
