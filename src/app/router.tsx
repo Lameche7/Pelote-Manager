@@ -59,6 +59,7 @@ import {
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
 import { NetworkDirectoryPage } from "@/features/network/pages/NetworkDirectoryPage";
+import { NetworkClubPage, NetworkTournamentPage } from "@/features/network/pages/NetworkDetailsPages";
 import { MyLicencePage } from "@/features/licences/pages/MyLicencePage";
 import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
 import { PlatformProtectedRoute } from "@/features/platform/auth/PlatformProtectedRoute";
@@ -100,6 +101,8 @@ const allAuthenticatedRoles = [
 
 export const routes = [
   { path: "/reseau", element: <NetworkDirectoryPage /> },
+  { path: "/reseau/clubs/:clubSlug", element: <NetworkClubPage /> },
+  { path: "/reseau/tournois/:tournamentId", element: <NetworkTournamentPage /> },
   { path: `${ROUTES.tv}/:token`, element: <TvDisplayPage /> },
   {
     path: ROUTES.platform,
