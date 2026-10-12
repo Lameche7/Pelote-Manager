@@ -24,7 +24,7 @@ grant insert,update on public.network_club_profiles to authenticated;
 create or replace function public.get_network_club_public_profile(target_slug text)
 returns table(name text, slug text, logo_url text, public_address text, public_email text, public_phone text, public_website text, public_description text)
 language sql stable security definer set search_path = ''
-as $
+as $network_profile$
  select c.name, c.slug, case when c.logo_url like 'https://%' then c.logo_url else null end,
  p.public_address, p.public_email, p.public_phone, p.public_website, p.public_description
  from public.clubs c join public.network_club_profiles p on p.club_id=c.id
