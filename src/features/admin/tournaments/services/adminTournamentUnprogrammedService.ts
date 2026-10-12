@@ -73,7 +73,10 @@ export const adminTournamentUnprogrammedService = {
     });
     if (error)
       throw new Error(
-        getSupabaseErrorMessage(error, "Impossible de programmer cette partie."),
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de programmer cette partie.",
+        ),
       );
   },
 };
