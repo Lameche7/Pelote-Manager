@@ -95,7 +95,13 @@ returns jsonb language sql stable security definer set search_path = '' as $$
     'previous_date',q.previous_play_date,
     'previous_start',q.previous_starts_at,
     'previous_end',q.previous_ends_at,
-    'reason',q.reason,'unprogrammed_at',q.unprogrammed_at
+    'reason',q.reason,'unprogrammed_at',q.unprogrammed_at,
+    'resources',coalesce((
+      select jsonb_agg(jsonb_build_object('id',rr.id,'name',rr.name) order by rr.name)
+      from public.tournament_resources tr
+      join public.reservable_resources rr on rr.id=tr.resource_id
+      where tr.tournament_id=t.id and rr.is_active
+    ),'[]'::jsonb)
   ) order by q.unprogrammed_at desc), '[]'::jsonb)
   from public.tournament_unprogrammed_matches q
   join public.tournaments t on t.id=q.tournament_id
