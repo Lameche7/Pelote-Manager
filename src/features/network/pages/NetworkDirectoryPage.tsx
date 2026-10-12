@@ -50,7 +50,6 @@ export function NetworkDirectoryPage() {
               ? result.value
                   .filter(
                     (tournament) =>
-                      tournament.status !== "archived" &&
                       tournament.status !== "cancelled",
                   )
                   .map((tournament) => ({ club: directory[index], tournament }))
