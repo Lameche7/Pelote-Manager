@@ -94,14 +94,23 @@ export function NetworkDirectoryPage() {
     <main className="network-directory">
       <section className="network-directory__hero" id="accueil">
         <header className="network-directory__hero-header">
-          <Link to="/reseau" className="network-directory__brand" aria-label="Accueil Pilotoki Network">
+          <Link
+            to="/reseau"
+            className="network-directory__brand"
+            aria-label="Accueil Pilotoki Network"
+          >
             <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" />
           </Link>
-          <nav className="network-directory__hero-nav" aria-label="Navigation Pilotoki Network">
+          <nav
+            className="network-directory__hero-nav"
+            aria-label="Navigation Pilotoki Network"
+          >
             <a href="#tournois">Tournois</a>
             <a href="#clubs">Clubs</a>
             <a href="#decouvrir">Découvrir Pilotoki</a>
-            <a href="#abonnement" className="network-directory__subscribe-link">S'abonner</a>
+            <a href="#abonnement" className="network-directory__subscribe-link">
+              S'abonner
+            </a>
           </nav>
         </header>
         <p className="network-directory__eyebrow">Pilotoki Network</p>
@@ -219,16 +228,27 @@ export function NetworkDirectoryPage() {
           </p>
         )}
       </section>
-      <section className="network-directory__section network-directory__info-sections" id="decouvrir">
+      <section
+        className="network-directory__section network-directory__info-sections"
+        id="decouvrir"
+      >
         <div>
           <p className="network-directory__eyebrow">La plateforme</p>
           <h2>Découvrir Pilotoki</h2>
-          <p>Pilotoki rassemble la vie des clubs de pelote : tournois, poules, résultats, classements et informations des clubs, dans un réseau accessible à tous.</p>
+          <p>
+            Pilotoki rassemble la vie des clubs de pelote : tournois, poules,
+            résultats, classements et informations des clubs, dans un réseau
+            accessible à tous.
+          </p>
         </div>
         <div id="abonnement">
           <p className="network-directory__eyebrow">Rejoindre le réseau</p>
           <h2>S'abonner à Pilotoki</h2>
-          <p>La création de club et la souscription en ligne arriveront prochainement. Aucun paiement n'est demandé sur cette page pour le moment.</p>
+          <p>
+            La création de club et la souscription en ligne arriveront
+            prochainement. Aucun paiement n'est demandé sur cette page pour le
+            moment.
+          </p>
         </div>
       </section>
       <footer className="network-directory__footer">
