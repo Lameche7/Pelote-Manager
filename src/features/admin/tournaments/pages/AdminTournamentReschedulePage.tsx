@@ -374,9 +374,7 @@ export function AdminTournamentReschedulePage() {
                               : "aucun compte relié"}
                           </small>
                           {approval.decision === "pending" && (
-                            <small
-                              title="Abonnement push actif sur au moins un compte autorisé à répondre pour l’équipe ; ne garantit pas la lecture."
-                            >
+                            <small title="Abonnement push actif sur au moins un compte autorisé à répondre pour l’équipe ; ne garantit pas la lecture.">
                               {approval.pushActiveCount === null
                                 ? "Notifications : non vérifiées"
                                 : approval.pushActiveCount > 0
