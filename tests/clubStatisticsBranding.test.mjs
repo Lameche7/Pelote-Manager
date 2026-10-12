@@ -43,7 +43,9 @@ test("public homepage only receives the safe branding projection", () => {
 });
 
 test("club information page edits images and the four-color palette", () => {
-  assert.match(clubPage, /URL du logo/);
+  assert.match(clubPage, /Logo du club/);
+  assert.match(clubPage, /type="file"/);
+  assert.match(clubPage, /clubBrandingUploadService\.upload/);
   assert.match(clubPage, /photo d’arrière-plan/);
   assert.match(clubPage, /primaryColor/);
   assert.match(clubPage, /secondaryColor/);
