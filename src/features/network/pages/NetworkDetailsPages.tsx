@@ -12,6 +12,11 @@ type ClubProfile = {
   name: string;
   slug: string;
   logo_url: string | null;
+  public_address?: string;
+  public_email?: string;
+  public_phone?: string;
+  public_website?: string;
+  public_description?: string;
 };
 
 function NetworkHeader() {
@@ -34,15 +39,15 @@ export function NetworkClubPage() {
   useEffect(() => {
     let alive = true;
     Promise.all([
-      supabase.rpc("list_network_clubs_v2"),
+      supabase.rpc("get_network_club_public_profile", { target_slug: clubSlug }),
       tournamentService.listPublic(clubSlug),
     ]).then(([directory, tournamentList]) => {
       if (directory.error) throw directory.error;
       if (!alive) return;
-      const found = ((directory.data ?? []) as ClubProfile[]).find((item) => item.slug === clubSlug);
+      const found = ((directory.data ?? []) as ClubProfile[])[0] ?? null;
       setClub(found ?? null);
       setTournaments(tournamentList);
-      setStatus(found ? "" : "Club introuvable dans le réseau.");
+      setStatus(found ? "" : "La fiche publique de ce club n’est pas encore publiée.");
     }).catch(() => {
       if (alive) setStatus("La fiche du club est momentanément indisponible.");
     });
@@ -60,9 +65,12 @@ export function NetworkClubPage() {
               {club.logo_url && <img src={club.logo_url} alt="" className="network-directory__club-logo" />}
               <h1>{club.name}</h1>
             </div>
-            <p>Club référencé dans Pilotoki Network.</p>
+            <p>{club.public_description || "Club référencé dans Pilotoki Network."}</p>
             <h2>Informations du club</h2>
-            <p>Les coordonnées et renseignements administratifs seront publiés ici après validation par le club.</p>
+            {club.public_address && <p><strong>Adresse :</strong> {club.public_address}</p>}
+            {club.public_email && <p><strong>E-mail :</strong> <a href={`mailto:${club.public_email}`}>{club.public_email}</a></p>}
+            {club.public_phone && <p><strong>Téléphone :</strong> {club.public_phone}</p>}
+            {club.public_website && /^https:\/\//.test(club.public_website) && <p><a href={club.public_website} target="_blank" rel="noopener noreferrer">Site internet du club ↗</a></p>}
             <h2>Tournois du club</h2>
             <div className="network-directory__grid">
               {tournaments.filter((item) => item.status !== "archived" && item.status !== "cancelled").map((item) => (
