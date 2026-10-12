@@ -2,9 +2,7 @@ import type {
   TournamentGeneralRankingTeam,
   TournamentGeneralRankings,
 } from "@/features/tournaments/services/tournamentGeneralRankingService";
-import type {
-  TournamentRankings as TournamentRankingsPayload,
-} from "@/features/tournaments/services/tournamentRankingService";
+import type { TournamentRankings as TournamentRankingsPayload } from "@/features/tournaments/services/tournamentRankingService";
 import "./TournamentRankings.css";
 
 type Props = {
