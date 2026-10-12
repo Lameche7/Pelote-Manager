@@ -367,11 +367,26 @@ export function AdminTournamentReschedulePage() {
                           réponse recueillie hors application
                         </small>
                       ) : !approval.isRequester ? (
-                        <small>
-                          {approval.appActorCount > 0
-                            ? `${approval.appActorCount} compte${approval.appActorCount > 1 ? "s" : ""} relié${approval.appActorCount > 1 ? "s" : ""}`
-                            : "aucun compte relié"}
-                        </small>
+                        <>
+                          <small>
+                            {approval.appActorCount > 0
+                              ? `${approval.appActorCount} compte${approval.appActorCount > 1 ? "s" : ""} relié${approval.appActorCount > 1 ? "s" : ""}`
+                              : "aucun compte relié"}
+                          </small>
+                          {approval.decision === "pending" && (
+                            <small
+                              title="Abonnement push actif sur au moins un compte autorisé à répondre pour l’équipe ; ne garantit pas la lecture."
+                            >
+                              {approval.pushActiveCount === null
+                                ? "Notifications : non vérifiées"
+                                : approval.pushActiveCount > 0
+                                  ? `🔔 Push actif · ${approval.pushActiveCount} compte${approval.pushActiveCount > 1 ? "s" : ""}`
+                                  : approval.appActorCount > 0
+                                    ? "🔕 Compte relié · push inactif"
+                                    : "🔕 Aucun compte joignable par push"}
+                            </small>
+                          )}
+                        </>
                       ) : null}
                     </span>
                   </div>

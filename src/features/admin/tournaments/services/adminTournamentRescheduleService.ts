@@ -16,6 +16,7 @@ export type AdminTournamentRescheduleApproval = {
   decisionNote: string | null;
   isRequester: boolean;
   appActorCount: number;
+  pushActiveCount: number | null;
   decidedAt: string | null;
 };
 
@@ -140,6 +141,7 @@ const mapRequest = (row: Row): AdminTournamentRescheduleRequest => {
         : null,
       isRequester: Boolean(approval.is_requester),
       appActorCount: Number(approval.app_actor_count ?? 0),
+      pushActiveCount: null,
       decidedAt: approval.decided_at ? String(approval.decided_at) : null,
     })),
     staleReason: row.stale_reason ? String(row.stale_reason) : null,
@@ -183,7 +185,28 @@ export const adminTournamentRescheduleService = {
     if (error) {
       fail(error, "Impossible de charger les demandes de report.");
     }
-    return rows(data).map(mapRequest);
+    const result = rows(data).map(mapRequest);
+    // A notification subscription is not the same as a linked application account.
+    // Keep the report usable if the optional read-only status RPC is unavailable.
+    const { data: coverage, error: coverageError } = await supabase.rpc(
+      "admin_tournament_reschedule_push_status",
+    );
+    if (!coverageError) {
+      const byTeam = new Map(
+        rows(coverage).map((item) => [
+          String(item.team_id),
+          Number(item.push_count ?? 0),
+        ]),
+      );
+      for (const request of result) {
+        for (const approval of request.approvals) {
+          if (approval.decision === "pending" && byTeam.has(approval.teamId)) {
+            approval.pushActiveCount = byTeam.get(approval.teamId) ?? 0;
+          }
+        }
+      }
+    }
+    return result;
   },
 
   async recordOfflineDecision(
