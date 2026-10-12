@@ -60,7 +60,9 @@ export function NetworkClubPublishing({ clubId }: { clubId: string }) {
         public_phone: existing.public_phone || club.phone,
         public_website: existing.public_website || club.website,
       }));
-      setStatus("Informations reprises. Vérifiez-les, cochez la publication puis enregistrez. Les notes internes ne sont pas copiées.");
+      setStatus(
+        "Informations reprises. Vérifiez-les, cochez la publication puis enregistrez. Les notes internes ne sont pas copiées.",
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Import impossible.");
     } finally {
@@ -105,7 +107,11 @@ export function NetworkClubPublishing({ clubId }: { clubId: string }) {
         Ces informations sont indépendantes de la fiche administrative interne.
         Rien n'est publié tant que vous n'activez pas la publication.
       </p>
-      <button type="button" disabled={busy} onClick={() => void importExisting()}>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void importExisting()}
+      >
         Reprendre les informations déjà saisies dans le club
       </button>
       {fields.map(({ key, label }) => (
