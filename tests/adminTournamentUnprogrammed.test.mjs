@@ -15,7 +15,7 @@ const panel = readFileSync(
   "utf8",
 );
 
-test("la déprogrammation conserve la rencontre mais libère planning et calendrier", () => {
+test("la déprogrammation libère planning et calendrier sans perdre le match", () => {
   const section = sql
     .split("create function public.admin_unprogram_tournament_match")[1]
     .split("create function public.admin_list_unprogrammed_tournament_matches")[0];
@@ -27,7 +27,7 @@ test("la déprogrammation conserve la rencontre mais libère planning et calendr
   assert.doesNotMatch(section, /delete from public.tournament_matches/);
 });
 
-test("la programmation restaure l'occupation sans accepter une date passée", () => {
+test("la programmation restaure une occupation future", () => {
   const section = sql.split(
     "create function public.admin_reprogram_tournament_match",
   )[1];
@@ -38,7 +38,7 @@ test("la programmation restaure l'occupation sans accepter une date passée", ()
   assert.match(section, /delete from public.tournament_unprogrammed_matches/);
 });
 
-test("les reports administrateur proposent la libération et la file d'attente", () => {
+test("les reports montrent les parties à programmer", () => {
   assert.match(page, /AdminTournamentUnprogrammedPanel/);
   assert.match(panel, /Déprogrammer \/ libérer le créneau/);
   assert.match(panel, /Parties à programmer/);
