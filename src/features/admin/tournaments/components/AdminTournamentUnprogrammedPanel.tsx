@@ -19,9 +19,7 @@ export function AdminTournamentUnprogrammedPanel() {
   const [tournaments, setTournaments] = useState<
     AdminManualRescheduleTournament[]
   >([]);
-  const [pending, setPending] = useState<UnprogrammedTournamentMatch[]>(
-    [],
-  );
+  const [pending, setPending] = useState<UnprogrammedTournamentMatch[]>([]);
   const [matchId, setMatchId] = useState("");
   const [reason, setReason] = useState("");
   const [editing, setEditing] = useState("");
