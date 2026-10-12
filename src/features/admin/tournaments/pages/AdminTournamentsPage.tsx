@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { supabase } from "@/infrastructure/supabase/client";
 import { TournamentSportingRulesSection } from "@/features/admin/tournaments/components/TournamentSportingRulesSection";
 import {
   tournamentAdminService,
@@ -276,6 +277,7 @@ export function AdminTournamentsPage() {
   const [sportingRules, setSportingRules] =
     useState<TournamentSportingRules | null>(null);
   const [refereeingEnabled, setRefereeingEnabled] = useState(false);
+  const [networkSpecialty, setNetworkSpecialty] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -302,6 +304,8 @@ export function AdminTournamentsPage() {
       setPlayWindows(loaded.playWindows);
       setSportingRules(loadedSportingRules);
       setRefereeingEnabled(loadedRefereeingEnabled);
+      const { data: networkProfile } = await supabase.from("network_tournament_profiles").select("specialty").eq("tournament_id", id).maybeSingle();
+      setNetworkSpecialty(networkProfile?.specialty ?? "");
     } catch (openError) {
       setError(
         openError instanceof Error
@@ -375,6 +379,7 @@ export function AdminTournamentsPage() {
     setPlayWindows([]);
     setSportingRules(blankSportingRules());
     setRefereeingEnabled(false);
+    setNetworkSpecialty("");
     setError("");
     setMessage("");
   };
@@ -666,6 +671,38 @@ export function AdminTournamentsPage() {
                   est désormais verrouillé.
                 </p>
               )}
+
+            {detail && (
+              <section className="admin-card" style={{ padding: 16 }}>
+                <h3>Visibilité dans Pilotoki Network</h3>
+                <label>
+                  Spécialité du tournoi
+                  <select value={networkSpecialty} onChange={(event) => setNetworkSpecialty(event.target.value)}>
+                    <option value="">À préciser</option>
+                    <option value="Trinquet">Trinquet</option>
+                    <option value="Mur à gauche">Mur à gauche</option>
+                    <option value="Fronton">Fronton</option>
+                    <option value="Place libre">Place libre</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </label>
+                <button type="button" disabled={saving} onClick={async () => {
+                  setSaving(true);
+                  try {
+                    const { error: metadataError } = await supabase.from("network_tournament_profiles").upsert({
+                      tournament_id: detail.id,
+                      specialty: networkSpecialty || null,
+                    }, { onConflict: "tournament_id" });
+                    if (metadataError) throw metadataError;
+                    setMessage("Spécialité publiée sur Pilotoki Network.");
+                  } catch (problem) {
+                    setError(problem instanceof Error ? problem.message : "Enregistrement de la spécialité impossible.");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}>Enregistrer la spécialité</button>
+              </section>
+            )}
 
             <form
               id="tournament-general-form"
