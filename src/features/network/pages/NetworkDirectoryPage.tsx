@@ -64,7 +64,7 @@ export function NetworkDirectoryPage() {
   }, []);
 
   const clubLogo = (club: Club) =>
-    club.logo_url  (
+    club.logo_url ? (
       <img
         className="network-directory__club-logo"
         src={club.logo_url}
@@ -107,7 +107,7 @@ export function NetworkDirectoryPage() {
             {tournaments.length} tournoi{tournaments.length > 1 ? "s" : ""}
           </span>
         </div>
-        {loading  (
+        {loading ? (
           <p>Chargement des tournois…</p>
         ) : tournaments.length ? (
           <div className="network-directory__grid">
@@ -135,7 +135,7 @@ export function NetworkDirectoryPage() {
                   <span>{tournament.teamCount} équipes</span>
                   <span>{tournament.series.length} séries</span>
                 </div>
-                {club.slug === LOURDES_SLUG  (
+                {club.slug === LOURDES_SLUG ? (
                   <a
                     className="network-directory__action"
                     href={`https://app.pelotemanager.fr/tournois/${encodeURIComponent(tournament.id)}`}
@@ -162,12 +162,12 @@ export function NetworkDirectoryPage() {
             <h2>Clubs du réseau</h2>
           </div>
           <span>
-            {clubs.length} club{clubs.length > 1  "s" : ""}
+            {clubs.length} club{clubs.length > 1 ? "s" : ""}
           </span>
         </div>
         {loading ? (
           <p>Chargement des clubs…</p>
-        ) : clubs.length  (
+        ) : clubs.length ? (
           <div className="network-directory__grid">
             {clubs.map((club) => (
               <article
