@@ -44,14 +44,20 @@ export function AdminTournamentUnprogrammedPanel() {
 
   useEffect(() => {
     load().catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : "Chargement impossible.");
+      setError(
+        cause instanceof Error ? cause.message : "Chargement impossible.",
+      );
     });
   }, [load]);
 
   const matches = tournaments.flatMap((tournament) =>
     tournament.matches.map((match) => ({
       ...match,
-      label: `${tournament.name} · ${match.teamALabel} contre ${match.teamBLabel} · ${displayDate(match.playDate)} ${match.startsAt}`,
+      label: [
+        tournament.name,
+        `${match.teamALabel} contre ${match.teamBLabel}`,
+        `${displayDate(match.playDate)} ${match.startsAt}`,
+      ].join(" · "),
     })),
   );
 
@@ -85,7 +91,9 @@ export function AdminTournamentUnprogrammedPanel() {
         "Créneau libéré. La partie figure désormais dans « Parties à programmer ».",
       );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Libération impossible.");
+      setError(
+        cause instanceof Error ? cause.message : "Libération impossible.",
+      );
     } finally {
       setBusy(false);
     }
@@ -117,7 +125,9 @@ export function AdminTournamentUnprogrammedPanel() {
       await load();
       setMessage("Partie reprogrammée et occupation du calendrier rétablie.");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Reprogrammation impossible.");
+      setError(
+        cause instanceof Error ? cause.message : "Reprogrammation impossible.",
+      );
     } finally {
       setBusy(false);
     }
