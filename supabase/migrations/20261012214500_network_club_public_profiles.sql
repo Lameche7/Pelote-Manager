@@ -30,7 +30,7 @@ as $network_profile$
  from public.clubs c join public.network_club_profiles p on p.club_id=c.id
  where c.slug=target_slug and p.is_published=true
  limit 1
-$;
+$network_profile$;
 revoke all on function public.get_network_club_public_profile(text) from public;
 grant execute on function public.get_network_club_public_profile(text) to anon,authenticated;
 commit;
