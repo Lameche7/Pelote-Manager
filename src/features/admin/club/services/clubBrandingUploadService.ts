@@ -22,7 +22,7 @@ export const clubBrandingUploadService = {
     if (identityError || authorizedClubId !== clubId) {
       throw new Error("Vous n'avez pas l'autorisation de modifier ce club.");
     }
-    const path = `${clubId}/branding/${kind}-${crypto.randomUUID()}.${extension}`;
+    const path = `${clubId}/dotation/branding-${kind}-${crypto.randomUUID()}.${extension}`;
     const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
       contentType: file.type,
       cacheControl: "3600",
@@ -37,7 +37,7 @@ export const clubBrandingUploadService = {
     const prefix = publicPrefix.endsWith("/") ? publicPrefix : `${publicPrefix}/`;
     if (!url.startsWith(prefix)) return;
     const path = url.slice(prefix.length);
-    if (!path.startsWith(`${clubId}/branding/`)) return;
+    if (!path.startsWith(`${clubId}/dotation/branding-`)) return;
     await supabase.storage.from(BUCKET).remove([path]);
   },
 };
