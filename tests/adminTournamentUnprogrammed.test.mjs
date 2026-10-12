@@ -16,7 +16,8 @@ const panel = readFileSync(
 );
 
 test("la déprogrammation conserve la rencontre mais libère planning et calendrier", () => {
-  const section = sql.split("create function public.admin_unprogram_tournament_match")[1]
+  const section = sql
+    .split("create function public.admin_unprogram_tournament_match")[1]
     .split("create function public.admin_list_unprogrammed_tournament_matches")[0];
   assert.match(section, /tournament_match_results/);
   assert.match(section, /tournament_reschedule_active_matches/);
@@ -27,7 +28,9 @@ test("la déprogrammation conserve la rencontre mais libère planning et calendr
 });
 
 test("la programmation restaure l'occupation sans accepter une date passée", () => {
-  const section = sql.split("create function public.admin_reprogram_tournament_match")[1];
+  const section = sql.split(
+    "create function public.admin_reprogram_tournament_match",
+  )[1];
   assert.match(section, /absolute_start<=now\(\)/);
   assert.match(section, /calendar_occupations/);
   assert.match(section, /insert into public.tournament_match_planning/);
