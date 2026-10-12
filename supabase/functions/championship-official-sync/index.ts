@@ -178,9 +178,7 @@ const fetchPartitionedSource = async (
       succeeded++;
       combined.push(...(items as JsonRow[]));
       if (Array.isArray(response.warnings)) {
-        warnings.push(
-          ...response.warnings.map((warning) => String(warning)),
-        );
+        warnings.push(...response.warnings.map((warning) => String(warning)));
       }
     });
   }
