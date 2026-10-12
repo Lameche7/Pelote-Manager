@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminTournamentUnprogrammedPanel } from "../components/AdminTournamentUnprogrammedPanel";
 import { AdminTournamentManualRescheduleForm } from "@/features/admin/tournaments/components/AdminTournamentManualRescheduleForm";
 import {
   ADMIN_RESCHEDULE_APPLY_LABEL,
@@ -247,6 +248,7 @@ export function AdminTournamentReschedulePage() {
         conservé.
       </p>
 
+      <AdminTournamentUnprogrammedPanel />
       <AdminTournamentManualRescheduleForm onCreated={load} />
 
       <div className="admin-reschedules__toolbar">
