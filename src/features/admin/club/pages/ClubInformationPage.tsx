@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ClubMediaManager } from "../components/ClubMediaManager";
+import { NetworkClubPublishing } from "../components/NetworkClubPublishing";
 import {
   clubBrandingUploadService,
   type BrandingImageKind,
@@ -316,6 +317,7 @@ export function ClubInformationPage() {
           </small>
         </aside>
       </form>
+      <NetworkClubPublishing clubId={club.id} />
     </section>
   );
 }
