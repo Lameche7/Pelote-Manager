@@ -536,8 +536,12 @@ export function TournamentResultsBoard({
                               <th>Cl.</th>
                               <th>Équipe</th>
                               <th>MJ</th>
-                              <th title="Total des points de classement obtenus">Pts totaux</th>
-                              <th title="Différence totale entre points marqués et encaissés">+/− total</th>
+                              <th title="Total des points de classement obtenus">
+                                Pts totaux
+                              </th>
+                              <th title="Différence totale entre points marqués et encaissés">
+                                +/− total
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
