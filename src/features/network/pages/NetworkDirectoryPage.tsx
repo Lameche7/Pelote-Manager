@@ -92,23 +92,23 @@ export function NetworkDirectoryPage() {
 
   return (
     <main className="network-directory">
-      <header className="network-directory__header">
-        <Link to="/reseau" aria-label="Accueil Pilotoki Network">
-          <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" />
-        </Link>
-        <nav aria-label="Navigation réseau">
-          <a href="#tournois">Tournois</a> · <a href="#clubs">Clubs</a>
-        </nav>
-      </header>
-      <section className="network-directory__hero">
+      <section className="network-directory__hero" id="accueil">
+        <header className="network-directory__hero-header">
+          <Link to="/reseau" className="network-directory__brand" aria-label="Accueil Pilotoki Network">
+            <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" />
+          </Link>
+          <nav className="network-directory__hero-nav" aria-label="Navigation Pilotoki Network">
+            <a href="#tournois">Tournois</a>
+            <a href="#clubs">Clubs</a>
+            <a href="#decouvrir">Découvrir Pilotoki</a>
+            <a href="#abonnement" className="network-directory__subscribe-link">S'abonner</a>
+          </nav>
+        </header>
         <p className="network-directory__eyebrow">Pilotoki Network</p>
         <h1>La pelote se retrouve ici.</h1>
         <p>
           Découvrez les clubs, les tournois, les poules, les classements et les
           résultats.
-        </p>
-        <p className="network-directory__note">
-          Rejoindre le réseau en créant son club : bientôt disponible.
         </p>
       </section>
 
@@ -218,6 +218,18 @@ export function NetworkDirectoryPage() {
             Une partie du catalogue est temporairement indisponible.
           </p>
         )}
+      </section>
+      <section className="network-directory__section network-directory__info-sections" id="decouvrir">
+        <div>
+          <p className="network-directory__eyebrow">La plateforme</p>
+          <h2>Découvrir Pilotoki</h2>
+          <p>Pilotoki rassemble la vie des clubs de pelote : tournois, poules, résultats, classements et informations des clubs, dans un réseau accessible à tous.</p>
+        </div>
+        <div id="abonnement">
+          <p className="network-directory__eyebrow">Rejoindre le réseau</p>
+          <h2>S'abonner à Pilotoki</h2>
+          <p>La création de club et la souscription en ligne arriveront prochainement. Aucun paiement n'est demandé sur cette page pour le moment.</p>
+        </div>
       </section>
       <footer className="network-directory__footer">
         Pilotoki Network · Clubs et tournois
