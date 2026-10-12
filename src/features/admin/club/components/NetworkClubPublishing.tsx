@@ -25,28 +25,46 @@ export function NetworkClubPublishing({ clubId }: { clubId: string }) {
 
   useEffect(() => {
     let active = true;
-    supabase.from("network_club_profiles").select("is_published,public_address,public_email,public_phone,public_website,public_description")
-      .eq("club_id", clubId).maybeSingle()
+    supabase
+      .from("network_club_profiles")
+      .select(
+        "is_published,public_address,public_email,public_phone,public_website,public_description",
+      )
+      .eq("club_id", clubId)
+      .maybeSingle()
       .then(({ data, error }) => {
         if (!active) return;
-        if (error) setStatus("La fiche réseau n'est pas encore disponible. Vérifiez la migration.");
+        if (error)
+          setStatus(
+            "La fiche réseau n'est pas encore disponible. Vérifiez la migration.",
+          );
         else if (data) setProfile(data);
         setBusy(false);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [clubId]);
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
     setStatus("");
-    const { error } = await supabase.from("network_club_profiles")
+    const { error } = await supabase
+      .from("network_club_profiles")
       .upsert({ club_id: clubId, ...profile }, { onConflict: "club_id" });
     setBusy(false);
-    setStatus(error ? "Enregistrement impossible : " + error.message : "Fiche publique mise à jour.");
+    setStatus(
+      error
+        ? "Enregistrement impossible : " + error.message
+        : "Fiche publique mise à jour.",
+    );
   };
 
-  const fields: { key: keyof Omit<PublicProfile, "is_published">; label: string }[] = [
+  const fields: {
+    key: keyof Omit<PublicProfile, "is_published">;
+    label: string;
+  }[] = [
     { key: "public_address", label: "Adresse à publier" },
     { key: "public_email", label: "E-mail public" },
     { key: "public_phone", label: "Téléphone public" },
@@ -55,23 +73,56 @@ export function NetworkClubPublishing({ clubId }: { clubId: string }) {
   ];
 
   return (
-    <form className="admin-card" onSubmit={(event) => void save(event)} style={{ padding: 22, display: "grid", gap: 12 }}>
+    <form
+      className="admin-card"
+      onSubmit={(event) => void save(event)}
+      style={{ padding: 22, display: "grid", gap: 12 }}
+    >
       <h2>Pilotoki Network — Fiche publique du club</h2>
-      <p>Ces informations sont indépendantes de la fiche administrative interne. Rien n'est publié tant que vous n'activez pas la publication.</p>
+      <p>
+        Ces informations sont indépendantes de la fiche administrative interne.
+        Rien n'est publié tant que vous n'activez pas la publication.
+      </p>
       {fields.map(({ key, label }) => (
         <label key={key} style={{ display: "grid", gap: 5 }}>
           {label}
           {key === "public_description" ? (
-            <textarea value={profile[key]} onChange={(event) => setProfile({ ...profile, [key]: event.target.value })} />
+            <textarea
+              value={profile[key]}
+              onChange={(event) =>
+                setProfile({ ...profile, [key]: event.target.value })
+              }
+            />
           ) : (
-            <input type={key === "public_email" ? "email" : key === "public_website" ? "url" : "text"}
-              value={profile[key]} onChange={(event) => setProfile({ ...profile, [key]: event.target.value })} />
+            <input
+              type={
+                key === "public_email"
+                  ? "email"
+                  : key === "public_website"
+                    ? "url"
+                    : "text"
+              }
+              value={profile[key]}
+              onChange={(event) =>
+                setProfile({ ...profile, [key]: event.target.value })
+              }
+            />
           )}
         </label>
       ))}
-      <label><input type="checkbox" checked={profile.is_published}
-        onChange={(event) => setProfile({ ...profile, is_published: event.target.checked })} /> Autoriser la publication de ces coordonnées sur Pilotoki Network</label>
-      <button type="submit" disabled={busy}>{busy ? "Chargement…" : "Enregistrer la fiche réseau"}</button>
+      <label>
+        <input
+          type="checkbox"
+          checked={profile.is_published}
+          onChange={(event) =>
+            setProfile({ ...profile, is_published: event.target.checked })
+          }
+        />{" "}
+        Autoriser la publication de ces coordonnées sur Pilotoki Network
+      </label>
+      <button type="submit" disabled={busy}>
+        {busy ? "Chargement…" : "Enregistrer la fiche réseau"}
+      </button>
       <span role="status">{status}</span>
     </form>
   );
