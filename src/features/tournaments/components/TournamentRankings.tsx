@@ -4,7 +4,6 @@ import type {
 } from "@/features/tournaments/services/tournamentGeneralRankingService";
 import type {
   TournamentRankings as TournamentRankingsPayload,
-  TournamentRankingTeam,
 } from "@/features/tournaments/services/tournamentRankingService";
 import "./TournamentRankings.css";
 
@@ -18,22 +17,6 @@ const numberFormatter = new Intl.NumberFormat("fr-FR", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 3,
 });
-
-const valueLabel = (
-  team: TournamentRankingTeam,
-  rankings: TournamentRankingsPayload,
-) =>
-  rankings.rankingMode === "points_per_match"
-    ? numberFormatter.format(team.rankingValue)
-    : String(team.rankingPoints);
-
-const goalAverageLabel = (
-  team: TournamentRankingTeam,
-  rankings: TournamentRankingsPayload,
-) =>
-  rankings.goalAverageMode === "point_difference_per_match"
-    ? numberFormatter.format(team.goalAverageValue)
-    : String(team.pointDifference);
 
 const generalValueLabel = (
   team: TournamentGeneralRankingTeam,
@@ -56,12 +39,12 @@ export function TournamentRankings({
   generalRankings = null,
   compact = false,
 }: Props) {
-  const rankingTitle =
-    rankings.rankingMode === "points_per_match"
+  const generalRankingTitle =
+    generalRankings?.rankingMode === "points_per_match"
       ? "Pts / partie"
       : "Points classement";
-  const goalAverageTitle =
-    rankings.goalAverageMode === "point_difference_per_match"
+  const generalGoalAverageTitle =
+    generalRankings?.goalAverageMode === "point_difference_per_match"
       ? "Diff. / partie"
       : "Différence";
 
@@ -111,8 +94,8 @@ export function TournamentRankings({
                               <th scope="col">MJ</th>
                               <th scope="col">G</th>
                               <th scope="col">P</th>
-                              <th scope="col">{rankingTitle}</th>
-                              <th scope="col">{goalAverageTitle}</th>
+                              <th scope="col">{generalRankingTitle}</th>
+                              <th scope="col">{generalGoalAverageTitle}</th>
                               <th scope="col">Pour</th>
                               <th scope="col">Contre</th>
                             </tr>
@@ -174,9 +157,8 @@ export function TournamentRankings({
                               <th scope="col">MJ</th>
                               <th scope="col">G</th>
                               <th scope="col">P</th>
-                              <th scope="col">Pts</th>
-                              <th scope="col">{rankingTitle}</th>
-                              <th scope="col">{goalAverageTitle}</th>
+                              <th scope="col">Pts totaux</th>
+                              <th scope="col">Diff. totale</th>
                               <th
                                 scope="col"
                                 title="Victoires entre équipes encore à égalité"
@@ -208,8 +190,7 @@ export function TournamentRankings({
                                 <td>{team.wins}</td>
                                 <td>{team.losses}</td>
                                 <td>{team.rankingPoints}</td>
-                                <td>{valueLabel(team, rankings)}</td>
-                                <td>{goalAverageLabel(team, rankings)}</td>
+                                <td>{team.pointDifference}</td>
                                 <td>{team.headToHeadWins}</td>
                                 <td>
                                   {numberFormatter.format(
