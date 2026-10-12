@@ -2,22 +2,16 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/infrastructure/supabase/client";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
-import type { PublicTournamentSummary } from "@/features/tournaments/types";
+import { NetworkTournamentCatalog } from "@/features/network/components/NetworkTournamentCatalog";
+import type { NetworkTournamentListing } from "@/features/network/components/NetworkTournamentCatalog";
 import "./NetworkDirectoryPage.css";
 
 type Club = { name: string; slug: string; logo_url: string | null };
-type TournamentListing = { club: Club; tournament: PublicTournamentSummary };
 
-const formatDate = (date: string) =>
-  new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 
 export function NetworkDirectoryPage() {
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [tournaments, setTournaments] = useState<TournamentListing[]>([]);
+  const [tournaments, setTournaments] = useState<NetworkTournamentListing[]>([]);
   const [specialties, setSpecialties] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -121,75 +115,7 @@ export function NetworkDirectoryPage() {
         </p>
       </section>
 
-      <section className="network-directory__section" id="tournois">
-        <div className="network-directory__section-heading">
-          <div>
-            <p className="network-directory__eyebrow">Compétitions</p>
-            <h2>Tournois du réseau</h2>
-          </div>
-          <span>
-            {tournaments.length} tournoi{tournaments.length > 1 ? "s" : ""}
-          </span>
-        </div>
-        {loading ? (
-          <p>Chargement des tournois…</p>
-        ) : tournaments.length ? (
-          <div className="network-directory__grid">
-            {tournaments.map(({ club, tournament }) => (
-              <article
-                className="network-directory__card"
-                key={`${club.slug}-${tournament.id}`}
-              >
-                <div className="network-directory__club-heading">
-                  {clubLogo(club)}
-                  <span>{club.name}</span>
-                </div>
-                <span className="network-directory__status">
-                  Tournoi publié
-                </span>
-                <span className="network-directory__specialty">
-                  {specialties[tournament.id] ?? "Spécialité à préciser"}
-                </span>
-                <h3>{tournament.name}</h3>
-                <p>Début : {formatDate(tournament.startsOn)}</p>
-                <p className="network-directory__date-note">
-                  Fin de la phase de poules : {formatDate(tournament.endsOn)}
-                </p>
-
-                <div className="network-directory__meta">
-                  <span>{tournament.teamCount} équipes</span>
-                  <span>{tournament.series.length} séries</span>
-                </div>
-                <div className="network-directory__registration">
-                  <strong>Inscriptions</strong>
-                  <span>
-                    {tournament.registrationClosesAt &&
-                    new Date(tournament.registrationClosesAt).getTime() <
-                      Date.now()
-                      ? "Closes"
-                      : tournament.registrationOpensAt &&
-                          new Date(tournament.registrationOpensAt).getTime() >
-                            Date.now()
-                        ? "Ouverture prochaine"
-                        : tournament.registrationOpensAt &&
-                            tournament.registrationClosesAt
-                          ? "Période d'inscription"
-                          : "Dates à préciser"}
-                  </span>
-                </div>
-                <Link
-                  className="network-directory__action"
-                  to={`/reseau/tournois/${encodeURIComponent(tournament.id)}`}
-                >
-                  Consulter le tournoi →
-                </Link>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p>Aucun tournoi publié pour le moment.</p>
-        )}
-      </section>
+      <NetworkTournamentCatalog tournaments={tournaments} specialtiesById={specialties} loading={loading} />
 
       <section className="network-directory__section" id="clubs">
         <div className="network-directory__section-heading">
