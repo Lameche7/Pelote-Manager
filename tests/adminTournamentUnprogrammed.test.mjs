@@ -18,7 +18,9 @@ const panel = readFileSync(
 test("la déprogrammation libère planning et calendrier sans perdre le match", () => {
   const section = sql
     .split("create function public.admin_unprogram_tournament_match")[1]
-    .split("create function public.admin_list_unprogrammed_tournament_matches")[0];
+    .split(
+      "create function public.admin_list_unprogrammed_tournament_matches",
+    )[0];
   assert.match(section, /tournament_match_results/);
   assert.match(section, /tournament_reschedule_active_matches/);
   assert.match(section, /publication_status='draft'/);
