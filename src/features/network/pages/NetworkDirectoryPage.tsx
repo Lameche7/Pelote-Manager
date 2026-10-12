@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "@/infrastructure/supabase/client";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type { PublicTournamentSummary } from "@/features/tournaments/types";
-import { ROUTES } from "@/shared/config";
 import "./NetworkDirectoryPage.css";
 
 type Club = { name: string; slug: string };
@@ -62,9 +60,7 @@ export function NetworkDirectoryPage() {
         <p className="network-directory__eyebrow">Pilotoki Network</p>
         <h1>Les clubs et leurs tournois, au même endroit.</h1>
         <p>Découvrez les clubs présents sur Pilotoki et leurs compétitions en cours.</p>
-        <a className="network-directory__action" href="mailto:contact@pelotemanager.fr?subject=Rejoindre%20Pilotoki">
-          Demander la création de mon club
-        </a>
+        <p>Création de club sur abonnement : prochainement disponible.</p>
         <p className="network-directory__note">L'ouverture automatique après abonnement sera disponible prochainement. Aucun paiement n'est demandé ici.</p>
       </section>
       <section className="network-directory__section">
@@ -76,7 +72,6 @@ export function NetworkDirectoryPage() {
                 <span className="network-directory__eyebrow">{club.name}</span>
                 <h3>{tournament.name}</h3>
                 <p>Du {tournament.startsOn} au {tournament.endsOn}</p>
-                <Link to={`${ROUTES.tournaments}/${encodeURIComponent(tournament.id)}`}>Voir le tournoi</Link>
               </article>
             ))}
           </div>
