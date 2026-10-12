@@ -8,10 +8,11 @@ import "./NetworkDirectoryPage.css";
 
 type Club = { name: string; slug: string; logo_url: string | null };
 
-
 export function NetworkDirectoryPage() {
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [tournaments, setTournaments] = useState<NetworkTournamentListing[]>([]);
+  const [tournaments, setTournaments] = useState<NetworkTournamentListing[]>(
+    [],
+  );
   const [specialties, setSpecialties] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -48,10 +49,7 @@ export function NetworkDirectoryPage() {
           lists.flatMap((result, index) =>
             result.status === "fulfilled"
               ? result.value
-                  .filter(
-                    (tournament) =>
-                      tournament.status !== "cancelled",
-                  )
+                  .filter((tournament) => tournament.status !== "cancelled")
                   .map((tournament) => ({ club: directory[index], tournament }))
               : [],
           ),
@@ -114,7 +112,11 @@ export function NetworkDirectoryPage() {
         </p>
       </section>
 
-      <NetworkTournamentCatalog tournaments={tournaments} specialtiesById={specialties} loading={loading} />
+      <NetworkTournamentCatalog
+        tournaments={tournaments}
+        specialtiesById={specialties}
+        loading={loading}
+      />
 
       <section className="network-directory__section" id="clubs">
         <div className="network-directory__section-heading">
