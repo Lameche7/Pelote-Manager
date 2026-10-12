@@ -91,7 +91,12 @@ export function NetworkTournamentPage() {
   useEffect(() => {
     let alive = true;
     Promise.all([
-      tournamentService.listPublic(),
+      supabase.rpc("list_network_clubs_v2").then(async ({ data, error }) => {
+        if (error) throw error;
+        const clubs = (data ?? []) as ClubProfile[];
+        const lists = await Promise.allSettled(clubs.map((club) => tournamentService.listPublic(club.slug)));
+        return lists.flatMap((result) => result.status === "fulfilled" ? result.value : []);
+      }),
       tournamentResultsService.get(tournamentId),
       tournamentRankingService.get(tournamentId),
     ]).then(([list, publicResults, publicRankings]) => {
