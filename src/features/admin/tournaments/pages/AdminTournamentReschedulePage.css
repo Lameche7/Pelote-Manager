@@ -294,3 +294,36 @@
     width: 100%;
   }
 }
+
+.admin-reschedules__unprogrammed {
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 1rem;
+}
+
+.admin-reschedules__unprogrammed h2 {
+  margin: 1rem 0 0.5rem;
+}
+
+.admin-reschedules__unprogram-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.admin-reschedules__unprogram-controls label {
+  display: flex;
+  flex: 1 1 170px;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.admin-reschedules__unprogram-controls select,
+.admin-reschedules__unprogram-controls input {
+  width: 100%;
+  min-height: 2.6rem;
+}
