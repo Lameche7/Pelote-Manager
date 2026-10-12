@@ -308,9 +308,9 @@ export function TournamentResultsBoard({
   }
 
   const rankingLabel =
-    rankings?.rankingMode === "points_per_match" ? "Pts/m" : "Pts";
+    generalRankings?.rankingMode === "points_per_match" ? "Pts/m" : "Pts";
   const goalAverageLabel =
-    rankings?.goalAverageMode === "point_difference_per_match"
+    generalRankings?.goalAverageMode === "point_difference_per_match"
       ? "+/−/m"
       : "+/−";
 
