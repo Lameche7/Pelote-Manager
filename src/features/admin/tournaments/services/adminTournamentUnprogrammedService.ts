@@ -26,7 +26,10 @@ export const adminTournamentUnprogrammedService = {
     );
     if (error)
       throw new Error(
-        getSupabaseErrorMessage(error, "Impossible de charger les parties à programmer."),
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de charger les parties à programmer.",
+        ),
       );
     return objects(data).map((row) => ({
       matchId: String(row.match_id ?? ""),
