@@ -126,6 +126,65 @@ const fetchSource = async (baseUrl: string, path: string, body: JsonRow) => {
   return payload;
 };
 
+// Interroge la FFPB par série pour éviter qu'une grosse compétition
+// dépasse les 90 secondes imparties à une requête globale.
+const fetchPartitionedSource = async (
+  baseUrl: string,
+  path: string,
+  body: JsonRow & { divisions: Array<{ name: string }> },
+  field: "results" | "standings" | "generalStandings",
+  warnings: string[],
+): Promise<JsonRow | null> => {
+  const combined: JsonRow[] = [];
+  let succeeded = 0;
+  // Limiter la charge simultanée sur le site fédéral.
+  for (let index = 0; index < body.divisions.length; index += 2) {
+    const batch = body.divisions.slice(index, index + 2);
+    const responses = await Promise.all(
+      batch.map(async (division) => {
+        let lastError: unknown;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            return await fetchSource(baseUrl, path, {
+              ...body,
+              divisions: [division],
+            });
+          } catch (error) {
+            lastError = error;
+            // Ne répéter que les échecs réseau/transitoires.
+            if (
+              attempt === 1 ||
+              !/timed out|timeout|network|fetch failed|50[234]/iu.test(
+                error instanceof Error ? error.message : String(error),
+              )
+            ) {
+              break;
+            }
+          }
+        }
+        warnings.push(
+          `${division.name} (${path}): ${lastError instanceof Error ? lastError.message : String(lastError)}`,
+        );
+        return null;
+      }),
+    );
+    responses.forEach((response, offset) => {
+      if (!response) return;
+      const items = response[field];
+      if (!Array.isArray(items)) {
+        warnings.push(`${batch[offset].name} (${path}): données absentes.`);
+        return;
+      }
+      succeeded++;
+      combined.push(...(items as JsonRow[]));
+      if (Array.isArray(response.warnings)) {
+        warnings.push(...response.warnings.map((warning) => String(warning)));
+      }
+    });
+  }
+  return succeeded > 0 ? { [field]: combined } : null;
+};
+
 const asNumber = (value: unknown) => {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
@@ -214,36 +273,27 @@ Deno.serve(async (request) => {
         };
 
         const [resultsSource, poolSource, generalSource] = await Promise.all([
-          fetchSource(
+          fetchPartitionedSource(
             sourceBaseUrl,
             "/api/championship-results-source",
             sourceBody,
-          ).catch((error) => {
-            warnings.push(
-              `Results: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            return null;
-          }),
-          fetchSource(
+            "results",
+            warnings,
+          ),
+          fetchPartitionedSource(
             sourceBaseUrl,
             "/api/championship-pool-standings-source",
             sourceBody,
-          ).catch((error) => {
-            warnings.push(
-              `Pool standings: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            return null;
-          }),
-          fetchSource(
+            "standings",
+            warnings,
+          ),
+          fetchPartitionedSource(
             sourceBaseUrl,
             "/api/championship-general-standings-public-source",
             sourceBody,
-          ).catch((error) => {
-            warnings.push(
-              `General standings: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            return null;
-          }),
+            "generalStandings",
+            warnings,
+          ),
         ]);
 
         const [
