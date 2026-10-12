@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ClubMediaManager } from "../components/ClubMediaManager";
+import {
+  clubBrandingUploadService,
+  type BrandingImageKind,
+} from "../services/clubBrandingUploadService";
 import { clubAdminService, type Club } from "../services/clubAdminService";
 import "./ClubPages.css";
 import "./ClubBranding.css";
@@ -39,6 +43,7 @@ export function ClubInformationPage() {
   const [club, setClub] = useState<Club | null>(null);
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [uploading, setUploading] = useState<BrandingImageKind | null>(null);
 
   useEffect(() => {
     clubAdminService
@@ -59,6 +64,44 @@ export function ClubInformationPage() {
       "--preview-hero": `url("${club.heroImageUrl}")`,
     };
   }, [club]);
+
+  const updateImage = async (kind: BrandingImageKind, file: File | null) => {
+    if (!club || uploading) return;
+    setUploading(kind);
+    setStatus("");
+    let uploadedUrl = "";
+    try {
+      if (file)
+        uploadedUrl = await clubBrandingUploadService.upload(
+          club.id,
+          kind,
+          file,
+        );
+      const nextClub = {
+        ...club,
+        [kind === "logo" ? "logoUrl" : "heroImageUrl"]: uploadedUrl,
+      };
+      await clubAdminService.updateClub(nextClub);
+      setClub(nextClub);
+      window.dispatchEvent(new CustomEvent("club-branding-updated"));
+      setStatus(
+        file ? "Image enregistrée avec succès." : "Image retirée du club.",
+      );
+    } catch (error: unknown) {
+      if (uploadedUrl)
+        await clubBrandingUploadService.discardUploadedImage(
+          club.id,
+          uploadedUrl,
+        );
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "Impossible de modifier l’image.",
+      );
+    } finally {
+      setUploading(null);
+    }
+  };
 
   if (!club) {
     return (
@@ -156,8 +199,65 @@ export function ClubInformationPage() {
               </p>
             </div>
           </div>
-          {field("logoUrl", "URL du logo", "url")}
-          {field("heroImageUrl", "URL de la photo d’arrière-plan", "url")}
+          {(
+            [
+              ["logo", "Logo du club"],
+              ["hero", "Photo d’arrière-plan"],
+            ] as const
+          ).map(([kind, label]) => {
+            const url = kind === "logo" ? club.logoUrl : club.heroImageUrl;
+            return (
+              <div
+                className="club-form__wide"
+                key={kind}
+                style={{ display: "grid", gap: 10 }}
+              >
+                <strong>{label}</strong>
+                <p style={{ margin: 0 }}>
+                  PNG, JPG ou WebP — 2 Mo maximum. L’image est enregistrée
+                  automatiquement.
+                </p>
+                {url && (
+                  <img
+                    src={url}
+                    alt={label}
+                    style={{
+                      maxWidth: 260,
+                      maxHeight: 140,
+                      objectFit: "contain",
+                      borderRadius: 12,
+                    }}
+                  />
+                )}
+                <label style={{ display: "block" }}>
+                  {uploading === kind
+                    ? "Téléversement en cours…"
+                    : url
+                      ? "Remplacer l’image"
+                      : "Choisir une image"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={uploading !== null || isSaving}
+                    onChange={(event) => {
+                      const file = event.currentTarget.files?.[0];
+                      if (file) void updateImage(kind, file);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+                {url && (
+                  <button
+                    type="button"
+                    disabled={uploading !== null || isSaving}
+                    onClick={() => void updateImage(kind, null)}
+                  >
+                    Supprimer l’image
+                  </button>
+                )}
+              </div>
+            );
+          })}
 
           <div className="club-branding-colors club-form__wide">
             {colorFields.map(({ key, label, help }) => (
@@ -189,7 +289,7 @@ export function ClubInformationPage() {
           <ClubMediaManager />
 
           <div className="club-form__actions">
-            <button type="submit" disabled={isSaving}>
+            <button type="submit" disabled={isSaving || uploading !== null}>
               {isSaving ? "Enregistrement…" : "Enregistrer et appliquer"}
             </button>
             <span role="status">{status}</span>

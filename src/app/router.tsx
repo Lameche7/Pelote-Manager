@@ -58,6 +58,7 @@ import {
 } from "@/features/legal/pages/LegalPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
+import { NetworkDirectoryPage } from "@/features/network/pages/NetworkDirectoryPage";
 import { MyLicencePage } from "@/features/licences/pages/MyLicencePage";
 import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
 import { PlatformProtectedRoute } from "@/features/platform/auth/PlatformProtectedRoute";
@@ -98,6 +99,7 @@ const allAuthenticatedRoles = [
 ];
 
 export const routes = [
+  { path: "/reseau", element: <NetworkDirectoryPage /> },
   { path: `${ROUTES.tv}/:token`, element: <TvDisplayPage /> },
   {
     path: ROUTES.platform,
