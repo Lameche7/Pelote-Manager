@@ -39,8 +39,17 @@ export function NetworkDirectoryPage() {
         );
         if (!current) return;
         setClubs(directory);
-        const { data: specialtyRows } = await supabase.from("network_tournament_profiles").select("tournament_id,specialty");
-        if (current) setSpecialties(Object.fromEntries((specialtyRows ?? []).filter((item) => item.specialty).map((item) => [item.tournament_id, item.specialty as string])));
+        const { data: specialtyRows } = await supabase
+          .from("network_tournament_profiles")
+          .select("tournament_id,specialty");
+        if (current)
+          setSpecialties(
+            Object.fromEntries(
+              (specialtyRows ?? [])
+                .filter((item) => item.specialty)
+                .map((item) => [item.tournament_id, item.specialty as string]),
+            ),
+          );
         setTournaments(
           lists.flatMap((result, index) =>
             result.status === "fulfilled"
@@ -87,7 +96,9 @@ export function NetworkDirectoryPage() {
         <Link to="/reseau" aria-label="Accueil Pilotoki Network">
           <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" />
         </Link>
-        <nav aria-label="Navigation réseau"><a href="#tournois">Tournois</a> · <a href="#clubs">Clubs</a></nav>
+        <nav aria-label="Navigation réseau">
+          <a href="#tournois">Tournois</a> · <a href="#clubs">Clubs</a>
+        </nav>
       </header>
       <section className="network-directory__hero">
         <p className="network-directory__eyebrow">Pilotoki Network</p>
@@ -124,8 +135,12 @@ export function NetworkDirectoryPage() {
                   {clubLogo(club)}
                   <span>{club.name}</span>
                 </div>
-                <span className="network-directory__status">Tournoi publié</span>
-                <span className="network-directory__specialty">{specialties[tournament.id] ?? "Spécialité à préciser"}</span>
+                <span className="network-directory__status">
+                  Tournoi publié
+                </span>
+                <span className="network-directory__specialty">
+                  {specialties[tournament.id] ?? "Spécialité à préciser"}
+                </span>
                 <h3>{tournament.name}</h3>
                 <p>Début : {formatDate(tournament.startsOn)}</p>
                 <p className="network-directory__date-note">
@@ -138,12 +153,25 @@ export function NetworkDirectoryPage() {
                 </div>
                 <div className="network-directory__registration">
                   <strong>Inscriptions</strong>
-                  <span>{tournament.registrationClosesAt && new Date(tournament.registrationClosesAt).getTime() < Date.now()
-                    ? "Closes" : tournament.registrationOpensAt && new Date(tournament.registrationOpensAt).getTime() > Date.now()
-                    ? "Ouverture prochaine" : tournament.registrationOpensAt && tournament.registrationClosesAt
-                    ? "Période d'inscription" : "Dates à préciser"}</span>
+                  <span>
+                    {tournament.registrationClosesAt &&
+                    new Date(tournament.registrationClosesAt).getTime() <
+                      Date.now()
+                      ? "Closes"
+                      : tournament.registrationOpensAt &&
+                          new Date(tournament.registrationOpensAt).getTime() >
+                            Date.now()
+                        ? "Ouverture prochaine"
+                        : tournament.registrationOpensAt &&
+                            tournament.registrationClosesAt
+                          ? "Période d'inscription"
+                          : "Dates à préciser"}
+                  </span>
                 </div>
-                <Link className="network-directory__action" to={`/reseau/tournois/${encodeURIComponent(tournament.id)}`}>
+                <Link
+                  className="network-directory__action"
+                  to={`/reseau/tournois/${encodeURIComponent(tournament.id)}`}
+                >
                   Consulter le tournoi →
                 </Link>
               </article>
@@ -191,7 +219,9 @@ export function NetworkDirectoryPage() {
           </p>
         )}
       </section>
-      <footer className="network-directory__footer">Pilotoki Network · Clubs et tournois</footer>
+      <footer className="network-directory__footer">
+        Pilotoki Network · Clubs et tournois
+      </footer>
     </main>
   );
 }
