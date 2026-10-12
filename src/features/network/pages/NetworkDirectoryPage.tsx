@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/infrastructure/supabase/client";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type { PublicTournamentSummary } from "@/features/tournaments/types";
@@ -6,7 +7,7 @@ import "./NetworkDirectoryPage.css";
 
 type Club = { name: string; slug: string; logo_url: string | null };
 type TournamentListing = { club: Club; tournament: PublicTournamentSummary };
-const LOURDES_SLUG = "pelotaris-club-lourdais";
+
 const formatDate = (date: string) =>
   new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
     day: "numeric",
@@ -17,6 +18,7 @@ const formatDate = (date: string) =>
 export function NetworkDirectoryPage() {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [tournaments, setTournaments] = useState<TournamentListing[]>([]);
+  const [specialties, setSpecialties] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -37,6 +39,17 @@ export function NetworkDirectoryPage() {
         );
         if (!current) return;
         setClubs(directory);
+        const { data: specialtyRows } = await supabase
+          .from("network_tournament_profiles")
+          .select("tournament_id,specialty");
+        if (current)
+          setSpecialties(
+            Object.fromEntries(
+              (specialtyRows ?? [])
+                .filter((item) => item.specialty)
+                .map((item) => [item.tournament_id, item.specialty as string]),
+            ),
+          );
         setTournaments(
           lists.flatMap((result, index) =>
             result.status === "fulfilled"
@@ -80,10 +93,12 @@ export function NetworkDirectoryPage() {
   return (
     <main className="network-directory">
       <header className="network-directory__header">
-        <a href="https://app.pelotemanager.fr/" aria-label="Retour à Pilotoki">
+        <Link to="/reseau" aria-label="Accueil Pilotoki Network">
           <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" />
-        </a>
-        <span>Le réseau des clubs</span>
+        </Link>
+        <nav aria-label="Navigation réseau">
+          <a href="#tournois">Tournois</a> · <a href="#clubs">Clubs</a>
+        </nav>
       </header>
       <section className="network-directory__hero">
         <p className="network-directory__eyebrow">Pilotoki Network</p>
@@ -97,7 +112,7 @@ export function NetworkDirectoryPage() {
         </p>
       </section>
 
-      <section className="network-directory__section">
+      <section className="network-directory__section" id="tournois">
         <div className="network-directory__section-heading">
           <div>
             <p className="network-directory__eyebrow">Compétitions</p>
@@ -123,30 +138,42 @@ export function NetworkDirectoryPage() {
                 <span className="network-directory__status">
                   Tournoi publié
                 </span>
+                <span className="network-directory__specialty">
+                  {specialties[tournament.id] ?? "Spécialité à préciser"}
+                </span>
                 <h3>{tournament.name}</h3>
                 <p>Début : {formatDate(tournament.startsOn)}</p>
                 <p className="network-directory__date-note">
                   Fin de la phase de poules : {formatDate(tournament.endsOn)}
                 </p>
-                <p className="network-directory__date-note">
-                  Fin du tournoi : à confirmer (phase finale non datée)
-                </p>
+
                 <div className="network-directory__meta">
                   <span>{tournament.teamCount} équipes</span>
                   <span>{tournament.series.length} séries</span>
                 </div>
-                {club.slug === LOURDES_SLUG ? (
-                  <a
-                    className="network-directory__action"
-                    href={`https://app.pelotemanager.fr/tournois/${encodeURIComponent(tournament.id)}`}
-                  >
-                    Voir les poules, classements et résultats →
-                  </a>
-                ) : (
-                  <p className="network-directory__date-note">
-                    Consultation détaillée bientôt disponible pour ce club
-                  </p>
-                )}
+                <div className="network-directory__registration">
+                  <strong>Inscriptions</strong>
+                  <span>
+                    {tournament.registrationClosesAt &&
+                    new Date(tournament.registrationClosesAt).getTime() <
+                      Date.now()
+                      ? "Closes"
+                      : tournament.registrationOpensAt &&
+                          new Date(tournament.registrationOpensAt).getTime() >
+                            Date.now()
+                        ? "Ouverture prochaine"
+                        : tournament.registrationOpensAt &&
+                            tournament.registrationClosesAt
+                          ? "Période d'inscription"
+                          : "Dates à préciser"}
+                  </span>
+                </div>
+                <Link
+                  className="network-directory__action"
+                  to={`/reseau/tournois/${encodeURIComponent(tournament.id)}`}
+                >
+                  Consulter le tournoi →
+                </Link>
               </article>
             ))}
           </div>
@@ -155,7 +182,7 @@ export function NetworkDirectoryPage() {
         )}
       </section>
 
-      <section className="network-directory__section">
+      <section className="network-directory__section" id="clubs">
         <div className="network-directory__section-heading">
           <div>
             <p className="network-directory__eyebrow">Communauté</p>
@@ -170,8 +197,9 @@ export function NetworkDirectoryPage() {
         ) : clubs.length ? (
           <div className="network-directory__grid">
             {clubs.map((club) => (
-              <article
+              <Link
                 key={club.slug}
+                to={`/reseau/clubs/${encodeURIComponent(club.slug)}`}
                 className="network-directory__card network-directory__club-card"
               >
                 {clubLogo(club)}
@@ -179,7 +207,7 @@ export function NetworkDirectoryPage() {
                   <h3>{club.name}</h3>
                   <p>Club référencé sur Pilotoki</p>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         ) : (
@@ -192,9 +220,7 @@ export function NetworkDirectoryPage() {
         )}
       </section>
       <footer className="network-directory__footer">
-        <a href="https://app.pelotemanager.fr/">
-          Accéder à l'application des joueurs de Lourdes
-        </a>
+        Pilotoki Network · Clubs et tournois
       </footer>
     </main>
   );

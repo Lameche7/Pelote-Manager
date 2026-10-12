@@ -38,7 +38,7 @@
   font-size: 0.95rem;
 }
 .network-directory__section {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 50px 24px;
 }
@@ -58,23 +58,23 @@
 }
 .network-directory__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 305px), 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 275px), 1fr));
+  gap: 16px;
 }
 .network-directory__card {
   background: #fff;
-  border-radius: 20px;
-  padding: 25px;
+  border-radius: 16px;
+  padding: 17px;
   border: 1px solid #dce5df;
   box-shadow: 0 8px 22px rgba(19, 65, 43, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
   min-width: 0;
 }
 .network-directory__card h3 {
   margin: 2px 0 5px;
-  font-size: 1.35rem;
+  font-size: 1.12rem;
 }
 .network-directory__card p {
   margin: 0;
@@ -95,8 +95,8 @@
 }
 .network-directory__club-logo,
 .network-directory__club-placeholder {
-  width: 58px;
-  height: 58px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
   border-radius: 14px;
   background: #f4f7f3;
@@ -178,5 +178,55 @@
   }
   .network-directory__card {
     padding: 21px;
+  }
+}
+
+.network-directory__club-card,
+.network-directory__detail-link {
+  text-decoration: none;
+  color: inherit;
+}
+.network-directory__club-card:hover,
+.network-directory__detail-link:hover {
+  border-color: #166347;
+  box-shadow: 0 9px 24px rgba(19, 65, 43, 0.13);
+}
+.network-directory__header nav a {
+  color: #145d43;
+  font-weight: 650;
+}
+.network-directory__specialty {
+  font-weight: 700;
+  color: #145d43;
+  font-size: 0.86rem;
+}
+.network-directory__registration {
+  background: #eff6f1;
+  border-radius: 12px;
+  padding: 11px 13px;
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+.network-directory__registration p {
+  margin: 0;
+}
+.network-directory__detail {
+  min-height: 65vh;
+}
+.network-directory__detail > a {
+  color: #145d43;
+  font-weight: 700;
+}
+.network-directory__detail h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+.network-directory__results {
+  margin-top: 24px;
+}
+@media (min-width: 1350px) {
+  .network-directory__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
