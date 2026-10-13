@@ -98,7 +98,7 @@ export function NetworkDirectoryPage() {
           >
             <a href="#tournois">Tournois</a>
             <a href="#clubs">Clubs</a>
-            <a href="#decouvrir">Découvrir Pilotoki</a>
+            <a href="https://pelote-manager-ltvjzizbl-guegue-team.vercel.app/pilotoki-demo/#customizer">Découvrir Pilotoki</a>
             <a href="#abonnement" className="network-directory__subscribe-link">
               S'abonner
             </a>
