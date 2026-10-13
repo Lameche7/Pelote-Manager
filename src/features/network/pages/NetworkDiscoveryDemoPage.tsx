@@ -3,7 +3,7 @@ import { NetworkNavigation } from "@/features/network/components/NetworkNavigati
 import "./NetworkDirectoryPage.css";
 import "./NetworkDiscoveryDemoPage.css";
 
-type Feature = "reservations" | "tournois" | "championnats" | "arbitrage" | "notifications";
+type Feature = "reservations" | "tournois" | "championnats" | "arbitrage" | "notifications" | "tv";
 type View = "joueur" | "administrateur";
 const features: { id: Feature; label: string; description: string }[] = [
   { id: "reservations", label: "Réservations", description: "Réserver un terrain, suivre les créneaux et les disponibilités" },
@@ -11,6 +11,7 @@ const features: { id: Feature; label: string; description: string }[] = [
   { id: "championnats", label: "Championnats", description: "Programmer les rencontres et suivre les résultats" },
   { id: "arbitrage", label: "Arbitrage", description: "Organiser les arbitres de chaque créneau" },
   { id: "notifications", label: "Notifications", description: "Informer les joueurs des rendez-vous et des changements" },
+  { id: "tv", label: "Mode TV", description: "Animer les écrans du trinquet, du club-house ou d’un espace commun" },
 ];
 const sampleMatches = [
   { teams: "Martin / Dupont · Bernard / Petit", day: "Mardi 20 octobre", hour: "19 h 30", score: "—" },
@@ -53,6 +54,7 @@ export function NetworkDiscoveryPage() {
   const [selectedSlot, setSelectedSlot] = useState("19 h 30");
   const [reserved, setReserved] = useState(false);
   const [requested, setRequested] = useState(false);
+  const [tvSlide, setTvSlide] = useState<"programme" | "resultats" | "infos">("programme");
   const active = features.find((item) => item.id === feature)!;
   const primaryText = textOn(primary);
   const accentText = textOn(accent);
@@ -125,6 +127,35 @@ export function NetworkDiscoveryPage() {
               {feature === "championnats" && <div className="pilotoki-discovery__content"><h3>Rencontre de championnat</h3><p>Journée 4 · Dimanche 25 octobre 2026</p><div className="pilotoki-discovery__example"><strong>{club.trim() || "Mon club"} — Club visiteur</strong><span>1re série · Programmation à confirmer</span><span>{view === "joueur" ? "Consultez la rencontre et les résultats." : "Programmez la rencontre et validez les résultats."}</span></div></div>}
               {feature === "arbitrage" && <div className="pilotoki-discovery__content"><h3>Tableau d’arbitrage</h3><p>Chaque arbitre est associé à un créneau, même si une partie est déplacée.</p><div className="pilotoki-discovery__example"><strong>Jeudi 22 octobre · 19 h 30</strong><span>Trinquet principal</span><span>Arbitre : à désigner</span></div></div>}
               {feature === "notifications" && <div className="pilotoki-discovery__content"><h3>Les bonnes informations, au bon moment</h3><div className="pilotoki-discovery__example"><strong>Rappel de partie</strong><span>Votre partie est prévue demain à 19 h 30.</span></div><div className="pilotoki-discovery__example"><strong>Report de partie</strong><span>Une nouvelle date vous est proposée.</span></div><p>Les notifications présentées sont des exemples : aucun message n'est envoyé.</p></div>}
+              {feature === "tv" && (
+                <div className="pilotoki-discovery__content">
+                  <h3>La vie du club sur grand écran</h3>
+                  <p>
+                    Une télévision dans le trinquet, au bar ou dans le club-house peut afficher
+                    en continu les prochains matchs, les résultats et les annonces du club,
+                    sans que les visiteurs aient besoin de consulter leur téléphone.
+                  </p>
+                  <div className="pilotoki-discovery__slots" role="group" aria-label="Choisir un affichage TV">
+                    <button type="button" className={tvSlide === "programme" ? "active" : ""} aria-pressed={tvSlide === "programme"} onClick={() => setTvSlide("programme")}>Programme</button>
+                    <button type="button" className={tvSlide === "resultats" ? "active" : ""} aria-pressed={tvSlide === "resultats"} onClick={() => setTvSlide("resultats")}>Résultats</button>
+                    <button type="button" className={tvSlide === "infos" ? "active" : ""} aria-pressed={tvSlide === "infos"} onClick={() => setTvSlide("infos")}>Infos club</button>
+                  </div>
+                  <div className="pilotoki-discovery__tv" aria-label="Simulation de l'affichage sur une télévision">
+                    <div className="pilotoki-discovery__tv-head">
+                      {logo ? <img src={logo} alt="Logo du club" /> : <span className="pilotoki-discovery__tv-initial">P</span>}
+                      <strong>{club.trim() || "Mon club de pelote"}</strong>
+                      <span>● MODE TV</span>
+                    </div>
+                    <div className="pilotoki-discovery__tv-content">
+                      {tvSlide === "programme" && <><h4>À l'affiche au trinquet</h4><p>Mardi · 19 h 30 — Martin / Dupont contre Bernard / Petit</p><p>Jeudi · 20 h 30 — Lacaze / Durand contre Barbé / Lopez</p></>}
+                      {tvSlide === "resultats" && <><h4>Derniers résultats</h4><p>Martin / Dupont <strong>40 – 32</strong> Bernard / Petit</p><p>Lacaze / Durand <strong>40 – 36</strong> Barbé / Lopez</p></>}
+                      {tvSlide === "infos" && <><h4>Informations du club</h4><p>Bienvenue à toutes et à tous !</p><p>Retrouvez ici les annonces, événements, affiches et messages des partenaires.</p></>}
+                    </div>
+                    <div className="pilotoki-discovery__tv-footer">PILOTOKI · Affichage automatique du club</div>
+                  </div>
+                  <p>Le club peut personnaliser le contenu et diffuser ses informations, y compris ses événements et partenaires. En pratique, un écran connecté (ou une TV avec boîtier type Fire TV) suffit pour ouvrir la page Mode TV. Les trois écrans ci-dessus sont des exemples fictifs.</p>
+                </div>
+              )}
               <aside className="pilotoki-discovery__home-preview" aria-label="Aperçu de l'accueil personnalisé">
                 <p>Aperçu de votre accueil · {view === "joueur" ? "Joueur" : "Administrateur"}</p>
                 <div className="pilotoki-discovery__mini-screen">
