@@ -331,3 +331,27 @@
 .pilotoki-discovery__booking-referee{border-top:1px solid currentColor;padding-top:4px;font-size:.68rem}
 .pilotoki-discovery__success svg,.pilotoki-discovery__matches b svg{vertical-align:middle;display:inline-block}
 @media(max-width:760px){.pilotoki-discovery__referee-grid{grid-template-columns:1fr}}
+
+
+/* Distinctive discovery showcase: scheduling proposals and tournament lifecycle. */
+.pilotoki-discovery__sidebar button:last-child{margin-top:12px;background:var(--club-accent);color:var(--club-on-accent);border:2px solid transparent;box-shadow:0 4px 14px #00000021;font-weight:900}
+.pilotoki-discovery__sidebar button:last-child:hover,.pilotoki-discovery__sidebar button:last-child.active{background:var(--club-accent);color:var(--club-on-accent);border-color:var(--club-on-accent)}
+.pilotoki-discovery__bonus-hero{padding:22px;border:1px solid var(--club-border);border-radius:16px;background:linear-gradient(135deg,var(--club-soft),#fff);display:grid;gap:8px}
+.pilotoki-discovery__bonus-hero>span{font-weight:900;font-size:.76rem;letter-spacing:.1em;color:var(--club-heading)}
+.pilotoki-discovery__bonus-hero h3{font-size:clamp(1.3rem,2.5vw,1.8rem);line-height:1.2}
+.pilotoki-discovery__bonus-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pilotoki-discovery__bonus-flow>div{min-width:0;display:grid;align-content:start;gap:10px;padding:16px;border-radius:13px;background:var(--club-soft);border:1px solid var(--club-border)}
+.pilotoki-discovery__bonus-flow>div>span{background:var(--club-primary);color:var(--club-on-primary);width:33px;height:33px;display:grid;place-items:center;border-radius:9px;font-size:.81rem;font-weight:900}
+.pilotoki-discovery__bonus-flow strong{font-size:.93rem}
+.pilotoki-discovery__bonus-flow small{font-size:.79rem;line-height:1.5}
+.pilotoki-discovery__bonus-proposals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pilotoki-discovery__bonus-proposals button{display:grid;align-content:start;text-align:left;gap:9px;border:2px solid var(--club-border);border-radius:11px;background:var(--club-soft);color:var(--club-heading);padding:14px}
+.pilotoki-discovery__bonus-proposals button>span{font-size:.69rem;font-weight:800}
+.pilotoki-discovery__bonus-proposals button>strong{font-size:.88rem}
+.pilotoki-discovery__bonus-proposals button>small{font-size:.7rem}
+.pilotoki-discovery__bonus-proposals button.is-selected{border-color:var(--club-accent);box-shadow:0 0 0 2px var(--club-accent-soft)}
+.pilotoki-discovery__bonus-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pilotoki-discovery__bonus-steps>div{border:1px solid var(--club-border);background:white;border-radius:13px;padding:17px;display:grid;gap:8px}
+.pilotoki-discovery__bonus-steps strong{font-size:1rem}
+@media(max-width:850px){.pilotoki-discovery__bonus-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.pilotoki-discovery__bonus-proposals{grid-template-columns:1fr}}
+@media(max-width:550px){.pilotoki-discovery__bonus-flow,.pilotoki-discovery__bonus-steps{grid-template-columns:1fr}}
