@@ -50,6 +50,24 @@ const tvWeekend = [
   { type: "CHAMPIONNAT", title: "Équipe 2 en déplacement", date: "Dimanche · 9 h 30" },
 ] as const;
 
+const reservationDemoWeek = [
+ {day:"Lun",items:[["17 h 30","Réservable à partir de dimanche 8 h","opening"],["18 h 30","Réserver","book"],["19 h 30","Créneau à l’année","yearly"]]},
+ {day:"Mar",items:[["17 h 30","Réservable à partir de lundi 8 h","opening"],["18 h 30","Réserver","book"],["20 h 30","Partie de championnat","championship"]]},
+ {day:"Mer",items:[["17 h 30","Créneau à l’année","yearly"],["18 h 30","Réservable à partir de mardi 8 h","opening"],["19 h 30","Réserver","book"],["20 h 30","Réserver","book"]]},
+ {day:"Jeu",items:[["17 h 30","Réserver","book"],["18 h 30","Réserver","book"],["19 h 30","Partie de championnat","championship"]]},
+ {day:"Ven",items:[["17 h 30","Réservable à partir de jeudi 8 h","opening"],["18 h 30","Réserver","book"],["19 h 30","Créneau à l’année","yearly"],["20 h 30","Réserver","book"]]},
+ {day:"Sam",items:[["10 h","Partie de championnat","championship"],["15 h","Réserver","book"],["18 h 30","Réserver","book"]]},
+ {day:"Dim",items:[["9 h 30","Partie de championnat","championship"],["14 h 30","Réserver","book"],["17 h","Créneau à l’année","yearly"]]},
+] as const;
+const championshipDemoDays = [
+ {day:"Lundi",start:"09:00",end:"18:00",enabled:false},
+ {day:"Mardi",start:"09:00",end:"18:00",enabled:false},
+ {day:"Mercredi",start:"09:00",end:"18:00",enabled:false},
+ {day:"Jeudi",start:"09:00",end:"18:00",enabled:false},
+ {day:"Vendredi",start:"16:30",end:"21:30",enabled:true},
+ {day:"Samedi",start:"09:00",end:"21:00",enabled:true},
+ {day:"Dimanche",start:"09:00",end:"21:00",enabled:true},
+] as const;
 export function NetworkDiscoveryPage() {
   const [club, setClub] = useState("Mon club de pelote");
   const [primary, setPrimary] = useState("#155a43");
@@ -141,19 +159,58 @@ export function NetworkDiscoveryPage() {
                 <span className="pilotoki-discovery__preview-badge">Démonstration · {view === "joueur" ? "Joueur" : "Administration"}</span>
               </div>
               {feature === "reservations" && <div className="pilotoki-discovery__content">
-                <h3>{view === "joueur" ? "Choisir un créneau" : "Planning des terrains"}</h3>
-                <p>Mercredi 21 octobre 2026 · Trinquet principal</p>
-                <div className="pilotoki-discovery__slots">{["17 h 30", "18 h 30", "19 h 30", "20 h 30"].map((hour) => <button type="button" key={hour} className={selectedSlot === hour ? "active" : ""} aria-pressed={selectedSlot === hour} onClick={() => { setSelectedSlot(hour); setReserved(false); }}>{hour}</button>)}</div>
-                <button type="button" className="pilotoki-discovery__cta" onClick={() => setReserved(true)}>{view === "joueur" ? "Simuler la réservation" : "Bloquer ce créneau (simulation)"}</button>
-                {reserved && <p role="status" className="pilotoki-discovery__success">Simulation enregistrée pour {selectedSlot}. Aucune réservation réelle n'a été créée.</p>}
-              </div>}
+  {view === "joueur" ? <>
+    <h3>Réserver votre terrain · Toute la semaine</h3>
+    <p>Une semaine de démonstration : les disponibilités et les droits de réservation sont différents selon le créneau.</p>
+    <div className="pilotoki-discovery__booking-week">
+      {reservationDemoWeek.map((day) => <div className="pilotoki-discovery__booking-day" key={day.day}>
+        <strong className="pilotoki-discovery__booking-day-head">{day.day}</strong>
+        {day.items.map(([time,label,type]) => <button type="button" key={time} className={`pilotoki-discovery__booking-card pilotoki-discovery__booking-card--${type}`} onClick={() => {setSelectedSlot(day.day+" · "+time);setReserved(true);}}>
+          <span>{time}</span><strong>{label}</strong>
+        </button>)}
+      </div>)}
+    </div>
+    {reserved && <p className="pilotoki-discovery__success" role="status">{selectedSlot} : aperçu du créneau sélectionné. Aucune réservation réelle effectuée.</p>}
+    <div className="pilotoki-discovery__booking-note"><strong>Un fonctionnement entièrement configurable</strong><p>L’administrateur règle les délais d’ouverture, les créneaux à l’année, les plages championnat, la durée, les tarifs, les quotas et les conditions d’annulation. Basculez sur « Vue administrateur » pour découvrir les paramètres.</p></div>
+  </> : <>
+    <h3>Administration · Paramètres des réservations</h3>
+    <p>Exemple condensé des règles générales configurables par le club.</p>
+    <div className="pilotoki-discovery__settings-card">
+      <div className="pilotoki-discovery__settings-heading"><strong>Règles générales</strong><span>Paiement en ligne désactivé</span></div>
+      <div className="pilotoki-discovery__settings-grid">
+        {([["Paiement en ligne","Désactivé · confirmation immédiate"],["Délai pour régler les 4 parts","120 minutes"],["Anticipation licencié","72 heures"],["Anticipation non licencié","48 heures"],["Tarif licencié","16,00 €"],["Tarif non licencié","16,00 €"],["Durée d’un créneau","60 minutes"],["Pas du calendrier","60 minutes"],["Délai minimum avant réservation","0 minute"],["Délai d’annulation","8 heures avant"],["Quota licencié","20 réservations actives"],["Quota non licencié","20 réservations actives"]] as const).map(([label,value]) => <div className="pilotoki-discovery__setting" key={label}><strong>{label}</strong><span>{value}</span></div>)}
+      </div>
+      <p className="pilotoki-discovery__settings-hint">Démonstration en lecture seule. Les valeurs sont entièrement modifiables dans l’administration réelle.</p>
+    </div>
+  </>}
+</div>}
               {feature === "tournois" && <div className="pilotoki-discovery__content">
                 <div className="pilotoki-discovery__between"><h3>Tournoi du club · 4e série</h3><span className="pilotoki-discovery__preview-badge">Phase de poules</span></div>
                 <div className="pilotoki-discovery__matches">{sampleMatches.map((match) => <div key={match.teams}><strong>{match.teams}</strong><span>{match.day} · {match.hour}</span><b>{match.score}</b></div>)}</div>
                 <button type="button" className="pilotoki-discovery__cta" onClick={() => setRequested(true)}>{view === "joueur" ? "Demander un report (simulation)" : "Examiner les reports (simulation)"}</button>
                 {requested && <p role="status" className="pilotoki-discovery__success">Le parcours de report est illustré. Aucune demande réelle n'a été envoyée.</p>}
               </div>}
-              {feature === "championnats" && <div className="pilotoki-discovery__content"><h3>Rencontre de championnat</h3><p>Journée 4 · Dimanche 25 octobre 2026</p><div className="pilotoki-discovery__example"><strong>{club.trim() || "Mon club"} — Club visiteur</strong><span>1re série · Programmation à confirmer</span><span>{view === "joueur" ? "Consultez la rencontre et les résultats." : "Programmez la rencontre et validez les résultats."}</span></div></div>}
+              {feature === "championnats" && <div className="pilotoki-discovery__content">
+  {view === "joueur" ? <>
+    <h3>Mes championnats · Rencontre du week-end</h3>
+    <p>Retrouvez votre prochaine partie, réservez un créneau championnat et saisissez les résultats après la rencontre.</p>
+    <div className="pilotoki-discovery__champ-cards">
+      <div className="pilotoki-discovery__champ-card"><span>DIMANCHE 25 OCTOBRE · 1re SÉRIE</span><strong>{club.trim() || "Mon club"} <em>VS</em> Club visiteur</strong><p>Programmation à confirmer · Trinquet principal</p><button type="button" onClick={() => setRequested(true)}>Réserver un créneau championnat</button></div>
+      <div className="pilotoki-discovery__champ-card"><span>SAMEDI 24 OCTOBRE · 2e SÉRIE</span><strong>Club voisin <em>VS</em> {club.trim() || "Mon club"}</strong><p>15 h · Rencontre à l’extérieur</p><button type="button" onClick={() => setRequested(true)}>Consulter la rencontre et son résultat</button></div>
+    </div>
+    {requested && <p className="pilotoki-discovery__success" role="status">Parcours illustré uniquement : aucune réservation ni saisie réelle.</p>}
+  </> : <>
+    <div className="pilotoki-discovery__champ-admin-head"><span>CHAMPIONNATS</span><h3>Réservations championnat</h3><p>Accès anticipé aux plages dédiées pour les joueurs engagés, sans modifier les règles normales du club.</p></div>
+    <div className="pilotoki-discovery__settings-card">
+      <div className="pilotoki-discovery__settings-heading"><strong>50 joueurs éligibles</strong><span>Selon les effectifs et le rattachement des comptes</span></div>
+      <div className="pilotoki-discovery__settings-grid"><div className="pilotoki-discovery__setting"><strong>Accès anticipé championnat</strong><span>☑ Activé</span></div><div className="pilotoki-discovery__setting"><strong>Réservable à l’avance</strong><span>90 jours</span></div><div className="pilotoki-discovery__setting"><strong>Maximum de réservations actives</strong><span>20</span></div></div>
+    </div>
+    <div className="pilotoki-discovery__settings-card"><strong>Paiement d’une rencontre de championnat</strong><p>◉ Sans paiement · confirmation immédiate à 0 €</p><p>○ Tarification habituelle du club (alternative)</p></div>
+    <div className="pilotoki-discovery__settings-card"><strong>Terrains concernés</strong><p>☑ Trinquet Robert Cathala</p></div>
+    <div className="pilotoki-discovery__settings-card"><strong>Plages réservées championnat</strong><p>Jours et horaires entièrement modifiables.</p><div className="pilotoki-discovery__champ-days">{championshipDemoDays.map(day => <div key={day.day} className={day.enabled ? "is-enabled" : ""}><span>{day.enabled ? "☑" : "☐"} {day.day}</span><strong>{day.start} → {day.end}</strong></div>)}</div></div>
+    <p className="pilotoki-discovery__settings-hint">Maquette condensée en lecture seule, fidèle aux réglages disponibles dans l’administration du club.</p>
+  </>}
+</div>}
               {feature === "arbitrage" && <div className="pilotoki-discovery__content"><h3>Tableau d’arbitrage</h3><p>Chaque arbitre est associé à un créneau, même si une partie est déplacée.</p><div className="pilotoki-discovery__example"><strong>Jeudi 22 octobre · 19 h 30</strong><span>Trinquet principal</span><span>Arbitre : à désigner</span></div></div>}
               {feature === "notifications" && <div className="pilotoki-discovery__content"><h3>Les bonnes informations, au bon moment</h3><div className="pilotoki-discovery__example"><strong>Rappel de partie</strong><span>Votre partie est prévue demain à 19 h 30.</span></div><div className="pilotoki-discovery__example"><strong>Report de partie</strong><span>Une nouvelle date vous est proposée.</span></div><p>Les notifications présentées sont des exemples : aucun message n'est envoyé.</p></div>}
               {feature === "tv" && (
