@@ -48,3 +48,20 @@
 .pilotoki-discovery__mini-welcome {color:var(--club-heading);font-weight:750;}
 .pilotoki-discovery__mini-tiles span {background:var(--club-soft);color:var(--club-heading);font-size:.68rem;padding:11px 5px;border:1px solid var(--club-border);}
 .pilotoki-discovery__mini-action {padding:10px;}
+
+
+/* Authentic club landing page scaled into the live preview. */
+.pilotoki-discovery__mini-topbar { display:flex; align-items:center; gap:8px; padding:8px 10px; min-height:43px; }
+.pilotoki-discovery__mini-topbar img { width:100px; height:25px; object-fit:contain; padding:3px; background:#ffffff; border-radius:4px; }
+.pilotoki-discovery__mini-club { font-size:.63rem; font-weight:800; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pilotoki-discovery__mini-topbar nav { display:flex; gap:8px; font-size:.58rem; font-weight:750; }
+.pilotoki-discovery__mini-cover { min-height:235px; padding:18px 12px; gap:10px; }
+.pilotoki-discovery__mini-cover img { width:58px; height:58px; }
+.pilotoki-discovery__mini-cover > strong { font-size:clamp(1.25rem,2.2vw,1.8rem); line-height:1.08; text-transform:uppercase; max-width:92%; text-shadow:0 2px 8px #0005; }
+.pilotoki-discovery__mini-powered { font-weight:900; font-size:1rem; letter-spacing:.2em; text-shadow:0 2px 7px #0007; }
+.pilotoki-discovery__mini-cover small { font-size:.7rem; }
+.pilotoki-discovery__mini-actions { display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
+.pilotoki-discovery__mini-actions span { background:var(--club-accent); color:var(--club-on-accent); border-radius:5px; padding:8px 7px; font-size:.57rem; font-weight:800; }
+.pilotoki-discovery__mini-feature-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); background:var(--club-accent); color:var(--club-on-accent); }
+.pilotoki-discovery__mini-feature-strip span { text-align:center; padding:11px 3px; font-size:.55rem; font-weight:800; border-right:1px solid #ffffff44; }
+@media(max-width:540px) { .pilotoki-discovery__mini-topbar nav { gap:4px; font-size:.48rem; } .pilotoki-discovery__mini-topbar img { width:78px; } }
