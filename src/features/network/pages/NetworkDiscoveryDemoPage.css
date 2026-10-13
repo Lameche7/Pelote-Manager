@@ -65,3 +65,47 @@
 .pilotoki-discovery__mini-feature-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); background:var(--club-accent); color:var(--club-on-accent); }
 .pilotoki-discovery__mini-feature-strip span { text-align:center; padding:11px 3px; font-size:.55rem; font-weight:800; border-right:1px solid #ffffff44; }
 @media(max-width:540px) { .pilotoki-discovery__mini-topbar nav { gap:4px; font-size:.48rem; } .pilotoki-discovery__mini-topbar img { width:78px; } }
+
+/* The club header must always use the calculated foreground, even when the
+   main brand color is almost black. Older generic span rules must not win. */
+.pilotoki-discovery__mini-topbar,
+.pilotoki-discovery__mini-topbar span,
+.pilotoki-discovery__mini-topbar nav,
+.pilotoki-discovery__mini-topbar nav span {
+  color: var(--club-on-primary);
+}
+.pilotoki-discovery__mini-topbar {
+  height: auto;
+  min-height: 48px;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+.pilotoki-discovery__mini-topbar .pilotoki-discovery__mini-club {
+  color: var(--club-on-primary);
+  flex: 0 1 auto;
+  max-width: 90px;
+  font-size: 0.52rem;
+}
+.pilotoki-discovery__mini-topbar nav {
+  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  line-height: 1.2;
+  min-width: 0;
+}
+.pilotoki-discovery__mini-topbar nav span {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 0.5rem;
+}
+.pilotoki-discovery__mini-topbar nav span:first-child {
+  background: var(--club-selected);
+  padding: 5px 6px;
+  border-radius: 5px;
+}
+.pilotoki-discovery__mini-topbar img {
+  flex-shrink: 0;
+  width: 88px;
+}
