@@ -302,3 +302,14 @@
 .pilotoki-discovery__tournament-admin-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .pilotoki-discovery__tournament-admin-actions span{background:var(--club-primary);color:var(--club-on-primary);border-radius:9px;padding:12px;font-size:.79rem;font-weight:800;text-align:center}
 @media(max-width:650px){.pilotoki-discovery__tournament-admin-actions{grid-template-columns:1fr}}
+
+
+/* Championship standings and a clearly marked qualification cut line. */
+.pilotoki-discovery__standings{border:1px solid var(--club-border);border-radius:12px;overflow-x:auto}
+.pilotoki-discovery__standings>div{display:grid;grid-template-columns:60px minmax(150px,1fr) 65px 45px 55px;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--club-border);min-width:395px;font-size:.85rem}
+.pilotoki-discovery__standings>div:last-child{border-bottom:0}
+.pilotoki-discovery__standings .pilotoki-discovery__standings-head{background:var(--club-primary);color:var(--club-on-primary);font-weight:900;font-size:.77rem}
+.pilotoki-discovery__standings>div.is-qualified{background:var(--club-accent-soft);color:var(--club-on-accent-soft);border-left:5px solid var(--club-accent);padding-left:9px}
+.pilotoki-discovery__standings>div.is-qualified+div:not(.is-qualified){border-top:3px dashed var(--club-accent)}
+.pilotoki-discovery__qualification-legend{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.79rem;font-weight:750;color:var(--club-heading)}
+.pilotoki-discovery__qualification-legend>span:first-child{color:var(--club-heading);background:var(--club-accent-soft);border-radius:99px;padding:6px 10px}
