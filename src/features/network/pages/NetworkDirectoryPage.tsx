@@ -88,13 +88,13 @@ export function NetworkDirectoryPage() {
           <Link
             to="/reseau"
             className="network-directory__brand"
-            aria-label="Accueil Pilotoki Network"
+            aria-label="Accueil Pilotoki"
           >
             <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" />
           </Link>
           <nav
             className="network-directory__hero-nav"
-            aria-label="Navigation Pilotoki Network"
+            aria-label="Navigation Pilotoki"
           >
             <a href="#tournois">Tournois</a>
             <a href="#clubs">Clubs</a>
@@ -104,7 +104,6 @@ export function NetworkDirectoryPage() {
             </a>
           </nav>
         </header>
-        <p className="network-directory__eyebrow">Pilotoki Network</p>
         <h1>La pelote se retrouve ici.</h1>
         <p>
           Découvrez les clubs, les tournois, les poules, les classements et les
@@ -179,7 +178,7 @@ export function NetworkDirectoryPage() {
         </div>
       </section>
       <footer className="network-directory__footer">
-        Pilotoki Network · Clubs et tournois
+        Pilotoki · Clubs et tournois
       </footer>
     </main>
   );
