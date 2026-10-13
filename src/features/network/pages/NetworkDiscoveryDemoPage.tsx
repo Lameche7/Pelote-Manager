@@ -141,17 +141,33 @@ export function NetworkDiscoveryPage() {
                     <button type="button" className={tvSlide === "infos" ? "active" : ""} aria-pressed={tvSlide === "infos"} onClick={() => setTvSlide("infos")}>Infos club</button>
                   </div>
                   <div className="pilotoki-discovery__tv" aria-label="Simulation de l'affichage sur une télévision">
+                    <div className="pilotoki-discovery__tv-atmosphere" style={cover ? { backgroundImage: "linear-gradient(125deg, #061b24e8, #061b24a6), url(" + JSON.stringify(cover) + ")" } : undefined} />
                     <div className="pilotoki-discovery__tv-head">
-                      {logo ? <img src={logo} alt="Logo du club" /> : <span className="pilotoki-discovery__tv-initial">P</span>}
-                      <strong>{club.trim() || "Mon club de pelote"}</strong>
-                      <span>● MODE TV</span>
+                      <div className="pilotoki-discovery__tv-brand">
+                        {logo ? <img src={logo} alt="Logo du club" /> : <span className="pilotoki-discovery__tv-initial">P</span>}
+                        <div><small>LE CLUB EN DIRECT</small><strong>{club.trim() || "Mon club de pelote"}</strong></div>
+                      </div>
+                      <span className="pilotoki-discovery__tv-live"><span aria-hidden="true">●</span> PILOTOKI TV</span>
                     </div>
                     <div className="pilotoki-discovery__tv-content">
-                      {tvSlide === "programme" && <><h4>À l'affiche au trinquet</h4><p>Mardi · 19 h 30 — Martin / Dupont contre Bernard / Petit</p><p>Jeudi · 20 h 30 — Lacaze / Durand contre Barbé / Lopez</p></>}
-                      {tvSlide === "resultats" && <><h4>Derniers résultats</h4><p>Martin / Dupont <strong>40 – 32</strong> Bernard / Petit</p><p>Lacaze / Durand <strong>40 – 36</strong> Barbé / Lopez</p></>}
-                      {tvSlide === "infos" && <><h4>Informations du club</h4><p>Bienvenue à toutes et à tous !</p><p>Retrouvez ici les annonces, événements, affiches et messages des partenaires.</p></>}
+                      {tvSlide === "programme" && <>
+                        <div className="pilotoki-discovery__tv-title"><small>CE SOIR AU TRINQUET</small><h4>Les rencontres à l'affiche</h4></div>
+                        <div className="pilotoki-discovery__tv-match"><div className="pilotoki-discovery__tv-time"><strong>19:30</strong><span>TRINQUET 1</span></div><div className="pilotoki-discovery__tv-versus"><strong>Martin / Dupont</strong><span>VS</span><strong>Bernard / Petit</strong></div><span className="pilotoki-discovery__tv-pill">4e série</span></div>
+                        <div className="pilotoki-discovery__tv-match"><div className="pilotoki-discovery__tv-time"><strong>20:30</strong><span>TRINQUET 1</span></div><div className="pilotoki-discovery__tv-versus"><strong>Lacaze / Durand</strong><span>VS</span><strong>Barbé / Lopez</strong></div><span className="pilotoki-discovery__tv-pill">3e série</span></div>
+                      </>}
+                      {tvSlide === "resultats" && <>
+                        <div className="pilotoki-discovery__tv-title"><small>LES DERNIERS MATCHS</small><h4>Résultats du club</h4></div>
+                        <div className="pilotoki-discovery__tv-scoreboard"><div><span>Martin / Dupont</span><strong>40</strong></div><span className="pilotoki-discovery__tv-score-separator">—</span><div><strong>32</strong><span>Bernard / Petit</span></div></div>
+                        <div className="pilotoki-discovery__tv-score-note">VICTOIRE · 4e SÉRIE</div>
+                        <div className="pilotoki-discovery__tv-match pilotoki-discovery__tv-match--small"><strong>Lacaze / Durand</strong><span>40 — 36</span><strong>Barbé / Lopez</strong></div>
+                      </>}
+                      {tvSlide === "infos" && <>
+                        <div className="pilotoki-discovery__tv-title"><small>LA VIE DU CLUB</small><h4>Bienvenue chez nous !</h4></div>
+                        <div className="pilotoki-discovery__tv-announcements"><div><span className="pilotoki-discovery__tv-emoji">🏆</span><strong>Tournoi du club</strong><span>Les inscriptions sont ouvertes !</span></div><div><span className="pilotoki-discovery__tv-emoji">📣</span><strong>Prochaine animation</strong><span>Retrouvons-nous au trinquet</span></div></div>
+                        <div className="pilotoki-discovery__tv-partner">ESPACE PARTENAIRES & ANNONCES DU CLUB</div>
+                      </>}
                     </div>
-                    <div className="pilotoki-discovery__tv-footer">PILOTOKI · Affichage automatique du club</div>
+                    <div className="pilotoki-discovery__tv-footer"><span>PROGRAMME · RÉSULTATS · VIE DU CLUB</span><strong>Propulsé par PILOTOKI</strong></div>
                   </div>
                   <p>Le club peut personnaliser le contenu et diffuser ses informations, y compris ses événements et partenaires. En pratique, un écran connecté (ou une TV avec boîtier type Fire TV) suffit pour ouvrir la page Mode TV. Les trois écrans ci-dessus sont des exemples fictifs.</p>
                 </div>
