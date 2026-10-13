@@ -714,8 +714,8 @@ export function AdminTournamentsPage() {
                       setMessage("Spécialité publiée sur Pilotoki Network.");
                     } catch (problem) {
                       setError(
-                        problem instanceof Error
-                          ? problem.message
+                        problem && typeof problem === "object" && "message" in problem
+                          ? String(problem.message)
                           : "Enregistrement de la spécialité impossible.",
                       );
                     } finally {
