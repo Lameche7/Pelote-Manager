@@ -109,3 +109,61 @@
   flex-shrink: 0;
   width: 88px;
 }
+
+
+/* Mode TV: readable simulated shared-screen display using club branding. */
+.pilotoki-discovery__tv {
+  background: var(--club-primary);
+  color: var(--club-on-primary);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 5px solid #27302d;
+  box-shadow: 0 10px 24px #112a202b;
+}
+.pilotoki-discovery__tv-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--club-border);
+}
+.pilotoki-discovery__tv-head img {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+  padding: 4px;
+  background: white;
+  border-radius: 8px;
+}
+.pilotoki-discovery__tv-initial {
+  display: grid;
+  place-items: center;
+  background: white;
+  color: #17392f;
+  border-radius: 8px;
+  height: 48px;
+  width: 48px;
+  font-weight: 900;
+}
+.pilotoki-discovery__tv-head strong { flex: 1; font-size: 1.05rem; }
+.pilotoki-discovery__tv-head > span:last-child { font-size: .75rem; font-weight: 800; }
+.pilotoki-discovery__tv-content {
+  min-height: 185px;
+  padding: 20px;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+.pilotoki-discovery__tv-content h4 {
+  font-size: 1.4rem;
+  margin: 0 0 5px;
+}
+.pilotoki-discovery__tv-content p { color: inherit; margin: 0; }
+.pilotoki-discovery__tv-footer {
+  padding: 10px 16px;
+  background: var(--club-accent);
+  color: var(--club-on-accent);
+  font-size: .78rem;
+  font-weight: 800;
+  text-align: center;
+}
