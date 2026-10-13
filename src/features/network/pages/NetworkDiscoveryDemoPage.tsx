@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from "react";
+import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
 import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
 import "./NetworkDirectoryPage.css";
 import "./NetworkDiscoveryDemoPage.css";
@@ -87,6 +88,7 @@ export function NetworkDiscoveryPage() {
   const [selectedSlot, setSelectedSlot] = useState("19 h 30");
   const [reserved, setReserved] = useState(false);
   const [requested, setRequested] = useState(false);
+  const [refereeSelection, setRefereeSelection] = useState<number | null>(null);
   const [championshipTab, setChampionshipTab] = useState<"parties" | "resultats" | "poule" | "general">("parties");
   const [tournamentTab, setTournamentTab] = useState<"planning" | "classement">("planning");
   const [tvSlide, setTvSlide] = useState<"programme" | "resultats" | "infos">("programme");
@@ -168,7 +170,7 @@ export function NetworkDiscoveryPage() {
       {reservationDemoWeek.map((day) => <div className="pilotoki-discovery__booking-day" key={day.day}>
         <strong className="pilotoki-discovery__booking-day-head">{day.day}</strong>
         {day.items.map(([time,label,type]) => <button type="button" key={time} className={`pilotoki-discovery__booking-card pilotoki-discovery__booking-card--${type}`} onClick={() => {setSelectedSlot(day.day+" · "+time);setReserved(true);}}>
-          <span>{time}</span><strong>{label}</strong>
+          <span>{time}</span><strong>{label}</strong>{type === "championship" && time === "19 h 30" && <span className="pilotoki-discovery__booking-referee" title="Partie arbitrée"><WhistleIcon width="17" height="17" aria-label="Partie arbitrée" /> Arbitrée</span>}
         </button>)}
       </div>)}
     </div>
@@ -268,7 +270,34 @@ export function NetworkDiscoveryPage() {
     <p className="pilotoki-discovery__settings-hint">Maquette condensée en lecture seule, fidèle aux réglages disponibles dans l’administration du club.</p>
   </>}
 </div>}
-              {feature === "arbitrage" && <div className="pilotoki-discovery__content"><h3>Tableau d’arbitrage</h3><p>Chaque arbitre est associé à un créneau, même si une partie est déplacée.</p><div className="pilotoki-discovery__example"><strong>Jeudi 22 octobre · 19 h 30</strong><span>Trinquet principal</span><span>Arbitre : à désigner</span></div></div>}
+              {feature === "arbitrage" && <div className="pilotoki-discovery__content">
+  {view === "joueur" ? <>
+    <h3>Devenez arbitre d’une rencontre</h3>
+    <p>Toutes les rencontres de championnat programmées : choisissez un créneau libre pour vous positionner comme arbitre. L’arbitrage est associé au créneau, même si la partie est déplacée.</p>
+    <div className="pilotoki-discovery__referee-grid">
+      {([
+        ["Vendredi 23 octobre", "19 h 30", "1re série", "Club du Béarn", "Club voisin"],
+        ["Samedi 24 octobre", "10 h", "2e série", club.trim() || "Mon club", "Club des Gaves"],
+        ["Samedi 24 octobre", "15 h", "3e série", "Club du Piémont", "Club visiteur"],
+        ["Dimanche 25 octobre", "9 h 30", "1re série", club.trim() || "Mon club", "Club de l’Adour"],
+        ["Dimanche 25 octobre", "14 h 30", "4e série", "Club voisin", "Club du Béarn"],
+        ["Dimanche 25 octobre", "17 h", "2e série", "Club des Gaves", club.trim() || "Mon club"],
+      ] as const).map(([date,time,series,home,away],i) => <article className={`pilotoki-discovery__referee-card ${refereeSelection===i ? "is-selected" : ""}`} key={i}>
+        <div className="pilotoki-discovery__referee-card-top"><span>{date} · {time}</span><span>{series}</span></div>
+        <strong>{home} <em>VS</em> {away}</strong><small>Trinquet principal</small>
+        <div className="pilotoki-discovery__referee-card-foot"><span><WhistleIcon width="17" height="17" aria-label="Arbitrage" /> {refereeSelection===i ? "Vous êtes volontaire" : "Arbitre recherché"}</span>
+          <button type="button" aria-pressed={refereeSelection===i} onClick={() => setRefereeSelection(refereeSelection===i ? null : i)}>{refereeSelection===i ? "Annuler mon choix" : "Je me positionne"}</button>
+        </div>
+      </article>)}
+    </div>
+    {refereeSelection !== null && <p role="status" className="pilotoki-discovery__success"><WhistleIcon width="18" height="18" /> Vous êtes volontaire sur ce créneau dans la démonstration. Aucune affectation réelle n’est enregistrée.</p>}
+    <div className="pilotoki-discovery__booking-note"><strong>Repérez immédiatement les parties arbitrées</strong><p>Le pictogramme sifflet de Pilotoki apparaît sur les cartes du planning lorsque le créneau dispose d’un arbitre.</p></div>
+  </> : <>
+    <h3>Gestion de l’arbitrage</h3><p>Depuis l’administration, le club visualise les rencontres, les créneaux avec arbitre et ceux encore à pourvoir.</p>
+    <div className="pilotoki-discovery__settings-card"><strong>Arbitrages de la semaine</strong><div className="pilotoki-discovery__matches"><div><strong>Vendredi 23 octobre · 19 h 30</strong><span>1re série · Arbitre à désigner</span><b>À pourvoir</b></div><div><strong>Samedi 24 octobre · 10 h</strong><span>2e série · Arbitre volontaire</span><b><WhistleIcon width="18" height="18" aria-label="Partie arbitrée" /> Arbitrée</b></div><div><strong>Dimanche 25 octobre · 9 h 30</strong><span>1re série · Arbitre à désigner</span><b>À pourvoir</b></div></div></div>
+    <p className="pilotoki-discovery__settings-hint">Simulation uniquement, sans affectation réelle d’arbitres.</p>
+  </>}
+</div>}
               {feature === "notifications" && <div className="pilotoki-discovery__content"><h3>Les bonnes informations, au bon moment</h3><div className="pilotoki-discovery__example"><strong>Rappel de partie</strong><span>Votre partie est prévue demain à 19 h 30.</span></div><div className="pilotoki-discovery__example"><strong>Report de partie</strong><span>Une nouvelle date vous est proposée.</span></div><p>Les notifications présentées sont des exemples : aucun message n'est envoyé.</p></div>}
               {feature === "tv" && (
                 <div className="pilotoki-discovery__content">
