@@ -65,14 +65,14 @@ export function MyProfilePage() {
   const [actionMessage, setActionMessage] = useState("");
 
   useEffect(() => {
-    if (!profile?.memberId) {
+    if (!profile?.id) {
       setMember(null);
       setMemberClubs([]);
       return;
     }
     let active = true;
     void Promise.all([
-      memberProfileService.get(profile.memberId),
+      memberProfileService.get(),
       memberProfileService.listClubs(),
     ])
       .then(([details, clubs]) => {
@@ -88,7 +88,7 @@ export function MyProfilePage() {
     return () => {
       active = false;
     };
-  }, [profile?.memberId]);
+  }, [profile?.id, profile?.memberId]);
 
   useEffect(() => {
     setLicenceIdentity((current) => ({
@@ -104,7 +104,7 @@ export function MyProfilePage() {
   const lastName = member?.lastName || profile.lastName;
   const displayName =
     [firstName, lastName].filter(Boolean).join(" ") || profile.displayName;
-  const hasLinkedLicence = Boolean(profile.memberId);
+  const hasLinkedLicence = Boolean(profile.memberId || member || memberClubs.length > 0);
   const isActiveLicensee = Boolean(member?.isActive);
   const accountType = isActiveLicensee
     ? "Licencié actif"
@@ -305,7 +305,7 @@ export function MyProfilePage() {
                 <span className="my-profile__account-type">{accountType}</span>
               </dd>
             </div>
-            {hasLinkedLicence && member && (
+            {member && (
               <>
                 <div>
                   <dt>Numéro de licence</dt>
