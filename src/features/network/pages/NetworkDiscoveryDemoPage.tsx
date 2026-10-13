@@ -16,6 +16,20 @@ const sampleMatches = [
   { teams: "Martin / Dupont · Bernard / Petit", day: "Mardi 20 octobre", hour: "19 h 30", score: "—" },
   { teams: "Lacaze / Durand · Barbé / Lopez", day: "Jeudi 22 octobre", hour: "20 h 30", score: "40 – 32" },
 ];
+/** Pick the accessible text color for a user-selected solid background. */
+function textOn(background: string): string {
+  const hex = background.replace("#", "");
+  const channels = [0, 2, 4].map((index) => {
+    const value = parseInt(hex.slice(index, index + 2), 16) / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance =
+    channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  return (luminance + 0.05) / 0.05 >= 1.05 / (luminance + 0.05)
+    ? "#152722"
+    : "#ffffff";
+}
+
 export function NetworkDiscoveryPage() {
   const [club, setClub] = useState("Mon club de pelote");
   const [primary, setPrimary] = useState("#155a43");
@@ -36,6 +50,8 @@ export function NetworkDiscoveryPage() {
   const [reserved, setReserved] = useState(false);
   const [requested, setRequested] = useState(false);
   const active = features.find((item) => item.id === feature)!;
+  const primaryText = textOn(primary);
+  const accentText = textOn(accent);
   return (
     <main className="network-directory">
       <div className="network-directory__subpage-header"><NetworkNavigation /></div>
@@ -63,7 +79,7 @@ export function NetworkDiscoveryPage() {
             </div>
           </div>
           <div className="pilotoki-discovery__body">
-            <nav className="pilotoki-discovery__sidebar" style={{ background: primary }} aria-label="Fonctionnalités du testeur">
+            <nav className="pilotoki-discovery__sidebar" style={{ background: primary, color: primaryText }} aria-label="Fonctionnalités du testeur">
               {features.map((item) => (
                 <button key={item.id} type="button" aria-current={feature === item.id ? "page" : undefined} className={feature === item.id ? "active" : ""} onClick={() => setFeature(item.id)}>
                   {item.label}
@@ -79,13 +95,13 @@ export function NetworkDiscoveryPage() {
                 <h3>{view === "joueur" ? "Choisir un créneau" : "Planning des terrains"}</h3>
                 <p>Mercredi 21 octobre 2026 · Trinquet principal</p>
                 <div className="pilotoki-discovery__slots">{["17 h 30", "18 h 30", "19 h 30", "20 h 30"].map((hour) => <button type="button" key={hour} className={selectedSlot === hour ? "active" : ""} aria-pressed={selectedSlot === hour} onClick={() => { setSelectedSlot(hour); setReserved(false); }}>{hour}</button>)}</div>
-                <button type="button" className="pilotoki-discovery__cta" style={{ background: accent }} onClick={() => setReserved(true)}>{view === "joueur" ? "Simuler la réservation" : "Bloquer ce créneau (simulation)"}</button>
+                <button type="button" className="pilotoki-discovery__cta" style={{ background: accent, color: accentText }} onClick={() => setReserved(true)}>{view === "joueur" ? "Simuler la réservation" : "Bloquer ce créneau (simulation)"}</button>
                 {reserved && <p role="status" className="pilotoki-discovery__success">Simulation enregistrée pour {selectedSlot}. Aucune réservation réelle n'a été créée.</p>}
               </div>}
               {feature === "tournois" && <div className="pilotoki-discovery__content">
                 <div className="pilotoki-discovery__between"><h3>Tournoi du club · 4e série</h3><span className="pilotoki-discovery__preview-badge">Phase de poules</span></div>
                 <div className="pilotoki-discovery__matches">{sampleMatches.map((match) => <div key={match.teams}><strong>{match.teams}</strong><span>{match.day} · {match.hour}</span><b>{match.score}</b></div>)}</div>
-                <button type="button" className="pilotoki-discovery__cta" style={{ background: accent }} onClick={() => setRequested(true)}>{view === "joueur" ? "Demander un report (simulation)" : "Examiner les reports (simulation)"}</button>
+                <button type="button" className="pilotoki-discovery__cta" style={{ background: accent, color: accentText }} onClick={() => setRequested(true)}>{view === "joueur" ? "Demander un report (simulation)" : "Examiner les reports (simulation)"}</button>
                 {requested && <p role="status" className="pilotoki-discovery__success">Le parcours de report est illustré. Aucune demande réelle n'a été envoyée.</p>}
               </div>}
               {feature === "championnats" && <div className="pilotoki-discovery__content"><h3>Rencontre de championnat</h3><p>Journée 4 · Dimanche 25 octobre 2026</p><div className="pilotoki-discovery__example"><strong>{club.trim() || "Mon club"} — Club visiteur</strong><span>1re série · Programmation à confirmer</span><span>{view === "joueur" ? "Consultez la rencontre et les résultats." : "Programmez la rencontre et validez les résultats."}</span></div></div>}
@@ -93,16 +109,16 @@ export function NetworkDiscoveryPage() {
               {feature === "notifications" && <div className="pilotoki-discovery__content"><h3>Les bonnes informations, au bon moment</h3><div className="pilotoki-discovery__example"><strong>Rappel de partie</strong><span>Votre partie est prévue demain à 19 h 30.</span></div><div className="pilotoki-discovery__example"><strong>Report de partie</strong><span>Une nouvelle date vous est proposée.</span></div><p>Les notifications présentées sont des exemples : aucun message n'est envoyé.</p></div>}
               <aside className="pilotoki-discovery__home-preview" aria-label="Aperçu de l'accueil personnalisé">
                 <p>Aperçu de votre accueil · {view === "joueur" ? "Joueur" : "Administrateur"}</p>
-                <div className="pilotoki-discovery__mini-screen" style={{ backgroundColor: primary }}>
-                  <div className="pilotoki-discovery__mini-cover" style={cover ? { backgroundImage: "linear-gradient(#0003, #0004), url(" + JSON.stringify(cover) + ")" } : { background: primary }}>
+                <div className="pilotoki-discovery__mini-screen" style={{ backgroundColor: primary, color: primaryText }}>
+                  <div className="pilotoki-discovery__mini-cover" style={cover ? { backgroundImage: "linear-gradient(#0008, #0009), url(" + JSON.stringify(cover) + ")", color: "#ffffff" } : { background: primary, color: primaryText }}>
                     {logo ? <img src={logo} alt="Logo choisi pour le club" /> : <span className="pilotoki-discovery__mini-emblem">P</span>}
                     <strong>{club.trim() || "Mon club de pelote"}</strong>
                   </div>
                   <div className="pilotoki-discovery__mini-body">
-                    <span style={{ color: accent }}>Bienvenue sur votre espace</span>
+                    <span style={{ color: accent, fontWeight: 800 }}>Bienvenue sur votre espace</span>
                     <b>{view === "joueur" ? "Ma prochaine partie" : "Tableau de bord du club"}</b>
                     <div className="pilotoki-discovery__mini-tiles"><span>Réservations</span><span>Tournois</span><span>Championnats</span></div>
-                    <div className="pilotoki-discovery__mini-action" style={{ background: accent }}>{view === "joueur" ? "Réserver un terrain" : "Gérer mon club"}</div>
+                    <div className="pilotoki-discovery__mini-action" style={{ background: accent, color: accentText }}>{view === "joueur" ? "Réserver un terrain" : "Gérer mon club"}</div>
                   </div>
                 </div>
               </aside>
