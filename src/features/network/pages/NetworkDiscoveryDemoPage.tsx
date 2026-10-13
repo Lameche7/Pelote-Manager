@@ -87,6 +87,7 @@ export function NetworkDiscoveryPage() {
   const [selectedSlot, setSelectedSlot] = useState("19 h 30");
   const [reserved, setReserved] = useState(false);
   const [requested, setRequested] = useState(false);
+  const [championshipTab, setChampionshipTab] = useState<"parties" | "resultats" | "poule" | "general">("parties");
   const [tournamentTab, setTournamentTab] = useState<"planning" | "classement">("planning");
   const [tvSlide, setTvSlide] = useState<"programme" | "resultats" | "infos">("programme");
   const active = features.find((item) => item.id === feature)!;
@@ -224,13 +225,37 @@ export function NetworkDiscoveryPage() {
 </div>}
               {feature === "championnats" && <div className="pilotoki-discovery__content">
   {view === "joueur" ? <>
-    <h3>Mes championnats · Rencontre du week-end</h3>
-    <p>Retrouvez votre prochaine partie, réservez un créneau championnat et saisissez les résultats après la rencontre.</p>
-    <div className="pilotoki-discovery__champ-cards">
-      <div className="pilotoki-discovery__champ-card"><span>DIMANCHE 25 OCTOBRE · 1re SÉRIE</span><strong>{club.trim() || "Mon club"} <em>VS</em> Club visiteur</strong><p>Programmation à confirmer · Trinquet principal</p><button type="button" onClick={() => setRequested(true)}>Réserver un créneau championnat</button></div>
-      <div className="pilotoki-discovery__champ-card"><span>SAMEDI 24 OCTOBRE · 2e SÉRIE</span><strong>Club voisin <em>VS</em> {club.trim() || "Mon club"}</strong><p>15 h · Rencontre à l’extérieur</p><button type="button" onClick={() => setRequested(true)}>Consulter la rencontre et son résultat</button></div>
+    <h3>Mes championnats · 1re série</h3>
+    <div className="pilotoki-discovery__slots" role="group" aria-label="Explorer les championnats">
+      {([["parties","Mes parties"],["resultats","Résultats"],["poule","Classement de poule"],["general","Classement général"]] as const).map(([tab,label]) => <button key={tab} type="button" className={championshipTab === tab ? "active" : ""} aria-pressed={championshipTab === tab} onClick={() => setChampionshipTab(tab)}>{label}</button>)}
     </div>
-    {requested && <p className="pilotoki-discovery__success" role="status">Parcours illustré uniquement : aucune réservation ni saisie réelle.</p>}
+    {championshipTab === "parties" && <>
+      <p>Retrouvez votre prochaine rencontre, réservez votre créneau et suivez vos autres parties.</p>
+      <div className="pilotoki-discovery__champ-cards">
+        <div className="pilotoki-discovery__champ-card"><span>DIMANCHE 25 OCTOBRE · JOURNÉE 4</span><strong>{club.trim() || "Mon club"} <em>VS</em> Club visiteur</strong><p>1re série · Programmation à confirmer</p><button type="button" onClick={() => setRequested(true)}>Réserver un créneau championnat</button></div>
+        <div className="pilotoki-discovery__champ-card"><span>SAMEDI 24 OCTOBRE · JOURNÉE 4</span><strong>Club voisin <em>VS</em> {club.trim() || "Mon club"}</strong><p>2e série · 15 h · Rencontre à l’extérieur</p><button type="button" onClick={() => setRequested(true)}>Consulter la rencontre</button></div>
+      </div>
+      {requested && <p className="pilotoki-discovery__success" role="status">Parcours illustré uniquement : aucune réservation réelle.</p>}
+    </>}
+    {championshipTab === "resultats" && <>
+      <div className="pilotoki-discovery__between"><h3>Résultats · Journée 3</h3><span className="pilotoki-discovery__preview-badge">Poule A · 1re série</span></div>
+      <div className="pilotoki-discovery__matches"><div><strong>{club.trim() || "Mon club"} — Club voisin</strong><span>Dimanche 18 octobre · Domicile</span><b>40 – 32</b></div><div><strong>Club visiteur — Club du Béarn</strong><span>Samedi 17 octobre</span><b>36 – 40</b></div><div><strong>Club du Piémont — Club voisin</strong><span>Samedi 17 octobre</span><b>40 – 35</b></div></div>
+      <p>Résultats fictifs pour illustrer l’exploration des rencontres par journée.</p>
+    </>}
+    {championshipTab === "poule" && <>
+      <div className="pilotoki-discovery__between"><h3>Classement · Poule A</h3><span className="pilotoki-discovery__preview-badge">1re série</span></div>
+      <p>Les deux premières équipes sont dans la zone de qualification de cette simulation.</p>
+      <div className="pilotoki-discovery__standings"><div className="pilotoki-discovery__standings-head"><span>Rang</span><span>Équipe</span><span>J</span><span>V</span><span>Pts</span></div>
+        {([["1",club.trim() || "Mon club","3","3","9"],["2","Club du Béarn","3","2","6"],["3","Club du Piémont","3","1","3"],["4","Club voisin","3","0","0"]] as const).map(([rank,name,played,wins,points],i) => <div className={i < 2 ? "is-qualified" : ""} key={rank}><span>{rank}</span><strong>{name}</strong><span>{played}</span><span>{wins}</span><b>{points}</b></div>)}
+      </div><div className="pilotoki-discovery__qualification-legend"><span>● Zone qualificative · 2 premiers</span><span>Classement fictif</span></div>
+    </>}
+    {championshipTab === "general" && <>
+      <div className="pilotoki-discovery__between"><h3>Classement général · Fin des poules</h3><span className="pilotoki-discovery__preview-badge">1re série</span></div>
+      <p>Comparaison des équipes issues de toutes les poules. Les quatre premières places illustrent la zone qualificative pour la phase finale.</p>
+      <div className="pilotoki-discovery__standings"><div className="pilotoki-discovery__standings-head"><span>Rang</span><span>Équipe</span><span>Poule</span><span>V</span><span>Pts</span></div>
+        {([["1",club.trim() || "Mon club","A","5","15"],["2","Club des Gaves","B","5","15"],["3","Club du Béarn","A","4","12"],["4","Club de l’Adour","C","4","12"],["5","Club du Piémont","A","3","9"],["6","Club voisin","B","2","6"]] as const).map(([rank,name,pool,wins,points],i) => <div key={rank} className={i < 4 ? "is-qualified" : ""}><span>{rank}</span><strong>{name}</strong><span>{pool}</span><span>{wins}</span><b>{points}</b></div>)}
+      </div><div className="pilotoki-discovery__qualification-legend"><span>● Zone qualificative · 4 premiers</span><span>Simulation en fin de poules</span></div>
+    </>}
   </> : <>
     <div className="pilotoki-discovery__champ-admin-head"><span>CHAMPIONNATS</span><h3>Réservations championnat</h3><p>Accès anticipé aux plages dédiées pour les joueurs engagés, sans modifier les règles normales du club.</p></div>
     <div className="pilotoki-discovery__settings-card">
