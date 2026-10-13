@@ -128,18 +128,21 @@ export function NetworkDiscoveryPage() {
               <aside className="pilotoki-discovery__home-preview" aria-label="Aperçu de l'accueil personnalisé">
                 <p>Aperçu de votre accueil · {view === "joueur" ? "Joueur" : "Administrateur"}</p>
                 <div className="pilotoki-discovery__mini-screen">
-                  <div className="pilotoki-discovery__mini-topbar"><img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" /><span>☰</span></div>
-                  <div className="pilotoki-discovery__mini-cover" style={cover ? {backgroundImage:"linear-gradient(#0008,#0009), url("+JSON.stringify(cover)+")",color:"#fff"} : {background:primary,color:primaryText}}>
+                  <header className="pilotoki-discovery__mini-topbar" style={{ background: primary, color: primaryText }}>
+                    <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki" />
+                    <span className="pilotoki-discovery__mini-club">{club.trim() || "Mon club de pelote"}</span>
+                    <nav aria-label="Aperçu navigation"><span>Accueil</span><span>Réservations</span><span>Mon espace</span>{view === "administrateur" && <span>Administration</span>}</nav>
+                  </header>
+                  <div className="pilotoki-discovery__mini-cover" style={cover ? { backgroundImage: "linear-gradient(#0008, #0009), url(" + JSON.stringify(cover) + ")", color: "#ffffff" } : { background: primary, color: primaryText }}>
                     {logo ? <img src={logo} alt="Logo du club" /> : <span className="pilotoki-discovery__mini-emblem">P</span>}
                     <strong>{club.trim() || "Mon club de pelote"}</strong>
+                    <div className="pilotoki-discovery__mini-powered">PILOTOKI</div>
+                    <small>Bienvenue dans votre club</small>
+                    <div className="pilotoki-discovery__mini-actions">
+                      <span>Réserver un créneau</span><span>{view === "joueur" ? "Accéder à mon compte" : "Administration"}</span><span>Découvrir PILOTOKI</span>
+                    </div>
                   </div>
-                  <nav className="pilotoki-discovery__mini-tabs" aria-label="Menus de l’aperçu"><span className="is-active">Accueil</span><span>Réservations</span><span>Tournois</span><span>Championnats</span></nav>
-                  <div className="pilotoki-discovery__mini-body">
-                    <span className="pilotoki-discovery__mini-welcome">Bienvenue dans votre club</span>
-                    <b>{view === "joueur" ? "Mon espace joueur" : "Tableau de bord administrateur"}</b>
-                    <div className="pilotoki-discovery__mini-tiles"><span>{view === "joueur" ? "Prochaine partie" : "Planning du club"}</span><span>{view === "joueur" ? "Mes réservations" : "Reports à traiter"}</span><span>{view === "joueur" ? "Classements" : "Résultats"}</span></div>
-                    <div className="pilotoki-discovery__mini-action">{view === "joueur" ? "Réserver un terrain" : "Accéder à l’administration"}</div>
-                  </div>
+                  <div className="pilotoki-discovery__mini-feature-strip"><span>RÉSERVATIONS SIMPLES</span><span>PAIEMENT SÉCURISÉ</span><span>INFOS EN DIRECT</span></div>
                 </div>
               </aside>
             </div>
