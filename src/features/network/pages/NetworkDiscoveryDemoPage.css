@@ -7,7 +7,7 @@
 .pilotoki-discovery__swatch input{height:28px;width:29px;padding:2px;border:1px solid #bfd4c6;border-radius:8px;background:white;cursor:pointer}
 .pilotoki-discovery__controls{gap:10px;min-height:83px;padding:10px 16px}
 .pilotoki-discovery__club-field input{max-width:215px}
-.pilotoki-discovery__home-preview{margin-top:18px;margin-left:auto;width:min(100%,360px);border-top:1px solid #e1ebe3;padding-top:12px}
+.pilotoki-discovery__home-preview{margin-top:18px;margin-left:auto;width:min(100%,415px);border-top:1px solid #e1ebe3;padding-top:12px}
 .pilotoki-discovery__home-preview>p{font-size:.75rem;color:#63786d;font-weight:800;margin:0 0 8px}
 .pilotoki-discovery__mini-screen{border:1px solid #d4e4d9;border-radius:12px;overflow:hidden;box-shadow:0 5px 16px #133a2e15}
 .pilotoki-discovery__mini-cover{min-height:98px;background-position:center;background-size:cover;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;color:white;text-align:center;padding:8px;font-size:.95rem}
@@ -17,4 +17,4 @@
 .pilotoki-discovery__mini-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
 .pilotoki-discovery__mini-tiles span{background:#eef4ef;border-radius:5px;padding:6px 3px;text-align:center;font-size:.64rem}
 .pilotoki-discovery__mini-action{color:white;font-weight:800;text-align:center;border-radius:6px;padding:7px}
-@media(max-width:950px){.pilotoki-discovery__controls{flex-wrap:wrap}.pilotoki-discovery__home-preview{width:min(100%,360px)}}
+@media(max-width:950px){.pilotoki-discovery__controls{flex-wrap:wrap}.pilotoki-discovery__home-preview{width:min(100%,415px)}}
