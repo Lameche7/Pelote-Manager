@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type { PublicTournamentSummary } from "@/features/tournaments/types";
 import "./NetworkTournamentCatalog.css";
 
-type Club = { name: string; slug: string; logo_url: string | null };
+type Club = { name: string; slug: string; logo_url: string | null; hero_image_url: string | null };
 export type NetworkTournamentListing = {
   club: Club;
   tournament: PublicTournamentSummary;
@@ -244,6 +244,18 @@ export function NetworkTournamentCatalog({
                 key={tournament.id}
               >
                 <div className="network-tournaments__visual">
+                  {club.hero_image_url && (
+                    <img
+                      className="network-tournaments__cover"
+                      src={club.hero_image_url}
+                      alt=""
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
+                  )}
+                  <span className="network-tournaments__visual-shade" aria-hidden="true" />
                   <span
                     className={`network-tournaments__state network-tournaments__state--${state}`}
                   >
@@ -251,6 +263,7 @@ export function NetworkTournamentCatalog({
                   </span>
                   {club.logo_url ? (
                     <img
+                      className="network-tournaments__logo"
                       src={club.logo_url}
                       alt={`Logo ${club.name}`}
                       loading="lazy"
