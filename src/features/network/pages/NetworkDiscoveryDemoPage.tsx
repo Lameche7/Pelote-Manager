@@ -4,7 +4,7 @@ import { NetworkNavigation } from "@/features/network/components/NetworkNavigati
 import "./NetworkDirectoryPage.css";
 import "./NetworkDiscoveryDemoPage.css";
 
-type Feature = "reservations" | "tournois" | "championnats" | "arbitrage" | "notifications" | "tv";
+type Feature = "reservations" | "tournois" | "championnats" | "arbitrage" | "notifications" | "tv" | "bonus";
 type View = "joueur" | "administrateur";
 const features: { id: Feature; label: string; description: string }[] = [
   { id: "reservations", label: "Réservations", description: "Réserver un terrain, suivre les créneaux et les disponibilités" },
@@ -13,6 +13,7 @@ const features: { id: Feature; label: string; description: string }[] = [
   { id: "arbitrage", label: "Arbitrage", description: "Organiser les arbitres de chaque créneau" },
   { id: "notifications", label: "Notifications", description: "Informer les joueurs des rendez-vous et des changements" },
   { id: "tv", label: "Mode TV", description: "Animer les écrans du trinquet, du club-house ou d’un espace commun" },
+  { id: "bonus", label: "✦ Les + de Pilotoki", description: "Reports intelligents et gestion d’un tournoi de A à Z" },
 ];
 const sampleMatches = [
   { teams: "Martin / Dupont · Bernard / Petit", day: "Mardi 20 octobre", hour: "19 h 30", score: "—" },
@@ -91,6 +92,8 @@ export function NetworkDiscoveryPage() {
   const [refereeSelection, setRefereeSelection] = useState<number | null>(null);
   const [championshipTab, setChampionshipTab] = useState<"parties" | "resultats" | "poule" | "general">("parties");
   const [tournamentTab, setTournamentTab] = useState<"planning" | "classement">("planning");
+  const [bonusTab, setBonusTab] = useState<"reports" | "tournoi">("reports");
+  const [bonusProposal, setBonusProposal] = useState<number | null>(null);
   const [tvSlide, setTvSlide] = useState<"programme" | "resultats" | "infos">("programme");
   const active = features.find((item) => item.id === feature)!;
   const primaryText = textOn(primary);
@@ -299,6 +302,25 @@ export function NetworkDiscoveryPage() {
   </>}
 </div>}
               {feature === "notifications" && <div className="pilotoki-discovery__content"><h3>Les bonnes informations, au bon moment</h3><div className="pilotoki-discovery__example"><strong>Rappel de partie</strong><span>Votre partie est prévue demain à 19 h 30.</span></div><div className="pilotoki-discovery__example"><strong>Report de partie</strong><span>Une nouvelle date vous est proposée.</span></div><p>Les notifications présentées sont des exemples : aucun message n'est envoyé.</p></div>}
+              {feature === "bonus" && <div className="pilotoki-discovery__content pilotoki-discovery__bonus">
+                <div className="pilotoki-discovery__bonus-hero"><span>✦ LES + DE PILOTOKI</span><h3>Des outils qui simplifient vraiment la vie du club</h3><p>De la gestion des imprévus à l’organisation complète d’un tournoi, découvrez ce que Pilotoki prend en charge.</p></div>
+                <div className="pilotoki-discovery__slots" role="group" aria-label="Explorer les avantages Pilotoki">
+                  <button type="button" aria-pressed={bonusTab==="reports"} className={bonusTab==="reports"?"active":""} onClick={()=>setBonusTab("reports")}>↗ Reports de parties</button>
+                  <button type="button" aria-pressed={bonusTab==="tournoi"} className={bonusTab==="tournoi"?"active":""} onClick={()=>setBonusTab("tournoi")}>★ Tournois de A à Z</button>
+                </div>
+                {bonusTab==="reports" ? <>
+                  <h3>Reporter une partie sans échanger vingt messages</h3>
+                  <p>Un joueur souhaite déplacer sa partie ? Pilotoki recherche des créneaux compatibles avec les disponibilités du calendrier et les contraintes de programmation. Les adversaires peuvent répondre à la proposition ; le planning est actualisé après validation.</p>
+                  <div className="pilotoki-discovery__bonus-flow"><div><span>01</span><strong>Demande de report</strong><small>Le joueur choisit la rencontre concernée</small></div><div><span>02</span><strong>Solutions proposées</strong><small>Des dates et horaires alternatifs compatibles</small></div><div><span>03</span><strong>Accord des équipes</strong><small>La proposition est soumise aux joueurs concernés</small></div><div><span>04</span><strong>Planning actualisé</strong><small>La nouvelle programmation devient visible</small></div></div>
+                  <div className="pilotoki-discovery__settings-card"><div className="pilotoki-discovery__between"><strong>Exemple · Match à déplacer</strong><span className="pilotoki-discovery__preview-badge">4e série · Poule B</span></div><p>Martin / Dupont — Bernard / Petit · Vendredi 30 octobre, 19 h 30</p><strong>Propositions de créneaux</strong><div className="pilotoki-discovery__bonus-proposals">{["Lundi 2 novembre · 18 h 30","Mardi 3 novembre · 19 h 30","Jeudi 5 novembre · 20 h 30"].map((slot,i)=><button type="button" key={slot} className={bonusProposal===i?"is-selected":""} aria-pressed={bonusProposal===i} onClick={()=>setBonusProposal(i)}><span>✓ Créneau compatible</span><strong>{slot}</strong><small>{bonusProposal===i?"Proposition sélectionnée":"Choisir cette proposition"}</small></button>)}</div>{bonusProposal!==null&&<p className="pilotoki-discovery__success" role="status">Proposition sélectionnée pour la démonstration. Dans Pilotoki, elle serait soumise aux personnes concernées avant validation.</p>}</div>
+                  <p className="pilotoki-discovery__settings-hint">Les créneaux et les équipes de cet exemple sont fictifs. Les propositions réelles dépendent de la disponibilité des terrains et des règles du tournoi.</p>
+                </> : <>
+                  <h3>Un tournoi entièrement piloté dans la même application</h3><p>Le club configure ses séries et ses règles, recueille les inscriptions, prépare les poules, programme les rencontres, suit les résultats et organise les phases finales.</p>
+                  <div className="pilotoki-discovery__bonus-flow">{([["01","Créer le tournoi","Période, discipline, séries et format"],["02","Ouvrir les inscriptions","Équipes, joueurs et suivi administratif"],["03","Former les poules","Répartition et calendrier des matchs"],["04","Programmer les parties","Créneaux, réservations et reports"],["05","Suivre les résultats","Scores et classements mis à jour"],["06","Jouer les finales","Qualification et tableau final"]] as const).map(([n,title,desc])=><div key={n}><span>{n}</span><strong>{title}</strong><small>{desc}</small></div>)}</div>
+                  <div className="pilotoki-discovery__bonus-steps"><div><strong>Administration</strong><p>Paramétrage, suivi des inscriptions, constitution des poules, programmation et supervision des reports.</p></div><div><strong>Joueurs</strong><p>Leur calendrier, leurs adversaires, demandes de reports, résultats, classements et progression vers les finales.</p></div></div>
+                  <div className="pilotoki-discovery__booking-note"><strong>Du premier inscrit à la dernière finale</strong><p>Un même outil pour toute la vie sportive du tournoi, avec une visibilité partagée entre les organisateurs et les participants.</p></div>
+                </>}
+              </div>}
               {feature === "tv" && (
                 <div className="pilotoki-discovery__content">
                   <h3>La vie du club sur grand écran</h3>
