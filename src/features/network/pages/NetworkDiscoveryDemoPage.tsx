@@ -52,6 +52,7 @@ export function NetworkDiscoveryPage() {
   const active = features.find((item) => item.id === feature)!;
   const primaryText = textOn(primary);
   const accentText = textOn(accent);
+  const accentLabel = accentText === "#152722" ? "#17392f" : accent;
   return (
     <main className="network-directory">
       <div className="network-directory__subpage-header"><NetworkNavigation /></div>
@@ -81,7 +82,7 @@ export function NetworkDiscoveryPage() {
           <div className="pilotoki-discovery__body">
             <nav className="pilotoki-discovery__sidebar" style={{ background: primary, color: primaryText }} aria-label="Fonctionnalités du testeur">
               {features.map((item) => (
-                <button key={item.id} type="button" aria-current={feature === item.id ? "page" : undefined} className={feature === item.id ? "active" : ""} onClick={() => setFeature(item.id)}>
+                <button key={item.id} type="button" aria-current={feature === item.id ? "page" : undefined} style={{ color: primaryText }} className={feature === item.id ? "active" : ""} onClick={() => setFeature(item.id)}>
                   {item.label}
                 </button>
               ))}
@@ -115,7 +116,7 @@ export function NetworkDiscoveryPage() {
                     <strong>{club.trim() || "Mon club de pelote"}</strong>
                   </div>
                   <div className="pilotoki-discovery__mini-body">
-                    <span style={{ color: accent, fontWeight: 800 }}>Bienvenue sur votre espace</span>
+                    <span style={{ color: accentLabel, fontWeight: 800 }}>Bienvenue sur votre espace</span>
                     <b>{view === "joueur" ? "Ma prochaine partie" : "Tableau de bord du club"}</b>
                     <div className="pilotoki-discovery__mini-tiles"><span>Réservations</span><span>Tournois</span><span>Championnats</span></div>
                     <div className="pilotoki-discovery__mini-action" style={{ background: accent, color: accentText }}>{view === "joueur" ? "Réserver un terrain" : "Gérer mon club"}</div>
