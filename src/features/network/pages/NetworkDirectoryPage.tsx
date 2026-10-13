@@ -6,7 +6,7 @@ import { NetworkTournamentCatalog } from "@/features/network/components/NetworkT
 import type { NetworkTournamentListing } from "@/features/network/components/NetworkTournamentCatalog";
 import "./NetworkDirectoryPage.css";
 
-type Club = { name: string; slug: string; logo_url: string | null };
+type Club = { name: string; slug: string; logo_url: string | null; hero_image_url: string | null };
 
 export function NetworkDirectoryPage() {
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -22,7 +22,7 @@ export function NetworkDirectoryPage() {
     async function load() {
       try {
         const { data, error: directoryError } = await supabase.rpc(
-          "list_network_clubs_v2",
+          "list_network_clubs_v3",
         );
         if (directoryError) throw directoryError;
         const directory = ((data ?? []) as Club[]).filter(
