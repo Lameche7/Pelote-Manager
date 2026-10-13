@@ -35,6 +35,21 @@ function mixColors(a: string, b: string, ratio: number): string {
   return "#" + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(i, i+2),16)*(1-ratio)+parseInt(b.slice(i,i+2),16)*ratio).toString(16).padStart(2,"0")).join("");
 }
 
+const tvWeek = [
+  { day: "Lun", slots: [["17:30","Réservation","reservation"],["18:30","Réservation","reservation"],["19:30","Entraînement","training"],["20:30","Réservation","reservation"]] },
+  { day: "Mar", slots: [["17:30","Réservation","reservation"],["18:30","Tournoi 4e série","tournament"],["19:30","Réservation","reservation"],["20:30","Réservation","reservation"]] },
+  { day: "Mer", slots: [["17:30","École de pelote","training"],["18:30","Réservation","reservation"],["19:30","Réservation","reservation"],["20:30","Tournoi 3e série","tournament"]] },
+  { day: "Jeu", slots: [["17:30","Réservation","reservation"],["18:30","Réservation","reservation"],["19:30","Championnat","championship"],["20:30","Réservation","reservation"]] },
+  { day: "Ven", slots: [["17:30","Réservation","reservation"],["18:30","Tournoi 3e série","tournament"],["19:30","Réservation","reservation"],["20:30","Entraînement","training"]] },
+  { day: "Sam", slots: [["10:00","Championnat équipe 1","championship"],["15:00","Tournoi · Quart","tournament"],["18:30","Réservation","reservation"]] },
+  { day: "Dim", slots: [["09:30","Championnat équipe 2","championship"],["14:30","Tournoi · Demi-finale","tournament"],["17:00","Animation club","training"]] },
+] as const;
+const tvWeekend = [
+  { type: "TOURNOI", title: "Demi-finale 4e série", date: "Dimanche · 14 h 30" },
+  { type: "CHAMPIONNAT", title: "Équipe 1 reçoit Pau", date: "Samedi · 10 h" },
+  { type: "CHAMPIONNAT", title: "Équipe 2 en déplacement", date: "Dimanche · 9 h 30" },
+] as const;
+
 export function NetworkDiscoveryPage() {
   const [club, setClub] = useState("Mon club de pelote");
   const [primary, setPrimary] = useState("#155a43");
@@ -136,7 +151,7 @@ export function NetworkDiscoveryPage() {
                     sans que les visiteurs aient besoin de consulter leur téléphone.
                   </p>
                   <div className="pilotoki-discovery__slots" role="group" aria-label="Choisir un affichage TV">
-                    <button type="button" className={tvSlide === "programme" ? "active" : ""} aria-pressed={tvSlide === "programme"} onClick={() => setTvSlide("programme")}>Programme</button>
+                    <button type="button" className={tvSlide === "programme" ? "active" : ""} aria-pressed={tvSlide === "programme"} onClick={() => setTvSlide("programme")}>Planning semaine</button>
                     <button type="button" className={tvSlide === "resultats" ? "active" : ""} aria-pressed={tvSlide === "resultats"} onClick={() => setTvSlide("resultats")}>Résultats</button>
                     <button type="button" className={tvSlide === "infos" ? "active" : ""} aria-pressed={tvSlide === "infos"} onClick={() => setTvSlide("infos")}>Infos club</button>
                   </div>
@@ -151,9 +166,17 @@ export function NetworkDiscoveryPage() {
                     </div>
                     <div className="pilotoki-discovery__tv-content">
                       {tvSlide === "programme" && <>
-                        <div className="pilotoki-discovery__tv-title"><small>CE SOIR AU TRINQUET</small><h4>Les rencontres à l'affiche</h4></div>
-                        <div className="pilotoki-discovery__tv-match"><div className="pilotoki-discovery__tv-time"><strong>19:30</strong><span>TRINQUET 1</span></div><div className="pilotoki-discovery__tv-versus"><strong>Martin / Dupont</strong><span>VS</span><strong>Bernard / Petit</strong></div><span className="pilotoki-discovery__tv-pill">4e série</span></div>
-                        <div className="pilotoki-discovery__tv-match"><div className="pilotoki-discovery__tv-time"><strong>20:30</strong><span>TRINQUET 1</span></div><div className="pilotoki-discovery__tv-versus"><strong>Lacaze / Durand</strong><span>VS</span><strong>Barbé / Lopez</strong></div><span className="pilotoki-discovery__tv-pill">3e série</span></div>
+                        <div className="pilotoki-discovery__tv-title"><small>VOTRE CLUB, TOUTE LA SEMAINE</small><h4>Planning hebdomadaire</h4><span className="pilotoki-discovery__tv-tonight">● CE SOIR · 3 PARTIES À SUIVRE</span></div>
+                        <div className="pilotoki-discovery__tv-week">
+                          {tvWeek.map((day) => <div className="pilotoki-discovery__tv-day" key={day.day}>
+                            <strong className="pilotoki-discovery__tv-day-label">{day.day}</strong>
+                            {day.slots.map(([time, label, type]) => <div key={time} className={`pilotoki-discovery__tv-slot pilotoki-discovery__tv-slot--${type}`}><span>{time}</span><strong>{label}</strong></div>)}
+                          </div>)}
+                        </div>
+                        <div className="pilotoki-discovery__tv-weekend">
+                          <div className="pilotoki-discovery__tv-weekend-title"><small>À NE PAS MANQUER</small><strong>Tournois & championnats ce week-end</strong></div>
+                          <div className="pilotoki-discovery__tv-weekend-cards">{tvWeekend.map((event) => <div className="pilotoki-discovery__tv-weekend-card" key={event.title}><span>{event.type}</span><strong>{event.title}</strong><small>{event.date}</small></div>)}</div>
+                        </div>
                       </>}
                       {tvSlide === "resultats" && <>
                         <div className="pilotoki-discovery__tv-title"><small>LES DERNIERS MATCHS</small><h4>Résultats du club</h4></div>
