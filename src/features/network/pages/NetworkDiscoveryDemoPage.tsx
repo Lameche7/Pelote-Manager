@@ -87,6 +87,7 @@ export function NetworkDiscoveryPage() {
   const [selectedSlot, setSelectedSlot] = useState("19 h 30");
   const [reserved, setReserved] = useState(false);
   const [requested, setRequested] = useState(false);
+  const [tournamentTab, setTournamentTab] = useState<"planning" | "classement">("planning");
   const [tvSlide, setTvSlide] = useState<"programme" | "resultats" | "infos">("programme");
   const active = features.find((item) => item.id === feature)!;
   const primaryText = textOn(primary);
@@ -185,11 +186,42 @@ export function NetworkDiscoveryPage() {
   </>}
 </div>}
               {feature === "tournois" && <div className="pilotoki-discovery__content">
-                <div className="pilotoki-discovery__between"><h3>Tournoi du club · 4e série</h3><span className="pilotoki-discovery__preview-badge">Phase de poules</span></div>
-                <div className="pilotoki-discovery__matches">{sampleMatches.map((match) => <div key={match.teams}><strong>{match.teams}</strong><span>{match.day} · {match.hour}</span><b>{match.score}</b></div>)}</div>
-                <button type="button" className="pilotoki-discovery__cta" onClick={() => setRequested(true)}>{view === "joueur" ? "Demander un report (simulation)" : "Examiner les reports (simulation)"}</button>
-                {requested && <p role="status" className="pilotoki-discovery__success">Le parcours de report est illustré. Aucune demande réelle n'a été envoyée.</p>}
-              </div>}
+  {view === "joueur" ? <>
+    <div className="pilotoki-discovery__between"><h3>Mon tournoi · 4e série</h3><span className="pilotoki-discovery__preview-badge">Phase de poules</span></div>
+    <div className="pilotoki-discovery__slots" role="group" aria-label="Navigation du tournoi">
+      <button type="button" className={tournamentTab === "planning" ? "active" : ""} aria-pressed={tournamentTab === "planning"} onClick={() => setTournamentTab("planning")}>Mon planning</button>
+      <button type="button" className={tournamentTab === "classement" ? "active" : ""} aria-pressed={tournamentTab === "classement"} onClick={() => setTournamentTab("classement")}>Classement & résultats</button>
+    </div>
+    {tournamentTab === "planning" ? <>
+      <div className="pilotoki-discovery__champ-card"><span>MA PROCHAINE PARTIE · POULE B</span><strong>Martin / Dupont <em>VS</em> Bernard / Petit</strong><p>Mardi 20 octobre · 19 h 30 · Trinquet principal</p><button type="button" onClick={() => setRequested(true)}>Demander un report (simulation)</button></div>
+      <h3>Mes autres parties</h3><div className="pilotoki-discovery__matches">{sampleMatches.map(match => <div key={match.teams}><strong>{match.teams}</strong><span>{match.day} · {match.hour}</span><b>{match.score}</b></div>)}</div>
+      {requested && <p className="pilotoki-discovery__success" role="status">Demande de report simulée : aucune notification réelle envoyée.</p>}
+    </> : <>
+      <div className="pilotoki-discovery__settings-card"><div className="pilotoki-discovery__between"><strong>Classement · Poule B</strong><span className="pilotoki-discovery__preview-badge">4e série</span></div>
+        <div className="pilotoki-discovery__tournament-table"><div><strong>Rang</strong><strong>Équipe</strong><strong>J</strong><strong>V</strong><strong>Pts</strong></div>
+          <div><span>1</span><strong>Martin / Dupont</strong><span>3</span><span>3</span><b>9</b></div>
+          <div><span>2</span><strong>Bernard / Petit</strong><span>3</span><span>2</span><b>6</b></div>
+          <div><span>3</span><strong>Lacaze / Durand</strong><span>3</span><span>1</span><b>3</b></div>
+          <div><span>4</span><strong>Barbé / Lopez</strong><span>3</span><span>0</span><b>0</b></div>
+        </div>
+      </div>
+      <h3>Derniers résultats</h3><div className="pilotoki-discovery__matches"><div><strong>Martin / Dupont — Bernard / Petit</strong><span>Jeudi 22 octobre</span><b>40 – 32</b></div><div><strong>Lacaze / Durand — Barbé / Lopez</strong><span>Mardi 20 octobre</span><b>40 – 36</b></div></div>
+    </>}
+    <p className="pilotoki-discovery__settings-hint">Données fictives de démonstration. Le planning, les scores et les classements réels se mettent à jour selon les résultats du tournoi.</p>
+  </> : <>
+    <div className="pilotoki-discovery__champ-admin-head"><span>ADMINISTRATION</span><h3>Gestion des tournois</h3><p>Un seul espace pour piloter les inscriptions, les paramètres du tournoi et son organisation sportive.</p></div>
+    <div className="pilotoki-discovery__settings-card"><div className="pilotoki-discovery__settings-heading"><strong>Tournoi d'automne · 4e série</strong><span>En cours · Poules</span></div>
+      <div className="pilotoki-discovery__tournament-admin-section"><h4>Paramètres administratifs</h4><div className="pilotoki-discovery__settings-grid">
+        {([["État du tournoi","En cours"],["Inscriptions","Ouvertes jusqu'au 18 octobre"],["Participation","16 € par équipe"],["Période","Octobre – Décembre"],["Terrain","Trinquet principal"],["Gestion","Inscriptions et paiements"]] as const).map(([label,value]) => <div className="pilotoki-discovery__setting" key={label}><strong>{label}</strong><span>{value}</span></div>)}
+      </div></div>
+      <div className="pilotoki-discovery__tournament-admin-section"><h4>Paramètres sportifs</h4><div className="pilotoki-discovery__settings-grid">
+        {([["Discipline","Paleta gomme pleine"],["Séries","1re, 2e, 3e et 4e"],["Format","Poules puis phase finale"],["Équipes","24 équipes"],["Créneaux","Lun. à ven. · 17 h 30 – 20 h 30"],["Classements","Mis à jour après résultat"]] as const).map(([label,value]) => <div className="pilotoki-discovery__setting" key={label}><strong>{label}</strong><span>{value}</span></div>)}
+      </div></div>
+      <div className="pilotoki-discovery__tournament-admin-actions"><span>Programmation des parties</span><span>Gestion des reports</span><span>Saisie des résultats</span><span>Poules & phases finales</span></div>
+    </div>
+    <p className="pilotoki-discovery__settings-hint">Aperçu en lecture seule : aucune inscription, programmation ou donnée sportive réelle n'est modifiée.</p>
+  </>}
+</div>}
               {feature === "championnats" && <div className="pilotoki-discovery__content">
   {view === "joueur" ? <>
     <h3>Mes championnats · Rencontre du week-end</h3>
