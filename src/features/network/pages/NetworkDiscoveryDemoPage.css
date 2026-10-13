@@ -313,3 +313,21 @@
 .pilotoki-discovery__standings>div.is-qualified+div:not(.is-qualified){border-top:3px dashed var(--club-accent)}
 .pilotoki-discovery__qualification-legend{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.79rem;font-weight:750;color:var(--club-heading)}
 .pilotoki-discovery__qualification-legend>span:first-child{color:var(--club-heading);background:var(--club-accent-soft);border-radius:99px;padding:6px 10px}
+
+
+/* Refereeing showcase reuses the app's real WhistleIcon, including in calendar. */
+.pilotoki-discovery__referee-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pilotoki-discovery__referee-card{display:grid;gap:11px;align-content:start;padding:15px;border:1px solid var(--club-border);background:var(--club-soft);border-radius:14px;transition:border-color .16s,box-shadow .16s}
+.pilotoki-discovery__referee-card.is-selected{border:2px solid var(--club-accent);padding:14px;box-shadow:0 0 0 2px var(--club-accent-soft)}
+.pilotoki-discovery__referee-card-top,.pilotoki-discovery__referee-card-foot{display:flex;justify-content:space-between;gap:9px;align-items:center;flex-wrap:wrap}
+.pilotoki-discovery__referee-card-top{font-size:.75rem;font-weight:800;color:var(--club-heading)}
+.pilotoki-discovery__referee-card>strong{font-size:1.03rem;line-height:1.3}
+.pilotoki-discovery__referee-card>strong em{font-style:normal;opacity:.65;font-size:.79rem}
+.pilotoki-discovery__referee-card>small{font-size:.77rem;opacity:.8}
+.pilotoki-discovery__referee-card-foot{padding-top:10px;border-top:1px solid var(--club-border)}
+.pilotoki-discovery__referee-card-foot>span,.pilotoki-discovery__booking-referee{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:800}
+.pilotoki-discovery__referee-card-foot button{border:0;background:var(--club-accent);color:var(--club-on-accent);padding:9px 12px;border-radius:8px;font-weight:800;font-size:.76rem}
+.pilotoki-discovery__referee-card-foot button:hover{filter:brightness(.92)}
+.pilotoki-discovery__booking-referee{border-top:1px solid currentColor;padding-top:4px;font-size:.68rem}
+.pilotoki-discovery__success svg,.pilotoki-discovery__matches b svg{vertical-align:middle;display:inline-block}
+@media(max-width:760px){.pilotoki-discovery__referee-grid{grid-template-columns:1fr}}
