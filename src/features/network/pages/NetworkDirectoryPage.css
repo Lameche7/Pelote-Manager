@@ -5,7 +5,7 @@
   font-family: inherit;
 }
 .network-directory__hero {
-  padding: 30px 24px 70px;
+  padding: 18px 24px 36px;
   text-align: center;
   background: radial-gradient(circle at 78% 25%, #256b52, #103a30 68%);
   color: white;
@@ -14,20 +14,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
-  margin: 0 auto 52px;
+  gap: 12px;
+  margin: 0 auto 24px;
 }
 .network-directory__brand {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 30px;
+  padding: 8px 20px;
   border-radius: 22px;
   background: white;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
 }
 .network-directory__brand img {
-  width: clamp(205px, 26vw, 340px);
+  width: clamp(175px, 23vw, 265px);
   height: auto;
   display: block;
 }
@@ -80,12 +80,12 @@
 .network-directory__hero h1 {
   font-size: clamp(2.1rem, 5vw, 3.7rem);
   line-height: 1.1;
-  margin: 18px auto;
+  margin: 10px auto;
   max-width: 800px;
 }
 .network-directory__hero p {
   max-width: 700px;
-  margin: 14px auto;
+  margin: 8px auto;
   line-height: 1.6;
 }
 .network-directory__hero .network-directory__note {
@@ -222,17 +222,17 @@
 }
 @media (max-width: 600px) {
   .network-directory__hero {
-    padding: 24px 16px 50px;
+    padding: 14px 16px 28px;
   }
   .network-directory__hero-header {
-    margin-bottom: 44px;
+    margin-bottom: 18px;
   }
   .network-directory__hero-nav {
     gap: 6px 16px;
     font-size: 0.9rem;
   }
   .network-directory__brand {
-    padding: 12px 18px;
+    padding: 8px 15px;
   }
   .network-directory__info-sections {
     grid-template-columns: 1fr;
