@@ -98,19 +98,33 @@ export function NetworkDiscoveryPage() {
         </section>
         <section className="pilotoki-discovery__workspace" aria-label="Testeur Pilotoki">
           <div className="pilotoki-discovery__controls">
-            <div className="pilotoki-discovery__club-field">
-              <label htmlFor="pilotoki-demo-club">Nom de votre club</label>
-              <input id="pilotoki-demo-club" value={club} maxLength={45} onChange={(event) => setClub(event.target.value)} />
+            <div className="pilotoki-discovery__customizer-title">
+              <strong>✦ Personnalisez votre club</strong>
+              <span>Modifiez les éléments ci-dessous : l'aperçu s'actualise aussitôt.</span>
             </div>
-            <div className="pilotoki-discovery__branding" aria-label="Personnalisation visuelle">
-              <label className="pilotoki-discovery__upload">Logo<input type="file" accept="image/*" aria-label="Choisir le logo" onChange={(event) => readImage(event, setLogo)} /></label>
-              <label className="pilotoki-discovery__upload">Fond<input type="file" accept="image/*" aria-label="Choisir le fond d'écran" onChange={(event) => readImage(event, setCover)} /></label>
-              <label className="pilotoki-discovery__swatch">Principal<input type="color" value={primary} aria-label="Couleur principale" onChange={(event) => setPrimary(event.target.value)} /></label>
-              <label className="pilotoki-discovery__swatch">Accent<input type="color" value={accent} aria-label="Couleur d'accent" onChange={(event) => setAccent(event.target.value)} /></label>
-            </div>
-            <div className="pilotoki-discovery__views" role="group" aria-label="Choisir une interface">
-              <button type="button" className={view === "joueur" ? "active" : ""} aria-pressed={view === "joueur"} onClick={() => setView("joueur")}>Vue joueur</button>
-              <button type="button" className={view === "administrateur" ? "active" : ""} aria-pressed={view === "administrateur"} onClick={() => setView("administrateur")}>Vue administrateur</button>
+            <div className="pilotoki-discovery__customizer-fields">
+              <div className="pilotoki-discovery__club-field">
+                <label htmlFor="pilotoki-demo-club">✎ Nom du club</label>
+                <input id="pilotoki-demo-club" value={club} maxLength={45} title="Cliquez pour modifier le nom de votre club" onChange={(event) => setClub(event.target.value)} />
+              </div>
+              <div className="pilotoki-discovery__branding" aria-label="Personnalisation visuelle">
+                <label className="pilotoki-discovery__upload">▧ {logo ? "Changer le logo" : "Choisir un logo"}
+                  <input type="file" accept="image/*" aria-label="Importer le logo du club" onChange={(event) => readImage(event, setLogo)} />
+                </label>
+                <label className="pilotoki-discovery__upload">▧ {cover ? "Changer le fond" : "Choisir un fond"}
+                  <input type="file" accept="image/*" aria-label="Importer une image de fond" onChange={(event) => readImage(event, setCover)} />
+                </label>
+                <label className="pilotoki-discovery__swatch">Couleur principale
+                  <input type="color" value={primary} aria-label="Choisir la couleur principale" onChange={(event) => setPrimary(event.target.value)} />
+                </label>
+                <label className="pilotoki-discovery__swatch">Couleur des boutons
+                  <input type="color" value={accent} aria-label="Choisir la couleur des boutons" onChange={(event) => setAccent(event.target.value)} />
+                </label>
+              </div>
+              <div className="pilotoki-discovery__views" role="group" aria-label="Choisir une interface">
+                <button type="button" className={view === "joueur" ? "active" : ""} aria-pressed={view === "joueur"} onClick={() => setView("joueur")}>Vue joueur</button>
+                <button type="button" className={view === "administrateur" ? "active" : ""} aria-pressed={view === "administrateur"} onClick={() => setView("administrateur")}>Vue administrateur</button>
+              </div>
             </div>
           </div>
           <div className="pilotoki-discovery__body">
