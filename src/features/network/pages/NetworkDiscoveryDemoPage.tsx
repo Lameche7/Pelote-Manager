@@ -56,7 +56,6 @@ export function NetworkDiscoveryPage() {
   const active = features.find((item) => item.id === feature)!;
   const primaryText = textOn(primary);
   const accentText = textOn(accent);
-  const accentLabel = accentText === "#152722" ? "#17392f" : accent;
   const soft = mixColors(primary, "#ffffff", 0.90);
   const theme = {
     "--club-primary": primary,
