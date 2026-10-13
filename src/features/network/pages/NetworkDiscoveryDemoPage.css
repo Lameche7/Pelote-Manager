@@ -290,3 +290,15 @@
 .pilotoki-discovery__champ-days>div.is-enabled{opacity:1;font-weight:800}
 @media(max-width:1150px){.pilotoki-discovery__booking-week{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:700px){.pilotoki-discovery__booking-week{grid-template-columns:repeat(2,minmax(0,1fr))}.pilotoki-discovery__settings-grid,.pilotoki-discovery__champ-cards{grid-template-columns:1fr}}
+
+
+/* Tournament showcase: navigable player standings and an admin dashboard. */
+.pilotoki-discovery__tournament-table{display:grid;gap:0;overflow-x:auto}
+.pilotoki-discovery__tournament-table>div{display:grid;grid-template-columns:55px minmax(155px,1fr) 35px 35px 45px;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--club-border);font-size:.84rem;min-width:350px}
+.pilotoki-discovery__tournament-table>div:first-child{background:var(--club-soft);border-radius:9px 9px 0 0;font-size:.72rem}
+.pilotoki-discovery__tournament-table>div:nth-child(2){background:var(--club-accent-soft);color:var(--club-on-accent-soft)}
+.pilotoki-discovery__tournament-admin-section{display:grid;gap:12px;border-top:1px solid var(--club-border);padding-top:16px}
+.pilotoki-discovery__tournament-admin-section h4{font-size:1.08rem;margin:0;color:var(--club-heading)}
+.pilotoki-discovery__tournament-admin-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.pilotoki-discovery__tournament-admin-actions span{background:var(--club-primary);color:var(--club-on-primary);border-radius:9px;padding:12px;font-size:.79rem;font-weight:800;text-align:center}
+@media(max-width:650px){.pilotoki-discovery__tournament-admin-actions{grid-template-columns:1fr}}
