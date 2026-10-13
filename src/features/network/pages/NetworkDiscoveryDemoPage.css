@@ -167,3 +167,43 @@
   font-weight: 800;
   text-align: center;
 }
+
+
+/* Showcase-quality widescreen boards for communal displays. */
+.pilotoki-discovery__tv{position:relative;isolation:isolate;overflow:hidden;background:#071d24;color:#fff;border:7px solid #1b2629;border-radius:19px;aspect-ratio:16/9;min-height:340px;display:flex;flex-direction:column;box-shadow:0 16px 32px #09292042}
+.pilotoki-discovery__tv-atmosphere{position:absolute;inset:0;z-index:-1;background:radial-gradient(circle at 83% 20%,#2c6d74aa,transparent 55%),linear-gradient(135deg,#102f38,#06171f);background-position:center;background-size:cover}
+.pilotoki-discovery__tv-head{border:0;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pilotoki-discovery__tv-brand{display:flex;align-items:center;gap:12px;min-width:0}
+.pilotoki-discovery__tv-brand img{width:53px;height:53px;background:white;border-radius:10px;padding:5px;object-fit:contain;flex-shrink:0}
+.pilotoki-discovery__tv-brand>div{display:grid;gap:3px;min-width:0}
+.pilotoki-discovery__tv-brand small,.pilotoki-discovery__tv-title small{font-size:.68rem;letter-spacing:.16em;font-weight:900;color:#b8d3d2}
+.pilotoki-discovery__tv-brand strong{font-size:clamp(.9rem,2vw,1.3rem);line-height:1.15}
+.pilotoki-discovery__tv-live{white-space:nowrap;font-size:.75rem;font-weight:900;letter-spacing:.06em;color:#fff;background:#ffffff1d;border:1px solid #ffffff39;padding:8px 12px;border-radius:99px}
+.pilotoki-discovery__tv-live span{color:var(--club-accent)}
+.pilotoki-discovery__tv-content{padding:8px 24px 24px;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:11px;color:white}
+.pilotoki-discovery__tv-title{text-align:center;margin:0 0 8px}
+.pilotoki-discovery__tv-title h4{font-size:clamp(1.45rem,3vw,2.25rem);margin:4px 0 0;line-height:1.15;color:#fff}
+.pilotoki-discovery__tv-match{display:flex;gap:14px;align-items:center;padding:14px 17px;background:#ffffff13;border:1px solid #ffffff34;border-radius:13px;backdrop-filter:blur(5px);color:#fff}
+.pilotoki-discovery__tv-time{display:grid;gap:3px;border-right:1px solid #ffffff4d;padding-right:15px;min-width:83px}
+.pilotoki-discovery__tv-time strong{font-size:1.5rem;font-variant-numeric:tabular-nums;color:#fff}
+.pilotoki-discovery__tv-time span{font-size:.58rem;font-weight:800;letter-spacing:.08em;color:#d5e3e4}
+.pilotoki-discovery__tv-versus{flex:1;display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.pilotoki-discovery__tv-versus strong{font-size:clamp(.8rem,1.55vw,1.16rem);line-height:1.2}
+.pilotoki-discovery__tv-versus span{color:var(--club-on-accent);background:var(--club-accent);border-radius:50%;width:30px;height:30px;display:grid;place-items:center;font-weight:900;font-size:.68rem;flex-shrink:0}
+.pilotoki-discovery__tv-pill{font-size:.68rem;border:1px solid #ffffff5c;border-radius:99px;padding:6px 9px;white-space:nowrap}
+.pilotoki-discovery__tv-scoreboard{display:flex;align-items:center;justify-content:center;gap:19px;background:#ffffff16;border:1px solid #ffffff3e;border-radius:17px;padding:20px 15px}
+.pilotoki-discovery__tv-scoreboard>div{display:grid;gap:4px;text-align:center}
+.pilotoki-discovery__tv-scoreboard>div strong{font-size:clamp(2.5rem,6vw,5rem);font-weight:950;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+.pilotoki-discovery__tv-scoreboard>div span{font-size:.85rem;font-weight:800}
+.pilotoki-discovery__tv-score-separator{color:var(--club-accent);font-size:2.5rem;font-weight:900}
+.pilotoki-discovery__tv-score-note{text-align:center;letter-spacing:.12em;font-weight:900;font-size:.76rem}
+.pilotoki-discovery__tv-match--small{justify-content:space-between;gap:8px;padding:10px 15px;font-size:.8rem}
+.pilotoki-discovery__tv-match--small span{font-size:1.2rem;font-weight:950;color:#fff}
+.pilotoki-discovery__tv-announcements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pilotoki-discovery__tv-announcements>div{display:grid;align-content:center;text-align:center;gap:8px;min-height:130px;padding:15px;background:#ffffff1a;border:1px solid #ffffff3e;border-radius:14px}
+.pilotoki-discovery__tv-announcements strong{font-size:1.1rem}
+.pilotoki-discovery__tv-announcements span:last-child{font-size:.78rem;color:#e4efec}
+.pilotoki-discovery__tv-emoji{font-size:2rem}
+.pilotoki-discovery__tv-partner{text-align:center;font-size:.66rem;font-weight:900;letter-spacing:.13em;color:#d3e6e5;padding:6px}
+.pilotoki-discovery__tv-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 19px;background:var(--club-accent);color:var(--club-on-accent);font-size:.68rem;letter-spacing:.05em}
+@media(max-width:650px){.pilotoki-discovery__tv{aspect-ratio:auto;min-height:360px}.pilotoki-discovery__tv-head{padding:10px}.pilotoki-discovery__tv-content{padding:9px 11px 16px}.pilotoki-discovery__tv-brand img{height:37px;width:37px}.pilotoki-discovery__tv-live{font-size:.61rem;padding:6px}.pilotoki-discovery__tv-match{padding:10px;gap:8px}.pilotoki-discovery__tv-time{min-width:65px;padding-right:9px}.pilotoki-discovery__tv-time strong{font-size:1.15rem}.pilotoki-discovery__tv-versus{gap:5px}.pilotoki-discovery__tv-versus strong{font-size:.72rem}.pilotoki-discovery__tv-pill{display:none}}
