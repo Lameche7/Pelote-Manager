@@ -752,7 +752,7 @@ export function MyTournamentsPage() {
 
         {isLoading ? (
           <p>Chargement de vos tournois…</p>
-        ) : displayed.length === 0 ? (
+        ) : displayed.length === 0 && !(view === "current" && externalTournaments.length > 0) ? (
           <div className="my-tournaments__empty">
             <h2>
               {view === "current"
