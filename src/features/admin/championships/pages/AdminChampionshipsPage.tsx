@@ -114,11 +114,19 @@ export function AdminChampionshipsPage() {
     let active = true;
     setDetailBusy(true);
     setError("");
-    void supabase.rpc("admin_list_substitutable_championship_teams", { target_championship_id: selectedId }).then(({data,error: accessError}) => {
-      if (!active) return;
-      if (accessError) { setSubstitutableTeams([]); setError("Impossible de vérifier les équipes autorisées."); return; }
-      setSubstitutableTeams(Array.isArray(data) ? data.map(String) : []);
-    });
+    void supabase
+      .rpc("admin_list_substitutable_championship_teams", {
+        target_championship_id: selectedId,
+      })
+      .then(({ data, error: accessError }) => {
+        if (!active) return;
+        if (accessError) {
+          setSubstitutableTeams([]);
+          setError("Impossible de vérifier les équipes autorisées.");
+          return;
+        }
+        setSubstitutableTeams(Array.isArray(data) ? data.map(String) : []);
+      });
     void championshipImportService
       .clubDetail(selectedId)
       .then((result) => {
@@ -184,17 +192,26 @@ export function AdminChampionshipsPage() {
     setSubstituteBusy(true);
     setSubstituteMessage("");
     try {
-      const { error: rpcError } = await supabase.rpc("admin_add_championship_substitute", {
-        target_team_id: teamId,
-        target_licence: substituteLicence.trim(),
-      });
+      const { error: rpcError } = await supabase.rpc(
+        "admin_add_championship_substitute",
+        {
+          target_team_id: teamId,
+          target_licence: substituteLicence.trim(),
+        },
+      );
       if (rpcError) throw rpcError;
       const refreshed = await championshipImportService.clubDetail(selectedId);
       setDetail(refreshed);
-      setSubstituteMessage("Remplaçant ajouté. Les joueurs déjà inscrits conservent leurs droits.");
+      setSubstituteMessage(
+        "Remplaçant ajouté. Les joueurs déjà inscrits conservent leurs droits.",
+      );
       setSubstituteLicence("");
     } catch (cause) {
-      setSubstituteMessage(cause instanceof Error ? cause.message : "Impossible d'ajouter ce remplaçant.");
+      setSubstituteMessage(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible d'ajouter ce remplaçant.",
+      );
     } finally {
       setSubstituteBusy(false);
     }
@@ -643,110 +660,125 @@ export function AdminChampionshipsPage() {
               <div>
                 <p className="admin-page__eyebrow">Consultation</p>
                 <h2>Calendrier et résultats</h2>
-                <button type="button" aria-expanded={calendarExpanded} aria-controls="championship-calendar-contents" onClick={() => setCalendarExpanded((value) => !value)}>
-                  {calendarExpanded ? "Masquer le calendrier" : "Afficher le calendrier"}
+                <button
+                  type="button"
+                  aria-expanded={calendarExpanded}
+                  aria-controls="championship-calendar-contents"
+                  onClick={() => setCalendarExpanded((value) => !value)}
+                >
+                  {calendarExpanded
+                    ? "Masquer le calendrier"
+                    : "Afficher le calendrier"}
                 </button>
                 <p>
                   {filteredMatches.length} rencontre(s) affichée(s) sur{" "}
                   {detail.matches.length}.
                 </p>
               </div>
-              {calendarExpanded && <div className="admin-championships__filters">
-                <label>
-                  Série
-                  <select
-                    value={divisionFilter}
-                    onChange={(event) => {
-                      setDivisionFilter(event.target.value);
-                      setPhaseFilter("all");
-                    }}
-                  >
-                    <option value="all">Toutes les séries</option>
-                    {detail.divisions.map((division) => (
-                      <option key={division.id} value={division.id}>
-                        {division.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Phase
-                  <select
-                    value={phaseFilter}
-                    onChange={(event) => setPhaseFilter(event.target.value)}
-                  >
-                    <option value="all">Toutes les phases</option>
-                    {phases.map((phase) => (
-                      <option key={phase} value={phase}>
-                        {phase}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Club
-                  <input
-                    type="search"
-                    value={clubFilter}
-                    placeholder="Ex. Lourdes"
-                    onChange={(event) => setClubFilter(event.target.value)}
-                  />
-                </label>
-              </div>}
+              {calendarExpanded && (
+                <div className="admin-championships__filters">
+                  <label>
+                    Série
+                    <select
+                      value={divisionFilter}
+                      onChange={(event) => {
+                        setDivisionFilter(event.target.value);
+                        setPhaseFilter("all");
+                      }}
+                    >
+                      <option value="all">Toutes les séries</option>
+                      {detail.divisions.map((division) => (
+                        <option key={division.id} value={division.id}>
+                          {division.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Phase
+                    <select
+                      value={phaseFilter}
+                      onChange={(event) => setPhaseFilter(event.target.value)}
+                    >
+                      <option value="all">Toutes les phases</option>
+                      {phases.map((phase) => (
+                        <option key={phase} value={phase}>
+                          {phase}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Club
+                    <input
+                      type="search"
+                      value={clubFilter}
+                      placeholder="Ex. Lourdes"
+                      onChange={(event) => setClubFilter(event.target.value)}
+                    />
+                  </label>
+                </div>
+              )}
             </div>
 
-            {calendarExpanded && <div id="championship-calendar-contents">
-            <div className="admin-championships__matches-table-wrap">
-              <table className="admin-championships__matches-table">
-                <thead>
-                  <tr>
-                    <th>Série / phase</th>
-                    <th>Date</th>
-                    <th>Rencontre</th>
-                    <th>Score</th>
-                    <th>Lieu</th>
-                    <th>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMatches.slice(0, 250).map((match) => (
-                    <tr key={match.id}>
-                      <td>
-                        <strong>{match.divisionName}</strong>
-                        <span>
-                          {match.phase}
-                          {match.poolCode ? ` · Poule ${match.poolCode}` : ""}
-                        </span>
-                      </td>
-                      <td>
-                        {formatDateTime(
-                          match.reportOn ??
-                            match.agreementOn ??
-                            match.scheduledOn,
-                          match.reportTime ??
-                            match.agreementTime ??
-                            match.scheduledTime,
-                        )}
-                      </td>
-                      <td>
-                        <strong>{match.team1Label}</strong>
-                        <span>{match.team2Label}</span>
-                      </td>
-                      <td>{match.scoreRaw ?? "—"}</td>
-                      <td>{match.agreementVenue ?? match.venue ?? "—"}</td>
-                      <td>{matchStatusLabel[match.status] ?? match.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {filteredMatches.length > 250 && (
-              <p className="admin-championships__limit-note">
-                Les 250 premières rencontres sont affichées. Utilisez les
-                filtres pour cibler une série, une phase ou un club.
-              </p>
+            {calendarExpanded && (
+              <div id="championship-calendar-contents">
+                <div className="admin-championships__matches-table-wrap">
+                  <table className="admin-championships__matches-table">
+                    <thead>
+                      <tr>
+                        <th>Série / phase</th>
+                        <th>Date</th>
+                        <th>Rencontre</th>
+                        <th>Score</th>
+                        <th>Lieu</th>
+                        <th>Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredMatches.slice(0, 250).map((match) => (
+                        <tr key={match.id}>
+                          <td>
+                            <strong>{match.divisionName}</strong>
+                            <span>
+                              {match.phase}
+                              {match.poolCode
+                                ? ` · Poule ${match.poolCode}`
+                                : ""}
+                            </span>
+                          </td>
+                          <td>
+                            {formatDateTime(
+                              match.reportOn ??
+                                match.agreementOn ??
+                                match.scheduledOn,
+                              match.reportTime ??
+                                match.agreementTime ??
+                                match.scheduledTime,
+                            )}
+                          </td>
+                          <td>
+                            <strong>{match.team1Label}</strong>
+                            <span>{match.team2Label}</span>
+                          </td>
+                          <td>{match.scoreRaw ?? "—"}</td>
+                          <td>{match.agreementVenue ?? match.venue ?? "—"}</td>
+                          <td>
+                            {matchStatusLabel[match.status] ?? match.status}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {filteredMatches.length > 250 && (
+                  <p className="admin-championships__limit-note">
+                    Les 250 premières rencontres sont affichées. Utilisez les
+                    filtres pour cibler une série, une phase ou un club.
+                  </p>
+                )}
+              </div>
             )}
-            </div>}
           </div>
 
           <details className="admin-card admin-championships__teams">
@@ -769,23 +801,61 @@ export function AdminChampionshipsPage() {
                       </li>
                     ))}
                   </ul>
-                  {substitutableTeams.includes(team.id) && (substituteTeamId === team.id ? (
-                    <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
-                      <label>Licence du remplaçant
-                        <input type="text" inputMode="numeric" value={substituteLicence} onChange={(event) => setSubstituteLicence(event.target.value)} placeholder="Ex. 115220" disabled={substituteBusy} />
-                      </label>
-                      <button type="button" disabled={substituteBusy || !substituteLicence.trim()} onClick={() => void addSubstitute(team.id)}>
-                        {substituteBusy ? "Vérification…" : "Confirmer l’ajout du remplaçant"}
+                  {substitutableTeams.includes(team.id) &&
+                    (substituteTeamId === team.id ? (
+                      <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+                        <label>
+                          Licence du remplaçant
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={substituteLicence}
+                            onChange={(event) =>
+                              setSubstituteLicence(event.target.value)
+                            }
+                            placeholder="Ex. 115220"
+                            disabled={substituteBusy}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          disabled={substituteBusy || !substituteLicence.trim()}
+                          onClick={() => void addSubstitute(team.id)}
+                        >
+                          {substituteBusy
+                            ? "Vérification…"
+                            : "Confirmer l’ajout du remplaçant"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={substituteBusy}
+                          onClick={() => {
+                            setSubstituteTeamId(null);
+                            setSubstituteMessage("");
+                          }}
+                        >
+                          Fermer
+                        </button>
+                        {substituteMessage && (
+                          <p role="status">{substituteMessage}</p>
+                        )}
+                        <small>
+                          Ajout uniquement : aucun titulaire n’est retiré et les
+                          droits existants sont conservés.
+                        </small>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSubstituteTeamId(team.id);
+                          setSubstituteLicence("");
+                          setSubstituteMessage("");
+                        }}
+                      >
+                        + Attribuer un remplaçant
                       </button>
-                      <button type="button" disabled={substituteBusy} onClick={() => { setSubstituteTeamId(null); setSubstituteMessage(""); }}>Fermer</button>
-                      {substituteMessage && <p role="status">{substituteMessage}</p>}
-                      <small>Ajout uniquement : aucun titulaire n’est retiré et les droits existants sont conservés.</small>
-                    </div>
-                  ) : (
-                    <button type="button" onClick={() => { setSubstituteTeamId(team.id); setSubstituteLicence(""); setSubstituteMessage(""); }}>
-                      + Attribuer un remplaçant
-                    </button>
-                  ))}
+                    ))}
                 </article>
               ))}
             </div>

@@ -578,17 +578,34 @@ type ExternalErrebotTournament = {
   id: string;
   name: string;
   venueName: string;
-  fixtures: Array<{ date: string; time: string; series: string; pool: string; team1ExternalId: string; team2ExternalId: string; score1: number | null; score2: number | null }>;
-  teams: Array<{ externalId: string; players: Array<{ firstName: string; lastName: string }> }>;
+  fixtures: Array<{
+    date: string;
+    time: string;
+    series: string;
+    pool: string;
+    team1ExternalId: string;
+    team2ExternalId: string;
+    score1: number | null;
+    score2: number | null;
+  }>;
+  teams: Array<{
+    externalId: string;
+    players: Array<{ firstName: string; lastName: string }>;
+  }>;
 };
-const externalTeamLabel = (team: ExternalErrebotTournament["teams"][number] | undefined) =>
-  team?.players.map((p) => [p.firstName, p.lastName].join(" ")).join(" / ") ?? "Équipe";
+const externalTeamLabel = (
+  team: ExternalErrebotTournament["teams"][number] | undefined,
+) =>
+  team?.players.map((p) => [p.firstName, p.lastName].join(" ")).join(" / ") ??
+  "Équipe";
 
 export function MyTournamentsPage() {
   const [searchParams] = useSearchParams();
   const focusMatchId = searchParams.get("match");
   const [tournaments, setTournaments] = useState<MyTournamentOverview[]>([]);
-  const [externalTournaments, setExternalTournaments] = useState<ExternalErrebotTournament[]>([]);
+  const [externalTournaments, setExternalTournaments] = useState<
+    ExternalErrebotTournament[]
+  >([]);
   const [externalError, setExternalError] = useState("");
   const [view, setView] = useState<"current" | "history">("current");
   const [isLoading, setIsLoading] = useState(true);
@@ -602,12 +619,25 @@ export function MyTournamentsPage() {
 
   useEffect(() => {
     let active = true;
-    void supabase.rpc("list_my_external_errebot_tournaments").then(({ data, error }) => {
-      if (!active) return;
-      if (error) { setExternalError("Les tournois extérieurs ne sont pas disponibles pour le moment."); return; }
-      setExternalTournaments(Array.isArray(data) ? data as unknown as ExternalErrebotTournament[] : []);
-    });
-    return () => { active = false; };
+    void supabase
+      .rpc("list_my_external_errebot_tournaments")
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          setExternalError(
+            "Les tournois extérieurs ne sont pas disponibles pour le moment.",
+          );
+          return;
+        }
+        setExternalTournaments(
+          Array.isArray(data)
+            ? (data as unknown as ExternalErrebotTournament[])
+            : [],
+        );
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -694,19 +724,67 @@ export function MyTournamentsPage() {
         )}
 
         {view === "current" && externalTournaments.length > 0 && (
-          <section className="my-tournaments__external" aria-label="Mes tournois extérieurs">
+          <section
+            className="my-tournaments__external"
+            aria-label="Mes tournois extérieurs"
+          >
             <h2>Mes tournois extérieurs</h2>
-            <p>Ces parties ont lieu dans d’autres trinquets : elles n’occupent aucun créneau à Lourdes.</p>
-            {externalTournaments.map((tournament) => <article key={tournament.id} className="my-tournaments__external-card">
-              <h3>{tournament.name} · {tournament.venueName}</h3>
-              <details><summary>Voir les parties et résultats ({tournament.fixtures.length})</summary>
-                <ul>{tournament.fixtures.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)).map((match,i)=><li key={i}>
-                  <strong>{match.date} · {match.time} · {match.series} · Poule {match.pool}</strong>
-                  <span>{externalTeamLabel(tournament.teams.find(team=>team.externalId===match.team1ExternalId))} – {externalTeamLabel(tournament.teams.find(team=>team.externalId===match.team2ExternalId))}</span>
-                  {match.score1!==null && match.score2!==null && <b>{match.score1} – {match.score2}</b>}
-                </li>)}</ul>
-              </details>
-            </article>)}
+            <p>
+              Ces parties ont lieu dans d’autres trinquets : elles n’occupent
+              aucun créneau à Lourdes.
+            </p>
+            {externalTournaments.map((tournament) => (
+              <article
+                key={tournament.id}
+                className="my-tournaments__external-card"
+              >
+                <h3>
+                  {tournament.name} · {tournament.venueName}
+                </h3>
+                <details>
+                  <summary>
+                    Voir les parties et résultats ({tournament.fixtures.length})
+                  </summary>
+                  <ul>
+                    {tournament.fixtures
+                      .slice()
+                      .sort(
+                        (a, b) =>
+                          a.date.localeCompare(b.date) ||
+                          a.time.localeCompare(b.time),
+                      )
+                      .map((match, i) => (
+                        <li key={i}>
+                          <strong>
+                            {match.date} · {match.time} · {match.series} · Poule{" "}
+                            {match.pool}
+                          </strong>
+                          <span>
+                            {externalTeamLabel(
+                              tournament.teams.find(
+                                (team) =>
+                                  team.externalId === match.team1ExternalId,
+                              ),
+                            )}{" "}
+                            –{" "}
+                            {externalTeamLabel(
+                              tournament.teams.find(
+                                (team) =>
+                                  team.externalId === match.team2ExternalId,
+                              ),
+                            )}
+                          </span>
+                          {match.score1 !== null && match.score2 !== null && (
+                            <b>
+                              {match.score1} – {match.score2}
+                            </b>
+                          )}
+                        </li>
+                      ))}
+                  </ul>
+                </details>
+              </article>
+            ))}
           </section>
         )}
         {externalError && <p role="status">{externalError}</p>}
@@ -752,7 +830,8 @@ export function MyTournamentsPage() {
 
         {isLoading ? (
           <p>Chargement de vos tournois…</p>
-        ) : displayed.length === 0 && !(view === "current" && externalTournaments.length > 0) ? (
+        ) : displayed.length === 0 &&
+          !(view === "current" && externalTournaments.length > 0) ? (
           <div className="my-tournaments__empty">
             <h2>
               {view === "current"

@@ -104,7 +104,9 @@ export function MyProfilePage() {
   const lastName = member?.lastName || profile.lastName;
   const displayName =
     [firstName, lastName].filter(Boolean).join(" ") || profile.displayName;
-  const hasLinkedLicence = Boolean(profile.memberId || member || memberClubs.length > 0);
+  const hasLinkedLicence = Boolean(
+    profile.memberId || member || memberClubs.length > 0,
+  );
   const isActiveLicensee = Boolean(member?.isActive);
   const accountType = isActiveLicensee
     ? "Licencié actif"
