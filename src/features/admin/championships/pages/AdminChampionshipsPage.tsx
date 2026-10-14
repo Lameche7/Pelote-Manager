@@ -120,7 +120,7 @@ export function AdminChampionshipsPage() {
       setSubstitutableTeams(Array.isArray(data) ? data.map(String) : []);
     });
     void championshipImportService
-      .detail(selectedId)
+      .clubDetail(selectedId)
       .then((result) => {
         if (active) {
           setDetail(result);
@@ -189,7 +189,7 @@ export function AdminChampionshipsPage() {
         target_licence: substituteLicence.trim(),
       });
       if (rpcError) throw rpcError;
-      const refreshed = await championshipImportService.detail(selectedId);
+      const refreshed = await championshipImportService.clubDetail(selectedId);
       setDetail(refreshed);
       setSubstituteMessage("Remplaçant ajouté. Les joueurs déjà inscrits conservent leurs droits.");
       setSubstituteLicence("");
@@ -271,7 +271,7 @@ export function AdminChampionshipsPage() {
       );
       setEngagementsUpdateFile(null);
       const [nextDetail] = await Promise.all([
-        championshipImportService.detail(selectedId),
+        championshipImportService.clubDetail(selectedId),
         loadList(),
       ]);
       setDetail(nextDetail);
@@ -340,7 +340,7 @@ export function AdminChampionshipsPage() {
       setFilePreview(null);
       setUpdateFile(null);
       const [nextDetail] = await Promise.all([
-        championshipImportService.detail(selectedId),
+        championshipImportService.clubDetail(selectedId),
         loadList(),
       ]);
       setDetail(nextDetail);
