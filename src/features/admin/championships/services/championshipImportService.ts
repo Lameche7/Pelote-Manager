@@ -368,6 +368,14 @@ export const championshipImportService = {
     return data.map(mapChampionship).filter((item) => item.id);
   },
 
+  async clubDetail(championshipId: string): Promise<AdminChampionshipDetail> {
+    const { data, error } = await rpc("admin_get_club_championship_detail", {
+      target_id: championshipId,
+    });
+    if (error) fail(error, "Impossible de charger les équipes du club.");
+    return mapDetail(data);
+  },
+
   async detail(championshipId: string): Promise<AdminChampionshipDetail> {
     const { data, error } = await rpc("admin_get_championship_detail", {
       target_id: championshipId,
