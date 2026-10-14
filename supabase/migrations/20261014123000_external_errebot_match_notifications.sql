@@ -42,7 +42,7 @@ begin
       concat('Votre match aujourd’hui : ',row_t.title),
       concat('Tournoi extérieur · ',row_t.venue_name,' · ',fixture->>'series',
              ' · ',fixture->>'time',' (heure locale).'),
-      'important','published',false,now(),
+      'important','draft',false,null,
       ((fixture->>'date')::date + interval '1 day') at time zone 'Europe/Paris')
     returning id into comm_id;
     insert into public.external_errebot_reminder_events
@@ -57,6 +57,7 @@ begin
     values(comm_id,row_t.club_id,player.id,player.email,
       case when player.email is null then 'unavailable'::public.communication_email_status
         else 'not_configured'::public.communication_email_status end);
+    update public.club_communications set status='published',published_at=now(),updated_at=now() where id=comm_id;
     sent := sent+1;
    end loop;
   end loop;
