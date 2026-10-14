@@ -179,7 +179,8 @@ export function ErrebotTournamentImportFinalize({
     if (
       !name.trim() ||
       (externalTournament && !externalVenue.trim()) ||
-      (!externalTournament && (!seasonId || resourceIds.length === 0 || !primaryResourceId)) ||
+      (!externalTournament &&
+        (!seasonId || resourceIds.length === 0 || !primaryResourceId)) ||
       !matchFormat ||
       !sportingRulesValid ||
       !seriesColorsValid
@@ -191,9 +192,19 @@ export function ErrebotTournamentImportFinalize({
     setError("");
     try {
       if (externalTournament) {
-        const { error: externalError } = await supabase.rpc("admin_import_external_errebot", {
-          payload: { file, name: name.trim(), venueName: externalVenue.trim(), teams: parsed.teams, pools: parsed.pools, fixtures: parsed.fixtures },
-        });
+        const { error: externalError } = await supabase.rpc(
+          "admin_import_external_errebot",
+          {
+            payload: {
+              file,
+              name: name.trim(),
+              venueName: externalVenue.trim(),
+              teams: parsed.teams,
+              pools: parsed.pools,
+              fixtures: parsed.fixtures,
+            },
+          },
+        );
         if (externalError) throw externalError;
         setExternalImported(true);
         return;
@@ -235,7 +246,22 @@ export function ErrebotTournamentImportFinalize({
   };
 
   if (externalImported) {
-    return <div className="admin-card admin-tournament-import__card errebot-import-finalize"><h2>Tournoi extérieur importé</h2><p>{name} · {externalVenue}</p><p>Les parties sont enregistrées hors du calendrier et du mode TV de Lourdes. Seuls les participants dont l’identité est déjà vérifiée peuvent retrouver ce tournoi.</p><button type="button" onClick={onReset}>Importer un autre fichier</button></div>;
+    return (
+      <div className="admin-card admin-tournament-import__card errebot-import-finalize">
+        <h2>Tournoi extérieur importé</h2>
+        <p>
+          {name} · {externalVenue}
+        </p>
+        <p>
+          Les parties sont enregistrées hors du calendrier et du mode TV de
+          Lourdes. Seuls les participants dont l’identité est déjà vérifiée
+          peuvent retrouver ce tournoi.
+        </p>
+        <button type="button" onClick={onReset}>
+          Importer un autre fichier
+        </button>
+      </div>
+    );
   }
 
   if (result) {
@@ -404,20 +430,41 @@ export function ErrebotTournamentImportFinalize({
           <section className="errebot-import-finalize__section">
             <h3>Lieu d’organisation</h3>
             <label>
-              <input type="radio" name="errebot-location" checked={!externalTournament} disabled={importing} onChange={() => setExternalTournament(false)} />
+              <input
+                type="radio"
+                name="errebot-location"
+                checked={!externalTournament}
+                disabled={importing}
+                onChange={() => setExternalTournament(false)}
+              />
               Tournoi organisé au club de Lourdes
             </label>
             <label>
-              <input type="radio" name="errebot-location" checked={externalTournament} disabled={importing} onChange={() => setExternalTournament(true)} />
+              <input
+                type="radio"
+                name="errebot-location"
+                checked={externalTournament}
+                disabled={importing}
+                onChange={() => setExternalTournament(true)}
+              />
               Tournoi organisé dans un autre trinquet
             </label>
             {externalTournament && (
               <div className="errebot-import-finalize__form">
-                <label>Nom du trinquet organisateur
-                  <input type="text" value={externalVenue} onChange={(event) => setExternalVenue(event.target.value)} placeholder="Ex. Trinquet de Pau" />
+                <label>
+                  Nom du trinquet organisateur
+                  <input
+                    type="text"
+                    value={externalVenue}
+                    onChange={(event) => setExternalVenue(event.target.value)}
+                    placeholder="Ex. Trinquet de Pau"
+                  />
                 </label>
                 <p role="status">
-                  Aucun terrain de Lourdes n’est nécessaire. Ce tournoi est enregistré hors des réservations et du mode TV du club. Les rappels du jour de match nécessitent encore une activation séparée.
+                  Aucun terrain de Lourdes n’est nécessaire. Ce tournoi est
+                  enregistré hors des réservations et du mode TV du club. Les
+                  rappels du jour de match nécessitent encore une activation
+                  séparée.
                 </p>
               </div>
             )}
@@ -478,201 +525,204 @@ export function ErrebotTournamentImportFinalize({
           </section>
 
           {!externalTournament && (
-          <section className="errebot-import-finalize__section">
-            <h3>3. Format des scores et classement</h3>
-            <div className="errebot-import-finalize__form">
-              <label>
-                Format des parties
-                <select
-                  value={matchFormat}
-                  disabled={importing}
-                  onChange={(event) =>
-                    setMatchFormat(
-                      event.target.value as ErrebotTournamentMatchFormat | "",
-                    )
-                  }
-                >
-                  <option value="">Choisir le format…</option>
-                  <option value="single_game">Une partie en X points</option>
-                  <option value="best_of_three_sets">
-                    2 manches gagnantes
-                  </option>
-                </select>
-              </label>
-
-              {matchFormat === "single_game" && (
+            <section className="errebot-import-finalize__section">
+              <h3>3. Format des scores et classement</h3>
+              <div className="errebot-import-finalize__form">
                 <label>
-                  Nombre de points de la partie
-                  <input
-                    type="number"
-                    min="1"
-                    value={singleGamePoints}
+                  Format des parties
+                  <select
+                    value={matchFormat}
                     disabled={importing}
                     onChange={(event) =>
-                      setSingleGamePoints(numberValue(event.target.value))
+                      setMatchFormat(
+                        event.target.value as ErrebotTournamentMatchFormat | "",
+                      )
+                    }
+                  >
+                    <option value="">Choisir le format…</option>
+                    <option value="single_game">Une partie en X points</option>
+                    <option value="best_of_three_sets">
+                      2 manches gagnantes
+                    </option>
+                  </select>
+                </label>
+
+                {matchFormat === "single_game" && (
+                  <label>
+                    Nombre de points de la partie
+                    <input
+                      type="number"
+                      min="1"
+                      value={singleGamePoints}
+                      disabled={importing}
+                      onChange={(event) =>
+                        setSingleGamePoints(numberValue(event.target.value))
+                      }
+                    />
+                  </label>
+                )}
+
+                {matchFormat === "best_of_three_sets" && (
+                  <>
+                    <label>
+                      Points des manches principales
+                      <input
+                        type="number"
+                        min="1"
+                        value={mainSetPoints}
+                        disabled={importing}
+                        onChange={(event) =>
+                          setMainSetPoints(numberValue(event.target.value))
+                        }
+                      />
+                    </label>
+                    <label>
+                      Points de la manche décisive
+                      <input
+                        type="number"
+                        min="1"
+                        value={decidingSetPoints}
+                        disabled={importing}
+                        onChange={(event) =>
+                          setDecidingSetPoints(numberValue(event.target.value))
+                        }
+                      />
+                    </label>
+                  </>
+                )}
+
+                <label>
+                  Points de base — victoire
+                  <input
+                    type="number"
+                    min="0"
+                    value={baseWinPoints}
+                    disabled={importing}
+                    onChange={(event) =>
+                      setBaseWinPoints(numberValue(event.target.value))
                     }
                   />
                 </label>
+
+                <label>
+                  Points de base — défaite
+                  <input
+                    type="number"
+                    min="0"
+                    value={baseLossPoints}
+                    disabled={importing}
+                    onChange={(event) =>
+                      setBaseLossPoints(numberValue(event.target.value))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Bonus offensif
+                  <input
+                    type="number"
+                    min="0"
+                    value={offensiveBonusPoints}
+                    disabled={importing}
+                    onChange={(event) =>
+                      setOffensiveBonusPoints(numberValue(event.target.value))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Bonus défensif
+                  <input
+                    type="number"
+                    min="0"
+                    value={defensiveBonusPoints}
+                    disabled={importing}
+                    onChange={(event) =>
+                      setDefensiveBonusPoints(numberValue(event.target.value))
+                    }
+                  />
+                </label>
+
+                {matchFormat === "single_game" && (
+                  <>
+                    <label>
+                      Bonus offensif — écart minimum
+                      <input
+                        type="number"
+                        min="1"
+                        value={offensiveBonusMargin}
+                        disabled={importing}
+                        onChange={(event) =>
+                          setOffensiveBonusMargin(
+                            numberValue(event.target.value),
+                          )
+                        }
+                      />
+                    </label>
+                    <label>
+                      Bonus défensif — écart maximum
+                      <input
+                        type="number"
+                        min="1"
+                        value={defensiveBonusMargin}
+                        disabled={importing}
+                        onChange={(event) =>
+                          setDefensiveBonusMargin(
+                            numberValue(event.target.value),
+                          )
+                        }
+                      />
+                    </label>
+                  </>
+                )}
+
+                <label>
+                  Critère principal de classement
+                  <select
+                    value={rankingMode}
+                    disabled={importing}
+                    onChange={(event) =>
+                      setRankingMode(
+                        event.target.value as ErrebotTournamentRankingMode,
+                      )
+                    }
+                  >
+                    <option value="points_per_match">
+                      Points de classement / partie
+                    </option>
+                    <option value="total_points">
+                      Total des points de classement
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  Goal-average
+                  <select
+                    value={goalAverageMode}
+                    disabled={importing}
+                    onChange={(event) =>
+                      setGoalAverageMode(
+                        event.target.value as ErrebotTournamentGoalAverageMode,
+                      )
+                    }
+                  >
+                    <option value="point_difference_per_match">
+                      Différence de points / partie
+                    </option>
+                    <option value="point_difference">
+                      Différence totale de points
+                    </option>
+                  </select>
+                </label>
+              </div>
+
+              {matchFormat === "" && (
+                <p className="errebot-import-finalize__required-note">
+                  Choisissez explicitement le format des parties avant l’import.
+                </p>
               )}
-
-              {matchFormat === "best_of_three_sets" && (
-                <>
-                  <label>
-                    Points des manches principales
-                    <input
-                      type="number"
-                      min="1"
-                      value={mainSetPoints}
-                      disabled={importing}
-                      onChange={(event) =>
-                        setMainSetPoints(numberValue(event.target.value))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Points de la manche décisive
-                    <input
-                      type="number"
-                      min="1"
-                      value={decidingSetPoints}
-                      disabled={importing}
-                      onChange={(event) =>
-                        setDecidingSetPoints(numberValue(event.target.value))
-                      }
-                    />
-                  </label>
-                </>
-              )}
-
-              <label>
-                Points de base — victoire
-                <input
-                  type="number"
-                  min="0"
-                  value={baseWinPoints}
-                  disabled={importing}
-                  onChange={(event) =>
-                    setBaseWinPoints(numberValue(event.target.value))
-                  }
-                />
-              </label>
-
-              <label>
-                Points de base — défaite
-                <input
-                  type="number"
-                  min="0"
-                  value={baseLossPoints}
-                  disabled={importing}
-                  onChange={(event) =>
-                    setBaseLossPoints(numberValue(event.target.value))
-                  }
-                />
-              </label>
-
-              <label>
-                Bonus offensif
-                <input
-                  type="number"
-                  min="0"
-                  value={offensiveBonusPoints}
-                  disabled={importing}
-                  onChange={(event) =>
-                    setOffensiveBonusPoints(numberValue(event.target.value))
-                  }
-                />
-              </label>
-
-              <label>
-                Bonus défensif
-                <input
-                  type="number"
-                  min="0"
-                  value={defensiveBonusPoints}
-                  disabled={importing}
-                  onChange={(event) =>
-                    setDefensiveBonusPoints(numberValue(event.target.value))
-                  }
-                />
-              </label>
-
-              {matchFormat === "single_game" && (
-                <>
-                  <label>
-                    Bonus offensif — écart minimum
-                    <input
-                      type="number"
-                      min="1"
-                      value={offensiveBonusMargin}
-                      disabled={importing}
-                      onChange={(event) =>
-                        setOffensiveBonusMargin(numberValue(event.target.value))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Bonus défensif — écart maximum
-                    <input
-                      type="number"
-                      min="1"
-                      value={defensiveBonusMargin}
-                      disabled={importing}
-                      onChange={(event) =>
-                        setDefensiveBonusMargin(numberValue(event.target.value))
-                      }
-                    />
-                  </label>
-                </>
-              )}
-
-              <label>
-                Critère principal de classement
-                <select
-                  value={rankingMode}
-                  disabled={importing}
-                  onChange={(event) =>
-                    setRankingMode(
-                      event.target.value as ErrebotTournamentRankingMode,
-                    )
-                  }
-                >
-                  <option value="points_per_match">
-                    Points de classement / partie
-                  </option>
-                  <option value="total_points">
-                    Total des points de classement
-                  </option>
-                </select>
-              </label>
-
-              <label>
-                Goal-average
-                <select
-                  value={goalAverageMode}
-                  disabled={importing}
-                  onChange={(event) =>
-                    setGoalAverageMode(
-                      event.target.value as ErrebotTournamentGoalAverageMode,
-                    )
-                  }
-                >
-                  <option value="point_difference_per_match">
-                    Différence de points / partie
-                  </option>
-                  <option value="point_difference">
-                    Différence totale de points
-                  </option>
-                </select>
-              </label>
-            </div>
-
-            {matchFormat === "" && (
-              <p className="errebot-import-finalize__required-note">
-                Choisissez explicitement le format des parties avant l’import.
-              </p>
-            )}
-          </section>
-
+            </section>
           )}
           <section className="errebot-import-finalize__section">
             <div className="errebot-import-finalize__section-heading">
@@ -733,7 +783,8 @@ export function ErrebotTournamentImportFinalize({
             !name.trim() ||
             (externalTournament && !externalVenue.trim()) ||
             (!externalTournament && !seasonId) ||
-            (!externalTournament && (resourceIds.length === 0 || !primaryResourceId)) ||
+            (!externalTournament &&
+              (resourceIds.length === 0 || !primaryResourceId)) ||
             slotDurationMinutes < 15 ||
             slotDurationMinutes > 240 ||
             !sportingRulesValid ||
