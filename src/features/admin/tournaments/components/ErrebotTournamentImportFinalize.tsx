@@ -57,6 +57,8 @@ export function ErrebotTournamentImportFinalize({
     [parsed],
   );
   const [options, setOptions] = useState<TournamentOptions | null>(null);
+  const [externalTournament, setExternalTournament] = useState(false);
+  const [externalVenue, setExternalVenue] = useState("");
   const [name, setName] = useState(defaultErrebotTournamentName(file.name));
   const [seasonId, setSeasonId] = useState("");
   const [resourceIds, setResourceIds] = useState<string[]>([]);
@@ -174,6 +176,7 @@ export function ErrebotTournamentImportFinalize({
   const importTournament = async () => {
     if (
       !name.trim() ||
+      externalTournament ||
       !seasonId ||
       resourceIds.length === 0 ||
       !primaryResourceId ||
@@ -387,6 +390,31 @@ export function ErrebotTournamentImportFinalize({
           </section>
 
           <section className="errebot-import-finalize__section">
+            <h3>Lieu d’organisation</h3>
+            <label>
+              <input type="radio" name="errebot-location" checked={!externalTournament} disabled={importing} onChange={() => setExternalTournament(false)} />
+              Tournoi organisé au club de Lourdes
+            </label>
+            <label>
+              <input type="radio" name="errebot-location" checked={externalTournament} disabled={importing} onChange={() => setExternalTournament(true)} />
+              Tournoi organisé dans un autre trinquet
+            </label>
+            {externalTournament && (
+              <div className="errebot-import-finalize__form">
+                <label>Nom du trinquet organisateur
+                  <input type="text" value={externalVenue} onChange={(event) => setExternalVenue(event.target.value)} placeholder="Ex. Trinquet de Pau" />
+                </label>
+                <p role="status">
+                  Aucun terrain de Lourdes n’est nécessaire pour un tournoi extérieur. Son import sera activé une fois isolés
+                  le calendrier des réservations, le mode TV et les reports locaux.
+                  Les rappels de match seront conservés pour les participants.
+                  Aucun tournoi extérieur ne peut encore être importé.
+                </p>
+              </div>
+            )}
+          </section>
+
+          <section className="errebot-import-finalize__section">
             <div className="errebot-import-finalize__section-heading">
               <div>
                 <h3>2. Terrains</h3>
@@ -440,6 +468,7 @@ export function ErrebotTournamentImportFinalize({
             </label>
           </section>
 
+          {!externalTournament && (
           <section className="errebot-import-finalize__section">
             <h3>3. Format des scores et classement</h3>
             <div className="errebot-import-finalize__form">
@@ -635,6 +664,7 @@ export function ErrebotTournamentImportFinalize({
             )}
           </section>
 
+          )}
           <section className="errebot-import-finalize__section">
             <div className="errebot-import-finalize__section-heading">
               <div>
@@ -691,10 +721,10 @@ export function ErrebotTournamentImportFinalize({
           disabled={
             loading ||
             importing ||
+            externalTournament ||
             !name.trim() ||
             !seasonId ||
-            resourceIds.length === 0 ||
-            !primaryResourceId ||
+            (!externalTournament && (resourceIds.length === 0 || !primaryResourceId)) ||
             slotDurationMinutes < 15 ||
             slotDurationMinutes > 240 ||
             !sportingRulesValid ||
