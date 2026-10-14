@@ -50,15 +50,15 @@ begin
 
   delete from public.external_errebot_participants where tournament_id=new_id;
   insert into public.external_errebot_participants(tournament_id,profile_id,external_team_id)
-  select distinct new_id, ident.profile_id, team->>'externalId'
-  from jsonb_array_elements(teams) team,
-       lateral jsonb_array_elements(team->'players') player
+  select distinct new_id, ident.profile_id, team_data.team->>'externalId'
+  from jsonb_array_elements(teams) as team_data(team)
+  cross join lateral jsonb_array_elements(team_data.team->'players') as player_data(player)
   join public.tournament_external_player_identities ident
-    on public.normalize_member_identity(ident.first_name)=public.normalize_member_identity(player->>'firstName')
-   and public.normalize_member_identity(ident.last_name)=public.normalize_member_identity(player->>'lastName')
-   and regexp_replace(coalesce(ident.phone,''),'[^0-9]','','g')=regexp_replace(coalesce(player->>'phone',''),'[^0-9]','','g')
+    on public.normalize_member_identity(ident.first_name)=public.normalize_member_identity(player_data.player->>'firstName')
+   and public.normalize_member_identity(ident.last_name)=public.normalize_member_identity(player_data.player->>'lastName')
+   and regexp_replace(coalesce(ident.phone,''),'[^0-9]','','g')=regexp_replace(coalesce(player_data.player->>'phone',''),'[^0-9]','','g')
   where ident.profile_id is not null and ident.status='verified'
-    and length(regexp_replace(coalesce(player->>'phone',''),'[^0-9]','','g'))>=8
+    and length(regexp_replace(coalesce(player_data.player->>'phone',''),'[^0-9]','','g'))>=8
   on conflict do nothing;
 
   return jsonb_build_object('id',new_id,'imported',true,
