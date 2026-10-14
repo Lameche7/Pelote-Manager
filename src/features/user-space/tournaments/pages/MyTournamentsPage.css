@@ -499,3 +499,13 @@
 .my-tournaments__team-contacts {
   margin-top: 0.5rem;
 }
+
+
+/* Imported external Errebot fixtures never reserve a Lourdes court. */
+.my-tournaments__external{display:grid;gap:12px;padding:18px;border:1px solid var(--color-border,#d3d7df);border-radius:14px}
+.my-tournaments__external h2,.my-tournaments__external h3{margin:0}
+.my-tournaments__external-card{background:var(--surface,#fff);border:1px solid var(--color-border,#d3d7df);padding:16px;border-radius:12px}
+.my-tournaments__external-card details{margin-top:12px}
+.my-tournaments__external-card summary{cursor:pointer;font-weight:700}
+.my-tournaments__external-card ul{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:10px}
+.my-tournaments__external-card li{display:grid;gap:5px;border-top:1px solid #e5e7eb;padding-top:10px}
