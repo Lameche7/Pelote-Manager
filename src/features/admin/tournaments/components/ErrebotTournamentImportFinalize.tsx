@@ -1,3 +1,4 @@
+import { supabase } from "@/infrastructure/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -59,6 +60,7 @@ export function ErrebotTournamentImportFinalize({
   const [options, setOptions] = useState<TournamentOptions | null>(null);
   const [externalTournament, setExternalTournament] = useState(false);
   const [externalVenue, setExternalVenue] = useState("");
+  const [externalImported, setExternalImported] = useState(false);
   const [name, setName] = useState(defaultErrebotTournamentName(file.name));
   const [seasonId, setSeasonId] = useState("");
   const [resourceIds, setResourceIds] = useState<string[]>([]);
@@ -176,10 +178,8 @@ export function ErrebotTournamentImportFinalize({
   const importTournament = async () => {
     if (
       !name.trim() ||
-      externalTournament ||
-      !seasonId ||
-      resourceIds.length === 0 ||
-      !primaryResourceId ||
+      (externalTournament && !externalVenue.trim()) ||
+      (!externalTournament && (!seasonId || resourceIds.length === 0 || !primaryResourceId)) ||
       !matchFormat ||
       !sportingRulesValid ||
       !seriesColorsValid
@@ -190,6 +190,14 @@ export function ErrebotTournamentImportFinalize({
     setImporting(true);
     setError("");
     try {
+      if (externalTournament) {
+        const { error: externalError } = await supabase.rpc("admin_import_external_errebot", {
+          payload: { file, name: name.trim(), venueName: externalVenue.trim(), teams: parsed.teams, pools: parsed.pools, fixtures: parsed.fixtures },
+        });
+        if (externalError) throw externalError;
+        setExternalImported(true);
+        return;
+      }
       const imported = await errebotImportService.importTournament(
         buildErrebotTournamentImportPayload(file, parsed, {
           name,
@@ -225,6 +233,10 @@ export function ErrebotTournamentImportFinalize({
       setImporting(false);
     }
   };
+
+  if (externalImported) {
+    return <div className="admin-card admin-tournament-import__card errebot-import-finalize"><h2>Tournoi extérieur importé</h2><p>{name} · {externalVenue}</p><p>Les parties sont enregistrées hors du calendrier et du mode TV de Lourdes. Seuls les participants dont l’identité est déjà vérifiée peuvent retrouver ce tournoi.</p><button type="button" onClick={onReset}>Importer un autre fichier</button></div>;
+  }
 
   if (result) {
     return (
@@ -405,10 +417,7 @@ export function ErrebotTournamentImportFinalize({
                   <input type="text" value={externalVenue} onChange={(event) => setExternalVenue(event.target.value)} placeholder="Ex. Trinquet de Pau" />
                 </label>
                 <p role="status">
-                  Aucun terrain de Lourdes n’est nécessaire pour un tournoi extérieur. Son import sera activé une fois isolés
-                  le calendrier des réservations, le mode TV et les reports locaux.
-                  Les rappels de match seront conservés pour les participants.
-                  Aucun tournoi extérieur ne peut encore être importé.
+                  Aucun terrain de Lourdes n’est nécessaire. Ce tournoi est enregistré hors des réservations et du mode TV du club. Les rappels du jour de match nécessitent encore une activation séparée.
                 </p>
               </div>
             )}
@@ -721,9 +730,9 @@ export function ErrebotTournamentImportFinalize({
           disabled={
             loading ||
             importing ||
-            externalTournament ||
             !name.trim() ||
-            !seasonId ||
+            (externalTournament && !externalVenue.trim()) ||
+            (!externalTournament && !seasonId) ||
             (!externalTournament && (resourceIds.length === 0 || !primaryResourceId)) ||
             slotDurationMinutes < 15 ||
             slotDurationMinutes > 240 ||
