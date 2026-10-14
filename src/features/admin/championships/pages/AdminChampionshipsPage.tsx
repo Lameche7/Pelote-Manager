@@ -54,6 +54,8 @@ export function AdminChampionshipsPage() {
   const [detail, setDetail] = useState<AdminChampionshipDetail | null>(null);
   const [detailBusy, setDetailBusy] = useState(false);
   const [substituteTeamId, setSubstituteTeamId] = useState<string | null>(null);
+  const [substitutableTeams, setSubstitutableTeams] = useState<string[]>([]);
+  const [calendarExpanded, setCalendarExpanded] = useState(false);
   const [substituteLicence, setSubstituteLicence] = useState("");
   const [substituteBusy, setSubstituteBusy] = useState(false);
   const [substituteMessage, setSubstituteMessage] = useState("");
@@ -106,11 +108,17 @@ export function AdminChampionshipsPage() {
   useEffect(() => {
     if (!selectedId) {
       setDetail(null);
+      setSubstitutableTeams([]);
       return;
     }
     let active = true;
     setDetailBusy(true);
     setError("");
+    void supabase.rpc("admin_list_substitutable_championship_teams", { target_championship_id: selectedId }).then(({data,error: accessError}) => {
+      if (!active) return;
+      if (accessError) { setSubstitutableTeams([]); setError("Impossible de vérifier les équipes autorisées."); return; }
+      setSubstitutableTeams(Array.isArray(data) ? data.map(String) : []);
+    });
     void championshipImportService
       .detail(selectedId)
       .then((result) => {
@@ -635,12 +643,15 @@ export function AdminChampionshipsPage() {
               <div>
                 <p className="admin-page__eyebrow">Consultation</p>
                 <h2>Calendrier et résultats</h2>
+                <button type="button" aria-expanded={calendarExpanded} aria-controls="championship-calendar-contents" onClick={() => setCalendarExpanded((value) => !value)}>
+                  {calendarExpanded ? "Masquer le calendrier" : "Afficher le calendrier"}
+                </button>
                 <p>
                   {filteredMatches.length} rencontre(s) affichée(s) sur{" "}
                   {detail.matches.length}.
                 </p>
               </div>
-              <div className="admin-championships__filters">
+              {calendarExpanded && <div className="admin-championships__filters">
                 <label>
                   Série
                   <select
@@ -681,9 +692,10 @@ export function AdminChampionshipsPage() {
                     onChange={(event) => setClubFilter(event.target.value)}
                   />
                 </label>
-              </div>
+              </div>}
             </div>
 
+            {calendarExpanded && <div id="championship-calendar-contents">
             <div className="admin-championships__matches-table-wrap">
               <table className="admin-championships__matches-table">
                 <thead>
@@ -734,6 +746,7 @@ export function AdminChampionshipsPage() {
                 filtres pour cibler une série, une phase ou un club.
               </p>
             )}
+            </div>}
           </div>
 
           <details className="admin-card admin-championships__teams">
@@ -756,7 +769,7 @@ export function AdminChampionshipsPage() {
                       </li>
                     ))}
                   </ul>
-                  {substituteTeamId === team.id ? (
+                  {substitutableTeams.includes(team.id) && (substituteTeamId === team.id ? (
                     <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
                       <label>Licence du remplaçant
                         <input type="text" inputMode="numeric" value={substituteLicence} onChange={(event) => setSubstituteLicence(event.target.value)} placeholder="Ex. 115220" disabled={substituteBusy} />
@@ -772,7 +785,7 @@ export function AdminChampionshipsPage() {
                     <button type="button" onClick={() => { setSubstituteTeamId(team.id); setSubstituteLicence(""); setSubstituteMessage(""); }}>
                       + Attribuer un remplaçant
                     </button>
-                  )}
+                  ))}
                 </article>
               ))}
             </div>
