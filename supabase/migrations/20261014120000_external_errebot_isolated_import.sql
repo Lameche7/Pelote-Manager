@@ -50,14 +50,19 @@ begin
 
   delete from public.external_errebot_participants where tournament_id=new_id;
   insert into public.external_errebot_participants(tournament_id,profile_id,external_team_id)
-  select distinct new_id, ident.profile_id, team_data.team->>'externalId'
+  select distinct new_id, coalesce(ident.profile_id, member_profile.id), team_data.team->>'externalId'
   from jsonb_array_elements(teams) as team_data(team)
   cross join lateral jsonb_array_elements(team_data.team->'players') as player_data(player)
   join public.tournament_external_player_identities ident
     on public.normalize_member_identity(ident.first_name)=public.normalize_member_identity(player_data.player->>'firstName')
    and public.normalize_member_identity(ident.last_name)=public.normalize_member_identity(player_data.player->>'lastName')
    and regexp_replace(coalesce(ident.phone,''),'[^0-9]','','g')=regexp_replace(coalesce(player_data.player->>'phone',''),'[^0-9]','','g')
-  where ident.profile_id is not null and ident.status='verified'
+  left join lateral (
+    select profile.id from public.profiles profile
+    where profile.member_id=ident.member_id and ident.profile_id is null
+    order by profile.id limit 1
+  ) member_profile on true
+  where (ident.profile_id is not null or member_profile.id is not null) and ident.status='verified'
     and length(regexp_replace(coalesce(player_data.player->>'phone',''),'[^0-9]','','g'))>=8
   on conflict do nothing;
 
