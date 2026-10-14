@@ -15,7 +15,8 @@ create table if not exists public.external_errebot_tournaments (
 create table if not exists public.external_errebot_participants (
   tournament_id uuid not null references public.external_errebot_tournaments(id) on delete cascade,
   profile_id uuid not null references public.profiles(id) on delete cascade,
-  primary key (tournament_id, profile_id)
+  external_team_id text not null,
+  primary key (tournament_id, profile_id, external_team_id)
 );
 alter table public.external_errebot_tournaments enable row level security;
 alter table public.external_errebot_participants enable row level security;
@@ -48,8 +49,8 @@ begin
   returning id into new_id;
 
   delete from public.external_errebot_participants where tournament_id=new_id;
-  insert into public.external_errebot_participants(tournament_id,profile_id)
-  select distinct new_id, ident.profile_id
+  insert into public.external_errebot_participants(tournament_id,profile_id,external_team_id)
+  select distinct new_id, ident.profile_id, team->>'externalId'
   from jsonb_array_elements(teams) team,
        lateral jsonb_array_elements(team->'players') player
   join public.tournament_external_player_identities ident
