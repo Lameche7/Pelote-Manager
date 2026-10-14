@@ -22,6 +22,12 @@ type RefereedIntervalRow = {
   source_type: "championship" | "tournament";
 };
 
+type RefereeNameRow = {
+  starts_at: string;
+  ends_at: string;
+  referee_name: string | null;
+};
+
 type SlotRow = {
   resource_id: string;
   starts_at: string;
@@ -82,6 +88,15 @@ export const reservationCalendarService = {
       throw new Error(
         getSupabaseErrorMessage(refereeError, "Impossible de charger les arbitrages du calendrier."),
       );
+    const { data: refereeNames, error: refereeNamesError } = await supabase.rpc(
+      "list_referee_names_for_calendar",
+      { target_resource_id: resourceId, range_start: fromDate, range_end: toDate },
+    );
+    if (refereeNamesError)
+      throw new Error(
+        getSupabaseErrorMessage(refereeNamesError, "Impossible de charger le nom des arbitres."),
+      );
+    const assignments = (refereeNames ?? []) as RefereeNameRow[];
     return ((data ?? []) as SlotRow[]).map((slot) => ({
       resourceId: slot.resource_id,
       startsAt: slot.starts_at,
@@ -94,6 +109,10 @@ export const reservationCalendarService = {
       reservationAccess: slot.reservation_access,
       resultDisplay: slot.result_display,
       hasReferee: ((refereedIntervals ?? []) as RefereedIntervalRow[]).some((item) => new Date(item.starts_at).getTime() < new Date(slot.ends_at).getTime() && new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()),
+      refereeName: assignments.find((item) =>
+        new Date(item.starts_at).getTime() < new Date(slot.ends_at).getTime() &&
+        new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()
+      )?.referee_name ?? null,
     }));
   },
 

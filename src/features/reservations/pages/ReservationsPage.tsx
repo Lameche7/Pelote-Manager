@@ -150,7 +150,7 @@ function SlotCard({
               : "Occupé"}
         </span>
         <small>{bookedByDetails}</small>
-        {(isChampionshipMatch || isTournamentMatch) && slot.hasReferee && <span className="reservation-slot__referee" title="Partie arbitrée"><WhistleIcon aria-label="Partie arbitrée" width="18" height="18" /></span>}
+        {(isChampionshipMatch || isTournamentMatch) && slot.hasReferee && <span className="reservation-slot__referee" title={slot.refereeName ? `Arbitre : ${slot.refereeName}` : "Partie arbitrée"}><WhistleIcon aria-label="Partie arbitrée" width="18" height="18" />{slot.refereeName && <span>{slot.refereeName}</span>}</span>}
         {slot.resultDisplay && (
           <span className="reservation-slot__result">{slot.resultDisplay}</span>
         )}

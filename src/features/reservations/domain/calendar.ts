@@ -12,6 +12,7 @@ export type CalendarSlot = {
   reservationAccess?: "standard" | "championship" | null;
   resultDisplay?: string | null;
   hasReferee?: boolean;
+  refereeName?: string | null;
 };
 
 export type CalendarOccupation = {
