@@ -1,3 +1,4 @@
+import { supabase } from "@/infrastructure/supabase/client";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { ChampionshipDayResultsRecap } from "@/features/admin/championships/components/ChampionshipDayResultsRecap";
@@ -52,6 +53,10 @@ export function AdminChampionshipsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<AdminChampionshipDetail | null>(null);
   const [detailBusy, setDetailBusy] = useState(false);
+  const [substituteTeamId, setSubstituteTeamId] = useState<string | null>(null);
+  const [substituteLicence, setSubstituteLicence] = useState("");
+  const [substituteBusy, setSubstituteBusy] = useState(false);
+  const [substituteMessage, setSubstituteMessage] = useState("");
   const [divisionFilter, setDivisionFilter] = useState("all");
   const [phaseFilter, setPhaseFilter] = useState("all");
   const [clubFilter, setClubFilter] = useState("");
@@ -165,6 +170,27 @@ export function AdminChampionshipsPage() {
       return true;
     });
   }, [clubFilter, detail, divisionFilter, phaseFilter]);
+
+  const addSubstitute = async (teamId: string) => {
+    if (!substituteLicence.trim() || !selectedId) return;
+    setSubstituteBusy(true);
+    setSubstituteMessage("");
+    try {
+      const { error: rpcError } = await supabase.rpc("admin_add_championship_substitute", {
+        target_team_id: teamId,
+        target_licence: substituteLicence.trim(),
+      });
+      if (rpcError) throw rpcError;
+      const refreshed = await championshipImportService.detail(selectedId);
+      setDetail(refreshed);
+      setSubstituteMessage("Remplaçant ajouté. Les joueurs déjà inscrits conservent leurs droits.");
+      setSubstituteLicence("");
+    } catch (cause) {
+      setSubstituteMessage(cause instanceof Error ? cause.message : "Impossible d'ajouter ce remplaçant.");
+    } finally {
+      setSubstituteBusy(false);
+    }
+  };
 
   const filteredTeams = useMemo(() => {
     if (!detail) return [];
@@ -730,6 +756,23 @@ export function AdminChampionshipsPage() {
                       </li>
                     ))}
                   </ul>
+                  {substituteTeamId === team.id ? (
+                    <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+                      <label>Licence du remplaçant
+                        <input type="text" inputMode="numeric" value={substituteLicence} onChange={(event) => setSubstituteLicence(event.target.value)} placeholder="Ex. 115220" disabled={substituteBusy} />
+                      </label>
+                      <button type="button" disabled={substituteBusy || !substituteLicence.trim()} onClick={() => void addSubstitute(team.id)}>
+                        {substituteBusy ? "Vérification…" : "Confirmer l’ajout du remplaçant"}
+                      </button>
+                      <button type="button" disabled={substituteBusy} onClick={() => { setSubstituteTeamId(null); setSubstituteMessage(""); }}>Fermer</button>
+                      {substituteMessage && <p role="status">{substituteMessage}</p>}
+                      <small>Ajout uniquement : aucun titulaire n’est retiré et les droits existants sont conservés.</small>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => { setSubstituteTeamId(team.id); setSubstituteLicence(""); setSubstituteMessage(""); }}>
+                      + Attribuer un remplaçant
+                    </button>
+                  )}
                 </article>
               ))}
             </div>
