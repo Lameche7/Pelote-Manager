@@ -1,0 +1,66 @@
+name: Appliquer le formatage Prettier
+
+on:
+  push:
+    branches:
+      - chore/format-diagnostics-20261014
+    paths:
+      - .github/workflows/apply-prettier-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout de la branche
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          ref: chore/format-diagnostics-20261014
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Installer les dépendances
+        run: npm ci
+      - name: Reformater uniquement les 8 fichiers diagnostiqués
+        run: |
+          npx prettier --write \
+            .github/workflows/format-diagnostics.yml \
+            src/features/admin/championships/pages/AdminChampionshipsPage.tsx \
+            src/features/admin/tournaments/components/ErrebotTournamentImportFinalize.tsx \
+            src/features/admin/tournaments/pages/AdminTournamentsPage.tsx \
+            src/features/user-space/profile/pages/MyProfilePage.tsx \
+            src/features/user-space/tournaments/pages/MyTournamentsPage.css \
+            src/features/user-space/tournaments/pages/MyTournamentsPage.tsx \
+            tests/externalErrebotIsolation.test.mjs
+      - name: Vérifications
+        run: |
+          npm run format:check
+          npm run typecheck
+          npm run lint
+          npm run test
+          npm run build
+          git diff --check
+      - name: Commit de formatage sur la branche
+        run: |
+          if git diff --quiet; then
+            echo "Aucune modification nécessaire"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            .github/workflows/format-diagnostics.yml \
+            src/features/admin/championships/pages/AdminChampionshipsPage.tsx \
+            src/features/admin/tournaments/components/ErrebotTournamentImportFinalize.tsx \
+            src/features/admin/tournaments/pages/AdminTournamentsPage.tsx \
+            src/features/user-space/profile/pages/MyProfilePage.tsx \
+            src/features/user-space/tournaments/pages/MyTournamentsPage.css \
+            src/features/user-space/tournaments/pages/MyTournamentsPage.tsx \
+            tests/externalErrebotIsolation.test.mjs
+          git commit -m "style: apply Prettier to 8 diagnosed files"
+          git push origin HEAD:chore/format-diagnostics-20261014
