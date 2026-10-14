@@ -46,4 +46,5 @@ as $function$
 $function$;
 
 revoke all on function public.list_referee_names_for_calendar(uuid,timestamptz,timestamptz) from public;
+revoke all on function public.list_referee_names_for_calendar(uuid,timestamptz,timestamptz) from anon;
 grant execute on function public.list_referee_names_for_calendar(uuid,timestamptz,timestamptz) to authenticated;
