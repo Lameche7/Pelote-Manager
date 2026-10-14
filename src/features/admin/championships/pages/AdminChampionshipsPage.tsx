@@ -746,7 +746,8 @@ export function AdminChampionshipsPage() {
                 filtres pour cibler une série, une phase ou un club.
               </p>
             )}
-          </div>}
+            </div>}
+          </div>
 
           <details className="admin-card admin-championships__teams">
             <summary>
