@@ -55,6 +55,7 @@ export function AdminChampionshipsPage() {
   const [detailBusy, setDetailBusy] = useState(false);
   const [substituteTeamId, setSubstituteTeamId] = useState<string | null>(null);
   const [substitutableTeams, setSubstitutableTeams] = useState<string[]>([]);
+  const [calendarExpanded, setCalendarExpanded] = useState(false);
   const [substituteLicence, setSubstituteLicence] = useState("");
   const [substituteBusy, setSubstituteBusy] = useState(false);
   const [substituteMessage, setSubstituteMessage] = useState("");
@@ -642,12 +643,15 @@ export function AdminChampionshipsPage() {
               <div>
                 <p className="admin-page__eyebrow">Consultation</p>
                 <h2>Calendrier et résultats</h2>
+                <button type="button" aria-expanded={calendarExpanded} aria-controls="championship-calendar-contents" onClick={() => setCalendarExpanded((value) => !value)}>
+                  {calendarExpanded ? "Masquer le calendrier" : "Afficher le calendrier"}
+                </button>
                 <p>
                   {filteredMatches.length} rencontre(s) affichée(s) sur{" "}
                   {detail.matches.length}.
                 </p>
               </div>
-              <div className="admin-championships__filters">
+              {calendarExpanded && <div className="admin-championships__filters">
                 <label>
                   Série
                   <select
@@ -688,9 +692,10 @@ export function AdminChampionshipsPage() {
                     onChange={(event) => setClubFilter(event.target.value)}
                   />
                 </label>
-              </div>
+              </div>}
             </div>
 
+            {calendarExpanded && <div id="championship-calendar-contents">
             <div className="admin-championships__matches-table-wrap">
               <table className="admin-championships__matches-table">
                 <thead>
@@ -741,7 +746,7 @@ export function AdminChampionshipsPage() {
                 filtres pour cibler une série, une phase ou un club.
               </p>
             )}
-          </div>
+          </div>}
 
           <details className="admin-card admin-championships__teams">
             <summary>
