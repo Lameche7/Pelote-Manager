@@ -41,6 +41,12 @@ jobs:
             src/features/user-space/tournaments/pages/MyTournamentsPage.css \
             src/features/user-space/tournaments/pages/MyTournamentsPage.tsx \
             tests/externalErrebotIsolation.test.mjs
+      - name: Exporter le workflow reformaté dans les logs
+        run: |
+          echo FORMATTED_DIAGNOSTIC_START
+          base64 -w0 .github/workflows/format-diagnostics.yml
+          echo
+          echo FORMATTED_DIAGNOSTIC_END
       - name: Vérifications
         run: |
           npm run format:check
@@ -58,7 +64,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- \
-            .github/workflows/format-diagnostics.yml \
             src/features/admin/championships/pages/AdminChampionshipsPage.tsx \
             src/features/admin/tournaments/components/ErrebotTournamentImportFinalize.tsx \
             src/features/admin/tournaments/pages/AdminTournamentsPage.tsx \
