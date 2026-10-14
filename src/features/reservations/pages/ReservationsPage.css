@@ -658,3 +658,22 @@ button.reservation-slot:focus-visible {
   font-weight: 700;
   overflow-wrap: anywhere;
 }
+
+.reservation-slot__referee {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.reservation-slot__referee svg {
+  flex-shrink: 0;
+}
+
+.reservation-slot__referee span {
+  overflow-wrap: anywhere;
+}
