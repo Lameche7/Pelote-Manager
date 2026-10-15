@@ -13,6 +13,12 @@ import {
   type AdminTournamentResultMatch,
   type AdminTournamentResultsWorkspace,
 } from "@/features/admin/tournaments/services/tournamentResultsAdminService";
+import { Link } from "react-router-dom";
+import { ROUTES } from "@/shared/config/routes";
+import {
+  adminTournamentUnprogrammedService,
+  type UnprogrammedTournamentMatch,
+} from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
 import "./AdminTournamentResultsPage.css";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -120,6 +126,7 @@ const sortMatches = (
   });
 
 export function AdminTournamentResultsPage() {
+  const [unprogrammed, setUnprogrammed] = useState<UnprogrammedTournamentMatch[]>([]);
   const [workspaces, setWorkspaces] = useState<
     AdminTournamentResultsWorkspace[]
   >([]);
@@ -140,7 +147,11 @@ export function AdminTournamentResultsPage() {
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
-    const loaded = await tournamentResultsAdminService.getWorkspace();
+    const [loaded, waiting] = await Promise.all([
+      tournamentResultsAdminService.getWorkspace(),
+      adminTournamentUnprogrammedService.list(),
+    ]);
+    setUnprogrammed(waiting);
     const rankingEntries = await Promise.all(
       loaded.map(
         async (workspace) =>
@@ -176,6 +187,9 @@ export function AdminTournamentResultsPage() {
     [selectedId, workspaces],
   );
   const selectedRankings = rankingsByTournament[selectedId] ?? null;
+  const unprogrammedForTournament = unprogrammed.filter(
+    (match) => match.tournamentId === selectedId,
+  );
   const now = new Date();
   const today = localDateKey(now);
 
@@ -400,6 +414,32 @@ export function AdminTournamentResultsPage() {
               <span>validés</span>
             </div>
           </div>
+
+          <section className="admin-card tournament-results-unprogrammed" aria-label="Parties en attente de programmation">
+            <div className="tournament-results-unprogrammed__heading">
+              <div>
+                <strong>{unprogrammedForTournament.length} partie(s) à programmer</strong>
+                <p>
+                  Ces parties n'ont plus de créneau. Elles ne sont pas considérées comme jouées
+                  et ne figurent pas parmi les scores manquants.
+                </p>
+              </div>
+              <Link to={ROUTES.adminTournamentReschedules}>Gérer les programmations</Link>
+            </div>
+            {unprogrammedForTournament.length > 0 && (
+              <details>
+                <summary>Afficher les {unprogrammedForTournament.length} parties à reprogrammer</summary>
+                <ul>
+                  {unprogrammedForTournament.map((match) => (
+                    <li key={match.matchId}>
+                      <strong>{match.teamA} — {match.teamB}</strong>
+                      <span>{match.seriesName} · Ancien créneau : {match.previousDate} à {match.previousStart}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </section>
 
           <div className="tournament-results-tabs" role="tablist">
             <button
