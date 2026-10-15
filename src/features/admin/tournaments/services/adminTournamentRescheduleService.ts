@@ -6,6 +6,12 @@ const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 const time = (value: unknown) => String(value ?? "").slice(0, 5);
 
+export type PendingRescheduleEmailRecipient = {
+  requestId: string;
+  teamId: string;
+  email: string;
+};
+
 export const ADMIN_RESCHEDULE_APPLY_LABEL = "Appliquer le report";
 
 export type AdminTournamentRescheduleApproval = {
@@ -175,6 +181,18 @@ const fail = (error: unknown, fallback: string): never => {
 };
 
 export const adminTournamentRescheduleService = {
+  async listPendingEmailRecipients(): Promise<PendingRescheduleEmailRecipient[]> {
+    const { data, error } = await supabase.rpc(
+      "admin_list_pending_reschedule_email_recipients",
+    );
+    if (error) fail(error, "Impossible de récupérer les adresses de relance.");
+    return rows(data).map((row) => ({
+      requestId: String(row.request_id ?? ""),
+      teamId: String(row.team_id ?? ""),
+      email: String(row.email ?? "").trim(),
+    })).filter((row) => row.requestId && row.teamId && row.email);
+  },
+
   async list(
     tournamentId: string | null = null,
   ): Promise<AdminTournamentRescheduleRequest[]> {
