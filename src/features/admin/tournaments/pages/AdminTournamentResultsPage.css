@@ -446,3 +446,38 @@
     border-radius: 1rem 1rem 0 0;
   }
 }
+
+.tournament-results-unprogrammed {
+  display: grid;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+
+.tournament-results-unprogrammed__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tournament-results-unprogrammed__heading p {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+}
+
+.tournament-results-unprogrammed__heading a {
+  font-weight: 700;
+}
+
+.tournament-results-unprogrammed ul {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.tournament-results-unprogrammed li span {
+  display: block;
+  font-size: 0.82rem;
+}
