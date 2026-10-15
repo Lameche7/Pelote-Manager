@@ -8,6 +8,7 @@ const formatTime = (value: unknown) => String(value ?? "").slice(0, 5);
 
 export type UnprogrammedTournamentMatch = {
   matchId: string;
+  tournamentId: string;
   tournamentName: string;
   seriesName: string;
   teamA: string;
@@ -33,6 +34,7 @@ export const adminTournamentUnprogrammedService = {
       );
     return objects(data).map((row) => ({
       matchId: String(row.match_id ?? ""),
+      tournamentId: String(row.tournament_id ?? ""),
       tournamentName: String(row.tournament_name ?? ""),
       seriesName: String(row.series_name ?? ""),
       teamA: String(row.team_a ?? ""),
