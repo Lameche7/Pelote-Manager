@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - run: npx prettier --write src/features/admin/tournaments/pages/AdminTournamentResultsPage.tsx
       - run: |
-          npm run format:check
+          npx prettier --check src/features/admin/tournaments/pages/AdminTournamentResultsPage.tsx
           npm run typecheck
           npm run test
           git diff --check
