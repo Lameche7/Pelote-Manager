@@ -126,7 +126,9 @@ const sortMatches = (
   });
 
 export function AdminTournamentResultsPage() {
-  const [unprogrammed, setUnprogrammed] = useState<UnprogrammedTournamentMatch[]>([]);
+  const [unprogrammed, setUnprogrammed] = useState<
+    UnprogrammedTournamentMatch[]
+  >([]);
   const [workspaces, setWorkspaces] = useState<
     AdminTournamentResultsWorkspace[]
   >([]);
