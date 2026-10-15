@@ -415,25 +415,41 @@ export function AdminTournamentResultsPage() {
             </div>
           </div>
 
-          <section className="admin-card tournament-results-unprogrammed" aria-label="Parties en attente de programmation">
+          <section
+            className="admin-card tournament-results-unprogrammed"
+            aria-label="Parties en attente de programmation"
+          >
             <div className="tournament-results-unprogrammed__heading">
               <div>
-                <strong>{unprogrammedForTournament.length} partie(s) à programmer</strong>
+                <strong>
+                  {unprogrammedForTournament.length} partie(s) à programmer
+                </strong>
                 <p>
-                  Ces parties n'ont plus de créneau. Elles ne sont pas considérées comme jouées
-                  et ne figurent pas parmi les scores manquants.
+                  Ces parties n'ont plus de créneau. Elles ne sont pas
+                  considérées comme jouées et ne figurent pas parmi les scores
+                  manquants.
                 </p>
               </div>
-              <Link to={ROUTES.adminTournamentReschedules}>Gérer les programmations</Link>
+              <Link to={ROUTES.adminTournamentReschedules}>
+                Gérer les programmations
+              </Link>
             </div>
             {unprogrammedForTournament.length > 0 && (
               <details>
-                <summary>Afficher les {unprogrammedForTournament.length} parties à reprogrammer</summary>
+                <summary>
+                  Afficher les {unprogrammedForTournament.length} parties à
+                  reprogrammer
+                </summary>
                 <ul>
                   {unprogrammedForTournament.map((match) => (
                     <li key={match.matchId}>
-                      <strong>{match.teamA} — {match.teamB}</strong>
-                      <span>{match.seriesName} · Ancien créneau : {match.previousDate} à {match.previousStart}</span>
+                      <strong>
+                        {match.teamA} — {match.teamB}
+                      </strong>
+                      <span>
+                        {match.seriesName} · Ancien créneau :{" "}
+                        {match.previousDate} à {match.previousStart}
+                      </span>
                     </li>
                   ))}
                 </ul>
