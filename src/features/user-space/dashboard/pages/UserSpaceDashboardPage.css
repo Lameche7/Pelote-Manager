@@ -107,10 +107,46 @@ a.user-dashboard__card:hover {
   box-shadow: 0 0.75rem 1.8rem rgb(184 104 25 / 12%);
   animation: birthday-pop 0.5s ease-out both;
 }
-.user-dashboard__birthday-emoji { font-size: clamp(1.7rem, 4vw, 2.7rem); white-space: nowrap; }
-.user-dashboard__birthday h2 { margin: 0 0 0.4rem; color: #8b2b54; font-size: 1.5rem; }
-.user-dashboard__birthday p { margin: 0; color: #653e43; line-height: 1.5; }
-.user-dashboard__birthday button { margin-left: auto; align-self: flex-start; border: 0; background: transparent; color: #653e43; font-size: 1.4rem; cursor: pointer; }
-@keyframes birthday-pop { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-@media (max-width: 42rem) { .user-dashboard__birthday { flex-wrap: wrap; } }
-@media (prefers-reduced-motion: reduce) { .user-dashboard__birthday { animation: none; } }
+.user-dashboard__birthday-emoji {
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
+  white-space: nowrap;
+}
+.user-dashboard__birthday h2 {
+  margin: 0 0 0.4rem;
+  color: #8b2b54;
+  font-size: 1.5rem;
+}
+.user-dashboard__birthday p {
+  margin: 0;
+  color: #653e43;
+  line-height: 1.5;
+}
+.user-dashboard__birthday button {
+  margin-left: auto;
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: #653e43;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+@keyframes birthday-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@media (max-width: 42rem) {
+  .user-dashboard__birthday {
+    flex-wrap: wrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .user-dashboard__birthday {
+    animation: none;
+  }
+}
