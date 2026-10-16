@@ -36,8 +36,11 @@ as $$
     and exists (
       select 1
       from public.tournament_team_players tp
-      join public.club_members cm on cm.id=tp.member_id
-      join identified i on i.sport_player_id=cm.sport_player_id
+      left join public.club_members cm on cm.id=tp.member_id
+      left join public.tournament_external_player_identities ext
+        on ext.id=tp.external_identity_id and ext.status='verified'
+      left join public.profiles ep on ep.id=ext.profile_id
+      join identified i on i.sport_player_id=coalesce(cm.sport_player_id,ep.sport_player_id)
       where tp.team_id in (m.team_a_id,m.team_b_id)
     )
   order by plan.play_date;
