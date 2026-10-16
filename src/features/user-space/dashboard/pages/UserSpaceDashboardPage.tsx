@@ -153,10 +153,12 @@ export function UserSpaceDashboardPage() {
     let active = true;
     supabase.rpc("my_pilotoki_birthday").then(({ data, error }) => {
       if (!active || error || !data || typeof data !== "string") return;
-      const now = new Intl.DateTimeFormat("en-CA", {
+      const parts = new Intl.DateTimeFormat("en-US", {
         timeZone: "Europe/Paris", month: "2-digit", day: "2-digit",
-      }).format(new Date());
-      setBirthday(data.slice(5, 10) === now);
+      }).formatToParts(new Date());
+      const month = parts.find((part) => part.type === "month")?.value;
+      const day = parts.find((part) => part.type === "day")?.value;
+      setBirthday(data.slice(5, 10) === `${month}-${day}`);
     }).catch(() => undefined);
     return () => { active = false; };
   }, []);
