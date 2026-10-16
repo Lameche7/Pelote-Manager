@@ -113,6 +113,9 @@ export function TournamentRegistrationForm({
   const [loadingIdentity, setLoadingIdentity] = useState(true);
   const [searchingPartner, setSearchingPartner] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [busyDates, setBusyDates] = useState<string[]>([]);
+  const [checkingBusyDates, setCheckingBusyDates] = useState(true);
+  const [busyDatesError, setBusyDatesError] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -182,6 +185,30 @@ export function TournamentRegistrationForm({
       window.clearTimeout(timer);
     };
   }, [draft, onError, partnerQuery, tournament.id]);
+
+  useEffect(() => {
+    if (!identity) return;
+    let active = true;
+    setCheckingBusyDates(true);
+    setBusyDatesError(false);
+    tournamentService.getInterTournamentBusyDates(
+      tournament.id,
+      draft?.partnerMemberId ?? null,
+    ).then((dates) => {
+      if (!active) return;
+      setBusyDates(dates);
+      setDraft((current) => current
+        ? { ...current, availabilitySlots: current.availabilitySlots.filter((slot) => !dates.includes(slot.date)) }
+        : current);
+    }).catch((cause: unknown) => {
+      if (!active) return;
+      setBusyDatesError(true);
+      onError(cause instanceof Error ? cause.message : "Vérification des autres tournois impossible.");
+    }).finally(() => {
+      if (active) setCheckingBusyDates(false);
+    });
+    return () => { active = false; };
+  }, [identity, draft?.partnerMemberId, tournament.id, onError]);
 
   const partnerRole = draft ? oppositeRole(draft.submitterRole) : "back";
   const poolAvailabilitySlots =
@@ -279,10 +306,20 @@ export function TournamentRegistrationForm({
       return;
     }
 
+    if (checkingBusyDates || busyDatesError) {
+      onError("La vérification des engagements des joueurs doit être terminée avant inscription.");
+      return;
+    }
     setSaving(true);
     onError("");
     onMessage("");
     try {
+      const freshBusyDates = await tournamentService.getInterTournamentBusyDates(tournament.id, draft.partnerMemberId);
+      if (draft.availabilitySlots.some((slot) => freshBusyDates.includes(slot.date))) {
+        setBusyDates(freshBusyDates);
+        setDraft({ ...draft, availabilitySlots: draft.availabilitySlots.filter((slot) => !freshBusyDates.includes(slot.date)) });
+        throw new Error("Une partie vient d’être programmée dans un autre tournoi : les journées correspondantes ont été décochées. Vérifiez vos disponibilités.");
+      }
       await tournamentService.saveMine(tournament.id, draft);
       await onReload();
       onMessage(
@@ -608,7 +645,8 @@ export function TournamentRegistrationForm({
       <TournamentAvailabilityGrid
         tournament={tournament}
         value={draft.availabilitySlots}
-        disabled={saving}
+        disabled={saving || checkingBusyDates || busyDatesError}
+        busyDates={busyDates}
         onChange={(availabilitySlots) =>
           setDraft({ ...draft, availabilitySlots })
         }
@@ -630,7 +668,7 @@ export function TournamentRegistrationForm({
         <button
           className="button button--primary"
           type="submit"
-          disabled={saving || !availabilityMinimumReached}
+          disabled={saving || checkingBusyDates || busyDatesError || !availabilityMinimumReached}
         >
           {registration ? "Mettre à jour mon équipe" : "Inscrire mon équipe"}
         </button>
