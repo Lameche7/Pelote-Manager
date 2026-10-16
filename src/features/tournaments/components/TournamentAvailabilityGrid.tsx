@@ -145,12 +145,13 @@ export function TournamentAvailabilityGrid({
     [tournament.availableSlots],
   );
   const blocked = useMemo(() => new Set(busyDates), [busyDates]);
-  const isBlocked = (slot: TournamentAvailabilitySlot) => blocked.has(slot.date);
+  const isBlocked = (slot: TournamentAvailabilitySlot) =>
+    blocked.has(slot.date);
   const selectedKeys = useMemo(() => new Set(value.map(slotKey)), [value]);
   const validSelected = useMemo(
     () =>
-      tournament.availableSlots.filter((slot) =>
-        selectedKeys.has(slotKey(slot)) && !isBlocked(slot),
+      tournament.availableSlots.filter(
+        (slot) => selectedKeys.has(slotKey(slot)) && !isBlocked(slot),
       ),
     [selectedKeys, tournament.availableSlots],
   );
@@ -181,7 +182,9 @@ export function TournamentAvailabilityGrid({
 
   const emitKeys = (keys: Set<string>) => {
     onChange(
-      tournament.availableSlots.filter((slot) => keys.has(slotKey(slot)) && !isBlocked(slot)),
+      tournament.availableSlots.filter(
+        (slot) => keys.has(slotKey(slot)) && !isBlocked(slot),
+      ),
     );
   };
 
@@ -295,7 +298,10 @@ export function TournamentAvailabilityGrid({
       </p>
 
       {busyDates.length > 0 && !admin && (
-        <p role="status">{busyDates.length} journée(s) bloquée(s) : au moins un joueur identifié dispute déjà une partie dans un autre tournoi Pilotoki.</p>
+        <p role="status">
+          {busyDates.length} journée(s) bloquée(s) : au moins un joueur
+          identifié dispute déjà une partie dans un autre tournoi Pilotoki.
+        </p>
       )}
 
       <div className="tournament-availability-grid__stats">
@@ -391,8 +397,12 @@ export function TournamentAvailabilityGrid({
                                 <label>
                                   <input
                                     type="checkbox"
-                                    disabled={disabled || day.slots.every(isBlocked)}
-                                    checked={allSelected && !day.slots.every(isBlocked)}
+                                    disabled={
+                                      disabled || day.slots.every(isBlocked)
+                                    }
+                                    checked={
+                                      allSelected && !day.slots.every(isBlocked)
+                                    }
                                     onChange={(event) =>
                                       toggleDay(day, event.target.checked)
                                     }
@@ -412,8 +422,15 @@ export function TournamentAvailabilityGrid({
                                       type="checkbox"
                                       aria-label={`${formatDay(day.date)} à ${time}`}
                                       disabled={disabled || isBlocked(slot)}
-                                      title={isBlocked(slot) ? "Indisponible : partie programmée dans un autre tournoi Pilotoki" : undefined}
-                                      checked={!isBlocked(slot) && selectedKeys.has(slotKey(slot))}
+                                      title={
+                                        isBlocked(slot)
+                                          ? "Indisponible : partie programmée dans un autre tournoi Pilotoki"
+                                          : undefined
+                                      }
+                                      checked={
+                                        !isBlocked(slot) &&
+                                        selectedKeys.has(slotKey(slot))
+                                      }
                                       onChange={(event) =>
                                         toggleSlot(slot, event.target.checked)
                                       }

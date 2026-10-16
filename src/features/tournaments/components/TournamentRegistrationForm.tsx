@@ -191,23 +191,40 @@ export function TournamentRegistrationForm({
     let active = true;
     setCheckingBusyDates(true);
     setBusyDatesError(false);
-    tournamentService.getInterTournamentBusyDates(
-      tournament.id,
-      draft?.partnerMemberId ?? null,
-    ).then((dates) => {
-      if (!active) return;
-      setBusyDates(dates);
-      setDraft((current) => current
-        ? { ...current, availabilitySlots: current.availabilitySlots.filter((slot) => !dates.includes(slot.date)) }
-        : current);
-    }).catch((cause: unknown) => {
-      if (!active) return;
-      setBusyDatesError(true);
-      onError(cause instanceof Error ? cause.message : "Vérification des autres tournois impossible.");
-    }).finally(() => {
-      if (active) setCheckingBusyDates(false);
-    });
-    return () => { active = false; };
+    tournamentService
+      .getInterTournamentBusyDates(
+        tournament.id,
+        draft?.partnerMemberId ?? null,
+      )
+      .then((dates) => {
+        if (!active) return;
+        setBusyDates(dates);
+        setDraft((current) =>
+          current
+            ? {
+                ...current,
+                availabilitySlots: current.availabilitySlots.filter(
+                  (slot) => !dates.includes(slot.date),
+                ),
+              }
+            : current,
+        );
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+        setBusyDatesError(true);
+        onError(
+          cause instanceof Error
+            ? cause.message
+            : "Vérification des autres tournois impossible.",
+        );
+      })
+      .finally(() => {
+        if (active) setCheckingBusyDates(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [identity, draft?.partnerMemberId, tournament.id, onError]);
 
   const partnerRole = draft ? oppositeRole(draft.submitterRole) : "back";
@@ -307,18 +324,35 @@ export function TournamentRegistrationForm({
     }
 
     if (checkingBusyDates || busyDatesError) {
-      onError("La vérification des engagements des joueurs doit être terminée avant inscription.");
+      onError(
+        "La vérification des engagements des joueurs doit être terminée avant inscription.",
+      );
       return;
     }
     setSaving(true);
     onError("");
     onMessage("");
     try {
-      const freshBusyDates = await tournamentService.getInterTournamentBusyDates(tournament.id, draft.partnerMemberId);
-      if (draft.availabilitySlots.some((slot) => freshBusyDates.includes(slot.date))) {
+      const freshBusyDates =
+        await tournamentService.getInterTournamentBusyDates(
+          tournament.id,
+          draft.partnerMemberId,
+        );
+      if (
+        draft.availabilitySlots.some((slot) =>
+          freshBusyDates.includes(slot.date),
+        )
+      ) {
         setBusyDates(freshBusyDates);
-        setDraft({ ...draft, availabilitySlots: draft.availabilitySlots.filter((slot) => !freshBusyDates.includes(slot.date)) });
-        throw new Error("Une partie vient d’être programmée dans un autre tournoi : les journées correspondantes ont été décochées. Vérifiez vos disponibilités.");
+        setDraft({
+          ...draft,
+          availabilitySlots: draft.availabilitySlots.filter(
+            (slot) => !freshBusyDates.includes(slot.date),
+          ),
+        });
+        throw new Error(
+          "Une partie vient d’être programmée dans un autre tournoi : les journées correspondantes ont été décochées. Vérifiez vos disponibilités.",
+        );
       }
       await tournamentService.saveMine(tournament.id, draft);
       await onReload();
@@ -668,7 +702,12 @@ export function TournamentRegistrationForm({
         <button
           className="button button--primary"
           type="submit"
-          disabled={saving || checkingBusyDates || busyDatesError || !availabilityMinimumReached}
+          disabled={
+            saving ||
+            checkingBusyDates ||
+            busyDatesError ||
+            !availabilityMinimumReached
+          }
         >
           {registration ? "Mettre à jour mon équipe" : "Inscrire mon équipe"}
         </button>
