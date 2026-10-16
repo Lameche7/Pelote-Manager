@@ -127,6 +127,7 @@ type Props = {
   tournament: AvailabilityTournament;
   value: TournamentAvailabilitySlot[];
   disabled?: boolean;
+  busyDates?: string[];
   variant?: "registration" | "admin";
   onChange: (slots: TournamentAvailabilitySlot[]) => void;
 };
@@ -135,6 +136,7 @@ export function TournamentAvailabilityGrid({
   tournament,
   value,
   disabled = false,
+  busyDates = [],
   variant = "registration",
   onChange,
 }: Props) {
@@ -142,11 +144,13 @@ export function TournamentAvailabilityGrid({
     () => buildWeeks(tournament.availableSlots),
     [tournament.availableSlots],
   );
+  const blocked = useMemo(() => new Set(busyDates), [busyDates]);
+  const isBlocked = (slot: TournamentAvailabilitySlot) => blocked.has(slot.date);
   const selectedKeys = useMemo(() => new Set(value.map(slotKey)), [value]);
   const validSelected = useMemo(
     () =>
       tournament.availableSlots.filter((slot) =>
-        selectedKeys.has(slotKey(slot)),
+        selectedKeys.has(slotKey(slot)) && !isBlocked(slot),
       ),
     [selectedKeys, tournament.availableSlots],
   );
@@ -177,13 +181,13 @@ export function TournamentAvailabilityGrid({
 
   const emitKeys = (keys: Set<string>) => {
     onChange(
-      tournament.availableSlots.filter((slot) => keys.has(slotKey(slot))),
+      tournament.availableSlots.filter((slot) => keys.has(slotKey(slot)) && !isBlocked(slot)),
     );
   };
 
   const toggleSlot = (slot: TournamentAvailabilitySlot, checked: boolean) => {
     const next = new Set(selectedKeys);
-    if (checked) next.add(slotKey(slot));
+    if (checked && !isBlocked(slot)) next.add(slotKey(slot));
     else next.delete(slotKey(slot));
     emitKeys(next);
   };
@@ -191,7 +195,7 @@ export function TournamentAvailabilityGrid({
   const toggleDay = (day: DayGroup, checked: boolean) => {
     const next = new Set(selectedKeys);
     for (const slot of day.slots) {
-      if (checked) next.add(slotKey(slot));
+      if (checked && !isBlocked(slot)) next.add(slotKey(slot));
       else next.delete(slotKey(slot));
     }
     emitKeys(next);
@@ -201,7 +205,7 @@ export function TournamentAvailabilityGrid({
     const next = new Set(selectedKeys);
     for (const day of week.days) {
       for (const slot of day.slots) {
-        if (checked) next.add(slotKey(slot));
+        if (checked && !isBlocked(slot)) next.add(slotKey(slot));
         else next.delete(slotKey(slot));
       }
     }
@@ -230,7 +234,7 @@ export function TournamentAvailabilityGrid({
         const key = slotKey(slot);
         const pattern = `${dateWeekday(slot.date)}|${slot.startsAt}|${slot.endsAt}`;
         next.delete(key);
-        if (selectedPatterns.has(pattern)) next.add(key);
+        if (selectedPatterns.has(pattern) && !isBlocked(slot)) next.add(key);
       }
     }
 
@@ -289,6 +293,10 @@ export function TournamentAvailabilityGrid({
           </>
         )}
       </p>
+
+      {busyDates.length > 0 && !admin && (
+        <p role="status">{busyDates.length} journée(s) bloquée(s) : au moins un joueur identifié dispute déjà une partie dans un autre tournoi Pilotoki.</p>
+      )}
 
       <div className="tournament-availability-grid__stats">
         <span>
@@ -383,8 +391,8 @@ export function TournamentAvailabilityGrid({
                                 <label>
                                   <input
                                     type="checkbox"
-                                    disabled={disabled}
-                                    checked={allSelected}
+                                    disabled={disabled || day.slots.every(isBlocked)}
+                                    checked={allSelected && !day.slots.every(isBlocked)}
                                     onChange={(event) =>
                                       toggleDay(day, event.target.checked)
                                     }
@@ -403,8 +411,9 @@ export function TournamentAvailabilityGrid({
                                     <input
                                       type="checkbox"
                                       aria-label={`${formatDay(day.date)} à ${time}`}
-                                      disabled={disabled}
-                                      checked={selectedKeys.has(slotKey(slot))}
+                                      disabled={disabled || isBlocked(slot)}
+                                      title={isBlocked(slot) ? "Indisponible : partie programmée dans un autre tournoi Pilotoki" : undefined}
+                                      checked={!isBlocked(slot) && selectedKeys.has(slotKey(slot))}
                                       onChange={(event) =>
                                         toggleSlot(slot, event.target.checked)
                                       }
