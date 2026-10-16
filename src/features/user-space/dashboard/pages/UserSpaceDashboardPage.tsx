@@ -159,7 +159,7 @@ export function UserSpaceDashboardPage() {
       const month = parts.find((part) => part.type === "month")?.value;
       const day = parts.find((part) => part.type === "day")?.value;
       setBirthday(data.slice(5, 10) === `${month}-${day}`);
-    }).catch(() => undefined);
+    }, () => undefined);
     return () => { active = false; };
   }, []);
 
