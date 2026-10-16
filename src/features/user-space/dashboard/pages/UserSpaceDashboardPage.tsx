@@ -14,6 +14,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/infrastructure/supabase/client";
 import { permanentSlotService } from "@/features/reservations/services/permanentSlotService";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import { getGreeting } from "@/features/user-space/domain/userSpace";
@@ -132,6 +133,8 @@ function Card({ card }: { card: DashboardCard }) {
 export function UserSpaceDashboardPage() {
   const { profile } = useAuth();
   const [hasPermanentSlots, setHasPermanentSlots] = useState(false);
+  const [birthday, setBirthday] = useState(false);
+  const [birthdayDismissed, setBirthdayDismissed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -141,6 +144,27 @@ export function UserSpaceDashboardPage() {
         if (active) setHasPermanentSlots(hasSlots);
       })
       .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    supabase.rpc("my_pilotoki_birthday").then(
+      ({ data, error }) => {
+        if (!active || error || !data || typeof data !== "string") return;
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: "Europe/Paris",
+          month: "2-digit",
+          day: "2-digit",
+        }).formatToParts(new Date());
+        const month = parts.find((part) => part.type === "month")?.value;
+        const day = parts.find((part) => part.type === "day")?.value;
+        setBirthday(data.slice(5, 10) === `${month}-${day}`);
+      },
+      () => undefined,
+    );
     return () => {
       active = false;
     };
@@ -158,6 +182,33 @@ export function UserSpaceDashboardPage() {
           <h1 id="user-space-title">{getGreeting(profile?.firstName)}</h1>
           <p>Bienvenue dans votre espace personnel.</p>
         </header>
+        {birthday && !birthdayDismissed && (
+          <aside
+            className="user-dashboard__birthday"
+            aria-label="Joyeux anniversaire"
+          >
+            <span className="user-dashboard__birthday-emoji" aria-hidden="true">
+              🎂 🎉 🥳
+            </span>
+            <div>
+              <h2>
+                Joyeux anniversaire
+                {profile?.firstName ? ` ${profile.firstName}` : ""} !
+              </h2>
+              <p>
+                Toute l’équipe de Pilotoki te souhaite une superbe journée,
+                pleine de beaux points et de victoires ! 🎾
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBirthdayDismissed(true)}
+              aria-label="Fermer le message d’anniversaire"
+            >
+              ×
+            </button>
+          </aside>
+        )}
         <div className="user-dashboard__grid">
           {cards.map((card) => (
             <Card key={card.title} card={card} />
