@@ -124,6 +124,8 @@ const knownErrors: Record<string, string> = {
   "A player can only belong to one active team per tournament":
     "Un joueur est déjà inscrit dans une autre équipe de ce tournoi.",
   "Tournament registration not found": "Aucune inscription active trouvée.",
+  "Tournament cross-event busy date":
+    "Un joueur a déjà une partie programmée dans un autre tournoi Pilotoki à l’une des dates choisies. Actualisez les disponibilités.",
 };
 
 const fail = (error: unknown, fallback: string): never => {
@@ -318,7 +320,7 @@ export const tournamentService = {
     draft: MyTournamentRegistrationDraft,
   ): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "save_my_tournament_registration_v3",
+      "save_my_tournament_registration_v4",
       {
         target_tournament_id: tournamentId,
         payload: registrationPayload(draft),
