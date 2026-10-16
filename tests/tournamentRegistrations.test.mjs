@@ -179,7 +179,7 @@ test("le service public utilise la grille datée et les RPC enrichies", async ()
   assert.match(service, /minimumAvailabilitySlots/);
   assert.match(service, /minimumWeekendAvailabilitySlots/);
   assert.match(service, /get_my_tournament_registration_v3/);
-  assert.match(service, /save_my_tournament_registration_v3/);
+  assert.match(service, /save_my_tournament_registration_v4/);
   assert.match(service, /availability_slots/);
 });
 
