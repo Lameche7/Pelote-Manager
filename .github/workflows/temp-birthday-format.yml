@@ -1,0 +1,34 @@
+name: Temporary birthday formatting
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-birthday-format.yml"
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/birthday-dashboard-surprise-20261016
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format birthday files
+        run: |
+          npx prettier --write src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx src/features/user-space/dashboard/pages/UserSpaceDashboardPage.css
+          git diff --check
+      - name: Commit formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/user-space/dashboard/pages/UserSpaceDashboardPage.tsx src/features/user-space/dashboard/pages/UserSpaceDashboardPage.css
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "style: format birthday greeting"
+          git pull --rebase origin feat/birthday-dashboard-surprise-20261016
+          git push origin HEAD:feat/birthday-dashboard-surprise-20261016
