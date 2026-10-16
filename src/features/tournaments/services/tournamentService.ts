@@ -158,6 +158,18 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
 });
 
 export const tournamentService = {
+  async getInterTournamentBusyDates(
+    tournamentId: string,
+    partnerMemberId: string | null,
+  ): Promise<string[]> {
+    const { data, error } = await supabase.rpc("tournament_registration_busy_dates", {
+      target_tournament_id: tournamentId,
+      target_partner_member_id: partnerMemberId,
+    });
+    if (error) fail(error, "Impossible de vérifier les autres tournois.");
+    return rows(data).map((row) => String(row.play_date ?? "")).filter(Boolean);
+  },
+
   async listPublic(
     clubSlug?: string | null,
   ): Promise<PublicTournamentSummary[]> {
