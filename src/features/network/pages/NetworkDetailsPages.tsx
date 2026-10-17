@@ -12,6 +12,7 @@ import {
 } from "@/features/tournaments/services/tournamentRankingService";
 import { TournamentResultsBoard } from "@/features/tournaments/components/TournamentResultsBoard";
 import type { PublicTournamentSummary } from "@/features/tournaments/types";
+import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
 import "./NetworkDirectoryPage.css";
 
 type ClubProfile = {
@@ -26,16 +27,7 @@ type ClubProfile = {
 };
 
 function NetworkHeader() {
-  return (
-    <header className="network-directory__header">
-      <Link to="/reseau">
-        <img src="/branding/pilotoki-wordmark.png" alt="Pilotoki Network" />
-      </Link>
-      <nav aria-label="Navigation du réseau">
-        <Link to="/reseau">Accueil du réseau</Link>
-      </nav>
-    </header>
-  );
+  return <div className="network-directory__subpage-header"><NetworkNavigation /></div>;
 }
 
 export function NetworkClubPage() {
