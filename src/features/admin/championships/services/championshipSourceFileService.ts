@@ -190,20 +190,39 @@ export const championshipSourceFileService = {
         message: "Aucune partie n’a été détectée dans le fichier.",
       });
     } else {
-      parsed.rows.forEach((match) => {
-        if (
-          match.competition !== first.competition ||
-          match.specialty !== first.specialty
-        ) {
-          issues.push({
-            source: "matches",
-            row: match.row,
-            severity: "error",
-            message:
-              "Le fichier contient plusieurs compétitions ou spécialités différentes.",
+      const groups = new Map<
+        string,
+        { competition: string; specialty: string; count: number }
+      >();
+      for (const match of parsed.rows) {
+        const key = [match.competition, match.specialty].join("\u0000");
+        const group = groups.get(key);
+        if (group) {
+          group.count += 1;
+        } else {
+          groups.set(key, {
+            competition: match.competition,
+            specialty: match.specialty,
+            count: 1,
           });
         }
-      });
+      }
+      if (groups.size > 1) {
+        issues.push({
+          source: "matches",
+          row: 0,
+          severity: "error",
+          message:
+            "Ce classeur regroupe plusieurs compétitions ou spécialités : " +
+            Array.from(groups.values())
+              .map(
+                (group) =>
+                  `${group.competition} · ${group.specialty} (${group.count} partie(s))`,
+              )
+              .join(" ; ") +
+            ". Sélectionnez un export concernant uniquement le championnat voulu.",
+        });
+      }
     }
 
     return {
