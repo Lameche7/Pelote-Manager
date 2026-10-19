@@ -387,7 +387,7 @@ const parseDivisionResults = (html, divisionName) => {
     const team2 = parseTeam(secondLabel);
     if (!team1 || !team2) continue;
     const phaseText = fieldText(html, row, "I220");
-    const phase = identifyPhase(phaseText);
+    const phase = identifyPhase(phaseText) ?? identifyPhase(fieldText(html, row, "I222"));
     const sourceDate = parseDate(fieldText(html, row, "I163"));
     if (phase) {
       matches.push({
@@ -494,11 +494,12 @@ export default async function handler(request, response) {
     }
 
     const snapshot = JSON.stringify(
-      allMatches
+      allResults
         .map((item) => ({
           division: item.division,
           team1: item.team1Label,
           team2: item.team2Label,
+          score: item.scoreRaw,
           date: item.sourceDate,
         }))
         .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
