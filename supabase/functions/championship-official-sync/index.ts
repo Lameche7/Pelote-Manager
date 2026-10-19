@@ -444,7 +444,7 @@ Deno.serve(async (request) => {
               !phase
             ) {
               warnings.push(
-                "Rencontre finale ignorée : équipes, phase ou date non identifiées.",
+                "Rencontre finale ignorée : équipes ou phase non identifiées.",
               );
               continue;
             }
