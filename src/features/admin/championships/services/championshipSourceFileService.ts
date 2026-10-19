@@ -193,7 +193,7 @@ export const championshipSourceFileService = {
     } else {
       const base = (targetCompetition ?? first.competition).trim();
       const foldCompetition = (value: string) =>
-        value.normalize("NFD").replace(/[\\u0300-\\u036f]/gu, "").toLowerCase()
+        value.normalize("NFD").replace(/[\u0300-\u036f]/gu, "").toLowerCase()
           .replace(/[^a-z0-9]+/gu, " ").trim();
       const baseFold = foldCompetition(base);
       const unknown = new Map<string, number>();
