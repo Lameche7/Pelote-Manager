@@ -441,8 +441,7 @@ Deno.serve(async (request) => {
               !a ||
               !b ||
               a.id === b.id ||
-              !phase ||
-              !raw.sourceDate
+              !phase
             ) {
               warnings.push(
                 "Rencontre finale ignorée : équipes, phase ou date non identifiées.",
@@ -467,7 +466,7 @@ Deno.serve(async (request) => {
                 team1_id: a.id,
                 team2_id: b.id,
                 phase,
-                scheduled_on: String(raw.sourceDate),
+                scheduled_on: raw.sourceDate ? String(raw.sourceDate) : null,
                 source_key: key,
                 source_metadata: { source: "ffpb-automatic-finals" },
                 status: "to_schedule",
