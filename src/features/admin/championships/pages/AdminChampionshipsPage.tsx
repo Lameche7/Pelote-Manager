@@ -310,8 +310,10 @@ export function AdminChampionshipsPage() {
     setUpdateMessage("");
     setUpdatePreview(null);
     try {
-      const parsed =
-        await championshipSourceFileService.parseMatchesUpdate(updateFile);
+      const parsed = await championshipSourceFileService.parseMatchesUpdate(
+        updateFile,
+        detail?.name,
+      );
       setFilePreview(parsed);
       if (!parsed.valid) return;
       const descriptor =
