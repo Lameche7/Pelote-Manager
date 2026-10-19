@@ -21,6 +21,8 @@ export type ManagedReservation = {
   createdAt: string;
 };
 
+export type ChampionshipConversionMatch = { id: string; label: string; plannedDate: string | null };
+
 export type ReservationUser = {
   id: string;
   name: string;
@@ -37,6 +39,24 @@ export type CalendarBlock = {
 };
 
 export const adminReservationsService = {
+  async championshipCandidates(reservationId: string): Promise<ChampionshipConversionMatch[]> {
+    const { data, error } = await supabase.rpc("admin_championship_matches_for_reservation", {
+      target_reservation_id: reservationId,
+    });
+    if (error) throw error;
+    return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+      id: String(row.match_id),
+      label: String(row.label),
+      plannedDate: row.planned_date ? String(row.planned_date) : null,
+    }));
+  },
+  async convertToChampionship(reservationId: string, matchId: string): Promise<void> {
+    const { error } = await supabase.rpc("admin_convert_reservation_to_championship", {
+      target_reservation_id: reservationId,
+      target_match_id: matchId,
+    });
+    if (error) throw error;
+  },
   async list(filters: AdminReservationFilters): Promise<ManagedReservation[]> {
     const range = reservationRange(filters.period);
     const { data, error } = await supabase.rpc("admin_manage_reservations", {
