@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { CalendarPlus, ExternalLink, Move, XCircle } from "lucide-react";
+import {
+  CalendarPlus,
+  ExternalLink,
+  Move,
+  XCircle,
+  Trophy,
+} from "lucide-react";
 import type {
   CalendarSlot,
   ReservableResource,
@@ -14,6 +20,7 @@ import {
   adminReservationsService,
   type ManagedReservation,
   type ReservationUser,
+  type ChampionshipConversionMatch,
 } from "../services/adminReservationsService";
 import { AdminDialog } from "../components/AdminDialog";
 import { BlockManager } from "../components/BlockManager";
@@ -44,6 +51,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 type Dialog =
   | { kind: "detail" | "cancel" | "move"; item: ManagedReservation }
   | { kind: "create" }
+  | { kind: "championship"; item: ManagedReservation }
   | null;
 
 export function AdminReservationsManagementPage() {
@@ -62,6 +70,11 @@ export function AdminReservationsManagementPage() {
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [price, setPrice] = useState<number | null>(null);
+  const [championshipMatches, setChampionshipMatches] = useState<
+    ChampionshipConversionMatch[]
+  >([]);
+  const [championshipMatchId, setChampionshipMatchId] = useState("");
+  const [championshipLoading, setChampionshipLoading] = useState(false);
   const [reason, setReason] = useState("Annulation administrateur");
   const [form, setForm] = useState({
     userId: "",
@@ -141,6 +154,27 @@ export function AdminReservationsManagementPage() {
       .then(setPrice)
       .catch(() => setPrice(null));
   }, [dialog, form.resourceId, form.startsAt, form.userId]);
+  async function openChampionship(item: ManagedReservation) {
+    setDialog({ kind: "championship", item });
+    setChampionshipMatches([]);
+    setChampionshipMatchId("");
+    setChampionshipLoading(true);
+    setError("");
+    try {
+      const candidates = await adminReservationsService.championshipCandidates(
+        item.id,
+      );
+      setChampionshipMatches(candidates);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible de rechercher les rencontres.",
+      );
+    } finally {
+      setChampionshipLoading(false);
+    }
+  }
   function openCreate() {
     setForm({
       userId: "",
@@ -181,6 +215,16 @@ export function AdminReservationsManagementPage() {
         );
         setMessage(
           "La réservation a été déplacée. Son propriétaire est conservé.",
+        );
+      } else if (dialog.kind === "championship") {
+        if (!championshipMatchId)
+          throw new Error("Sélectionnez la rencontre de championnat.");
+        await adminReservationsService.convertToChampionship(
+          dialog.item.id,
+          championshipMatchId,
+        );
+        setMessage(
+          "La réservation a été associée à la rencontre de championnat. Le créneau et le paiement éventuel sont conservés.",
         );
       } else if (dialog.kind === "cancel") {
         await adminReservationsService.cancel(dialog.item.id, reason);
@@ -285,6 +329,16 @@ export function AdminReservationsManagementPage() {
                     >
                       <ExternalLink size={16} />
                     </button>
+                    {["pending", "confirmed"].includes(item.status) && (
+                      <button
+                        type="button"
+                        title="Transformer en réservation championnat"
+                        aria-label={`Transformer la réservation de ${item.customerName} en championnat`}
+                        onClick={() => void openChampionship(item)}
+                      >
+                        <Trophy size={16} />
+                      </button>
+                    )}
                     {canManageReservation(item.status, item.customerType) && (
                       <>
                         <button title="Déplacer" onClick={() => openMove(item)}>
@@ -334,6 +388,66 @@ export function AdminReservationsManagementPage() {
               {dialog.item.paymentStatus} — {euros(dialog.item.priceCents)}
             </dd>
           </dl>
+        </AdminDialog>
+      )}
+      {dialog?.kind === "championship" && (
+        <AdminDialog
+          title="Transformer en réservation championnat"
+          onClose={() => !busy && setDialog(null)}
+        >
+          <p>
+            Réservation de <strong>{dialog.item.customerName}</strong> le{" "}
+            <strong>{dateTime(dialog.item.startsAt)}</strong> au{" "}
+            <strong>{dialog.item.resourceName}</strong>.
+          </p>
+          <p>
+            Le créneau actuel et son historique de paiement seront conservés.
+            Choisissez la rencontre correspondante.
+          </p>
+          {championshipLoading ? (
+            <p role="status">Chargement des rencontres du club…</p>
+          ) : (
+            <label className="admin-dialog__field">
+              Rencontre de championnat
+              <select
+                value={championshipMatchId}
+                onChange={(event) => setChampionshipMatchId(event.target.value)}
+              >
+                <option value="">Sélectionnez une rencontre</option>
+                {championshipMatches.map((match) => (
+                  <option key={match.id} value={match.id}>
+                    {match.plannedDate ? `${match.plannedDate} · ` : ""}
+                    {match.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {!championshipLoading && championshipMatches.length === 0 && (
+            <p>Aucune rencontre éligible pour les championnats de ce club.</p>
+          )}
+          <div className="admin-dialog__actions">
+            <button
+              className="secondary"
+              onClick={() => setDialog(null)}
+              disabled={busy}
+            >
+              Annuler
+            </button>
+            <button
+              disabled={busy || championshipLoading || !championshipMatchId}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Associer définitivement cette réservation à la rencontre choisie ?",
+                  )
+                )
+                  void submit();
+              }}
+            >
+              Confirmer la conversion
+            </button>
+          </div>
         </AdminDialog>
       )}
       {dialog?.kind === "cancel" && (
