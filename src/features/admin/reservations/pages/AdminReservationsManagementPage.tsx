@@ -233,10 +233,15 @@ export function AdminReservationsManagementPage() {
       setDialog(null);
       await load();
     } catch (e) {
+      const serverMessage =
+        typeof e === "object" && e !== null && "message" in e
+          ? String((e as { message: unknown }).message)
+          : null;
       setError(
         e instanceof Error
           ? e.message
-          : "Ce créneau n’est plus disponible. Actualisez les créneaux et réessayez.",
+          : serverMessage ??
+              "Impossible de terminer cette opération. Réessayez.",
       );
     } finally {
       setBusy(false);
