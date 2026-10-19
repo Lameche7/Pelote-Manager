@@ -10,18 +10,36 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch ONE official division through preview parser
-        env:
-          API: https://pelote-manager-ch7ozybr1-guegue-team.vercel.app/api/championship-results-source
+      - uses: actions/checkout@v4
+      - name: Parse official FFPB response in-process (no database write)
         run: |
-          curl -fsS --max-time 200 -X POST "$API" -H 'content-type: application/json' \
-            -d '{"sourceUrl":"https://lbpb.competition.ffpb.net/FFPB_COMPETITION/PAGE_ACCUEIL_INVITE/qBcAAPNLOQQFAA","seasonLabel":"2027","competitionName":"CHAMPIONNAT HIVER 2027","specialty":"Trinquet Paleta Pelote de Gomme Pleine Féminine","divisions":[{"name":"Dames 3ème série"}]}' > /tmp/ffpb-readonly.json
-          node - <<'JS'
-          const fs = require("fs");
-          const j = JSON.parse(fs.readFileSync("/tmp/ffpb-readonly.json","utf8"));
-          const matches = Array.isArray(j.matches) ? j.matches : [];
-          const results = Array.isArray(j.results) ? j.results : [];
-          const stages = [...new Set(matches.map(m => m.phase))];
-          console.log(JSON.stringify({division:j.divisions,matchCount:matches.length,resultCount:results.length,stages,warnings:j.warnings},null,2));
-          if (!Array.isArray(j.matches)) process.exitCode=1;
+          node --input-type=module - <<'JS'
+          import handler from "./api/championship-results-source.mjs";
+          let code = 200;
+          let output;
+          const response = {
+            setHeader: () => {},
+            status: (value) => { code=value; return response; },
+            json: (payload) => { output=payload; return response; },
+          };
+          await handler({
+            method:"POST",
+            body: {
+              sourceUrl:"https://lbpb.competition.ffpb.net/FFPB_COMPETITION/PAGE_ACCUEIL_INVITE/qBcAAPNLOQQFAA",
+              seasonLabel:"2027",
+              competitionName:"CHAMPIONNAT HIVER 2027",
+              specialty:"Trinquet Paleta Pelote de Gomme Pleine Féminine",
+              divisions:[{name:"Dames 3ème série"}],
+            },
+          }, response);
+          const fixtures = output?.matches ?? [];
+          console.log(JSON.stringify({
+            status:code,
+            count:fixtures.length,
+            results:output?.results?.length,
+            phases:[...new Set(fixtures.map(x=>x.phase))],
+            warnings:output?.warnings,
+            error:output?.error,
+          },null,2));
+          if (code!==200 || !Array.isArray(output?.matches)) process.exitCode=1;
           JS
