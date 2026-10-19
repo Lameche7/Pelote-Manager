@@ -311,7 +311,7 @@ export function AdminChampionshipsPage() {
     setUpdatePreview(null);
     try {
       const parsed =
-        await championshipSourceFileService.parseMatchesUpdate(updateFile);
+        await championshipSourceFileService.parseMatchesUpdate(updateFile, detail?.name);
       setFilePreview(parsed);
       if (!parsed.valid) return;
       const descriptor =
