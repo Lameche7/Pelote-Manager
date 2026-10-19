@@ -175,6 +175,7 @@ export const championshipSourceFileService = {
 
   async parseMatchesUpdate(
     matchesFile: File,
+    targetCompetition?: string,
   ): Promise<ChampionshipMatchesUpdatePreviewFile> {
     ensureMatchesFile(matchesFile);
     const matchRows = await firstWorkbookSheet(matchesFile);
@@ -190,43 +191,43 @@ export const championshipSourceFileService = {
         message: "Aucune partie n’a été détectée dans le fichier.",
       });
     } else {
-      const groups = new Map<
-        string,
-        { competition: string; specialty: string; count: number }
-      >();
+      const base = (targetCompetition ?? first.competition).trim();
+      const foldCompetition = (value: string) =>
+        value.normalize("NFD").replace(/[\\u0300-\\u036f]/gu, "").toLowerCase()
+          .replace(/[^a-z0-9]+/gu, " ").trim();
+      const baseFold = foldCompetition(base);
+      const unknown = new Map<string, number>();
       for (const match of parsed.rows) {
-        const key = [match.competition, match.specialty].join("\u0000");
-        const group = groups.get(key);
-        if (group) {
-          group.count += 1;
-        } else {
-          groups.set(key, {
-            competition: match.competition,
-            specialty: match.specialty,
-            count: 1,
-          });
+        const actual = foldCompetition(match.competition);
+        const suffix = actual.startsWith(baseFold + " ")
+          ? match.competition.trim().slice(base.length).trim()
+          : "";
+        const accepted = actual === baseFold || actual.startsWith(baseFold + " ");
+        if (!accepted || match.specialty !== first.specialty) {
+          const key = match.competition + " · " + match.specialty;
+          unknown.set(key, (unknown.get(key) ?? 0) + 1);
+          continue;
         }
+        if (suffix) {
+          match.sourceMetadata.originalCompetition = match.competition;
+          match.phase = match.phase + " · " + suffix;
+          match.sourceKey += "|competition:" + actual;
+        }
+        match.competition = base;
       }
-      if (groups.size > 1) {
+      if (unknown.size) {
         issues.push({
           source: "matches",
           row: 0,
           severity: "error",
-          message:
-            "Ce classeur regroupe plusieurs compétitions ou spécialités : " +
-            Array.from(groups.values())
-              .map(
-                (group) =>
-                  `${group.competition} · ${group.specialty} (${group.count} partie(s))`,
-              )
-              .join(" ; ") +
-            ". Sélectionnez un export concernant uniquement le championnat voulu.",
+          message: "Rencontres hors du championnat « " + base + " » : " +
+            Array.from(unknown, ([name, count]) => name + " (" + count + " partie(s))").join(" ; "),
         });
       }
     }
 
     return {
-      competition: first?.competition ?? null,
+      competition: targetCompetition ?? first?.competition ?? null,
       specialty: first?.specialty ?? null,
       matches: parsed.rows,
       issues,
