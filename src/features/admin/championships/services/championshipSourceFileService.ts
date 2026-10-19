@@ -193,8 +193,12 @@ export const championshipSourceFileService = {
     } else {
       const base = (targetCompetition ?? first.competition).trim();
       const foldCompetition = (value: string) =>
-        value.normalize("NFD").replace(/[\u0300-\u036f]/gu, "").toLowerCase()
-          .replace(/[^a-z0-9]+/gu, " ").trim();
+        value
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/gu, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/gu, " ")
+          .trim();
       const baseFold = foldCompetition(base);
       const unknown = new Map<string, number>();
       for (const match of parsed.rows) {
@@ -202,7 +206,8 @@ export const championshipSourceFileService = {
         const suffix = actual.startsWith(baseFold + " ")
           ? match.competition.trim().slice(base.length).trim()
           : "";
-        const accepted = actual === baseFold || actual.startsWith(baseFold + " ");
+        const accepted =
+          actual === baseFold || actual.startsWith(baseFold + " ");
         if (!accepted || match.specialty !== first.specialty) {
           const key = match.competition + " · " + match.specialty;
           unknown.set(key, (unknown.get(key) ?? 0) + 1);
@@ -220,8 +225,14 @@ export const championshipSourceFileService = {
           source: "matches",
           row: 0,
           severity: "error",
-          message: "Rencontres hors du championnat « " + base + " » : " +
-            Array.from(unknown, ([name, count]) => name + " (" + count + " partie(s))").join(" ; "),
+          message:
+            "Rencontres hors du championnat « " +
+            base +
+            " » : " +
+            Array.from(
+              unknown,
+              ([name, count]) => name + " (" + count + " partie(s))",
+            ).join(" ; "),
         });
       }
     }
