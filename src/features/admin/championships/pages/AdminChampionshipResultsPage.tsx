@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/infrastructure/supabase/client";
 import { ChampionshipSourceUrlEditor } from "@/features/admin/championships/components/ChampionshipSourceUrlEditor";
 import {
   adminChampionshipDayResultsService,
@@ -351,6 +352,33 @@ export function AdminChampionshipResultsPage() {
     setOfficialConflicts([]);
   };
 
+  const [finalsSyncBusy, setFinalsSyncBusy] = useState(false);
+  const [finalsSyncMessage, setFinalsSyncMessage] = useState("");
+
+  const syncFinalsNow = async () => {
+    if (!selectedChampionship) return;
+    setFinalsSyncBusy(true);
+    setFinalsSyncMessage("");
+    try {
+      const { error } = await supabase.rpc(
+        "admin_request_final_fixtures_sync",
+        {
+          target_championship_id: selectedChampionship.id,
+        },
+      );
+      if (error) throw error;
+      setFinalsSyncMessage(
+        "Recherche des nouvelles rencontres lancée. Actualisez le championnat dans quelques instants pour voir les nouvelles phases publiées par le comité.",
+      );
+    } catch (cause) {
+      setFinalsSyncMessage(
+        cause instanceof Error ? cause.message : "Lancement impossible.",
+      );
+    } finally {
+      setFinalsSyncBusy(false);
+    }
+  };
+
   const verifyOfficialSource = async () => {
     if (!selectedChampionship?.sourceUrl || divisions.length === 0) return;
     setOfficialUpdateBusy(true);
@@ -537,6 +565,33 @@ export function AdminChampionshipResultsPage() {
                 : "Vérifier maintenant"}
             </button>
           </div>
+
+          <div className="admin-championship-results__official-controls">
+            <div className="admin-championship-results__file-picker">
+              <span>Nouvelles rencontres de phases finales</span>
+              <strong>
+                Lundi 21 h · mardi 9 h et 21 h, après la dernière journée de
+                poules
+              </strong>
+            </div>
+            <button
+              type="button"
+              onClick={() => void syncFinalsNow()}
+              disabled={finalsSyncBusy || !selectedChampionship.sourceUrl}
+            >
+              {finalsSyncBusy
+                ? "Lancement…"
+                : "Vérifier les nouvelles rencontres"}
+            </button>
+          </div>
+          {finalsSyncMessage && (
+            <p
+              role="status"
+              className="admin-championship-results__official-success"
+            >
+              {finalsSyncMessage}
+            </p>
+          )}
 
           {!selectedChampionship.sourceUrl && (
             <p className="admin-championship-results__alert" role="alert">
