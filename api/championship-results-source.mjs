@@ -356,6 +356,19 @@ const parseScore = (value) => {
   };
 };
 
+const identifyPhase = (value) => {
+  const raw = String(value ?? "").trim();
+  const normalized = fold(raw);
+  if (/^(poule|pools?)\b/u.test(normalized)) return "Poules";
+  if (/barrage/u.test(normalized)) return "Barrage";
+  if (/1\s*16|seizieme/u.test(normalized)) return "1/16ème de finale";
+  if (/1\s*8|huitieme/u.test(normalized)) return "1/8ème de finale";
+  if (/1\s*4|quart/u.test(normalized)) return "1/4 de finale";
+  if (/1\s*2|demi/u.test(normalized)) return "1/2 finale";
+  if (/\bfinale\b/u.test(normalized)) return "Finale";
+  return null;
+};
+
 const parseDivisionResults = (html, divisionName) => {
   const rows = Array.from(
     new Set(
@@ -366,22 +379,33 @@ const parseDivisionResults = (html, divisionName) => {
   ).sort((a, b) => a - b);
 
   const results = [];
+  const matches = [];
   for (const row of rows) {
     const firstLabel = teamLabel(html, row, "I165");
     const secondLabel = teamLabel(html, row, "I167");
     const team1 = parseTeam(firstLabel);
     const team2 = parseTeam(secondLabel);
     if (!team1 || !team2) continue;
+    const phaseText = fieldText(html, row, "I220");
+    const phase = identifyPhase(phaseText);
+    const sourceDate = parseDate(fieldText(html, row, "I163"));
+    if (phase) {
+      matches.push({
+        division: divisionName, phase, sourceDate,
+        team1Label: firstLabel, team2Label: secondLabel,
+        team1, team2, sourceInfo: fieldText(html, row, "I222") || null,
+      });
+    }
     const score = parseScore(fieldText(html, row, "I168"));
     if (!score) continue;
     results.push({
       division: divisionName,
-      phase: "Poules",
+      phase: phase ?? "Poules",
       poolCode:
         fieldText(html, row, "I220")
           .replace(/^Poule\s+/iu, "")
           .trim() || null,
-      sourceDate: parseDate(fieldText(html, row, "I163")),
+      sourceDate,
       team1Label: firstLabel,
       team2Label: secondLabel,
       team1,
@@ -394,6 +418,7 @@ const parseDivisionResults = (html, divisionName) => {
     declaredCount: declaredMatchCount(html),
     loadedCount: rows.length,
     results,
+    matches,
   };
 };
 
@@ -427,6 +452,7 @@ export default async function handler(request, response) {
     }
 
     const allResults = [];
+    const allMatches = [];
     const divisionSummary = [];
     const warnings = [];
     for (const division of divisions) {
@@ -440,6 +466,7 @@ export default async function handler(request, response) {
         });
         const parsed = parseDivisionResults(html, division.name);
         allResults.push(...parsed.results);
+        allMatches.push(...parsed.matches);
         divisionSummary.push({
           division: division.name,
           declaredCount: parsed.declaredCount,
@@ -462,12 +489,11 @@ export default async function handler(request, response) {
     }
 
     const snapshot = JSON.stringify(
-      allResults
+      allMatches
         .map((item) => ({
           division: item.division,
           team1: item.team1Label,
           team2: item.team2Label,
-          score: item.scoreRaw,
           date: item.sourceDate,
         }))
         .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
@@ -484,6 +510,7 @@ export default async function handler(request, response) {
       },
       divisions: divisionSummary,
       results: allResults,
+      matches: allMatches,
       warnings,
     });
   } catch (cause) {
