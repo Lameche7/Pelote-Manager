@@ -391,9 +391,14 @@ const parseDivisionResults = (html, divisionName) => {
     const sourceDate = parseDate(fieldText(html, row, "I163"));
     if (phase) {
       matches.push({
-        division: divisionName, phase, sourceDate,
-        team1Label: firstLabel, team2Label: secondLabel,
-        team1, team2, sourceInfo: fieldText(html, row, "I222") || null,
+        division: divisionName,
+        phase,
+        sourceDate,
+        team1Label: firstLabel,
+        team2Label: secondLabel,
+        team1,
+        team2,
+        sourceInfo: fieldText(html, row, "I222") || null,
       });
     }
     const score = parseScore(fieldText(html, row, "I168"));

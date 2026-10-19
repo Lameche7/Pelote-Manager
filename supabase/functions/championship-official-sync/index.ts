@@ -186,7 +186,12 @@ const fetchPartitionedSource = async (
       }
     });
   }
-  return succeeded > 0 ? { [field]: combined, ...(field === "results" ? { matches: combinedMatches } : {}) } : null;
+  return succeeded > 0
+    ? {
+        [field]: combined,
+        ...(field === "results" ? { matches: combinedMatches } : {}),
+      }
+    : null;
 };
 
 const asNumber = (value: unknown) => {
@@ -214,8 +219,9 @@ Deno.serve(async (request) => {
     const force = body.force === true;
     const finalFixtures = body.finalFixtures === true;
     const local = parisSchedule();
-    const fixturesAllowed = (local.weekday === "Mon" && local.hour === "21")
-      || (local.weekday === "Tue" && (local.hour === "09" || local.hour === "21"));
+    const fixturesAllowed =
+      (local.weekday === "Mon" && local.hour === "21") ||
+      (local.weekday === "Tue" && (local.hour === "09" || local.hour === "21"));
     if (!force && !(finalFixtures ? fixturesAllowed : local.allowed)) {
       return Response.json({
         skipped: true,
@@ -246,7 +252,8 @@ Deno.serve(async (request) => {
     const summaries: JsonRow[] = [];
 
     for (const championship of championships) {
-      if (body.championshipId && body.championshipId !== championship.id) continue;
+      if (body.championshipId && body.championshipId !== championship.id)
+        continue;
       const summary: JsonRow = {
         championshipId: championship.id,
         name: championship.name,
@@ -274,18 +281,28 @@ Deno.serve(async (request) => {
         const divisionIds = divisions.map((division) => division.id);
         if (finalFixtures) {
           const { data: poolSchedule, error: poolScheduleError } = await admin
-            .from("championship_matches").select("scheduled_on")
-            .in("division_id", divisionIds).eq("phase", "Poules")
-            .not("scheduled_on", "is", null).order("scheduled_on", { ascending: false }).limit(1);
+            .from("championship_matches")
+            .select("scheduled_on")
+            .in("division_id", divisionIds)
+            .eq("phase", "Poules")
+            .not("scheduled_on", "is", null)
+            .order("scheduled_on", { ascending: false })
+            .limit(1);
           if (poolScheduleError) throw poolScheduleError;
           const lastPoolDate = poolSchedule?.[0]?.scheduled_on;
           const parts = new Intl.DateTimeFormat("en-GB", {
-            timeZone: PARIS_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+            timeZone: PARIS_TIME_ZONE,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
           }).formatToParts(new Date());
-          const part = (name: string) => parts.find(item => item.type === name)?.value ?? "";
+          const part = (name: string) =>
+            parts.find((item) => item.type === name)?.value ?? "";
           const todayParis = `${part("year")}-${part("month")}-${part("day")}`;
           if (!lastPoolDate || (!force && lastPoolDate >= todayParis)) {
-            warnings.push("Phase de poules non terminée ou date de fin indisponible.");
+            warnings.push(
+              "Phase de poules non terminée ou date de fin indisponible.",
+            );
             summaries.push(summary);
             continue;
           }
@@ -306,20 +323,24 @@ Deno.serve(async (request) => {
             "results",
             warnings,
           ),
-          finalFixtures ? Promise.resolve(null) : fetchPartitionedSource(
-            sourceBaseUrl,
-            "/api/championship-pool-standings-source",
-            sourceBody,
-            "standings",
-            warnings,
-          ),
-          finalFixtures ? Promise.resolve(null) : fetchPartitionedSource(
-            sourceBaseUrl,
-            "/api/championship-general-standings-public-source",
-            sourceBody,
-            "generalStandings",
-            warnings,
-          ),
+          finalFixtures
+            ? Promise.resolve(null)
+            : fetchPartitionedSource(
+                sourceBaseUrl,
+                "/api/championship-pool-standings-source",
+                sourceBody,
+                "standings",
+                warnings,
+              ),
+          finalFixtures
+            ? Promise.resolve(null)
+            : fetchPartitionedSource(
+                sourceBaseUrl,
+                "/api/championship-general-standings-public-source",
+                sourceBody,
+                "generalStandings",
+                warnings,
+              ),
         ]);
 
         const [
@@ -379,10 +400,16 @@ Deno.serve(async (request) => {
           );
         }
 
-        if (finalFixtures && resultsSource && Array.isArray(resultsSource.matches)) {
+        if (
+          finalFixtures &&
+          resultsSource &&
+          Array.isArray(resultsSource.matches)
+        ) {
           const { data: known, error: knownError } = await admin
             .from("championship_matches")
-            .select("id,division_id,team1_id,team2_id,phase,scheduled_on,source_key")
+            .select(
+              "id,division_id,team1_id,team2_id,phase,scheduled_on,source_key",
+            )
             .in("division_id", divisionIds);
           if (knownError) throw knownError;
           const knownMatches = known ?? [];
@@ -390,30 +417,65 @@ Deno.serve(async (request) => {
           for (const raw of resultsSource.matches as JsonRow[]) {
             if (fold(raw.phase) === "poules") continue;
             const division = divisionByName.get(fold(raw.division));
-            const a = division ? teamByKey.get(teamKey(division.id,
-              (raw.team1 as JsonRow | undefined)?.clubName,
-              (raw.team1 as JsonRow | undefined)?.teamNumber)) : undefined;
-            const b = division ? teamByKey.get(teamKey(division.id,
-              (raw.team2 as JsonRow | undefined)?.clubName,
-              (raw.team2 as JsonRow | undefined)?.teamNumber)) : undefined;
+            const a = division
+              ? teamByKey.get(
+                  teamKey(
+                    division.id,
+                    (raw.team1 as JsonRow | undefined)?.clubName,
+                    (raw.team1 as JsonRow | undefined)?.teamNumber,
+                  ),
+                )
+              : undefined;
+            const b = division
+              ? teamByKey.get(
+                  teamKey(
+                    division.id,
+                    (raw.team2 as JsonRow | undefined)?.clubName,
+                    (raw.team2 as JsonRow | undefined)?.teamNumber,
+                  ),
+                )
+              : undefined;
             const phase = String(raw.phase ?? "");
-            if (!division || !a || !b || a.id === b.id || !phase || !raw.sourceDate) {
-              warnings.push("Rencontre finale ignorée : équipes, phase ou date non identifiées.");
+            if (
+              !division ||
+              !a ||
+              !b ||
+              a.id === b.id ||
+              !phase ||
+              !raw.sourceDate
+            ) {
+              warnings.push(
+                "Rencontre finale ignorée : équipes, phase ou date non identifiées.",
+              );
               continue;
             }
-            const matchesSamePairAndPhase = knownMatches.filter(match =>
-              match.division_id === division.id && fold(match.phase) === fold(phase)
-              && ((match.team1_id === a.id && match.team2_id === b.id)
-                || (match.team1_id === b.id && match.team2_id === a.id)));
+            const matchesSamePairAndPhase = knownMatches.filter(
+              (match) =>
+                match.division_id === division.id &&
+                fold(match.phase) === fold(phase) &&
+                ((match.team1_id === a.id && match.team2_id === b.id) ||
+                  (match.team1_id === b.id && match.team2_id === a.id)),
+            );
             if (matchesSamePairAndPhase.length) continue;
-            const key = "ffpb-final|" + [division.id, fold(phase), ...[a.id,b.id].sort()].join("|");
+            const key =
+              "ffpb-final|" +
+              [division.id, fold(phase), ...[a.id, b.id].sort()].join("|");
             const { data: inserted, error: insertError } = await admin
-              .from("championship_matches").insert({
-                division_id: division.id, team1_id: a.id, team2_id: b.id,
-                phase, scheduled_on: String(raw.sourceDate),
-                source_key: key, source_metadata: { source: "ffpb-automatic-finals" },
+              .from("championship_matches")
+              .insert({
+                division_id: division.id,
+                team1_id: a.id,
+                team2_id: b.id,
+                phase,
+                scheduled_on: String(raw.sourceDate),
+                source_key: key,
+                source_metadata: { source: "ffpb-automatic-finals" },
                 status: "to_schedule",
-              }).select("id,division_id,team1_id,team2_id,phase,scheduled_on,source_key").single();
+              })
+              .select(
+                "id,division_id,team1_id,team2_id,phase,scheduled_on,source_key",
+              )
+              .single();
             if (insertError) {
               if (insertError.code === "23505") continue;
               throw insertError;
@@ -424,7 +486,11 @@ Deno.serve(async (request) => {
           summary.finalMatchesCreated = created;
         }
 
-        if (!finalFixtures && resultsSource && Array.isArray(resultsSource.results)) {
+        if (
+          !finalFixtures &&
+          resultsSource &&
+          Array.isArray(resultsSource.results)
+        ) {
           const { data: matchesData, error: matchesError } = await admin
             .from("championship_matches")
             .select(

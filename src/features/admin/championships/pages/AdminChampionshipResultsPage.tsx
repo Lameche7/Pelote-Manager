@@ -360,15 +360,20 @@ export function AdminChampionshipResultsPage() {
     setFinalsSyncBusy(true);
     setFinalsSyncMessage("");
     try {
-      const { error } = await supabase.rpc("admin_request_final_fixtures_sync", {
-        target_championship_id: selectedChampionship.id,
-      });
+      const { error } = await supabase.rpc(
+        "admin_request_final_fixtures_sync",
+        {
+          target_championship_id: selectedChampionship.id,
+        },
+      );
       if (error) throw error;
       setFinalsSyncMessage(
         "Recherche des nouvelles rencontres lancée. Actualisez le championnat dans quelques instants pour voir les nouvelles phases publiées par le comité.",
       );
     } catch (cause) {
-      setFinalsSyncMessage(cause instanceof Error ? cause.message : "Lancement impossible.");
+      setFinalsSyncMessage(
+        cause instanceof Error ? cause.message : "Lancement impossible.",
+      );
     } finally {
       setFinalsSyncBusy(false);
     }
@@ -564,17 +569,29 @@ export function AdminChampionshipResultsPage() {
           <div className="admin-championship-results__official-controls">
             <div className="admin-championship-results__file-picker">
               <span>Nouvelles rencontres de phases finales</span>
-              <strong>Lundi 21 h · mardi 9 h et 21 h, après la dernière journée de poules</strong>
+              <strong>
+                Lundi 21 h · mardi 9 h et 21 h, après la dernière journée de
+                poules
+              </strong>
             </div>
             <button
               type="button"
               onClick={() => void syncFinalsNow()}
               disabled={finalsSyncBusy || !selectedChampionship.sourceUrl}
             >
-              {finalsSyncBusy ? "Lancement…" : "Vérifier les nouvelles rencontres"}
+              {finalsSyncBusy
+                ? "Lancement…"
+                : "Vérifier les nouvelles rencontres"}
             </button>
           </div>
-          {finalsSyncMessage && <p role="status" className="admin-championship-results__official-success">{finalsSyncMessage}</p>}
+          {finalsSyncMessage && (
+            <p
+              role="status"
+              className="admin-championship-results__official-success"
+            >
+              {finalsSyncMessage}
+            </p>
+          )}
 
           {!selectedChampionship.sourceUrl && (
             <p className="admin-championship-results__alert" role="alert">
