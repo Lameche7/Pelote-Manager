@@ -136,6 +136,7 @@ const fetchPartitionedSource = async (
   warnings: string[],
 ): Promise<JsonRow | null> => {
   const combined: JsonRow[] = [];
+  const combinedMatches: JsonRow[] = [];
   let succeeded = 0;
   // Limiter la charge simultanée sur le site fédéral.
   for (let index = 0; index < body.divisions.length; index += 2) {
@@ -177,12 +178,15 @@ const fetchPartitionedSource = async (
       }
       succeeded++;
       combined.push(...(items as JsonRow[]));
+      if (field === "results" && Array.isArray(response.matches)) {
+        combinedMatches.push(...(response.matches as JsonRow[]));
+      }
       if (Array.isArray(response.warnings)) {
         warnings.push(...response.warnings.map((warning) => String(warning)));
       }
     });
   }
-  return succeeded > 0 ? { [field]: combined } : null;
+  return succeeded > 0 ? { [field]: combined, ...(field === "results" ? { matches: combinedMatches } : {}) } : null;
 };
 
 const asNumber = (value: unknown) => {
@@ -208,8 +212,11 @@ Deno.serve(async (request) => {
   try {
     const body = (await request.json().catch(() => ({}))) as JsonRow;
     const force = body.force === true;
+    const finalFixtures = body.finalFixtures === true;
     const local = parisSchedule();
-    if (!force && !local.allowed) {
+    const fixturesAllowed = (local.weekday === "Mon" && local.hour === "23")
+      || (local.weekday === "Tue" && (local.hour === "09" || local.hour === "21"));
+    if (!force && !(finalFixtures ? fixturesAllowed : local.allowed)) {
       return Response.json({
         skipped: true,
         reason: "outside_schedule",
@@ -239,6 +246,7 @@ Deno.serve(async (request) => {
     const summaries: JsonRow[] = [];
 
     for (const championship of championships) {
+      if (body.championshipId && body.championshipId !== championship.id) continue;
       const summary: JsonRow = {
         championshipId: championship.id,
         name: championship.name,
@@ -264,6 +272,22 @@ Deno.serve(async (request) => {
         }
 
         const divisionIds = divisions.map((division) => division.id);
+        if (finalFixtures) {
+          const { data: poolSchedule, error: poolScheduleError } = await admin
+            .from("championship_matches").select("scheduled_on")
+            .in("division_id", divisionIds).eq("phase", "Poules")
+            .not("scheduled_on", "is", null).order("scheduled_on", { ascending: false }).limit(1);
+          if (poolScheduleError) throw poolScheduleError;
+          const lastPoolDate = poolSchedule?.[0]?.scheduled_on;
+          const todayParis = new Intl.DateTimeFormat("en-CA", {
+            timeZone: PARIS_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+          }).format(new Date());
+          if (!lastPoolDate || (!force && lastPoolDate >= todayParis)) {
+            warnings.push("Phase de poules non terminée ou date de fin indisponible.");
+            summaries.push(summary);
+            continue;
+          }
+        }
         const sourceBody = {
           sourceUrl: championship.source_url,
           seasonLabel: championship.season_label,
@@ -351,6 +375,51 @@ Deno.serve(async (request) => {
             teamKey(team.division_id, club.normalized_name, team.team_number),
             team,
           );
+        }
+
+        if (finalFixtures && resultsSource && Array.isArray(resultsSource.matches)) {
+          const { data: known, error: knownError } = await admin
+            .from("championship_matches")
+            .select("id,division_id,team1_id,team2_id,phase,scheduled_on,source_key")
+            .in("division_id", divisionIds);
+          if (knownError) throw knownError;
+          const knownMatches = known ?? [];
+          let created = 0;
+          for (const raw of resultsSource.matches as JsonRow[]) {
+            if (fold(raw.phase) === "poules") continue;
+            const division = divisionByName.get(fold(raw.division));
+            const a = division ? teamByKey.get(teamKey(division.id,
+              (raw.team1 as JsonRow | undefined)?.clubName,
+              (raw.team1 as JsonRow | undefined)?.teamNumber)) : undefined;
+            const b = division ? teamByKey.get(teamKey(division.id,
+              (raw.team2 as JsonRow | undefined)?.clubName,
+              (raw.team2 as JsonRow | undefined)?.teamNumber)) : undefined;
+            const phase = String(raw.phase ?? "");
+            if (!division || !a || !b || a.id === b.id || !phase || !raw.sourceDate) {
+              warnings.push("Rencontre finale ignorée : équipes, phase ou date non identifiées.");
+              continue;
+            }
+            const matchesSamePairAndPhase = knownMatches.filter(match =>
+              match.division_id === division.id && fold(match.phase) === fold(phase)
+              && ((match.team1_id === a.id && match.team2_id === b.id)
+                || (match.team1_id === b.id && match.team2_id === a.id)));
+            if (matchesSamePairAndPhase.length) continue;
+            const key = "ffpb-final|" + [division.id, fold(phase), ...[a.id,b.id].sort()].join("|");
+            const { data: inserted, error: insertError } = await admin
+              .from("championship_matches").insert({
+                division_id: division.id, team1_id: a.id, team2_id: b.id,
+                phase, scheduled_on: String(raw.sourceDate),
+                source_key: key, source_metadata: { source: "ffpb-automatic-finals" },
+                status: "to_schedule",
+              }).select("id,division_id,team1_id,team2_id,phase,scheduled_on,source_key").single();
+            if (insertError) {
+              if (insertError.code === "23505") continue;
+              throw insertError;
+            }
+            if (inserted) knownMatches.push(inserted);
+            created++;
+          }
+          summary.finalMatchesCreated = created;
         }
 
         if (resultsSource && Array.isArray(resultsSource.results)) {
