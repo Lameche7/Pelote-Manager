@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { CalendarPlus, ExternalLink, Move, XCircle, Trophy } from "lucide-react";
+import {
+  CalendarPlus,
+  ExternalLink,
+  Move,
+  XCircle,
+  Trophy,
+} from "lucide-react";
 import type {
   CalendarSlot,
   ReservableResource,
@@ -64,7 +70,9 @@ export function AdminReservationsManagementPage() {
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [price, setPrice] = useState<number | null>(null);
-  const [championshipMatches, setChampionshipMatches] = useState<ChampionshipConversionMatch[]>([]);
+  const [championshipMatches, setChampionshipMatches] = useState<
+    ChampionshipConversionMatch[]
+  >([]);
   const [championshipMatchId, setChampionshipMatchId] = useState("");
   const [championshipLoading, setChampionshipLoading] = useState(false);
   const [reason, setReason] = useState("Annulation administrateur");
@@ -153,10 +161,16 @@ export function AdminReservationsManagementPage() {
     setChampionshipLoading(true);
     setError("");
     try {
-      const candidates = await adminReservationsService.championshipCandidates(item.id);
+      const candidates = await adminReservationsService.championshipCandidates(
+        item.id,
+      );
       setChampionshipMatches(candidates);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Impossible de rechercher les rencontres.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Impossible de rechercher les rencontres.",
+      );
     } finally {
       setChampionshipLoading(false);
     }
@@ -203,9 +217,15 @@ export function AdminReservationsManagementPage() {
           "La réservation a été déplacée. Son propriétaire est conservé.",
         );
       } else if (dialog.kind === "championship") {
-        if (!championshipMatchId) throw new Error("Sélectionnez la rencontre de championnat.");
-        await adminReservationsService.convertToChampionship(dialog.item.id, championshipMatchId);
-        setMessage("La réservation a été associée à la rencontre de championnat. Le créneau et le paiement éventuel sont conservés.");
+        if (!championshipMatchId)
+          throw new Error("Sélectionnez la rencontre de championnat.");
+        await adminReservationsService.convertToChampionship(
+          dialog.item.id,
+          championshipMatchId,
+        );
+        setMessage(
+          "La réservation a été associée à la rencontre de championnat. Le créneau et le paiement éventuel sont conservés.",
+        );
       } else if (dialog.kind === "cancel") {
         await adminReservationsService.cancel(dialog.item.id, reason);
         setMessage("La réservation a été annulée et le créneau libéré.");
@@ -371,23 +391,33 @@ export function AdminReservationsManagementPage() {
         </AdminDialog>
       )}
       {dialog?.kind === "championship" && (
-        <AdminDialog title="Transformer en réservation championnat" onClose={() => !busy && setDialog(null)}>
+        <AdminDialog
+          title="Transformer en réservation championnat"
+          onClose={() => !busy && setDialog(null)}
+        >
           <p>
             Réservation de <strong>{dialog.item.customerName}</strong> le{" "}
             <strong>{dateTime(dialog.item.startsAt)}</strong> au{" "}
             <strong>{dialog.item.resourceName}</strong>.
           </p>
-          <p>Le créneau actuel et son historique de paiement seront conservés. Choisissez la rencontre correspondante.</p>
+          <p>
+            Le créneau actuel et son historique de paiement seront conservés.
+            Choisissez la rencontre correspondante.
+          </p>
           {championshipLoading ? (
             <p role="status">Chargement des rencontres du club…</p>
           ) : (
             <label className="admin-dialog__field">
               Rencontre de championnat
-              <select value={championshipMatchId} onChange={(event) => setChampionshipMatchId(event.target.value)}>
+              <select
+                value={championshipMatchId}
+                onChange={(event) => setChampionshipMatchId(event.target.value)}
+              >
                 <option value="">Sélectionnez une rencontre</option>
                 {championshipMatches.map((match) => (
                   <option key={match.id} value={match.id}>
-                    {match.plannedDate ? `${match.plannedDate} · ` : ""}{match.label}
+                    {match.plannedDate ? `${match.plannedDate} · ` : ""}
+                    {match.label}
                   </option>
                 ))}
               </select>
@@ -397,11 +427,22 @@ export function AdminReservationsManagementPage() {
             <p>Aucune rencontre éligible pour les championnats de ce club.</p>
           )}
           <div className="admin-dialog__actions">
-            <button className="secondary" onClick={() => setDialog(null)} disabled={busy}>Annuler</button>
+            <button
+              className="secondary"
+              onClick={() => setDialog(null)}
+              disabled={busy}
+            >
+              Annuler
+            </button>
             <button
               disabled={busy || championshipLoading || !championshipMatchId}
               onClick={() => {
-                if (window.confirm("Associer définitivement cette réservation à la rencontre choisie ?")) void submit();
+                if (
+                  window.confirm(
+                    "Associer définitivement cette réservation à la rencontre choisie ?",
+                  )
+                )
+                  void submit();
               }}
             >
               Confirmer la conversion
