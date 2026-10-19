@@ -436,13 +436,7 @@ Deno.serve(async (request) => {
                 )
               : undefined;
             const phase = String(raw.phase ?? "");
-            if (
-              !division ||
-              !a ||
-              !b ||
-              a.id === b.id ||
-              !phase
-            ) {
+            if (!division || !a || !b || a.id === b.id || !phase) {
               warnings.push(
                 "Rencontre finale ignorée : équipes ou phase non identifiées.",
               );
