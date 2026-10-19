@@ -25,9 +25,9 @@ jobs:
           await handler({
             method:"POST",
             body: {
-              sourceUrl:"https://lbpb.competition.ffpb.net/FFPB_COMPETITION/PAGE_ACCUEIL_INVITE/qBcAAPNLOQQFAA",
-              seasonLabel:"2027",
-              competitionName:"CHAMPIONNAT HIVER 2027",
+              sourceUrl:"https://lbpb.competition.ffpb.net?id_competition=5",
+              seasonLabel:"2025",
+              competitionName:"CHAMPIONNAT HIVER 2025",
               specialty:"Trinquet Paleta Pelote de Gomme Pleine Féminine",
               divisions:[{name:"Dames 3ème série"}],
             },
