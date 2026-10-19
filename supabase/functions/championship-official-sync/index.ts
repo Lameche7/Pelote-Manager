@@ -414,6 +414,8 @@ Deno.serve(async (request) => {
           if (knownError) throw knownError;
           const knownMatches = known ?? [];
           let created = 0;
+          let duplicates = 0;
+          const addedByDivision: Record<string, number> = {};
           for (const raw of resultsSource.matches as JsonRow[]) {
             if (fold(raw.phase) === "poules") continue;
             const division = divisionByName.get(fold(raw.division));
@@ -449,7 +451,10 @@ Deno.serve(async (request) => {
                 ((match.team1_id === a.id && match.team2_id === b.id) ||
                   (match.team1_id === b.id && match.team2_id === a.id)),
             );
-            if (matchesSamePairAndPhase.length) continue;
+            if (matchesSamePairAndPhase.length) {
+              duplicates++;
+              continue;
+            }
             const key =
               "ffpb-final|" +
               [division.id, fold(phase), ...[a.id, b.id].sort()].join("|");
@@ -470,13 +475,20 @@ Deno.serve(async (request) => {
               )
               .single();
             if (insertError) {
-              if (insertError.code === "23505") continue;
+              if (insertError.code === "23505") {
+                duplicates++;
+                continue;
+              }
               throw insertError;
             }
             if (inserted) knownMatches.push(inserted);
             created++;
+            addedByDivision[division.name] =
+              (addedByDivision[division.name] ?? 0) + 1;
           }
           summary.finalMatchesCreated = created;
+          summary.finalMatchesAlreadyPresent = duplicates;
+          summary.finalMatchesAddedByDivision = addedByDivision;
         }
 
         if (
@@ -695,9 +707,17 @@ Deno.serve(async (request) => {
             championship_id: championship.id,
             club_id: championship.created_by_club_id,
             actor_id: null,
-            action: "championship.official_auto_sync",
+            action: finalFixtures
+              ? "championship.final_fixtures_sync"
+              : "championship.official_auto_sync",
             payload: {
               sourceBaseUrl,
+              finalFixtures,
+              finalMatchesCreated: summary.finalMatchesCreated ?? 0,
+              finalMatchesAlreadyPresent:
+                summary.finalMatchesAlreadyPresent ?? 0,
+              finalMatchesAddedByDivision:
+                summary.finalMatchesAddedByDivision ?? {},
               resultsUpdated: summary.resultsUpdated,
               poolStandingsUpdated: summary.poolStandingsUpdated,
               generalStandingsUpdated: summary.generalStandingsUpdated,

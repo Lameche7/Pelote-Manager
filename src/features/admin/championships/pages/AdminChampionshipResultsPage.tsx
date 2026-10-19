@@ -352,6 +352,43 @@ export function AdminChampionshipResultsPage() {
     setOfficialConflicts([]);
   };
 
+  type FinalsReport = {
+    completedAt: string;
+    added: number;
+    alreadyPresent: number;
+    byDivision: Record<string, number>;
+    warnings: string[];
+  };
+  const [finalsReport, setFinalsReport] = useState<FinalsReport | null>(null);
+  const loadFinalsReport = async (id: string) => {
+    const { data, error } = await supabase.rpc(
+      "admin_get_final_fixtures_sync_report",
+      {
+        target_championship_id: id,
+      },
+    );
+    if (error) throw error;
+    const report = data as FinalsReport | null;
+    setFinalsReport(report);
+    return report;
+  };
+  useEffect(() => {
+    if (!championshipId) {
+      setFinalsReport(null);
+      return;
+    }
+    let active = true;
+    void supabase
+      .rpc("admin_get_final_fixtures_sync_report", {
+        target_championship_id: championshipId,
+      })
+      .then(({ data, error }) => {
+        if (active && !error) setFinalsReport(data as FinalsReport | null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [championshipId]);
   const [finalsSyncBusy, setFinalsSyncBusy] = useState(false);
   const [finalsSyncMessage, setFinalsSyncMessage] = useState("");
 
@@ -359,6 +396,7 @@ export function AdminChampionshipResultsPage() {
     if (!selectedChampionship) return;
     setFinalsSyncBusy(true);
     setFinalsSyncMessage("");
+    const startedAt = Date.now() - 10000;
     try {
       const { error } = await supabase.rpc(
         "admin_request_final_fixtures_sync",
@@ -367,8 +405,20 @@ export function AdminChampionshipResultsPage() {
         },
       );
       if (error) throw error;
+      setFinalsSyncMessage("Recherche lancée : attente du compte rendu…");
+      let finished = false;
+      for (let attempt = 0; attempt < 30; attempt++) {
+        await new Promise((resolve) => window.setTimeout(resolve, 2000));
+        const report = await loadFinalsReport(selectedChampionship.id);
+        if (report && Date.parse(report.completedAt) >= startedAt) {
+          finished = true;
+          break;
+        }
+      }
       setFinalsSyncMessage(
-        "Recherche des nouvelles rencontres lancée. Actualisez le championnat dans quelques instants pour voir les nouvelles phases publiées par le comité.",
+        finished
+          ? "Vérification terminée. Bilan ci-dessous."
+          : "La vérification prend plus de temps que prévu. Le dernier bilan sera affiché dès votre retour sur cet écran.",
       );
     } catch (cause) {
       setFinalsSyncMessage(
@@ -591,6 +641,39 @@ export function AdminChampionshipResultsPage() {
             >
               {finalsSyncMessage}
             </p>
+          )}
+
+          {finalsReport && (
+            <div className="admin-card" aria-live="polite">
+              <strong>Dernière recherche de phases finales</strong>
+              <p>
+                {new Date(finalsReport.completedAt).toLocaleString("fr-FR")} ·{" "}
+                <strong>{finalsReport.added} rencontre(s) ajoutée(s)</strong> ·{" "}
+                {finalsReport.alreadyPresent} déjà présente(s) ·{" "}
+                {finalsReport.warnings.length} anomalie(s)
+              </p>
+              {Object.entries(finalsReport.byDivision).length > 0 && (
+                <ul>
+                  {Object.entries(finalsReport.byDivision).map(
+                    ([name, count]) => (
+                      <li key={name}>
+                        {name} : {count} nouvelle(s) rencontre(s)
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
+              {finalsReport.warnings.length > 0 && (
+                <details>
+                  <summary>Voir les anomalies</summary>
+                  <ul>
+                    {finalsReport.warnings.map((warning, index) => (
+                      <li key={index}>{warning}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
           )}
 
           {!selectedChampionship.sourceUrl && (
