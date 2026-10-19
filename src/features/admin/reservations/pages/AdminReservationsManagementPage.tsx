@@ -236,7 +236,9 @@ export function AdminReservationsManagementPage() {
       setError(
         e instanceof Error
           ? e.message
-          : "Ce créneau n’est plus disponible. Actualisez les créneaux et réessayez.",
+          : typeof e === "object" && e !== null && "message" in e
+            ? String(e.message)
+            : "La modification a échoué. Réessayez ou contactez l’administrateur.",
       );
     } finally {
       setBusy(false);
