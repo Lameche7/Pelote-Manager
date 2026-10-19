@@ -35,7 +35,7 @@ begin
     )
   order by (coalesce(m.report_on,m.agreement_on,m.scheduled_on) =
     (rec.starts_at at time zone (select rr.timezone from public.reservable_resources rr where rr.id=rec.resource_id))::date) desc,
-    planned_date desc nulls last, label
+    coalesce(m.report_on,m.agreement_on,m.scheduled_on) desc nulls last, ch.name, d.name, t1.source_label
   limit 300;
 end $$;
 
