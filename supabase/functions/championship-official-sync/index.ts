@@ -483,7 +483,8 @@ Deno.serve(async (request) => {
             }
             if (inserted) knownMatches.push(inserted);
             created++;
-            addedByDivision[division.name] = (addedByDivision[division.name] ?? 0) + 1;
+            addedByDivision[division.name] =
+              (addedByDivision[division.name] ?? 0) + 1;
           }
           summary.finalMatchesCreated = created;
           summary.finalMatchesAlreadyPresent = duplicates;
@@ -706,13 +707,17 @@ Deno.serve(async (request) => {
             championship_id: championship.id,
             club_id: championship.created_by_club_id,
             actor_id: null,
-            action: finalFixtures ? "championship.final_fixtures_sync" : "championship.official_auto_sync",
+            action: finalFixtures
+              ? "championship.final_fixtures_sync"
+              : "championship.official_auto_sync",
             payload: {
               sourceBaseUrl,
               finalFixtures,
               finalMatchesCreated: summary.finalMatchesCreated ?? 0,
-              finalMatchesAlreadyPresent: summary.finalMatchesAlreadyPresent ?? 0,
-              finalMatchesAddedByDivision: summary.finalMatchesAddedByDivision ?? {},
+              finalMatchesAlreadyPresent:
+                summary.finalMatchesAlreadyPresent ?? 0,
+              finalMatchesAddedByDivision:
+                summary.finalMatchesAddedByDivision ?? {},
               resultsUpdated: summary.resultsUpdated,
               poolStandingsUpdated: summary.poolStandingsUpdated,
               generalStandingsUpdated: summary.generalStandingsUpdated,

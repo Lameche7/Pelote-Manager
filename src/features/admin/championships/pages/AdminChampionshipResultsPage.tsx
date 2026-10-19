@@ -361,9 +361,12 @@ export function AdminChampionshipResultsPage() {
   };
   const [finalsReport, setFinalsReport] = useState<FinalsReport | null>(null);
   const loadFinalsReport = async (id: string) => {
-    const { data, error } = await supabase.rpc("admin_get_final_fixtures_sync_report", {
-      target_championship_id: id,
-    });
+    const { data, error } = await supabase.rpc(
+      "admin_get_final_fixtures_sync_report",
+      {
+        target_championship_id: id,
+      },
+    );
     if (error) throw error;
     const report = data as FinalsReport | null;
     setFinalsReport(report);
@@ -375,12 +378,16 @@ export function AdminChampionshipResultsPage() {
       return;
     }
     let active = true;
-    void supabase.rpc("admin_get_final_fixtures_sync_report", {
-      target_championship_id: championshipId,
-    }).then(({ data, error }) => {
-      if (active && !error) setFinalsReport(data as FinalsReport | null);
-    });
-    return () => { active = false; };
+    void supabase
+      .rpc("admin_get_final_fixtures_sync_report", {
+        target_championship_id: championshipId,
+      })
+      .then(({ data, error }) => {
+        if (active && !error) setFinalsReport(data as FinalsReport | null);
+      });
+    return () => {
+      active = false;
+    };
   }, [championshipId]);
   const [finalsSyncBusy, setFinalsSyncBusy] = useState(false);
   const [finalsSyncMessage, setFinalsSyncMessage] = useState("");
@@ -408,9 +415,11 @@ export function AdminChampionshipResultsPage() {
           break;
         }
       }
-      setFinalsSyncMessage(finished
-        ? "Vérification terminée. Bilan ci-dessous."
-        : "La vérification prend plus de temps que prévu. Le dernier bilan sera affiché dès votre retour sur cet écran.");
+      setFinalsSyncMessage(
+        finished
+          ? "Vérification terminée. Bilan ci-dessous."
+          : "La vérification prend plus de temps que prévu. Le dernier bilan sera affiché dès votre retour sur cet écran.",
+      );
     } catch (cause) {
       setFinalsSyncMessage(
         cause instanceof Error ? cause.message : "Lancement impossible.",
@@ -645,17 +654,23 @@ export function AdminChampionshipResultsPage() {
               </p>
               {Object.entries(finalsReport.byDivision).length > 0 && (
                 <ul>
-                  {Object.entries(finalsReport.byDivision).map(([name, count]) => (
-                    <li key={name}>{name} : {count} nouvelle(s) rencontre(s)</li>
-                  ))}
+                  {Object.entries(finalsReport.byDivision).map(
+                    ([name, count]) => (
+                      <li key={name}>
+                        {name} : {count} nouvelle(s) rencontre(s)
+                      </li>
+                    ),
+                  )}
                 </ul>
               )}
               {finalsReport.warnings.length > 0 && (
                 <details>
                   <summary>Voir les anomalies</summary>
-                  <ul>{finalsReport.warnings.map((warning, index) => (
-                    <li key={index}>{warning}</li>
-                  ))}</ul>
+                  <ul>
+                    {finalsReport.warnings.map((warning, index) => (
+                      <li key={index}>{warning}</li>
+                    ))}
+                  </ul>
                 </details>
               )}
             </div>
