@@ -214,7 +214,7 @@ Deno.serve(async (request) => {
     const force = body.force === true;
     const finalFixtures = body.finalFixtures === true;
     const local = parisSchedule();
-    const fixturesAllowed = (local.weekday === "Mon" && local.hour === "23")
+    const fixturesAllowed = (local.weekday === "Mon" && local.hour === "21")
       || (local.weekday === "Tue" && (local.hour === "09" || local.hour === "21"));
     if (!force && !(finalFixtures ? fixturesAllowed : local.allowed)) {
       return Response.json({
@@ -279,9 +279,11 @@ Deno.serve(async (request) => {
             .not("scheduled_on", "is", null).order("scheduled_on", { ascending: false }).limit(1);
           if (poolScheduleError) throw poolScheduleError;
           const lastPoolDate = poolSchedule?.[0]?.scheduled_on;
-          const todayParis = new Intl.DateTimeFormat("en-CA", {
+          const parts = new Intl.DateTimeFormat("en-GB", {
             timeZone: PARIS_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
-          }).format(new Date());
+          }).formatToParts(new Date());
+          const part = (name: string) => parts.find(item => item.type === name)?.value ?? "";
+          const todayParis = `${part("year")}-${part("month")}-${part("day")}`;
           if (!lastPoolDate || (!force && lastPoolDate >= todayParis)) {
             warnings.push("Phase de poules non terminée ou date de fin indisponible.");
             summaries.push(summary);
@@ -304,14 +306,14 @@ Deno.serve(async (request) => {
             "results",
             warnings,
           ),
-          fetchPartitionedSource(
+          finalFixtures ? Promise.resolve(null) : fetchPartitionedSource(
             sourceBaseUrl,
             "/api/championship-pool-standings-source",
             sourceBody,
             "standings",
             warnings,
           ),
-          fetchPartitionedSource(
+          finalFixtures ? Promise.resolve(null) : fetchPartitionedSource(
             sourceBaseUrl,
             "/api/championship-general-standings-public-source",
             sourceBody,
@@ -422,7 +424,7 @@ Deno.serve(async (request) => {
           summary.finalMatchesCreated = created;
         }
 
-        if (resultsSource && Array.isArray(resultsSource.results)) {
+        if (!finalFixtures && resultsSource && Array.isArray(resultsSource.results)) {
           const { data: matchesData, error: matchesError } = await admin
             .from("championship_matches")
             .select(
