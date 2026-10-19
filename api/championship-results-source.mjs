@@ -369,7 +369,7 @@ const identifyPhase = (value) => {
   return null;
 };
 
-const parseDivisionResults = (html, divisionName) => {
+export const parseDivisionResults = (html, divisionName) => {
   const rows = Array.from(
     new Set(
       Array.from(html.matchAll(/id=["']I158_(\d+)["']/giu), (match) =>
