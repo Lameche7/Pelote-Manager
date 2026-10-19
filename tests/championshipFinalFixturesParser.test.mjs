@@ -25,6 +25,9 @@ test("les rencontres finales sans score sont lues avec leur vraie phase", () => 
 });
 
 test("une phase non identifiable n'est jamais proposée à l'import automatique", () => {
-  const parsed = parseDivisionResults(fixture(1, "Terrain principal"), "Dames 3ème série");
+  const parsed = parseDivisionResults(
+    fixture(1, "Terrain principal"),
+    "Dames 3ème série",
+  );
   assert.equal(parsed.matches.length, 0);
 });
