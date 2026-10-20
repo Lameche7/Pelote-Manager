@@ -338,3 +338,86 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* Hero photo: keep authentic brand mark and interactive navigation above it. */
+.network-directory__hero--photo {
+  min-height: 520px;
+  background-color: #103a30;
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+.network-directory__hero--photo .network-directory__hero-header {
+  width: 100%;
+  margin-bottom: 55px;
+}
+.network-directory__hero-copy {
+  width: min(100%, 1340px);
+  margin: auto auto 58px;
+  padding: 0 clamp(8px, 4vw, 65px);
+}
+.network-directory__hero-copy h1 {
+  margin: 0 0 20px;
+  max-width: 680px;
+  font-size: clamp(2.5rem, 5vw, 4.7rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+.network-directory__hero-copy h1 span {
+  color: #f4d46e;
+}
+.network-directory__hero-copy p {
+  margin: 0 0 28px;
+  max-width: 620px;
+  font-size: clamp(1.05rem, 1.8vw, 1.36rem);
+  line-height: 1.5;
+  color: #f2f6f0;
+}
+.network-directory__hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.network-directory__hero-actions a {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 48px;
+  padding: 12px 21px;
+  border-radius: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+.network-directory__hero-primary {
+  background: #f4d46e;
+  color: #16362b;
+  border-color: #f4d46e !important;
+}
+.network-directory__hero-secondary {
+  background: rgba(5, 33, 27, 0.48);
+  color: white;
+}
+.network-directory__hero-actions a:hover,
+.network-directory__hero-actions a:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+@media (max-width: 700px) {
+  .network-directory__hero--photo {
+    min-height: 590px;
+    background-position: 63% center;
+  }
+  .network-directory__hero--photo .network-directory__hero-header {
+    margin-bottom: 30px;
+  }
+  .network-directory__hero-copy {
+    margin-bottom: 30px;
+  }
+  .network-directory__hero-copy h1 {
+    max-width: 450px;
+  }
+}
