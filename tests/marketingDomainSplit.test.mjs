@@ -20,8 +20,8 @@ const [
   read("src/features/marketing/pages/MarketingPage.tsx"),
   read("vercel.json"),
   read("src/infrastructure/auth/authService.ts"),
-  read("src/app/router.tsx"),
   read("src/features/members/services/memberService.ts"),
+  read("src/app/router.tsx"),
 ]);
 
 test("www affiche le portail réseau tandis que l’application reste séparée", () => {
