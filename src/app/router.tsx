@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { MainLayout } from "@/app/layouts/MainLayout";
 import { ProtectedRoute } from "@/app/router/ProtectedRoute";
 import { PermissionRoute } from "@/features/admin/access/PermissionRoute";
@@ -118,7 +118,7 @@ export const routes = [
   },
   {
     path: ROUTES.home,
-    element: <MainLayout />,
+    element: typeof window !== "undefined" && isMarketingHostname(window.location.hostname) ? <Outlet /> : <MainLayout />,
     children: [
       { index: true, element: typeof window !== "undefined" && isMarketingHostname(window.location.hostname) ? <NetworkDirectoryPage /> : <HomePage /> },
       { path: ROUTES.login, element: <LoginPage /> },
