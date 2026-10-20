@@ -33,9 +33,9 @@ test("www affiche le portail réseau tandis que l’application reste séparée"
   assert.match(app, /return <MarketingPage \/>/);
 });
 
-test("www sert la vitrine interactive avancée depuis /pilotoki-demo", () => {
-  assert.match(vercel, /"destination": "\/pilotoki-demo\/index.html"/);
-  assert.match(vercel, /"value": "www.pelotemanager.fr"/);
+test("www conserve l’accueil réseau sans redirection vers l’ancien prototype", () => {
+  assert.doesNotMatch(vercel, /"destination": "\/pilotoki-demo\/index.html"/);
+  assert.match(router, /<NetworkDirectoryPage \/>/);
 });
 
 test("le domaine nu redirige vers la vitrine www", () => {
