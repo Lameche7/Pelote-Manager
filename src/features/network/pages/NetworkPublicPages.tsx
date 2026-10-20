@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
-import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
+import { NetworkHero } from "@/features/network/components/NetworkHero";
 import "./NetworkDirectoryPage.css";
 
 function NetworkPageShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="network-directory">
-      <div className="network-directory__subpage-header">
-        <NetworkNavigation />
-      </div>
+      <NetworkHero />
       {children}
       <footer className="network-directory__footer">
         Pilotoki · Clubs et tournois
