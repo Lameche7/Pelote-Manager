@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import type { PublicTournamentSummary } from "@/features/tournaments/types";
 import "./NetworkTournamentCatalog.css";
 
-type Club = { name: string; slug: string; logo_url: string | null; hero_image_url: string | null };
+type Club = {
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  hero_image_url: string | null;
+};
 export type NetworkTournamentListing = {
   club: Club;
   tournament: PublicTournamentSummary;
@@ -255,7 +260,10 @@ export function NetworkTournamentCatalog({
                       }}
                     />
                   )}
-                  <span className="network-tournaments__visual-shade" aria-hidden="true" />
+                  <span
+                    className="network-tournaments__visual-shade"
+                    aria-hidden="true"
+                  />
                   <span
                     className={`network-tournaments__state network-tournaments__state--${state}`}
                   >

@@ -7,15 +7,26 @@ import { NetworkTournamentCatalog } from "@/features/network/components/NetworkT
 import type { NetworkTournamentListing } from "@/features/network/components/NetworkTournamentCatalog";
 import "./NetworkDirectoryPage.css";
 
-type Club = { name: string; slug: string; logo_url: string | null; hero_image_url: string | null };
+type Club = {
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  hero_image_url: string | null;
+};
 
 export function NetworkDirectoryPage() {
   const location = useLocation();
 
   useEffect(() => {
-    const target = location.pathname.endsWith("/clubs") ? "clubs" : location.pathname.endsWith("/tournois") ? "tournois" : "";
+    const target = location.pathname.endsWith("/clubs")
+      ? "clubs"
+      : location.pathname.endsWith("/tournois")
+        ? "tournois"
+        : "";
     if (!target) return;
-    const frame = window.requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView());
+    const frame = window.requestAnimationFrame(() =>
+      document.getElementById(target)?.scrollIntoView(),
+    );
     return () => window.cancelAnimationFrame(frame);
   }, [location.pathname]);
   const [clubs, setClubs] = useState<Club[]>([]);
