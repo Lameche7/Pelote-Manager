@@ -1,0 +1,31 @@
+name: Temporary network pages formatter
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-format-network-pages.yml"
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/www-network-full-pages-20261020
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/features/network/components/NetworkNavigation.tsx src/features/network/components/NetworkTournamentCatalog.css src/features/network/components/NetworkTournamentCatalog.tsx src/features/network/pages/NetworkDirectoryPage.tsx src/features/network/pages/NetworkPublicPages.tsx src/app/router.tsx tests/marketingDomainSplit.test.mjs
+      - name: Commit formatted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/network src/app/router.tsx tests/marketingDomainSplit.test.mjs
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "style: format full network pages"
+          git pull --rebase origin fix/www-network-full-pages-20261020
+          git push origin HEAD:fix/www-network-full-pages-20261020
