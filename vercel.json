@@ -15,11 +15,6 @@
   ],
   "rewrites": [
     {
-      "source": "/",
-      "has": [{ "type": "host", "value": "www.pelotemanager.fr" }],
-      "destination": "/pilotoki-demo/index.html"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
