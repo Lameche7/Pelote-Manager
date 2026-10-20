@@ -127,12 +127,6 @@ export function NetworkDirectoryPage() {
             >
               Découvrir Pilotoki →
             </Link>
-            <a
-              href="/pilotoki-demo/#customizer"
-              className="network-directory__hero-secondary"
-            >
-              Tester la démo
-            </a>
           </div>
         </div>
       </section>
