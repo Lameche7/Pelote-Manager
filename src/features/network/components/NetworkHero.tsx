@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
 import { NetworkNavigation } from "./NetworkNavigation";
 
-export function NetworkHero({ variant = "default" }: { variant?: "default" | "discovery" | "subscription" }) {
+export function NetworkHero({
+  variant = "default",
+}: {
+  variant?: "default" | "discovery" | "subscription";
+}) {
   return (
     <section
       className="network-directory__hero network-directory__hero--photo"
@@ -16,7 +20,10 @@ export function NetworkHero({ variant = "default" }: { variant?: "default" | "di
         {variant === "subscription" ? (
           <>
             <h1>S'abonner à Pilotoki</h1>
-            <p>Rejoignez le réseau Pilotoki et découvrez une nouvelle façon de gérer votre club.</p>
+            <p>
+              Rejoignez le réseau Pilotoki et découvrez une nouvelle façon de
+              gérer votre club.
+            </p>
           </>
         ) : variant === "discovery" ? (
           <>
