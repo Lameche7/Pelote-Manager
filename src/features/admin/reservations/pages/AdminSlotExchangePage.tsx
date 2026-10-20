@@ -87,6 +87,7 @@ export function AdminSlotExchangePage() {
   const [showPreview, setShowPreview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState("");
+  const [attempted, setAttempted] = useState(false);
   useEffect(() => {
     tournamentAdminService
       .list()
@@ -166,6 +167,7 @@ export function AdminSlotExchangePage() {
     if (!window.confirm("Confirmer l'échange définitif des deux occupations ?"))
       return;
     setBusy(true);
+    setAttempted(true);
     setError("");
     setSuccess("");
     try {
@@ -245,8 +247,9 @@ export function AdminSlotExchangePage() {
             : "Occupations sur 7 jours"}
         </span>
       </div>
-      {error && <p role="alert">{error}</p>}
-      {success && <p role="status">{success}</p>}
+      {error && <p role="alert" style={{ padding: 16, border: "2px solid #b91c1c", borderRadius: 8, fontWeight: 700, whiteSpace: "pre-wrap" }}>Échange non effectué : {error}</p>}
+      {success && <p role="status" style={{ padding: 16, border: "2px solid #15803d", borderRadius: 8, fontWeight: 700, whiteSpace: "pre-wrap" }}>{success}</p>}
+      {attempted && busy && <p role="status">Vérification et enregistrement de l’échange en cours…</p>}
       {loading ? (
         <p>Chargement du planning…</p>
       ) : (
