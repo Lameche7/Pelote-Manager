@@ -5,7 +5,7 @@
   font-family: inherit;
 }
 .network-directory__hero {
-  padding: 30px 24px 70px;
+  padding: 20px 24px 45px;
   text-align: center;
   background: radial-gradient(circle at 78% 25%, #256b52, #103a30 68%);
   color: white;
@@ -14,20 +14,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
-  margin: 0 auto 52px;
+  gap: 12px;
+  margin: 0 auto 30px;
 }
 .network-directory__brand {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 30px;
-  border-radius: 22px;
+  padding: 10px 24px;
+  border-radius: 18px;
   background: white;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
 }
 .network-directory__brand img {
-  width: clamp(205px, 26vw, 340px);
+  width: clamp(190px, 23vw, 285px);
   height: auto;
   display: block;
 }
@@ -36,8 +36,8 @@
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 8px;
   background: rgba(7, 32, 28, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 22px;
@@ -54,7 +54,7 @@
   border-radius: 12px;
   font-weight: 750;
   text-decoration: none;
-  padding: 10px 16px;
+  padding: 8px 13px;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
