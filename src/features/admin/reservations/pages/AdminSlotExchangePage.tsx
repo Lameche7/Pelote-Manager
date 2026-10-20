@@ -203,15 +203,16 @@ export function AdminSlotExchangePage() {
             ))}
           </select>
         </label>
-        {!selectedTournament && <label>
+        {!selectedTournament && (
+          <label>
           À partir du{" "}
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
-        </label>
-        }
+          </label>
+        )}
         <span>{selectedTournament ? `Occupations du tournoi entier (${selectedTournament.startsOn} au ${selectedTournament.endsOn})` : "Occupations sur 7 jours"}</span>
       </div>
       {error && <p role="alert">{error}</p>}
