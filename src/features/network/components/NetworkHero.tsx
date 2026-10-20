@@ -31,7 +31,10 @@ export function NetworkHero({ discovery = false }: { discovery?: boolean }) {
               club dans un seul outil.
             </p>
             <div className="network-directory__hero-actions">
-              <Link to="/reseau/decouvrir" className="network-directory__hero-primary">
+              <Link
+                to="/reseau/decouvrir"
+                className="network-directory__hero-primary"
+              >
                 Découvrir Pilotoki →
               </Link>
             </div>
