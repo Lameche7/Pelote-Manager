@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent } from "react";
 import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
-import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
+import { NetworkHero } from "@/features/network/components/NetworkHero";
 import "./NetworkDirectoryPage.css";
 import "./NetworkDiscoveryDemoPage.css";
 
@@ -300,9 +300,7 @@ export function NetworkDiscoveryPage() {
 
   return (
     <main className="network-directory">
-      <div className="network-directory__subpage-header">
-        <NetworkNavigation />
-      </div>
+      <NetworkHero />
       <div className="pilotoki-discovery" style={theme}>
         <section className="pilotoki-discovery__intro">
           <p className="network-directory__eyebrow">
