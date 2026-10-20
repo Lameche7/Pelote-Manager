@@ -40,7 +40,7 @@ async function loadCandidatesForRange(resourceId: string, from: Date, until: Dat
   }
   return result.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
-const today = () new Date().toLocaleDateString("en-CA");
+const today = () => new Date().toLocaleDateString("en-CA");
 const formatDate = (value: string) =>
   new Date(value).toLocaleString("fr-FR", {
     dateStyle: "medium",
