@@ -1,0 +1,29 @@
+name: Temporary discovery formatter
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-format-discovery.yml"
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/www-network-full-pages-20261020
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/features/network/pages/NetworkDiscoveryDemoPage.tsx src/features/network/pages/NetworkDiscoveryDemoPage.css
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/network/pages/NetworkDiscoveryDemoPage.tsx src/features/network/pages/NetworkDiscoveryDemoPage.css
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "style: format restored discovery demo"
+          git pull --rebase origin fix/www-network-full-pages-20261020
+          git push origin HEAD:fix/www-network-full-pages-20261020
