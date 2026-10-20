@@ -59,6 +59,7 @@ import {
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
 import { NetworkDirectoryPage } from "@/features/network/pages/NetworkDirectoryPage";
+import { isMarketingHostname } from "@/shared/config/domains";
 import { NetworkClubPage, NetworkTournamentPage } from "@/features/network/pages/NetworkDetailsPages";
 import { MyLicencePage } from "@/features/licences/pages/MyLicencePage";
 import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
@@ -119,7 +120,7 @@ export const routes = [
     path: ROUTES.home,
     element: <MainLayout />,
     children: [
-      { index: true, element: <HomePage /> },
+      { index: true, element: typeof window !== "undefined" && isMarketingHostname(window.location.hostname) ? <NetworkDirectoryPage /> : <HomePage /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.register, element: <RegisterPage /> },
       { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
