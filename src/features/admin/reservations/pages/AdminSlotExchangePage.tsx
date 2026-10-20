@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { tournamentAdminService, type TournamentSummary } from "@/features/admin/tournaments/services/tournamentAdminService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import type {
   CalendarOccupation,
@@ -14,7 +15,32 @@ import {
 // Explicit deployment gate: simulation only until the database audit is approved.
 const EXCHANGE_WRITES_ENABLED = true;
 
-const today = () => new Date().toLocaleDateString("en-CA");
+const tournamentRange = (tournament: TournamentSummary) => ({
+  from: new Date(tournament.startsOn + "T00:00:00"),
+  until: new Date(new Date(tournament.endsOn + "T00:00:00").getTime() + 86400000),
+});
+async function loadCandidatesForRange(resourceId: string, from: Date, until: Date) {
+  const result: ExchangeCandidate[] = [];
+  const seen = new Set<string>();
+  let cursor = from.getTime();
+  while (cursor < until.getTime()) {
+    const next = Math.min(cursor + 30 * 86400000, until.getTime());
+    const batch = await listExchangeCandidates(
+      resourceId,
+      new Date(cursor).toISOString(),
+      new Date(next).toISOString(),
+    );
+    for (const item of batch) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        result.push(item);
+      }
+    }
+    cursor = next;
+  }
+  return result.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}
+const today = () new Date().toLocaleDateString("en-CA");
 const formatDate = (value: string) =>
   new Date(value).toLocaleString("fr-FR", {
     dateStyle: "medium",
@@ -42,6 +68,8 @@ export function AdminSlotExchangePage() {
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
   const [date, setDate] = useState(today);
+  const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
+  const [tournamentId, setTournamentId] = useState("");
   const [items, setItems] = useState<ExchangeCandidate[]>([]);
   const [firstId, setFirstId] = useState("");
   const [secondId, setSecondId] = useState("");
@@ -50,6 +78,15 @@ export function AdminSlotExchangePage() {
   const [showPreview, setShowPreview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState("");
+  useEffect(() => {
+    tournamentAdminService.list().then(setTournaments).catch((e) => {
+      setError(e instanceof Error ? e.message : "Impossible de charger les tournois.");
+    });
+  }, []);
+  const selectedTournament = tournaments.find((t) => t.id === tournamentId);
+  const range = selectedTournament
+    ? tournamentRange(selectedTournament)
+    : { from: new Date(date + "T00:00:00"), until: new Date(new Date(date + "T00:00:00").getTime() + 7 * 86400000) };
   useEffect(() => {
     let active = true;
     reservationCalendarService
@@ -69,17 +106,14 @@ export function AdminSlotExchangePage() {
     };
   }, []);
   useEffect(() => {
-    if (!resourceId || !date) return;
+    if (!resourceId || (!date && !selectedTournament)) return;
     let active = true;
     setLoading(true);
     setError("");
     setShowPreview(false);
     setFirstId("");
     setSecondId("");
-    const from = new Date(date + "T00:00:00");
-    const until = new Date(from);
-    until.setDate(until.getDate() + 7);
-    listExchangeCandidates(resourceId, from.toISOString(), until.toISOString())
+    loadCandidatesForRange(resourceId, range.from, range.until)
       .then((data) => {
         if (active) setItems(data);
       })
@@ -97,7 +131,7 @@ export function AdminSlotExchangePage() {
     return () => {
       active = false;
     };
-  }, [resourceId, date]);
+  }, [resourceId, date, tournamentId, tournaments]);
   const first = items.find((item) => item.id === firstId);
   const second = items.find((item) => item.id === secondId);
   const preview = useMemo(
@@ -127,16 +161,7 @@ export function AdminSlotExchangePage() {
       setShowPreview(false);
       setFirstId("");
       setSecondId("");
-      const from = new Date(date + "T00:00:00");
-      const until = new Date(from);
-      until.setDate(until.getDate() + 7);
-      setItems(
-        await listExchangeCandidates(
-          resourceId,
-          from.toISOString(),
-          until.toISOString(),
-        ),
-      );
+      setItems(await loadCandidatesForRange(resourceId, range.from, range.until));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Échange impossible.");
     } finally {
@@ -170,6 +195,15 @@ export function AdminSlotExchangePage() {
           </select>
         </label>
         <label>
+          Tournoi{" "}
+          <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)}>
+            <option value="">Recherche sur 7 jours</option>
+            {tournaments.map((t) => (
+              <option key={t.id} value={t.id}>{t.name} ({t.startsOn} → {t.endsOn})</option>
+            ))}
+          </select>
+        </label>
+        {!selectedTournament && <label>
           À partir du{" "}
           <input
             type="date"
@@ -177,7 +211,8 @@ export function AdminSlotExchangePage() {
             onChange={(e) => setDate(e.target.value)}
           />
         </label>
-        <span>Occupations sur 7 jours</span>
+        }
+        <span>{selectedTournament ? `Occupations du tournoi entier (${selectedTournament.startsOn} au ${selectedTournament.endsOn})` : "Occupations sur 7 jours"}</span>
       </div>
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}
