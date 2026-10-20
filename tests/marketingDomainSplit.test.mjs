@@ -4,7 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-const [app, main, domains, marketing, vercel, authService, memberService] =
+const [app, main, domains, marketing, vercel, authService, memberService, router] =
   await Promise.all([
     read("src/app/App.tsx"),
     read("src/main.tsx"),
@@ -12,14 +12,16 @@ const [app, main, domains, marketing, vercel, authService, memberService] =
     read("src/features/marketing/pages/MarketingPage.tsx"),
     read("vercel.json"),
     read("src/infrastructure/auth/authService.ts"),
+    read("src/app/router.tsx"),
     read("src/features/members/services/memberService.ts"),
   ]);
 
-test("www affiche la vitrine tandis que l'application reste séparée", () => {
+test("www affiche le portail réseau tandis que l’application reste séparée", () => {
   assert.match(domains, /MARKETING_HOST = "www\.pelotemanager\.fr"/);
   assert.match(domains, /APP_HOST = "app\.pelotemanager\.fr"/);
   assert.match(domains, /APEX_HOST = "pelotemanager\.fr"/);
-  assert.match(app, /isMarketingHostname\(window\.location\.hostname\)/);
+  assert.match(router, /isMarketingHostname\(window\.location\.hostname\)/);
+  assert.match(router, /<NetworkDirectoryPage \/>/);
   assert.match(app, /return <MarketingPage \/>/);
 });
 
