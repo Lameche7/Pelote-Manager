@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 export const PILOTOKI_TESTER_URL =
-  "https://pelote-manager-ltvjzizbl-guegue-team.vercel.app/pilotoki-demo/#customizer";
+  "/pilotoki-demo/#customizer";
 
 export function NetworkNavigation() {
   return (
