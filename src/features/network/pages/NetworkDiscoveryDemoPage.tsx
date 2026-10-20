@@ -300,7 +300,7 @@ export function NetworkDiscoveryPage() {
 
   return (
     <main className="network-directory">
-      <NetworkHero discovery />
+      <NetworkHero variant="discovery" />
       <div className="pilotoki-discovery" style={theme}>
         <section
           className="pilotoki-discovery__workspace"
