@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { tournamentAdminService, type TournamentSummary } from "@/features/admin/tournaments/services/tournamentAdminService";
+import {
+  tournamentAdminService,
+  type TournamentSummary,
+} from "@/features/admin/tournaments/services/tournamentAdminService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import type {
   CalendarOccupation,
@@ -17,9 +20,15 @@ const EXCHANGE_WRITES_ENABLED = true;
 
 const tournamentRange = (tournament: TournamentSummary) => ({
   from: new Date(tournament.startsOn + "T00:00:00"),
-  until: new Date(new Date(tournament.endsOn + "T00:00:00").getTime() + 86400000),
+  until: new Date(
+    new Date(tournament.endsOn + "T00:00:00").getTime() + 86400000,
+  ),
 });
-async function loadCandidatesForRange(resourceId: string, from: Date, until: Date) {
+async function loadCandidatesForRange(
+  resourceId: string,
+  from: Date,
+  until: Date,
+) {
   const result: ExchangeCandidate[] = [];
   const seen = new Set<string>();
   let cursor = from.getTime();
@@ -79,14 +88,24 @@ export function AdminSlotExchangePage() {
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState("");
   useEffect(() => {
-    tournamentAdminService.list().then(setTournaments).catch((e) => {
-      setError(e instanceof Error ? e.message : "Impossible de charger les tournois.");
-    });
+    tournamentAdminService
+      .list()
+      .then(setTournaments)
+      .catch((e) => {
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Impossible de charger les tournois.",
+        );
+      });
   }, []);
   const selectedTournament = tournaments.find((t) => t.id === tournamentId);
   const range = selectedTournament
     ? tournamentRange(selectedTournament)
-    : { from: new Date(date + "T00:00:00"), until: new Date(new Date(date + "T00:00:00").getTime() + 7 * 86400000) };
+    : {
+        from: new Date(date + "T00:00:00"),
+        until: new Date(new Date(date + "T00:00:00").getTime() + 7 * 86400000),
+      };
   useEffect(() => {
     let active = true;
     reservationCalendarService
@@ -161,7 +180,9 @@ export function AdminSlotExchangePage() {
       setShowPreview(false);
       setFirstId("");
       setSecondId("");
-      setItems(await loadCandidatesForRange(resourceId, range.from, range.until));
+      setItems(
+        await loadCandidatesForRange(resourceId, range.from, range.until),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Échange impossible.");
     } finally {
@@ -196,24 +217,33 @@ export function AdminSlotExchangePage() {
         </label>
         <label>
           Tournoi{" "}
-          <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)}>
+          <select
+            value={tournamentId}
+            onChange={(e) => setTournamentId(e.target.value)}
+          >
             <option value="">Recherche sur 7 jours</option>
             {tournaments.map((t) => (
-              <option key={t.id} value={t.id}>{t.name} ({t.startsOn} → {t.endsOn})</option>
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.startsOn} → {t.endsOn})
+              </option>
             ))}
           </select>
         </label>
         {!selectedTournament && (
           <label>
-          À partir du{" "}
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+            À partir du{" "}
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
           </label>
         )}
-        <span>{selectedTournament ? `Occupations du tournoi entier (${selectedTournament.startsOn} au ${selectedTournament.endsOn})` : "Occupations sur 7 jours"}</span>
+        <span>
+          {selectedTournament
+            ? `Occupations du tournoi entier (${selectedTournament.startsOn} au ${selectedTournament.endsOn})`
+            : "Occupations sur 7 jours"}
+        </span>
       </div>
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}
