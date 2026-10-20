@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { pilotokiHeroPhoto } from "@/features/network/assets/pilotokiHeroPhoto";
 import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
 import { supabase } from "@/infrastructure/supabase/client";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
@@ -103,13 +104,16 @@ export function NetworkDirectoryPage() {
 
   return (
     <main className="network-directory">
-      <section className="network-directory__hero" id="accueil">
+      <section className="network-directory__hero network-directory__hero--photo" id="accueil" style={{ backgroundImage: `linear-gradient(90deg, rgba(5, 33, 27, .94) 0%, rgba(5, 33, 27, .72) 45%, rgba(5, 33, 27, .04) 100%), url("${pilotokiHeroPhoto}")` }}>
         <NetworkNavigation />
-        <h1>La pelote se retrouve ici.</h1>
-        <p>
-          Découvrez les clubs, les tournois, les poules, les classements et les
-          résultats.
-        </p>
+        <div className="network-directory__hero-copy">
+          <h1>La plateforme des <span>clubs de pelote</span></h1>
+          <p>Réservations, tournois, championnats, arbitrage et communication club dans un seul outil.</p>
+          <div className="network-directory__hero-actions">
+            <Link to="/reseau/decouvrir" className="network-directory__hero-primary">Découvrir Pilotoki →</Link>
+            <a href="/pilotoki-demo/#customizer" className="network-directory__hero-secondary">Tester la démo</a>
+          </div>
+        </div>
       </section>
 
       <NetworkTournamentCatalog
