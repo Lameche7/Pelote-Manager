@@ -33,6 +33,11 @@ test("www affiche le portail réseau tandis que l’application reste séparée"
   assert.match(app, /return <MarketingPage \/>/);
 });
 
+test("www sert la vitrine interactive avancée depuis /pilotoki-demo", () => {
+  assert.match(vercel, /"destination": "\/pilotoki-demo\/index.html"/);
+  assert.match(vercel, /"value": "www.pelotemanager.fr"/);
+});
+
 test("le domaine nu redirige vers la vitrine www", () => {
   assert.match(vercel, /"type": "host"/);
   assert.match(vercel, /"value": "pelotemanager\.fr"/);
