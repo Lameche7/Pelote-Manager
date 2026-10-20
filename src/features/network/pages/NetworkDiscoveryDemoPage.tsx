@@ -300,18 +300,8 @@ export function NetworkDiscoveryPage() {
 
   return (
     <main className="network-directory">
-      <NetworkHero />
+      <NetworkHero discovery />
       <div className="pilotoki-discovery" style={theme}>
-        <section className="pilotoki-discovery__intro">
-          <p className="network-directory__eyebrow">
-            La plateforme de gestion des clubs
-          </p>
-          <h1>Découvrez tout ce que Pilotoki peut faire pour votre club.</h1>
-          <p>
-            Un testeur interactif intégré à Pilotoki. Explorez librement les
-            fonctionnalités côté joueur et côté administrateur.
-          </p>
-        </section>
         <section
           className="pilotoki-discovery__workspace"
           aria-label="Testeur Pilotoki"
