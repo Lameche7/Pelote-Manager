@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { pilotokiHeroPhoto } from "@/features/network/assets/pilotokiHeroPhoto";
 import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
 import { supabase } from "@/infrastructure/supabase/client";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
@@ -108,7 +107,7 @@ export function NetworkDirectoryPage() {
         className="network-directory__hero network-directory__hero--photo"
         id="accueil"
         style={{
-          backgroundImage: `linear-gradient(90deg, rgba(5, 33, 27, .94) 0%, rgba(5, 33, 27, .72) 45%, rgba(5, 33, 27, .04) 100%), url("${pilotokiHeroPhoto}")`,
+          backgroundImage: `linear-gradient(90deg, rgba(5, 33, 27, .94) 0%, rgba(5, 33, 27, .72) 45%, rgba(5, 33, 27, .04) 100%), url("/branding/pilotoki-hero-hd.webp")`,
         }}
       >
         <NetworkNavigation />
