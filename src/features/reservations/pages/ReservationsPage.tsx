@@ -32,6 +32,7 @@ import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
 import { resolveCalendarPlayerActions } from "../services/calendarPlayerActionsService";
 import { refereeingService } from "@/features/refereeing/services/refereeingService";
 import { adminTournamentUnprogrammedService } from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
+import { loadAdminCalendarMatchContacts, type MatchContact } from "@/features/reservations/services/adminCalendarMatchContactsService";
 import { adminCalendarChampionshipService, type ChampionshipCalendarCandidate } from "@/features/reservations/services/adminCalendarChampionshipService";
 import { adminAccessService, type ClubAccess } from "@/features/admin/access/adminAccessService";
 import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
@@ -508,6 +509,40 @@ export function ReservationsPage() {
   const [inspectedActions, setInspectedActions] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [inspectionError, setInspectionError] = useState("");
+  const [matchContacts, setMatchContacts] = useState<MatchContact[] | null>(null);
+  const [contactBusy, setContactBusy] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [copiedContacts, setCopiedContacts] = useState(false);
+  useEffect(() => {
+    setMatchContacts(null);
+    setContactError("");
+    setCopiedContacts(false);
+  }, [inspectedSlot]);
+  const openMatchContacts = async () => {
+    if (!inspectedSlot || !canAdminReservations || inspectedSlot.status !== "occupied") return;
+    setContactBusy(true);
+    setMatchContacts(null);
+    setContactError("");
+    setCopiedContacts(false);
+    try {
+      setMatchContacts(await loadAdminCalendarMatchContacts(inspectedSlot));
+    } catch (cause) {
+      setContactError(cause instanceof Error ? cause.message : "Coordonnées indisponibles.");
+    } finally {
+      setContactBusy(false);
+    }
+  };
+  const copyMatchPhones = async () => {
+    const phones = [...new Set((matchContacts ?? []).map((contact) => contact.phone?.trim()).filter((phone): phone is string => Boolean(phone)))];
+    if (!phones.length) return;
+    try {
+      await navigator.clipboard.writeText(phones.join("; "));
+      setCopiedContacts(true);
+      setContactError("");
+    } catch {
+      setContactError("Copie automatique indisponible : sélectionne les numéros ci-dessous.");
+    }
+  };
   const [unprogramBusy, setUnprogramBusy] = useState(false);
   const [unprogramError, setUnprogramError] = useState("");
   const unprogramInspectedMatch = async () => {
@@ -932,6 +967,11 @@ export function ReservationsPage() {
                   {canAdminReservations && (
                     <>
                       <Link className="reservation-slot-actions__button" to={`${ROUTES.adminSlotExchange}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}`}>Échanger des créneaux</Link>
+                      {(inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
+                        <button className="reservation-slot-actions__button" type="button" disabled={contactBusy} onClick={() => void openMatchContacts()}>
+                          {contactBusy ? "Chargement…" : "Contacter"}
+                        </button>
+                      )}
 
                     </>
                   )}
@@ -944,6 +984,26 @@ export function ReservationsPage() {
                   )}
                 </div>
               </div>
+            )}
+            {contactError && <p role="alert">{contactError}</p>}
+            {matchContacts && inspectedSlot.status === "occupied" && (
+              <section className="reservation-slot-actions">
+                <h3>Contacter les joueurs</h3>
+                {matchContacts.length === 0 && <p>Aucun joueur identifié.</p>}
+                {matchContacts.map((contact, index) => (
+                  <p key={`${contact.team}-${contact.name}-${index}`}>
+                    {contact.name} : {contact.phone ? <a href={`tel:${contact.phone.replace(/[^+0-9]/g, "")}`}>{contact.phone}</a> : "Numéro non renseigné"}
+                  </p>
+                ))}
+                {matchContacts.some((contact) => contact.phone) && (
+                  <>
+                    <button className="reservation-slot-actions__button" type="button" onClick={() => void copyMatchPhones()}>
+                      {copiedContacts ? "Numéros copiés" : "Copier tous les numéros"}
+                    </button>
+                    <textarea readOnly aria-label="Numéros à copier" value={[...new Set(matchContacts.map((c) => c.phone?.trim()).filter((phone): phone is string => Boolean(phone)))].join("; ")} rows={2} />
+                  </>
+                )}
+              </section>
             )}
             {inspectedSlot.status === "locked" && canAdminReservations && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
