@@ -191,17 +191,18 @@ export function AdminSlotExchangePage() {
   const option = (item: ExchangeCandidate) =>
     `${formatDate(item.startsAt)} — ${item.title} (${item.sourceKind === "championship" ? "Championnat" : item.sourceKind === "tournament" ? "Tournoi" : item.sourceKind === "reservation" ? "Réservation" : item.sourceKind})`;
   return (
-    <main style={{ maxWidth: 1050, margin: "0 auto", padding: 24 }}>
+    <main style={{ maxWidth: 1050, width: "100%", minWidth: 0, boxSizing: "border-box", margin: "0 auto", padding: 24 }}>
       <h1>Échanger deux créneaux</h1>
       <p>
         Choisis deux occupations du calendrier, vérifie leurs nouveaux horaires puis confirme l’échange. Le serveur contrôle les droits et les conflits avant toute modification.
       </p>
       <div
-        style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20 }}
+        style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20, minWidth: 0 }}
       >
         <label>
           Terrain{" "}
           <select
+            style={{ maxWidth: "100%", minWidth: 0 }}
             value={resourceId}
             onChange={(e) => setResourceId(e.target.value)}
           >
@@ -215,6 +216,7 @@ export function AdminSlotExchangePage() {
         <label>
           Tournoi{" "}
           <select
+            style={{ maxWidth: "100%", minWidth: 0 }}
             value={tournamentId}
             onChange={(e) => setTournamentId(e.target.value)}
           >
@@ -265,12 +267,12 @@ export function AdminSlotExchangePage() {
         ).map((field) => (
           <fieldset
             key={field.label}
-            style={{ padding: 20, borderRadius: 12, border: "1px solid #888" }}
+            style={{ minWidth: 0, padding: 20, borderRadius: 12, border: "1px solid #888" }}
           >
             <legend>{field.label}</legend>
             <select
               aria-label={field.label}
-              style={{ width: "100%", padding: 8 }}
+              style={{ width: "100%", minWidth: 0, boxSizing: "border-box", padding: 8 }}
               value={field.value}
               onChange={(e) => {
                 field.set(e.target.value);
