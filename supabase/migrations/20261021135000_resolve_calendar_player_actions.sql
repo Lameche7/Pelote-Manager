@@ -62,10 +62,17 @@ with viewer as (
   not exists(
     select 1 from public.referee_slot_assignments ra
     where ra.resource_id=target_resource_id and ra.starts_at=target_starts_at
-  ) and exists(
-    select 1 from public.club_memberships membership
-    join resource r on r.club_id=membership.club_id
-    where membership.profile_id=auth.uid()
+  ) and (
+    exists(
+      select 1 from public.club_memberships membership
+      join resource r on r.club_id=membership.club_id
+      where membership.profile_id=auth.uid()
+    ) or exists(
+      select 1 from viewer v
+      join public.club_members member on member.sport_player_id=v.sport_player_id and member.is_active
+      join resource r on r.club_id=member.club_id
+      where v.sport_player_id is not null
+    )
   ) can_volunteer,
   case when m.kind='championship' then exists(
     select 1 from public.championship_matches cm
