@@ -10,6 +10,7 @@ import {
 import {
   addDays,
   buildWeekDays,
+  formatTime,
   groupSlotsByLocalDate,
   startOfIsoWeek,
   toDateInputValue,
