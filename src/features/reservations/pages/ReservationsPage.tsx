@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
@@ -504,6 +504,7 @@ export function ReservationsPage() {
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [inspectionError, setInspectionError] = useState("");
   const [volunteering, setVolunteering] = useState(false);
+  const loadGeneration = useRef(0);
   useEffect(() => {
     let active = true;
     setInspectedActions(null);
@@ -517,6 +518,29 @@ export function ReservationsPage() {
     }).finally(() => { if (active) setInspectionLoading(false); });
     return () => { active = false; };
   }, [inspectedSlot, isAuthenticated]);
+  const withdrawOnCalendar = async () => {
+    if (!inspectedActions?.isAssignedReferee || volunteering) return;
+    if (!window.confirm("Te retirer de cet arbitrage ?")) return;
+    setVolunteering(true);
+    setInspectionError("");
+    try {
+      const matches = await refereeingService.list();
+      const match = matches.find((item) =>
+        item.match_id === inspectedActions.matchId &&
+        item.source_type === inspectedActions.kind &&
+        item.is_mine
+      );
+      if (!match) throw new Error("Cet arbitrage n'est plus associé à ton compte.");
+      await refereeingService.withdraw(match);
+      await loadSlots();
+      setInspectedActions(null);
+      setInspectedSlot(null);
+    } catch (error) {
+      setInspectionError(error instanceof Error ? error.message : "Impossible de se retirer de cet arbitrage.");
+    } finally {
+      setVolunteering(false);
+    }
+  };
   const volunteerOnCalendar = async () => {
     if (!inspectedActions?.actions.volunteerReferee || volunteering) return;
     setVolunteering(true);
@@ -530,6 +554,7 @@ export function ReservationsPage() {
       );
       if (!match) throw new Error("Cet arbitrage n'est plus disponible.");
       await refereeingService.volunteer(match);
+      await loadSlots();
       setInspectedActions(null);
       setInspectedSlot(null);
     } catch (error) {
@@ -540,6 +565,7 @@ export function ReservationsPage() {
   };
 
   const [isLoading, setIsLoading] = useState(true);
+  const [resourcesLoading, setResourcesLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [championshipContext, setChampionshipContext] =
     useState<ChampionshipMatchReservationContext | null>(null);
@@ -581,7 +607,7 @@ export function ReservationsPage() {
           setErrorMessage("Le calendrier est momentanément indisponible.");
       })
       .finally(() => {
-        if (isCurrent) setIsLoading(false);
+        if (isCurrent) setResourcesLoading(false);
       });
     return () => {
       isCurrent = false;
@@ -619,20 +645,23 @@ export function ReservationsPage() {
 
   async function loadSlots(): Promise<void> {
     if (!resourceId) return;
+    const generation = ++loadGeneration.current;
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      setSlots(
-        await reservationCalendarService.listSlots(
-          resourceId,
-          weekStartValue,
-          weekEndValue,
-        ),
+      const nextSlots = await reservationCalendarService.listSlots(
+        resourceId,
+        weekStartValue,
+        weekEndValue,
       );
+      if (generation === loadGeneration.current) setSlots(nextSlots);
     } catch {
-      setErrorMessage("Impossible de charger les disponibilités.");
+      if (generation === loadGeneration.current) {
+        setSlots([]);
+        setErrorMessage("Impossible de charger les disponibilités.");
+      }
     } finally {
-      setIsLoading(false);
+      if (generation === loadGeneration.current) setIsLoading(false);
     }
   }
 
@@ -755,7 +784,7 @@ export function ReservationsPage() {
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading || resourcesLoading ? (
         <CalendarSkeleton />
       ) : resources.length === 0 ? (
         <div className="reservation-calendar__message">
@@ -786,7 +815,7 @@ export function ReservationsPage() {
             {inspectedSlot.refereeName && <p>Arbitre : {inspectedSlot.refereeName}</p>}
             {inspectionLoading && <p role="status">Vérification des droits…</p>}
             {inspectionError && <p role="alert">{inspectionError}</p>}
-            {(inspectedActions?.actions.submitResult || inspectedActions?.actions.volunteerReferee || inspectedActions?.actions.requestReportInMySpace) && (
+            {(inspectedActions?.actions.submitResult || inspectedActions?.actions.volunteerReferee || inspectedActions?.actions.requestReportInMySpace || inspectedActions?.isAssignedReferee) && (
               <div className="reservation-slot-actions">
                 <h3>Actions disponibles</h3>
                 <div className="reservation-slot-actions__list">
@@ -800,6 +829,11 @@ export function ReservationsPage() {
                 {volunteering ? "Enregistrement…" : "Je peux arbitrer"}
               </button>
             )}
+            {inspectedActions?.isAssignedReferee && (
+              <button className="reservation-slot-actions__button" type="button" disabled={volunteering} onClick={() => void withdrawOnCalendar()}>
+                {volunteering ? "Enregistrement…" : "Me retirer de l’arbitrage"}
+              </button>
+            )}
             {inspectedActions?.actions.requestReportInMySpace && (
               <Link className="reservation-slot-actions__button" to={`${inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
                 Demander un report
@@ -808,7 +842,7 @@ export function ReservationsPage() {
                 </div>
               </div>
             )}
-            {!inspectionLoading && !inspectionError && !inspectedActions?.actions.submitResult && !inspectedActions?.actions.volunteerReferee && !inspectedActions?.actions.requestReportInMySpace && (
+            {!inspectionLoading && !inspectionError && !inspectedActions?.actions.submitResult && !inspectedActions?.actions.volunteerReferee && !inspectedActions?.actions.requestReportInMySpace && !inspectedActions?.isAssignedReferee && (
               <p>Aucune action disponible pour ce créneau.</p>
             )}
           </section>

@@ -79,23 +79,24 @@ export const reservationCalendarService = {
         getSupabaseErrorMessage(error, "Impossible de charger le calendrier."),
       );
 
-    const { data: refereedIntervals, error: refereeError } = await supabase.rpc("list_refereed_calendar_intervals", {
-      target_resource_id: resourceId,
-      range_start: fromDate,
-      range_end: toDate,
-    });
-    if (refereeError)
-      throw new Error(
-        getSupabaseErrorMessage(refereeError, "Impossible de charger les arbitrages du calendrier."),
-      );
-    const { data: refereeNames, error: refereeNamesError } = await supabase.rpc(
-      "list_referee_names_for_calendar",
-      { target_resource_id: resourceId, range_start: fromDate, range_end: toDate },
-    );
-    if (refereeNamesError)
-      throw new Error(
-        getSupabaseErrorMessage(refereeNamesError, "Impossible de charger le nom des arbitres."),
-      );
+    // Referee decorations are nonessential to availability: do not hide the
+    // entire timetable if either supplementary RPC temporarily fails.
+    const [intervalResponse, nameResponse] = await Promise.allSettled([
+      supabase.rpc("list_refereed_calendar_intervals", {
+        target_resource_id: resourceId,
+        range_start: fromDate,
+        range_end: toDate,
+      }),
+      supabase.rpc("list_referee_names_for_calendar", {
+        target_resource_id: resourceId,
+        range_start: fromDate,
+        range_end: toDate,
+      }),
+    ]);
+    const refereedIntervals = intervalResponse.status === "fulfilled" && !intervalResponse.value.error
+      ? intervalResponse.value.data : [];
+    const refereeNames = nameResponse.status === "fulfilled" && !nameResponse.value.error
+      ? nameResponse.value.data : [];
     const assignments = (refereeNames ?? []) as RefereeNameRow[];
     return ((data ?? []) as SlotRow[]).map((slot) => ({
       resourceId: slot.resource_id,
