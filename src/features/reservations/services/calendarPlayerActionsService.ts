@@ -36,5 +36,5 @@ export async function resolveCalendarPlayerActions(slot: CalendarSlot) {
     canSubmitResultNow: match.canSubmitResultNow === true,
     canRequestReport: match.canRequestReport === true,
   });
-  return { kind: match.kind, matchId: match.matchId, actions };
+  return { kind: match.kind, matchId: match.matchId, isAssignedReferee: match.isAssignedReferee === true, isParticipant: match.isParticipant === true, actions };
 }
