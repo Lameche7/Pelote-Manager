@@ -29,19 +29,9 @@ export function CalendarWeekGrid({ weekDays, slotsByDay, timezone, championshipM
                   <SlotCard
                     key={`${slot.startsAt}-${slot.endsAt}`}
                     slot={slot}
-                    timezone={
-                      timezone
-                    }
+                    timezone={timezone}
                     championshipMatchSelected={championshipMatchSelected}
-                    onBook={(nextSlot) => {
-                      if (
-                        championshipContext?.existingReservation ||
-                        championshipContextLoading
-                      ) {
-                        return;
-                      }
-                      setSelectedSlot(nextSlot);
-                    }}
+                    onBook={onBook}
                   />
                 ))}
               </div>
