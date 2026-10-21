@@ -589,7 +589,7 @@ export function ReservationsPage() {
     (resource) => resource.id === resourceId,
   );
   const adminPermissions = adminAccess?.clubId === selectedResource?.clubId
-    ? adminAccess.permissions
+    ? (adminAccess?.permissions ?? [])
     : [];
   const canAdminReservations = adminPermissions.includes(ADMIN_PERMISSIONS.reservations);
   const canAdminTournaments = adminPermissions.includes(ADMIN_PERMISSIONS.tournaments);
