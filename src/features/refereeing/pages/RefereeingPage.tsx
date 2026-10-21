@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { TournamentScoreEditor } from "@/features/tournaments/components/TournamentScoreEditor";
 import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
@@ -19,6 +20,8 @@ const date = (v: string | null) =>
 const time = (v: string | null) =>
   v ? v.slice(0, 5).replace(":", "h") : "Horaire à confirmer";
 export function RefereeingPage() {
+  const [searchParams] = useSearchParams();
+  const focusMatchId = searchParams.get("match");
   const [tournamentEditor, setTournamentEditor] = useState<{
     matchId: string;
     rules: {
@@ -74,11 +77,13 @@ export function RefereeingPage() {
     () =>
       items.filter(
         (x) =>
-          x.is_mine ||
+          focusMatchId && items.some((match) => match.match_id === focusMatchId)
+            ? x.match_id === focusMatchId
+            : x.is_mine ||
           !x.play_date ||
           x.play_date >= new Date().toISOString().slice(0, 10),
       ),
-    [items],
+    [items, focusMatchId],
   );
   const championship = upcoming.filter((x) => x.source_type === "championship"),
     tournaments = upcoming.filter((x) => x.source_type === "tournament");
