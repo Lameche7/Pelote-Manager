@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   tournamentAdminService,
   type TournamentSummary,
@@ -74,9 +75,14 @@ const toSlot = (item: ExchangeCandidate): Slot => ({
 });
 
 export function AdminSlotExchangePage() {
+  const [params] = useSearchParams();
+  const requestedResource = params.get("resource");
+  const requestedStart = params.get("startsAt");
+  const requestedEnd = params.get("endsAt");
+  const validStart = requestedStart && !Number.isNaN(Date.parse(requestedStart)) ? requestedStart : null;
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(() => validStart ? validStart.slice(0, 10) : today());
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [tournamentId, setTournamentId] = useState("");
   const [items, setItems] = useState<ExchangeCandidate[]>([]);
@@ -113,7 +119,7 @@ export function AdminSlotExchangePage() {
       .then((data) => {
         if (active) {
           setResources(data);
-          setResourceId(data[0]?.id ?? "");
+          setResourceId(data.find((item) => item.id === requestedResource)?.id ?? data[0]?.id ?? "");
         }
       })
       .catch((e) => {
@@ -133,7 +139,13 @@ export function AdminSlotExchangePage() {
     setSecondId("");
     loadCandidatesForRange(resourceId, range.from, range.until)
       .then((data) => {
-        if (active) setItems(data);
+        if (active) {
+          setItems(data);
+          if (requestedResource === resourceId && requestedStart && requestedEnd) {
+            const matches = data.filter((item) => item.resourceId === resourceId && new Date(item.startsAt).getTime() === new Date(requestedStart).getTime() && new Date(item.endsAt).getTime() === new Date(requestedEnd).getTime());
+            if (matches.length === 1) setFirstId(matches[0].id);
+          }
+        }
       })
       .catch((e) => {
         if (active)
