@@ -12,9 +12,10 @@ type CalendarWeekGridProps = {
   timezone: string;
   championshipMatchSelected: boolean;
   onBook: (slot: CalendarSlot) => void;
+  onInspect: (slot: CalendarSlot) => void;
 };
 
-export function CalendarWeekGrid({ weekDays, slotsByDay, timezone, championshipMatchSelected, onBook }: CalendarWeekGridProps) {
+export function CalendarWeekGrid({ weekDays, slotsByDay, timezone, championshipMatchSelected, onBook, onInspect }: CalendarWeekGridProps) {
   return (
     <div className="reservation-calendar__grid">
       {weekDays.map((day) => {
@@ -32,6 +33,7 @@ export function CalendarWeekGrid({ weekDays, slotsByDay, timezone, championshipM
                     timezone={timezone}
                     championshipMatchSelected={championshipMatchSelected}
                     onBook={onBook}
+                    onInspect={onInspect}
                   />
                 ))}
               </div>
