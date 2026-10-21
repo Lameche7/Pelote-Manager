@@ -46,8 +46,7 @@ export function getCalendarPlayerActions(
       context.canSubmitResultNow,
     volunteerReferee:
       context.canVolunteerForRefereeing &&
-      !context.isAssignedReferee &&
-      !context.isParticipant,
+      !context.isAssignedReferee,
     requestReportInMySpace:
       context.isParticipant && context.canRequestReport,
   };
