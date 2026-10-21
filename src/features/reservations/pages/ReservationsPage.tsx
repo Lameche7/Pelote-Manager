@@ -31,6 +31,7 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
 import { resolveCalendarPlayerActions } from "../services/calendarPlayerActionsService";
 import { refereeingService } from "@/features/refereeing/services/refereeingService";
+import { adminTournamentUnprogrammedService } from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
 import { adminCalendarChampionshipService, type ChampionshipCalendarCandidate } from "@/features/reservations/services/adminCalendarChampionshipService";
 import { adminAccessService, type ClubAccess } from "@/features/admin/access/adminAccessService";
 import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
@@ -506,6 +507,30 @@ export function ReservationsPage() {
   const [inspectedActions, setInspectedActions] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [inspectionError, setInspectionError] = useState("");
+  const [unprogramBusy, setUnprogramBusy] = useState(false);
+  const [unprogramError, setUnprogramError] = useState("");
+  const unprogramInspectedMatch = async () => {
+    if (!inspectedSlot || !canAdminTournaments || unprogramBusy || inspectedSlot.status !== "occupied" || inspectedSlot.occupationType !== "match") return;
+    setUnprogramBusy(true);
+    setUnprogramError("");
+    try {
+      // Resolve against the precise selected interval; never infer identity from a displayed name.
+      const identity = await resolveCalendarPlayerActions(inspectedSlot);
+      if (identity?.kind !== "tournament" || !identity.matchId) {
+        throw new Error("Impossible d'identifier de manière certaine cette partie.");
+      }
+      if (!window.confirm("Déprogrammer cette partie et libérer son créneau ? Elle apparaîtra dans « Parties à programmer ».")) return;
+      await adminTournamentUnprogrammedService.unprogram(identity.matchId, "Déprogrammation administrateur depuis le calendrier");
+      setInspectedSlot(null);
+      setInspectedActions(null);
+      await loadSlots();
+    } catch (cause) {
+      setUnprogramError(cause instanceof Error ? cause.message : "Déprogrammation impossible.");
+    } finally {
+      setUnprogramBusy(false);
+    }
+  };
+
   const [volunteering, setVolunteering] = useState(false);
   const loadGeneration = useRef(0);
   useEffect(() => {
@@ -871,6 +896,7 @@ export function ReservationsPage() {
             {inspectedSlot.refereeName && <p>Arbitre : {inspectedSlot.refereeName}</p>}
             {inspectionLoading && <p role="status">Vérification des droits…</p>}
             {inspectionError && <p role="alert">{inspectionError}</p>}
+            {unprogramError && <p role="alert">{unprogramError}</p>}
             {(inspectedActions?.actions.submitResult || inspectedActions?.actions.volunteerReferee || inspectedActions?.actions.requestReportInMySpace || inspectedActions?.isAssignedReferee) && (
               <div className="reservation-slot-actions">
                 <h3>Actions disponibles</h3>
@@ -909,7 +935,7 @@ export function ReservationsPage() {
                     </>
                   )}
                   {canAdminTournaments && inspectedSlot.occupationType === "match" && (
-                    <Link className="reservation-slot-actions__button" to={ROUTES.adminTournamentReschedules}>Déplacer la partie</Link>
+                    <button className="reservation-slot-actions__button" type="button" disabled={unprogramBusy} onClick={() => void unprogramInspectedMatch()}>{unprogramBusy ? "Traitement…" : "Déprogrammer la partie"}</button>
                   )}
                   {canAdminChampionships &&
                     (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
