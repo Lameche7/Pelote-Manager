@@ -787,7 +787,7 @@ export function ReservationsPage() {
             {inspectionLoading && <p role="status">Vérification des droits…</p>}
             {inspectionError && <p role="alert">{inspectionError}</p>}
             {inspectedActions?.actions.submitResult && (
-              <Link to={`${inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
+              <Link to={`${inspectedActions.isAssignedReferee && !inspectedActions.isParticipant ? ROUTES.myRefereeing : inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
                 Saisir le résultat
               </Link>
             )}
