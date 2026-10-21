@@ -35,12 +35,14 @@ export function SlotCard({
   championshipMatchSelected,
   onBook,
   onInspect,
+  canInspectLocked,
 }: {
   slot: CalendarSlot;
   timezone: string;
   championshipMatchSelected: boolean;
   onBook: (slot: CalendarSlot) => void;
   onInspect: (slot: CalendarSlot) => void;
+  canInspectLocked: boolean;
 }) {
   const slotTime = formatTime(slot.startsAt, timezone);
   const isChampionship = slot.reservationAccess === "championship";
@@ -93,8 +95,10 @@ export function SlotCard({
     const openingLabel = slot.bookingOpensAt
       ? formatBookingOpening(slot.bookingOpensAt, timezone)
       : "prochainement";
+    const LockedContainer = canInspectLocked ? "button" : "div";
     return (
-      <div
+      <LockedContainer
+        {...(canInspectLocked ? { type: "button" as const, onClick: () => onInspect(slot) } : {})}
         className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}`}
         aria-label={`${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`}
       >
@@ -103,7 +107,7 @@ export function SlotCard({
           {isChampionship ? "Championnat · " : ""}Réservable dès le{" "}
           {openingLabel}
         </span>
-      </div>
+      </LockedContainer>
     );
   }
 

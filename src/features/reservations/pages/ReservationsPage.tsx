@@ -31,6 +31,7 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
 import { resolveCalendarPlayerActions } from "../services/calendarPlayerActionsService";
 import { refereeingService } from "@/features/refereeing/services/refereeingService";
+import { adminCalendarChampionshipService, type ChampionshipCalendarCandidate } from "@/features/reservations/services/adminCalendarChampionshipService";
 import { adminAccessService, type ClubAccess } from "@/features/admin/access/adminAccessService";
 import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
 import "./ReservationsPage.css";
@@ -569,6 +570,40 @@ export function ReservationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [resourcesLoading, setResourcesLoading] = useState(true);
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
+  const [championshipCandidates, setChampionshipCandidates] = useState<ChampionshipCalendarCandidate[] | null>(null);
+  const [chosenAdminMatch, setChosenAdminMatch] = useState("");
+  const [adminBookingBusy, setAdminBookingBusy] = useState(false);
+  const [adminBookingError, setAdminBookingError] = useState("");
+  const openAdminChampionship = async () => {
+    if (!inspectedSlot || inspectedSlot.status !== "locked" || !canAdminReservations || !canAdminChampionships) return;
+    setAdminBookingError("");
+    setChosenAdminMatch("");
+    setChampionshipCandidates(null);
+    try {
+      const candidates = await adminCalendarChampionshipService.candidates(inspectedSlot);
+      setChampionshipCandidates(candidates);
+    } catch (cause) {
+      setAdminBookingError(cause instanceof Error ? cause.message : "Rencontres indisponibles.");
+    }
+  };
+  const confirmAdminChampionship = async () => {
+    if (!inspectedSlot || !chosenAdminMatch || adminBookingBusy || !canAdminReservations || !canAdminChampionships) return;
+    const chosen = championshipCandidates?.find((m) => m.id === chosenAdminMatch);
+    if (!chosen || !window.confirm(`Programmer « ${chosen.label} » sur ce créneau ?`)) return;
+    setAdminBookingBusy(true);
+    setAdminBookingError("");
+    try {
+      await adminCalendarChampionshipService.book(inspectedSlot, chosenAdminMatch);
+      setInspectedSlot(null);
+      setChampionshipCandidates(null);
+      await loadSlots();
+    } catch (cause) {
+      setAdminBookingError(cause instanceof Error ? cause.message : "Programmation impossible.");
+    } finally {
+      setAdminBookingBusy(false);
+    }
+  };
+
   useEffect(() => {
     let active = true;
     setAdminAccess(null);
@@ -817,6 +852,7 @@ export function ReservationsPage() {
           timezone={selectedResource?.timezone ?? "Europe/Paris"}
           championshipMatchSelected={Boolean(championshipContext)}
           onInspect={setInspectedSlot}
+          canInspectLocked={canAdminReservations}
           onBook={(nextSlot) => {
             if (championshipContext?.existingReservation || championshipContextLoading) return;
             setSelectedSlot(nextSlot);
@@ -830,7 +866,7 @@ export function ReservationsPage() {
             <button type="button" className="booking-modal__close" aria-label="Fermer" onClick={() => setInspectedSlot(null)}>×</button>
             <h2>Informations du créneau</h2>
             <p>{new Date(inspectedSlot.startsAt).toLocaleString("fr-FR", { dateStyle: "full", timeStyle: "short", timeZone: selectedResource?.timezone ?? "Europe/Paris" })}</p>
-            <p>{inspectedSlot.bookedByName ?? "Créneau occupé"}</p>
+            <p>{inspectedSlot.status === "locked" ? "Créneau pas encore ouvert à la réservation" : inspectedSlot.bookedByName ?? "Créneau occupé"}</p>
             {inspectedSlot.resultDisplay && <p>Résultat : {inspectedSlot.resultDisplay}</p>}
             {inspectedSlot.refereeName && <p>Arbitre : {inspectedSlot.refereeName}</p>}
             {inspectionLoading && <p role="status">Vérification des droits…</p>}
@@ -862,21 +898,18 @@ export function ReservationsPage() {
                 </div>
               </div>
             )}
-            {(canAdminReservations || canAdminTournaments || canAdminChampionships) && (
+            {inspectedSlot.status === "occupied" && (canAdminReservations || canAdminTournaments || canAdminChampionships) && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
                   {canAdminReservations && (
                     <>
                       <Link className="reservation-slot-actions__button" to={`${ROUTES.adminSlotExchange}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}`}>Échanger des créneaux</Link>
-                      <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
+
                     </>
                   )}
                   {canAdminTournaments && inspectedSlot.occupationType === "match" && (
                     <Link className="reservation-slot-actions__button" to={ROUTES.adminTournamentReschedules}>Déplacer la partie</Link>
-                  )}
-                  {canAdminChampionships && inspectedSlot.occupationType === "championship_match" && (
-                    <Link className="reservation-slot-actions__button" to={ROUTES.adminChampionshipReservations}>Gérer la rencontre</Link>
                   )}
                   {canAdminChampionships &&
                     (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
@@ -885,6 +918,36 @@ export function ReservationsPage() {
                 </div>
               </div>
             )}
+            {inspectedSlot.status === "locked" && canAdminReservations && (
+              <div className="reservation-slot-actions reservation-slot-actions--admin">
+                <h3>Actions administrateur</h3>
+                <div className="reservation-slot-actions__list">
+                  <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
+                  {canAdminChampionships && (
+                    <button className="reservation-slot-actions__button" type="button" onClick={() => void openAdminChampionship()}>
+                      Programmer une partie de championnat
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {inspectedSlot.status === "locked" && championshipCandidates && (
+              <div className="reservation-slot-actions reservation-slot-actions--admin">
+                <h3>Choisir la rencontre</h3>
+                <select aria-label="Rencontre de championnat" value={chosenAdminMatch} onChange={(event) => setChosenAdminMatch(event.target.value)}>
+                  <option value="">Sélectionner une rencontre…</option>
+                  {championshipCandidates.map((match) => (
+                    <option value={match.id} key={match.id}>{match.label}{match.plannedDate ? ` · ${match.plannedDate}` : ""}</option>
+                  ))}
+                </select>
+                {championshipCandidates.length === 0 && <p>Aucune rencontre disponible pour ce club.</p>}
+                <button className="reservation-slot-actions__button" type="button" disabled={!chosenAdminMatch || adminBookingBusy} onClick={() => void confirmAdminChampionship()}>
+                  {adminBookingBusy ? "Programmation…" : "Confirmer la programmation"}
+                </button>
+              </div>
+            )}
+            {adminBookingError && <p role="alert">{adminBookingError}</p>}
             {!inspectionLoading && !inspectionError && !inspectedActions?.actions.submitResult && !inspectedActions?.actions.volunteerReferee && !inspectedActions?.actions.requestReportInMySpace && !inspectedActions?.isAssignedReferee && !canAdminReservations && !canAdminTournaments && !canAdminChampionships && (
               <p>Aucune action disponible pour ce créneau.</p>
             )}
