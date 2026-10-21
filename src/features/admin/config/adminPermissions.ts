@@ -89,7 +89,7 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.reservations,
       },
       {
-        label: "Échanger des créneaux (simulation)",
+        label: "Échanger des créneaux",
         to: ROUTES.adminSlotExchange,
         permission: ADMIN_PERMISSIONS.reservations,
       },
