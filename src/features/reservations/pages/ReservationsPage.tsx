@@ -786,20 +786,27 @@ export function ReservationsPage() {
             {inspectedSlot.refereeName && <p>Arbitre : {inspectedSlot.refereeName}</p>}
             {inspectionLoading && <p role="status">Vérification des droits…</p>}
             {inspectionError && <p role="alert">{inspectionError}</p>}
+            {(inspectedActions?.actions.submitResult || inspectedActions?.actions.volunteerReferee || inspectedActions?.actions.requestReportInMySpace) && (
+              <div className="reservation-slot-actions">
+                <h3>Actions disponibles</h3>
+                <div className="reservation-slot-actions__list">
             {inspectedActions?.actions.submitResult && (
-              <Link to={`${inspectedActions.isAssignedReferee && !inspectedActions.isParticipant ? ROUTES.myRefereeing : inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
+              <Link className="reservation-slot-actions__button" to={`${inspectedActions.isAssignedReferee && !inspectedActions.isParticipant ? ROUTES.myRefereeing : inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
                 Saisir le résultat
               </Link>
             )}
             {inspectedActions?.actions.volunteerReferee && (
-              <button type="button" disabled={volunteering} onClick={() => void volunteerOnCalendar()}>
-                {volunteering ? "Enregistrement…" : "Se proposer comme arbitre"}
+              <button className="reservation-slot-actions__button" type="button" disabled={volunteering} onClick={() => void volunteerOnCalendar()}>
+                {volunteering ? "Enregistrement…" : "Je peux arbitrer"}
               </button>
             )}
             {inspectedActions?.actions.requestReportInMySpace && (
-              <Link to={`${inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
-                Demander un report dans Mon espace
+              <Link className="reservation-slot-actions__button" to={`${inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
+                Demander un report
               </Link>
+            )}
+                </div>
+              </div>
             )}
             {!inspectionLoading && !inspectionError && !inspectedActions?.actions.submitResult && !inspectedActions?.actions.volunteerReferee && !inspectedActions?.actions.requestReportInMySpace && (
               <p>Aucune action disponible pour ce créneau.</p>
