@@ -817,6 +817,7 @@ export function ReservationsPage() {
           timezone={selectedResource?.timezone ?? "Europe/Paris"}
           championshipMatchSelected={Boolean(championshipContext)}
           onInspect={setInspectedSlot}
+          canInspectLocked={canAdminReservations}
           onBook={(nextSlot) => {
             if (championshipContext?.existingReservation || championshipContextLoading) return;
             setSelectedSlot(nextSlot);
@@ -830,7 +831,7 @@ export function ReservationsPage() {
             <button type="button" className="booking-modal__close" aria-label="Fermer" onClick={() => setInspectedSlot(null)}>×</button>
             <h2>Informations du créneau</h2>
             <p>{new Date(inspectedSlot.startsAt).toLocaleString("fr-FR", { dateStyle: "full", timeStyle: "short", timeZone: selectedResource?.timezone ?? "Europe/Paris" })}</p>
-            <p>{inspectedSlot.bookedByName ?? "Créneau occupé"}</p>
+            <p>{inspectedSlot.status === "locked" ? "Créneau pas encore ouvert à la réservation" : inspectedSlot.bookedByName ?? "Créneau occupé"}</p>
             {inspectedSlot.resultDisplay && <p>Résultat : {inspectedSlot.resultDisplay}</p>}
             {inspectedSlot.refereeName && <p>Arbitre : {inspectedSlot.refereeName}</p>}
             {inspectionLoading && <p role="status">Vérification des droits…</p>}
@@ -862,26 +863,31 @@ export function ReservationsPage() {
                 </div>
               </div>
             )}
-            {(canAdminReservations || canAdminTournaments || canAdminChampionships) && (
+            {inspectedSlot.status === "occupied" && (canAdminReservations || canAdminTournaments || canAdminChampionships) && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
                   {canAdminReservations && (
                     <>
                       <Link className="reservation-slot-actions__button" to={`${ROUTES.adminSlotExchange}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}`}>Échanger des créneaux</Link>
-                      <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
+
                     </>
                   )}
                   {canAdminTournaments && inspectedSlot.occupationType === "match" && (
                     <Link className="reservation-slot-actions__button" to={ROUTES.adminTournamentReschedules}>Déplacer la partie</Link>
                   )}
-                  {canAdminChampionships && inspectedSlot.occupationType === "championship_match" && (
-                    <Link className="reservation-slot-actions__button" to={ROUTES.adminChampionshipReservations}>Gérer la rencontre</Link>
-                  )}
                   {canAdminChampionships &&
                     (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
                     <Link className="reservation-slot-actions__button" to={ROUTES.adminRefereeing}>Gérer l'arbitrage</Link>
                   )}
+                </div>
+              </div>
+            )}
+            {inspectedSlot.status === "locked" && canAdminReservations && (
+              <div className="reservation-slot-actions reservation-slot-actions--admin">
+                <h3>Actions administrateur</h3>
+                <div className="reservation-slot-actions__list">
+                  <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
                 </div>
               </div>
             )}
