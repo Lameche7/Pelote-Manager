@@ -869,7 +869,7 @@ export function ReservationsPage() {
                   {canAdminReservations && (
                     <>
                       <Link className="reservation-slot-actions__button" to={ROUTES.adminSlotExchange}>Échanger des créneaux</Link>
-                      <Link className="reservation-slot-actions__button" to={ROUTES.adminReservationOperations}>Gérer la réservation</Link>
+                      <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
                     </>
                   )}
                   {canAdminTournaments && inspectedSlot.occupationType === "match" && (
@@ -878,7 +878,7 @@ export function ReservationsPage() {
                   {canAdminChampionships && inspectedSlot.occupationType === "championship_match" && (
                     <Link className="reservation-slot-actions__button" to={ROUTES.adminChampionshipReservations}>Gérer la rencontre</Link>
                   )}
-                  {(canAdminChampionships || canAdminTournaments) &&
+                  {canAdminChampionships &&
                     (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
                     <Link className="reservation-slot-actions__button" to={ROUTES.adminRefereeing}>Gérer l'arbitrage</Link>
                   )}
