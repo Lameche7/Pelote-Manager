@@ -31,6 +31,8 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
 import { resolveCalendarPlayerActions } from "../services/calendarPlayerActionsService";
 import { refereeingService } from "@/features/refereeing/services/refereeingService";
+import { adminAccessService, type ClubAccess } from "@/features/admin/access/adminAccessService";
+import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
 import "./ReservationsPage.css";
 import "./ReservationsResponsive.css";
 import "./ReservationLockedSlots.css";
@@ -566,6 +568,17 @@ export function ReservationsPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [resourcesLoading, setResourcesLoading] = useState(true);
+  const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
+  useEffect(() => {
+    let active = true;
+    setAdminAccess(null);
+    if (!isAuthenticated) return;
+    void adminAccessService.getOptionalAccess()
+      .then((access) => { if (active) setAdminAccess(access); })
+      .catch(() => { if (active) setAdminAccess(null); });
+    return () => { active = false; };
+  }, [isAuthenticated]);
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [championshipContext, setChampionshipContext] =
     useState<ChampionshipMatchReservationContext | null>(null);
@@ -575,6 +588,13 @@ export function ReservationsPage() {
   const selectedResource = resources.find(
     (resource) => resource.id === resourceId,
   );
+  const adminPermissions = adminAccess?.clubId === selectedResource?.clubId
+    ? (adminAccess?.permissions ?? [])
+    : [];
+  const canAdminReservations = adminPermissions.includes(ADMIN_PERMISSIONS.reservations);
+  const canAdminTournaments = adminPermissions.includes(ADMIN_PERMISSIONS.tournaments);
+  const canAdminChampionships = adminPermissions.includes(ADMIN_PERMISSIONS.championships);
+
   const weekDays = useMemo(() => buildWeekDays(anchorDate), [anchorDate]);
   const weekStart = weekDays[0];
   const weekEnd = weekDays[6];
@@ -842,7 +862,30 @@ export function ReservationsPage() {
                 </div>
               </div>
             )}
-            {!inspectionLoading && !inspectionError && !inspectedActions?.actions.submitResult && !inspectedActions?.actions.volunteerReferee && !inspectedActions?.actions.requestReportInMySpace && !inspectedActions?.isAssignedReferee && (
+            {(canAdminReservations || canAdminTournaments || canAdminChampionships) && (
+              <div className="reservation-slot-actions reservation-slot-actions--admin">
+                <h3>Actions administrateur</h3>
+                <div className="reservation-slot-actions__list">
+                  {canAdminReservations && (
+                    <>
+                      <Link className="reservation-slot-actions__button" to={ROUTES.adminSlotExchange}>Échanger des créneaux</Link>
+                      <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
+                    </>
+                  )}
+                  {canAdminTournaments && inspectedSlot.occupationType === "match" && (
+                    <Link className="reservation-slot-actions__button" to={ROUTES.adminTournamentReschedules}>Déplacer la partie</Link>
+                  )}
+                  {canAdminChampionships && inspectedSlot.occupationType === "championship_match" && (
+                    <Link className="reservation-slot-actions__button" to={ROUTES.adminChampionshipReservations}>Gérer la rencontre</Link>
+                  )}
+                  {canAdminChampionships &&
+                    (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
+                    <Link className="reservation-slot-actions__button" to={ROUTES.adminRefereeing}>Gérer l'arbitrage</Link>
+                  )}
+                </div>
+              </div>
+            )}
+            {!inspectionLoading && !inspectionError && !inspectedActions?.actions.submitResult && !inspectedActions?.actions.volunteerReferee && !inspectedActions?.actions.requestReportInMySpace && !inspectedActions?.isAssignedReferee && !canAdminReservations && !canAdminTournaments && !canAdminChampionships && (
               <p>Aucune action disponible pour ce créneau.</p>
             )}
           </section>
