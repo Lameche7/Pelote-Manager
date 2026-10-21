@@ -497,6 +497,7 @@ export function ReservationsPage() {
   );
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
+  const [inspectedSlot, setInspectedSlot] = useState<CalendarSlot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [championshipContext, setChampionshipContext] =
@@ -725,11 +726,26 @@ export function ReservationsPage() {
           slotsByDay={slotsByDay}
           timezone={selectedResource?.timezone ?? "Europe/Paris"}
           championshipMatchSelected={Boolean(championshipContext)}
+          onInspect={setInspectedSlot}
           onBook={(nextSlot) => {
             if (championshipContext?.existingReservation || championshipContextLoading) return;
             setSelectedSlot(nextSlot);
           }}
         />
+      )}
+
+      {inspectedSlot && (
+        <div className="booking-modal" role="presentation" onMouseDown={() => setInspectedSlot(null)}>
+          <section className="booking-modal__panel" role="dialog" aria-modal="true" aria-label="Informations du créneau" onMouseDown={(event) => event.stopPropagation()}>
+            <button type="button" className="booking-modal__close" aria-label="Fermer" onClick={() => setInspectedSlot(null)}>×</button>
+            <h2>Informations du créneau</h2>
+            <p>{new Date(inspectedSlot.startsAt).toLocaleString("fr-FR", { dateStyle: "full", timeStyle: "short", timeZone: selectedResource?.timezone ?? "Europe/Paris" })}</p>
+            <p>{inspectedSlot.bookedByName ?? "Créneau occupé"}</p>
+            {inspectedSlot.resultDisplay && <p>Résultat : {inspectedSlot.resultDisplay}</p>}
+            {inspectedSlot.refereeName && <p>Arbitre : {inspectedSlot.refereeName}</p>}
+            <p>Les actions sur les parties seront ajoutées après vérification de leur identification et des droits d'accès.</p>
+          </section>
+        </div>
       )}
 
       <div className="reservation-calendar__legend" aria-label="Légende">
