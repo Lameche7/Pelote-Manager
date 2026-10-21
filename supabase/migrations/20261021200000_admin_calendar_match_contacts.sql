@@ -38,7 +38,7 @@ begin
     ) c on true
     where m.id=target_match;
   else
-    select coalesce(jsonb_agg(jsonb_build_object('name',p.first_name||' '||p.last_name,'phone',coalesce(nullif(btrim(cm.phone),''),nullif(btrim(p.phone),'')),'team',p.team_id::text)
+    select coalesce(jsonb_agg(jsonb_build_object('name',p.first_name||' '||p.last_name,'phone',nullif(btrim(cm.phone),''),'team',p.team_id::text)
       order by p.team_id,p.last_name,p.first_name),'[]'::jsonb) into contacts
     from public.tournament_matches m
     join public.tournament_team_players p on p.team_id in(m.team_a_id,m.team_b_id)
