@@ -15,7 +15,7 @@ import {
   type ExchangeCandidate,
 } from "../services/slotExchangeCandidatesService";
 
-// Explicit deployment gate: simulation only until the database audit is approved.
+// Exchange writes remain gated by server-side authorization and conflict checks.
 const EXCHANGE_WRITES_ENABLED = true;
 
 const tournamentRange = (tournament: TournamentSummary) => ({
@@ -84,7 +84,6 @@ export function AdminSlotExchangePage() {
   const [secondId, setSecondId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState("");
   const [attempted, setAttempted] = useState(false);
@@ -130,7 +129,6 @@ export function AdminSlotExchangePage() {
     let active = true;
     setLoading(true);
     setError("");
-    setShowPreview(false);
     setFirstId("");
     setSecondId("");
     loadCandidatesForRange(resourceId, range.from, range.until)
@@ -156,15 +154,15 @@ export function AdminSlotExchangePage() {
   const second = items.find((item) => item.id === secondId);
   const preview = useMemo(
     () =>
-      showPreview && first && second
+      first && second
         ? previewSwap(toSlot(first), toSlot(second))
         : null,
-    [showPreview, first, second],
+    [first, second],
   );
   async function confirmExchange() {
-    if (!EXCHANGE_WRITES_ENABLED || !first || !second || !preview?.valid)
+    if (busy || loading || !EXCHANGE_WRITES_ENABLED || !first || !second || !preview?.valid || !first.exchangeSupported || !second.exchangeSupported)
       return;
-    if (!window.confirm("Confirmer l'échange définitif des deux occupations ?"))
+    if (!window.confirm(`Confirmer l’échange définitif ?\n${first.title} → ${formatDate(preview.first.startsAt)}\n${second.title} → ${formatDate(preview.second.startsAt)}`))
       return;
     setBusy(true);
     setAttempted(true);
@@ -179,8 +177,7 @@ export function AdminSlotExchangePage() {
         outcome.notificationWarning ??
           `Échange enregistré. ${outcome.notificationsPublished} notification(s) publiée(s).`,
       );
-      setShowPreview(false);
-      setFirstId("");
+        setFirstId("");
       setSecondId("");
       setItems(
         await loadCandidatesForRange(resourceId, range.from, range.until),
@@ -197,9 +194,7 @@ export function AdminSlotExchangePage() {
     <main style={{ maxWidth: 1050, margin: "0 auto", padding: 24 }}>
       <h1>Échanger deux créneaux</h1>
       <p>
-        Choisis deux occupations réelles du calendrier. La simulation est
-        disponible pour toutes les occupations. Les échanges sont validés par le
-        serveur avant toute modification.
+        Choisis deux occupations du calendrier, vérifie leurs nouveaux horaires puis confirme l’échange. Le serveur contrôle les droits et les conflits avant toute modification.
       </p>
       <div
         style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20 }}
@@ -279,8 +274,7 @@ export function AdminSlotExchangePage() {
               value={field.value}
               onChange={(e) => {
                 field.set(e.target.value);
-                setShowPreview(false);
-              }}
+                          }}
             >
               <option value="">Sélectionner une occupation…</option>
               {items
@@ -301,19 +295,11 @@ export function AdminSlotExchangePage() {
           </fieldset>
         ))}
       </div>
-      <button
-        type="button"
-        disabled={!first || !second || loading}
-        onClick={() => setShowPreview(true)}
-        style={{ marginTop: 20 }}
-      >
-        Simuler l'échange
-      </button>
       {preview && (
         <section aria-live="polite" style={{ marginTop: 20 }}>
           {preview.valid ? (
             <>
-              <h2>Après échange (simulation)</h2>
+              <h2>Échange prévu</h2>
               <p>
                 {first?.title} → {formatDate(preview.first.startsAt)}
               </p>
@@ -336,7 +322,7 @@ export function AdminSlotExchangePage() {
                   </p>
                   <button
                     type="button"
-                    disabled={busy}
+                    disabled={busy || loading}
                     onClick={() => void confirmExchange()}
                   >
                     {busy
