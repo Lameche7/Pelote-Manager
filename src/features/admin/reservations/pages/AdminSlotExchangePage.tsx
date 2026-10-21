@@ -82,7 +82,7 @@ export function AdminSlotExchangePage() {
   const validStart = requestedStart && !Number.isNaN(Date.parse(requestedStart)) ? requestedStart : null;
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
-  const [date, setDate] = useState(() => validStart ? validStart.slice(0, 10) : today());
+  const [date, setDate] = useState(() => validStart ? new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(validStart)) : today());
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [tournamentId, setTournamentId] = useState("");
   const [items, setItems] = useState<ExchangeCandidate[]>([]);
