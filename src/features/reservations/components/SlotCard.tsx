@@ -34,11 +34,13 @@ export function SlotCard({
   timezone,
   championshipMatchSelected,
   onBook,
+  onInspect,
 }: {
   slot: CalendarSlot;
   timezone: string;
   championshipMatchSelected: boolean;
   onBook: (slot: CalendarSlot) => void;
+  onInspect: (slot: CalendarSlot) => void;
 }) {
   const slotTime = formatTime(slot.startsAt, timezone);
   const isChampionship = slot.reservationAccess === "championship";
@@ -63,7 +65,9 @@ export function SlotCard({
         } as CSSProperties)
       : undefined;
     return (
-      <div
+      <button
+        type="button"
+        onClick={() => onInspect(slot)}
         className={`reservation-slot reservation-slot--occupied${isColoredMatch ? " reservation-slot--tournament" : ""}`}
         style={style}
         aria-label={`${slotTime} : occupé par ${bookedBy}`}
@@ -81,7 +85,7 @@ export function SlotCard({
         {slot.resultDisplay && (
           <span className="reservation-slot__result">{slot.resultDisplay}</span>
         )}
-      </div>
+      </button>
     );
   }
 
