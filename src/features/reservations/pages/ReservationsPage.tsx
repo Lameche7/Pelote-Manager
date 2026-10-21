@@ -997,6 +997,13 @@ export function ReservationsPage() {
                 ))}
                 {matchContacts.some((contact) => contact.phone) && (
                   <>
+                    <a
+                      className="reservation-slot-actions__button"
+                      href={`sms:${[...new Set(matchContacts.map((c) => c.phone?.replace(/[^+0-9]/g, "")).filter((phone): phone is string => Boolean(phone)))].join(",")}`}
+                    >
+                      Préparer un SMS collectif
+                    </a>
+                    <p>Vérifie que tous les destinataires sont présents dans Google Messages avant l’envoi. Selon Android, le lien peut ne reprendre que le premier numéro.</p>
                     <button className="reservation-slot-actions__button" type="button" onClick={() => void copyMatchPhones()}>
                       {copiedContacts ? "Numéros copiés" : "Copier tous les numéros"}
                     </button>
