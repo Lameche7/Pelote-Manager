@@ -513,6 +513,11 @@ export function ReservationsPage() {
   const [contactBusy, setContactBusy] = useState(false);
   const [contactError, setContactError] = useState("");
   const [copiedContacts, setCopiedContacts] = useState(false);
+  useEffect(() => {
+    setMatchContacts(null);
+    setContactError("");
+    setCopiedContacts(false);
+  }, [inspectedSlot]);
   const openMatchContacts = async () => {
     if (!inspectedSlot || !canAdminReservations || inspectedSlot.status !== "occupied") return;
     setContactBusy(true);
