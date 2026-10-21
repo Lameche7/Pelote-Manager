@@ -868,7 +868,7 @@ export function ReservationsPage() {
                 <div className="reservation-slot-actions__list">
                   {canAdminReservations && (
                     <>
-                      <Link className="reservation-slot-actions__button" to={ROUTES.adminSlotExchange}>Échanger des créneaux</Link>
+                      <Link className="reservation-slot-actions__button" to={`${ROUTES.adminSlotExchange}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}`}>Échanger des créneaux</Link>
                       <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
                     </>
                   )}
