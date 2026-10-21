@@ -29,6 +29,8 @@ import {
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
+import { resolveCalendarPlayerActions } from "../services/calendarPlayerActionsService";
+import { refereeingService } from "@/features/refereeing/services/refereeingService";
 import "./ReservationsPage.css";
 import "./ReservationsResponsive.css";
 import "./ReservationLockedSlots.css";
@@ -498,6 +500,45 @@ export function ReservationsPage() {
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [inspectedSlot, setInspectedSlot] = useState<CalendarSlot | null>(null);
+  const [inspectedActions, setInspectedActions] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
+  const [inspectionLoading, setInspectionLoading] = useState(false);
+  const [inspectionError, setInspectionError] = useState("");
+  const [volunteering, setVolunteering] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setInspectedActions(null);
+    setInspectionError("");
+    if (!inspectedSlot || !isAuthenticated) return;
+    setInspectionLoading(true);
+    resolveCalendarPlayerActions(inspectedSlot).then((result) => {
+      if (active) setInspectedActions(result);
+    }).catch((error: unknown) => {
+      if (active) setInspectionError(error instanceof Error ? error.message : "Impossible de vérifier les droits.");
+    }).finally(() => { if (active) setInspectionLoading(false); });
+    return () => { active = false; };
+  }, [inspectedSlot, isAuthenticated]);
+  const volunteerOnCalendar = async () => {
+    if (!inspectedActions?.actions.volunteerReferee || volunteering) return;
+    setVolunteering(true);
+    setInspectionError("");
+    try {
+      const matches = await refereeingService.list();
+      const match = matches.find((item) =>
+        item.match_id === inspectedActions.matchId &&
+        item.source_type === inspectedActions.kind &&
+        !item.referee_profile_id
+      );
+      if (!match) throw new Error("Cet arbitrage n'est plus disponible.");
+      await refereeingService.volunteer(match);
+      setInspectedActions(null);
+      setInspectedSlot(null);
+    } catch (error) {
+      setInspectionError(error instanceof Error ? error.message : "Impossible de prendre cet arbitrage.");
+    } finally {
+      setVolunteering(false);
+    }
+  };
+
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [championshipContext, setChampionshipContext] =
@@ -743,7 +784,26 @@ export function ReservationsPage() {
             <p>{inspectedSlot.bookedByName ?? "Créneau occupé"}</p>
             {inspectedSlot.resultDisplay && <p>Résultat : {inspectedSlot.resultDisplay}</p>}
             {inspectedSlot.refereeName && <p>Arbitre : {inspectedSlot.refereeName}</p>}
-            <p>Les actions sur les parties seront ajoutées après vérification de leur identification et des droits d'accès.</p>
+            {inspectionLoading && <p role="status">Vérification des droits…</p>}
+            {inspectionError && <p role="alert">{inspectionError}</p>}
+            {inspectedActions?.actions.submitResult && (
+              <Link to={`${inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
+                Saisir le résultat
+              </Link>
+            )}
+            {inspectedActions?.actions.volunteerReferee && (
+              <button type="button" disabled={volunteering} onClick={() => void volunteerOnCalendar()}>
+                {volunteering ? "Enregistrement…" : "Se proposer comme arbitre"}
+              </button>
+            )}
+            {inspectedActions?.actions.requestReportInMySpace && (
+              <Link to={`${inspectedActions.kind === "championship" ? ROUTES.myChampionships : ROUTES.myTournaments}?match=${encodeURIComponent(inspectedActions.matchId)}`}>
+                Demander un report dans Mon espace
+              </Link>
+            )}
+            {!inspectionLoading && !inspectionError && !inspectedActions?.actions.submitResult && !inspectedActions?.actions.volunteerReferee && !inspectedActions?.actions.requestReportInMySpace && (
+              <p>Aucune action disponible pour ce créneau.</p>
+            )}
           </section>
         </div>
       )}
