@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import {
   adminTournamentManualRescheduleService,
@@ -16,6 +17,8 @@ const displayDate = (date: string) =>
   }).format(new Date(`${date}T12:00:00`));
 
 export function AdminTournamentUnprogrammedPanel() {
+  const [params] = useSearchParams();
+  const highlightedMatchId = params.get("match");
   const [tournaments, setTournaments] = useState<
     AdminManualRescheduleTournament[]
   >([]);
@@ -183,15 +186,15 @@ export function AdminTournamentUnprogrammedPanel() {
         </p>
       )}
 
-      <h2>Parties à programmer ({pending.length})</h2>
+      <h2 id="parties-a-programmer">Parties à programmer ({pending.length})</h2>
       {pending.length === 0 && (
         <p>Aucune partie en attente de programmation.</p>
       )}
       <div className="admin-reschedules__list">
         {pending.map((match) => (
-          <article className="admin-reschedules__card" key={match.matchId}>
+          <article className="admin-reschedules__card" key={match.matchId} id={match.matchId === highlightedMatchId ? "partie-selectionnee" : undefined} style={match.matchId === highlightedMatchId ? { outline: "3px solid var(--color-primary, #176b4d)", outlineOffset: 3 } : undefined}>
             <h3>
-              {match.teamA} contre {match.teamB}
+              {match.matchId === highlightedMatchId ? "Partie sélectionnée · " : ""}{match.teamA} contre {match.teamB}
             </h3>
             <p>
               {match.tournamentName} · {match.seriesName}

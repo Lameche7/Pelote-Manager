@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
 import {
@@ -492,6 +492,7 @@ function BookingModal({
 }
 
 export function ReservationsPage() {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const championshipMatchId = searchParams.get("championshipMatch");
@@ -523,7 +524,7 @@ export function ReservationsPage() {
       await adminTournamentUnprogrammedService.unprogram(identity.matchId, "Déprogrammation administrateur depuis le calendrier");
       setInspectedSlot(null);
       setInspectedActions(null);
-      await loadSlots();
+      navigate(`${ROUTES.adminTournamentReschedules}?match=${encodeURIComponent(identity.matchId)}#parties-a-programmer`);
     } catch (cause) {
       setUnprogramError(cause instanceof Error ? cause.message : "Déprogrammation impossible.");
     } finally {
