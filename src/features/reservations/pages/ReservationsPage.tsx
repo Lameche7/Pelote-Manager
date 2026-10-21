@@ -536,7 +536,7 @@ export function ReservationsPage() {
     const phones = [...new Set((matchContacts ?? []).map((contact) => contact.phone?.trim()).filter((phone): phone is string => Boolean(phone)))];
     if (!phones.length) return;
     try {
-      await navigator.clipboard.writeText(phones.join("; "));
+      await navigator.clipboard.writeText(phones.join(", "));
       setCopiedContacts(true);
       setContactError("");
     } catch {
@@ -1000,7 +1000,7 @@ export function ReservationsPage() {
                     <button className="reservation-slot-actions__button" type="button" onClick={() => void copyMatchPhones()}>
                       {copiedContacts ? "Numéros copiés" : "Copier tous les numéros"}
                     </button>
-                    <textarea readOnly aria-label="Numéros à copier" value={[...new Set(matchContacts.map((c) => c.phone?.trim()).filter((phone): phone is string => Boolean(phone)))].join("; ")} rows={2} />
+                    <textarea readOnly aria-label="Numéros à copier" value={[...new Set(matchContacts.map((c) => c.phone?.trim()).filter((phone): phone is string => Boolean(phone)))].join(", ")} rows={2} />
                   </>
                 )}
               </section>
