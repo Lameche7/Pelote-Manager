@@ -28,17 +28,11 @@ import {
 } from "@/features/user-space/championships/services/championshipMatchReservationService";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { SlotCard } from "../components/SlotCard";
+import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
 import "./ReservationsPage.css";
 import "./ReservationsResponsive.css";
 import "./ReservationLockedSlots.css";
 import "./ReservationPaymentChoice.css";
-
-const dayFormatter = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
 
 const fullDateFormatter = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
@@ -726,42 +720,16 @@ export function ReservationsPage() {
           Aucun terrain n’est encore ouvert à la réservation.
         </div>
       ) : (
-        <div className="reservation-calendar__grid">
-          {weekDays.map((day) => {
-            const dayKey = toDateInputValue(day);
-            const daySlots = slotsByDay.get(dayKey) ?? [];
-            return (
-              <article className="reservation-calendar__day" key={dayKey}>
-                <h2>{dayFormatter.format(day)}</h2>
-                {daySlots.length > 0 ? (
-                  <div className="reservation-calendar__slots">
-                    {daySlots.map((slot) => (
-                      <SlotCard
-                        key={`${slot.startsAt}-${slot.endsAt}`}
-                        slot={slot}
-                        timezone={
-                          selectedResource?.timezone ?? "Europe/Paris"
-                        }
-                        championshipMatchSelected={Boolean(championshipContext)}
-                        onBook={(nextSlot) => {
-                          if (
-                            championshipContext?.existingReservation ||
-                            championshipContextLoading
-                          ) {
-                            return;
-                          }
-                          setSelectedSlot(nextSlot);
-                        }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="reservation-calendar__closed">Fermé</p>
-                )}
-              </article>
-            );
-          })}
-        </div>
+        <CalendarWeekGrid
+          weekDays={weekDays}
+          slotsByDay={slotsByDay}
+          timezone={selectedResource?.timezone ?? "Europe/Paris"}
+          championshipMatchSelected={Boolean(championshipContext)}
+          onBook={(nextSlot) => {
+            if (championshipContext?.existingReservation || championshipContextLoading) return;
+            setSelectedSlot(nextSlot);
+          }}
+        />
       )}
 
       <div className="reservation-calendar__legend" aria-label="Légende">
