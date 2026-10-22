@@ -30,6 +30,7 @@ import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
 import { resolveCalendarPlayerActions } from "../services/calendarPlayerActionsService";
+import { resolveCalendarCompetition } from "../services/calendarCompetitionService";
 import { refereeingService } from "@/features/refereeing/services/refereeingService";
 import { adminTournamentUnprogrammedService } from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
 import { loadAdminCalendarMatchContacts, type MatchContact } from "@/features/reservations/services/adminCalendarMatchContactsService";
@@ -509,6 +510,20 @@ export function ReservationsPage() {
   const [inspectedActions, setInspectedActions] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [inspectionError, setInspectionError] = useState("");
+  const [competitionBusy, setCompetitionBusy] = useState(false);
+  const [competitionError, setCompetitionError] = useState("");
+  const openInspectedCompetition = async () => {
+    if (!inspectedSlot || competitionBusy) return;
+    setCompetitionBusy(true);
+    setCompetitionError("");
+    try {
+      const match = await resolveCalendarCompetition(inspectedSlot);
+      if (!match) throw new Error("Compétition introuvable pour cette partie.");
+      navigate(match.kind === "tournament" ? `${ROUTES.tournaments}/${encodeURIComponent(match.competitionId)}` : `${ROUTES.myChampionships}?match=${encodeURIComponent(match.matchId)}`);
+    } catch (cause) {
+      setCompetitionError(cause instanceof Error ? cause.message : "Impossible d’ouvrir la compétition.");
+    } finally { setCompetitionBusy(false); }
+  };
   const [matchContacts, setMatchContacts] = useState<MatchContact[] | null>(null);
   const [contactBusy, setContactBusy] = useState(false);
   const [contactError, setContactError] = useState("");
@@ -933,6 +948,14 @@ export function ReservationsPage() {
             {inspectionLoading && <p role="status">Vérification des droits…</p>}
             {inspectionError && <p role="alert">{inspectionError}</p>}
             {unprogramError && <p role="alert">{unprogramError}</p>}
+            {competitionError && <p role="alert">{competitionError}</p>}
+            {inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
+              <div className="reservation-slot-actions">
+                <button className="reservation-slot-actions__button" type="button" disabled={competitionBusy} onClick={() => void openInspectedCompetition()}>
+                  {competitionBusy ? "Ouverture…" : "Voir la compétition"}
+                </button>
+              </div>
+            )}
             {(inspectedActions?.actions.submitResult || inspectedActions?.actions.volunteerReferee || inspectedActions?.actions.requestReportInMySpace || inspectedActions?.isAssignedReferee) && (
               <div className="reservation-slot-actions">
                 <h3>Actions disponibles</h3>
