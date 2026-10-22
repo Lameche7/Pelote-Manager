@@ -648,12 +648,14 @@ export function ReservationsPage() {
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const [championshipCandidates, setChampionshipCandidates] = useState<ChampionshipCalendarCandidate[] | null>(null);
   const [chosenAdminMatch, setChosenAdminMatch] = useState("");
+  const [convertReservationId, setConvertReservationId] = useState<string | null>(null);
   const [adminBookingBusy, setAdminBookingBusy] = useState(false);
   const [adminBookingError, setAdminBookingError] = useState("");
   const openAdminChampionship = async () => {
     if (!inspectedSlot || inspectedSlot.status !== "locked" || !canAdminReservations || !canAdminChampionships) return;
     setAdminBookingError("");
     setChosenAdminMatch("");
+    setConvertReservationId(null);
     setChampionshipCandidates(null);
     try {
       const candidates = await adminCalendarChampionshipService.candidates(inspectedSlot);
@@ -662,6 +664,19 @@ export function ReservationsPage() {
       setAdminBookingError(cause instanceof Error ? cause.message : "Rencontres indisponibles.");
     }
   };
+  const openConvertChampionship = async () => {
+    if (!inspectedSlot || inspectedSlot.status !== "occupied" || !canAdminReservations || !canAdminChampionships || inspectedSlot.occupationType !== "reservation") return;
+    setAdminBookingError("");
+    setChosenAdminMatch("");
+    setChampionshipCandidates(null);
+    setConvertReservationId(null);
+    try {
+      const id = await adminCalendarChampionshipService.occupiedReservationId(inspectedSlot);
+      const candidates = await adminCalendarChampionshipService.conversionCandidates(id);
+      setConvertReservationId(id);
+      setChampionshipCandidates(candidates);
+    } catch (cause) { setAdminBookingError(cause instanceof Error ? cause.message : "Réservation indisponible."); }
+  };
   const confirmAdminChampionship = async () => {
     if (!inspectedSlot || !chosenAdminMatch || adminBookingBusy || !canAdminReservations || !canAdminChampionships) return;
     const chosen = championshipCandidates?.find((m) => m.id === chosenAdminMatch);
@@ -669,7 +684,8 @@ export function ReservationsPage() {
     setAdminBookingBusy(true);
     setAdminBookingError("");
     try {
-      await adminCalendarChampionshipService.book(inspectedSlot, chosenAdminMatch);
+      if (convertReservationId) await adminCalendarChampionshipService.convertReservation(convertReservationId, chosenAdminMatch);
+      else await adminCalendarChampionshipService.book(inspectedSlot, chosenAdminMatch);
       setInspectedSlot(null);
       setChampionshipCandidates(null);
       await loadSlots();
@@ -987,6 +1003,9 @@ export function ReservationsPage() {
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
+                  {canAdminReservations && canAdminChampionships && inspectedSlot.occupationType === "reservation" && (
+                    <button className="reservation-slot-actions__button" type="button" onClick={() => void openConvertChampionship()}>Programmer une partie de championnat</button>
+                  )}
                   {canAdminReservations && (
                     <>
                       <Link className="reservation-slot-actions__button" to={`${ROUTES.adminSlotExchange}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}`}>Échanger des créneaux</Link>
@@ -1049,9 +1068,9 @@ export function ReservationsPage() {
               </div>
             )}
 
-            {inspectedSlot.status === "locked" && championshipCandidates && (
+            {(inspectedSlot.status === "locked" || (inspectedSlot.status === "occupied" && convertReservationId)) && championshipCandidates && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
-                <h3>Choisir la rencontre</h3>
+                <h3>{convertReservationId ? "Convertir cette réservation en partie de championnat" : "Choisir la rencontre"}</h3>
                 <select aria-label="Rencontre de championnat" value={chosenAdminMatch} onChange={(event) => setChosenAdminMatch(event.target.value)}>
                   <option value="">Sélectionner une rencontre…</option>
                   {championshipCandidates.map((match) => (
