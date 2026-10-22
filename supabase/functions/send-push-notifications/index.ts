@@ -242,12 +242,40 @@ Deno.serve(async (request) => {
         )
       : 86_400;
 
+    // Link a slot-exchange notification to the new reservation date.
+    // Never infer a target from the title: resolve the publication outbox.
+    let actionUrl = "/mon-espace/notifications";
+    const { data: exchangeEvent, error: exchangeError } = await admin
+      .from("admin_slot_exchange_notification_outbox")
+      .select("reservation_id,tournament_match_id,championship_match_id")
+      .eq("communication_id", communicationId)
+      .maybeSingle();
+    if (exchangeError) throw exchangeError;
+    if (exchangeEvent?.reservation_id) {
+      const { data: bookedReservation } = await admin
+        .from("reservations")
+        .select("starts_at")
+        .eq("id", exchangeEvent.reservation_id)
+        .maybeSingle();
+      if (bookedReservation?.starts_at) {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit",
+        }).formatToParts(new Date(bookedReservation.starts_at));
+        const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+        actionUrl = `/reservations?date=${part("year")}-${part("month")}-${part("day")}`;
+      }
+    } else if (exchangeEvent?.tournament_match_id) {
+      actionUrl = `/mon-espace/tournois?match=${encodeURIComponent(exchangeEvent.tournament_match_id)}`;
+    } else if (exchangeEvent?.championship_match_id) {
+      actionUrl = `/mon-espace/championnats?match=${encodeURIComponent(exchangeEvent.championship_match_id)}`;
+    }
+
     const notificationPayload = JSON.stringify({
       title: communication.title,
       body: communication.body,
       icon: "/pwa-icon.svg",
       badge: "/pwa-icon.svg",
-      url: "/mon-espace/notifications",
+      url: actionUrl,
       tag: `communication:${communication.id}`,
       priority: communication.priority,
     });
