@@ -169,6 +169,13 @@ AS $function$
       config.club_id,
       auth.uid()
     )
+      and now() < coalesce(
+        public.weekend_championship_release_at(
+          config.id,
+          (day.calendar_date + priority_window.opens_at) at time zone config.timezone,
+          (day.calendar_date + priority_window.closes_at) at time zone config.timezone
+        ), 'infinity'::timestamptz
+      )
   ),
   opening_periods as (
     select * from regular_periods
