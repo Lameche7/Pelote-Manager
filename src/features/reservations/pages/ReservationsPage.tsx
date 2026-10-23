@@ -652,23 +652,6 @@ export function ReservationsPage() {
   const [convertReservationId, setConvertReservationId] = useState<string | null>(null);
   const [adminBookingBusy, setAdminBookingBusy] = useState(false);
   const [adminBookingError, setAdminBookingError] = useState("");
-  const [hasActiveTournament, setHasActiveTournament] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    setHasActiveTournament(false);
-    if (!canAdminTournaments || !selectedResource) return;
-    void tournamentAdminService.list().then((items) => {
-      if (!alive) return;
-      setHasActiveTournament(items.some((tournament) =>
-        !["preparation", "configuration", "completed", "archived", "cancelled"].includes(tournament.status)
-        && tournament.resourceCount > 0
-        && tournament.startsOn <= toDateInputValue(new Date())
-        && tournament.endsOn >= toDateInputValue(new Date())
-      ));
-    }).catch(() => { if (alive) setHasActiveTournament(false); });
-    return () => { alive = false; };
-  }, [canAdminTournaments, selectedResource?.clubId]);
-
   const openAdminChampionship = async () => {
     if (!inspectedSlot || (inspectedSlot.status !== "locked" && inspectedSlot.status !== "available") || !canAdminReservations || !canAdminChampionships) return;
     setAdminBookingError("");
@@ -739,6 +722,24 @@ export function ReservationsPage() {
   const canAdminReservations = adminPermissions.includes(ADMIN_PERMISSIONS.reservations);
   const canAdminTournaments = adminPermissions.includes(ADMIN_PERMISSIONS.tournaments);
   const canAdminChampionships = adminPermissions.includes(ADMIN_PERMISSIONS.championships);
+  const [hasActiveTournament, setHasActiveTournament] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    setHasActiveTournament(false);
+    if (!canAdminTournaments || !selectedResource) return;
+    void tournamentAdminService.list().then((items) => {
+      if (!alive) return;
+      setHasActiveTournament(items.some((tournament) =>
+        !["preparation", "configuration", "completed", "archived", "cancelled"].includes(tournament.status)
+        && tournament.resourceCount > 0
+        && tournament.startsOn <= toDateInputValue(new Date())
+        && tournament.endsOn >= toDateInputValue(new Date())
+      ));
+    }).catch(() => { if (alive) setHasActiveTournament(false); });
+    return () => { alive = false; };
+  }, [canAdminTournaments, selectedResource?.clubId]);
+
+
 
   const weekDays = useMemo(() => buildWeekDays(anchorDate), [anchorDate]);
   const weekStart = weekDays[0];
