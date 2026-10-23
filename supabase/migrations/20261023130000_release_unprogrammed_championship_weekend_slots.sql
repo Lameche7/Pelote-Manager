@@ -165,17 +165,16 @@ AS $function$
     join public.championship_reservation_windows as priority_window
       on priority_window.club_id = config.club_id
      and priority_window.weekday = extract(isodow from day.calendar_date)::smallint
-    where public.championship_reservation_player_is_eligible(
-      config.club_id,
-      auth.uid()
-    )
-      and now() < coalesce(
+    where (
+      public.championship_reservation_player_is_eligible(config.club_id,auth.uid())
+      or now() >= coalesce(
         public.weekend_championship_release_at(
           config.id,
           (day.calendar_date + priority_window.opens_at) at time zone config.timezone,
           (day.calendar_date + priority_window.closes_at) at time zone config.timezone
         ), 'infinity'::timestamptz
       )
+    )
   ),
   opening_periods as (
     select * from regular_periods
@@ -402,6 +401,7 @@ begin
       not regular_opening_allowed
       and not championship_access.is_priority
       and released_permanent_at is null
+      and now() < coalesce(public.weekend_championship_release_at(target_resource_id,target_starts_at,target_ends_at),'infinity'::timestamptz)
     ) then
     raise exception 'Ce créneau se situe hors des horaires de réservation'
       using errcode = 'P0001';
