@@ -19,6 +19,13 @@ const displayDate = (date: string) =>
 export function AdminTournamentUnprogrammedPanel() {
   const [params] = useSearchParams();
   const highlightedMatchId = params.get("match");
+  const requestedResource = params.get("resource");
+  const requestedStart = params.get("startsAt");
+  const requestedEnd = params.get("endsAt");
+  const requestedDate = requestedStart ? new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(requestedStart)) : "";
+  const requestedStartTime = requestedStart ? new Intl.DateTimeFormat("fr-FR", {timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(new Date(requestedStart)) : "";
+  const requestedEndTime = requestedEnd ? new Intl.DateTimeFormat("fr-FR", {timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(new Date(requestedEnd)) : "";
+
   const [tournaments, setTournaments] = useState<
     AdminManualRescheduleTournament[]
   >([]);
@@ -187,6 +194,9 @@ export function AdminTournamentUnprogrammedPanel() {
       )}
 
       <h2 id="parties-a-programmer">Parties à programmer ({pending.length})</h2>
+      {requestedResource && requestedDate && (
+        <p role="status">Créneau choisi depuis Réservations : {requestedDate} · {requestedStartTime}–{requestedEndTime}. Sélectionnez une partie ci-dessous pour proposer cette programmation, sous réserve de disponibilité.</p>
+      )}
       {pending.length === 0 && (
         <p>Aucune partie en attente de programmation.</p>
       )}
@@ -210,10 +220,11 @@ export function AdminTournamentUnprogrammedPanel() {
                 disabled={busy}
                 onClick={() => {
                   setEditing(match.matchId);
-                  setDate("");
-                  setResourceId(match.resources[0]?.id ?? "");
-                  setStart(match.previousStart);
-                  setEnd(match.previousEnd);
+                  const resourceAllowed = match.resources.some((resource) => resource.id === requestedResource);
+                  setDate(resourceAllowed ? requestedDate : "");
+                  setResourceId(resourceAllowed ? requestedResource! : match.resources[0]?.id ?? "");
+                  setStart(resourceAllowed && requestedStartTime ? requestedStartTime : match.previousStart);
+                  setEnd(resourceAllowed && requestedEndTime ? requestedEndTime : match.previousEnd);
                   setError("");
                 }}
               >
