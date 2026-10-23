@@ -652,7 +652,7 @@ export function ReservationsPage() {
   const [adminBookingBusy, setAdminBookingBusy] = useState(false);
   const [adminBookingError, setAdminBookingError] = useState("");
   const openAdminChampionship = async () => {
-    if (!inspectedSlot || inspectedSlot.status !== "locked" || !canAdminReservations || !canAdminChampionships) return;
+    if (!inspectedSlot || (inspectedSlot.status !== "locked" && inspectedSlot.status !== "available") || !canAdminReservations || !canAdminChampionships) return;
     setAdminBookingError("");
     setChosenAdminMatch("");
     setConvertReservationId(null);
@@ -947,6 +947,10 @@ export function ReservationsPage() {
           canInspectLocked={canAdminReservations}
           onBook={(nextSlot) => {
             if (championshipContext?.existingReservation || championshipContextLoading) return;
+            if (nextSlot.reservationAccess === "championship" && !championshipContext && canAdminReservations && canAdminChampionships) {
+              setInspectedSlot(nextSlot);
+              return;
+            }
             setSelectedSlot(nextSlot);
           }}
         />
@@ -1054,11 +1058,11 @@ export function ReservationsPage() {
                 )}
               </section>
             )}
-            {inspectedSlot.status === "locked" && canAdminReservations && (
+            {(inspectedSlot.status === "locked" || (inspectedSlot.status === "available" && inspectedSlot.reservationAccess === "championship")) && canAdminReservations && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
-                  <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
+                  {inspectedSlot.status === "locked" && <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>}
                   {canAdminChampionships && (
                     <button className="reservation-slot-actions__button" type="button" onClick={() => void openAdminChampionship()}>
                       Programmer une partie de championnat
@@ -1068,7 +1072,7 @@ export function ReservationsPage() {
               </div>
             )}
 
-            {(inspectedSlot.status === "locked" || (inspectedSlot.status === "occupied" && convertReservationId)) && championshipCandidates && (
+            {(inspectedSlot.status === "locked" || inspectedSlot.status === "available" || (inspectedSlot.status === "occupied" && convertReservationId)) && championshipCandidates && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>{convertReservationId ? "Convertir cette réservation en partie de championnat" : "Choisir la rencontre"}</h3>
                 <select aria-label="Rencontre de championnat" value={chosenAdminMatch} onChange={(event) => setChosenAdminMatch(event.target.value)}>
