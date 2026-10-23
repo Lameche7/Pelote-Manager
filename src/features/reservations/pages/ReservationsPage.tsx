@@ -35,6 +35,7 @@ import { refereeingService } from "@/features/refereeing/services/refereeingServ
 import { adminTournamentUnprogrammedService } from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
 import { loadAdminCalendarMatchContacts, type MatchContact } from "@/features/reservations/services/adminCalendarMatchContactsService";
 import { adminCalendarChampionshipService, type ChampionshipCalendarCandidate } from "@/features/reservations/services/adminCalendarChampionshipService";
+import { tournamentAdminService } from "@/features/admin/tournaments/services/tournamentAdminService";
 import { adminAccessService, type ClubAccess } from "@/features/admin/access/adminAccessService";
 import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
 import "./ReservationsPage.css";
@@ -651,6 +652,23 @@ export function ReservationsPage() {
   const [convertReservationId, setConvertReservationId] = useState<string | null>(null);
   const [adminBookingBusy, setAdminBookingBusy] = useState(false);
   const [adminBookingError, setAdminBookingError] = useState("");
+  const [hasActiveTournament, setHasActiveTournament] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    setHasActiveTournament(false);
+    if (!canAdminTournaments || !selectedResource) return;
+    void tournamentAdminService.list().then((items) => {
+      if (!alive) return;
+      setHasActiveTournament(items.some((tournament) =>
+        !["preparation", "configuration", "completed", "archived", "cancelled"].includes(tournament.status)
+        && tournament.resourceCount > 0
+        && tournament.startsOn <= toDateInputValue(new Date())
+        && tournament.endsOn >= toDateInputValue(new Date())
+      ));
+    }).catch(() => { if (alive) setHasActiveTournament(false); });
+    return () => { alive = false; };
+  }, [canAdminTournaments, selectedResource?.clubId]);
+
   const openAdminChampionship = async () => {
     if (!inspectedSlot || (inspectedSlot.status !== "locked" && inspectedSlot.status !== "available") || !canAdminReservations || !canAdminChampionships) return;
     setAdminBookingError("");
@@ -1007,6 +1025,9 @@ export function ReservationsPage() {
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
+                  {canAdminTournaments && hasActiveTournament && inspectedSlot.occupationType === "reservation" && (
+                    <Link className="reservation-slot-actions__button" to={`${ROUTES.adminTournamentReschedules}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}#parties-a-programmer`}>Programmer une partie de tournoi</Link>
+                  )}
                   {canAdminReservations && canAdminChampionships && inspectedSlot.occupationType === "reservation" && (
                     <button className="reservation-slot-actions__button" type="button" onClick={() => void openConvertChampionship()}>Programmer une partie de championnat</button>
                   )}
@@ -1063,6 +1084,11 @@ export function ReservationsPage() {
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
                   {inspectedSlot.status === "locked" && <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>}
+                  {canAdminTournaments && hasActiveTournament && (
+                    <Link className="reservation-slot-actions__button" to={`${ROUTES.adminTournamentReschedules}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}#parties-a-programmer`}>
+                      Programmer une partie de tournoi
+                    </Link>
+                  )}
                   {canAdminChampionships && (
                     <button className="reservation-slot-actions__button" type="button" onClick={() => void openAdminChampionship()}>
                       Programmer une partie de championnat
