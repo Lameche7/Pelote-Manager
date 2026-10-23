@@ -104,7 +104,7 @@ begin
     policy.advance_days * 24,
     policy.max_active_reservations;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.list_available_slots(target_resource_id uuid, range_start date, range_end date)
  RETURNS TABLE(resource_id uuid, starts_at timestamp with time zone, ends_at timestamp with time zone, status text, booking_opens_at timestamp with time zone, booked_by_name text)
@@ -305,7 +305,7 @@ AS $function$
   union all
   select * from occupations_outside_schedule
   order by starts_at;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.assert_reservation_slot_allowed(target_resource_id uuid, target_user_id uuid, target_starts_at timestamp with time zone, target_ends_at timestamp with time zone, excluded_reservation_id uuid DEFAULT NULL::uuid)
  RETURNS TABLE(customer_type reservation_customer_type, price_cents integer)
@@ -487,6 +487,6 @@ begin
 
   return query select terms.customer_type, terms.price_cents;
 end;
-$function$
+$function$;
 
 commit;
