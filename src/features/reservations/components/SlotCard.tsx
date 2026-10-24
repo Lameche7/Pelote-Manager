@@ -1,6 +1,10 @@
 import type { CSSProperties } from "react";
 import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
-import { formatBookingOpening, formatTime, type CalendarSlot } from "@/features/reservations/domain/calendar";
+import {
+  formatBookingOpening,
+  formatTime,
+  type CalendarSlot,
+} from "@/features/reservations/domain/calendar";
 
 function getContrastTextColor(color: string): "#111827" | "#ffffff" {
   const hex = color.trim().replace("#", "");
@@ -14,13 +18,11 @@ function getContrastTextColor(color: string): "#111827" | "#ffffff" {
 
   if (!/^[0-9a-f]{6}$/i.test(normalized)) return "#111827";
 
-  const channels = [0, 2, 4].map((offset) =>
-    Number.parseInt(normalized.slice(offset, offset + 2), 16) / 255,
+  const channels = [0, 2, 4].map(
+    (offset) => Number.parseInt(normalized.slice(offset, offset + 2), 16) / 255,
   );
   const [red, green, blue] = channels.map((channel) =>
-    channel <= 0.04045
-      ? channel / 12.92
-      : ((channel + 0.055) / 1.055) ** 2.4,
+    channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4,
   );
   const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
   const contrastWithDark = (luminance + 0.05) / 0.05;
@@ -63,7 +65,9 @@ export function SlotCard({
     const style = slot.displayColor
       ? ({
           "--tournament-series-color": slot.displayColor,
-          "--tournament-series-contrast": getContrastTextColor(slot.displayColor),
+          "--tournament-series-contrast": getContrastTextColor(
+            slot.displayColor,
+          ),
         } as CSSProperties)
       : undefined;
     return (
@@ -75,7 +79,11 @@ export function SlotCard({
         aria-label={`${slotTime} : occupé par ${bookedBy}`}
       >
         <strong>{slotTime}</strong>
-        <span className={isColoredMatch ? "reservation-slot__match-badge" : undefined}>
+        <span
+          className={
+            isColoredMatch ? "reservation-slot__match-badge" : undefined
+          }
+        >
           {isChampionshipMatch
             ? "Partie championnat"
             : isTournamentMatch
@@ -83,7 +91,19 @@ export function SlotCard({
               : "Occupé"}
         </span>
         <small>{bookedByDetails}</small>
-        {(isChampionshipMatch || isTournamentMatch) && slot.hasReferee && <span className="reservation-slot__referee" title={slot.refereeName ? `Arbitre : ${slot.refereeName}` : "Partie arbitrée"}><WhistleIcon aria-label="Partie arbitrée" width="18" height="18" />{slot.refereeName && <span>{slot.refereeName}</span>}</span>}
+        {(isChampionshipMatch || isTournamentMatch) && slot.hasReferee && (
+          <span
+            className="reservation-slot__referee"
+            title={
+              slot.refereeName
+                ? `Arbitre : ${slot.refereeName}`
+                : "Partie arbitrée"
+            }
+          >
+            <WhistleIcon aria-label="Partie arbitrée" width="18" height="18" />
+            {slot.refereeName && <span>{slot.refereeName}</span>}
+          </span>
+        )}
         {slot.resultDisplay && (
           <span className="reservation-slot__result">{slot.resultDisplay}</span>
         )}
@@ -98,7 +118,9 @@ export function SlotCard({
     const LockedContainer = canInspectLocked ? "button" : "div";
     return (
       <LockedContainer
-        {...(canInspectLocked ? { type: "button" as const, onClick: () => onInspect(slot) } : {})}
+        {...(canInspectLocked
+          ? { type: "button" as const, onClick: () => onInspect(slot) }
+          : {})}
         className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}`}
         aria-label={`${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`}
       >
@@ -133,4 +155,3 @@ export function SlotCard({
     </button>
   );
 }
-

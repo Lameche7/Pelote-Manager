@@ -166,21 +166,40 @@ function browserSupportsPush(): boolean {
   );
 }
 
-export type PushDevice = { id: string; endpoint: string; user_agent: string | null; platform: string | null; created_at: string };
+export type PushDevice = {
+  id: string;
+  endpoint: string;
+  user_agent: string | null;
+  platform: string | null;
+  created_at: string;
+};
 
 export const pushNotificationService = {
   async listMyDevices(): Promise<PushDevice[]> {
     const { data, error } = await supabase.rpc("list_my_push_devices");
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger vos appareils."));
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger vos appareils."),
+      );
     return (data ?? []) as PushDevice[];
   },
   async deactivateDevice(id: string): Promise<void> {
-    const { error } = await supabase.rpc("deactivate_my_push_device", { target_id: id });
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de désactiver cet abonnement."));
+    const { error } = await supabase.rpc("deactivate_my_push_device", {
+      target_id: id,
+    });
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de désactiver cet abonnement.",
+        ),
+      );
   },
   async currentEndpoint(): Promise<string | null> {
     const registration = await getExistingRegistration();
-    return (await registration?.pushManager.getSubscription())?.endpoint ?? null;
+    return (
+      (await registration?.pushManager.getSubscription())?.endpoint ?? null
+    );
   },
   async syncExistingSubscription(): Promise<void> {
     if (!browserSupportsPush() || Notification.permission !== "granted") return;

@@ -79,10 +79,22 @@ export function AdminSlotExchangePage() {
   const requestedResource = params.get("resource");
   const requestedStart = params.get("startsAt");
   const requestedEnd = params.get("endsAt");
-  const validStart = requestedStart && !Number.isNaN(Date.parse(requestedStart)) ? requestedStart : null;
+  const validStart =
+    requestedStart && !Number.isNaN(Date.parse(requestedStart))
+      ? requestedStart
+      : null;
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
-  const [date, setDate] = useState(() => validStart ? new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(validStart)) : today());
+  const [date, setDate] = useState(() =>
+    validStart
+      ? new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Europe/Paris",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date(validStart))
+      : today(),
+  );
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [tournamentId, setTournamentId] = useState("");
   const [items, setItems] = useState<ExchangeCandidate[]>([]);
@@ -119,7 +131,11 @@ export function AdminSlotExchangePage() {
       .then((data) => {
         if (active) {
           setResources(data);
-          setResourceId(data.find((item) => item.id === requestedResource)?.id ?? data[0]?.id ?? "");
+          setResourceId(
+            data.find((item) => item.id === requestedResource)?.id ??
+              data[0]?.id ??
+              "",
+          );
         }
       })
       .catch((e) => {
@@ -141,8 +157,19 @@ export function AdminSlotExchangePage() {
       .then((data) => {
         if (active) {
           setItems(data);
-          if (requestedResource === resourceId && requestedStart && requestedEnd) {
-            const matches = data.filter((item) => item.resourceId === resourceId && new Date(item.startsAt).getTime() === new Date(requestedStart).getTime() && new Date(item.endsAt).getTime() === new Date(requestedEnd).getTime());
+          if (
+            requestedResource === resourceId &&
+            requestedStart &&
+            requestedEnd
+          ) {
+            const matches = data.filter(
+              (item) =>
+                item.resourceId === resourceId &&
+                new Date(item.startsAt).getTime() ===
+                  new Date(requestedStart).getTime() &&
+                new Date(item.endsAt).getTime() ===
+                  new Date(requestedEnd).getTime(),
+            );
             if (matches.length === 1) setFirstId(matches[0].id);
           }
         }
@@ -165,16 +192,26 @@ export function AdminSlotExchangePage() {
   const first = items.find((item) => item.id === firstId);
   const second = items.find((item) => item.id === secondId);
   const preview = useMemo(
-    () =>
-      first && second
-        ? previewSwap(toSlot(first), toSlot(second))
-        : null,
+    () => (first && second ? previewSwap(toSlot(first), toSlot(second)) : null),
     [first, second],
   );
   async function confirmExchange() {
-    if (busy || loading || !EXCHANGE_WRITES_ENABLED || !first || !second || !preview?.valid || !first.exchangeSupported || !second.exchangeSupported)
+    if (
+      busy ||
+      loading ||
+      !EXCHANGE_WRITES_ENABLED ||
+      !first ||
+      !second ||
+      !preview?.valid ||
+      !first.exchangeSupported ||
+      !second.exchangeSupported
+    )
       return;
-    if (!window.confirm(`Confirmer l’échange définitif ?\n${first.title} → ${formatDate(preview.first.startsAt)}\n${second.title} → ${formatDate(preview.second.startsAt)}`))
+    if (
+      !window.confirm(
+        `Confirmer l’échange définitif ?\n${first.title} → ${formatDate(preview.first.startsAt)}\n${second.title} → ${formatDate(preview.second.startsAt)}`,
+      )
+    )
       return;
     setBusy(true);
     setAttempted(true);
@@ -189,7 +226,7 @@ export function AdminSlotExchangePage() {
         outcome.notificationWarning ??
           `Échange enregistré. ${outcome.notificationsPublished} notification(s) publiée(s).`,
       );
-        setFirstId("");
+      setFirstId("");
       setSecondId("");
       setItems(
         await loadCandidatesForRange(resourceId, range.from, range.until),
@@ -203,13 +240,30 @@ export function AdminSlotExchangePage() {
   const option = (item: ExchangeCandidate) =>
     `${formatDate(item.startsAt)} — ${item.title} (${item.sourceKind === "championship" ? "Championnat" : item.sourceKind === "tournament" ? "Tournoi" : item.sourceKind === "reservation" ? "Réservation" : item.sourceKind})`;
   return (
-    <main style={{ maxWidth: 1050, width: "100%", minWidth: 0, boxSizing: "border-box", margin: "0 auto", padding: 24 }}>
+    <main
+      style={{
+        maxWidth: 1050,
+        width: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
+        margin: "0 auto",
+        padding: 24,
+      }}
+    >
       <h1>Échanger deux créneaux</h1>
       <p>
-        Choisis deux occupations du calendrier, vérifie leurs nouveaux horaires puis confirme l’échange. Le serveur contrôle les droits et les conflits avant toute modification.
+        Choisis deux occupations du calendrier, vérifie leurs nouveaux horaires
+        puis confirme l’échange. Le serveur contrôle les droits et les conflits
+        avant toute modification.
       </p>
       <div
-        style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20, minWidth: 0 }}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 16,
+          marginBottom: 20,
+          minWidth: 0,
+        }}
       >
         <label>
           Terrain{" "}
@@ -256,9 +310,39 @@ export function AdminSlotExchangePage() {
             : "Occupations sur 7 jours"}
         </span>
       </div>
-      {error && <p role="alert" style={{ padding: 16, border: "2px solid #b91c1c", borderRadius: 8, fontWeight: 700, whiteSpace: "pre-wrap" }}>Échange non effectué : {error}</p>}
-      {success && <p role="status" style={{ padding: 16, border: "2px solid #15803d", borderRadius: 8, fontWeight: 700, whiteSpace: "pre-wrap" }}>{success}</p>}
-      {attempted && busy && <p role="status">Vérification et enregistrement de l’échange en cours…</p>}
+      {error && (
+        <p
+          role="alert"
+          style={{
+            padding: 16,
+            border: "2px solid #b91c1c",
+            borderRadius: 8,
+            fontWeight: 700,
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          Échange non effectué : {error}
+        </p>
+      )}
+      {success && (
+        <p
+          role="status"
+          style={{
+            padding: 16,
+            border: "2px solid #15803d",
+            borderRadius: 8,
+            fontWeight: 700,
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {success}
+        </p>
+      )}
+      {attempted && busy && (
+        <p role="status">
+          Vérification et enregistrement de l’échange en cours…
+        </p>
+      )}
       {loading ? (
         <p>Chargement du planning…</p>
       ) : (
@@ -279,16 +363,26 @@ export function AdminSlotExchangePage() {
         ).map((field) => (
           <fieldset
             key={field.label}
-            style={{ minWidth: 0, padding: 20, borderRadius: 12, border: "1px solid #888" }}
+            style={{
+              minWidth: 0,
+              padding: 20,
+              borderRadius: 12,
+              border: "1px solid #888",
+            }}
           >
             <legend>{field.label}</legend>
             <select
               aria-label={field.label}
-              style={{ width: "100%", minWidth: 0, boxSizing: "border-box", padding: 8 }}
+              style={{
+                width: "100%",
+                minWidth: 0,
+                boxSizing: "border-box",
+                padding: 8,
+              }}
               value={field.value}
               onChange={(e) => {
                 field.set(e.target.value);
-                          }}
+              }}
             >
               <option value="">Sélectionner une occupation…</option>
               {items
