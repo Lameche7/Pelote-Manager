@@ -153,7 +153,9 @@ export function RefereeingPage() {
       );
       saved = true;
       setScoreMatch(null);
-      setScoreSuccess("Résultat enregistré et transmis au club pour validation.");
+      setScoreSuccess(
+        "Résultat enregistré et transmis au club pour validation.",
+      );
     } catch (e) {
       setScoreError(
         e instanceof Error
@@ -166,7 +168,9 @@ export function RefereeingPage() {
     // A failed refresh must never be reported as a failed result submission.
     if (saved) {
       void load().catch(() => {
-        setError("Résultat enregistré. Actualise la page pour mettre à jour la liste.");
+        setError(
+          "Résultat enregistré. Actualise la page pour mettre à jour la liste.",
+        );
       });
     }
   };
@@ -530,9 +534,13 @@ export function RefereeingPage() {
                           score.sets,
                         );
                         setTournamentEditor(null);
-                        setScoreSuccess("Résultat enregistré et transmis au club pour validation.");
+                        setScoreSuccess(
+                          "Résultat enregistré et transmis au club pour validation.",
+                        );
                         void load().catch(() => {
-                          setError("Résultat enregistré. Actualise la page pour mettre à jour la liste.");
+                          setError(
+                            "Résultat enregistré. Actualise la page pour mettre à jour la liste.",
+                          );
                         });
                       } catch (e) {
                         setError(
