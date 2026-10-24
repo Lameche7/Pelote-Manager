@@ -144,12 +144,14 @@ export function RefereeingPage() {
     setBusy(scoreMatch.match_id);
     setScoreError("");
     setScoreSuccess("");
+    let saved = false;
     try {
       await refereeingService.submitChampionshipScore(
         scoreMatch.match_id,
         sa,
         sb,
       );
+      saved = true;
       setScoreMatch(null);
       setScoreSuccess("Résultat enregistré et transmis au club pour validation.");
     } catch (e) {
@@ -162,9 +164,11 @@ export function RefereeingPage() {
       setBusy("");
     }
     // A failed refresh must never be reported as a failed result submission.
-    void load().catch(() => {
-      setError("Résultat enregistré. Actualise la page pour mettre à jour la liste.");
-    });
+    if (saved) {
+      void load().catch(() => {
+        setError("Résultat enregistré. Actualise la page pour mettre à jour la liste.");
+      });
+    }
   };
   const openChampionshipScore = (x: RefereeingMatch) => {
     setScoreMatch(x);
