@@ -127,7 +127,7 @@ test("Mes championnats réserve à domicile ou dans notre trinquet après choix 
   assert.match(championshipsService, /get_my_championship_match_reservations/);
   assert.match(reservationPage, /Réservation pour une rencontre/);
   assert.match(reservationPage, /championshipMatchReservationService\.create/);
-  assert.match(reservationPage, /Choisir une rencontre/);
+  assert.match(reservationPage, /Choisir ma rencontre/);
   assert.match(reservationPage, /ROUTES\.myChampionships/);
   assert.match(
     reservationPage,
