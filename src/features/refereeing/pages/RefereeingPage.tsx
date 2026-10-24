@@ -19,7 +19,8 @@ const date = (v: string | null) =>
     : "Date à confirmer";
 const time = (v: string | null) =>
   v ? v.slice(0, 5).replace(":", "h") : "Horaire à confirmer";
-// The referee enters both teams\u2019 scores in one clearly labelled dialog.\nexport function RefereeingPage() {
+// The referee enters both teams' scores in one clearly labelled dialog.
+export function RefereeingPage() {
   const [searchParams] = useSearchParams();
   const focusMatchId = searchParams.get("match");
   const [scoreMatch, setScoreMatch] = useState<RefereeingMatch | null>(null);
