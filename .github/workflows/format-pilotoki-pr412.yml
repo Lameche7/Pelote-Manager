@@ -1,0 +1,27 @@
+name: Repair repository formatting for PR 412
+on:
+  push:
+    branches: [feat/referee-simple-score-dialog]
+    paths:
+      - '.github/workflows/format-pilotoki-pr412.yml'
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write .
+      - name: Commit repository formatting and remove temporary action
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/format-pilotoki-pr412.yml
+          git add -u
+          git commit -m "style: apply project formatter to outstanding files"
+          git push
