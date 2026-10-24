@@ -16,7 +16,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npx prettier --write .
+      - run: npx prettier --write src/features/admin/reservations/pages/AdminSlotExchangePage.tsx src/features/admin/tournaments/components/AdminTournamentUnprogrammedPanel.tsx src/features/notifications/components/PushNotificationSettings.tsx src/features/notifications/services/pushNotificationService.ts src/features/reservations/components/CalendarWeekGrid.tsx src/features/reservations/components/SlotCard.tsx src/features/reservations/domain/calendarPlayerActions.ts src/features/reservations/services/adminCalendarChampionshipService.ts src/features/reservations/services/adminCalendarMatchContactsService.ts src/features/reservations/services/calendarCompetitionService.ts src/features/reservations/services/calendarPlayerActionsService.ts supabase/functions/send-push-notifications/index.ts tests/calendarPlayerActionsPolicy.test.mjs tests/tournamentPublicResultsDesign.test.mjs
       - name: Commit repository formatting and remove temporary action
         run: |
           git config user.name "github-actions[bot]"
