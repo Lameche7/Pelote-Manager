@@ -11,18 +11,35 @@ export function PushNotificationSettings() {
   const [devices, setDevices] = useState<PushDevice[]>([]);
   const [currentEndpoint, setCurrentEndpoint] = useState<string | null>(null);
   const refreshDevices = async () => {
-    const [items, current] = await Promise.all([pushNotificationService.listMyDevices(), pushNotificationService.currentEndpoint()]);
+    const [items, current] = await Promise.all([
+      pushNotificationService.listMyDevices(),
+      pushNotificationService.currentEndpoint(),
+    ]);
     setDevices(items);
     setCurrentEndpoint(current);
   };
-  useEffect(() => { void refreshDevices().catch(() => undefined); }, []);
+  useEffect(() => {
+    void refreshDevices().catch(() => undefined);
+  }, []);
   const removeDevice = async (device: PushDevice) => {
-    if (!window.confirm("Désactiver les notifications pour cet ancien abonnement ?")) return;
+    if (
+      !window.confirm(
+        "Désactiver les notifications pour cet ancien abonnement ?",
+      )
+    )
+      return;
     setSaving(true);
     setError("");
-    try { await pushNotificationService.deactivateDevice(device.id); await refreshDevices(); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Désactivation impossible."); }
-    finally { setSaving(false); }
+    try {
+      await pushNotificationService.deactivateDevice(device.id);
+      await refreshDevices();
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Désactivation impossible.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -153,11 +170,28 @@ export function PushNotificationSettings() {
         {devices.length > 0 && (
           <div>
             <h3>Mes abonnements Push actifs ({devices.length})</h3>
-            <p>Conservez celui de ce navigateur. Supprimez uniquement les anciens abonnements que vous reconnaissez.</p>
+            <p>
+              Conservez celui de ce navigateur. Supprimez uniquement les anciens
+              abonnements que vous reconnaissez.
+            </p>
             {devices.map((device) => (
               <div key={device.id}>
-                <span>{device.platform ?? "Appareil"} · {new Date(device.created_at).toLocaleDateString("fr-FR")} {device.endpoint === currentEndpoint ? "· Ce navigateur" : "· Autre abonnement"}</span>{" "}
-                {device.endpoint !== currentEndpoint && <button type="button" disabled={saving} onClick={() => void removeDevice(device)}>Désactiver</button>}
+                <span>
+                  {device.platform ?? "Appareil"} ·{" "}
+                  {new Date(device.created_at).toLocaleDateString("fr-FR")}{" "}
+                  {device.endpoint === currentEndpoint
+                    ? "· Ce navigateur"
+                    : "· Autre abonnement"}
+                </span>{" "}
+                {device.endpoint !== currentEndpoint && (
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void removeDevice(device)}
+                  >
+                    Désactiver
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -259,9 +259,13 @@ Deno.serve(async (request) => {
         .maybeSingle();
       if (bookedReservation?.starts_at) {
         const parts = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit",
+          timeZone: "Europe/Paris",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
         }).formatToParts(new Date(bookedReservation.starts_at));
-        const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+        const part = (type: string) =>
+          parts.find((item) => item.type === type)?.value ?? "";
         actionUrl = `/reservations?date=${part("year")}-${part("month")}-${part("day")}`;
       }
     } else if (exchangeEvent?.tournament_match_id) {

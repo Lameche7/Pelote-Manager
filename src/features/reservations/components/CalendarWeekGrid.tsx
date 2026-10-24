@@ -3,7 +3,9 @@ import { toDateInputValue } from "@/features/reservations/domain/calendar";
 import { SlotCard } from "./SlotCard";
 
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "short", day: "numeric", month: "short",
+  weekday: "short",
+  day: "numeric",
+  month: "short",
 });
 
 type CalendarWeekGridProps = {
@@ -16,7 +18,15 @@ type CalendarWeekGridProps = {
   canInspectLocked: boolean;
 };
 
-export function CalendarWeekGrid({ weekDays, slotsByDay, timezone, championshipMatchSelected, onBook, onInspect, canInspectLocked }: CalendarWeekGridProps) {
+export function CalendarWeekGrid({
+  weekDays,
+  slotsByDay,
+  timezone,
+  championshipMatchSelected,
+  onBook,
+  onInspect,
+  canInspectLocked,
+}: CalendarWeekGridProps) {
   return (
     <div className="reservation-calendar__grid">
       {weekDays.map((day) => {

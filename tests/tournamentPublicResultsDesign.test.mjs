@@ -50,10 +50,11 @@ test("le classement public est volontairement compact", async () => {
 });
 
 test("le calendrier récupère et applique la couleur de série", async () => {
-  const [migration, service, page, styles] = await Promise.all([
+  const [migration, service, _page, slotCard, styles] = await Promise.all([
     read(migrationPath),
     read("../src/features/reservations/services/reservationCalendarService.ts"),
     read("../src/features/reservations/pages/ReservationsPage.tsx"),
+    read("../src/features/reservations/components/SlotCard.tsx"),
     read("../src/features/reservations/pages/ReservationLockedSlots.css"),
   ]);
 
@@ -62,7 +63,7 @@ test("le calendrier récupère et applique la couleur de série", async () => {
   assert.match(migration, /series\.color as display_color/);
   assert.match(service, /list_available_slots_v4/);
   assert.match(service, /displayColor: slot\.display_color/);
-  assert.match(page, /reservation-slot--tournament/);
-  assert.match(page, /--tournament-series-color/);
+  assert.match(slotCard, /reservation-slot--tournament/);
+  assert.match(slotCard, /--tournament-series-color/);
   assert.match(styles, /var\(--tournament-series-color\)/);
 });
