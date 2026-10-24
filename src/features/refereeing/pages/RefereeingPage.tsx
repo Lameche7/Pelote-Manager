@@ -19,7 +19,7 @@ const date = (v: string | null) =>
     : "Date à confirmer";
 const time = (v: string | null) =>
   v ? v.slice(0, 5).replace(":", "h") : "Horaire à confirmer";
-// The referee enters both teams' scores in one clearly named dialog.
+// The referee enters both scores in one clearly named dialog.
 export function RefereeingPage() {
   const [searchParams] = useSearchParams();
   const focusMatchId = searchParams.get("match");
@@ -27,6 +27,7 @@ export function RefereeingPage() {
   const [scoreLeft, setScoreLeft] = useState("");
   const [scoreRight, setScoreRight] = useState("");
   const [scoreError, setScoreError] = useState("");
+  const [scoreSuccess, setScoreSuccess] = useState("");
   const [tournamentEditor, setTournamentEditor] = useState<{
     matchId: string;
     rules: {
@@ -142,14 +143,19 @@ export function RefereeingPage() {
     }
     setBusy(scoreMatch.match_id);
     setScoreError("");
+    setScoreSuccess("");
+    let saved = false;
     try {
       await refereeingService.submitChampionshipScore(
         scoreMatch.match_id,
         sa,
         sb,
       );
+      saved = true;
       setScoreMatch(null);
-      await load();
+      setScoreSuccess(
+        "Résultat enregistré et transmis au club pour validation.",
+      );
     } catch (e) {
       setScoreError(
         e instanceof Error
@@ -159,9 +165,18 @@ export function RefereeingPage() {
     } finally {
       setBusy("");
     }
+    // A failed refresh must never be reported as a failed result submission.
+    if (saved) {
+      void load().catch(() => {
+        setError(
+          "Résultat enregistré. Actualise la page pour mettre à jour la liste.",
+        );
+      });
+    }
   };
   const openChampionshipScore = (x: RefereeingMatch) => {
     setScoreMatch(x);
+    setScoreSuccess("");
     setScoreLeft("");
     setScoreRight("");
     setScoreError("");
@@ -330,6 +345,7 @@ export function RefereeingPage() {
             l’arbitrage est activé.
           </p>
         </header>
+        {scoreSuccess && <p role="status">{scoreSuccess}</p>}
         {error && (
           <p role="alert" className="ref-page__error">
             {error}
@@ -518,7 +534,14 @@ export function RefereeingPage() {
                           score.sets,
                         );
                         setTournamentEditor(null);
-                        await load();
+                        setScoreSuccess(
+                          "Résultat enregistré et transmis au club pour validation.",
+                        );
+                        void load().catch(() => {
+                          setError(
+                            "Résultat enregistré. Actualise la page pour mettre à jour la liste.",
+                          );
+                        });
                       } catch (e) {
                         setError(
                           e instanceof Error
