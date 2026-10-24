@@ -22,6 +22,10 @@ const time = (v: string | null) =>
 export function RefereeingPage() {
   const [searchParams] = useSearchParams();
   const focusMatchId = searchParams.get("match");
+  const [scoreMatch, setScoreMatch] = useState<RefereeingMatch | null>(null);
+  const [scoreLeft, setScoreLeft] = useState("");
+  const [scoreRight, setScoreRight] = useState("");
+  const [scoreError, setScoreError] = useState("");
   const [tournamentEditor, setTournamentEditor] = useState<{
     matchId: string;
     rules: {
@@ -119,39 +123,42 @@ export function RefereeingPage() {
       setBusy("");
     }
   };
-  const submitScore = async (x: RefereeingMatch) => {
-    const a = window.prompt("Score équipe 1 (points)");
-    if (a === null) return;
-    const b = window.prompt("Score équipe 2 (points)");
-    if (b === null) return;
-    const sa = Number(a),
-      sb = Number(b);
+  const submitScore = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!scoreMatch) return;
+    const sa = Number(scoreLeft);
+    const sb = Number(scoreRight);
     if (
-      !a.trim() ||
-      !b.trim() ||
+      !scoreLeft.trim() ||
+      !scoreRight.trim() ||
       !Number.isInteger(sa) ||
       !Number.isInteger(sb) ||
       sa < 0 ||
       sb < 0 ||
       sa === sb
     ) {
-      setError("Saisis deux scores entiers différents.");
+      setScoreError("Saisis deux scores entiers différents.");
       return;
     }
-    if (!window.confirm(`Confirmer le score : ${sa} – ${sb} ?`)) return;
-    setBusy(x.match_id);
-    setError("");
+    setBusy(scoreMatch.match_id);
+    setScoreError("");
     try {
-      await refereeingService.submitChampionshipScore(x.match_id, sa, sb);
-      window.alert("Résultat transmis pour validation.");
+      await refereeingService.submitChampionshipScore(scoreMatch.match_id, sa, sb);
+      setScoreMatch(null);
       await load();
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Impossible de saisir le résultat.",
+      setScoreError(
+        e instanceof Error ? e.message : "Impossible d’enregistrer le résultat.",
       );
     } finally {
       setBusy("");
     }
+  };
+  const openChampionshipScore = (x: RefereeingMatch) => {
+    setScoreMatch(x);
+    setScoreLeft("");
+    setScoreRight("");
+    setScoreError("");
   };
   const openTournamentScore = async (x: RefereeingMatch) => {
     setBusy(x.match_id);
@@ -280,34 +287,10 @@ export function RefereeingPage() {
           Saisie Résultat
         </button>
       )}
-      {tournamentEditor?.matchId === x.match_id && (
-        <TournamentScoreEditor
-          rules={tournamentEditor.rules}
-          leftLabel={x.team1_label}
-          rightLabel={x.team2_label}
-          disabled={busy === x.match_id}
-          submitLabel="Transmettre au club"
-          onCancel={() => setTournamentEditor(null)}
-          onSubmit={async (score) => {
-            setBusy(x.match_id);
-            try {
-              await refereeingService.submitTournamentScore(
-                x.match_id,
-                score.sets,
-              );
-              setTournamentEditor(null);
-              window.alert("Résultat transmis pour validation.");
-              await load();
-            } finally {
-              setBusy("");
-            }
-          }}
-        />
-      )}{" "}
       {x.is_mine && x.source_type === "championship" && (
         <button
           disabled={busy === x.match_id || !isFinished(x)}
-          onClick={() => void submitScore(x)}
+          onClick={() => openChampionshipScore(x)}
         >
           {isFinished(x) ? "Saisir le résultat" : "Saisie Résultat"}
         </button>
@@ -422,6 +405,92 @@ export function RefereeingPage() {
             })}
           </>
         )}
+            {(scoreMatch || tournamentEditor) && (
+              <div className="ref-score-backdrop" role="presentation">
+                <section
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="ref-score-title"
+                  className="ref-score-dialog"
+                >
+                  <h2 id="ref-score-title">Saisir le résultat</h2>
+                  {scoreMatch ? (
+                    <form onSubmit={(event) => void submitScore(event)}>
+                      <p className="ref-score-dialog__context">
+                        {scoreMatch.competition_label} · {date(scoreMatch.play_date)} · {time(scoreMatch.play_time)}
+                      </p>
+                      <div className="ref-score-dialog__teams">
+                        <label>
+                          <strong>{scoreMatch.team1_label}</strong>
+                          <span>Points marqués</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            inputMode="numeric"
+                            required
+                            autoFocus
+                            value={scoreLeft}
+                            onChange={(event) => setScoreLeft(event.target.value)}
+                            disabled={busy === scoreMatch.match_id}
+                          />
+                        </label>
+                        <span className="ref-score-dialog__versus">—</span>
+                        <label>
+                          <strong>{scoreMatch.team2_label}</strong>
+                          <span>Points marqués</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            inputMode="numeric"
+                            required
+                            value={scoreRight}
+                            onChange={(event) => setScoreRight(event.target.value)}
+                            disabled={busy === scoreMatch.match_id}
+                          />
+                        </label>
+                      </div>
+                      {scoreError && <p role="alert" className="ref-page__error">{scoreError}</p>}
+                      <p className="ref-score-dialog__hint">Vérifie les noms des équipes avant de transmettre le résultat au club.</p>
+                      <div className="ref-score-dialog__actions">
+                        <button type="button" onClick={() => setScoreMatch(null)} disabled={busy === scoreMatch.match_id}>Annuler</button>
+                        <button type="submit" disabled={busy === scoreMatch.match_id || !scoreLeft.trim() || !scoreRight.trim()}>
+                          {busy === scoreMatch.match_id ? "Enregistrement…" : "Valider le résultat"}
+                        </button>
+                      </div>
+                    </form>
+                  ) : tournamentEditor ? (
+                    <>
+                      <p className="ref-score-dialog__context">
+                        {items.find((x) => x.match_id === tournamentEditor.matchId)?.competition_label}
+                      </p>
+                      <TournamentScoreEditor
+                        rules={tournamentEditor.rules}
+                        leftLabel={items.find((x) => x.match_id === tournamentEditor.matchId)?.team1_label ?? "Équipe 1"}
+                        rightLabel={items.find((x) => x.match_id === tournamentEditor.matchId)?.team2_label ?? "Équipe 2"}
+                        disabled={busy === tournamentEditor.matchId}
+                        submitLabel="Valider le résultat"
+                        onCancel={() => setTournamentEditor(null)}
+                        onSubmit={async (score) => {
+                          setBusy(tournamentEditor.matchId);
+                          try {
+                            await refereeingService.submitTournamentScore(tournamentEditor.matchId, score.sets);
+                            setTournamentEditor(null);
+                            await load();
+                          } catch (e) {
+                            setError(e instanceof Error ? e.message : "Impossible de saisir le résultat.");
+                            throw e;
+                          } finally {
+                            setBusy("");
+                          }
+                        }}
+                      />
+                    </>
+                  ) : null}
+                </section>
+              </div>
+            )}
       </section>
     </UserSpaceShell>
   );
