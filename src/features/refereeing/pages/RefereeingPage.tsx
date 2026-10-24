@@ -27,6 +27,7 @@ export function RefereeingPage() {
   const [scoreLeft, setScoreLeft] = useState("");
   const [scoreRight, setScoreRight] = useState("");
   const [scoreError, setScoreError] = useState("");
+  const [scoreSuccess, setScoreSuccess] = useState("");
   const [tournamentEditor, setTournamentEditor] = useState<{
     matchId: string;
     rules: {
@@ -142,6 +143,7 @@ export function RefereeingPage() {
     }
     setBusy(scoreMatch.match_id);
     setScoreError("");
+    setScoreSuccess("");
     try {
       await refereeingService.submitChampionshipScore(
         scoreMatch.match_id,
@@ -149,7 +151,7 @@ export function RefereeingPage() {
         sb,
       );
       setScoreMatch(null);
-      await load();
+      setScoreSuccess("Résultat enregistré et transmis au club pour validation.");
     } catch (e) {
       setScoreError(
         e instanceof Error
@@ -159,9 +161,14 @@ export function RefereeingPage() {
     } finally {
       setBusy("");
     }
+    // A failed refresh must never be reported as a failed result submission.
+    void load().catch(() => {
+      setError("Résultat enregistré. Actualise la page pour mettre à jour la liste.");
+    });
   };
   const openChampionshipScore = (x: RefereeingMatch) => {
     setScoreMatch(x);
+    setScoreSuccess("");
     setScoreLeft("");
     setScoreRight("");
     setScoreError("");
@@ -330,6 +337,7 @@ export function RefereeingPage() {
             l’arbitrage est activé.
           </p>
         </header>
+        {scoreSuccess && <p role="status">{scoreSuccess}</p>}
         {error && (
           <p role="alert" className="ref-page__error">
             {error}
@@ -518,7 +526,10 @@ export function RefereeingPage() {
                           score.sets,
                         );
                         setTournamentEditor(null);
-                        await load();
+                        setScoreSuccess("Résultat enregistré et transmis au club pour validation.");
+                        void load().catch(() => {
+                          setError("Résultat enregistré. Actualise la page pour mettre à jour la liste.");
+                        });
                       } catch (e) {
                         setError(
                           e instanceof Error
