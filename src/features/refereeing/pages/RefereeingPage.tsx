@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { TournamentScoreEditor } from "@/features/tournaments/components/TournamentScoreEditor";
 import { WhistleIcon } from "@/features/refereeing/components/WhistleIcon";
@@ -23,6 +23,7 @@ const time = (v: string | null) =>
 export function RefereeingPage() {
   const [searchParams] = useSearchParams();
   const focusMatchId = searchParams.get("match");
+  const directOpenHandled = useRef(false);
   const [scoreMatch, setScoreMatch] = useState<RefereeingMatch | null>(null);
   const [scoreLeft, setScoreLeft] = useState("");
   const [scoreRight, setScoreRight] = useState("");
@@ -79,6 +80,17 @@ export function RefereeingPage() {
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
+  useEffect(() => {
+    if (loading || !focusMatchId || directOpenHandled.current) return;
+    directOpenHandled.current = true;
+    const match = items.find((item) => item.match_id === focusMatchId && item.is_mine);
+    if (!match || match.has_result) return;
+    if (match.source_type === "championship") {
+      openChampionshipScore(match);
+    } else {
+      void openTournamentScore(match);
+    }
+  }, [loading, items, focusMatchId]);
   const upcoming = useMemo(
     () =>
       items.filter((x) =>
@@ -300,7 +312,10 @@ export function RefereeingPage() {
           Arbitre : <strong>{x.referee_name}</strong>
         </p>
       )}
-      {x.is_mine && x.source_type === "tournament" && (
+      {x.is_mine && x.has_result && (
+        <p role="status">Résultat déjà saisi — aucune nouvelle saisie nécessaire.</p>
+      )}
+      {x.is_mine && !x.has_result && x.source_type === "tournament" && (
         <button
           disabled={busy === x.match_id || !isFinished(x)}
           onClick={() => void openTournamentScore(x)}
@@ -308,7 +323,7 @@ export function RefereeingPage() {
           Saisie Résultat
         </button>
       )}
-      {x.is_mine && x.source_type === "championship" && (
+      {x.is_mine && !x.has_result && x.source_type === "championship" && (
         <button
           disabled={busy === x.match_id || !isFinished(x)}
           onClick={() => openChampionshipScore(x)}
