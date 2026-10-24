@@ -83,7 +83,9 @@ export function RefereeingPage() {
   useEffect(() => {
     if (loading || !focusMatchId || directOpenHandled.current) return;
     directOpenHandled.current = true;
-    const match = items.find((item) => item.match_id === focusMatchId && item.is_mine);
+    const match = items.find(
+      (item) => item.match_id === focusMatchId && item.is_mine,
+    );
     if (!match || match.has_result) return;
     if (match.source_type === "championship") {
       openChampionshipScore(match);
@@ -313,7 +315,9 @@ export function RefereeingPage() {
         </p>
       )}
       {x.is_mine && x.has_result && (
-        <p role="status">Résultat déjà saisi — aucune nouvelle saisie nécessaire.</p>
+        <p role="status">
+          Résultat déjà saisi — aucune nouvelle saisie nécessaire.
+        </p>
       )}
       {x.is_mine && !x.has_result && x.source_type === "tournament" && (
         <button
