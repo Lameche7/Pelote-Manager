@@ -79,13 +79,12 @@ export function RefereeingPage() {
   }, []);
   const upcoming = useMemo(
     () =>
-      items.filter(
-        (x) =>
-          focusMatchId && items.some((match) => match.match_id === focusMatchId)
-            ? x.match_id === focusMatchId
-            : x.is_mine ||
-          !x.play_date ||
-          x.play_date >= new Date().toISOString().slice(0, 10),
+      items.filter((x) =>
+        focusMatchId && items.some((match) => match.match_id === focusMatchId)
+          ? x.match_id === focusMatchId
+          : x.is_mine ||
+            !x.play_date ||
+            x.play_date >= new Date().toISOString().slice(0, 10),
       ),
     [items, focusMatchId],
   );
@@ -152,7 +151,9 @@ export function RefereeingPage() {
       await load();
     } catch (e) {
       setScoreError(
-        e instanceof Error ? e.message : "Impossible d’enregistrer le résultat.",
+        e instanceof Error
+          ? e.message
+          : "Impossible d’enregistrer le résultat.",
       );
     } finally {
       setBusy("");
@@ -421,8 +422,8 @@ export function RefereeingPage() {
               {scoreMatch ? (
                 <form onSubmit={(event) => void submitScore(event)}>
                   <p className="ref-score-dialog__context">
-                    {scoreMatch.competition_label} · {date(scoreMatch.play_date)} ·{" "}
-                    {time(scoreMatch.play_time)}
+                    {scoreMatch.competition_label} ·{" "}
+                    {date(scoreMatch.play_date)} · {time(scoreMatch.play_time)}
                   </p>
                   <div className="ref-score-dialog__teams">
                     <label>
@@ -491,22 +492,19 @@ export function RefereeingPage() {
                 <>
                   <p className="ref-score-dialog__context">
                     {
-                      items.find(
-                        (x) => x.match_id === tournamentEditor.matchId,
-                      )?.competition_label
+                      items.find((x) => x.match_id === tournamentEditor.matchId)
+                        ?.competition_label
                     }
                   </p>
                   <TournamentScoreEditor
                     rules={tournamentEditor.rules}
                     leftLabel={
-                      items.find(
-                        (x) => x.match_id === tournamentEditor.matchId,
-                      )?.team1_label ?? "Équipe 1"
+                      items.find((x) => x.match_id === tournamentEditor.matchId)
+                        ?.team1_label ?? "Équipe 1"
                     }
                     rightLabel={
-                      items.find(
-                        (x) => x.match_id === tournamentEditor.matchId,
-                      )?.team2_label ?? "Équipe 2"
+                      items.find((x) => x.match_id === tournamentEditor.matchId)
+                        ?.team2_label ?? "Équipe 2"
                     }
                     disabled={busy === tournamentEditor.matchId}
                     submitLabel="Valider le résultat"
