@@ -13,6 +13,7 @@ export type RefereeingMatch = {
   referee_profile_id: string | null;
   referee_name: string | null;
   is_mine: boolean;
+  has_result: boolean;
   my_count: number;
 };
 export type RefereeCandidate = { id: string; name: string; count: number };
