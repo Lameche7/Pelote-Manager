@@ -11,7 +11,7 @@ AS $function$
     reservation.ends_at,
     championship.name,
     division.name,
-    concat_ws(E'\\n',
+    concat_ws(chr(10),
       coalesce((
         select string_agg(concat_ws(' ',nullif(p.first_name,''),nullif(p.last_name,'')), ' / ' order by p.last_name,p.first_name)
         from public.championship_team_players tp
