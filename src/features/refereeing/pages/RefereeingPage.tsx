@@ -143,7 +143,11 @@ export function RefereeingPage() {
     setBusy(scoreMatch.match_id);
     setScoreError("");
     try {
-      await refereeingService.submitChampionshipScore(scoreMatch.match_id, sa, sb);
+      await refereeingService.submitChampionshipScore(
+        scoreMatch.match_id,
+        sa,
+        sb,
+      );
       setScoreMatch(null);
       await load();
     } catch (e) {
@@ -405,92 +409,134 @@ export function RefereeingPage() {
             })}
           </>
         )}
-            {(scoreMatch || tournamentEditor) && (
-              <div className="ref-score-backdrop" role="presentation">
-                <section
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="ref-score-title"
-                  className="ref-score-dialog"
-                >
-                  <h2 id="ref-score-title">Saisir le résultat</h2>
-                  {scoreMatch ? (
-                    <form onSubmit={(event) => void submitScore(event)}>
-                      <p className="ref-score-dialog__context">
-                        {scoreMatch.competition_label} · {date(scoreMatch.play_date)} · {time(scoreMatch.play_time)}
-                      </p>
-                      <div className="ref-score-dialog__teams">
-                        <label>
-                          <strong>{scoreMatch.team1_label}</strong>
-                          <span>Points marqués</span>
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            inputMode="numeric"
-                            required
-                            autoFocus
-                            value={scoreLeft}
-                            onChange={(event) => setScoreLeft(event.target.value)}
-                            disabled={busy === scoreMatch.match_id}
-                          />
-                        </label>
-                        <span className="ref-score-dialog__versus">—</span>
-                        <label>
-                          <strong>{scoreMatch.team2_label}</strong>
-                          <span>Points marqués</span>
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            inputMode="numeric"
-                            required
-                            value={scoreRight}
-                            onChange={(event) => setScoreRight(event.target.value)}
-                            disabled={busy === scoreMatch.match_id}
-                          />
-                        </label>
-                      </div>
-                      {scoreError && <p role="alert" className="ref-page__error">{scoreError}</p>}
-                      <p className="ref-score-dialog__hint">Vérifie les noms des équipes avant de transmettre le résultat au club.</p>
-                      <div className="ref-score-dialog__actions">
-                        <button type="button" onClick={() => setScoreMatch(null)} disabled={busy === scoreMatch.match_id}>Annuler</button>
-                        <button type="submit" disabled={busy === scoreMatch.match_id || !scoreLeft.trim() || !scoreRight.trim()}>
-                          {busy === scoreMatch.match_id ? "Enregistrement…" : "Valider le résultat"}
-                        </button>
-                      </div>
-                    </form>
-                  ) : tournamentEditor ? (
-                    <>
-                      <p className="ref-score-dialog__context">
-                        {items.find((x) => x.match_id === tournamentEditor.matchId)?.competition_label}
-                      </p>
-                      <TournamentScoreEditor
-                        rules={tournamentEditor.rules}
-                        leftLabel={items.find((x) => x.match_id === tournamentEditor.matchId)?.team1_label ?? "Équipe 1"}
-                        rightLabel={items.find((x) => x.match_id === tournamentEditor.matchId)?.team2_label ?? "Équipe 2"}
-                        disabled={busy === tournamentEditor.matchId}
-                        submitLabel="Valider le résultat"
-                        onCancel={() => setTournamentEditor(null)}
-                        onSubmit={async (score) => {
-                          setBusy(tournamentEditor.matchId);
-                          try {
-                            await refereeingService.submitTournamentScore(tournamentEditor.matchId, score.sets);
-                            setTournamentEditor(null);
-                            await load();
-                          } catch (e) {
-                            setError(e instanceof Error ? e.message : "Impossible de saisir le résultat.");
-                            throw e;
-                          } finally {
-                            setBusy("");
-                          }
-                        }}
+        {(scoreMatch || tournamentEditor) && (
+          <div className="ref-score-backdrop" role="presentation">
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ref-score-title"
+              className="ref-score-dialog"
+            >
+              <h2 id="ref-score-title">Saisir le résultat</h2>
+              {scoreMatch ? (
+                <form onSubmit={(event) => void submitScore(event)}>
+                  <p className="ref-score-dialog__context">
+                    {scoreMatch.competition_label} · {date(scoreMatch.play_date)} ·{" "}
+                    {time(scoreMatch.play_time)}
+                  </p>
+                  <div className="ref-score-dialog__teams">
+                    <label>
+                      <strong>{scoreMatch.team1_label}</strong>
+                      <span>Points marqués</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputMode="numeric"
+                        required
+                        autoFocus
+                        value={scoreLeft}
+                        onChange={(event) => setScoreLeft(event.target.value)}
+                        disabled={busy === scoreMatch.match_id}
                       />
-                    </>
-                  ) : null}
-                </section>
-              </div>
-            )}
+                    </label>
+                    <span className="ref-score-dialog__versus">—</span>
+                    <label>
+                      <strong>{scoreMatch.team2_label}</strong>
+                      <span>Points marqués</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputMode="numeric"
+                        required
+                        value={scoreRight}
+                        onChange={(event) => setScoreRight(event.target.value)}
+                        disabled={busy === scoreMatch.match_id}
+                      />
+                    </label>
+                  </div>
+                  {scoreError && (
+                    <p role="alert" className="ref-page__error">
+                      {scoreError}
+                    </p>
+                  )}
+                  <p className="ref-score-dialog__hint">
+                    Vérifie les noms des équipes avant de transmettre le
+                    résultat au club.
+                  </p>
+                  <div className="ref-score-dialog__actions">
+                    <button
+                      type="button"
+                      onClick={() => setScoreMatch(null)}
+                      disabled={busy === scoreMatch.match_id}
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={
+                        busy === scoreMatch.match_id ||
+                        !scoreLeft.trim() ||
+                        !scoreRight.trim()
+                      }
+                    >
+                      {busy === scoreMatch.match_id
+                        ? "Enregistrement…"
+                        : "Valider le résultat"}
+                    </button>
+                  </div>
+                </form>
+              ) : tournamentEditor ? (
+                <>
+                  <p className="ref-score-dialog__context">
+                    {
+                      items.find(
+                        (x) => x.match_id === tournamentEditor.matchId,
+                      )?.competition_label
+                    }
+                  </p>
+                  <TournamentScoreEditor
+                    rules={tournamentEditor.rules}
+                    leftLabel={
+                      items.find(
+                        (x) => x.match_id === tournamentEditor.matchId,
+                      )?.team1_label ?? "Équipe 1"
+                    }
+                    rightLabel={
+                      items.find(
+                        (x) => x.match_id === tournamentEditor.matchId,
+                      )?.team2_label ?? "Équipe 2"
+                    }
+                    disabled={busy === tournamentEditor.matchId}
+                    submitLabel="Valider le résultat"
+                    onCancel={() => setTournamentEditor(null)}
+                    onSubmit={async (score) => {
+                      setBusy(tournamentEditor.matchId);
+                      try {
+                        await refereeingService.submitTournamentScore(
+                          tournamentEditor.matchId,
+                          score.sets,
+                        );
+                        setTournamentEditor(null);
+                        await load();
+                      } catch (e) {
+                        setError(
+                          e instanceof Error
+                            ? e.message
+                            : "Impossible de saisir le résultat.",
+                        );
+                        throw e;
+                      } finally {
+                        setBusy("");
+                      }
+                    }}
+                  />
+                </>
+              ) : null}
+            </section>
+          </div>
+        )}
       </section>
     </UserSpaceShell>
   );
