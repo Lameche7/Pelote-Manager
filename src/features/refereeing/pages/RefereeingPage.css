@@ -142,11 +142,11 @@
     gap: 0.45rem;
   }
   .ref-stats__toggle > span:last-child {
-    align-self: flex-end;
-  }
+  align-self: flex-end;
+}
   .ref-stats__toggle small {
-    line-height: 1.35;
-  }
+  line-height: 1.35;
+}
 }
 
 .ref-group {
@@ -201,8 +201,8 @@
 }
 @media (max-width: 520px) {
   .ref-group__heading {
-    align-items: flex-start;
-  }
+  align-items: flex-start;
+}
   .ref-group__actions {
     flex-direction: column;
     align-items: flex-end;
@@ -238,7 +238,6 @@
   opacity: 0.7;
 }
 
-
 /* Simple result entry, shared by championship and tournament referees */
 .ref-score-backdrop {
   position: fixed;
@@ -260,17 +259,34 @@
   padding: clamp(1rem, 4vw, 1.7rem);
   box-shadow: 0 18px 60px rgb(0 0 0 / 25%);
 }
-.ref-score-dialog h2 { margin: 0 0 .5rem; }
-.ref-score-dialog__context { color: #526073; margin: 0 0 1.4rem; }
+.ref-score-dialog h2 {
+  margin: 0 0 0.5rem;
+}
+.ref-score-dialog__context {
+  color: #526073;
+  margin: 0 0 1.4rem;
+}
 .ref-score-dialog__teams {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 1rem minmax(0, 1fr);
-  gap: .65rem;
+  gap: 0.65rem;
   align-items: center;
 }
-.ref-score-dialog__teams label { display: grid; gap: .55rem; min-width: 0; text-align: center; }
-.ref-score-dialog__teams label strong { overflow-wrap: anywhere; font-size: 1.05rem; min-height: 2.6rem; }
-.ref-score-dialog__teams label span { color: #526073; font-size: .82rem; }
+.ref-score-dialog__teams label {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  text-align: center;
+}
+.ref-score-dialog__teams label strong {
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+  min-height: 2.6rem;
+}
+.ref-score-dialog__teams label span {
+  color: #526073;
+  font-size: 0.82rem;
+}
 .ref-score-dialog__teams input {
   display: block;
   width: 100%;
@@ -281,15 +297,44 @@
   text-align: center;
   font-size: 2rem;
   font-weight: 800;
-  padding: .55rem .25rem;
+  padding: 0.55rem 0.25rem;
 }
-.ref-score-dialog__versus { text-align: center; font-weight: 800; font-size: 1.2rem; }
-.ref-score-dialog__hint { color: #526073; font-size: .86rem; margin: 1.2rem 0; }
-.ref-score-dialog__actions { display: flex; gap: .7rem; justify-content: flex-end; margin-top: 1rem; }
-.ref-score-dialog__actions button { padding: .8rem 1rem; border-radius: 10px; font-weight: 800; cursor: pointer; }
-.ref-score-dialog__actions button:last-child { background: #126b46; color: white; border: 1px solid #126b46; }
-.ref-score-dialog__actions button:disabled { opacity: .55; cursor: not-allowed; }
+.ref-score-dialog__versus {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.ref-score-dialog__hint {
+  color: #526073;
+  font-size: 0.86rem;
+  margin: 1.2rem 0;
+}
+.ref-score-dialog__actions {
+  display: flex;
+  gap: 0.7rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.ref-score-dialog__actions button {
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.ref-score-dialog__actions button:last-child {
+  background: #126b46;
+  color: white;
+  border: 1px solid #126b46;
+}
+.ref-score-dialog__actions button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
 @media (max-width: 380px) {
-  .ref-score-dialog__teams { gap: .3rem; }
-  .ref-score-dialog__actions { flex-direction: column-reverse; }
+  .ref-score-dialog__teams {
+  gap: 0.3rem;
+}
+  .ref-score-dialog__actions {
+  flex-direction: column-reverse;
+}
 }
