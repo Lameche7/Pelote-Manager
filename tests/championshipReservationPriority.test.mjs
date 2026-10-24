@@ -14,6 +14,7 @@ const [
   calendar,
   calendarService,
   reservationsPage,
+  slotCard,
 ] = await Promise.all([
   read(
     "../supabase/migrations/20260911170050_add_championship_reservation_priority.sql",
@@ -30,6 +31,7 @@ const [
   read("../src/features/reservations/domain/calendar.ts"),
   read("../src/features/reservations/services/reservationCalendarService.ts"),
   read("../src/features/reservations/pages/ReservationsPage.tsx"),
+  read("../src/features/reservations/components/SlotCard.tsx"),
 ]);
 
 test("configure un droit championnat indépendant des horaires publics", () => {
@@ -78,6 +80,6 @@ test("le calendrier distingue visuellement les créneaux championnat", () => {
   assert.match(calendar, /reservationAccess\?: "standard" \| "championship"/);
   assert.match(calendarService, /reservation_access/);
   assert.match(calendarService, /reservationAccess: slot\.reservation_access/);
-  assert.match(reservationsPage, /Réserver · Championnat/);
+  assert.match(slotCard, /Réserver · Championnat/);
   assert.match(reservationsPage, /Accès championnat actif/);
 });
