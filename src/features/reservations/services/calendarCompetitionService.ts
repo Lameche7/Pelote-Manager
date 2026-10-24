@@ -2,9 +2,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
 import type { CalendarSlot } from "@/features/reservations/domain/calendar";
 
-export async function resolveCalendarCompetition(
-  slot: CalendarSlot,
-): Promise<{
+export async function resolveCalendarCompetition(slot: CalendarSlot): Promise<{
   kind: "tournament" | "championship";
   competitionId: string;
   matchId: string;

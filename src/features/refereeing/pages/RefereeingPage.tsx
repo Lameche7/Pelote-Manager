@@ -464,8 +464,8 @@ export function RefereeingPage() {
                     </p>
                   )}
                   <p className="ref-score-dialog__hint">
-                    Vérifie les équipes avant de transmettre le
-                    résultat au club.
+                    Vérifie les équipes avant de transmettre le résultat au
+                    club.
                   </p>
                   <div className="ref-score-dialog__actions">
                     <button
