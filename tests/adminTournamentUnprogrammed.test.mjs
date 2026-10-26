@@ -46,3 +46,13 @@ test("les reports montrent les parties à programmer", () => {
   assert.match(panel, /Parties à programmer/);
   assert.match(panel, /Confirmer la programmation/);
 });
+
+
+test("le PDF des parties à reprogrammer regroupe tous les tournois et séries", () => {
+  assert.match(panel, /Exporter la liste en PDF/);
+  assert.match(panel, /printPendingMatches\(pending\)/);
+  assert.match(panel, /@page \{ size: A4 portrait/);
+  assert.match(panel, /grouped\.get\(match\.tournamentName\)/);
+  assert.match(panel, /match\.reason/);
+  assert.match(panel, /window\.print\(\)/);
+});

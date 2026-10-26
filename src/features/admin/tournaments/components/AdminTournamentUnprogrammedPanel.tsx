@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
+import { Printer } from "lucide-react";
 import {
   adminTournamentManualRescheduleService,
   type AdminManualRescheduleTournament,
@@ -15,6 +16,67 @@ const displayDate = (date: string) =>
     day: "2-digit",
     month: "2-digit",
   }).format(new Date(`${date}T12:00:00`));
+
+
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (char) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char,
+  );
+
+const printPendingMatches = (matches: UnprogrammedTournamentMatch[]) => {
+  if (matches.length === 0) return;
+  const win = window.open("", "_blank");
+  if (!win) throw new Error("Autorisez les fenêtres contextuelles pour exporter ce document.");
+
+  const grouped = new Map<string, Map<string, UnprogrammedTournamentMatch[]>>();
+  for (const match of [...matches].sort((a, b) =>
+    [a.tournamentName, a.seriesName, a.previousDate, a.previousStart, a.teamA]
+      .join("|").localeCompare(
+        [b.tournamentName, b.seriesName, b.previousDate, b.previousStart, b.teamA].join("|"),
+        "fr",
+      ),
+  )) {
+    if (!grouped.has(match.tournamentName)) grouped.set(match.tournamentName, new Map());
+    const series = grouped.get(match.tournamentName)!;
+    series.set(match.seriesName, [...(series.get(match.seriesName) ?? []), match]);
+  }
+
+  const sections = [...grouped].map(([tournament, series]) =>
+    `<section><h2>${escapeHtml(tournament)}</h2>${[...series].map(([name, items]) =>
+      `<h3>${escapeHtml(name)} — ${items.length} partie(s)</h3>
+       <table><thead><tr><th>Équipe 1</th><th>Équipe 2</th><th>Ancien créneau</th><th>Motif</th></tr></thead>
+       <tbody>${items.map((match) => `<tr><td>${escapeHtml(match.teamA)}</td>
+       <td>${escapeHtml(match.teamB)}</td>
+       <td>${escapeHtml(match.previousDate.split("-").reverse().join("/"))} ${escapeHtml(match.previousStart)}–${escapeHtml(match.previousEnd)}</td>
+       <td>${escapeHtml(match.reason || "—")}</td></tr>`).join("")}</tbody></table>`
+    ).join("")}</section>`
+  ).join("");
+
+  const stamp = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date());
+  win.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"/>
+    <title>Parties de tournois à reprogrammer</title>
+    <style>
+      @page { size: A4 portrait; margin: 14mm; }
+      body { font-family: Arial, sans-serif; color: #172b42; font-size: 10pt; }
+      h1 { font-size: 18pt; margin: 0 0 6px; }
+      h2 { font-size: 14pt; margin: 20px 0 6px; color: #154b75; }
+      h3 { font-size: 11pt; margin: 12px 0 6px; }
+      .subtitle { color: #566578; margin: 0 0 12px; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 12px; table-layout: fixed; }
+      th, td { border: 1px solid #c8d3dc; padding: 6px; text-align: left; overflow-wrap: anywhere; vertical-align: top; }
+      th { background: #e8f1f7; }
+      tr { break-inside: avoid; }
+      thead { display: table-header-group; }
+      section { break-inside: auto; }
+      @media screen { body { max-width: 840px; margin: 28px auto; padding: 0 18px; } }
+    </style></head><body>
+    <h1>Parties de tournois à reprogrammer</h1>
+    <p class="subtitle">État au ${escapeHtml(stamp)} · ${matches.length} partie(s) sans créneau · ${grouped.size} tournoi(s)</p>
+    ${sections}
+    <script>window.onload = () => { window.focus(); window.print(); };<\/script>
+    </body></html>`);
+  win.document.close();
+};
 
 export function AdminTournamentUnprogrammedPanel() {
   const [params] = useSearchParams();
@@ -214,7 +276,23 @@ export function AdminTournamentUnprogrammedPanel() {
         </p>
       )}
 
-      <h2 id="parties-a-programmer">Parties à programmer ({pending.length})</h2>
+      <div className="admin-reschedules__unprogram-controls">
+        <h2 id="parties-a-programmer">Parties à programmer ({pending.length})</h2>
+        <button
+          type="button"
+          disabled={pending.length === 0}
+          onClick={() => {
+            try {
+              printPendingMatches(pending);
+            } catch (cause) {
+              setError(cause instanceof Error ? cause.message : "Export impossible.");
+            }
+          }}
+        >
+          <Printer aria-hidden="true" />
+          Exporter la liste en PDF
+        </button>
+      </div>
       {requestedResource && requestedDate && (
         <p role="status">
           Créneau choisi depuis Réservations : {requestedDate} ·{" "}
