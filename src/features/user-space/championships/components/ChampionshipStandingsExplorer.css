@@ -365,3 +365,23 @@
     flex-direction: column;
   }
 }
+
+
+.championship-standings-browser__projected-opponent {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.55rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgb(22 163 74 / 22%);
+  border-radius: 0.7rem;
+  background: var(--surface-elevated, #fff);
+}
+.championship-standings-browser__projected-opponent > strong {
+  font-size: 0.85rem;
+}
+.championship-standings-browser__projected-opponent > span {
+  overflow-wrap: anywhere;
+}
+.championship-standings-browser__projected-opponent > small {
+  margin-top: 0.2rem;
+}

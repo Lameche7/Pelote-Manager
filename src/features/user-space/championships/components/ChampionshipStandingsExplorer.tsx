@@ -173,6 +173,24 @@ export function ChampionshipStandingsExplorer({
   const qualificationSource = generalStandings[0]?.qualificationSource ?? null;
   const myGeneralStanding =
     generalStandings.find((row) => row.isMyTeam) ?? null;
+  // Projection indicative : têtes de série opposées (1/N, 2/N-1, ...).
+  // Ne remplace pas le tableau final officiel de la FFPB.
+  const projectedOpponent = useMemo(() => {
+    if (qualificationCutoff === null || !myGeneralStanding) return null;
+    const rank = myGeneralStanding.generalRank;
+    if (
+      !Number.isInteger(qualificationCutoff) ||
+      qualificationCutoff < 2 ||
+      !Number.isInteger(rank) ||
+      rank < 1 ||
+      rank > qualificationCutoff
+    ) return null;
+    const opponentRank = qualificationCutoff + 1 - rank;
+    const opponent = generalStandings.find(
+      (row) => row.generalRank === opponentRank && row.teamId !== myGeneralStanding.teamId,
+    );
+    return opponent ? { opponent, opponentRank } : null;
+  }, [generalStandings, myGeneralStanding, qualificationCutoff]);
 
   return (
     <section
@@ -354,6 +372,24 @@ export function ChampionshipStandingsExplorer({
                     </span>
                     {qualificationSource && (
                       <small>Source : {qualificationSource}</small>
+                    )}
+                    {projectedOpponent && (
+                      <div className="championship-standings-browser__projected-opponent">
+                        <strong>Adversaire potentiel au premier tour de phase finale</strong>
+                        <span>
+                          {projectedOpponent.opponent.players.length > 0
+                            ? projectedOpponent.opponent.players.join(" / ")
+                            : projectedOpponent.opponent.teamLabel}
+                        </span>
+                        <span>
+                          {projectedOpponent.opponent.clubName} · {projectedOpponent.opponentRank}e au général
+                        </span>
+                        <small>
+                          Projection indicative selon le classement actuel et un croisement
+                          des têtes de série (1er contre dernier qualifié).
+                          Sous réserve du tableau officiel FFPB et de ses règles de tirage.
+                        </small>
+                      </div>
                     )}
                   </div>
                 </div>
