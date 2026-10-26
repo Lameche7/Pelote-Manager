@@ -137,6 +137,7 @@ const fetchPartitionedSource = async (
 ): Promise<JsonRow | null> => {
   const combined: JsonRow[] = [];
   const combinedMatches: JsonRow[] = [];
+  const phaseDiagnostics: JsonRow[] = [];
   let succeeded = 0;
   // Limiter la charge simultanée sur le site fédéral.
   for (let index = 0; index < body.divisions.length; index += 2) {
@@ -181,6 +182,9 @@ const fetchPartitionedSource = async (
       if (field === "results" && Array.isArray(response.matches)) {
         combinedMatches.push(...(response.matches as JsonRow[]));
       }
+      if (field === "results" && Array.isArray(response.divisions)) {
+        phaseDiagnostics.push(...(response.divisions as JsonRow[]).map((item) => ({ division: item.division, phaseDebug: item.phaseDebug })));
+      }
       if (Array.isArray(response.warnings)) {
         warnings.push(...response.warnings.map((warning) => String(warning)));
       }
@@ -189,7 +193,7 @@ const fetchPartitionedSource = async (
   return succeeded > 0
     ? {
         [field]: combined,
-        ...(field === "results" ? { matches: combinedMatches } : {}),
+        ...(field === "results" ? { matches: combinedMatches, phaseDiagnostics } : {}),
       }
     : null;
 };
@@ -414,6 +418,7 @@ Deno.serve(async (request) => {
           if (knownError) throw knownError;
           const knownMatches = known ?? [];
           summary.finalFixturesReceived = resultsSource.matches.length;
+          summary.phaseDiagnostics = resultsSource.phaseDiagnostics ?? [];
           const rejected: Record<string, number> = {};
           const reject = (reason: string) => {
             rejected[reason] = (rejected[reason] ?? 0) + 1;
@@ -719,6 +724,7 @@ Deno.serve(async (request) => {
               finalFixtures,
               finalMatchesCreated: summary.finalMatchesCreated ?? 0,
               finalFixturesReceived: summary.finalFixturesReceived ?? 0,
+              phaseDiagnostics: summary.phaseDiagnostics ?? [],
               finalFixturesRejected: summary.finalFixturesRejected ?? {},
               finalMatchesAlreadyPresent:
                 summary.finalMatchesAlreadyPresent ?? 0,
