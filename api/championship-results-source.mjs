@@ -309,6 +309,14 @@ const searchDivision = async ({
     select.id && select.name &&
     select.options.some((option) => /barrage|32|16|seizieme/iu.test(fold(option.label)))
   );
+  const phaseDebug = {
+    phaseSelectorFound: Boolean(phaseSelect),
+    availableSelects: parseSelects(session.html).map(select => ({
+      id: select.id,
+      options: select.options.map(option => option.label).filter(label => /phase|barrage|finale|32|16/i.test(label)).slice(0, 12),
+    })).filter(select => select.options.length > 0),
+    phaseRequests: 0,
+  };
   if (phaseSelect) {
     const phaseOptions = phaseSelect.options.filter((option) => {
       const label = fold(option.label);
@@ -322,9 +330,10 @@ const searchDivision = async ({
       values.set("WD_BUTTON_CLICK_", phaseSelect.id);
       const filtered = await expandAllRows(await postForm(session, values));
       pages.push(filtered.html);
+      phaseDebug.phaseRequests += 1;
     }
   }
-  return pages;
+  return { pages, phaseDebug };
 };
 
 const fieldHtml = (html, row, attributeId) => {
@@ -490,7 +499,7 @@ export default async function handler(request, response) {
     const warnings = [];
     for (const division of divisions) {
       try {
-        const pages = await searchDivision({
+        const { pages, phaseDebug } = await searchDivision({
           sourceUrl,
           seasonLabel,
           competitionName,
@@ -518,6 +527,7 @@ export default async function handler(request, response) {
           declaredCount: parsed.declaredCount,
           loadedCount: parsed.loadedCount,
           resultCount: parsed.results.length,
+          phaseDebug,
         });
         if (
           parsed.declaredCount !== null &&
