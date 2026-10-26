@@ -413,11 +413,16 @@ Deno.serve(async (request) => {
             .in("division_id", divisionIds);
           if (knownError) throw knownError;
           const knownMatches = known ?? [];
+          summary.finalFixturesReceived = resultsSource.matches.length;
+          const rejected: Record<string, number> = {};
+          const reject = (reason: string) => {
+            rejected[reason] = (rejected[reason] ?? 0) + 1;
+          };
           let created = 0;
           let duplicates = 0;
           const addedByDivision: Record<string, number> = {};
           for (const raw of resultsSource.matches as JsonRow[]) {
-            if (fold(raw.phase) === "poules") continue;
+            if (fold(raw.phase) === "poules") { reject("poules"); continue; }
             const division = divisionByName.get(fold(raw.division));
             const a = division
               ? teamByKey.get(
@@ -439,9 +444,7 @@ Deno.serve(async (request) => {
               : undefined;
             const phase = String(raw.phase ?? "");
             if (!division || !a || !b || a.id === b.id || !phase) {
-              warnings.push(
-                "Rencontre finale ignorée : équipes ou phase non identifiées.",
-              );
+              reject(!division ? "division inconnue" : !a || !b ? "equipe introuvable" : a.id === b.id ? "equipes identiques" : "phase manquante");
               continue;
             }
             const matchesSamePairAndPhase = knownMatches.filter(
@@ -486,6 +489,7 @@ Deno.serve(async (request) => {
             addedByDivision[division.name] =
               (addedByDivision[division.name] ?? 0) + 1;
           }
+          summary.finalFixturesRejected = rejected;
           summary.finalMatchesCreated = created;
           summary.finalMatchesAlreadyPresent = duplicates;
           summary.finalMatchesAddedByDivision = addedByDivision;
@@ -714,6 +718,8 @@ Deno.serve(async (request) => {
               sourceBaseUrl,
               finalFixtures,
               finalMatchesCreated: summary.finalMatchesCreated ?? 0,
+              finalFixturesReceived: summary.finalFixturesReceived ?? 0,
+              finalFixturesRejected: summary.finalFixturesRejected ?? {},
               finalMatchesAlreadyPresent:
                 summary.finalMatchesAlreadyPresent ?? 0,
               finalMatchesAddedByDivision:
