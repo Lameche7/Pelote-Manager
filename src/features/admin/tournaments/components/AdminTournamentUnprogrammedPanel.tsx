@@ -8,6 +8,7 @@ import {
 import {
   adminTournamentUnprogrammedService,
   type UnprogrammedTournamentMatch,
+  type UnprogrammedMatchContact,
 } from "../services/adminTournamentUnprogrammedService";
 
 const displayDate = (date: string) =>
@@ -23,7 +24,7 @@ const escapeHtml = (value: string) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char,
   );
 
-const printPendingMatches = (matches: UnprogrammedTournamentMatch[]) => {
+const printPendingMatches = (matches: UnprogrammedTournamentMatch[], contacts: UnprogrammedMatchContact[]) => {
   if (matches.length === 0) return;
   const win = window.open("", "_blank");
   if (!win) throw new Error("Autorisez les fenêtres contextuelles pour exporter ce document.");
@@ -41,12 +42,19 @@ const printPendingMatches = (matches: UnprogrammedTournamentMatch[]) => {
     series.set(match.seriesName, [...(series.get(match.seriesName) ?? []), match]);
   }
 
+  const contactsByMatch = new Map<string, UnprogrammedMatchContact[]>();
+  for (const contact of contacts) {
+    contactsByMatch.set(contact.matchId, [...(contactsByMatch.get(contact.matchId) ?? []), contact]);
+  }
   const sections = [...grouped].map(([tournament, series]) =>
     `<section><h2>${escapeHtml(tournament)}</h2>${[...series].map(([name, items]) =>
       `<h3>${escapeHtml(name)} — ${items.length} partie(s)</h3>
-       <table><thead><tr><th>Équipe 1</th><th>Équipe 2</th><th>Ancien créneau</th><th>Motif</th></tr></thead>
+       <table><thead><tr><th>Équipe 1</th><th>Équipe 2</th><th>Contacts des joueurs</th><th>Ancien créneau</th><th>Motif</th></tr></thead>
        <tbody>${items.map((match) => `<tr><td>${escapeHtml(match.teamA)}</td>
        <td>${escapeHtml(match.teamB)}</td>
+       <td>${(contactsByMatch.get(match.matchId) ?? []).map(contact =>
+         `${escapeHtml(contact.name)} : ${escapeHtml(contact.phone || "Non renseigné")}`
+       ).join("<br/>") || "Non renseigné"}</td>
        <td>${escapeHtml(match.previousDate.split("-").reverse().join("/"))} ${escapeHtml(match.previousStart)}–${escapeHtml(match.previousEnd)}</td>
        <td>${escapeHtml(match.reason || "—")}</td></tr>`).join("")}</tbody></table>`
     ).join("")}</section>`
@@ -121,6 +129,7 @@ export function AdminTournamentUnprogrammedPanel() {
   const [start, setStart] = useState("19:30");
   const [end, setEnd] = useState("20:30");
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -140,6 +149,19 @@ export function AdminTournamentUnprogrammedPanel() {
       );
     });
   }, [load]);
+
+  const exportPdf = async () => {
+    setExporting(true);
+    setError("");
+    try {
+      const contacts = await adminTournamentUnprogrammedService.listContacts();
+      printPendingMatches(pending, contacts);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Export impossible.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const matches = tournaments.flatMap((tournament) =>
     tournament.matches.map((match) => ({
@@ -280,17 +302,11 @@ export function AdminTournamentUnprogrammedPanel() {
         <h2 id="parties-a-programmer">Parties à programmer ({pending.length})</h2>
         <button
           type="button"
-          disabled={pending.length === 0}
-          onClick={() => {
-            try {
-              printPendingMatches(pending);
-            } catch (cause) {
-              setError(cause instanceof Error ? cause.message : "Export impossible.");
-            }
-          }}
+          disabled={pending.length === 0 || exporting}
+          onClick={() => void exportPdf()}
         >
           <Printer aria-hidden="true" />
-          Exporter la liste en PDF
+          {exporting ? "Préparation…" : "Exporter la liste en PDF"}
         </button>
       </div>
       {requestedResource && requestedDate && (
