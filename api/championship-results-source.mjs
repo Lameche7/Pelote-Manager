@@ -388,8 +388,12 @@ export const parseDivisionResults = (html, divisionName) => {
     const team2 = parseTeam(secondLabel);
     if (!team1 || !team2) continue;
     const phaseText = fieldText(html, row, "I220");
-    const phase =
-      identifyPhase(phaseText) ?? identifyPhase(fieldText(html, row, "I222"));
+    const secondaryPhase = identifyPhase(fieldText(html, row, "I222"));
+    const primaryPhase = identifyPhase(phaseText);
+    // Un intitulé explicite de phase finale prime sur le libellé générique « Poules ».
+    const phase = secondaryPhase && secondaryPhase !== "Poules"
+      ? secondaryPhase
+      : primaryPhase ?? secondaryPhase;
     const sourceDate = parseDate(fieldText(html, row, "I163"));
     if (phase) {
       matches.push({
