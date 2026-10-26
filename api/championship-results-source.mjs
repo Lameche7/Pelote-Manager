@@ -302,7 +302,29 @@ const searchDivision = async ({
   searchValues.set("WD_BUTTON_CLICK_", "A32");
   session = await postForm(session, searchValues);
   session = await expandAllRows(session);
-  return session.html;
+  const pages = [session.html];
+  // Le filtre « Phases » de Rencontres / Résultats peut rester sur Poules.
+  // Découvrir son identifiant à partir des options, plutôt que supposer un ID WebDev fixe.
+  const phaseSelect = parseSelects(session.html).find((select) =>
+    select.id && select.name &&
+    select.options.some((option) => /barrage|1\\s*\\/?\\s*32|32\\s*(?:eme|e)|seizieme|1\\s*\\/?\\s*16/iu.test(fold(option.label)))
+  );
+  if (phaseSelect) {
+    const phaseOptions = phaseSelect.options.filter((option) => {
+      const label = fold(option.label);
+      return label && label !== "toutes" && label !== "tous" &&
+        /barrage|finale|1\\s*\\/?\\s*(?:32|16|8|4|2)|32\\s*(?:eme|e)/u.test(label);
+    });
+    for (const option of phaseOptions) {
+      const values = parseFormValues(session.html);
+      values.set(phaseSelect.name, option.value);
+      values.set("WD_ACTION_", "");
+      values.set("WD_BUTTON_CLICK_", phaseSelect.id);
+      const filtered = await expandAllRows(await postForm(session, values));
+      pages.push(filtered.html);
+    }
+  }
+  return pages;
 };
 
 const fieldHtml = (html, row, attributeId) => {
@@ -468,16 +490,29 @@ export default async function handler(request, response) {
     const warnings = [];
     for (const division of divisions) {
       try {
-        const html = await searchDivision({
+        const pages = await searchDivision({
           sourceUrl,
           seasonLabel,
           competitionName,
           specialty,
           divisionName: division.name,
         });
-        const parsed = parseDivisionResults(html, division.name);
-        allResults.push(...parsed.results);
-        allMatches.push(...parsed.matches);
+        const parsedPages = pages.map((html) => parseDivisionResults(html, division.name));
+        const parsed = parsedPages[0];
+        const uniqueMatches = new Map();
+        const uniqueResults = new Map();
+        for (const page of parsedPages) {
+          for (const match of page.matches) {
+            const key = [match.phase,match.team1Label,match.team2Label,match.sourceDate].join("|");
+            uniqueMatches.set(key, match);
+          }
+          for (const result of page.results) {
+            const key = [result.phase,result.team1Label,result.team2Label,result.sourceDate,result.scoreRaw].join("|");
+            uniqueResults.set(key, result);
+          }
+        }
+        allResults.push(...uniqueResults.values());
+        allMatches.push(...uniqueMatches.values());
         divisionSummary.push({
           division: division.name,
           declaredCount: parsed.declaredCount,
