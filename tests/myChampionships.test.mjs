@@ -163,3 +163,17 @@ test("les championnats utilisent le responsable d'équipe et restent stables en 
   assert.match(migration, /responsible_phone text/);
   assert.match(migration, /admin_update_championship_team_contacts/);
 });
+
+
+test("le classement propose un adversaire potentiel sans l'annoncer officiel", async () => {
+  const source = await read(
+    new URL(
+      "../src/features/user-space/championships/components/ChampionshipStandingsExplorer.tsx",
+      import.meta.url,
+    ),
+  );
+  assert.match(source, /qualificationCutoff \+ 1 - rank/);
+  assert.match(source, /projectedOpponent\.opponent\.players\.join/);
+  assert.match(source, /Adversaire potentiel au premier tour/);
+  assert.match(source, /Sous réserve du tableau officiel FFPB/);
+});
