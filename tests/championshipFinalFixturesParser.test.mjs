@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import { parseDivisionResults } from "../api/championship-results-source.mjs";
 
 const field = (row, code, value) =>
@@ -45,4 +46,11 @@ test("une phase finale explicite prime sur un libellé Poules", () => {
   const html = fixture(1, "Poules") + field(1, "I222", "1/32ème de finale");
   const parsed = parseDivisionResults(html, "3ème série");
   assert.equal(parsed.matches[0]?.phase, "1/32ème de finale");
+});
+
+test("le collecteur cherche les phases finales dans le filtre dédié", () => {
+  const source = readFileSync("api/championship-results-source.mjs", "utf8");
+  assert.match(source, /const phaseSelect = parseSelects/);
+  assert.match(source, /values\.set\(phaseSelect\.name, option\.value\)/);
+  assert.match(source, /uniqueMatches\.set\(key, match\)/);
 });
