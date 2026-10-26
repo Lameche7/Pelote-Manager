@@ -40,3 +40,9 @@ test("les 32es de finale et barrages de quatrième série sont reconnus", () => 
   const barrage = parseDivisionResults(fixture(2, "Barrages"), "4ème série");
   assert.equal(barrage.matches[0]?.phase, "Barrage");
 });
+
+test("une phase finale explicite prime sur un libellé Poules", () => {
+  const html = fixture(1, "Poules") + field(1, "I222", "1/32ème de finale");
+  const parsed = parseDivisionResults(html, "3ème série");
+  assert.equal(parsed.matches[0]?.phase, "1/32ème de finale");
+});
