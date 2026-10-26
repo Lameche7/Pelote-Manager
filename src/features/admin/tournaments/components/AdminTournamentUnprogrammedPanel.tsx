@@ -158,6 +158,7 @@ export function AdminTournamentUnprogrammedPanel() {
       const contacts = await adminTournamentUnprogrammedService.listContacts();
       printPendingMatches(pending, contacts, popup);
     } catch (cause) {
+      popup.close();
       setError(cause instanceof Error ? cause.message : "Export impossible.");
     } finally {
       setExporting(false);
