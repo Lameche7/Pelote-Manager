@@ -20,7 +20,24 @@ export type UnprogrammedTournamentMatch = {
   resources: { id: string; name: string }[];
 };
 
+export type UnprogrammedMatchContact = {
+  matchId: string;
+  teamId: string;
+  name: string;
+  phone: string | null;
+};
+
 export const adminTournamentUnprogrammedService = {
+  async listContacts(): Promise<UnprogrammedMatchContact[]> {
+    const { data, error } = await supabase.rpc("admin_unprogrammed_tournament_match_contacts");
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les téléphones des joueurs."));
+    return objects(data).map(row => ({
+      matchId: String(row.match_id ?? ""),
+      teamId: String(row.team_id ?? ""),
+      name: String(row.name ?? ""),
+      phone: row.phone ? String(row.phone) : null,
+    }));
+  },
   async list(): Promise<UnprogrammedTournamentMatch[]> {
     const { data, error } = await supabase.rpc(
       "admin_list_unprogrammed_tournament_matches",
