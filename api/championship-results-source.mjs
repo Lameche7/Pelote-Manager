@@ -361,6 +361,7 @@ const identifyPhase = (value) => {
   const normalized = fold(raw);
   if (/^(poule|pools?)\b/u.test(normalized)) return "Poules";
   if (/barrage/u.test(normalized)) return "Barrage";
+  if (/(?:1\s*32|trente\s*deuxieme|32\s*eme|32\s*e\s*de\s*finale)/u.test(normalized)) return "1/32ème de finale";
   if (/1\s*16|seizieme/u.test(normalized)) return "1/16ème de finale";
   if (/1\s*8|huitieme/u.test(normalized)) return "1/8ème de finale";
   if (/1\s*4|quart/u.test(normalized)) return "1/4 de finale";
