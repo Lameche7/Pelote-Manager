@@ -307,13 +307,13 @@ const searchDivision = async ({
   // Découvrir son identifiant à partir des options, plutôt que supposer un ID WebDev fixe.
   const phaseSelect = parseSelects(session.html).find((select) =>
     select.id && select.name &&
-    select.options.some((option) => /barrage|1\\s*\\/?\\s*32|32\\s*(?:eme|e)|seizieme|1\\s*\\/?\\s*16/iu.test(fold(option.label)))
+    select.options.some((option) => /barrage|32|16|seizieme/iu.test(fold(option.label)))
   );
   if (phaseSelect) {
     const phaseOptions = phaseSelect.options.filter((option) => {
       const label = fold(option.label);
       return label && label !== "toutes" && label !== "tous" &&
-        /barrage|finale|1\\s*\\/?\\s*(?:32|16|8|4|2)|32\\s*(?:eme|e)/u.test(label);
+        /barrage|finale|32|16|8|quart|demi/u.test(label);
     });
     for (const option of phaseOptions) {
       const values = parseFormValues(session.html);
