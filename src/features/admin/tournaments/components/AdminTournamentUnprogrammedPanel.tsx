@@ -24,10 +24,9 @@ const escapeHtml = (value: string) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char,
   );
 
-const printPendingMatches = (matches: UnprogrammedTournamentMatch[], contacts: UnprogrammedMatchContact[]) => {
+const printPendingMatches = (matches: UnprogrammedTournamentMatch[], contacts: UnprogrammedMatchContact[], popup: Window) => {
   if (matches.length === 0) return;
-  const win = window.open("", "_blank");
-  if (!win) throw new Error("Autorisez les fenêtres contextuelles pour exporter ce document.");
+  const win = popup;
 
   const grouped = new Map<string, Map<string, UnprogrammedTournamentMatch[]>>();
   for (const match of [...matches].sort((a, b) =>
@@ -151,11 +150,13 @@ export function AdminTournamentUnprogrammedPanel() {
   }, [load]);
 
   const exportPdf = async () => {
+    const popup = window.open("", "_blank");
+    if (!popup) { setError("Autorisez les fenêtres contextuelles pour exporter le PDF."); return; }
     setExporting(true);
     setError("");
     try {
       const contacts = await adminTournamentUnprogrammedService.listContacts();
-      printPendingMatches(pending, contacts);
+      printPendingMatches(pending, contacts, popup);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Export impossible.");
     } finally {
