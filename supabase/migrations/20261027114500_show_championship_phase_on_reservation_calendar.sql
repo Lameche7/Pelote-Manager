@@ -86,7 +86,7 @@ left join lateral (
   limit 1
 ) as championship_slot on true
 order by slot.starts_at;
-$function$
+$function$;
 
 
 -- Scoped lookup for the results administrator. Keep the existing day-results
