@@ -265,17 +265,36 @@ export const licenceService = {
   preparePayment: async (
     requestId: string,
   ): Promise<PreparedLicencePayment> => {
+    // Évite de laisser indéfiniment le bouton désactivé si une requête ne répond pas.
+    const withTimeout = async <T>(operation: Promise<T>, step: string): Promise<T> => {
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      try {
+        return await Promise.race([
+          operation,
+          new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(
+              () => reject(new Error(
+                `Délai dépassé pendant ${step}. Aucun paiement confirmé. Vérifiez son statut avant de réessayer.`
+              )),
+              15000,
+            );
+          }),
+        ]);
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
+    };
     const result = value<
       Array<{ payment_id: string; redirect_url: string | null }>
     >(
-      await rpc("prepare_my_licence_payment", {
+      await withTimeout(rpc("prepare_my_licence_payment", {
         target_request_id: requestId,
-      }),
+      }), "la préparation de la licence"),
     );
     const paymentId = result[0]?.payment_id;
     if (!paymentId) throw new Error("Paiement introuvable.");
 
-    const mode = await licenceService.getPaymentMode(paymentId);
+    const mode = await withTimeout(licenceService.getPaymentMode(paymentId), "la vérification du mode de paiement");
     if (mode === "test") return { paymentId, mode };
 
     const existingRedirectUrl = result[0]?.redirect_url;
@@ -283,10 +302,10 @@ export const licenceService = {
       return { paymentId, mode, redirectUrl: existingRedirectUrl };
     }
 
-    const { data, error } = await supabase.functions.invoke(
+    const { data, error } = await withTimeout(supabase.functions.invoke(
       "create-helloasso-checkout",
       { body: { paymentId } },
-    );
+    ), "la connexion à HelloAsso");
     if (error) throw new Error(await edgeFunctionErrorMessage(error));
     const redirectUrl = (data as { redirectUrl?: string } | null)?.redirectUrl;
     if (!redirectUrl) throw new Error("Lien HelloAsso introuvable.");
