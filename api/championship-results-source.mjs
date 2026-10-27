@@ -527,6 +527,15 @@ export default async function handler(request, response) {
         });
         const parsedPages = pages.map((html) => parseDivisionResults(html, division.name));
         const parsed = parsedPages[0];
+        phaseDebug.parsedPages = parsedPages.map((page, index) => ({
+          selectedPhase: index === 0 ? "initial" : phaseDebug.phasePages[index - 1]?.phase,
+          rows: page.loadedCount,
+          matches: page.matches.length,
+          phases: page.matches.reduce((counts, match) => {
+            counts[match.phase] = (counts[match.phase] ?? 0) + 1;
+            return counts;
+          }, {}),
+        }));
         const uniqueMatches = new Map();
         const uniqueResults = new Map();
         for (const page of parsedPages) {
