@@ -22,6 +22,7 @@ export type AdminChampionshipDayResult = {
   divisionName: string;
   divisionDisplayOrder: number;
   poolCode: string | null;
+  phase: string;
   team1Id: string;
   team1Label: string;
   team1Players: string[];
@@ -49,6 +50,7 @@ const mapRow = (row: Row): AdminChampionshipDayResult => ({
   divisionName: String(row.division_name ?? ""),
   divisionDisplayOrder: Number(row.division_display_order ?? 0),
   poolCode: nullableString(row.pool_code),
+  phase: String(row.phase ?? (row.pool_code ? "Poules" : "")),
   team1Id: String(row.team1_id ?? ""),
   team1Label: String(row.team1_label ?? ""),
   team1Players: Array.isArray(row.team1_players)
@@ -73,7 +75,7 @@ const mapRow = (row: Row): AdminChampionshipDayResult => ({
 export const adminChampionshipDayResultsService = {
   async list(championshipId: string): Promise<AdminChampionshipDayResult[]> {
     const { data, error } = await supabase.rpc(
-      "admin_list_championship_day_results_v2",
+      "admin_list_championship_day_results_v3",
       { target_id: championshipId },
     );
     if (error) {
@@ -84,7 +86,26 @@ export const adminChampionshipDayResultsService = {
         ),
       );
     }
-    return rows(data).map(mapRow);
+    const matches = rows(data).map(mapRow);
+    const { data: phaseRows, error: phaseError } = await supabase.rpc(
+      "admin_list_championship_match_phases",
+      { target_id: championshipId },
+    );
+    if (phaseError) {
+      throw new Error(
+        getSupabaseErrorMessage(
+          phaseError,
+          "Impossible de charger les phases du championnat.",
+        ),
+      );
+    }
+    const phases = new Map(
+      rows(phaseRows).map((item) => [String(item.match_id), String(item.phase)]),
+    );
+    return matches.map((match) => ({
+      ...match,
+      phase: phases.get(match.matchId) ?? match.phase,
+    }));
   },
 
   async submit(
