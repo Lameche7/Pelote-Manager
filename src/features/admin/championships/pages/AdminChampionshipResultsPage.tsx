@@ -420,9 +420,17 @@ export function AdminChampionshipResultsPage() {
           break;
         }
       }
+      if (finished) {
+        const refreshed = await loadResults(selectedChampionship.id);
+        const finalDates = refreshed
+          .filter((match) => match.phase && match.phase !== "Poules" && match.dayOn)
+          .map((match) => match.dayOn as string)
+          .sort();
+        if (finalDates.length > 0) setSelectedDay(finalDates.at(-1) ?? "");
+      }
       setFinalsSyncMessage(
         finished
-          ? "Vérification terminée. Bilan ci-dessous."
+          ? "Vérification terminée. Rencontres actualisées ci-dessous."
           : "La vérification prend plus de temps que prévu. Le dernier bilan sera affiché dès votre retour sur cet écran.",
       );
     } catch (cause) {
