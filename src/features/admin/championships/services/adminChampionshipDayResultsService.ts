@@ -75,7 +75,7 @@ const mapRow = (row: Row): AdminChampionshipDayResult => ({
 export const adminChampionshipDayResultsService = {
   async list(championshipId: string): Promise<AdminChampionshipDayResult[]> {
     const { data, error } = await supabase.rpc(
-      "admin_list_championship_day_results_v2",
+      "admin_list_championship_day_results_v3",
       { target_id: championshipId },
     );
     if (error) {
