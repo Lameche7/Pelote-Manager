@@ -285,7 +285,12 @@ export function AdminChampionshipResultsPage() {
     void loadResults(championshipId)
       .then((nextMatches) => {
         if (!active) return;
-        setSelectedDay(defaultDay(matchDays(nextMatches)));
+        const availableDays = matchDays(nextMatches);
+        const importedFinals = nextMatches
+          .filter((match) => match.phase && match.phase !== "Poules" && match.dayOn)
+          .map((match) => match.dayOn as string)
+          .sort();
+        setSelectedDay(importedFinals.at(-1) ?? defaultDay(availableDays));
       })
       .catch((cause) => {
         if (active) {
@@ -785,9 +790,11 @@ export function AdminChampionshipResultsPage() {
                       >
                         <div className="admin-championship-results__match-meta">
                           <span>
-                            {match.poolCode
-                              ? `Poule ${match.poolCode}`
-                              : "Championnat"}
+                            {match.phase && match.phase !== "Poules"
+                              ? match.phase
+                              : match.poolCode
+                                ? `Poule ${match.poolCode}`
+                                : "Championnat"}
                           </span>
                           <span>
                             {match.actualOn && match.actualOn !== match.dayOn
