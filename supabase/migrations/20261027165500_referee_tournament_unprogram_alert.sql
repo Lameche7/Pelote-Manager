@@ -2,7 +2,9 @@ begin;
 
 -- Une notification par déprogrammation, réservée à l'arbitre du créneau.
 create table public.referee_unprogram_notification_events (
-  match_id uuid primary key references public.tournament_matches(id) on delete cascade,
+  match_id uuid not null references public.tournament_matches(id) on delete cascade,
+  previous_start timestamptz not null,
+  primary key(match_id,previous_start),
   communication_id uuid not null unique references public.club_communications(id) on delete cascade,
   referee_profile_id uuid not null,
   created_at timestamptz not null default now()
@@ -38,7 +40,10 @@ begin
   order by a.assigned_at desc
   limit 1;
 
-  if referee_id is null then return new; end if;
+  if referee_id is null or exists (
+    select 1 from public.referee_unprogram_notification_events e
+    where e.match_id=new.match_id and e.previous_start=match_start
+  ) then return new; end if;
 
   insert into public.club_communications (
     club_id,title,body,priority,status,show_on_home,published_at,expires_at
@@ -56,8 +61,8 @@ begin
   ) values (communication_id,club,referee_id);
 
   insert into public.referee_unprogram_notification_events (
-    match_id,communication_id,referee_profile_id
-  ) values (new.match_id,communication_id,referee_id);
+    match_id,previous_start,communication_id,referee_profile_id
+  ) values (new.match_id,match_start,communication_id,referee_id);
   return new;
 end;
 $$;
