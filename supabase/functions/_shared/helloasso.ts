@@ -74,6 +74,30 @@ export async function getHelloAssoAccessToken(input: {
   });
 
   if (!response.ok) {
+    // Diagnostic technique seulement : jamais de jeton, de secret ou de données payeur.
+    const rayId = response.headers.get("cf-ray");
+    let egressIp: string | null = null;
+    if (response.status === 403) {
+      try {
+        const ipResponse = await fetch("https://api.ipify.org?format=json", {
+          signal: AbortSignal.timeout(3500),
+        });
+        if (ipResponse.ok) {
+          const ipResult = (await ipResponse.json()) as { ip?: string };
+          egressIp = ipResult.ip ?? null;
+        }
+      } catch {
+        // Cette vérification secondaire ne doit pas masquer l'erreur HelloAsso.
+      }
+    }
+    console.error("helloasso_oauth_failure", JSON.stringify({
+      at: new Date().toISOString(),
+      endpoint: urls.oauth,
+      status: response.status,
+      rayId,
+      egressIp,
+      note: "IP observée via service tiers : susceptible de varier selon les requêtes",
+    }));
     const details = helloAssoErrorDetails(response, await response.text());
     throw new Error(
       `Authentification HelloAsso impossible (${response.status})${
