@@ -86,26 +86,7 @@ export const adminChampionshipDayResultsService = {
         ),
       );
     }
-    const matches = rows(data).map(mapRow);
-    const { data: phaseRows, error: phaseError } = await supabase.rpc(
-      "admin_list_championship_match_phases",
-      { target_id: championshipId },
-    );
-    if (phaseError) {
-      throw new Error(
-        getSupabaseErrorMessage(
-          phaseError,
-          "Impossible de charger les phases du championnat.",
-        ),
-      );
-    }
-    const phases = new Map(
-      rows(phaseRows).map((item) => [String(item.match_id), String(item.phase)]),
-    );
-    return matches.map((match) => ({
-      ...match,
-      phase: phases.get(match.matchId) ?? match.phase,
-    }));
+    return rows(data).map(mapRow);
   },
 
   async submit(
