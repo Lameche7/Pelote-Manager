@@ -68,7 +68,8 @@ const defaultDay = (days: string[]) => {
   const pastOrToday = days
     .filter((day) => new Date(`${day}T00:00:00`).getTime() <= today.getTime())
     .sort((a, b) => b.localeCompare(a));
-  return pastOrToday[0] ?? [...days].sort((a, b) => a.localeCompare(b))[0];
+  const upcoming = days.filter((day) => new Date(`${day}T00:00:00`).getTime() >= today.getTime()).sort((a, b) => a.localeCompare(b));
+  return upcoming[0] ?? pastOrToday[0] ?? days[0];
 };
 
 const matchHasStarted = (match: AdminChampionshipDayResult) => {
