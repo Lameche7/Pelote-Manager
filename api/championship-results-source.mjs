@@ -525,7 +525,17 @@ export default async function handler(request, response) {
           specialty,
           divisionName: division.name,
         });
-        const parsedPages = pages.map((html) => parseDivisionResults(html, division.name));
+        const parsedPages = pages.map((html, index) => {
+          const parsedPage = parseDivisionResults(html, division.name);
+          const selectedPhase = index > 0
+            ? identifyPhase(phaseDebug.phasePages[index - 1]?.phase)
+            : null;
+          if (selectedPhase && selectedPhase !== "Poules") {
+            for (const match of parsedPage.matches) match.phase = selectedPhase;
+            for (const result of parsedPage.results) result.phase = selectedPhase;
+          }
+          return parsedPage;
+        });
         const parsed = parsedPages[0];
         phaseDebug.parsedPages = parsedPages.map((page, index) => ({
           selectedPhase: index === 0 ? "initial" : phaseDebug.phasePages[index - 1]?.phase,
