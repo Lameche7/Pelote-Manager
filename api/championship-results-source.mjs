@@ -316,6 +316,7 @@ const searchDivision = async ({
       options: select.options.map(option => option.label).filter(label => /phase|barrage|finale|32|16/i.test(label)).slice(0, 12),
     })).filter(select => select.options.length > 0),
     phaseRequests: 0,
+    phasePages: [],
   };
   if (phaseSelect) {
     const phaseOptions = phaseSelect.options.filter((option) => {
@@ -328,9 +329,27 @@ const searchDivision = async ({
       values.set(phaseSelect.name, option.value);
       values.set("WD_ACTION_", "");
       values.set("WD_BUTTON_CLICK_", phaseSelect.id);
-      const filtered = await expandAllRows(await postForm(session, values));
+      const selected = await postForm(session, values);
+      // Un changement de filtre WebDev ne déclenche pas toujours la recherche.
+      // Soumettre explicitement le bouton Rechercher en conservant la phase choisie.
+      const searchAgain = parseFormValues(selected.html);
+      const activePhaseSelect = parseSelects(selected.html).find(
+        (item) => item.id === phaseSelect.id,
+      );
+      if (activePhaseSelect?.name) {
+        searchAgain.set(activePhaseSelect.name, option.value);
+      }
+      searchAgain.set("WD_ACTION_", "");
+      searchAgain.set("WD_BUTTON_CLICK_", "A32");
+      const filtered = await expandAllRows(await postForm(selected, searchAgain));
       pages.push(filtered.html);
       phaseDebug.phaseRequests += 1;
+      phaseDebug.phasePages.push({
+        phase: option.label,
+        afterSelectionRows: rowCount(selected.html),
+        afterSearchRows: rowCount(filtered.html),
+        afterSearchDeclared: declaredMatchCount(filtered.html),
+      });
     }
   }
   return { pages, phaseDebug };
