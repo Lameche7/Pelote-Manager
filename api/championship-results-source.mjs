@@ -307,7 +307,10 @@ const searchDivision = async ({
   // Découvrir son identifiant à partir des options, plutôt que supposer un ID WebDev fixe.
   const phaseSelect = parseSelects(session.html).find((select) =>
     select.id && select.name &&
-    select.options.some((option) => /barrage|32|16|seizieme/iu.test(fold(option.label)))
+    select.options.some((option) => {
+      const label = fold(option.label);
+      return identifyPhase(label) !== null && identifyPhase(label) !== "Poules";
+    })
   );
   const phaseDebug = {
     phaseSelectorFound: Boolean(phaseSelect),
@@ -322,7 +325,7 @@ const searchDivision = async ({
     const phaseOptions = phaseSelect.options.filter((option) => {
       const label = fold(option.label);
       return label && label !== "toutes" && label !== "tous" &&
-        /barrage|finale|32|16|8|quart|demi/u.test(label);
+        identifyPhase(label) !== null && identifyPhase(label) !== "Poules";
     });
     for (const option of phaseOptions) {
       const values = parseFormValues(session.html);
