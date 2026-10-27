@@ -353,7 +353,11 @@ export function ChampionshipMatchActionCard({
         <div>
           <p>
             {championship.divisionName}
-            {championship.poolCode ? ` · Poule ${championship.poolCode}` : ""}
+            {match.phase && match.phase !== "Poules"
+              ? ` · ${match.phase}`
+              : championship.poolCode
+                ? ` · Poule ${championship.poolCode}`
+                : ` · Poules`}
           </p>
           <h3>
             {championship.players
