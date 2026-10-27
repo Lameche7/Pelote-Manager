@@ -86,7 +86,26 @@ export const adminChampionshipDayResultsService = {
         ),
       );
     }
-    return rows(data).map(mapRow);
+    const matches = rows(data).map(mapRow);
+    // The existing admin RPC does not return the phase: enrich from the
+    // underlying championship matches without changing its SQL signature.
+    const phases = new Map<string, string>();
+    for (let index = 0; index < matches.length; index += 100) {
+      const ids = matches.slice(index, index + 100).map((match) => match.matchId);
+      if (!ids.length) continue;
+      const { data: phaseRows, error: phaseError } = await supabase
+        .from("championship_matches")
+        .select("id,phase")
+        .in("id", ids);
+      if (phaseError) throw new Error(
+        getSupabaseErrorMessage(phaseError, "Impossible de charger les phases des rencontres."),
+      );
+      for (const item of phaseRows ?? []) phases.set(item.id, item.phase);
+    }
+    return matches.map((match) => ({
+      ...match,
+      phase: phases.get(match.matchId) ?? match.phase,
+    }));
   },
 
   async submit(
