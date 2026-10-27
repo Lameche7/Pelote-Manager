@@ -22,6 +22,7 @@ export type AdminChampionshipDayResult = {
   divisionName: string;
   divisionDisplayOrder: number;
   poolCode: string | null;
+  phase: string;
   team1Id: string;
   team1Label: string;
   team1Players: string[];
@@ -49,6 +50,7 @@ const mapRow = (row: Row): AdminChampionshipDayResult => ({
   divisionName: String(row.division_name ?? ""),
   divisionDisplayOrder: Number(row.division_display_order ?? 0),
   poolCode: nullableString(row.pool_code),
+  phase: String(row.phase ?? (row.pool_code ? "Poules" : "")),
   team1Id: String(row.team1_id ?? ""),
   team1Label: String(row.team1_label ?? ""),
   team1Players: Array.isArray(row.team1_players)
