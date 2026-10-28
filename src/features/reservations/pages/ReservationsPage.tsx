@@ -1026,7 +1026,6 @@ export function ReservationsPage() {
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
-                  {canAdminReservations && <Link className="reservation-slot-actions__button" to={`${ROUTES.adminReservations}?create=1&resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}`}>Effectuer une réservation</Link>}
                   {canAdminTournaments && hasActiveTournament && inspectedSlot.occupationType === "reservation" && (
                     <Link className="reservation-slot-actions__button" to={`${ROUTES.adminTournamentReschedules}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}#parties-a-programmer`}>Programmer une partie de tournoi</Link>
                   )}
@@ -1085,8 +1084,7 @@ export function ReservationsPage() {
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
-                  <Link className="reservation-slot-actions__button" to={`${ROUTES.adminReservations}?create=1&resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}`}>Effectuer une réservation</Link>
-                  {inspectedSlot.status === "locked" && <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>}
+                  <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
                   {canAdminTournaments && hasActiveTournament && (
                     <Link className="reservation-slot-actions__button" to={`${ROUTES.adminTournamentReschedules}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}#parties-a-programmer`}>
                       Programmer une partie de tournoi
