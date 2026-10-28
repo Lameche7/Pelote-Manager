@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import {
   CalendarPlus,
@@ -55,6 +56,7 @@ type Dialog =
   | null;
 
 export function AdminReservationsManagementPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<AdminReservationFilters>(
     EMPTY_ADMIN_RESERVATION_FILTERS,
   );
@@ -175,6 +177,32 @@ export function AdminReservationsManagementPage() {
       setChampionshipLoading(false);
     }
   }
+  useEffect(() => {
+    if (searchParams.get("create") !== "1") return;
+    const resourceId = searchParams.get("resource") ?? "";
+    const startsAt = searchParams.get("startsAt");
+    const timestamp = startsAt ? new Date(startsAt) : null;
+    const valid = timestamp && !Number.isNaN(timestamp.getTime());
+    const formatPart = (options: Intl.DateTimeFormatOptions) =>
+      new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", ...options }).format(timestamp!);
+    setForm({
+      userId: "",
+      resourceId: resourceId || resources[0]?.id || "",
+      date: valid ? new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(timestamp!) : today(),
+      startsAt: valid ? formatPart({ hour: "2-digit", minute: "2-digit", hourCycle: "h23" }) : "",
+    });
+    setUserQuery("");
+    setPrice(null);
+    setDialog({ kind: "create" });
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous);
+      next.delete("create");
+      next.delete("resource");
+      next.delete("startsAt");
+      return next;
+    }, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   function openCreate() {
     setForm({
       userId: "",
