@@ -1,0 +1,42 @@
+name: Temporary Prettier fix for PR 439
+on:
+  push:
+    branches:
+      - feat/admin-booking-from-calendar
+    paths:
+      - .github/workflows/pr439-format-fix.yml
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/admin-booking-from-calendar
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format failing files and commit
+        run: |
+          npx prettier --write \
+            api/championship-results-source.mjs \
+            src/features/admin/championships/pages/AdminChampionshipResultsPage.tsx \
+            src/features/admin/tournaments/components/AdminTournamentUnprogrammedPanel.tsx \
+            src/features/admin/tournaments/services/adminTournamentUnprogrammedService.ts \
+            src/features/licences/services/licenceService.ts \
+            src/features/user-space/championships/components/ChampionshipStandingsExplorer.css \
+            src/features/user-space/championships/components/ChampionshipStandingsExplorer.tsx \
+            supabase/functions/championship-official-sync/index.ts \
+            tests/adminTournamentUnprogrammed.test.mjs \
+            tests/championshipFinalFixturesParser.test.mjs \
+            tests/myChampionships.test.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "style: apply Prettier to outstanding CI files"
+            git push origin HEAD:feat/admin-booking-from-calendar
+          fi
