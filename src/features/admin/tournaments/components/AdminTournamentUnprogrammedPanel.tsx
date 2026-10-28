@@ -18,49 +18,89 @@ const displayDate = (date: string) =>
     month: "2-digit",
   }).format(new Date(`${date}T12:00:00`));
 
-
 const escapeHtml = (value: string) =>
-  value.replace(/[&<>"']/g, (char) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char,
+  value.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        char
+      ] ?? char,
   );
 
-const printPendingMatches = (matches: UnprogrammedTournamentMatch[], contacts: UnprogrammedMatchContact[], popup: Window) => {
+const printPendingMatches = (
+  matches: UnprogrammedTournamentMatch[],
+  contacts: UnprogrammedMatchContact[],
+  popup: Window,
+) => {
   if (matches.length === 0) return;
   const win = popup;
 
   const grouped = new Map<string, Map<string, UnprogrammedTournamentMatch[]>>();
   for (const match of [...matches].sort((a, b) =>
     [a.tournamentName, a.seriesName, a.previousDate, a.previousStart, a.teamA]
-      .join("|").localeCompare(
-        [b.tournamentName, b.seriesName, b.previousDate, b.previousStart, b.teamA].join("|"),
+      .join("|")
+      .localeCompare(
+        [
+          b.tournamentName,
+          b.seriesName,
+          b.previousDate,
+          b.previousStart,
+          b.teamA,
+        ].join("|"),
         "fr",
       ),
   )) {
-    if (!grouped.has(match.tournamentName)) grouped.set(match.tournamentName, new Map());
+    if (!grouped.has(match.tournamentName))
+      grouped.set(match.tournamentName, new Map());
     const series = grouped.get(match.tournamentName)!;
-    series.set(match.seriesName, [...(series.get(match.seriesName) ?? []), match]);
+    series.set(match.seriesName, [
+      ...(series.get(match.seriesName) ?? []),
+      match,
+    ]);
   }
 
   const contactsByMatch = new Map<string, UnprogrammedMatchContact[]>();
   for (const contact of contacts) {
-    contactsByMatch.set(contact.matchId, [...(contactsByMatch.get(contact.matchId) ?? []), contact]);
+    contactsByMatch.set(contact.matchId, [
+      ...(contactsByMatch.get(contact.matchId) ?? []),
+      contact,
+    ]);
   }
-  const sections = [...grouped].map(([tournament, series]) =>
-    `<section><h2>${escapeHtml(tournament)}</h2>${[...series].map(([name, items]) =>
-      `<h3>${escapeHtml(name)} — ${items.length} partie(s)</h3>
+  const sections = [...grouped]
+    .map(
+      ([tournament, series]) =>
+        `<section><h2>${escapeHtml(tournament)}</h2>${[...series]
+          .map(
+            ([name, items]) =>
+              `<h3>${escapeHtml(name)} — ${items.length} partie(s)</h3>
        <table><thead><tr><th>Équipe 1</th><th>Équipe 2</th><th>Contacts des joueurs</th><th>Ancien créneau</th><th>Motif</th></tr></thead>
-       <tbody>${items.map((match) => `<tr><td>${escapeHtml(match.teamA)}</td>
+       <tbody>${items
+         .map(
+           (match) => `<tr><td>${escapeHtml(match.teamA)}</td>
        <td>${escapeHtml(match.teamB)}</td>
-       <td>${(contactsByMatch.get(match.matchId) ?? []).map(contact =>
-         `${escapeHtml(contact.name)} : ${escapeHtml(contact.phone || "Non renseigné")}`
-       ).join("<br/>") || "Non renseigné"}</td>
+       <td>${
+         (contactsByMatch.get(match.matchId) ?? [])
+           .map(
+             (contact) =>
+               `${escapeHtml(contact.name)} : ${escapeHtml(contact.phone || "Non renseigné")}`,
+           )
+           .join("<br/>") || "Non renseigné"
+       }</td>
        <td>${escapeHtml(match.previousDate.split("-").reverse().join("/"))} ${escapeHtml(match.previousStart)}–${escapeHtml(match.previousEnd)}</td>
-       <td>${escapeHtml(match.reason || "—")}</td></tr>`).join("")}</tbody></table>`
-    ).join("")}</section>`
-  ).join("");
+       <td>${escapeHtml(match.reason || "—")}</td></tr>`,
+         )
+         .join("")}</tbody></table>`,
+          )
+          .join("")}</section>`,
+    )
+    .join("");
 
-  const stamp = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date());
-  win.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"/>
+  const stamp = new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date());
+  win.document
+    .write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"/>
     <title>Parties de tournois à reprogrammer</title>
     <style>
       @page { size: A4 portrait; margin: 14mm; }
@@ -151,7 +191,10 @@ export function AdminTournamentUnprogrammedPanel() {
 
   const exportPdf = async () => {
     const popup = window.open("", "_blank");
-    if (!popup) { setError("Autorisez les fenêtres contextuelles pour exporter le PDF."); return; }
+    if (!popup) {
+      setError("Autorisez les fenêtres contextuelles pour exporter le PDF.");
+      return;
+    }
     setExporting(true);
     setError("");
     try {
@@ -301,7 +344,9 @@ export function AdminTournamentUnprogrammedPanel() {
       )}
 
       <div className="admin-reschedules__unprogram-controls">
-        <h2 id="parties-a-programmer">Parties à programmer ({pending.length})</h2>
+        <h2 id="parties-a-programmer">
+          Parties à programmer ({pending.length})
+        </h2>
         <button
           type="button"
           disabled={pending.length === 0 || exporting}

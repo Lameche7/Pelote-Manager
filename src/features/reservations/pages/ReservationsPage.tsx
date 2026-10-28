@@ -1084,7 +1084,7 @@ export function ReservationsPage() {
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>Actions administrateur</h3>
                 <div className="reservation-slot-actions__list">
-                  {inspectedSlot.status === "locked" && <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>}
+                  <Link className="reservation-slot-actions__button" to={ROUTES.adminReservations}>Gérer la réservation</Link>
                   {canAdminTournaments && hasActiveTournament && (
                     <Link className="reservation-slot-actions__button" to={`${ROUTES.adminTournamentReschedules}?resource=${encodeURIComponent(inspectedSlot.resourceId)}&startsAt=${encodeURIComponent(inspectedSlot.startsAt)}&endsAt=${encodeURIComponent(inspectedSlot.endsAt)}#parties-a-programmer`}>
                       Programmer une partie de tournoi

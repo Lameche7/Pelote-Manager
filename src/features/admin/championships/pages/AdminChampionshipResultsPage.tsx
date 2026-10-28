@@ -68,7 +68,9 @@ const defaultDay = (days: string[]) => {
   const pastOrToday = days
     .filter((day) => new Date(`${day}T00:00:00`).getTime() <= today.getTime())
     .sort((a, b) => b.localeCompare(a));
-  const upcoming = days.filter((day) => new Date(`${day}T00:00:00`).getTime() >= today.getTime()).sort((a, b) => a.localeCompare(b));
+  const upcoming = days
+    .filter((day) => new Date(`${day}T00:00:00`).getTime() >= today.getTime())
+    .sort((a, b) => a.localeCompare(b));
   return upcoming[0] ?? pastOrToday[0] ?? days[0];
 };
 
@@ -288,7 +290,9 @@ export function AdminChampionshipResultsPage() {
         if (!active) return;
         const availableDays = matchDays(nextMatches);
         const importedFinals = nextMatches
-          .filter((match) => match.phase && match.phase !== "Poules" && match.dayOn)
+          .filter(
+            (match) => match.phase && match.phase !== "Poules" && match.dayOn,
+          )
           .map((match) => match.dayOn as string)
           .sort();
         setSelectedDay(importedFinals.at(-1) ?? defaultDay(availableDays));

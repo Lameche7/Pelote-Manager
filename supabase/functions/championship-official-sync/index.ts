@@ -183,7 +183,12 @@ const fetchPartitionedSource = async (
         combinedMatches.push(...(response.matches as JsonRow[]));
       }
       if (field === "results" && Array.isArray(response.divisions)) {
-        phaseDiagnostics.push(...(response.divisions as JsonRow[]).map((item) => ({ division: item.division, phaseDebug: item.phaseDebug })));
+        phaseDiagnostics.push(
+          ...(response.divisions as JsonRow[]).map((item) => ({
+            division: item.division,
+            phaseDebug: item.phaseDebug,
+          })),
+        );
       }
       if (Array.isArray(response.warnings)) {
         warnings.push(...response.warnings.map((warning) => String(warning)));
@@ -193,7 +198,9 @@ const fetchPartitionedSource = async (
   return succeeded > 0
     ? {
         [field]: combined,
-        ...(field === "results" ? { matches: combinedMatches, phaseDiagnostics } : {}),
+        ...(field === "results"
+          ? { matches: combinedMatches, phaseDiagnostics }
+          : {}),
       }
     : null;
 };
@@ -427,7 +434,10 @@ Deno.serve(async (request) => {
           let duplicates = 0;
           const addedByDivision: Record<string, number> = {};
           for (const raw of resultsSource.matches as JsonRow[]) {
-            if (fold(raw.phase) === "poules") { reject("poules"); continue; }
+            if (fold(raw.phase) === "poules") {
+              reject("poules");
+              continue;
+            }
             const division = divisionByName.get(fold(raw.division));
             const a = division
               ? teamByKey.get(
@@ -449,7 +459,15 @@ Deno.serve(async (request) => {
               : undefined;
             const phase = String(raw.phase ?? "");
             if (!division || !a || !b || a.id === b.id || !phase) {
-              reject(!division ? "division inconnue" : !a || !b ? "equipe introuvable" : a.id === b.id ? "equipes identiques" : "phase manquante");
+              reject(
+                !division
+                  ? "division inconnue"
+                  : !a || !b
+                    ? "equipe introuvable"
+                    : a.id === b.id
+                      ? "equipes identiques"
+                      : "phase manquante",
+              );
               continue;
             }
             const matchesSamePairAndPhase = knownMatches.filter(

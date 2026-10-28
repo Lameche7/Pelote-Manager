@@ -305,27 +305,41 @@ const searchDivision = async ({
   const pages = [session.html];
   // Le filtre « Phases » de Rencontres / Résultats peut rester sur Poules.
   // Découvrir son identifiant à partir des options, plutôt que supposer un ID WebDev fixe.
-  const phaseSelect = parseSelects(session.html).find((select) =>
-    select.id && select.name &&
-    select.options.some((option) => {
-      const label = fold(option.label);
-      return identifyPhase(label) !== null && identifyPhase(label) !== "Poules";
-    })
+  const phaseSelect = parseSelects(session.html).find(
+    (select) =>
+      select.id &&
+      select.name &&
+      select.options.some((option) => {
+        const label = fold(option.label);
+        return (
+          identifyPhase(label) !== null && identifyPhase(label) !== "Poules"
+        );
+      }),
   );
   const phaseDebug = {
     phaseSelectorFound: Boolean(phaseSelect),
-    availableSelects: parseSelects(session.html).map(select => ({
-      id: select.id,
-      options: select.options.map(option => option.label).filter(label => /phase|barrage|finale|32|16/i.test(label)).slice(0, 12),
-    })).filter(select => select.options.length > 0),
+    availableSelects: parseSelects(session.html)
+      .map((select) => ({
+        id: select.id,
+        options: select.options
+          .map((option) => option.label)
+          .filter((label) => /phase|barrage|finale|32|16/i.test(label))
+          .slice(0, 12),
+      }))
+      .filter((select) => select.options.length > 0),
     phaseRequests: 0,
     phasePages: [],
   };
   if (phaseSelect) {
     const phaseOptions = phaseSelect.options.filter((option) => {
       const label = fold(option.label);
-      return label && label !== "toutes" && label !== "tous" &&
-        identifyPhase(label) !== null && identifyPhase(label) !== "Poules";
+      return (
+        label &&
+        label !== "toutes" &&
+        label !== "tous" &&
+        identifyPhase(label) !== null &&
+        identifyPhase(label) !== "Poules"
+      );
     });
     for (const option of phaseOptions) {
       const values = parseFormValues(session.html);
@@ -344,7 +358,9 @@ const searchDivision = async ({
       }
       searchAgain.set("WD_ACTION_", "");
       searchAgain.set("WD_BUTTON_CLICK_", "A32");
-      const filtered = await expandAllRows(await postForm(selected, searchAgain));
+      const filtered = await expandAllRows(
+        await postForm(selected, searchAgain),
+      );
       pages.push(filtered.html);
       phaseDebug.phaseRequests += 1;
       phaseDebug.phasePages.push({
@@ -414,7 +430,12 @@ const identifyPhase = (value) => {
   const normalized = fold(raw);
   if (/^(poule|pools?)\b/u.test(normalized)) return "Poules";
   if (/barrage/u.test(normalized)) return "Barrage";
-  if (/(?:1\s*32|trente\s*deuxieme|32\s*eme|32\s*e\s*de\s*finale)/u.test(normalized)) return "1/32ème de finale";
+  if (
+    /(?:1\s*32|trente\s*deuxieme|32\s*eme|32\s*e\s*de\s*finale)/u.test(
+      normalized,
+    )
+  )
+    return "1/32ème de finale";
   if (/1\s*16|seizieme/u.test(normalized)) return "1/16ème de finale";
   if (/1\s*8|huitieme/u.test(normalized)) return "1/8ème de finale";
   if (/1\s*4|quart/u.test(normalized)) return "1/4 de finale";
@@ -444,9 +465,10 @@ export const parseDivisionResults = (html, divisionName) => {
     const secondaryPhase = identifyPhase(fieldText(html, row, "I222"));
     const primaryPhase = identifyPhase(phaseText);
     // Un intitulé explicite de phase finale prime sur le libellé générique « Poules ».
-    const phase = secondaryPhase && secondaryPhase !== "Poules"
-      ? secondaryPhase
-      : primaryPhase ?? secondaryPhase;
+    const phase =
+      secondaryPhase && secondaryPhase !== "Poules"
+        ? secondaryPhase
+        : (primaryPhase ?? secondaryPhase);
     const sourceDate = parseDate(fieldText(html, row, "I163"));
     if (phase) {
       matches.push({
@@ -530,18 +552,21 @@ export default async function handler(request, response) {
         });
         const parsedPages = pages.map((html, index) => {
           const parsedPage = parseDivisionResults(html, division.name);
-          const selectedPhase = index > 0
-            ? identifyPhase(phaseDebug.phasePages[index - 1]?.phase)
-            : null;
+          const selectedPhase =
+            index > 0
+              ? identifyPhase(phaseDebug.phasePages[index - 1]?.phase)
+              : null;
           if (selectedPhase && selectedPhase !== "Poules") {
             for (const match of parsedPage.matches) match.phase = selectedPhase;
-            for (const result of parsedPage.results) result.phase = selectedPhase;
+            for (const result of parsedPage.results)
+              result.phase = selectedPhase;
           }
           return parsedPage;
         });
         const parsed = parsedPages[0];
         phaseDebug.parsedPages = parsedPages.map((page, index) => ({
-          selectedPhase: index === 0 ? "initial" : phaseDebug.phasePages[index - 1]?.phase,
+          selectedPhase:
+            index === 0 ? "initial" : phaseDebug.phasePages[index - 1]?.phase,
           rows: page.loadedCount,
           matches: page.matches.length,
           phases: page.matches.reduce((counts, match) => {
@@ -553,11 +578,22 @@ export default async function handler(request, response) {
         const uniqueResults = new Map();
         for (const page of parsedPages) {
           for (const match of page.matches) {
-            const key = [match.phase,match.team1Label,match.team2Label,match.sourceDate].join("|");
+            const key = [
+              match.phase,
+              match.team1Label,
+              match.team2Label,
+              match.sourceDate,
+            ].join("|");
             uniqueMatches.set(key, match);
           }
           for (const result of page.results) {
-            const key = [result.phase,result.team1Label,result.team2Label,result.sourceDate,result.scoreRaw].join("|");
+            const key = [
+              result.phase,
+              result.team1Label,
+              result.team2Label,
+              result.sourceDate,
+              result.scoreRaw,
+            ].join("|");
             uniqueResults.set(key, result);
           }
         }
