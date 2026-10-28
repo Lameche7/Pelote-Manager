@@ -34,7 +34,11 @@ test("une phase non identifiable n'est jamais proposée à l'import automatique"
 });
 
 test("les 32es de finale et barrages de quatrième série sont reconnus", () => {
-  for (const label of ["1/32ème de finale", "32ème de finale", "1/32 de finale"]) {
+  for (const label of [
+    "1/32ème de finale",
+    "32ème de finale",
+    "1/32 de finale",
+  ]) {
     const parsed = parseDivisionResults(fixture(1, label), "3ème série");
     assert.equal(parsed.matches[0]?.phase, "1/32ème de finale", label);
   }

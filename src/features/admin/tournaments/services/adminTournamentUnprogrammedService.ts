@@ -29,9 +29,17 @@ export type UnprogrammedMatchContact = {
 
 export const adminTournamentUnprogrammedService = {
   async listContacts(): Promise<UnprogrammedMatchContact[]> {
-    const { data, error } = await supabase.rpc("admin_unprogrammed_tournament_match_contacts");
-    if (error) throw new Error(getSupabaseErrorMessage(error, "Impossible de charger les téléphones des joueurs."));
-    return objects(data).map(row => ({
+    const { data, error } = await supabase.rpc(
+      "admin_unprogrammed_tournament_match_contacts",
+    );
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(
+          error,
+          "Impossible de charger les téléphones des joueurs.",
+        ),
+      );
+    return objects(data).map((row) => ({
       matchId: String(row.match_id ?? ""),
       teamId: String(row.team_id ?? ""),
       name: String(row.name ?? ""),
