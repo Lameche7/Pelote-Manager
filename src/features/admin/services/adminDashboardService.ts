@@ -13,6 +13,8 @@ export type DashboardMetrics = {
   unreadDeliveries: number;
   tournamentMatches: number;
   championshipMatches: number;
+  championshipMatchesTotal: number;
+  championshipWinRate: number;
 };
 
 export type DashboardReservation = {
@@ -101,6 +103,8 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
       unreadDeliveries: asNumber(metrics.unread_deliveries),
       tournamentMatches: 0,
       championshipMatches: 0,
+      championshipMatchesTotal: 0,
+      championshipWinRate: 0,
     },
     nextReservations: asRows(row.next_reservations).map((reservation) => ({
       id: asString(reservation.id),
@@ -169,6 +173,12 @@ export const adminDashboardService = {
       dashboard.metrics.tournamentMatches = asNumber(counts.tournament_matches);
       dashboard.metrics.championshipMatches = asNumber(
         counts.championship_matches,
+      );
+      dashboard.metrics.championshipMatchesTotal = asNumber(
+        counts.championship_matches_total,
+      );
+      dashboard.metrics.championshipWinRate = asNumber(
+        counts.championship_win_rate,
       );
     }
     return dashboard;
