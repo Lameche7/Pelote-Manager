@@ -7,6 +7,8 @@ import {
   CalendarClock,
   CalendarDays,
   CalendarX2,
+  Trophy,
+  Swords,
   CircleAlert,
   CreditCard,
   Megaphone,
@@ -104,6 +106,23 @@ export function AdminPage() {
           icon: CalendarClock,
           permission: ADMIN_PERMISSIONS.reservations,
           to: ROUTES.adminReservations,
+        },
+        {
+          label: "Tournois · parties jouées",
+          value: dashboard.metrics.tournamentMatches,
+          detail: "Résultats validés à ce jour",
+          icon: Trophy,
+          permission: ADMIN_PERMISSIONS.tournaments,
+          to: ROUTES.adminTournaments,
+        },
+        {
+          label: "Championnats · parties jouées",
+          value: dashboard.metrics.championshipMatches,
+          detail: "Jouées au trinquet Robert Cathala",
+          secondary: `Total du club : ${dashboard.metrics.championshipMatchesTotal} · Victoires : ${dashboard.metrics.championshipWinRate.toLocaleString("fr-FR")}%`,
+          icon: Swords,
+          permission: ADMIN_PERMISSIONS.championships,
+          to: ROUTES.adminChampionships,
         },
         {
           label: "Licenciés actifs",
@@ -219,6 +238,9 @@ export function AdminPage() {
                   <span>{metric.label}</span>
                   <strong>{metric.value}</strong>
                   <small>{metric.detail}</small>
+                  {"secondary" in metric && metric.secondary && (
+                    <small>{metric.secondary}</small>
+                  )}
                   <Link to={metric.to}>Ouvrir →</Link>
                 </article>
               );
