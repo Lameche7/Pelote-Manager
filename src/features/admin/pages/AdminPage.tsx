@@ -247,6 +247,46 @@ export function AdminPage() {
             })}
           </div>
 
+          {(hasPermission(ADMIN_PERMISSIONS.tournaments) ||
+            hasPermission(ADMIN_PERMISSIONS.championships)) &&
+            dashboard.monthlyMatches.length > 0 && (
+              <article className="admin-card admin-dashboard__panel">
+                <header>
+                  <div>
+                    <span className="admin-dashboard__section-icon">
+                      <CalendarDays aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h2>Bilan mensuel des parties jouées</h2>
+                      <p>Douze derniers mois, jusqu’à aujourd’hui.</p>
+                    </div>
+                  </div>
+                </header>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "right" }}>
+                    <thead>
+                      <tr>
+                        <th scope="col" style={{ textAlign: "left", padding: "0.5rem" }}>Mois</th>
+                        {hasPermission(ADMIN_PERMISSIONS.tournaments) && <th scope="col" style={{ padding: "0.5rem" }}>Tournois</th>}
+                        {hasPermission(ADMIN_PERMISSIONS.championships) && <th scope="col" style={{ padding: "0.5rem" }}>Championnats · Robert Cathala</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dashboard.monthlyMatches.map((item) => (
+                        <tr key={item.month}>
+                          <th scope="row" style={{ textAlign: "left", padding: "0.5rem" }}>
+                            {new Date(item.month + "-01T12:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+                          </th>
+                          {hasPermission(ADMIN_PERMISSIONS.tournaments) && <td style={{ padding: "0.5rem" }}>{item.tournamentMatches}</td>}
+                          {hasPermission(ADMIN_PERMISSIONS.championships) && <td style={{ padding: "0.5rem" }}>{item.championshipMatches}</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            )}
+
           <div className="admin-dashboard__columns">
             {hasPermission(ADMIN_PERMISSIONS.reservations) && (
               <article className="admin-card admin-dashboard__panel">
