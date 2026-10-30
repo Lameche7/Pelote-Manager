@@ -1043,6 +1043,17 @@ export function ReservationsPage() {
 
                     </>
                   )}
+                  {((canAdminTournaments && inspectedSlot.occupationType === "match") ||
+                    (canAdminChampionships && inspectedSlot.occupationType === "championship_match")) && (
+                    <Link
+                      className="reservation-slot-actions__button"
+                      to={inspectedSlot.occupationType === "match"
+                        ? ROUTES.adminTournamentResults
+                        : ROUTES.adminChampionshipResults}
+                    >
+                      Saisir le résultat (admin)
+                    </Link>
+                  )}
                   {canAdminTournaments && inspectedSlot.occupationType === "match" && (
                     <button className="reservation-slot-actions__button" type="button" disabled={unprogramBusy} onClick={() => void unprogramInspectedMatch()}>{unprogramBusy ? "Traitement…" : "Déprogrammer la partie"}</button>
                   )}
