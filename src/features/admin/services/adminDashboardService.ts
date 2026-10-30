@@ -62,8 +62,15 @@ export type DashboardActivity = {
   targetPath: string;
 };
 
+export type MonthlyMatchReport = {
+  month: string;
+  tournamentMatches: number;
+  championshipMatches: number;
+};
+
 export type AdminDashboard = {
   generatedAt: string;
+  monthlyMatches: MonthlyMatchReport[];
   metrics: DashboardMetrics;
   nextReservations: DashboardReservation[];
   upcomingClosures: DashboardClosure[];
@@ -91,6 +98,7 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
 
   return {
     generatedAt: asString(row.generated_at),
+    monthlyMatches: [],
     metrics: {
       reservationsToday: asNumber(metrics.reservations_today),
       reservationsNext7Days: asNumber(metrics.reservations_next_7_days),
@@ -180,6 +188,16 @@ export const adminDashboardService = {
       dashboard.metrics.championshipWinRate = asNumber(
         counts.championship_win_rate,
       );
+    }
+    const { data: monthlyData, error: monthlyError } = await supabase.rpc(
+      "admin_monthly_match_report",
+    );
+    if (!monthlyError) {
+      dashboard.monthlyMatches = asRows(monthlyData).map((item) => ({
+        month: asString(item.month),
+        tournamentMatches: asNumber(item.tournament_matches),
+        championshipMatches: asNumber(item.championship_matches),
+      }));
     }
     return dashboard;
   },
