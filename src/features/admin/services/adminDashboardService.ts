@@ -11,6 +11,8 @@ export type DashboardMetrics = {
   upcomingEvents: number;
   activeCommunications: number;
   unreadDeliveries: number;
+  tournamentMatches: number;
+  championshipMatches: number;
 };
 
 export type DashboardReservation = {
@@ -97,6 +99,8 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
       upcomingEvents: asNumber(metrics.upcoming_events),
       activeCommunications: asNumber(metrics.active_communications),
       unreadDeliveries: asNumber(metrics.unread_deliveries),
+      tournamentMatches: 0,
+      championshipMatches: 0,
     },
     nextReservations: asRows(row.next_reservations).map((reservation) => ({
       id: asString(reservation.id),
@@ -156,6 +160,15 @@ export const adminDashboardService = {
         ),
       );
     }
-    return mapDashboard(data);
+    const dashboard = mapDashboard(data);
+    const { data: matchCounts, error: countsError } = await supabase.rpc(
+      "admin_dashboard_match_counts",
+    );
+    if (!countsError) {
+      const counts = asRecord(matchCounts);
+      dashboard.metrics.tournamentMatches = asNumber(counts.tournament_matches);
+      dashboard.metrics.championshipMatches = asNumber(counts.championship_matches);
+    }
+    return dashboard;
   },
 };
