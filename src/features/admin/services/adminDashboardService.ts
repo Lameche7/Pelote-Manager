@@ -167,7 +167,9 @@ export const adminDashboardService = {
     if (!countsError) {
       const counts = asRecord(matchCounts);
       dashboard.metrics.tournamentMatches = asNumber(counts.tournament_matches);
-      dashboard.metrics.championshipMatches = asNumber(counts.championship_matches);
+      dashboard.metrics.championshipMatches = asNumber(
+        counts.championship_matches,
+      );
     }
     return dashboard;
   },
