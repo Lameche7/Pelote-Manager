@@ -15,7 +15,8 @@ begin
     select count(*) into tournament_count
     from public.tournament_matches m
     join public.tournaments t on t.id = m.tournament_id
-    where t.club_id = target_club_id;
+    join public.tournament_match_results result on result.match_id = m.id
+    where t.club_id = target_club_id and result.status::text = 'validated';
   end if;
   if public.has_club_permission(target_club_id, 'championships.manage') then
     select count(distinct m.id) into championship_count
@@ -23,7 +24,7 @@ begin
     join public.championship_divisions d on d.id = m.division_id
     join public.championship_teams a on a.id = m.team1_id
     join public.championship_teams b on b.id = m.team2_id
-    where exists (
+    where m.status::text = 'played' and exists (
       select 1 from public.championship_club_links l
       where l.club_id = target_club_id
         and l.championship_id = d.championship_id
