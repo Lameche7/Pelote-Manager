@@ -272,7 +272,9 @@ export function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {dashboard.monthlyMatches.map((item) => (
+                      {dashboard.monthlyMatches
+                        .filter((item) => item.tournamentMatches > 0 || item.championshipMatches > 0)
+                        .map((item) => (
                         <tr key={item.month}>
                           <th scope="row" style={{ textAlign: "left", padding: "0.5rem" }}>
                             {new Date(item.month + "-01T12:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
