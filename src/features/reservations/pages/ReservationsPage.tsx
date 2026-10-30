@@ -1049,7 +1049,7 @@ export function ReservationsPage() {
 
       {adminScore && (
         <div className="booking-modal" role="presentation" onMouseDown={() => setAdminScore(null)}>
-          <section className="booking-modal__panel" role="dialog" aria-modal="true" aria-label="Saisie du résultat" onMouseDown={(event) => event.stopPropagation()}>
+          <section className="booking-modal__panel admin-score-modal" role="dialog" aria-modal="true" aria-label="Saisie du résultat" onMouseDown={(event) => event.stopPropagation()}>
             <button className="booking-modal__close" type="button" aria-label="Fermer" onClick={() => setAdminScore(null)}>×</button>
             <h2>Saisie du résultat</h2>
             {adminScoreError && <p role="alert">{adminScoreError}</p>}
@@ -1079,18 +1079,18 @@ export function ReservationsPage() {
               />
             )}
             {adminScore.kind === "championship" && adminScore.championshipMatch && (
-              <form onSubmit={(event) => void submitAdminChampionshipScore(event)}>
-                <div className="admin-championship-results__score-inputs">
-                  <label><span>{adminScore.championshipMatch.team1Label}</span><input type="number" min="0" inputMode="numeric" value={adminScoreLeft} onChange={(event) => setAdminScoreLeft(event.target.value)} required /></label>
-                  <label><span>{adminScore.championshipMatch.team2Label}</span><input type="number" min="0" inputMode="numeric" value={adminScoreRight} onChange={(event) => setAdminScoreRight(event.target.value)} required /></label>
+              <form className="admin-score-modal__form" onSubmit={(event) => void submitAdminChampionshipScore(event)}>
+                <div className="admin-score-modal__teams">
+                  <label className="admin-score-modal__team"><span>{adminScore.championshipMatch.team1Label}</span><input type="number" min="0" inputMode="numeric" value={adminScoreLeft} onChange={(event) => setAdminScoreLeft(event.target.value)} required /></label>
+                  <label className="admin-score-modal__team"><span>{adminScore.championshipMatch.team2Label}</span><input type="number" min="0" inputMode="numeric" value={adminScoreRight} onChange={(event) => setAdminScoreRight(event.target.value)} required /></label>
                 </div>
-                <button type="submit" disabled={adminScoreBusy}>{adminScoreBusy ? "Enregistrement…" : "Enregistrer le résultat"}</button>
+                <button className="admin-score-modal__submit" type="submit" disabled={adminScoreBusy}>{adminScoreBusy ? "Enregistrement…" : "Enregistrer le résultat"}</button>
               </form>
             )}
           </section>
         </div>
       )}
-      {inspectedSlot && (
+      {inspectedSlot && !adminScore && (
         <div className="booking-modal" role="presentation" onMouseDown={() => setInspectedSlot(null)}>
           <section className="booking-modal__panel" role="dialog" aria-modal="true" aria-label="Informations du créneau" onMouseDown={(event) => event.stopPropagation()}>
             <button type="button" className="booking-modal__close" aria-label="Fermer" onClick={() => setInspectedSlot(null)}>×</button>

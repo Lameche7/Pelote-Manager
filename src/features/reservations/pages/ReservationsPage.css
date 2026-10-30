@@ -736,3 +736,54 @@ button.reservation-slot:focus-visible {
     width: 100%;
   }
 }
+
+
+/* Direct administrative score entry: readable on narrow mobile screens. */
+.admin-score-modal {
+  width: min(100% - 1rem, 520px);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.admin-score-modal__form {
+  display: grid;
+  gap: 1.25rem;
+}
+.admin-score-modal__teams {
+  display: grid;
+  gap: 0.875rem;
+}
+.admin-score-modal__team {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5rem;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  font-weight: 650;
+}
+.admin-score-modal__team span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+.admin-score-modal__team input {
+  width: 100%;
+  min-width: 0;
+  height: 3.25rem;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  border: 1px solid #aeb8c3;
+  border-radius: 0.75rem;
+}
+.admin-score-modal__submit {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #d90074;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+}
