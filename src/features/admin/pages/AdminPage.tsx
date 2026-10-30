@@ -119,7 +119,7 @@ export function AdminPage() {
           label: "Championnats · parties jouées",
           value: dashboard.metrics.championshipMatches,
           detail: "Jouées au trinquet Robert Cathala",
-          secondary: `Total du club : ${dashboard.metrics.championshipMatchesTotal} · Victoires : ${dashboard.metrics.championshipWinRate.toLocaleString("fr-FR")}%`,
+          secondary: `Cette saison : ${dashboard.metrics.championshipMatchesTotal} · Victoires : ${dashboard.metrics.championshipWinRate.toLocaleString("fr-FR")}%`,
           icon: Swords,
           permission: ADMIN_PERMISSIONS.championships,
           to: ROUTES.adminChampionships,
