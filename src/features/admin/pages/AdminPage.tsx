@@ -118,7 +118,8 @@ export function AdminPage() {
         {
           label: "Championnats · parties jouées",
           value: dashboard.metrics.championshipMatches,
-          detail: "Parties jouées par les équipes du club",
+          detail: "Jouées au trinquet Robert Cathala",
+          secondary: `Total du club : ${dashboard.metrics.championshipMatchesTotal} · Victoires : ${dashboard.metrics.championshipWinRate.toLocaleString("fr-FR")}%`,
           icon: Swords,
           permission: ADMIN_PERMISSIONS.championships,
           to: ROUTES.adminChampionships,
@@ -237,6 +238,9 @@ export function AdminPage() {
                   <span>{metric.label}</span>
                   <strong>{metric.value}</strong>
                   <small>{metric.detail}</small>
+                  {"secondary" in metric && metric.secondary && (
+                    <small>{metric.secondary}</small>
+                  )}
                   <Link to={metric.to}>Ouvrir →</Link>
                 </article>
               );
