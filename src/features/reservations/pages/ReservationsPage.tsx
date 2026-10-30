@@ -1,3 +1,7 @@
+import { TournamentScoreEditor } from "@/features/tournaments/components/TournamentScoreEditor";
+import { tournamentResultsAdminService, type AdminTournamentResultMatch, type AdminTournamentResultsWorkspace } from "@/features/admin/tournaments/services/tournamentResultsAdminService";
+import { adminChampionshipDayResultsService, type AdminChampionshipDayResult } from "@/features/admin/championships/services/adminChampionshipDayResultsService";
+import { championshipImportService } from "@/features/admin/championships/services/championshipImportService";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
@@ -559,6 +563,74 @@ export function ReservationsPage() {
       setContactError("Copie automatique indisponible : sélectionne les numéros ci-dessous.");
     }
   };
+  const [adminScore, setAdminScore] = useState<{
+    kind: "tournament" | "championship";
+    id: string;
+    tournament?: AdminTournamentResultsWorkspace;
+    tournamentMatch?: AdminTournamentResultMatch;
+    championshipMatch?: AdminChampionshipDayResult;
+  } | null>(null);
+  const [adminScoreBusy, setAdminScoreBusy] = useState(false);
+  const [adminScoreError, setAdminScoreError] = useState("");
+  const [adminScoreLeft, setAdminScoreLeft] = useState("");
+  const [adminScoreRight, setAdminScoreRight] = useState("");
+  const openAdminScore = async () => {
+    if (!inspectedActions?.matchId || !inspectedSlot || adminScoreBusy) return;
+    setAdminScoreError("");
+    setAdminScoreBusy(true);
+    try {
+      const id = inspectedActions.matchId;
+      if (inspectedActions.kind === "tournament" && canAdminTournaments) {
+        const workspaces = await tournamentResultsAdminService.getWorkspace();
+        const tournament = workspaces.find((item) => item.matches.some((m) => m.id === id));
+        const match = tournament?.matches.find((item) => item.id === id);
+        if (!match || !tournament) throw new Error("Partie de tournoi introuvable dans la gestion des résultats.");
+        if (match.result) throw new Error("Un résultat est déjà enregistré pour cette partie.");
+        setAdminScore({ kind: "tournament", id, tournament, tournamentMatch: match });
+      } else if (inspectedActions.kind === "championship" && canAdminChampionships) {
+        const championships = await championshipImportService.list();
+        let match: AdminChampionshipDayResult | undefined;
+        for (const championship of championships) {
+          const matches = await adminChampionshipDayResultsService.list(championship.id);
+          match = matches.find((item) => item.matchId === id);
+          if (match) break;
+        }
+        if (!match) throw new Error("Partie de championnat introuvable dans la gestion des résultats.");
+        if (match.officialScoreTeam1 !== null || match.proposedScoreTeam1 !== null) {
+          throw new Error("Un résultat est déjà enregistré ou proposé pour cette partie.");
+        }
+        setAdminScoreLeft("");
+        setAdminScoreRight("");
+        setAdminScore({ kind: "championship", id, championshipMatch: match });
+      }
+    } catch (cause) {
+      setAdminScoreError(cause instanceof Error ? cause.message : "Impossible d'ouvrir la saisie du score.");
+    } finally {
+      setAdminScoreBusy(false);
+    }
+  };
+  const submitAdminChampionshipScore = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!adminScore || adminScore.kind !== "championship") return;
+    const left = Number(adminScoreLeft), right = Number(adminScoreRight);
+    if (!adminScoreLeft.trim() || !adminScoreRight.trim() || !Number.isInteger(left) || !Number.isInteger(right) || left < 0 || right < 0 || left === right) {
+      setAdminScoreError("Saisis deux scores entiers différents.");
+      return;
+    }
+    setAdminScoreBusy(true);
+    setAdminScoreError("");
+    try {
+      await adminChampionshipDayResultsService.submit(adminScore.id, left, right);
+      setAdminScore(null);
+      setInspectedSlot(null);
+      setInspectedActions(null);
+      await loadSlots();
+    } catch (cause) {
+      setAdminScoreError(cause instanceof Error ? cause.message : "Enregistrement impossible.");
+    } finally {
+      setAdminScoreBusy(false);
+    }
+  };
   const [unprogramBusy, setUnprogramBusy] = useState(false);
   const [unprogramError, setUnprogramError] = useState("");
   const unprogramInspectedMatch = async () => {
@@ -975,6 +1047,49 @@ export function ReservationsPage() {
         />
       )}
 
+      {adminScore && (
+        <div className="booking-modal" role="presentation" onMouseDown={() => setAdminScore(null)}>
+          <section className="booking-modal__panel" role="dialog" aria-modal="true" aria-label="Saisie du résultat" onMouseDown={(event) => event.stopPropagation()}>
+            <button className="booking-modal__close" type="button" aria-label="Fermer" onClick={() => setAdminScore(null)}>×</button>
+            <h2>Saisie du résultat</h2>
+            {adminScoreError && <p role="alert">{adminScoreError}</p>}
+            {adminScore.kind === "tournament" && adminScore.tournament && adminScore.tournamentMatch && (
+              <TournamentScoreEditor
+                key={adminScore.id}
+                rules={adminScore.tournament.sportingRules}
+                leftLabel={adminScore.tournamentMatch.teamALabel}
+                rightLabel={adminScore.tournamentMatch.teamBLabel}
+                disabled={adminScoreBusy}
+                onCancel={() => setAdminScore(null)}
+                onSubmit={async (score) => {
+                  setAdminScoreBusy(true);
+                  setAdminScoreError("");
+                  try {
+                    await tournamentResultsAdminService.save(adminScore.id, score);
+                    setAdminScore(null);
+                    setInspectedSlot(null);
+                    setInspectedActions(null);
+                    await loadSlots();
+                  } catch (cause) {
+                    setAdminScoreError(cause instanceof Error ? cause.message : "Enregistrement impossible.");
+                  } finally {
+                    setAdminScoreBusy(false);
+                  }
+                }}
+              />
+            )}
+            {adminScore.kind === "championship" && adminScore.championshipMatch && (
+              <form onSubmit={(event) => void submitAdminChampionshipScore(event)}>
+                <div className="admin-championship-results__score-inputs">
+                  <label><span>{adminScore.championshipMatch.team1Label}</span><input type="number" min="0" inputMode="numeric" value={adminScoreLeft} onChange={(event) => setAdminScoreLeft(event.target.value)} required /></label>
+                  <label><span>{adminScore.championshipMatch.team2Label}</span><input type="number" min="0" inputMode="numeric" value={adminScoreRight} onChange={(event) => setAdminScoreRight(event.target.value)} required /></label>
+                </div>
+                <button type="submit" disabled={adminScoreBusy}>{adminScoreBusy ? "Enregistrement…" : "Enregistrer le résultat"}</button>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
       {inspectedSlot && (
         <div className="booking-modal" role="presentation" onMouseDown={() => setInspectedSlot(null)}>
           <section className="booking-modal__panel" role="dialog" aria-modal="true" aria-label="Informations du créneau" onMouseDown={(event) => event.stopPropagation()}>
@@ -1045,14 +1160,9 @@ export function ReservationsPage() {
                   )}
                   {((canAdminTournaments && inspectedSlot.occupationType === "match") ||
                     (canAdminChampionships && inspectedSlot.occupationType === "championship_match")) && (
-                    <Link
-                      className="reservation-slot-actions__button"
-                      to={inspectedSlot.occupationType === "match"
-                        ? ROUTES.adminTournamentResults
-                        : ROUTES.adminChampionshipResults}
-                    >
-                      Saisir le résultat (admin)
-                    </Link>
+                    <button className="reservation-slot-actions__button" type="button" disabled={adminScoreBusy || inspectionLoading || !inspectedActions?.matchId} onClick={() => void openAdminScore()}>
+                      {adminScoreBusy ? "Chargement…" : "Saisir le résultat (admin)"}
+                    </button>
                   )}
                   {canAdminTournaments && inspectedSlot.occupationType === "match" && (
                     <button className="reservation-slot-actions__button" type="button" disabled={unprogramBusy} onClick={() => void unprogramInspectedMatch()}>{unprogramBusy ? "Traitement…" : "Déprogrammer la partie"}</button>
