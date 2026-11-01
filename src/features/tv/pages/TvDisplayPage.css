@@ -351,3 +351,11 @@
     animation: none;
   }
 }
+
+.tv-display__movember-moustache {
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(3.2rem, 6vmin, 5.5rem);
+  max-height: 3rem;
+  object-fit: contain;
+}
