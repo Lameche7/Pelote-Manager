@@ -181,20 +181,11 @@ export function HomePage() {
             )}
           </div>
           <h1 id="home-title">{branding.name}</h1>
-          <div className="premium-home__pilotoki-brand">
-            <img
-              className="premium-home__pilotoki-logo"
-              src="/branding/pilotoki-wordmark.png"
-              alt="PILOTOKI"
-            />
-            {movemberVisible && (
-              <img
-                className="premium-home__pilotoki-movember-moustache"
-                src="/branding/movember-moustache.svg"
-                alt="Movember — sensibilisation à la santé masculine"
-              />
-            )}
-          </div>
+          <img
+            className="premium-home__pilotoki-logo"
+            src="/branding/pilotoki-wordmark.png"
+            alt="PILOTOKI"
+          />
           <p className="premium-home__signature">
             {CLUB_CONFIG.foundedYear && (
               <>
