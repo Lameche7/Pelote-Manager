@@ -439,7 +439,7 @@ export function AdminChampionshipResultsPage() {
     }
   };
 
-  const verifyOfficialSource = async () => {
+  const verifyOfficialSource = async (quick = false) => {
     if (!selectedChampionship?.sourceUrl || divisions.length === 0) return;
     setOfficialUpdateBusy(true);
     setOfficialUpdateError("");
@@ -452,12 +452,23 @@ export function AdminChampionshipResultsPage() {
         competitionName: selectedChampionship.name,
         specialty: selectedChampionship.specialty,
         divisions: divisions.map((division) => division.name),
-      });
+      }, { includeStandings: !quick });
+      // Mode rapide : comparer uniquement les résultats des 21 derniers jours.
+      // La synchronisation complète demeure disponible pour les corrections anciennes.
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 21);
+      const cutoffDay = cutoff.toISOString().slice(0, 10);
+      const resultsToApply = quick
+        ? source.results.filter((result) => {
+            const date = result.sourceDate?.slice(0, 10);
+            return date != null && /^\\d{4}-\\d{2}-\\d{2}$/.test(date) && date >= cutoffDay;
+          })
+        : source.results;
       const applied =
-        source.results.length > 0
+        resultsToApply.length > 0
           ? await championshipOfficialResultsSyncService.apply(
               selectedChampionship.id,
-              source.results,
+              resultsToApply,
             )
           : {
               processedCount: 0,
@@ -482,7 +493,7 @@ export function AdminChampionshipResultsPage() {
           ? ` · ${applied.confirmedProposalCount} proposition(s) confirmée(s) · ${applied.conflictProposalCount} divergente(s)`
           : "";
       setOfficialUpdateMessage(
-        `FFPB vérifiée : ${source.summary.officialResultCount} résultat(s) officiel(s) trouvé(s) · ${applied.updatedCount} mis à jour · ${applied.unchangedCount} déjà à jour${proposalSuffix}${warningSuffix}.`,
+        `${quick ? "Vérification rapide (21 derniers jours)" : "FFPB vérifiée"} : ${resultsToApply.length} résultat(s) contrôlé(s) sur ${source.summary.officialResultCount} trouvé(s) · ${applied.updatedCount} mis à jour · ${applied.unchangedCount} déjà à jour${proposalSuffix}${warningSuffix}.`,
       );
     } catch (cause) {
       setOfficialUpdateError(
@@ -515,10 +526,18 @@ export function AdminChampionshipResultsPage() {
             divisions.length === 0 ||
             officialUpdateBusy
           }
-          onClick={() => void verifyOfficialSource()}
+          onClick={() => void verifyOfficialSource(true)}
         >
           <span aria-hidden="true">↻</span>
-          {officialUpdateBusy ? "Vérification…" : "Vérifier maintenant"}
+          {officialUpdateBusy ? "Vérification…" : "Vérification rapide"}
+        </button>
+        <button
+          type="button"
+          className="admin-championship-results__official-trigger"
+          disabled={!selectedChampionship?.sourceUrl || divisions.length === 0 || officialUpdateBusy}
+          onClick={() => void verifyOfficialSource(false)}
+        >
+          Vérification complète
         </button>
       </header>
 
@@ -613,7 +632,7 @@ export function AdminChampionshipResultsPage() {
             </div>
             <button
               type="button"
-              onClick={() => void verifyOfficialSource()}
+              onClick={() => void verifyOfficialSource(false)}
               disabled={
                 officialUpdateBusy ||
                 !selectedChampionship.sourceUrl ||
