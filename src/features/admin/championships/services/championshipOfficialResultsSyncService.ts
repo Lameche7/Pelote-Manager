@@ -243,7 +243,7 @@ export const championshipOfficialResultsSyncService = {
     competitionName: string;
     specialty: string;
     divisions: string[];
-  }): Promise<OfficialResultsSourceResponse> {
+  }, options: { includeStandings?: boolean } = {}): Promise<OfficialResultsSourceResponse> {
     const response = await fetch("/api/championship-results-source", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -265,7 +265,7 @@ export const championshipOfficialResultsSyncService = {
 
     payload.warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
 
-    try {
+    if (options.includeStandings !== false) try {
       const standings = await readStandings(params);
       standingsByResults.set(payload.results, standings.standings);
       payload.standingsSummary = standings.summary;
@@ -279,7 +279,7 @@ export const championshipOfficialResultsSyncService = {
       );
     }
 
-    try {
+    if (options.includeStandings !== false) try {
       const general = await readGeneralStandings(params);
       generalStandingsByResults.set(payload.results, general.generalStandings);
       payload.generalStandingsSummary = general.summary;
