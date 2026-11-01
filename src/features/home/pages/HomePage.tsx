@@ -57,6 +57,8 @@ type ClubHeroStyle = CSSProperties & {
 
 type PublicEventCardStyle = CSSProperties & { "--event-accent": string };
 
+const showMovember = () => new Date().getMonth() === 10;
+
 const showOctoberRose = () => {
   const today = new Date();
   return today.getFullYear() === 2026 && today.getMonth() === 9;
@@ -65,6 +67,7 @@ const showOctoberRose = () => {
 export function HomePage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const octoberRoseVisible = showOctoberRose();
+  const movemberVisible = showMovember();
   const publicClubSlug =
     typeof window === "undefined"
       ? null
@@ -162,6 +165,13 @@ export function HomePage() {
               src={branding.logoUrl}
               alt={branding.name}
             />
+            {movemberVisible && (
+              <img
+                className="premium-home__movember-moustache"
+                src="/branding/movember-moustache.svg"
+                alt="Movember — sensibilisation à la santé masculine"
+              />
+            )}
             {octoberRoseVisible && (
               <img
                 className="premium-home__october-rose-ribbon"
