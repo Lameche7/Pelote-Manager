@@ -453,16 +453,26 @@ export function AdminChampionshipResultsPage() {
         specialty: selectedChampionship.specialty,
         divisions: divisions.map((division) => division.name),
       }, { includeStandings: !quick });
-      // Mode rapide : comparer uniquement les résultats des 21 derniers jours.
-      // La synchronisation complète demeure disponible pour les corrections anciennes.
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 21);
-      const cutoffDay = cutoff.toISOString().slice(0, 10);
+      // La vérification rapide suit la dernière journée jouée du championnat,
+      // et non une fenêtre mobile de 21 jours.
+      const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
+      const lastDay = days.filter((day) => day <= today).at(-1);
+      if (quick && !lastDay) {
+        throw new Error("Aucune journée passée disponible pour la vérification rapide.");
+      }
+      const lastDayMatches = matches.filter((match) => match.dayOn === lastDay);
+      const lastDayDates = new Set(
+        lastDayMatches.flatMap((match) =>
+          [match.dayOn, match.actualOn?.slice(0, 10)].filter(
+            (date): date is string => Boolean(date),
+          ),
+        ),
+      );
       const resultsToApply = quick
-        ? source.results.filter((result) => {
-            const date = result.sourceDate?.slice(0, 10);
-            return date != null && /^\\d{4}-\\d{2}-\\d{2}$/.test(date) && date >= cutoffDay;
-          })
+        ? source.results.filter((result) =>
+            result.sourceDate != null &&
+            lastDayDates.has(result.sourceDate.slice(0, 10)),
+          )
         : source.results;
       const applied =
         resultsToApply.length > 0
@@ -493,7 +503,7 @@ export function AdminChampionshipResultsPage() {
           ? ` · ${applied.confirmedProposalCount} proposition(s) confirmée(s) · ${applied.conflictProposalCount} divergente(s)`
           : "";
       setOfficialUpdateMessage(
-        `${quick ? "Vérification rapide (21 derniers jours)" : "FFPB vérifiée"} : ${resultsToApply.length} résultat(s) contrôlé(s) sur ${source.summary.officialResultCount} trouvé(s) · ${applied.updatedCount} mis à jour · ${applied.unchangedCount} déjà à jour${proposalSuffix}${warningSuffix}.`,
+        `${quick ? "Vérification rapide (dernière journée)" : "FFPB vérifiée"} : ${resultsToApply.length} résultat(s) contrôlé(s) sur ${source.summary.officialResultCount} trouvé(s) · ${applied.updatedCount} mis à jour · ${applied.unchangedCount} déjà à jour${proposalSuffix}${warningSuffix}.`,
       );
     } catch (cause) {
       setOfficialUpdateError(
