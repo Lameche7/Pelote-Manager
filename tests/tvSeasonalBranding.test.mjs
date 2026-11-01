@@ -28,3 +28,14 @@ test("le ruban saisonnier est placé à droite du nom du club TV", async () => {
   assert.match(page, /<h1>\{clubName\}<\/h1>[\s\S]*isOctoberRose/);
   assert.match(page, /\/branding\/octobre-rose-ribbon\.svg/);
 });
+
+test("la moustache Movember est à droite du nom du club TV en novembre", async () => {
+  const [page, style] = await Promise.all([
+    read("../src/features/tv/pages/TvDisplayPage.tsx"),
+    read("../src/features/tv/pages/TvDisplayPage.css"),
+  ]);
+  assert.match(page, /now\.getMonth\(\) === 10/);
+  assert.match(page, /<h1>\{clubName\}<\/h1>[\s\S]*isMovember/);
+  assert.match(page, /\/branding\/movember-moustache\.svg/);
+  assert.match(style, /\.tv-display__movember-moustache/);
+});
