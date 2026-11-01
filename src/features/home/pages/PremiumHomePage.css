@@ -448,27 +448,3 @@
     width: min(24vw, 5.5rem);
   }
 }
-
-.premium-home__pilotoki-brand {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.45rem, 1.3vw, 0.8rem);
-  max-width: 100%;
-}
-
-.premium-home__pilotoki-movember-moustache {
-  display: block;
-  flex: 0 0 auto;
-  width: clamp(2.3rem, 4vw, 3.4rem);
-  height: auto;
-  max-height: 2.5rem;
-  object-fit: contain;
-  filter: drop-shadow(0 0.2rem 0.45rem rgb(255 241 215 / 45%));
-}
-
-@media (max-width: 640px) {
-  .premium-home__pilotoki-movember-moustache {
-    width: min(11vw, 2.5rem);
-  }
-}

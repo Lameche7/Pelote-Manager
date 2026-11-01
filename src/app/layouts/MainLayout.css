@@ -192,3 +192,17 @@
     justify-content: center;
   }
 }
+
+.app-brand__movember-moustache {
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(2.1rem, 3.5vw, 3rem);
+  height: auto;
+  max-height: 2rem;
+  object-fit: contain;
+  filter: drop-shadow(0 0 0.35rem rgb(255 241 215 / 45%));
+}
+
+@media (max-width: 40rem) {
+  .app-brand__movember-moustache { width: 2.2rem; }
+}
