@@ -418,6 +418,7 @@ export function TvDisplayPage() {
   const logoUrl =
     branding.logoUrl || display?.clubLogoUrl || CLUB_CONFIG.logoUrl;
   const isOctoberRose = now.getFullYear() === 2026 && now.getMonth() === 9;
+  const isMovember = now.getMonth() === 10;
   const tvBrandStyle = {
     "--tv-club-primary": branding.primaryColor,
   } as CSSProperties;
@@ -506,6 +507,13 @@ export function TvDisplayPage() {
             </p>
             <div className="tv-display__club-name-row">
               <h1>{clubName}</h1>
+              {isMovember && (
+                <img
+                  className="tv-display__movember-moustache"
+                  src="/branding/movember-moustache.svg"
+                  alt="Movember — sensibilisation à la santé masculine"
+                />
+              )}
               {isOctoberRose && (
                 <img
                   className="tv-display__october-ribbon"
