@@ -143,6 +143,13 @@ export function MainLayout() {
             src="/branding/pilotoki-wordmark.png"
             alt="PILOTOKI"
           />
+          {new Date().getMonth() === 10 && (
+            <img
+              className="app-brand__movember-moustache"
+              src="/branding/movember-moustache.svg"
+              alt="Movember — sensibilisation à la santé masculine"
+            />
+          )}
           <span className="app-brand__club">
             <small>{CLUB_CONFIG.name}</small>
           </span>
