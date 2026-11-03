@@ -5,7 +5,7 @@ import test from "node:test";
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("les admins peuvent définir les dates finales après génération des poules", async () => {
-    const [migration, page, service] = await Promise.all([
+  const [migration, page, service] = await Promise.all([
     read(
       "../supabase/migrations/20261103190000_admin_edit_tournament_finals_dates.sql",
     ),
