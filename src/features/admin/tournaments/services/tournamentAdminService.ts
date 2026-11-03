@@ -376,7 +376,8 @@ export const tournamentAdminService = {
       target_finals_starts_on: startsOn,
       target_finals_ends_on: endsOn,
     });
-    if (error) fail(error, "Impossible d'enregistrer les dates des phases finales.");
+    if (error)
+      fail(error, "Impossible d'enregistrer les dates des phases finales.");
   },
 
   async saveConfiguration(
