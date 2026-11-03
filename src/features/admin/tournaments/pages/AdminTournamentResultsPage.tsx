@@ -37,7 +37,7 @@ const roundLabels: Record<string, string> = {
   final: "Finale",
 };
 
-type ResultsView = "todo" | "today" | "pending" | "all";
+type ResultsView = "todo" | "remaining" | "today" | "pending" | "all";
 type ResultsTab = "scores" | "rankings";
 
 const matchStageLabel = (match: AdminTournamentResultMatch) =>
@@ -211,6 +211,12 @@ export function AdminTournamentResultsPage() {
 
   const todoCount = pendingCount + missingFinishedCount;
 
+  const remainingScheduledCount =
+    selected?.matches.filter((match) => !match.result).length ?? 0;
+  const remainingCount = remainingScheduledCount + unprogrammedForTournament.length;
+  const totalCount = (selected?.matches.length ?? 0) + unprogrammedForTournament.length;
+  const completedPercent = totalCount > 0 ? Math.round((validatedCount / totalCount) * 100) : 0;
+
   const todayCount =
     selected?.matches.filter((match) => match.playDate === today).length ?? 0;
 
@@ -252,6 +258,8 @@ export function AdminTournamentResultsPage() {
         ) {
           return false;
         }
+
+        if (view === "remaining" && match.result) return false;
 
         if (view === "today" && match.playDate !== referenceToday) {
           return false;
@@ -417,6 +425,40 @@ export function AdminTournamentResultsPage() {
             </div>
           </div>
 
+          <section className="admin-card" aria-label="Pilotage du tournoi">
+            <h2>Suivi du tournoi</h2>
+            <p>Avancement basé sur les résultats validés. Les parties sans créneau sont incluses dans les parties restantes.</p>
+            <div className="tournament-results-toolbar">
+              <div><strong>{totalCount}</strong><span>parties au total</span></div>
+              <div><strong>{validatedCount}</strong><span>résultats validés</span></div>
+              <div><strong>{remainingCount}</strong><span>parties restantes sans résultat</span></div>
+              <div><strong>{unprogrammedForTournament.length}</strong><span>à reprogrammer</span></div>
+              <div><strong>{completedPercent} %</strong><span>avancement</span></div>
+            </div>
+            <progress value={validatedCount} max={Math.max(totalCount, 1)} style={{ width: "100%" }} aria-label="Parties avec résultat validé" />
+            <h3>Avancement par série</h3>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", textAlign: "left" }}>
+                <thead><tr><th>Série</th><th>Validées</th><th>Restantes</th><th>À reprogrammer</th></tr></thead>
+                <tbody>
+                  {seriesOptions.map((series) => {
+                    const seriesMatches = selected?.matches.filter((match) => match.seriesName === series) ?? [];
+                    const seriesUnprogrammed = unprogrammedForTournament.filter((match) => match.seriesName === series);
+                    return (
+                      <tr key={series}>
+                        <th scope="row">{series}</th>
+                        <td>{seriesMatches.filter((match) => match.result?.status === "validated").length}</td>
+                        <td>{seriesMatches.filter((match) => !match.result).length + seriesUnprogrammed.length}</td>
+                        <td>{seriesUnprogrammed.length}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p><Link to={ROUTES.adminTournamentReschedules}>Gérer les parties à reprogrammer</Link></p>
+          </section>
+
           <section
             className="admin-card tournament-results-unprogrammed"
             aria-label="Parties en attente de programmation"
@@ -507,6 +549,14 @@ export function AdminTournamentResultsPage() {
                 >
                   <strong>{todoCount}</strong>
                   <span>À traiter</span>
+                </button>
+                <button
+                  type="button"
+                  className={view === "remaining" ? "is-active" : ""}
+                  onClick={() => setView("remaining")}
+                >
+                  <strong>{remainingCount}</strong>
+                  <span>Restantes</span>
                 </button>
                 <button
                   type="button"
@@ -604,6 +654,8 @@ export function AdminTournamentResultsPage() {
                 <span>
                   {view === "todo"
                     ? "Scores nécessitant une action"
+                    : view === "remaining"
+                      ? "Parties programmées sans résultat (hors parties à recaler)"
                     : view === "today"
                       ? "Parties du jour"
                       : view === "pending"
