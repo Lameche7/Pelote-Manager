@@ -112,17 +112,25 @@ export function AdminTournamentQualificationPage() {
     setMessage("");
 
     if (!finalsStartsOn || !finalsEndsOn) {
-      setError("Renseignez la date de début et la date de fin de la phase finale.");
+      setError(
+        "Renseignez la date de début et la date de fin de la phase finale.",
+      );
       return;
     }
     if (finalsStartsOn <= detail.poolEndsOn || finalsEndsOn < finalsStartsOn) {
-      setError("La phase finale doit commencer après les poules et sa date de fin doit suivre son début.");
+      setError(
+        "La phase finale doit commencer après les poules et sa date de fin doit suivre son début.",
+      );
       return;
     }
 
     setSavingDates(true);
     try {
-      await tournamentAdminService.setFinalsDates(detail.id, finalsStartsOn, finalsEndsOn);
+      await tournamentAdminService.setFinalsDates(
+        detail.id,
+        finalsStartsOn,
+        finalsEndsOn,
+      );
       const refreshed = await tournamentAdminService.get(detail.id);
       setDetail(refreshed);
       setFinalsStartsOn(refreshed.finalsStartsOn ?? "");
@@ -243,7 +251,10 @@ export function AdminTournamentQualificationPage() {
 
       {!loading && detail && (
         <div className="qualification-series-list">
-          <section className="admin-card qualification-series" aria-label="Dates de la phase finale">
+          <section
+            className="admin-card qualification-series"
+            aria-label="Dates de la phase finale"
+          >
             <header>
               <div>
                 <p>Calendrier du tournoi</p>
@@ -281,10 +292,16 @@ export function AdminTournamentQualificationPage() {
             <button
               type="button"
               className="qualification-save"
-              disabled={savingDates || saving || ["completed", "archived", "cancelled"].includes(detail.status)}
+              disabled={
+                savingDates ||
+                saving ||
+                ["completed", "archived", "cancelled"].includes(detail.status)
+              }
               onClick={() => void saveFinalsDates()}
             >
-              {savingDates ? "Enregistrement…" : "Enregistrer les dates de phase finale"}
+              {savingDates
+                ? "Enregistrement…"
+                : "Enregistrer les dates de phase finale"}
             </button>
           </section>
           {activeSeries.map((series) => {
