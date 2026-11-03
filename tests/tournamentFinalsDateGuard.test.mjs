@@ -16,10 +16,7 @@ test("un simple changement des dates finales ne réapplique pas le minimum histo
     sql,
     /new\.minimum_finals_availability_slots is not distinct from old\.minimum_finals_availability_slots/,
   );
-  assert.match(
-    sql,
-    /new\.pool_ends_on is not distinct from old\.pool_ends_on/,
-  );
+  assert.match(sql, /new\.pool_ends_on is not distinct from old\.pool_ends_on/);
   assert.match(
     sql,
     /new\.slot_duration_minutes is not distinct from old\.slot_duration_minutes/,
