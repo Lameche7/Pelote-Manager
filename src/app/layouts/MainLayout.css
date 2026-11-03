@@ -204,5 +204,7 @@
 }
 
 @media (max-width: 40rem) {
-  .app-brand__movember-moustache { width: 2.2rem; }
+  .app-brand__movember-moustache {
+    width: 2.2rem;
+  }
 }
