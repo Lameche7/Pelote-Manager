@@ -23,6 +23,9 @@ export function AdminTournamentQualificationPage() {
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [finalsStartsOn, setFinalsStartsOn] = useState("");
+  const [finalsEndsOn, setFinalsEndsOn] = useState("");
+  const [savingDates, setSavingDates] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -54,6 +57,8 @@ export function AdminTournamentQualificationPage() {
     if (!selectedId) {
       setDetail(null);
       setCounts({});
+      setFinalsStartsOn("");
+      setFinalsEndsOn("");
       return;
     }
 
@@ -67,6 +72,8 @@ export function AdminTournamentQualificationPage() {
       .then(([loadedDetail, qualifiers]) => {
         if (!active) return;
         setDetail(loadedDetail);
+        setFinalsStartsOn(loadedDetail.finalsStartsOn ?? "");
+        setFinalsEndsOn(loadedDetail.finalsEndsOn ?? "");
         setCounts(
           Object.fromEntries(
             loadedDetail.series.map((series) => [
@@ -98,6 +105,39 @@ export function AdminTournamentQualificationPage() {
     () => detail?.series.filter((series) => series.enabled) ?? [],
     [detail],
   );
+
+  const saveFinalsDates = async () => {
+    if (!detail) return;
+    setError("");
+    setMessage("");
+
+    if (!finalsStartsOn || !finalsEndsOn) {
+      setError("Renseignez la date de début et la date de fin de la phase finale.");
+      return;
+    }
+    if (finalsStartsOn <= detail.poolEndsOn || finalsEndsOn < finalsStartsOn) {
+      setError("La phase finale doit commencer après les poules et sa date de fin doit suivre son début.");
+      return;
+    }
+
+    setSavingDates(true);
+    try {
+      await tournamentAdminService.setFinalsDates(detail.id, finalsStartsOn, finalsEndsOn);
+      const refreshed = await tournamentAdminService.get(detail.id);
+      setDetail(refreshed);
+      setFinalsStartsOn(refreshed.finalsStartsOn ?? "");
+      setFinalsEndsOn(refreshed.finalsEndsOn ?? "");
+      setMessage("Dates de la phase finale enregistrées.");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Impossible d'enregistrer les dates de la phase finale.",
+      );
+    } finally {
+      setSavingDates(false);
+    }
+  };
 
   const save = async () => {
     if (!detail) return;
@@ -203,6 +243,50 @@ export function AdminTournamentQualificationPage() {
 
       {!loading && detail && (
         <div className="qualification-series-list">
+          <section className="admin-card qualification-series" aria-label="Dates de la phase finale">
+            <header>
+              <div>
+                <p>Calendrier du tournoi</p>
+                <h2>Dates de la phase finale</h2>
+              </div>
+            </header>
+            <p>
+              Modifiez cette période même après la génération des poules.
+              Les parties déjà programmées et les disponibilités enregistrées
+              doivent rester dans la période choisie.
+            </p>
+            <p>Fin des poules : {detail.poolEndsOn}</p>
+            <div className="qualification-preview__numbers">
+              <label>
+                Début de la phase finale
+                <input
+                  type="date"
+                  min={detail.poolEndsOn}
+                  value={finalsStartsOn}
+                  disabled={savingDates || saving}
+                  onChange={(event) => setFinalsStartsOn(event.target.value)}
+                />
+              </label>
+              <label>
+                Fin de la phase finale
+                <input
+                  type="date"
+                  min={finalsStartsOn || detail.poolEndsOn}
+                  value={finalsEndsOn}
+                  disabled={savingDates || saving}
+                  onChange={(event) => setFinalsEndsOn(event.target.value)}
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              className="qualification-save"
+              disabled={savingDates || saving || ["completed", "archived", "cancelled"].includes(detail.status)}
+              onClick={() => void saveFinalsDates()}
+            >
+              {savingDates ? "Enregistrement…" : "Enregistrer les dates de phase finale"}
+            </button>
+          </section>
           {activeSeries.map((series) => {
             const seriesId = series.id ?? "";
             const qualifierCount = counts[seriesId] ?? 0;
