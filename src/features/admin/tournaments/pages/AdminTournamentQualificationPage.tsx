@@ -117,10 +117,7 @@ export function AdminTournamentQualificationPage() {
       );
       return;
     }
-    if (
-      finalsStartsOn <= detail.poolEndsOn ||
-      finalsEndsOn < finalsStartsOn
-    ) {
+    if (finalsStartsOn <= detail.poolEndsOn || finalsEndsOn < finalsStartsOn) {
       setError(
         "La phase finale doit commencer après les poules et sa date de fin doit suivre son début.",
       );
