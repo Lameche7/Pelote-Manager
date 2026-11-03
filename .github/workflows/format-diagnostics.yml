@@ -43,5 +43,10 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
+      - name: Show actual Prettier changes
+        if: always()
+        run: |
+          npx prettier --write src/features/admin/tournaments/pages/AdminTournamentQualificationPage.tsx tests/tournamentFinalsDatesAdmin.test.mjs
+          git diff -- src/features/admin/tournaments/pages/AdminTournamentQualificationPage.tsx tests/tournamentFinalsDatesAdmin.test.mjs
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
