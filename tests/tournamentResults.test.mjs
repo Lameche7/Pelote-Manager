@@ -159,8 +159,5 @@ test("le suivi conserve les séries dont toutes les parties sont à reprogrammer
     adminPage,
     /unprogrammedForTournament\.map\(\(match\) => match\.seriesName\)/,
   );
-  assert.match(
-    adminPage,
-    /seriesUnprogrammed\.length/,
-  );
+  assert.match(adminPage, /seriesUnprogrammed\.length/);
 });
