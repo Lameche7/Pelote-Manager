@@ -15,8 +15,14 @@ test("modifier les dates finales ne revalide pas les anciennes disponibilités",
   ]);
 
   assert.match(migration, /enforce_tournament_finals_availability_for_teams/);
-  assert.match(migration, /new\.finals_starts_on is distinct from old\.finals_starts_on/);
+  assert.match(
+    migration,
+    /new\.finals_starts_on is distinct from old\.finals_starts_on/,
+  );
   assert.match(migration, /minimum_finals_availability_slots/);
-  assert.match(migration, /perform public\.assert_tournament_team_finals_availability/);
+  assert.match(
+    migration,
+    /perform public\.assert_tournament_team_finals_availability/,
+  );
   assert.match(page, /disponibilités enregistrées restent conservées/);
 });
