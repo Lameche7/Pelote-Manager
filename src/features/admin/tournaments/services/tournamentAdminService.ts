@@ -138,6 +138,12 @@ const knownErrors: Record<string, string> = {
   "Tournament dates are invalid": "Les dates du tournoi sont incohérentes.",
   "Tournament phase dates are invalid":
     "Vérifiez les dates des poules et de la phase finale. La phase finale doit commencer après les poules.",
+  "Tournament finals dates are locked at this stage":
+    "Les dates de la phase finale ne sont plus modifiables pour ce tournoi.",
+  "Tournament finals dates conflict with existing planning":
+    "La nouvelle période exclut des parties de phase finale déjà programmées.",
+  "Tournament finals dates conflict with existing availability":
+    "La nouvelle période exclut des disponibilités déjà renseignées par les équipes.",
   "Tournament availability settings are invalid":
     "Vérifiez la durée des créneaux et les minima de disponibilités.",
   "Tournament registration fee is invalid":
@@ -358,6 +364,19 @@ export const tournamentAdminService = {
       },
     );
     if (error) fail(error, "Impossible de modifier le tournoi.");
+  },
+
+  async setFinalsDates(
+    id: string,
+    startsOn: string,
+    endsOn: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc("admin_set_tournament_finals_dates", {
+      target_tournament_id: id,
+      target_finals_starts_on: startsOn,
+      target_finals_ends_on: endsOn,
+    });
+    if (error) fail(error, "Impossible d'enregistrer les dates des phases finales.");
   },
 
   async saveConfiguration(
