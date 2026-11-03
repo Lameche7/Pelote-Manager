@@ -149,3 +149,15 @@ test("le back-office résultats ouvre un tableau de traitement priorisé", async
   assert.match(adminPage, /Classements/);
   assert.match(adminPage, /role="dialog"/);
 });
+
+test("le suivi conserve les séries dont toutes les parties sont à reprogrammer", async () => {
+  const adminPage = await read(
+    "../src/features/admin/tournaments/pages/AdminTournamentResultsPage.tsx",
+  );
+
+  assert.match(
+    adminPage,
+    /unprogrammedForTournament\.map\(\(match\) => match\.seriesName\)/,
+  );
+  assert.match(adminPage, /seriesUnprogrammed\.length/);
+});

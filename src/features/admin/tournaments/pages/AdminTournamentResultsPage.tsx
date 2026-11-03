@@ -226,9 +226,12 @@ export function AdminTournamentResultsPage() {
   const seriesOptions = useMemo(
     () =>
       Array.from(
-        new Set(selected?.matches.map((match) => match.seriesName) ?? []),
+        new Set([
+          ...(selected?.matches.map((match) => match.seriesName) ?? []),
+          ...unprogrammedForTournament.map((match) => match.seriesName),
+        ]),
       ).sort((left, right) => left.localeCompare(right, "fr")),
-    [selected],
+    [selected, unprogrammed],
   );
 
   const poolOptions = useMemo(
