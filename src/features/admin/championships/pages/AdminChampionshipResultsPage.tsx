@@ -446,19 +446,26 @@ export function AdminChampionshipResultsPage() {
     setOfficialUpdateMessage("");
     setOfficialConflicts([]);
     try {
-      const source = await championshipOfficialResultsSyncService.read({
-        sourceUrl: selectedChampionship.sourceUrl,
-        seasonLabel: selectedChampionship.seasonLabel,
-        competitionName: selectedChampionship.name,
-        specialty: selectedChampionship.specialty,
-        divisions: divisions.map((division) => division.name),
-      }, { includeStandings: !quick });
+      const source = await championshipOfficialResultsSyncService.read(
+        {
+          sourceUrl: selectedChampionship.sourceUrl,
+          seasonLabel: selectedChampionship.seasonLabel,
+          competitionName: selectedChampionship.name,
+          specialty: selectedChampionship.specialty,
+          divisions: divisions.map((division) => division.name),
+        },
+        { includeStandings: !quick },
+      );
       // La vérification rapide suit la dernière journée jouée du championnat,
       // et non une fenêtre mobile de 21 jours.
-      const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
+      const today = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Europe/Paris",
+      });
       const lastDay = days.filter((day) => day <= today).at(-1);
       if (quick && !lastDay) {
-        throw new Error("Aucune journée passée disponible pour la vérification rapide.");
+        throw new Error(
+          "Aucune journée passée disponible pour la vérification rapide.",
+        );
       }
       const lastDayMatches = matches.filter((match) => match.dayOn === lastDay);
       const lastDayDates = new Set(
@@ -469,9 +476,10 @@ export function AdminChampionshipResultsPage() {
         ),
       );
       const resultsToApply = quick
-        ? source.results.filter((result) =>
-            result.sourceDate != null &&
-            lastDayDates.has(result.sourceDate.slice(0, 10)),
+        ? source.results.filter(
+            (result) =>
+              result.sourceDate != null &&
+              lastDayDates.has(result.sourceDate.slice(0, 10)),
           )
         : source.results;
       const applied =
@@ -544,7 +552,11 @@ export function AdminChampionshipResultsPage() {
         <button
           type="button"
           className="admin-championship-results__official-trigger"
-          disabled={!selectedChampionship?.sourceUrl || divisions.length === 0 || officialUpdateBusy}
+          disabled={
+            !selectedChampionship?.sourceUrl ||
+            divisions.length === 0 ||
+            officialUpdateBusy
+          }
           onClick={() => void verifyOfficialSource(false)}
         >
           Vérification complète

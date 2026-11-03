@@ -237,13 +237,16 @@ const readGeneralStandings = async (params: {
 };
 
 export const championshipOfficialResultsSyncService = {
-  async read(params: {
-    sourceUrl: string;
-    seasonLabel: string;
-    competitionName: string;
-    specialty: string;
-    divisions: string[];
-  }, options: { includeStandings?: boolean } = {}): Promise<OfficialResultsSourceResponse> {
+  async read(
+    params: {
+      sourceUrl: string;
+      seasonLabel: string;
+      competitionName: string;
+      specialty: string;
+      divisions: string[];
+    },
+    options: { includeStandings?: boolean } = {},
+  ): Promise<OfficialResultsSourceResponse> {
     const response = await fetch("/api/championship-results-source", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -265,33 +268,38 @@ export const championshipOfficialResultsSyncService = {
 
     payload.warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
 
-    if (options.includeStandings !== false) try {
-      const standings = await readStandings(params);
-      standingsByResults.set(payload.results, standings.standings);
-      payload.standingsSummary = standings.summary;
-      payload.warnings.push(...(standings.warnings ?? []));
-    } catch (cause) {
-      standingsByResults.set(payload.results, []);
-      payload.warnings.push(
-        cause instanceof Error
-          ? `Classements par poule : ${cause.message}`
-          : "Classements par poule : synchronisation impossible.",
-      );
-    }
+    if (options.includeStandings !== false)
+      try {
+        const standings = await readStandings(params);
+        standingsByResults.set(payload.results, standings.standings);
+        payload.standingsSummary = standings.summary;
+        payload.warnings.push(...(standings.warnings ?? []));
+      } catch (cause) {
+        standingsByResults.set(payload.results, []);
+        payload.warnings.push(
+          cause instanceof Error
+            ? `Classements par poule : ${cause.message}`
+            : "Classements par poule : synchronisation impossible.",
+        );
+      }
 
-    if (options.includeStandings !== false) try {
-      const general = await readGeneralStandings(params);
-      generalStandingsByResults.set(payload.results, general.generalStandings);
-      payload.generalStandingsSummary = general.summary;
-      payload.warnings.push(...(general.warnings ?? []));
-    } catch (cause) {
-      generalStandingsByResults.set(payload.results, []);
-      payload.warnings.push(
-        cause instanceof Error
-          ? `Classement général : ${cause.message}`
-          : "Classement général : synchronisation impossible.",
-      );
-    }
+    if (options.includeStandings !== false)
+      try {
+        const general = await readGeneralStandings(params);
+        generalStandingsByResults.set(
+          payload.results,
+          general.generalStandings,
+        );
+        payload.generalStandingsSummary = general.summary;
+        payload.warnings.push(...(general.warnings ?? []));
+      } catch (cause) {
+        generalStandingsByResults.set(payload.results, []);
+        payload.warnings.push(
+          cause instanceof Error
+            ? `Classement général : ${cause.message}`
+            : "Classement général : synchronisation impossible.",
+        );
+      }
 
     return payload;
   },
