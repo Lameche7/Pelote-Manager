@@ -262,9 +262,10 @@ export function AdminTournamentQualificationPage() {
               </div>
             </header>
             <p>
-              Modifiez cette période même après la génération des poules. Les
-              parties déjà programmées et les disponibilités enregistrées
-              doivent rester dans la période choisie.
+              Modifiez cette période même après la génération des poules.
+              Les disponibilités enregistrées restent conservées, même en
+              dehors de ces dates. Les parties déjà programmées doivent
+              rester dans la période choisie.
             </p>
             <p>Fin des poules : {detail.poolEndsOn}</p>
             <div className="qualification-preview__numbers">
