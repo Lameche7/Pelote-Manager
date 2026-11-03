@@ -117,7 +117,10 @@ export function AdminTournamentQualificationPage() {
       );
       return;
     }
-    if (finalsStartsOn <= detail.poolEndsOn || finalsEndsOn < finalsStartsOn) {
+    if (
+      finalsStartsOn <= detail.poolEndsOn ||
+      finalsEndsOn < finalsStartsOn
+    ) {
       setError(
         "La phase finale doit commencer après les poules et sa date de fin doit suivre son début.",
       );
@@ -262,8 +265,8 @@ export function AdminTournamentQualificationPage() {
               </div>
             </header>
             <p>
-              Modifiez cette période même après la génération des poules.
-              Les parties déjà programmées et les disponibilités enregistrées
+              Modifiez cette période même après la génération des poules. Les
+              parties déjà programmées et les disponibilités enregistrées
               doivent rester dans la période choisie.
             </p>
             <p>Fin des poules : {detail.poolEndsOn}</p>
