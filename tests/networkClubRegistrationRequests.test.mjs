@@ -16,10 +16,7 @@ test("inscription des clubs : demande sans paiement ni création de club", async
   ]);
   assert.match(sql, /network_club_registration_requests/);
   assert.match(sql, /enable row level security/);
-  assert.match(
-    sql,
-    /revoke all on public\.network_club_registration_requests/,
-  );
+  assert.match(sql, /revoke all on public\.network_club_registration_requests/);
   assert.match(
     sql,
     /grant execute on function public\.submit_network_club_registration_request/,
