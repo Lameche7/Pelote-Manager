@@ -59,12 +59,11 @@ async function verifyPlatformAdmin(request, env, fetchImpl = fetch) {
 async function querySource(env, endpoint, init = {}, fetchImpl = fetch) {
   const sourceUrl = requiredEnv(env, "VITE_SUPABASE_URL");
   const serviceKey = requiredEnv(env, "NETWORK_REGISTRATION_SERVICE_ROLE_KEY");
+  // sb_secret_* keys are opaque API keys, never bearer JWTs.
   const response = await fetchImpl(`${sourceUrl}/rest/v1/${endpoint}`, {
     ...init,
     headers: {
       apikey: serviceKey,
-      // New sb_secret_* keys are opaque API keys, not JWT bearer tokens.
-      // Supabase maps the apikey header to service_role on the server.
       ...(init.headers ?? {}),
     },
     cache: "no-store",
