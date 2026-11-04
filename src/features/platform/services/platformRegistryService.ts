@@ -4,11 +4,7 @@ export type PlatformClubStatus =
   "provisioning" | "trial" | "active" | "suspended" | "cancelled";
 
 export type PlatformSubscriptionPlan =
-  | "essentiel"
-  | "club"
-  | "premium"
-  | "standard"
-  | "custom";
+  "essentiel" | "club" | "premium" | "standard" | "custom";
 
 export type PlatformProvisioningStatus =
   | "pending"
