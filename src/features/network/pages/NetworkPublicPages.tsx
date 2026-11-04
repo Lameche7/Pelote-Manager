@@ -74,7 +74,9 @@ export function NetworkSubscriptionPage() {
         id="abonnement"
       >
         <div className="network-pricing__heading">
-          <p className="network-directory__eyebrow">Trois offres pour les clubs</p>
+          <p className="network-directory__eyebrow">
+            Trois offres pour les clubs
+          </p>
           <h2>Votre club, votre formule.</h2>
           <p>
             De la réservation d'un terrain à l'organisation d'un tournoi :
@@ -120,8 +122,8 @@ export function NetworkSubscriptionPage() {
 
         <p className="network-pricing__launch-note">
           Tarifs mensuels indicatifs par club, affichés avant le lancement
-          commercial. Les modalités TTC/HT seront précisées à l'ouverture.
-          Les abonnements, les paiements et l'essai gratuit ne sont pas encore
+          commercial. Les modalités TTC/HT seront précisées à l'ouverture. Les
+          abonnements, les paiements et l'essai gratuit ne sont pas encore
           accessibles : aucun paiement n'est demandé sur cette page.
         </p>
       </section>
