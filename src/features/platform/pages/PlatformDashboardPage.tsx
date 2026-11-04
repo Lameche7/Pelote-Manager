@@ -9,6 +9,7 @@ import { usePlatformAuth } from "../auth/usePlatformAuth";
 import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
 import { PlatformLiveExecutionConfirmationPanel } from "../components/PlatformLiveExecutionConfirmationPanel";
+import { PlatformRegistrationRequestsPanel } from "../components/PlatformRegistrationRequestsPanel";
 import {
   platformRegistryService,
   type PlatformClub,
@@ -320,6 +321,8 @@ export function PlatformDashboardPage() {
           </span>
         </article>
       </section>
+
+      <PlatformRegistrationRequestsPanel />
 
       <PlatformBudgetForecastPanel clubs={clubs} plans={costPlans} />
 
