@@ -43,5 +43,10 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
+      - name: Show source formatting changes
+        if: always()
+        run: |
+          npx prettier --write api/platform-registration-requests.mjs
+          git diff -- api/platform-registration-requests.mjs
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
