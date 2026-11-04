@@ -100,7 +100,7 @@ begin
   end if;
 
   insert into public.club_communications(
-    club_id,title,body,priority,status,show_on_home,published_at,expires_at,
+    club_id,title,body,priority,status,show_on_home,expires_at,
     created_by,updated_by
   ) values (
     target_tournament.club_id,
@@ -111,7 +111,7 @@ begin
       to_char(target_date,'DD/MM/YYYY'),
       to_char(target_start,'HH24:MI'),
       target_resource.name),
-    'important','published',false,now(),target_start_at + interval '1 day',
+    'important','draft',false,target_start_at + interval '1 day',
     new.created_by,new.created_by
   ) returning id into target_communication;
 
@@ -144,6 +144,12 @@ begin
   on conflict do nothing;
 
   get diagnostics target_recipient_count = row_count;
+
+  -- Publish only after recipients exist so downstream push workers can see them.
+  update public.club_communications
+  set status = 'published', published_at = now(), updated_at = now()
+  where id = target_communication;
+
   insert into public.tournament_admin_reprogram_notification_events(
     audit_id,match_id,communication_id,recipient_count
   ) values (new.id,target_match.id,target_communication,target_recipient_count)
