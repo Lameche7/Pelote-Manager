@@ -43,5 +43,10 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
+      - name: Show exact acceptance formatting
+        if: always()
+        run: |
+          npx prettier --write api/platform-registration-requests.mjs src/features/platform/components/PlatformRegistrationRequestsPanel.tsx src/features/platform/services/platformRegistryService.ts tests/platformNetworkAcceptance.test.mjs tests/platformRegistrationInbox.test.mjs
+          git diff -- api/platform-registration-requests.mjs src/features/platform/components/PlatformRegistrationRequestsPanel.tsx src/features/platform/services/platformRegistryService.ts tests/platformNetworkAcceptance.test.mjs tests/platformRegistrationInbox.test.mjs
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
