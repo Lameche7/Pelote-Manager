@@ -63,7 +63,9 @@ export function PlatformRegistrationRequestsPanel() {
       const result = await apiCall<{ requests: RegistrationRequest[] }>("GET");
       setRequests(result.requests);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Chargement impossible.");
+      setError(
+        cause instanceof Error ? cause.message : "Chargement impossible.",
+      );
     } finally {
       setLoading(false);
     }
@@ -80,9 +82,14 @@ export function PlatformRegistrationRequestsPanel() {
         : requests.filter((request) => request.status === filter),
     [filter, requests],
   );
-  const pending = requests.filter((request) => request.status === "pending").length;
+  const pending = requests.filter(
+    (request) => request.status === "pending",
+  ).length;
 
-  const setStatus = async (request: RegistrationRequest, status: RegistrationStatus) => {
+  const setStatus = async (
+    request: RegistrationRequest,
+    status: RegistrationStatus,
+  ) => {
     if (request.status === status || changingId) return;
     setChangingId(request.id);
     setError("");
@@ -95,23 +102,31 @@ export function PlatformRegistrationRequestsPanel() {
       setRequests((items) =>
         items.map((item) => (item.id === request.id ? result.request : item)),
       );
-      setMessage(`Statut de ${request.club_name} : ${labels[status].toLowerCase()}.`);
+      setMessage(
+        `Statut de ${request.club_name} : ${labels[status].toLowerCase()}.`,
+      );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Mise à jour impossible.");
+      setError(
+        cause instanceof Error ? cause.message : "Mise à jour impossible.",
+      );
     } finally {
       setChangingId("");
     }
   };
 
   return (
-    <section className="platform-card platform-registration-panel" id="demandes-inscription">
+    <section
+      className="platform-card platform-registration-panel"
+      id="demandes-inscription"
+    >
       <div className="platform-registration-panel__heading">
         <div>
           <p className="platform-kicker">Pilotoki Network</p>
           <h2>Demandes d'inscription</h2>
           <p>
             {pending} demande{pending > 1 ? "s" : ""} à traiter ·{" "}
-            {requests.length} candidature{requests.length > 1 ? "s" : ""} récente
+            {requests.length} candidature{requests.length > 1 ? "s" : ""}{" "}
+            récente
             {requests.length > 1 ? "s" : ""}
           </p>
         </div>
@@ -138,7 +153,11 @@ export function PlatformRegistrationRequestsPanel() {
           {message}
         </p>
       )}
-      <div className="platform-registration-panel__filters" role="group" aria-label="Filtrer les demandes">
+      <div
+        className="platform-registration-panel__filters"
+        role="group"
+        aria-label="Filtrer les demandes"
+      >
         {(["all", "pending", "contacted", "approved", "rejected"] as const).map(
           (option) => (
             <button
@@ -160,7 +179,10 @@ export function PlatformRegistrationRequestsPanel() {
       ) : (
         <div className="platform-registration-panel__list">
           {visible.map((request) => (
-            <article className="platform-registration-panel__item" key={request.id}>
+            <article
+              className="platform-registration-panel__item"
+              key={request.id}
+            >
               <div className="platform-registration-panel__item-header">
                 <div>
                   <h3>{request.club_name}</h3>
@@ -169,7 +191,9 @@ export function PlatformRegistrationRequestsPanel() {
                     {new Date(request.created_at).toLocaleDateString("fr-FR")}
                   </small>
                 </div>
-                <span className={`platform-registration-panel__status platform-registration-panel__status--${request.status}`}>
+                <span
+                  className={`platform-registration-panel__status platform-registration-panel__status--${request.status}`}
+                >
                   {labels[request.status]}
                 </span>
               </div>
@@ -188,25 +212,25 @@ export function PlatformRegistrationRequestsPanel() {
                 )}
               </div>
               <div className="platform-registration-panel__actions">
-                {(["contacted", "approved", "rejected", "pending"] as const).map(
-                  (status) => (
-                    <button
-                      key={status}
-                      className="button button--small button--ghost"
-                      type="button"
-                      disabled={Boolean(changingId) || request.status === status}
-                      onClick={() => void setStatus(request, status)}
-                    >
-                      {status === "pending"
-                        ? "Remettre en attente"
-                        : status === "contacted"
-                          ? "Marquer contacté"
-                          : status === "approved"
-                            ? "Accepter"
-                            : "Refuser"}
-                    </button>
-                  ),
-                )}
+                {(
+                  ["contacted", "approved", "rejected", "pending"] as const
+                ).map((status) => (
+                  <button
+                    key={status}
+                    className="button button--small button--ghost"
+                    type="button"
+                    disabled={Boolean(changingId) || request.status === status}
+                    onClick={() => void setStatus(request, status)}
+                  >
+                    {status === "pending"
+                      ? "Remettre en attente"
+                      : status === "contacted"
+                        ? "Marquer contacté"
+                        : status === "approved"
+                          ? "Accepter"
+                          : "Refuser"}
+                  </button>
+                ))}
               </div>
             </article>
           ))}
