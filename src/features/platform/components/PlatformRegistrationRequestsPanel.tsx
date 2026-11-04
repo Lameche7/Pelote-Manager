@@ -148,9 +148,9 @@ export function PlatformRegistrationRequestsPanel({
         </button>
       </div>
       <p className="platform-registration-panel__notice">
-        Accepter une demande crée une fiche commerciale dans le registre
-        central des clubs, avec la formule choisie. Aucun compte, aucune
-        instance technique, aucun abonnement payant ni paiement n'est créé.
+        Accepter une demande crée une fiche commerciale dans le registre central
+        des clubs, avec la formule choisie. Aucun compte, aucune instance
+        technique, aucun abonnement payant ni paiement n'est créé.
       </p>
       {error && (
         <p className="platform-message platform-message--error" role="alert">
