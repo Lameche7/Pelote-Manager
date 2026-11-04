@@ -1,8 +1,7 @@
 // Server-only bridge between the independent platform and club Supabase projects.
 // A centrally authenticated super admin can review onboarding requests without
 // exposing the club project's service-role key to the browser.
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATUSES = new Set(["pending", "contacted", "approved", "rejected"]);
 const COLUMNS =
   "id,club_name,city,contact_name,contact_email,contact_phone,requested_plan,status,created_at,reviewed_at";
@@ -59,11 +58,11 @@ async function verifyPlatformAdmin(request, env, fetchImpl = fetch) {
 async function querySource(env, endpoint, init = {}, fetchImpl = fetch) {
   const sourceUrl = requiredEnv(env, "VITE_SUPABASE_URL");
   const serviceKey = requiredEnv(env, "NETWORK_REGISTRATION_SERVICE_ROLE_KEY");
+  // sb_secret_* keys are opaque API keys, never bearer JWTs.
   const response = await fetchImpl(`${sourceUrl}/rest/v1/${endpoint}`, {
     ...init,
     headers: {
       apikey: serviceKey,
-      authorization: `Bearer ${serviceKey}`,
       ...(init.headers ?? {}),
     },
     cache: "no-store",
