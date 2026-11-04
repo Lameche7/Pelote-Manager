@@ -32,7 +32,7 @@ create or replace function public.publish_admin_championship_reschedule_notifica
 returns void language plpgsql security definer set search_path = '' as $$
 declare
   target_match public.championship_matches%rowtype;
-  communication_id uuid;
+  target_notice_id uuid;
   event_id uuid;
   recipient_total integer := 0;
   local_timezone text := 'Europe/Paris';
@@ -88,7 +88,7 @@ begin
         then '' else ' · ' || btrim(target_venue) end
     ),
     'important','draft',false,target_starts_at + interval '1 day'
-  ) returning id into communication_id;
+  ) returning id into target_notice_id;
 
   with recipients as (
     select distinct profile.id as profile_id,
@@ -114,7 +114,7 @@ begin
     communication_id,club_id,club_member_id,profile_id_at_publication,
     email_snapshot,email_status
   )
-  select communication_id,target_club_id,member_id,profile_id,email_snapshot,
+  select target_notice_id,target_club_id,member_id,profile_id,email_snapshot,
     case when email_snapshot is null
       then 'unavailable'::public.communication_email_status
       else 'not_configured'::public.communication_email_status end
@@ -123,15 +123,15 @@ begin
   get diagnostics recipient_total = row_count;
 
   update public.championship_admin_reschedule_notification_events
-  set recipient_count=recipient_total,communication_id=communication_id
+  set recipient_count=recipient_total,communication_id=target_notice_id
   where id=event_id;
 
   if recipient_total>0 then
     update public.club_communications
     set status='published',published_at=now(),updated_at=now()
-    where id=communication_id;
+    where id=target_notice_id;
   else
-    delete from public.club_communications where id=communication_id;
+    delete from public.club_communications where id=target_notice_id;
   end if;
 end;
 $$;
