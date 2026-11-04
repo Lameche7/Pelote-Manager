@@ -59,6 +59,7 @@ import {
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
 import { NetworkDirectoryPage } from "@/features/network/pages/NetworkDirectoryPage";
+import { NetworkClubRegistrationPage } from "@/features/network/pages/NetworkClubRegistrationPage";
 import { NetworkDiscoveryPage, NetworkSubscriptionPage } from "@/features/network/pages/NetworkPublicPages";
 import { isMarketingHostname } from "@/shared/config/domains";
 import { NetworkClubPage, NetworkTournamentPage } from "@/features/network/pages/NetworkDetailsPages";
@@ -107,6 +108,7 @@ export const routes = [
   { path: "/reseau/clubs", element: <NetworkDirectoryPage /> },
   { path: "/reseau/decouvrir", element: <NetworkDiscoveryPage /> },
   { path: "/reseau/abonnement", element: <NetworkSubscriptionPage /> },
+  { path: "/reseau/inscription", element: <NetworkClubRegistrationPage /> },
   { path: "/reseau/clubs/:clubSlug", element: <NetworkClubPage /> },
   { path: "/reseau/tournois/:tournamentId", element: <NetworkTournamentPage /> },
   { path: `${ROUTES.tv}/:token`, element: <TvDisplayPage /> },
