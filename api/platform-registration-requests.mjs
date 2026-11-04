@@ -5,7 +5,7 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATUSES = new Set(["pending", "contacted", "approved", "rejected"]);
 const COLUMNS =
-  "id,club_name,city,contact_name,contact_email,contact_phone,requested_plan,status,created_at,reviewed_at";
+  "id,club_name,city,contact_name,contact_email,contact_phone,requested_plan,status,created_at,reviewed_at,platform_club_id";
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -74,6 +74,108 @@ async function querySource(env, endpoint, init = {}, fetchImpl = fetch) {
   return response.json();
 }
 
+function buildClubSlug(name, requestId) {
+  const base = name
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 50)
+    .replace(/-$/g, "");
+  return `${base || "club"}-${requestId.slice(0, 8)}`;
+}
+
+async function acceptApplication(env, request, id, actorId) {
+  const platformUrl = requiredEnv(env, "VITE_PLATFORM_SUPABASE_URL");
+  const platformKey = requiredEnv(env, "VITE_PLATFORM_SUPABASE_ANON_KEY");
+  const token = request.headers.authorization.match(/^Bearer (\S+)$/i)?.[1];
+  if (!token) throw new HttpError(401, "Session Super Admin requise.");
+
+  // Source data is read from the private DB. Never trust names, plan or email
+  // submitted by the browser when creating the commercial registry record.
+  const existing = await querySource(
+    env,
+    `network_club_registration_requests?id=eq.${id}&select=${COLUMNS}`,
+  );
+  if (!Array.isArray(existing) || existing.length !== 1) {
+    throw new HttpError(404, "Demande introuvable.");
+  }
+  const application = existing[0];
+  if (application.status === "approved" && application.platform_club_id) {
+    return application;
+  }
+  if (application.status === "approved") {
+    throw new HttpError(
+      409,
+      "Demande déjà acceptée sans rattachement. Vérification manuelle requise.",
+    );
+  }
+  if (!["essentiel", "club", "premium"].includes(application.requested_plan)) {
+    throw new HttpError(409, "Formule de la candidature inconnue.");
+  }
+
+  const centralResponse = await fetch(
+    `${platformUrl}/rest/v1/rpc/platform_register_network_application`,
+    {
+      method: "POST",
+      headers: {
+        apikey: platformKey,
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        target_request_id: application.id,
+        target_name: application.club_name,
+        target_slug: buildClubSlug(application.club_name, application.id),
+        target_contact_email: application.contact_email,
+        target_plan: application.requested_plan,
+        target_notes: `Candidature Pilotoki Network · ${application.city} · ${application.contact_name}`,
+      }),
+      cache: "no-store",
+    },
+  );
+
+  if (!centralResponse.ok) {
+    // Do not change source status if the central transaction fails.
+    throw new HttpError(
+      502,
+      "La fiche centrale n'a pas pu être créée. Vérifiez que la migration centrale est installée.",
+    );
+  }
+  const centralClubId = await centralResponse.json();
+  if (typeof centralClubId !== "string" || !UUID_RE.test(centralClubId)) {
+    throw new HttpError(502, "Réponse de la plateforme centrale invalide.");
+  }
+
+  // If the source PATCH fails after central commit, retrying invokes the
+  // idempotent central RPC and gets the same club ID.
+  const updated = await querySource(
+    env,
+    `network_club_registration_requests?id=eq.${id}&status=neq.approved&select=${COLUMNS}`,
+    {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({
+        status: "approved",
+        platform_club_id: centralClubId,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by_platform_user_id: actorId,
+      }),
+    },
+  );
+  if (!Array.isArray(updated) || updated.length !== 1) {
+    throw new HttpError(
+      409,
+      "Fiche créée, mais état de la candidature modifié. Actualisez.",
+    );
+  }
+  return updated[0];
+}
+
 export default async function handler(request, response) {
   response.setHeader("cache-control", "no-store, private");
   response.setHeader("x-content-type-options", "nosniff");
@@ -107,9 +209,19 @@ export default async function handler(request, response) {
       throw new HttpError(400, "Décision invalide.");
     }
 
+    if (status === "approved") {
+      const approved = await acceptApplication(
+        process.env,
+        request,
+        id,
+        actorId,
+      );
+      return response.status(200).json({ request: approved });
+    }
+
     const rows = await querySource(
       process.env,
-      `network_club_registration_requests?id=eq.${id}&select=${COLUMNS}`,
+      `network_club_registration_requests?id=eq.${id}&status=neq.approved&select=${COLUMNS}`,
       {
         method: "PATCH",
         headers: {
@@ -124,7 +236,7 @@ export default async function handler(request, response) {
       },
     );
     if (!Array.isArray(rows) || rows.length !== 1) {
-      throw new HttpError(404, "Demande introuvable.");
+      throw new HttpError(409, "Demande déjà acceptée ou introuvable.");
     }
     return response.status(200).json({ request: rows[0] });
   } catch (error) {

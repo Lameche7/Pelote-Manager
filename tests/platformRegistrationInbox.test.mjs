@@ -33,8 +33,11 @@ test("la console affiche les demandes sans accès direct à la table privée", a
   assert.match(panel, /Accepter/);
   assert.match(panel, /Refuser/);
   assert.match(panel, /Marquer contacté/);
-  assert.match(panel, /ne crée ni club, ni compte, ni abonnement/);
-  assert.match(dashboard, /<PlatformRegistrationRequestsPanel \/>/);
+  assert.match(panel, /aucun abonnement payant ni paiement/);
+  assert.match(
+    dashboard,
+    /<PlatformRegistrationRequestsPanel onClubRegistered=\{loadPlatform\} \/>/,
+  );
   assert.match(sql, /reviewed_by_platform_user_id uuid/);
   assert.match(sql, /revoke all on public\.network_club_registration_requests/);
   assert.doesNotMatch(
@@ -49,9 +52,8 @@ test("une session Supabase UUID valide franchit la vérification serveur", async
     source,
     /\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{12\}/,
   );
-  const { default: handler } = await import(
-    "../api/platform-registration-requests.mjs"
-  );
+  const { default: handler } =
+    await import("../api/platform-registration-requests.mjs");
   const beforeFetch = globalThis.fetch;
   const envKeys = [
     "VITE_PLATFORM_SUPABASE_URL",
@@ -59,7 +61,9 @@ test("une session Supabase UUID valide franchit la vérification serveur", async
     "VITE_SUPABASE_URL",
     "NETWORK_REGISTRATION_SERVICE_ROLE_KEY",
   ];
-  const previous = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+  const previous = Object.fromEntries(
+    envKeys.map((key) => [key, process.env[key]]),
+  );
   process.env.VITE_PLATFORM_SUPABASE_URL = "https://platform.example.test";
   process.env.VITE_PLATFORM_SUPABASE_ANON_KEY = "sb_publishable_test";
   process.env.VITE_SUPABASE_URL = "https://club.example.test";
@@ -80,9 +84,17 @@ test("une session Supabase UUID valide franchit la vérification serveur", async
   };
   const result = { statusCode: 200, body: null, headers: {} };
   const response = {
-    setHeader(key, value) { result.headers[key] = value; },
-    status(code) { result.statusCode = code; return response; },
-    json(payload) { result.body = payload; return response; },
+    setHeader(key, value) {
+      result.headers[key] = value;
+    },
+    status(code) {
+      result.statusCode = code;
+      return response;
+    },
+    json(payload) {
+      result.body = payload;
+      return response;
+    },
   };
   try {
     await handler(
