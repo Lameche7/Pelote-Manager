@@ -8,7 +8,11 @@ type Preparation = {
   prepared_at: string;
 };
 
-export function PlatformFirstAdminDryRunPanel({ clubs }: { clubs: PlatformClub[] }) {
+export function PlatformFirstAdminDryRunPanel({
+  clubs,
+}: {
+  clubs: PlatformClub[];
+}) {
   const [preparations, setPreparations] = useState<Preparation[]>([]);
   const [emailByClub, setEmailByClub] = useState<Record<string, string>>({});
   const [busyClub, setBusyClub] = useState("");
@@ -67,13 +71,16 @@ export function PlatformFirstAdminDryRunPanel({ clubs }: { clubs: PlatformClub[]
   };
 
   return (
-    <section className="platform-card platform-card--wide" id="premier-admin-test">
+    <section
+      className="platform-card platform-card--wide"
+      id="premier-admin-test"
+    >
       <p className="platform-kicker">Avant l'activation</p>
       <h2>Premier administrateur — simulation</h2>
       <p>
-        Préparez l'identité du premier administrateur d'un club fictif.
-        Cette simulation n'envoie aucune invitation et ne crée aucun compte,
-        aucun droit d'administration ni aucune ressource technique.
+        Préparez l'identité du premier administrateur d'un club fictif. Cette
+        simulation n'envoie aucune invitation et ne crée aucun compte, aucun
+        droit d'administration ni aucune ressource technique.
       </p>
       <p>
         Pour les clubs réels, le rattachement de l'administrateur nécessitera
@@ -95,7 +102,9 @@ export function PlatformFirstAdminDryRunPanel({ clubs }: { clubs: PlatformClub[]
       ) : (
         <div className="platform-club-list">
           {testClubs.map((club) => {
-            const prepared = preparations.find((item) => item.club_id === club.id);
+            const prepared = preparations.find(
+              (item) => item.club_id === club.id,
+            );
             return (
               <div className="platform-club" key={club.id}>
                 <h3>{club.name}</h3>
