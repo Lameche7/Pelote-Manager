@@ -77,7 +77,7 @@ async function querySource(env, endpoint, init = {}, fetchImpl = fetch) {
 function buildClubSlug(name, requestId) {
   const base = name
     .normalize("NFD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/\p{M}/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
