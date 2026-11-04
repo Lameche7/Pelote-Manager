@@ -1,7 +1,8 @@
 // Server-only bridge between the independent platform and club Supabase projects.
 // A centrally authenticated super admin can review onboarding requests without
 // exposing the club project's service-role key to the browser.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATUSES = new Set(["pending", "contacted", "approved", "rejected"]);
 const COLUMNS =
   "id,club_name,city,contact_name,contact_email,contact_phone,requested_plan,status,created_at,reviewed_at";
@@ -15,7 +16,8 @@ class HttpError extends Error {
 
 function requiredEnv(env, key) {
   const value = env[key]?.trim();
-  if (!value) throw new HttpError(503, "Service des candidatures non configuré.");
+  if (!value)
+    throw new HttpError(503, "Service des candidatures non configuré.");
   return value;
 }
 
@@ -117,8 +119,7 @@ export default async function handler(request, response) {
         body: JSON.stringify({
           status,
           reviewed_at: status === "pending" ? null : new Date().toISOString(),
-          reviewed_by_platform_user_id:
-            status === "pending" ? null : actorId,
+          reviewed_by_platform_user_id: status === "pending" ? null : actorId,
         }),
       },
     );
