@@ -9,6 +9,7 @@ export const PLATFORM_INSTALLATION_BUNDLE = Object.freeze({
     "supabase/platform/migrations/20260805020000_add_live_execution_confirmations.sql",
     "supabase/platform/migrations/20260805030000_add_simulation_worker_claim.sql",
     "supabase/platform/migrations/20261104205000_register_network_applications.sql",
+    "supabase/platform/migrations/20261104213000_first_admin_dry_run.sql",
   ]),
   bootstrap: "supabase/platform/bootstrap/01_attach_first_platform_admin.sql",
   runbook: "docs/runbooks/PLATFORM_CENTRAL_INSTALLATION.md",
