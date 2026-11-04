@@ -33,8 +33,8 @@ test("la console affiche les demandes sans accès direct à la table privée", a
   assert.match(panel, /Accepter/);
   assert.match(panel, /Refuser/);
   assert.match(panel, /Marquer contacté/);
-  assert.match(panel, /ne crée ni club, ni compte, ni abonnement/);
-  assert.match(dashboard, /<PlatformRegistrationRequestsPanel \/>/);
+  assert.match(panel, /aucun abonnement payant ni paiement/);
+  assert.match(dashboard, /<PlatformRegistrationRequestsPanel onClubRegistered=\{loadPlatform\} \/>/);
   assert.match(sql, /reviewed_by_platform_user_id uuid/);
   assert.match(sql, /revoke all on public\.network_club_registration_requests/);
   assert.doesNotMatch(
