@@ -8,6 +8,7 @@ import {
 import { usePlatformAuth } from "../auth/usePlatformAuth";
 import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
+import { PlatformFirstAdminDryRunPanel } from "../components/PlatformFirstAdminDryRunPanel";
 import { PlatformLiveExecutionConfirmationPanel } from "../components/PlatformLiveExecutionConfirmationPanel";
 import { PlatformRegistrationRequestsPanel } from "../components/PlatformRegistrationRequestsPanel";
 import {
@@ -325,6 +326,8 @@ export function PlatformDashboardPage() {
       </section>
 
       <PlatformRegistrationRequestsPanel onClubRegistered={loadPlatform} />
+
+      <PlatformFirstAdminDryRunPanel clubs={clubs} />
 
       <PlatformBudgetForecastPanel clubs={clubs} plans={costPlans} />
 
