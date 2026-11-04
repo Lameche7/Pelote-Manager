@@ -1,7 +1,8 @@
 // Server-only bridge between the independent platform and club Supabase projects.
 // A centrally authenticated super admin can review onboarding requests without
 // exposing the club project's service-role key to the browser.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATUSES = new Set(["pending", "contacted", "approved", "rejected"]);
 const COLUMNS =
   "id,club_name,city,contact_name,contact_email,contact_phone,requested_plan,status,created_at,reviewed_at";
