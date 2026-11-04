@@ -3,7 +3,12 @@ import { requirePlatformSupabase } from "@/infrastructure/platform/platformClien
 export type PlatformClubStatus =
   "provisioning" | "trial" | "active" | "suspended" | "cancelled";
 
-export type PlatformSubscriptionPlan = "standard" | "premium" | "custom";
+export type PlatformSubscriptionPlan =
+  | "essentiel"
+  | "club"
+  | "premium"
+  | "standard"
+  | "custom";
 
 export type PlatformProvisioningStatus =
   | "pending"
