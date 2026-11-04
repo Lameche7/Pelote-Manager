@@ -19,6 +19,8 @@ test("la console affiche les demandes sans accès direct à la table privée", a
   assert.match(api, /\/auth\/v1\/user/);
   assert.match(api, /\/rest\/v1\/rpc\/platform_is_admin/);
   assert.match(api, /NETWORK_REGISTRATION_SERVICE_ROLE_KEY/);
+  assert.match(api, /apikey: serviceKey/);
+  assert.doesNotMatch(api, /authorization: `Bearer \\$\{serviceKey\}`/);
   assert.match(
     api,
     /response\.setHeader\("cache-control", "no-store, private"\)/,
