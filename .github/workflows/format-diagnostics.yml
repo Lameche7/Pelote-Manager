@@ -43,5 +43,10 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
+      - name: Show exact changes for registration files
+        if: always()
+        run: |
+          npx prettier --write src/features/legal/pages/LegalPage.tsx src/features/network/pages/NetworkClubRegistrationPage.tsx src/features/network/pages/NetworkDirectoryPage.css tests/networkClubRegistrationRequests.test.mjs
+          git diff -- src/features/legal/pages/LegalPage.tsx src/features/network/pages/NetworkClubRegistrationPage.tsx src/features/network/pages/NetworkDirectoryPage.css tests/networkClubRegistrationRequests.test.mjs
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
