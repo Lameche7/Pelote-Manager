@@ -106,7 +106,10 @@ async function acceptApplication(env, request, id, actorId) {
     return application;
   }
   if (application.status === "approved") {
-    throw new HttpError(409, "Demande déjà acceptée sans rattachement. Vérification manuelle requise.");
+    throw new HttpError(
+      409,
+      "Demande déjà acceptée sans rattachement. Vérification manuelle requise.",
+    );
   }
   if (!["essentiel", "club", "premium"].includes(application.requested_plan)) {
     throw new HttpError(409, "Formule de la candidature inconnue.");
@@ -165,7 +168,10 @@ async function acceptApplication(env, request, id, actorId) {
     },
   );
   if (!Array.isArray(updated) || updated.length !== 1) {
-    throw new HttpError(409, "Fiche créée, mais état de la candidature modifié. Actualisez.");
+    throw new HttpError(
+      409,
+      "Fiche créée, mais état de la candidature modifié. Actualisez.",
+    );
   }
   return updated[0];
 }
@@ -204,7 +210,12 @@ export default async function handler(request, response) {
     }
 
     if (status === "approved") {
-      const approved = await acceptApplication(process.env, request, id, actorId);
+      const approved = await acceptApplication(
+        process.env,
+        request,
+        id,
+        actorId,
+      );
       return response.status(200).json({ request: approved });
     }
 
