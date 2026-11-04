@@ -32,9 +32,11 @@ const statusLabels: Record<PlatformClubStatus, string> = {
 };
 
 const planLabels: Record<PlatformSubscriptionPlan, string> = {
-  standard: "Standard",
-  premium: "Premium",
-  custom: "Sur mesure",
+  standard: "Standard (historique)",
+  essentiel: "Essentiel · 9,90 €",
+  club: "Club · 14,90 €",
+  premium: "Premium · 19,90 €",
+  custom: "Sur mesure (historique)",
 };
 
 const provisioningStatusLabels: Record<PlatformProvisioningStatus, string> = {
@@ -322,7 +324,7 @@ export function PlatformDashboardPage() {
         </article>
       </section>
 
-      <PlatformRegistrationRequestsPanel />
+      <PlatformRegistrationRequestsPanel onClubRegistered={loadPlatform} />
 
       <PlatformBudgetForecastPanel clubs={clubs} plans={costPlans} />
 
