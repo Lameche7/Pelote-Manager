@@ -63,7 +63,8 @@ async function querySource(env, endpoint, init = {}, fetchImpl = fetch) {
     ...init,
     headers: {
       apikey: serviceKey,
-      authorization: `Bearer ${serviceKey}`,
+      // New sb_secret_* keys are opaque API keys, not JWT bearer tokens.
+      // Supabase maps the apikey header to service_role on the server.
       ...(init.headers ?? {}),
     },
     cache: "no-store",
