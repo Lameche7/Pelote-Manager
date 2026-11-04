@@ -160,7 +160,10 @@ export function NetworkClubRegistrationPage() {
                     />
                   </label>
                 </div>
-                <div className="network-registration__honeypot" aria-hidden="true">
+                <div
+                  className="network-registration__honeypot"
+                  aria-hidden="true"
+                >
                   <label>
                     Site web
                     <input
@@ -185,7 +188,10 @@ export function NetworkClubRegistrationPage() {
                   <span>
                     J'accepte que mes coordonnées soient utilisées pour traiter
                     cette demande et me recontacter. Voir la{" "}
-                    <Link to="/confidentialite">politique de confidentialité</Link>.
+                    <Link to="/confidentialite">
+                      politique de confidentialité
+                    </Link>
+                    .
                   </span>
                 </label>
                 {errorMessage && (
@@ -201,8 +207,8 @@ export function NetworkClubRegistrationPage() {
                   {isSending ? "Enregistrement…" : "Envoyer ma demande"}
                 </button>
                 <p className="network-registration__disclaimer">
-                  Aucun paiement, aucun abonnement et aucune création de club
-                  ne sont déclenchés par cette demande.
+                  Aucun paiement, aucun abonnement et aucune création de club ne
+                  sont déclenchés par cette demande.
                 </p>
               </form>
             </>
