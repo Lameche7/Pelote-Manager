@@ -1,5 +1,6 @@
--- CENTRAL PLATFORM PROJECT ONLY: track the public application of a registered club.
--- This creates a commercial record, never an instance, payment or Auth user.
+-- Base CENTRALE de Pelote Manager uniquement
+-- Register approved public applications as commercial club records only.
+begin;
 alter table public.platform_clubs
   add column if not exists source_registration_request_id uuid;
 create unique index if not exists platform_clubs_registration_source_unique
@@ -88,3 +89,5 @@ revoke all on function public.platform_register_network_application(
 grant execute on function public.platform_register_network_application(
   uuid,text,text,text,text,text
 ) to authenticated;
+
+commit;
