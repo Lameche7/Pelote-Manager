@@ -13,6 +13,7 @@ type RegistrationRequest = {
   status: RegistrationStatus;
   created_at: string;
   reviewed_at: string | null;
+  platform_club_id: string | null;
 };
 
 const labels: Record<RegistrationStatus, string> = {
@@ -48,7 +49,11 @@ async function apiCall<T>(method: "GET" | "POST", body?: unknown): Promise<T> {
   return payload as T;
 }
 
-export function PlatformRegistrationRequestsPanel() {
+export function PlatformRegistrationRequestsPanel({
+  onClubRegistered,
+}: {
+  onClubRegistered?: () => Promise<void>;
+}) {
   const [requests, setRequests] = useState<RegistrationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [changingId, setChangingId] = useState("");
@@ -103,8 +108,11 @@ export function PlatformRegistrationRequestsPanel() {
         items.map((item) => (item.id === request.id ? result.request : item)),
       );
       setMessage(
-        `Statut de ${request.club_name} : ${labels[status].toLowerCase()}.`,
+        status === "approved"
+          ? `Candidature acceptée : fiche commerciale créée pour ${request.club_name}, sans paiement ni provisionnement.`
+          : `Statut de ${request.club_name} : ${labels[status].toLowerCase()}.`,
       );
+      if (status === "approved") await onClubRegistered?.();
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Mise à jour impossible.",
@@ -140,8 +148,9 @@ export function PlatformRegistrationRequestsPanel() {
         </button>
       </div>
       <p className="platform-registration-panel__notice">
-        Accepter une demande signifie uniquement la valider pour le suivi
-        commercial. Cela ne crée ni club, ni compte, ni abonnement, ni paiement.
+        Accepter une demande crée une fiche commerciale dans le registre
+        central des clubs, avec la formule choisie. Aucun compte, aucune
+        instance technique, aucun abonnement payant ni paiement n'est créé.
       </p>
       {error && (
         <p className="platform-message platform-message--error" role="alert">
@@ -211,6 +220,12 @@ export function PlatformRegistrationRequestsPanel() {
                   </a>
                 )}
               </div>
+              {request.platform_club_id && (
+                <p>
+                  Fiche centrale créée · identifiant{" "}
+                  <code>{request.platform_club_id}</code>
+                </p>
+              )}
               <div className="platform-registration-panel__actions">
                 {(
                   ["contacted", "approved", "rejected", "pending"] as const
@@ -219,7 +234,11 @@ export function PlatformRegistrationRequestsPanel() {
                     key={status}
                     className="button button--small button--ghost"
                     type="button"
-                    disabled={Boolean(changingId) || request.status === status}
+                    disabled={
+                      Boolean(changingId) ||
+                      request.status === status ||
+                      request.status === "approved"
+                    }
                     onClick={() => void setStatus(request, status)}
                   >
                     {status === "pending"
@@ -227,7 +246,7 @@ export function PlatformRegistrationRequestsPanel() {
                       : status === "contacted"
                         ? "Marquer contacté"
                         : status === "approved"
-                          ? "Accepter"
+                          ? "Accepter et créer la fiche"
                           : "Refuser"}
                   </button>
                 ))}
