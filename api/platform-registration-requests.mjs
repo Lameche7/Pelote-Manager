@@ -89,7 +89,7 @@ function buildClubSlug(name, requestId) {
 async function acceptApplication(env, request, id, actorId) {
   const platformUrl = requiredEnv(env, "VITE_PLATFORM_SUPABASE_URL");
   const platformKey = requiredEnv(env, "VITE_PLATFORM_SUPABASE_ANON_KEY");
-  const token = request.headers.authorization.match(/^Bearer (\\S+)$/i)?.[1];
+  const token = request.headers.authorization.match(/^Bearer (\S+)$/i)?.[1];
   if (!token) throw new HttpError(401, "Session Super Admin requise.");
 
   // Source data is read from the private DB. Never trust names, plan or email
