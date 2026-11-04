@@ -6,8 +6,12 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("la préparation du premier administrateur est une simulation isolée", async () => {
   const [sql, component, dashboard] = await Promise.all([
-    read("../supabase/platform/migrations/20261104213000_first_admin_dry_run.sql"),
-    read("../src/features/platform/components/PlatformFirstAdminDryRunPanel.tsx"),
+    read(
+      "../supabase/platform/migrations/20261104213000_first_admin_dry_run.sql",
+    ),
+    read(
+      "../src/features/platform/components/PlatformFirstAdminDryRunPanel.tsx",
+    ),
     read("../src/features/platform/pages/PlatformDashboardPage.tsx"),
   ]);
   assert.match(sql, /not public\.is_platform_admin\(\)/);
@@ -18,7 +22,10 @@ test("la préparation du premier administrateur est une simulation isolée", asy
   assert.match(sql, /revoke all on public\.platform_first_admin_dry_runs/);
   assert.match(sql, /platform_prepare_first_admin_dry_run/);
   assert.match(sql, /platform_list_first_admin_dry_runs/);
-  assert.doesNotMatch(sql, /insert into (?:auth\.users|public\.club_memberships)/i);
+  assert.doesNotMatch(
+    sql,
+    /insert into (?:auth\.users|public\.club_memberships)/i,
+  );
   assert.doesNotMatch(sql, /insert into public\.platform_provisioning_jobs/i);
   assert.match(component, /aucune invitation/);
   assert.match(component, /Aucun compte ou accès n'a été créé/);
