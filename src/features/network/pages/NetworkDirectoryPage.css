@@ -620,3 +620,112 @@
     border-radius: 0;
   }
 }
+
+
+/* Public club registration requests, without automatic provisioning. */
+.network-registration {
+  max-width: 850px;
+}
+.network-registration__back {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: #165f46;
+  font-weight: 700;
+  text-decoration: none;
+}
+.network-registration__panel {
+  padding: clamp(24px, 4vw, 44px);
+  background: white;
+  border: 1px solid #dce5df;
+  border-radius: 23px;
+  box-shadow: 0 14px 32px rgba(12, 57, 41, 0.07);
+}
+.network-registration__panel h2 {
+  margin: 8px 0 10px;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+}
+.network-registration__panel > p,
+.network-registration__success p {
+  max-width: 680px;
+  color: #526a5d;
+  line-height: 1.6;
+}
+.network-registration__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 19px;
+  margin-top: 28px;
+}
+.network-registration__fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 700;
+  color: #1c4534;
+}
+.network-registration__fields input,
+.network-registration__fields select {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 13px;
+  border: 1px solid #b8cfc0;
+  border-radius: 10px;
+  background: #fff;
+  color: #18372f;
+  font: inherit;
+}
+.network-registration__fields input:focus-visible,
+.network-registration__fields select:focus-visible {
+  outline: 3px solid #89c9aa;
+  outline-offset: 2px;
+}
+.network-registration__privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 24px 0 16px;
+  line-height: 1.5;
+}
+.network-registration__privacy input {
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.network-registration__privacy a {
+  color: #145d43;
+}
+.network-registration__submit {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.network-registration__submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.network-registration__error {
+  padding: 13px 15px;
+  border-radius: 10px;
+  color: #8b2222;
+  background: #fff1ef;
+}
+.network-registration__disclaimer {
+  color: #657d6f;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.network-registration__honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (max-width: 650px) {
+  .network-registration__fields {
+    grid-template-columns: 1fr;
+  }
+}
