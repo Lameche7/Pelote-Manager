@@ -9,7 +9,10 @@ const file = new URL(
 
 test("reprogrammation admin championnat : notification aux joueurs et arbitre", async () => {
   const sql = await readFile(file, "utf8");
-  assert.match(sql, /after update of starts_at,ends_at,resource_id on public\.reservations/);
+  assert.match(
+    sql,
+    /after update of starts_at,ends_at,resource_id on public\.reservations/,
+  );
   assert.match(sql, /after update of scheduled_on,scheduled_time,venue/);
   assert.match(sql, /championship_team_players/);
   assert.match(sql, /championship_players/);
@@ -19,7 +22,10 @@ test("reprogrammation admin championnat : notification aux joueurs et arbitre", 
   assert.match(sql, /status='published',published_at=now\(\)/);
   assert.match(sql, /recipient_count=recipient_total/);
   assert.match(sql, /new\.starts_at is not distinct from old\.starts_at/);
-  assert.match(sql, /r\.championship_match_id=new\.match_id and r\.status='confirmed'/);
+  assert.match(
+    sql,
+    /r\.championship_match_id=new\.match_id and r\.status='confirmed'/,
+  );
   assert.match(sql, /new\.updated_by is distinct from auth\.uid\(\)/);
   assert.doesNotMatch(sql, /insert into public\.reservations\(/);
 });
