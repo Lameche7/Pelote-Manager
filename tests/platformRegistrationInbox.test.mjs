@@ -7,15 +7,22 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 test("la console affiche les demandes sans accès direct à la table privée", async () => {
   const [api, panel, dashboard, sql] = await Promise.all([
     read("../api/platform-registration-requests.mjs"),
-    read("../src/features/platform/components/PlatformRegistrationRequestsPanel.tsx"),
+    read(
+      "../src/features/platform/components/PlatformRegistrationRequestsPanel.tsx",
+    ),
     read("../src/features/platform/pages/PlatformDashboardPage.tsx"),
-    read("../supabase/migrations/20261104120000_review_network_club_requests.sql"),
+    read(
+      "../supabase/migrations/20261104120000_review_network_club_requests.sql",
+    ),
   ]);
 
   assert.match(api, /\/auth\/v1\/user/);
   assert.match(api, /\/rest\/v1\/rpc\/platform_is_admin/);
   assert.match(api, /NETWORK_REGISTRATION_SERVICE_ROLE_KEY/);
-  assert.match(api, /response\.setHeader\("cache-control", "no-store, private"\)/);
+  assert.match(
+    api,
+    /response\.setHeader\("cache-control", "no-store, private"\)/,
+  );
   assert.match(api, /STATUSES = new Set/);
   assert.match(api, /reviewed_by_platform_user_id/);
   assert.match(api, /Cache|no-store/);
@@ -28,5 +35,8 @@ test("la console affiche les demandes sans accès direct à la table privée", a
   assert.match(dashboard, /<PlatformRegistrationRequestsPanel \/>/);
   assert.match(sql, /reviewed_by_platform_user_id uuid/);
   assert.match(sql, /revoke all on public\.network_club_registration_requests/);
-  assert.doesNotMatch(panel, /service.role|from\("network_club_registration_requests"\)/i);
+  assert.doesNotMatch(
+    panel,
+    /service.role|from\("network_club_registration_requests"\)/i,
+  );
 });
