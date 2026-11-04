@@ -43,10 +43,5 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
-      - name: Print precise inbox formatting changes
-        if: always()
-        run: |
-          npx prettier --write api/platform-registration-requests.mjs src/features/platform/components/PlatformRegistrationRequestsPanel.tsx tests/platformRegistrationInbox.test.mjs
-          git diff -- api/platform-registration-requests.mjs src/features/platform/components/PlatformRegistrationRequestsPanel.tsx tests/platformRegistrationInbox.test.mjs
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
