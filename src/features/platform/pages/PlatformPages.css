@@ -395,3 +395,101 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Private commercial intake dashboard. */
+.platform-registration-panel {
+  width: min(100%, 90rem);
+  margin: 0 auto 1.5rem;
+}
+.platform-registration-panel__heading,
+.platform-registration-panel__item-header,
+.platform-registration-panel__contact,
+.platform-registration-panel__actions,
+.platform-registration-panel__filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.platform-registration-panel__heading h2,
+.platform-registration-panel__item h3 {
+  margin: 0;
+}
+.platform-registration-panel__heading p:last-child {
+  margin: 0.4rem 0 0;
+  color: #60716a;
+}
+.platform-registration-panel__notice {
+  margin: 1.2rem 0;
+  padding: 0.8rem 1rem;
+  color: #645017;
+  border-radius: 0.7rem;
+  background: #fff7dd;
+}
+.platform-registration-panel__filters {
+  justify-content: flex-start;
+  margin: 1rem 0;
+}
+.platform-registration-panel__filters [aria-pressed="true"] {
+  border-color: #2b7859;
+  color: #165b3f;
+  background: #e0f4e8;
+}
+.platform-registration-panel__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 0.9rem;
+}
+.platform-registration-panel__item {
+  min-width: 0;
+  padding: 1.1rem;
+  border: 1px solid #d9e4dc;
+  border-radius: 0.75rem;
+  background: #fcfdfc;
+}
+.platform-registration-panel__item-header {
+  align-items: flex-start;
+}
+.platform-registration-panel__item-header small {
+  color: #6a7770;
+}
+.platform-registration-panel__item p {
+  margin: 0.9rem 0;
+}
+.platform-registration-panel__status {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  background: #fff1bf;
+  color: #73530b;
+}
+.platform-registration-panel__status--contacted {
+  background: #e6f2fc;
+  color: #275478;
+}
+.platform-registration-panel__status--approved {
+  background: #ddf4e7;
+  color: #15583d;
+}
+.platform-registration-panel__status--rejected {
+  background: #fce8e8;
+  color: #82252a;
+}
+.platform-registration-panel__contact {
+  justify-content: flex-start;
+  gap: 0.5rem 1rem;
+  overflow-wrap: anywhere;
+}
+.platform-registration-panel__contact a {
+  color: #145b42;
+}
+.platform-registration-panel__actions {
+  justify-content: flex-start;
+  margin-top: 1rem;
+}
+.platform-registration-panel .platform-message {
+  width: 100%;
+  margin: 1rem 0;
+}
