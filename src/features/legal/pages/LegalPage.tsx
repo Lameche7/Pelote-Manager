@@ -109,6 +109,22 @@ export function PrivacyPage() {
         </p>
       </section>
 
+      <section id="inscription-club">
+        <h2>Demandes d'inscription de nouveaux clubs</h2>
+        <p>
+          Lorsqu'un responsable demande à rejoindre Pilotoki Network, nous
+          recueillons le nom et la commune du club, le nom du contact, son
+          adresse e-mail, son éventuel numéro de téléphone et la formule
+          souhaitée. Ces données servent uniquement à examiner la demande et à
+          recontacter son auteur. Elles ne créent aucun abonnement ou compte.
+        </p>
+        <p>
+          Les demandes sont accessibles uniquement aux personnes habilitées à
+          gérer les inscriptions. Vous pouvez solliciter leur rectification ou
+          suppression au moyen du contact indiqué ci-dessous.
+        </p>
+      </section>
+
       <section id="participations-importees">
         <h2>Pourquoi PILOTOKI peut déjà connaître votre inscription ?</h2>
         <p>

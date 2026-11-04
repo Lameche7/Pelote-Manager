@@ -113,13 +113,21 @@ export function NetworkSubscriptionPage() {
                   <li key={feature}>{feature}</li>
                 ))}
               </ul>
-              <Link to="/reseau/decouvrir" className="network-pricing__explore">
-                Découvrir les fonctionnalités
+              <Link
+                to={`/reseau/inscription?formule=${plan.id}`}
+                className="network-pricing__explore"
+              >
+                Demander cette formule
               </Link>
             </article>
           ))}
         </div>
 
+        <p className="network-pricing__launch-note">
+          Les demandes d'inscription sont ouvertes : notre équipe vous
+          recontactera pour valider votre club. La création des accès et le
+          paiement ne sont pas encore activés.
+        </p>
         <p className="network-pricing__launch-note">
           Tarifs mensuels indicatifs par club, affichés avant le lancement
           commercial. Les modalités TTC/HT seront précisées à l'ouverture. Les
