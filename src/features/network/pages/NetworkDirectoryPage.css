@@ -421,3 +421,203 @@
     max-width: 450px;
   }
 }
+
+
+/* Pilotoki Network subscription plans — responsive public landing page. */
+.network-pricing__heading {
+  max-width: 760px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+.network-pricing__heading h2 {
+  margin: 8px 0 12px;
+  font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+  line-height: 1.16;
+}
+.network-pricing__heading > p:last-child {
+  color: #526a5d;
+  font-size: 1.07rem;
+  line-height: 1.65;
+}
+.network-pricing__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+.network-pricing__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  padding: 32px 26px 26px;
+  border: 1px solid #d4e1d8;
+  border-radius: 22px;
+  background: white;
+  box-shadow: 0 12px 28px rgba(12, 57, 41, 0.06);
+}
+.network-pricing__card--featured {
+  border: 2px solid #17664d;
+  background: linear-gradient(180deg, #eff8f2 0%, #fff 54%);
+  box-shadow: 0 18px 38px rgba(12, 57, 41, 0.13);
+}
+.network-pricing__featured-label {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: #17664d;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+.network-pricing__card-header h3 {
+  margin: 0;
+  font-size: 1.45rem;
+  color: #153e30;
+}
+.network-pricing__description {
+  min-height: 3.1em;
+  margin: 10px 0 15px;
+  color: #577063;
+  line-height: 1.55;
+}
+.network-pricing__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.network-pricing__price strong {
+  font-size: clamp(2rem, 3.6vw, 2.65rem);
+  letter-spacing: -0.05em;
+  color: #0f4734;
+}
+.network-pricing__price span {
+  color: #5b7466;
+}
+.network-pricing__card ul {
+  list-style: none;
+  padding: 20px 0 0;
+  margin: 0;
+  border-top: 1px solid #e1e9e2;
+  display: grid;
+  gap: 14px;
+}
+.network-pricing__card li {
+  position: relative;
+  padding-left: 27px;
+  line-height: 1.45;
+}
+.network-pricing__card li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #16704e;
+  font-weight: 900;
+}
+.network-pricing__explore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 20px;
+  margin-top: auto;
+  border-radius: 12px;
+  background: #17664d;
+  color: white;
+  text-align: center;
+  font-weight: 750;
+  text-decoration: none;
+}
+.network-pricing__explore:hover,
+.network-pricing__explore:focus-visible {
+  background: #0c4735;
+  outline-offset: 3px;
+}
+.network-pricing__launch-note {
+  max-width: 890px;
+  margin: 25px auto 0;
+  padding: 16px 20px;
+  border-radius: 13px;
+  background: #eaf1e9;
+  color: #405f50;
+  line-height: 1.55;
+  text-align: center;
+}
+.network-pricing__comparison {
+  padding-top: 15px;
+}
+.network-pricing__table-scroll {
+  overflow-x: auto;
+  border: 1px solid #dce5df;
+  border-radius: 17px;
+  background: white;
+}
+.network-pricing__table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 570px;
+  text-align: center;
+}
+.network-pricing__table-scroll caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.network-pricing__table-scroll th,
+.network-pricing__table-scroll td {
+  padding: 17px 14px;
+  border-bottom: 1px solid #e4ece5;
+}
+.network-pricing__table-scroll thead th {
+  background: #ecf4ee;
+  color: #123e2c;
+}
+.network-pricing__table-scroll th:first-child {
+  text-align: left;
+}
+.network-pricing__table-scroll tbody tr:last-child th,
+.network-pricing__table-scroll tbody tr:last-child td {
+  border-bottom: 0;
+}
+.network-pricing__yes {
+  color: #166345;
+  font-weight: 750;
+}
+.network-pricing__no {
+  color: #81958a;
+}
+.network-pricing__next {
+  margin-bottom: 60px;
+  text-align: center;
+  border-radius: 20px;
+  background: #eaf3ed;
+}
+.network-pricing__next h2 {
+  font-size: clamp(1.6rem, 3vw, 2rem);
+}
+.network-pricing__next p:not(.network-directory__eyebrow) {
+  max-width: 650px;
+  margin: 14px auto 22px;
+  line-height: 1.6;
+}
+@media (max-width: 850px) {
+  .network-pricing__cards {
+    grid-template-columns: 1fr;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+  .network-pricing__card {
+    padding: 27px 22px;
+  }
+  .network-pricing__description {
+    min-height: 0;
+  }
+  .network-pricing__next {
+    border-radius: 0;
+  }
+}
