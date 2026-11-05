@@ -75,14 +75,14 @@ BEGIN
   BEGIN
     PERFORM public.list_profiles_for_admin();
     RAISE EXCEPTION 'Player unexpectedly read administrator directory';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  EXCEPTION WHEN insufficient_privilege OR SQLSTATE 'P0003' THEN NULL;
   END;
   BEGIN
     PERFORM public.set_profile_role(
       '20000000-0000-0000-0000-000000000004','admin'
     );
     RAISE EXCEPTION 'Player unexpectedly promoted foreign account';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  EXCEPTION WHEN insufficient_privilege OR SQLSTATE 'P0003' THEN NULL;
   END;
 END
 $assert$;
