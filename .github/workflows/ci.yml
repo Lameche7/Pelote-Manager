@@ -107,6 +107,34 @@ jobs:
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261008211000_scope_admin_profiles_to_club.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-cases.sql
 
+  multiclub-isolation:
+    name: Isolation entre clubs (PostgreSQL éphémère)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer la fixture fictive (deux clubs)
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
+      - name: Appliquer la véritable migration des droits multi-club
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261008211000_scope_admin_profiles_to_club.sql
+      - name: Vérifier lecture, écriture et absence d'accès inter-club
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/multiclub-isolation-cases.sql
+
   formatting-user-admin:
     runs-on: ubuntu-latest
     steps:
