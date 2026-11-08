@@ -79,9 +79,14 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
     const size = 2 ** Math.ceil(Math.log2(cutoff));
     const order = seedOrder(size);
     const rankMap = new Map(ranking.map(x => [x.generalRank, x]));
+    // Resolve the current club from the server-side club membership flags, not a hard-coded club name.
+    const currentClubNames = new Set(matches.flatMap(m => [
+      ...(m.team1IsMyClub ? [m.team1ClubName] : []),
+      ...(m.team2IsMyClub ? [m.team2ClubName] : []),
+    ]).filter(Boolean));
     const slot = (rank: number): ProjectedSlot => {
       const team = rankMap.get(rank);
-      return { label: team ? playerNames(team.players, team.teamLabel) : rank <= cutoff ? `Classé n°${rank} à déterminer` : "Exempt", isClub: Boolean(team?.isMyTeam), teamId: team?.teamId };
+      return { label: team ? playerNames(team.players, team.teamLabel) : rank <= cutoff ? `Classé n°${rank} à déterminer` : "Exempt", isClub: Boolean(team && currentClubNames.has(team.clubName)), teamId: team?.teamId };
     };
     // A 48-team qualification has 16 barrages followed by an official 32-team round.
     // Never invent the 64-slot bye arrangement: the imported 16es are authoritative.
