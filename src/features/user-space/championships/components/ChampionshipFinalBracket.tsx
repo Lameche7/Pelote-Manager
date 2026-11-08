@@ -83,6 +83,46 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
       const team = rankMap.get(rank);
       return { label: team ? playerNames(team.players, team.teamLabel) : rank <= cutoff ? `Classé n°${rank} à déterminer` : "Exempt", isClub: Boolean(team?.isMyTeam), teamId: team?.teamId };
     };
+    // A 48-team qualification has 16 barrages followed by an official 32-team round.
+    // Never invent the 64-slot bye arrangement: the imported 16es are authoritative.
+    if (cutoff === 48) {
+      const official16 = matches.filter(m => m.divisionId === divisionId && roundIndex(m.phase) === 2);
+      if (official16.length === 16) {
+        const teamRank = new Map(ranking.map(team => [team.teamId, team.generalRank]));
+        const first = official16.map(m => ({
+          left: { label: playerNames(m.team1Players, m.team1Label), isClub: m.team1IsMyClub, teamId: m.team1Id },
+          right: { label: playerNames(m.team2Players, m.team2Label), isClub: m.team2IsMyClub, teamId: m.team2Id },
+          official: m,
+        })).sort((a, b) => {
+          const rank = (pair: ProjectedMatch) => Math.min(teamRank.get(pair.left.teamId ?? "") ?? 999, teamRank.get(pair.right.teamId ?? "") ?? 999);
+          return rank(a) - rank(b);
+        });
+        const result: { name: string; matches: ProjectedMatch[] }[] = [{ name: "16es de finale", matches: first }];
+        let current: ProjectedMatch[] = first;
+        for (let count = 16; count >= 2; count /= 2) {
+          const next: ProjectedMatch[] = [];
+          for (let i = 0; i < current.length; i += 2) {
+            const winner = (pair: ProjectedMatch, number: number): ProjectedSlot => {
+              const m = pair.official;
+              if (m?.resultSource === "official" && m.officialScoreTeam1 != null && m.officialScoreTeam2 != null && m.officialScoreTeam1 !== m.officialScoreTeam2)
+                return m.officialScoreTeam1 > m.officialScoreTeam2 ? pair.left : pair.right;
+              return { label: `Vainqueur match ${number}`, isClub: false };
+            };
+            next.push({ left: winner(current[i], i + 1), right: winner(current[i + 1], i + 2) });
+          }
+          const name = roundLabel(count);
+          const published = matches.filter(m => m.divisionId === divisionId && roundIndex(m.phase) === roundNames.indexOf(name));
+          for (const pair of next) {
+            const m = published.find(m => pair.left.teamId && pair.right.teamId &&
+              ((m.team1Id === pair.left.teamId && m.team2Id === pair.right.teamId) || (m.team2Id === pair.left.teamId && m.team1Id === pair.right.teamId)));
+            if (m) pair.official = m;
+          }
+          result.push({ name, matches: next });
+          current = next;
+        }
+        return result;
+      }
+    }
     let current: ProjectedMatch[] = [];
     for (let i = 0; i < order.length; i += 2) current.push({ left: slot(order[i]), right: slot(order[i + 1]) });
     const result: { name: string; matches: ProjectedMatch[] }[] = [];
@@ -144,7 +184,7 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
           </button>)}
         </div>)}
       </div>
-      <p className="championship-bracket__hint">Projection calculée à partir du classement général et du nombre de qualifiés. Les matchs non publiés sont indicatifs : barrages, exemptions et éventuelles règles particulières du comité peuvent modifier le tableau.</p>
+      <p className="championship-bracket__hint">Les rencontres publiées sont prioritaires. Les tours suivants sont des projections indicatives : leur ordre peut être ajusté selon le tableau officiel du comité.</p>
       {selected && <div className="championship-bracket__detail" role="region" aria-label="Détail de la rencontre">
         <button type="button" onClick={() => setSelected(null)}>Fermer ×</button>
         <h3>{playerNames(selected.team1Players, selected.team1Label)} – {playerNames(selected.team2Players, selected.team2Label)}</h3>
