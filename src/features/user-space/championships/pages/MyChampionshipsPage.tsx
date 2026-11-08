@@ -3,6 +3,7 @@ import { CalendarDays, RefreshCw, Trophy } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
 import { ChampionshipMatchActionCard } from "@/features/user-space/championships/components/ChampionshipMatchActionCard";
+import { ChampionshipFinalBracket } from "@/features/user-space/championships/components/ChampionshipFinalBracket";
 import { ChampionshipResultsExplorer } from "@/features/user-space/championships/components/ChampionshipResultsExplorer";
 import { ChampionshipStandingsExplorer } from "@/features/user-space/championships/components/ChampionshipStandingsExplorer";
 import {
@@ -367,6 +368,7 @@ export function MyChampionshipsPage() {
                   preferredPoolId={primaryChampionship.poolId}
                   focusDay={focusDay}
                 />
+                <ChampionshipFinalBracket preferredChampionshipId={primaryChampionship.championshipId} preferredDivisionId={primaryChampionship.divisionId} />
                 <ChampionshipStandingsExplorer
                   championshipId={primaryChampionship.championshipId}
                   preferredDivisionId={primaryChampionship.divisionId}
