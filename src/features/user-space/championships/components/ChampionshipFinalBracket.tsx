@@ -15,6 +15,7 @@ const roundIndex = (phase: string) => {
   if (/final/.test(p) && !/phase|poule/.test(p)) return 6;
   return -1;
 };
+const playerNames = (players: string[], fallback: string) => players.length ? players.join(" / ") : fallback;
 const score = (match: ChampionshipBrowserMatch, side: 1 | 2) =>
   (side === 1 ? match.displayedScoreTeam1 : match.displayedScoreTeam2) ?? "—";
 
@@ -61,7 +62,8 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
   const rounds = useMemo(() => roundNames.map((name, index) => ({
     name, matches: matches.filter(m => m.divisionId === divisionId && roundIndex(m.phase) === index)
       .sort((a, b) => (a.theoreticalOn ?? "").localeCompare(b.theoreticalOn ?? "") || a.matchId.localeCompare(b.matchId)),
-  })).filter(r => r.matches.length), [matches, divisionId]);
+  })), [matches, divisionId]);
+  const hasFinals = rounds.some(r => r.matches.length > 0);
 
   return <section className="championship-bracket" aria-label="Tableau des phases finales">
     <header><Trophy aria-hidden="true" /><div><h2>Phases finales</h2><p>Suivez toutes les rencontres de chaque série jusqu’à la finale. Les équipes de votre club sont mises en évidence.</p></div></header>
@@ -69,23 +71,24 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
       <label>Championnat<select value={championshipId} onChange={e => setChampionshipId(e.target.value)}>{catalog.map(c => <option key={c.championshipId} value={c.championshipId}>{c.seasonLabel} · {c.championshipName}</option>)}</select></label>
       <label>Série<select value={divisionId} onChange={e => { setDivisionId(e.target.value); setSelected(null); }}>{championship?.divisions.map(d => <option key={d.id} value={d.id}>{d.name}{championship.myDivisionIds.includes(d.id) ? " · Mon club" : ""}</option>)}</select></label>
     </div>
-    {error ? <p role="alert">{error}</p> : loading ? <p>Chargement du tableau…</p> : rounds.length === 0 ? <p>Le tableau des phases finales n’est pas encore disponible pour cette série.</p> : <>
+    {error ? <p role="alert">{error}</p> : loading ? <p>Chargement du tableau…</p> : !hasFinals ? <p>Le tableau des phases finales n’est pas encore disponible pour cette série.</p> : <>
       <p className="championship-bracket__hint">Faites défiler horizontalement pour parcourir les tours. Touchez une rencontre pour voir son détail.</p>
       <div className="championship-bracket__scroll" tabIndex={0} aria-label="Tableau des tours éliminatoires">
         {rounds.map(round => <div className="championship-bracket__round" key={round.name}>
           <h3>{round.name}</h3>
           {round.matches.map(m => <button type="button" key={m.matchId} className="championship-bracket__match" onClick={() => setSelected(m)} aria-label={m.team1Label + " contre " + m.team2Label}>
-            <span className={m.team1IsMyClub ? "is-club" : ""}><strong>{m.team1Label}</strong><b>{score(m, 1)}</b></span>
-            <span className={m.team2IsMyClub ? "is-club" : ""}><strong>{m.team2Label}</strong><b>{score(m, 2)}</b></span>
+            <span className={m.team1IsMyClub ? "is-club" : ""}><strong>{playerNames(m.team1Players, m.team1Label)}</strong><b>{score(m, 1)}</b></span>
+            <span className={m.team2IsMyClub ? "is-club" : ""}><strong>{playerNames(m.team2Players, m.team2Label)}</strong><b>{score(m, 2)}</b></span>
             <small>{m.effectiveOn ?? m.theoreticalOn ?? "Date à définir"} · {m.resultSource === "official" ? "Officiel" : m.resultSource === "proposed" ? "Proposé" : "À jouer"}</small>
           </button>)}
+          {round.matches.length === 0 && <div className="championship-bracket__pending"><strong>Adversaires à déterminer</strong><span>Tableau officiel non encore publié pour ce tour</span></div>}
         </div>)}
       </div>
-      <p className="championship-bracket__hint">Les rencontres sont regroupées par tour officiel. Les liaisons entre matchs seront tracées lorsque leur correspondance sera confirmée par la source fédérale.</p>
+      <p className="championship-bracket__hint">Les tours à venir sont affichés même lorsque les rencontres ne sont pas encore publiées. Les confrontations futures ne peuvent être confirmées qu’avec le tableau officiel.</p>
       {selected && <div className="championship-bracket__detail" role="region" aria-label="Détail de la rencontre">
         <button type="button" onClick={() => setSelected(null)}>Fermer ×</button>
-        <h3>{selected.team1Label} – {selected.team2Label}</h3>
-        <p>{selected.team1Players.join(" / ") || selected.team1ClubName} contre {selected.team2Players.join(" / ") || selected.team2ClubName}</p>
+        <h3>{playerNames(selected.team1Players, selected.team1Label)} – {playerNames(selected.team2Players, selected.team2Label)}</h3>
+        <p>{selected.team1ClubName} contre {selected.team2ClubName}</p>
         <p>Score : {score(selected, 1)} – {score(selected, 2)} · {selected.resultSource === "official" ? "Résultat officiel" : selected.resultSource === "proposed" ? "Résultat proposé" : "En attente"}</p>
         <p>{selected.effectiveOn ?? selected.theoreticalOn ?? "Date à définir"} {selected.effectiveTime?.slice(0, 5) ?? ""} · {selected.venue ?? "Lieu à définir"}</p>
       </div>}
