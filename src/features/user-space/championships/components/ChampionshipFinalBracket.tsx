@@ -143,7 +143,6 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
             <span className={m.team2IsMyClub ? "is-club" : ""}><strong>{playerNames(m.team2Players, m.team2Label)}</strong><b>{score(m, 2)}</b></span>
           </button>)}
         </div>)}
-      </div>)}
       </div>
       <p className="championship-bracket__hint">Projection calculée à partir du classement général et du nombre de qualifiés. Les matchs non publiés sont indicatifs : barrages, exemptions et éventuelles règles particulières du comité peuvent modifier le tableau.</p>
       {selected && <div className="championship-bracket__detail" role="region" aria-label="Détail de la rencontre">
