@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { championshipResultsService, type ChampionshipBrowserMatch, type ChampionshipResultsCatalogItem } from "@/features/user-space/championships/services/championshipResultsService";
+import { championshipStandingsService, type ChampionshipGeneralStandingBrowserRow } from "@/features/user-space/championships/services/championshipStandingsService";
 import "./ChampionshipFinalBracket.css";
 
 const roundNames = ["Barrage", "32es de finale", "16es de finale", "8es de finale", "Quarts de finale", "Demi-finales", "Finale"];
@@ -16,6 +17,15 @@ const roundIndex = (phase: string) => {
   return -1;
 };
 const playerNames = (players: string[], fallback: string) => players.length ? players.join(" / ") : fallback;
+// Seed positions follow a fixed bracket: 1–32, 16–17, then their winners.
+const seedOrder = (size: number): number[] => {
+  let seeds = [1, 2];
+  for (let n = 4; n <= size; n *= 2) seeds = seeds.flatMap(seed => [seed, n + 1 - seed]);
+  return seeds;
+};
+const roundLabel = (size: number) => size === 64 ? "32es de finale" : size === 32 ? "16es de finale" : size === 16 ? "8es de finale" : size === 8 ? "Quarts de finale" : size === 4 ? "Demi-finales" : "Finale";
+type ProjectedSlot = { label: string; isClub: boolean; teamId?: string };
+type ProjectedMatch = { left: ProjectedSlot; right: ProjectedSlot; official?: ChampionshipBrowserMatch };
 const score = (match: ChampionshipBrowserMatch, side: 1 | 2) =>
   (side === 1 ? match.displayedScoreTeam1 : match.displayedScoreTeam2) ?? "—";
 
@@ -24,6 +34,7 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
   const [championshipId, setChampionshipId] = useState("");
   const [divisionId, setDivisionId] = useState("");
   const [matches, setMatches] = useState<ChampionshipBrowserMatch[]>([]);
+  const [standings, setStandings] = useState<ChampionshipGeneralStandingBrowserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<ChampionshipBrowserMatch | null>(null);
@@ -52,18 +63,62 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
     setLoading(true);
     setError("");
     setMatches([]);
+    setStandings([]);
     setSelected(null);
-    championshipResultsService.listMatches(championshipId).then(items => { if (active) setMatches(items); })
+    Promise.all([championshipResultsService.listMatches(championshipId), championshipStandingsService.listGeneral(championshipId)]).then(([items, ranking]) => { if (active) { setMatches(items); setStandings(ranking); } })
       .catch(e => { if (active) setError(e instanceof Error ? e.message : "Impossible de charger les phases finales."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [championshipId]);
 
+  const projection = useMemo(() => {
+    const ranking = standings.filter(x => x.divisionId === divisionId);
+    const cutoff = ranking[0]?.qualificationCutoff;
+    // No bracket is guessed without an explicitly supplied qualification size.
+    if (!cutoff || !Number.isInteger(cutoff) || cutoff < 2 || cutoff > 64) return null;
+    const size = 2 ** Math.ceil(Math.log2(cutoff));
+    const order = seedOrder(size);
+    const rankMap = new Map(ranking.map(x => [x.generalRank, x]));
+    const slot = (rank: number): ProjectedSlot => {
+      const team = rankMap.get(rank);
+      return { label: team ? playerNames(team.players, team.teamLabel) : rank <= cutoff ? `Classé n°${rank} à déterminer` : "Exempt", isClub: Boolean(team?.isMyTeam), teamId: team?.teamId };
+    };
+    let current: ProjectedMatch[] = [];
+    for (let i = 0; i < order.length; i += 2) current.push({ left: slot(order[i]), right: slot(order[i + 1]) });
+    const result: { name: string; matches: ProjectedMatch[] }[] = [];
+    for (let count = size; count >= 2; count /= 2) {
+      const name = roundLabel(count);
+      const actual = matches.filter(m => m.divisionId === divisionId && roundIndex(m.phase) === roundNames.indexOf(name));
+      const enriched = current.map(pair => {
+        const official = actual.find(m => [pair.left.teamId, pair.right.teamId].every(Boolean) &&
+          ((m.team1Id === pair.left.teamId && m.team2Id === pair.right.teamId) || (m.team2Id === pair.left.teamId && m.team1Id === pair.right.teamId)));
+        return { ...pair, official };
+      });
+      result.push({ name, matches: enriched });
+      if (count === 2) break;
+      current = [];
+      for (let i = 0; i < enriched.length; i += 2) {
+        const a = enriched[i], b = enriched[i + 1];
+        const nextSlot = (pair: ProjectedMatch, index: number): ProjectedSlot => {
+          const scoreA = pair.official?.displayedScoreTeam1, scoreB = pair.official?.displayedScoreTeam2;
+          if (pair.official?.resultSource === "official" && scoreA != null && scoreB != null && scoreA !== scoreB) {
+            const winnerId = scoreA > scoreB ? pair.official.team1Id : pair.official.team2Id;
+            return winnerId === pair.left.teamId ? pair.left : pair.right;
+          }
+          if (pair.right.label === "Exempt") return pair.left;
+          if (pair.left.label === "Exempt") return pair.right;
+          return { label: `Vainqueur match ${index + 1}`, isClub: false };
+        };
+        current.push({ left: nextSlot(a, i), right: nextSlot(b, i + 1) });
+      }
+    }
+    return result;
+  }, [matches, standings, divisionId]);
   const rounds = useMemo(() => roundNames.map((name, index) => ({
     name, matches: matches.filter(m => m.divisionId === divisionId && roundIndex(m.phase) === index)
       .sort((a, b) => (a.theoreticalOn ?? "").localeCompare(b.theoreticalOn ?? "") || a.matchId.localeCompare(b.matchId)),
   })), [matches, divisionId]);
-  const hasFinals = rounds.some(r => r.matches.length > 0);
+  const hasFinals = Boolean(projection) || rounds.some(r => r.matches.length > 0);
 
   return <section className="championship-bracket" aria-label="Tableau des phases finales">
     <header><Trophy aria-hidden="true" /><div><h2>Phases finales</h2><p>Suivez toutes les rencontres de chaque série jusqu’à la finale. Les équipes de votre club sont mises en évidence.</p></div></header>
@@ -74,17 +129,22 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
     {error ? <p role="alert">{error}</p> : loading ? <p>Chargement du tableau…</p> : !hasFinals ? <p>Le tableau des phases finales n’est pas encore disponible pour cette série.</p> : <>
       <p className="championship-bracket__hint">Faites défiler horizontalement pour parcourir les tours. Touchez une rencontre pour voir son détail.</p>
       <div className="championship-bracket__scroll" tabIndex={0} aria-label="Tableau des tours éliminatoires">
-        {rounds.map(round => <div className="championship-bracket__round" key={round.name}>
+        {projection ? projection.map(round => <div className="championship-bracket__round" key={round.name}>
           <h3>{round.name}</h3>
-          {round.matches.map(m => <button type="button" key={m.matchId} className="championship-bracket__match" onClick={() => setSelected(m)} aria-label={m.team1Label + " contre " + m.team2Label}>
+          {round.matches.map((pair, index) => <button type="button" key={index} className="championship-bracket__match" disabled={!pair.official} onClick={() => pair.official && setSelected(pair.official)} aria-label={pair.left.label + " contre " + pair.right.label}>
+            <span className={pair.left.isClub ? "is-club" : ""}><strong>{pair.left.label}</strong><b>{pair.official ? score(pair.official, pair.official.team1Id === pair.left.teamId ? 1 : 2) : "—"}</b></span>
+            <span className={pair.right.isClub ? "is-club" : ""}><strong>{pair.right.label}</strong><b>{pair.official ? score(pair.official, pair.official.team1Id === pair.right.teamId ? 1 : 2) : "—"}</b></span>
+            <small>{pair.official ? (pair.official.effectiveOn ?? pair.official.theoreticalOn ?? "Date à définir") : "Projection selon classement"}</small>
+          </button>)}
+        </div>) : rounds.map(round => <div className="championship-bracket__round" key={round.name}>
+          <h3>{round.name}</h3>
+          {round.matches.map(m => <button type="button" key={m.matchId} className="championship-bracket__match" onClick={() => setSelected(m)}>
             <span className={m.team1IsMyClub ? "is-club" : ""}><strong>{playerNames(m.team1Players, m.team1Label)}</strong><b>{score(m, 1)}</b></span>
             <span className={m.team2IsMyClub ? "is-club" : ""}><strong>{playerNames(m.team2Players, m.team2Label)}</strong><b>{score(m, 2)}</b></span>
-            <small>{m.effectiveOn ?? m.theoreticalOn ?? "Date à définir"} · {m.resultSource === "official" ? "Officiel" : m.resultSource === "proposed" ? "Proposé" : "À jouer"}</small>
           </button>)}
-          {round.matches.length === 0 && <div className="championship-bracket__pending"><strong>Adversaires à déterminer</strong><span>Tableau officiel non encore publié pour ce tour</span></div>}
         </div>)}
       </div>
-      <p className="championship-bracket__hint">Les tours à venir sont affichés même lorsque les rencontres ne sont pas encore publiées. Les confrontations futures ne peuvent être confirmées qu’avec le tableau officiel.</p>
+      <p className="championship-bracket__hint">Projection calculée à partir du classement général et du nombre de qualifiés. Les matchs non publiés sont indicatifs : barrages, exemptions et éventuelles règles particulières du comité peuvent modifier le tableau.</p>
       {selected && <div className="championship-bracket__detail" role="region" aria-label="Détail de la rencontre">
         <button type="button" onClick={() => setSelected(null)}>Fermer ×</button>
         <h3>{playerNames(selected.team1Players, selected.team1Label)} – {playerNames(selected.team2Players, selected.team2Label)}</h3>
