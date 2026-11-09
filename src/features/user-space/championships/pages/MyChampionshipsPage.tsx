@@ -368,7 +368,10 @@ export function MyChampionshipsPage() {
                   preferredPoolId={primaryChampionship.poolId}
                   focusDay={focusDay}
                 />
-                <ChampionshipFinalBracket preferredChampionshipId={primaryChampionship.championshipId} preferredDivisionId={primaryChampionship.divisionId} />
+                <ChampionshipFinalBracket
+                  preferredChampionshipId={primaryChampionship.championshipId}
+                  preferredDivisionId={primaryChampionship.divisionId}
+                />
                 <ChampionshipStandingsExplorer
                   championshipId={primaryChampionship.championshipId}
                   preferredDivisionId={primaryChampionship.divisionId}
