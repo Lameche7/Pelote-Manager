@@ -35,3 +35,18 @@ export function firstSeriesRankingIsComplete(ranking) {
     ranking.every((team) => team.generalRank >= 1 && team.generalRank <= 15)
   );
 }
+
+/**
+ * The first round internally has eight slots (four byes + four matches).
+ * Its internal slot numbering MUST NOT be presented as the visible
+ * eighth-final match numbering. State the seeded pairing explicitly.
+ */
+export function firstSeriesEighthWinnerLabel(firstRoundPairIndex) {
+  const pairings = {
+    2: "Vainqueur 8e–9e",
+    6: "Vainqueur 5e–12e",
+    10: "Vainqueur 7e–10e",
+    14: "Vainqueur 6e–11e",
+  };
+  return pairings[firstRoundPairIndex] ?? null;
+}
