@@ -13,6 +13,11 @@ import {
   seedOrder,
   orderRoundOf32MatchesBySeed,
 } from "../domain/officialSeedBracket.mjs";
+import {
+  firstSeries2027Weekends,
+  isFirstSeries2027,
+  openingRoundMatches,
+} from "../domain/firstSeries2027Rules.mjs";
 import "./ChampionshipFinalBracket.css";
 
 const roundNames = [
@@ -157,6 +162,22 @@ export function ChampionshipFinalBracket({
     };
   }, [championshipId]);
 
+  const isFirstSeries = isFirstSeries2027(
+    championship,
+    championship?.divisions.find((division) => division.id === divisionId)?.name ??
+      "",
+  );
+  const firstSeriesNationalBTeams = isFirstSeries
+    ? standings
+        .filter(
+          (team) =>
+            team.divisionId === divisionId &&
+            team.generalRank >= 9 &&
+            team.generalRank <= 12,
+        )
+        .sort((a, b) => a.generalRank - b.generalRank)
+    : [];
+
   const projection = useMemo(() => {
     const ranking = standings.filter((x) => x.divisionId === divisionId);
     const cutoff = ranking[0]?.qualificationCutoff;
@@ -294,7 +315,10 @@ export function ChampionshipFinalBracket({
         );
         return { ...pair, official };
       });
-      result.push({ name, matches: enriched });
+      result.push({
+        name,
+        matches: openingRoundMatches(cutoff, count, enriched),
+      });
       if (count === 2) break;
       current = [];
       for (let i = 0; i < enriched.length; i += 2) {
@@ -402,6 +426,18 @@ export function ChampionshipFinalBracket({
         </p>
       ) : (
         <>
+          {isFirstSeries && (
+            <div className="championship-bracket__regulation">
+              <strong>1ère série · Championnat du Béarn 2026–2027</strong>
+              <p>
+                15 équipes en 3 poules de 5. Après le classement général du 9
+                novembre : les rangs 1 à 4 vont directement en quarts. Les
+                rangs 5 à 12 jouent quatre huitièmes (5–12, 6–11, 7–10,
+                8–9). Les rencontres restent des projections tant que le
+                comité ne les a pas publiées.
+              </p>
+            </div>
+          )}
           <p className="championship-bracket__hint">
             Faites défiler horizontalement pour parcourir les tours. Touchez une
             rencontre pour voir son détail.
@@ -415,6 +451,12 @@ export function ChampionshipFinalBracket({
               ? projection.map((round) => (
                   <div className="championship-bracket__round" key={round.name}>
                     <h3>{round.name}</h3>
+                    {isFirstSeries &&
+                      firstSeries2027Weekends[round.name] && (
+                        <p className="championship-bracket__hint">
+                          Week-end prévu : {firstSeries2027Weekends[round.name]}
+                        </p>
+                      )}
                     {round.matches.map((pair, index) => (
                       <button
                         type="button"
@@ -492,6 +534,28 @@ export function ChampionshipFinalBracket({
                   </div>
                 ))}
           </div>
+          {isFirstSeries && (
+            <div className="championship-bracket__regulation">
+              <strong>Barrages Nationale B — compétition distincte</strong>
+              <p>
+                Les équipes classées 9e à 12e disputent deux tours de barrage
+                les week-ends des quarts et demi-finales du Béarn (21–22 et
+                28–29 novembre). Le règlement fourni ne précise pas les
+                croisements : aucun adversaire n'est inventé dans ce tableau.
+              </p>
+              <p>
+                Équipes concernées :{" "}
+                {firstSeriesNationalBTeams.length === 4
+                  ? firstSeriesNationalBTeams
+                      .map(
+                        (team) =>
+                          `${team.generalRank}e : ${playerNames(team.players, team.teamLabel)}`,
+                      )
+                      .join(" · ")
+                  : "Classement général à confirmer"}.
+              </p>
+            </div>
+          )}
           <p className="championship-bracket__hint">
             Les rencontres publiées sont prioritaires. Les tours suivants sont
             des projections indicatives : leur ordre peut être ajusté selon le
