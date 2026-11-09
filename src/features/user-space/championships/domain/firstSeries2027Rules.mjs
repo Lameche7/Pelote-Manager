@@ -24,3 +24,14 @@ export function openingRoundMatches(cutoff, size, matches) {
   }
   return matches;
 }
+
+export function firstSeriesRankingIsComplete(ranking) {
+  // 15 teams, three pools of five playing each other once: four matches each.
+  // A partially synchronized ranking must never assign direct quarter-final byes.
+  return (
+    ranking.length === 15 &&
+    ranking.every((team) => team.played === 4) &&
+    new Set(ranking.map((team) => team.generalRank)).size === 15 &&
+    ranking.every((team) => team.generalRank >= 1 && team.generalRank <= 15)
+  );
+}
