@@ -4,6 +4,7 @@ import test from "node:test";
 import { seedOrder } from "../src/features/user-space/championships/domain/officialSeedBracket.mjs";
 import {
   firstSeries2027Weekends,
+  firstSeriesEighthWinnerLabel,
   firstSeriesRankingIsComplete,
   isFirstSeries2027,
   openingRoundMatches,
@@ -108,4 +109,36 @@ test("la projection ne doit pas faire monter en quarts une équipe à partir d'u
   assert.match(source, /if \(incompleteFirstSeriesRanking\) return null/);
   assert.match(source, /Classement général incomplet/);
   assert.match(source, /firstSeriesRankingIsComplete/);
+});
+
+test("les quatre quarts de 1re série annoncent le bon vainqueur des 8es", () => {
+  const order = seedOrder(16);
+  const firstRound = [];
+  for (let i = 0; i < order.length; i += 2) {
+    firstRound.push([order[i], order[i + 1]]);
+  }
+  const quarterFinals = [];
+  for (let i = 0; i < firstRound.length; i += 2) {
+    const seed = firstRound[i][0];
+    const winner = firstSeriesEighthWinnerLabel(i * 2 + 2);
+    quarterFinals.push([seed, winner]);
+  }
+  assert.deepEqual(quarterFinals, [
+    [1, "Vainqueur 8e–9e"],
+    [4, "Vainqueur 5e–12e"],
+    [2, "Vainqueur 7e–10e"],
+    [3, "Vainqueur 6e–11e"],
+  ]);
+  assert.equal(firstSeriesEighthWinnerLabel(4), null);
+});
+
+test("les mentions des quarts utilisent les rangs et non les numéros des cases masquées", async () => {
+  const source = await readFile(
+    new URL(
+      "../src/features/user-space/championships/components/ChampionshipFinalBracket.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(source, /firstSeriesEighthWinnerLabel\(index\)/);
 });
