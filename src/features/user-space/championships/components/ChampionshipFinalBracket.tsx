@@ -362,7 +362,13 @@ export function ChampionshipFinalBracket({
       }
     }
     return result;
-  }, [matches, standings, divisionId, incompleteFirstSeriesRanking, isFirstSeries]);
+  }, [
+    matches,
+    standings,
+    divisionId,
+    incompleteFirstSeriesRanking,
+    isFirstSeries,
+  ]);
   const rounds = useMemo(
     () =>
       roundNames.map((name, index) => ({
