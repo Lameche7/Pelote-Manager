@@ -12,3 +12,7 @@ export function openingRoundMatches<
 export function firstSeriesRankingIsComplete(
   ranking: readonly { generalRank: number; played: number }[],
 ): boolean;
+
+export function firstSeriesEighthWinnerLabel(
+  firstRoundPairIndex: number,
+): string | null;

@@ -15,6 +15,7 @@ import {
 } from "../domain/officialSeedBracket.mjs";
 import {
   firstSeries2027Weekends,
+  firstSeriesEighthWinnerLabel,
   firstSeriesRankingIsComplete,
   isFirstSeries2027,
   openingRoundMatches,
@@ -349,13 +350,25 @@ export function ChampionshipFinalBracket({
           }
           if (pair.right.label === "Exempt") return pair.left;
           if (pair.left.label === "Exempt") return pair.right;
-          return { label: `Vainqueur match ${index + 1}`, isClub: false };
+          return {
+            label:
+              (isFirstSeries && count === 16
+                ? firstSeriesEighthWinnerLabel(index)
+                : null) ?? `Vainqueur match ${index + 1}`,
+            isClub: false,
+          };
         };
         current.push({ left: nextSlot(a, i), right: nextSlot(b, i + 1) });
       }
     }
     return result;
-  }, [matches, standings, divisionId, incompleteFirstSeriesRanking]);
+  }, [
+    matches,
+    standings,
+    divisionId,
+    incompleteFirstSeriesRanking,
+    isFirstSeries,
+  ]);
   const rounds = useMemo(
     () =>
       roundNames.map((name, index) => ({
