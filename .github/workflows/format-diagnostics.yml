@@ -43,10 +43,5 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
-      - name: Show first-series quarter labels format diff
-        if: always()
-        run: |
-          npx prettier --write src/features/user-space/championships/components/ChampionshipFinalBracket.tsx src/features/user-space/championships/domain/firstSeries2027Rules.d.mts
-          git diff -- src/features/user-space/championships/components/ChampionshipFinalBracket.tsx src/features/user-space/championships/domain/firstSeries2027Rules.d.mts
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
