@@ -9,3 +9,6 @@ export function openingRoundMatches<
     right: { label: string };
   },
 >(cutoff: number, size: number, matches: T[]): T[];
+export function firstSeriesRankingIsComplete(
+  ranking: readonly { generalRank: number; played: number }[],
+): boolean;
