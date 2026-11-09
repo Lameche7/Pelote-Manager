@@ -43,5 +43,10 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
+      - name: Show first-series bracket format diff
+        if: always()
+        run: |
+          npx prettier --write src/features/user-space/championships/components/ChampionshipFinalBracket.tsx src/features/user-space/championships/domain/firstSeries2027Rules.d.mts tests/championshipFirstSeries2027.test.mjs
+          git diff -- src/features/user-space/championships/components/ChampionshipFinalBracket.tsx src/features/user-space/championships/domain/firstSeries2027Rules.d.mts tests/championshipFirstSeries2027.test.mjs
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
