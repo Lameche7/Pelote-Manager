@@ -15,6 +15,7 @@ import {
 } from "../domain/officialSeedBracket.mjs";
 import {
   firstSeries2027Weekends,
+  firstSeriesRankingIsComplete,
   isFirstSeries2027,
   openingRoundMatches,
 } from "../domain/firstSeries2027Rules.mjs";
@@ -167,6 +168,11 @@ export function ChampionshipFinalBracket({
     championship?.divisions.find((division) => division.id === divisionId)
       ?.name ?? "",
   );
+  const firstSeriesRanking = standings.filter(
+    (team) => team.divisionId === divisionId,
+  );
+  const incompleteFirstSeriesRanking =
+    isFirstSeries && !firstSeriesRankingIsComplete(firstSeriesRanking);
   const firstSeriesNationalBTeams = isFirstSeries
     ? standings
         .filter(
@@ -180,6 +186,7 @@ export function ChampionshipFinalBracket({
 
   const projection = useMemo(() => {
     const ranking = standings.filter((x) => x.divisionId === divisionId);
+    if (incompleteFirstSeriesRanking) return null;
     const cutoff = ranking[0]?.qualificationCutoff;
     // No bracket is guessed without an explicitly supplied qualification size.
     if (!cutoff || !Number.isInteger(cutoff) || cutoff < 2 || cutoff > 64)
@@ -348,7 +355,7 @@ export function ChampionshipFinalBracket({
       }
     }
     return result;
-  }, [matches, standings, divisionId]);
+  }, [matches, standings, divisionId, incompleteFirstSeriesRanking]);
   const rounds = useMemo(
     () =>
       roundNames.map((name, index) => ({
@@ -419,6 +426,19 @@ export function ChampionshipFinalBracket({
         <p role="alert">{error}</p>
       ) : loading ? (
         <p>Chargement du tableau…</p>
+      ) : incompleteFirstSeriesRanking ? (
+        <div className="championship-bracket__regulation" role="status">
+          <strong>
+            Classement général incomplet — qualification suspendue
+          </strong>
+          <p>
+            La 1re série nécessite les 15 équipes classées après quatre parties
+            chacune. Pilotoki n'a actuellement que {firstSeriesRanking.length}
+            équipes classées. Les quatre qualifiés directement en quarts et les
+            huitièmes ne sont pas affichés pour éviter de présenter de mauvais
+            adversaires. Relancez l'import du classement officiel du comité.
+          </p>
+        </div>
       ) : !hasFinals ? (
         <p>
           Le tableau des phases finales n’est pas encore disponible pour cette

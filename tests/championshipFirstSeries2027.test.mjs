@@ -4,6 +4,7 @@ import test from "node:test";
 import { seedOrder } from "../src/features/user-space/championships/domain/officialSeedBracket.mjs";
 import {
   firstSeries2027Weekends,
+  firstSeriesRankingIsComplete,
   isFirstSeries2027,
   openingRoundMatches,
 } from "../src/features/user-space/championships/domain/firstSeries2027Rules.mjs";
@@ -69,4 +70,42 @@ test("calendrier prévisionnel et finale à Morlaàs, barrages B séparés", asy
   assert.match(bracket, /B arrages Nationale B|Barrages Nationale B/);
   assert.match(bracket, /9e à 12e/);
   assert.match(bracket, /isFirstSeries &&/);
+});
+
+test("les rangs de qualification sont suspendus quand le classement FFPB est partiel", () => {
+  const complete = Array.from({ length: 15 }, (_, index) => ({
+    generalRank: index + 1,
+    played: 4,
+  }));
+  assert.equal(firstSeriesRankingIsComplete(complete), true);
+  assert.equal(firstSeriesRankingIsComplete(complete.slice(0, 14)), false);
+  assert.equal(
+    firstSeriesRankingIsComplete(
+      complete.map((team) =>
+        team.generalRank === 2 ? { ...team, played: 2 } : team,
+      ),
+    ),
+    false,
+  );
+  assert.equal(
+    firstSeriesRankingIsComplete(
+      complete.map((team) =>
+        team.generalRank === 2 ? { ...team, generalRank: 1 } : team,
+      ),
+    ),
+    false,
+  );
+});
+
+test("la projection ne doit pas faire monter en quarts une équipe à partir d'un classement incomplet", async () => {
+  const source = await readFile(
+    new URL(
+      "../src/features/user-space/championships/components/ChampionshipFinalBracket.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(source, /if \(incompleteFirstSeriesRanking\) return null/);
+  assert.match(source, /Classement général incomplet/);
+  assert.match(source, /firstSeriesRankingIsComplete/);
 });
