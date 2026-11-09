@@ -428,7 +428,9 @@ export function ChampionshipFinalBracket({
         <p>Chargement du tableau…</p>
       ) : incompleteFirstSeriesRanking ? (
         <div className="championship-bracket__regulation" role="status">
-          <strong>Classement général incomplet — qualification suspendue</strong>
+          <strong>
+            Classement général incomplet — qualification suspendue
+          </strong>
           <p>
             La 1re série nécessite les 15 équipes classées après quatre parties
             chacune. Pilotoki n'a actuellement que {firstSeriesRanking.length}
