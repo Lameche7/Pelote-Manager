@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { championshipResultsService, type ChampionshipBrowserMatch, type ChampionshipResultsCatalogItem } from "@/features/user-space/championships/services/championshipResultsService";
 import { championshipStandingsService, type ChampionshipGeneralStandingBrowserRow } from "@/features/user-space/championships/services/championshipStandingsService";
+import { seedOrder, orderRoundOf32MatchesBySeed } from "../domain/officialSeedBracket.mjs";
 import "./ChampionshipFinalBracket.css";
 
 const roundNames = ["Barrage", "32es de finale", "16es de finale", "8es de finale", "Quarts de finale", "Demi-finales", "Finale"];
@@ -17,12 +18,6 @@ const roundIndex = (phase: string) => {
   return -1;
 };
 const playerNames = (players: string[], fallback: string) => players.length ? players.join(" / ") : fallback;
-// Seed positions follow a fixed bracket: 1–32, 16–17, then their winners.
-const seedOrder = (size: number): number[] => {
-  let seeds = [1, 2];
-  for (let n = 4; n <= size; n *= 2) seeds = seeds.flatMap(seed => [seed, n + 1 - seed]);
-  return seeds;
-};
 const roundLabel = (size: number) => size === 64 ? "32es de finale" : size === 32 ? "16es de finale" : size === 16 ? "8es de finale" : size === 8 ? "Quarts de finale" : size === 4 ? "Demi-finales" : "Finale";
 type ProjectedSlot = { label: string; isClub: boolean; teamId?: string };
 type ProjectedMatch = { left: ProjectedSlot; right: ProjectedSlot; official?: ChampionshipBrowserMatch };
@@ -94,14 +89,14 @@ export function ChampionshipFinalBracket({ preferredChampionshipId, preferredDiv
       const official16 = matches.filter(m => m.divisionId === divisionId && roundIndex(m.phase) === 2);
       if (official16.length === 16) {
         const teamRank = new Map(ranking.map(team => [team.teamId, team.generalRank]));
-        const first = official16.map(m => ({
+        // These 16 fixtures correspond to ranks 1–16 against the winners
+        // of the 16 barrages. The next tour crosses branch 1 with branch 16,
+        // branch 8 with 9, etc. Ascending-rank sorting would wrongly pair 1–2.
+        const first = orderRoundOf32MatchesBySeed(official16.map(m => ({
           left: { label: playerNames(m.team1Players, m.team1Label), isClub: m.team1IsMyClub, teamId: m.team1Id },
           right: { label: playerNames(m.team2Players, m.team2Label), isClub: m.team2IsMyClub, teamId: m.team2Id },
           official: m,
-        })).sort((a, b) => {
-          const rank = (pair: ProjectedMatch) => Math.min(teamRank.get(pair.left.teamId ?? "") ?? 999, teamRank.get(pair.right.teamId ?? "") ?? 999);
-          return rank(a) - rank(b);
-        });
+        })), pair => Math.min(teamRank.get(pair.left.teamId ?? "") ?? 999, teamRank.get(pair.right.teamId ?? "") ?? 999));
         const result: { name: string; matches: ProjectedMatch[] }[] = [{ name: "16es de finale", matches: first }];
         let current: ProjectedMatch[] = first;
         for (let count = 16; count >= 2; count /= 2) {
