@@ -164,8 +164,8 @@ export function ChampionshipFinalBracket({
 
   const isFirstSeries = isFirstSeries2027(
     championship,
-    championship?.divisions.find((division) => division.id === divisionId)?.name ??
-      "",
+    championship?.divisions.find((division) => division.id === divisionId)
+      ?.name ?? "",
   );
   const firstSeriesNationalBTeams = isFirstSeries
     ? standings
@@ -431,10 +431,10 @@ export function ChampionshipFinalBracket({
               <strong>1ère série · Championnat du Béarn 2026–2027</strong>
               <p>
                 15 équipes en 3 poules de 5. Après le classement général du 9
-                novembre : les rangs 1 à 4 vont directement en quarts. Les
-                rangs 5 à 12 jouent quatre huitièmes (5–12, 6–11, 7–10,
-                8–9). Les rencontres restent des projections tant que le
-                comité ne les a pas publiées.
+                novembre : les rangs 1 à 4 vont directement en quarts. Les rangs
+                5 à 12 jouent quatre huitièmes (5–12, 6–11, 7–10, 8–9). Les
+                rencontres restent des projections tant que le comité ne les a
+                pas publiées.
               </p>
             </div>
           )}
@@ -451,12 +451,11 @@ export function ChampionshipFinalBracket({
               ? projection.map((round) => (
                   <div className="championship-bracket__round" key={round.name}>
                     <h3>{round.name}</h3>
-                    {isFirstSeries &&
-                      firstSeries2027Weekends[round.name] && (
-                        <p className="championship-bracket__hint">
-                          Week-end prévu : {firstSeries2027Weekends[round.name]}
-                        </p>
-                      )}
+                    {isFirstSeries && firstSeries2027Weekends[round.name] && (
+                      <p className="championship-bracket__hint">
+                        Week-end prévu : {firstSeries2027Weekends[round.name]}
+                      </p>
+                    )}
                     {round.matches.map((pair, index) => (
                       <button
                         type="button"
@@ -552,7 +551,8 @@ export function ChampionshipFinalBracket({
                           `${team.generalRank}e : ${playerNames(team.players, team.teamLabel)}`,
                       )
                       .join(" · ")
-                  : "Classement général à confirmer"}.
+                  : "Classement général à confirmer"}
+                .
               </p>
             </div>
           )}
