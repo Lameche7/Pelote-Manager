@@ -197,7 +197,7 @@ export function ChampionshipFinalBracket({
         .filter(Boolean),
     );
     const slot = (rank: number): ProjectedSlot => {
-      const team = rankMap.get(rank);
+      const team = rank <= cutoff ? rankMap.get(rank) : undefined;
       return {
         label: team
           ? playerNames(team.players, team.teamLabel)
