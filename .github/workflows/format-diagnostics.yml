@@ -43,5 +43,10 @@ jobs:
           name: prettier-diagnostic
           path: prettier-report.txt
           retention-days: 14
+      - name: Print championship bracket Prettier diff
+        if: always()
+        run: |
+          npx prettier --write src/features/user-space/championships/components/ChampionshipFinalBracket.tsx src/features/user-space/championships/components/ChampionshipFinalBracket.css src/features/user-space/championships/pages/MyChampionshipsPage.tsx
+          git diff -- src/features/user-space/championships/components/ChampionshipFinalBracket.tsx src/features/user-space/championships/components/ChampionshipFinalBracket.css src/features/user-space/championships/pages/MyChampionshipsPage.tsx
       - name: Fail if formatting differs
         run: exit "$PRETTIER_EXIT"
