@@ -49,6 +49,7 @@ test("calendrier prévisionnel et finale à Morlaàs, barrages B séparés", asy
     new URL("../src/features/user-space/championships/components/ChampionshipFinalBracket.tsx", import.meta.url),
     "utf8",
   );
+  assert.match(bracket, /rank <= cutoff \? rankMap\.get\(rank\) : undefined/);
   assert.match(bracket, /openingRoundMatches\(cutoff, count, enriched\)/);
   assert.match(bracket, /B arrages Nationale B|Barrages Nationale B/);
   assert.match(bracket, /9e à 12e/);
