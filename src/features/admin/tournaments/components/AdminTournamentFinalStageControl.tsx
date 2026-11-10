@@ -206,6 +206,25 @@ export function AdminTournamentFinalStageControl({
       return `Phase finale générée : ${count} première${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""} créée${count > 1 ? "s" : ""}. Préparez maintenant le planning complet de toutes les séries.`;
     });
 
+  const generateSeries = (series: TournamentFinalSeriesState) =>
+    run(async () => {
+      const count = await tournamentFinalStageAdminService.generateSeries(
+        tournamentId,
+        series.seriesId,
+      );
+      await tournamentFinalStageAdminService.prepareFullPlanning(tournamentId);
+      return `${series.seriesName} : ${count} rencontre(s) de phase finale créées. Planning à préparer avant publication.`;
+    });
+
+  const publishSeries = (series: TournamentFinalSeriesState) =>
+    run(async () => {
+      const count = await tournamentFinalStageAdminService.publishSeries(
+        tournamentId,
+        series.seriesId,
+      );
+      return `${series.seriesName} : ${count} rencontre(s) publiées au calendrier.`;
+    });
+
   const publish = () =>
     run(async () => {
       const count =
@@ -300,6 +319,19 @@ export function AdminTournamentFinalStageControl({
             </p>
           )}
 
+          <div className="final-stage-series-list">
+            {stage.series.filter((series) => !series.generated).map((series) => (
+              <button
+                key={series.seriesId}
+                type="button"
+                disabled={busy || !stage.finalsStartsOn || !stage.finalsEndsOn || !seriesReadyForGeneration(series)}
+                onClick={() => void generateSeries(series)}
+              >
+                Générer uniquement : {series.seriesName}
+              </button>
+            ))}
+          </div>
+
           <button
             className="qualification-save"
             type="button"
@@ -351,6 +383,25 @@ export function AdminTournamentFinalStageControl({
                     </div>
                   </details>
 
+                  {!series.generated && (
+                    <div>
+                      <span>{series.validatedPoolMatchCount}/{series.poolMatchCount} résultats validés</span>
+                      <button
+                        type="button"
+                        disabled={busy || !seriesReadyForGeneration(series)}
+                        onClick={() => void generateSeries(series)}
+                      >
+                        Générer cette série
+                      </button>
+                    </div>
+                  )}
+                  {series.generated && matches.length > 0 &&
+                    matches.some((match) => match.resultStatus !== "validated") &&
+                    matches.filter((match) => match.resultStatus !== "validated").every((match) => match.planned && !match.published) && (
+                      <button type="button" disabled={busy} onClick={() => void publishSeries(series)}>
+                        Publier uniquement {series.seriesName} et notifier
+                      </button>
+                    )}
                   <div className="final-stage-matches">
                     {matches.map((match) => (
                       <MatchRow key={match.id} match={match} />
