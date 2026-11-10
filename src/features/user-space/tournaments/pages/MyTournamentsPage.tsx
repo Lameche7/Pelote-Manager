@@ -10,6 +10,7 @@ import { Phone } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import { MyTournamentFinalBracket } from "@/features/user-space/tournaments/components/MyTournamentFinalBracket";
 import { TournamentRescheduleRequestsPanel } from "@/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel";
 import { TournamentRescheduleSuggestions } from "@/features/user-space/tournaments/components/TournamentRescheduleSuggestions";
 import {
@@ -451,6 +452,8 @@ function TournamentCard({
           <strong>{tournament.team.poolNumber ?? "—"}</strong>
         </div>
       </div>
+
+      <MyTournamentFinalBracket tournamentId={tournament.id} seriesId={tournament.team.seriesId} teamId={tournament.team.id} />
 
       {qualification && qualification.qualifierCount > 0 && (
         <div
