@@ -721,6 +721,22 @@ export function ReservationsPage() {
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const [championshipCandidates, setChampionshipCandidates] = useState<ChampionshipCalendarCandidate[] | null>(null);
   const [chosenAdminMatch, setChosenAdminMatch] = useState("");
+  const [candidateGender, setCandidateGender] = useState("");
+  const [candidateSeries, setCandidateSeries] = useState("");
+  const [candidateWeekend, setCandidateWeekend] = useState("");
+  const [candidateSearch, setCandidateSearch] = useState("");
+  const candidateOptions = useMemo(() => (championshipCandidates ?? []).map((match) => {
+    const [series = "", players = ""] = match.label.split(" · ", 2);
+    const gender = /dames|f[eé]minin/i.test(series) ? "Féminin" : "Masculin";
+    const weekend = match.plannedDate ?? "";
+    return { ...match, series, players, gender, weekend };
+  }), [championshipCandidates]);
+  const filteredCandidateOptions = useMemo(() => candidateOptions.filter((match) =>
+    (!candidateGender || match.gender === candidateGender) &&
+    (!candidateSeries || match.series === candidateSeries) &&
+    (!candidateWeekend || match.weekend === candidateWeekend) &&
+    (!candidateSearch || match.label.toLocaleLowerCase("fr").includes(candidateSearch.toLocaleLowerCase("fr").trim()))
+  ), [candidateOptions, candidateGender, candidateSeries, candidateWeekend, candidateSearch]);
   const [convertReservationId, setConvertReservationId] = useState<string | null>(null);
   const [adminBookingBusy, setAdminBookingBusy] = useState(false);
   const [adminBookingError, setAdminBookingError] = useState("");
@@ -728,6 +744,10 @@ export function ReservationsPage() {
     if (!inspectedSlot || (inspectedSlot.status !== "locked" && inspectedSlot.status !== "available") || !canAdminReservations || !canAdminChampionships) return;
     setAdminBookingError("");
     setChosenAdminMatch("");
+    setCandidateGender("");
+    setCandidateSeries("");
+    setCandidateWeekend("");
+    setCandidateSearch("");
     setConvertReservationId(null);
     setChampionshipCandidates(null);
     try {
@@ -1223,12 +1243,55 @@ export function ReservationsPage() {
             {(inspectedSlot.status === "locked" || inspectedSlot.status === "available" || (inspectedSlot.status === "occupied" && convertReservationId)) && championshipCandidates && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>{convertReservationId ? "Convertir cette réservation en partie de championnat" : "Choisir la rencontre"}</h3>
-                <select aria-label="Rencontre de championnat" value={chosenAdminMatch} onChange={(event) => setChosenAdminMatch(event.target.value)}>
-                  <option value="">Sélectionner une rencontre…</option>
-                  {championshipCandidates.map((match) => (
-                    <option value={match.id} key={match.id}>{match.label}{match.plannedDate ? ` · ${match.plannedDate}` : ""}</option>
-                  ))}
-                </select>
+                <p>Filtrer les rencontres futures non jouées et non programmées.</p>
+                <div className="reservation-slot-actions__filters" style={{ display: "grid", gap: "0.65rem", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+                  <label>Catégorie
+                    <select value={candidateGender} onChange={(event) => { setCandidateGender(event.target.value); setCandidateSeries(""); setCandidateWeekend(""); setChosenAdminMatch(""); }}>
+                      <option value="">Féminin et masculin</option>
+                      <option value="Féminin">Féminin</option>
+                      <option value="Masculin">Masculin</option>
+                    </select>
+                  </label>
+                  <label>Série
+                    <select value={candidateSeries} onChange={(event) => { setCandidateSeries(event.target.value); setCandidateWeekend(""); setChosenAdminMatch(""); }}>
+                      <option value="">Toutes les séries</option>
+                      {[...new Set(candidateOptions.filter((m) => !candidateGender || m.gender === candidateGender).map((m) => m.series))].sort((a, b) => a.localeCompare(b, "fr", { numeric: true })).map((series) => (
+                        <option key={series} value={series}>{series}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>Journée prévue (date du comité)
+                    <select value={candidateWeekend} onChange={(event) => { setCandidateWeekend(event.target.value); setChosenAdminMatch(""); }}>
+                      <option value="">Toutes les dates</option>
+                      {[...new Set(candidateOptions.filter((m) => (!candidateGender || m.gender === candidateGender) && (!candidateSeries || m.series === candidateSeries)).map((m) => m.weekend).filter(Boolean))].sort().map((date) => (
+                        <option key={date} value={date}>{date.split("-").reverse().join("/")}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <label>Rechercher un joueur
+                  <input type="search" value={candidateSearch} onChange={(event) => { setCandidateSearch(event.target.value); setChosenAdminMatch(""); }} placeholder="Nom ou prénom…" />
+                </label>
+                <label>Rencontre ({filteredCandidateOptions.length} proposition{filteredCandidateOptions.length > 1 ? "s" : ""})
+                  <select aria-label="Rencontre de championnat" value={chosenAdminMatch} onChange={(event) => setChosenAdminMatch(event.target.value)}>
+                    <option value="">Sélectionner une rencontre…</option>
+                    {filteredCandidateOptions.map((match) => (
+                      <option value={match.id} key={match.id}>{match.players} · {match.series} · {match.plannedDate ? match.plannedDate.split("-").reverse().join("/") : "Date inconnue"}</option>
+                    ))}
+                  </select>
+                </label>
+                {filteredCandidateOptions.length === 0 && championshipCandidates.length > 0 && <p>Aucune rencontre ne correspond aux filtres. Élargissez la recherche.</p>}
+                {chosenAdminMatch && championshipCandidates.some((match) => match.id === chosenAdminMatch) && (() => {
+                  const selected = championshipCandidates.find((match) => match.id === chosenAdminMatch)!;
+                  const [series, players] = selected.label.split(" · ", 2);
+                  return (
+                    <div className="reservation-slot-actions__selection" aria-live="polite">
+                      <strong>Série : {series}</strong>
+                      <p>{players ?? selected.label}</p>
+                      <p>Date initiale du comité : {selected.plannedDate ? selected.plannedDate.split("-").reverse().join("/") : "non renseignée"}</p>
+                    </div>
+                  );
+                })()}
                 {championshipCandidates.length === 0 && <p>Aucune rencontre disponible pour ce club.</p>}
                 <button className="reservation-slot-actions__button" type="button" disabled={!chosenAdminMatch || adminBookingBusy} onClick={() => void confirmAdminChampionship()}>
                   {adminBookingBusy ? "Programmation…" : "Confirmer la programmation"}
