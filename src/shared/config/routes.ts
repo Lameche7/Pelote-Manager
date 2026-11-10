@@ -57,6 +57,7 @@ export const ROUTES = {
   adminReservationOperations: "/admin/reservations/suivi",
   adminReservationSettings: "/admin/reservations/parametres",
   adminPayments: "/admin/paiements",
+  adminPaymentSettings: "/admin/parametres/paiements",
   platform: "/super-admin",
   platformLogin: "/super-admin/connexion",
   forbidden: "/acces-refuse",
