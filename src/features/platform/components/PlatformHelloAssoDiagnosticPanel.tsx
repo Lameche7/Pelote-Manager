@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { env } from "@/shared/config/env";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
 
 type Diagnostic = {
@@ -24,7 +25,7 @@ export function PlatformHelloAssoDiagnosticPanel() {
       if (!platformSupabase) throw new Error("Connexion super admin indisponible.");
       const { data: { session } } = await platformSupabase.auth.getSession();
       if (!session) throw new Error("Reconnectez-vous à la console super admin.");
-      const response = await fetch("/api/helloasso-oauth-diagnostic", {
+      const response = await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/helloasso-oauth-diagnostic`, {
         method: "POST",
         headers: { authorization: `Bearer ${session.access_token}` },
       });
