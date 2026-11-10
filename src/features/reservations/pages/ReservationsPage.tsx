@@ -1223,12 +1223,24 @@ export function ReservationsPage() {
             {(inspectedSlot.status === "locked" || inspectedSlot.status === "available" || (inspectedSlot.status === "occupied" && convertReservationId)) && championshipCandidates && (
               <div className="reservation-slot-actions reservation-slot-actions--admin">
                 <h3>{convertReservationId ? "Convertir cette réservation en partie de championnat" : "Choisir la rencontre"}</h3>
+                <p>Rencontres à venir, non jouées et non programmées. La date indiquée est celle initialement prévue par le comité.</p>
                 <select aria-label="Rencontre de championnat" value={chosenAdminMatch} onChange={(event) => setChosenAdminMatch(event.target.value)}>
                   <option value="">Sélectionner une rencontre…</option>
                   {championshipCandidates.map((match) => (
-                    <option value={match.id} key={match.id}>{match.label}{match.plannedDate ? ` · ${match.plannedDate}` : ""}</option>
+                    <option value={match.id} key={match.id}>{match.label}{match.plannedDate ? ` · Comité : ${match.plannedDate.split("-").reverse().join("/")}` : " · Date comité non renseignée"}</option>
                   ))}
                 </select>
+                {chosenAdminMatch && championshipCandidates.some((match) => match.id === chosenAdminMatch) && (() => {
+                  const selected = championshipCandidates.find((match) => match.id === chosenAdminMatch)!;
+                  const [series, players] = selected.label.split(" · ", 2);
+                  return (
+                    <div className="reservation-slot-actions__selection" aria-live="polite">
+                      <strong>Série : {series}</strong>
+                      <p>{players ?? selected.label}</p>
+                      <p>Date initiale du comité : {selected.plannedDate ? selected.plannedDate.split("-").reverse().join("/") : "non renseignée"}</p>
+                    </div>
+                  );
+                })()}
                 {championshipCandidates.length === 0 && <p>Aucune rencontre disponible pour ce club.</p>}
                 <button className="reservation-slot-actions__button" type="button" disabled={!chosenAdminMatch || adminBookingBusy} onClick={() => void confirmAdminChampionship()}>
                   {adminBookingBusy ? "Programmation…" : "Confirmer la programmation"}
