@@ -29,6 +29,7 @@ import { MemberImportDetailPage } from "@/features/admin/members/pages/MemberImp
 import { MemberImportPage } from "@/features/admin/members/pages/MemberImportPage";
 import { MemberImportsPage } from "@/features/admin/members/pages/MemberImportsPage";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { AdminPaymentSettingsPage } from "@/features/admin/pages/AdminPaymentSettingsPage";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
 import { AdminReservationsPage } from "@/features/admin/pages/AdminReservationsPage";
@@ -312,6 +313,10 @@ export const routes = [
           {
             path: "utilisateurs",
             element: permitted(ADMIN_PERMISSIONS.settings, <AdminUsersPage />),
+          },
+          {
+            path: "parametres/paiements",
+            element: permitted(ADMIN_PERMISSIONS.settings, <AdminPaymentSettingsPage />),
           },
           {
             path: "paiements",
