@@ -315,6 +315,10 @@ export const routes = [
             element: permitted(ADMIN_PERMISSIONS.settings, <AdminUsersPage />),
           },
           {
+            path: "parametres/paiements",
+            element: permitted(ADMIN_PERMISSIONS.settings, <AdminPaymentSettingsPage />),
+          },
+          {
             path: "paiements",
             element: permitted(
               ADMIN_PERMISSIONS.paymentsRead,
