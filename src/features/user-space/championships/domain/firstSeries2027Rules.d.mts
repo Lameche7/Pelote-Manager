@@ -11,6 +11,7 @@ export function openingRoundMatches<
 >(cutoff: number, size: number, matches: T[]): T[];
 export function firstSeriesRankingIsComplete(
   ranking: readonly { generalRank: number; played: number }[],
+  qualificationCutoff?: number,
 ): boolean;
 
 export function firstSeriesEighthWinnerLabel(

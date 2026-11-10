@@ -173,7 +173,7 @@ export function ChampionshipFinalBracket({
     (team) => team.divisionId === divisionId,
   );
   const incompleteFirstSeriesRanking =
-    isFirstSeries && !firstSeriesRankingIsComplete(firstSeriesRanking);
+    isFirstSeries && !firstSeriesRankingIsComplete(firstSeriesRanking, firstSeriesRanking[0]?.qualificationCutoff ?? 12);
   const firstSeriesNationalBTeams = isFirstSeries
     ? standings
         .filter(
@@ -442,14 +442,14 @@ export function ChampionshipFinalBracket({
       ) : incompleteFirstSeriesRanking ? (
         <div className="championship-bracket__regulation" role="status">
           <strong>
-            Classement général incomplet — qualification suspendue
+            Rangs qualificatifs incomplets — projection suspendue
           </strong>
           <p>
-            La 1re série nécessite les 15 équipes classées après quatre parties
-            chacune. Pilotoki n'a actuellement que {firstSeriesRanking.length}
-            équipes classées. Les quatre qualifiés directement en quarts et les
-            huitièmes ne sont pas affichés pour éviter de présenter de mauvais
-            adversaires. Relancez l'import du classement officiel du comité.
+            Pilotoki doit disposer des rangs qualificatifs du classement général
+            (1 à {firstSeriesRanking[0]?.qualificationCutoff ?? 12}) pour afficher
+            les huitièmes et les quarts. Les équipes forfaits et le nombre de
+            rencontres jouées ne bloquent plus la projection. Vérifiez le
+            classement officiel du comité si un rang qualifié manque.
           </p>
         </div>
       ) : !hasFinals ? (
@@ -463,7 +463,7 @@ export function ChampionshipFinalBracket({
             <div className="championship-bracket__regulation">
               <strong>1ère série · Championnat du Béarn 2026–2027</strong>
               <p>
-                15 équipes en 3 poules de 5. Après le classement général du 9
+                Classement général du 9
                 novembre : les rangs 1 à 4 vont directement en quarts. Les rangs
                 5 à 12 jouent quatre huitièmes (5–12, 6–11, 7–10, 8–9). Les
                 rencontres restent des projections tant que le comité ne les a
