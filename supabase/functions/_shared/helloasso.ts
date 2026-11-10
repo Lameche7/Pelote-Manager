@@ -68,13 +68,31 @@ export async function getHelloAssoAccessToken(input: {
     method: "POST",
     headers: {
       accept: "application/json",
+      "user-agent": "Pilotoki/1.0 (HelloAsso integration; contact via Pilotoki support)",
       "content-type": "application/x-www-form-urlencoded",
     },
     body,
   });
 
   if (!response.ok) {
-    const details = helloAssoErrorDetails(response, await response.text());
+    const rawBody = await response.text();
+    if (response.status === 403) {
+      const diagnosticHeaders = Object.fromEntries(
+        ["server", "cf-ray", "cf-mitigated", "content-type", "date"].map((name) => [
+          name,
+          response.headers.get(name),
+        ]),
+      );
+      // Never log the request body, OAuth credentials, authorization headers or tokens.
+      console.error("helloasso_oauth_403", JSON.stringify({
+        timestamp: new Date().toISOString(),
+        environment: input.environment,
+        status: response.status,
+        headers: diagnosticHeaders,
+        responseBody: rawBody.slice(0, 12000),
+      }));
+    }
+    const details = helloAssoErrorDetails(response, rawBody);
     throw new Error(
       `Authentification HelloAsso impossible (${response.status})${
         details ? ` : ${details}` : "."
