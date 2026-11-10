@@ -73,6 +73,11 @@ export const adminNavigation = [
         permission: ADMIN_PERMISSIONS.club,
       },
       {
+        label: "Paiements",
+        to: ROUTES.adminPaymentSettings,
+        permission: ADMIN_PERMISSIONS.settings,
+      },
+      {
         label: "Tarifs",
         to: ROUTES.adminClubPricing,
         permission: ADMIN_PERMISSIONS.pricing,
