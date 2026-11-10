@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
+import { PlatformHelloAssoDiagnosticPanel } from "../components/PlatformHelloAssoDiagnosticPanel";
 import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
 import { PlatformFirstAdminDryRunPanel } from "../components/PlatformFirstAdminDryRunPanel";
@@ -276,6 +277,7 @@ export function PlatformDashboardPage() {
 
   return (
     <main className="platform-page">
+      <PlatformHelloAssoDiagnosticPanel />
       <header className="platform-header">
         <div>
           <p className="platform-kicker">Pelote Manager</p>
