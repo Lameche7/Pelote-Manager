@@ -464,6 +464,24 @@ export const tournamentFinalStageAdminService = {
     return mapState(data);
   },
 
+  async generateSeries(tournamentId: string, seriesId: string): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_generate_tournament_final_stage",
+      { target_tournament_id: tournamentId, target_series_id: seriesId },
+    );
+    if (error) fail(error, "Impossible de générer cette série.");
+    return Number(data ?? 0);
+  },
+
+  async publishSeries(tournamentId: string, seriesId: string): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_publish_tournament_final_round",
+      { target_tournament_id: tournamentId, target_series_id: seriesId },
+    );
+    if (error) fail(error, "Impossible de publier cette série.");
+    return Number(data ?? 0);
+  },
+
   async generate(tournamentId: string): Promise<number> {
     const { data, error } = await supabase.rpc(
       "admin_generate_tournament_final_stage",
