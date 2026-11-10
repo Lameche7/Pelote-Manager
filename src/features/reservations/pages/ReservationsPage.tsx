@@ -744,6 +744,10 @@ export function ReservationsPage() {
     if (!inspectedSlot || (inspectedSlot.status !== "locked" && inspectedSlot.status !== "available") || !canAdminReservations || !canAdminChampionships) return;
     setAdminBookingError("");
     setChosenAdminMatch("");
+    setCandidateGender("");
+    setCandidateSeries("");
+    setCandidateWeekend("");
+    setCandidateSearch("");
     setConvertReservationId(null);
     setChampionshipCandidates(null);
     try {
