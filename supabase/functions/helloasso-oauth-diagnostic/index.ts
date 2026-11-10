@@ -9,8 +9,9 @@ const json = (data: unknown, init?: ResponseInit) => Response.json(data, { ...in
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (request.method !== "POST") return json({ error: "Méthode interdite." }, { status: 405 });
-  const platformUrl = Deno.env.get("PLATFORM_SUPABASE_URL");
-  const platformAnonKey = Deno.env.get("PLATFORM_SUPABASE_ANON_KEY");
+  // Public central platform endpoint and publishable key (not a service-role secret).
+  const platformUrl = "https://ihgsxsnaidxioqbmmawb.supabase.co";
+  const platformAnonKey = "sb_publishable_5UHezFXrdIyum6MITP84eA_y2TMemam";
   const bearer = request.headers.get("authorization") ?? "";
   if (!platformUrl || !platformAnonKey) {
     return json({ error: "Configuration plateforme centrale manquante." }, { status: 503 });
