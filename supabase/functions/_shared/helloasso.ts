@@ -123,6 +123,8 @@ export async function createHelloAssoCheckout(input: {
       method: "POST",
       headers: {
         authorization: `Bearer ${input.accessToken}`,
+        accept: "application/json",
+        "user-agent": "Pilotoki/1.0 (HelloAsso integration; contact via Pilotoki support)",
         "content-type": "application/json",
       },
       body: JSON.stringify({
@@ -140,9 +142,23 @@ export async function createHelloAssoCheckout(input: {
   );
 
   if (!response.ok) {
-    const details = await response.text();
+    const rawBody = await response.text();
+    if (response.status === 403) {
+      console.error("helloasso_checkout_403", JSON.stringify({
+        timestamp: new Date().toISOString(),
+        environment: input.environment,
+        status: response.status,
+        headers: Object.fromEntries(
+          ["server", "cf-ray", "cf-mitigated", "content-type", "date"].map(
+            (name) => [name, response.headers.get(name)],
+          ),
+        ),
+        responseBody: rawBody.slice(0, 12000),
+      }));
+    }
+    const details = helloAssoErrorDetails(response, rawBody);
     throw new Error(
-      `Création du paiement HelloAsso impossible (${response.status}): ${details}`,
+      `Création du paiement HelloAsso impossible (${response.status})${details ? `: ${details}` : "."}`,
     );
   }
 
