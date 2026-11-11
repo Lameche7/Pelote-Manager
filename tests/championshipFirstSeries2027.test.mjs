@@ -66,11 +66,9 @@ test("calendrier prévisionnel et finale à Morlaàs, barrages B séparés", asy
     ),
     "utf8",
   );
-  assert.match(bracket, /rank <= cutoff \? rankMap\.get\(rank\) : undefined/);
-  assert.match(bracket, /openingRoundMatches\(cutoff, count, enriched\)/);
-  assert.match(bracket, /B arrages Nationale B|Barrages Nationale B/);
-  assert.match(bracket, /9e à 12e/);
+  assert.match(bracket, /championshipResultsService.listMatches/);
   assert.match(bracket, /isFirstSeries &&/);
+  assert.doesNotMatch(bracket, /rankMap/);
 });
 
 test("les 12 premiers rangs officiels suffisent malgré un forfait général", () => {
@@ -92,7 +90,7 @@ test("les 12 premiers rangs officiels suffisent malgré un forfait général", (
   );
 });
 
-test("la projection ne doit pas faire monter en quarts une équipe à partir d'un classement incomplet", async () => {
+test("aucune qualification n'est déduite du classement dans le tableau", async () => {
   const source = await readFile(
     new URL(
       "../src/features/user-space/championships/components/ChampionshipFinalBracket.tsx",
@@ -100,9 +98,9 @@ test("la projection ne doit pas faire monter en quarts une équipe à partir d'u
     ),
     "utf8",
   );
-  assert.match(source, /if \(incompleteFirstSeriesRanking\) return null/);
-  assert.match(source, /Classement officiel insuffisant/);
-  assert.match(source, /firstSeriesRankingIsComplete/);
+  assert.match(source, /Rencontres officielles du comité/);
+  assert.doesNotMatch(source, /firstSeriesRankingIsComplete/);
+  assert.doesNotMatch(source, /Projection selon classement/);
 });
 
 test("les quatre quarts de 1re série annoncent le bon vainqueur des 8es", () => {
@@ -126,7 +124,7 @@ test("les quatre quarts de 1re série annoncent le bon vainqueur des 8es", () =>
   assert.equal(firstSeriesEighthWinnerLabel(4), null);
 });
 
-test("les mentions des quarts utilisent les rangs et non les numéros des cases masquées", async () => {
+test("les quarts ne sont plus projetés depuis les rangs", async () => {
   const source = await readFile(
     new URL(
       "../src/features/user-space/championships/components/ChampionshipFinalBracket.tsx",
@@ -134,5 +132,5 @@ test("les mentions des quarts utilisent les rangs et non les numéros des cases 
     ),
     "utf8",
   );
-  assert.match(source, /firstSeriesEighthWinnerLabel\(index\)/);
+  assert.doesNotMatch(source, /firstSeriesEighthWinnerLabel\(index\)/);
 });
