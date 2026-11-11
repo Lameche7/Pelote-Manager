@@ -173,6 +173,7 @@ as $$
       )::integer as tie_first_position,
       max(seeded.seed) over (
         partition by
+          seeded.pool_rank,
           seeded.ranking_value,
           seeded.goal_average_value,
           seeded.points_for_per_match,
