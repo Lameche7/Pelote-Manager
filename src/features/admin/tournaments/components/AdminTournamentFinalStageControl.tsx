@@ -344,7 +344,9 @@ export function AdminTournamentFinalStageControl({
             {busy ? "Génération…" : "Générer la phase finale"}
           </button>
         </>
-      ) : (
+      ) : null}
+
+      {stage.generated && (
         <>
           <AdminTournamentFinalFullPlanning
             tournamentId={tournamentId}
