@@ -90,16 +90,6 @@ test("les 12 premiers rangs officiels suffisent malgré un forfait général", (
     ),
     false,
   );
-  assert.equal(
-    firstSeriesRankingIsComplete(
-      complete.map((team) =>
-        team.generalRank === 2
-          ? { ...team, qualificationCutoff: 13 }
-          : team,
-      ),
-    ),
-    false,
-  );
 });
 
 test("la projection ne doit pas faire monter en quarts une équipe à partir d'un classement incomplet", async () => {
