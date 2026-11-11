@@ -48,6 +48,7 @@ export function SlotCard({
 }) {
   const slotTime = formatTime(slot.startsAt, timezone);
   const isChampionship = slot.reservationAccess === "championship";
+  const isFinalsHold = slot.occupationType === "tournament_finals_hold";
 
   if (slot.status === "occupied") {
     const bookedBy = slot.bookedByName ?? "Réservation";
@@ -121,13 +122,12 @@ export function SlotCard({
         {...(canInspectLocked
           ? { type: "button" as const, onClick: () => onInspect(slot) }
           : {})}
-        className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}`}
-        aria-label={`${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`}
+        className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}${isFinalsHold ? " reservation-slot--finals-hold" : ""}`}
+        aria-label={isFinalsHold ? `${slotTime} : réservé aux phases finales du tournoi` : `${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`}
       >
         <strong>{slotTime}</strong>
         <span>
-          {isChampionship ? "Championnat · " : ""}Réservable dès le{" "}
-          {openingLabel}
+          {isFinalsHold ? "Réservé · Phases finales du tournoi" : <>{isChampionship ? "Championnat · " : ""}Réservable dès le{" "}{openingLabel}</>}
         </span>
       </LockedContainer>
     );
