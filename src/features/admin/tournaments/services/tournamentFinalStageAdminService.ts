@@ -491,6 +491,15 @@ export const tournamentFinalStageAdminService = {
     return Number(data ?? 0);
   },
 
+  async advanceSeries(tournamentId: string, seriesId: string): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_advance_tournament_final_stage",
+      { target_tournament_id: tournamentId, target_series_id: seriesId },
+    );
+    if (error) fail(error, "Impossible de préparer le tour suivant de cette série.");
+    return Number(data ?? 0);
+  },
+
   async advance(tournamentId: string): Promise<number> {
     const { data, error } = await supabase.rpc(
       "admin_advance_tournament_final_stage",
