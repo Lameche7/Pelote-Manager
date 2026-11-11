@@ -157,11 +157,11 @@ export function AdminTournamentFinalStageControl({
     unresolved.length > 0 &&
     unresolved.every(({ match }) => match.planned) &&
     !hasPublished;
-  const canPublish = planningReady;
+  const canPublish = planningReady && stage?.series.every((series) => series.generated);
   const hasUnplannedCurrentMatches =
     unresolved.length > 0 && unresolved.some(({ match }) => !match.planned);
   const canAdvance =
-    stage?.series.some((series) => {
+    stage?.series.every((series) => series.generated) && stage?.series.some((series) => {
       const matches = currentMatches(series);
       return (
         matches.length > 0 &&
@@ -417,7 +417,7 @@ export function AdminTournamentFinalStageControl({
             })}
           </div>
 
-          {hasUnplannedCurrentMatches && !hasPublished && (
+          {hasUnplannedCurrentMatches && !hasPublished && stage.series.every((series) => series.generated) && (
             <p className="qualification-alert qualification-alert--error">
               Certaines parties actuellement jouables sont « À programmer ».
               Modifiez manuellement l’étape correspondante dans le planning
@@ -440,7 +440,7 @@ export function AdminTournamentFinalStageControl({
             </p>
           ) : (
             <div className="final-stage-actions">
-              {hasPublished && (
+              {hasPublished && stage.series.every((series) => series.generated) && (
                 <button
                   type="button"
                   disabled={busy}
