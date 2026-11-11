@@ -230,17 +230,6 @@ export function AdminTournamentFinalStageControl({
         : `${series.seriesName} : aucun nouveau tour à créer.`;
     });
 
-  const advanceSeries = (series: TournamentFinalSeriesState) =>
-    run(async () => {
-      const count = await tournamentFinalStageAdminService.advanceSeries(
-        tournamentId,
-        series.seriesId,
-      );
-      return count > 0
-        ? `${series.seriesName} : ${count} rencontre(s) du tour suivant préparées.`
-        : `${series.seriesName} : aucun tour supplémentaire à créer.`;
-    });
-
   const publishSeries = (series: TournamentFinalSeriesState) =>
     run(async () => {
       const count = await tournamentFinalStageAdminService.publishSeries(
