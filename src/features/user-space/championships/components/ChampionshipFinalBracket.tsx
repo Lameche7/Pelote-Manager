@@ -54,7 +54,9 @@ export function ChampionshipFinalBracket({
   const [championshipId, setChampionshipId] = useState("");
   const [divisionId, setDivisionId] = useState("");
   const [matches, setMatches] = useState<ChampionshipBrowserMatch[]>([]);
-  const [standings, setStandings] = useState<ChampionshipGeneralStandingBrowserRow[]>([]);
+  const [standings, setStandings] = useState<
+    ChampionshipGeneralStandingBrowserRow[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<ChampionshipBrowserMatch | null>(
@@ -164,7 +166,8 @@ export function ChampionshipFinalBracket({
   const directQuarter = useMemo(() => {
     if (!isFirstSeries) return null;
     const eighths = matches.filter(
-      (match) => match.divisionId === divisionId && roundIndex(match.phase) === 3,
+      (match) =>
+        match.divisionId === divisionId && roundIndex(match.phase) === 3,
     );
     if (eighths.length === 0) return null;
     const rank4 = standings.find(
