@@ -253,9 +253,7 @@ export function ChampionshipFinalBracket({
                         <b>{score(match, 2)}</b>
                       </span>
                       <small>
-                        {match.effectiveOn ??
-                          match.theoreticalOn ??
-                          "Date à définir"}
+                        {match.effectiveOn ?? match.theoreticalOn ?? "Date à définir"}
                       </small>
                     </button>
                   ))}
