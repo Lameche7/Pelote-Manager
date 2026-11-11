@@ -70,14 +70,16 @@ export function ChampionshipFinalBracket({
             items[0]?.championshipId ??
             "",
         );
-      }).catch((e) => {
+      })
+      .catch((e) => {
         if (active)
           setError(
             e instanceof Error
               ? e.message
               : "Impossible de charger les championnats.",
           );
-      }).finally(() => {
+      })
+      .finally(() => {
         if (active) setLoading(false);
       });
     return () => {
