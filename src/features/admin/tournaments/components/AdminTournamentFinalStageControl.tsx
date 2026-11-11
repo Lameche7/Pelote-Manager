@@ -161,14 +161,14 @@ export function AdminTournamentFinalStageControl({
   const hasUnplannedCurrentMatches =
     unresolved.length > 0 && unresolved.some(({ match }) => !match.planned);
   const canAdvance =
-    stage?.series.every((series) => series.generated) && stage?.series.some((series) => {
+    (stage?.series.every((series) => series.generated) && stage?.series.some((series) => {
       const matches = currentMatches(series);
       return (
         matches.length > 0 &&
         matches.every((match) => match.resultStatus === "validated") &&
         !(matches.length === 1 && matches[0]?.round === "final")
       );
-    }) ?? false;
+    })) ?? false;
   const finalsComplete =
     Boolean(stage?.generated) &&
     stage?.series.every((series) => {
