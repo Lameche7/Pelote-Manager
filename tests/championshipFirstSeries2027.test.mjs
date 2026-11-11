@@ -73,17 +73,19 @@ test("calendrier prévisionnel et finale à Morlaàs, barrages B séparés", asy
   assert.match(bracket, /isFirstSeries &&/);
 });
 
-test("les rangs de qualification sont suspendus quand le classement FFPB est partiel", () => {
-  const complete = Array.from({ length: 15 }, (_, index) => ({
+test("les 12 premiers rangs officiels suffisent malgré un forfait général", () => {
+  const complete = Array.from({ length: 14 }, (_, index) => ({
     generalRank: index + 1,
-    played: 4,
+    played: index % 3 === 0 ? 3 : 4,
+    qualificationCutoff: 12,
   }));
   assert.equal(firstSeriesRankingIsComplete(complete), true);
-  assert.equal(firstSeriesRankingIsComplete(complete.slice(0, 14)), false);
+  assert.equal(firstSeriesRankingIsComplete(complete.slice(0, 12)), true);
+  assert.equal(firstSeriesRankingIsComplete(complete.slice(0, 11)), false);
   assert.equal(
     firstSeriesRankingIsComplete(
       complete.map((team) =>
-        team.generalRank === 2 ? { ...team, played: 2 } : team,
+        team.generalRank === 12 ? { ...team, generalRank: 11 } : team,
       ),
     ),
     false,
@@ -91,7 +93,9 @@ test("les rangs de qualification sont suspendus quand le classement FFPB est par
   assert.equal(
     firstSeriesRankingIsComplete(
       complete.map((team) =>
-        team.generalRank === 2 ? { ...team, generalRank: 1 } : team,
+        team.generalRank === 2
+          ? { ...team, qualificationCutoff: 13 }
+          : team,
       ),
     ),
     false,
@@ -107,7 +111,7 @@ test("la projection ne doit pas faire monter en quarts une équipe à partir d'u
     "utf8",
   );
   assert.match(source, /if \(incompleteFirstSeriesRanking\) return null/);
-  assert.match(source, /Classement général incomplet/);
+  assert.match(source, /Classement officiel insuffisant/);
   assert.match(source, /firstSeriesRankingIsComplete/);
 });
 
