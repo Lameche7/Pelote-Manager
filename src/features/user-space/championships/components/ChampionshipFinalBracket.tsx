@@ -272,7 +272,11 @@ export function ChampionshipFinalBracket({
             aria-label="Tableau des tours éliminatoires"
           >
             {rounds
-              .filter((round) => round.matches.length > 0)
+              .filter(
+                (round) =>
+                  round.matches.length > 0 ||
+                  (round.name === "Quarts de finale" && directQuarter),
+              )
               .map((round) => (
                 <div className="championship-bracket__round" key={round.name}>
                   <h3>{round.name}</h3>
@@ -280,6 +284,29 @@ export function ChampionshipFinalBracket({
                     <p className="championship-bracket__hint">
                       Week-end prévu : {firstSeries2027Weekends[round.name]}
                     </p>
+                  )}
+                  {round.name === "Quarts de finale" && directQuarter && (
+                    <div className="championship-bracket__match">
+                      <span>
+                        <strong>
+                          {playerNames(
+                            directQuarter.rank4.players,
+                            directQuarter.rank4.teamLabel,
+                          )}
+                        </strong>
+                        <b>—</b>
+                      </span>
+                      <span>
+                        <strong>
+                          {playerNames(
+                            directQuarter.rank5.players,
+                            directQuarter.rank5.teamLabel,
+                          )}
+                        </strong>
+                        <b>—</b>
+                      </span>
+                      <small>Projection · 4e contre 5e</small>
+                    </div>
                   )}
                   {round.matches.map((match) => (
                     <button
@@ -310,26 +337,6 @@ export function ChampionshipFinalBracket({
                 </div>
               ))}
           </div>
-          {directQuarter && (
-            <div className="championship-bracket__regulation">
-              <strong>Quart de finale projeté · branche 4–5</strong>
-              <p>
-                {playerNames(
-                  directQuarter.rank4.players,
-                  directQuarter.rank4.teamLabel,
-                )}
-                {" contre "}
-                {playerNames(
-                  directQuarter.rank5.players,
-                  directQuarter.rank5.teamLabel,
-                )}
-              </p>
-              <p>
-                Les deux équipes sont exemptées des huitièmes. Projection selon
-                le croisement des branches, en attente de publication du comité.
-              </p>
-            </div>
-          )}
           <p className="championship-bracket__hint">
             Seules les rencontres publiées par le comité sont affichées.
             Aucune branche ou exemption n'est déduite du classement.
