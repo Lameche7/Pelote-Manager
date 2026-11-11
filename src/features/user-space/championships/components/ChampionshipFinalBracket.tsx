@@ -9,6 +9,7 @@ import {
   firstSeries2027Weekends,
   isFirstSeries2027,
 } from "../domain/firstSeries2027Rules.mjs";
+import { championshipStandingsService, type ChampionshipGeneralStandingBrowserRow } from "@/features/user-space/championships/services/championshipStandingsService";
 import "./ChampionshipFinalBracket.css";
 
 const roundNames = [
@@ -50,6 +51,7 @@ export function ChampionshipFinalBracket({
   const [championshipId, setChampionshipId] = useState("");
   const [divisionId, setDivisionId] = useState("");
   const [matches, setMatches] = useState<ChampionshipBrowserMatch[]>([]);
+  const [standings, setStandings] = useState<ChampionshipGeneralStandingBrowserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<ChampionshipBrowserMatch | null>(
@@ -104,11 +106,17 @@ export function ChampionshipFinalBracket({
     setLoading(true);
     setError("");
     setMatches([]);
+    setStandings([]);
     setSelected(null);
-    championshipResultsService
-      .listMatches(championshipId)
-      .then((items) => {
-        if (active) setMatches(items);
+    Promise.all([
+      championshipResultsService.listMatches(championshipId),
+      championshipStandingsService.listGeneral(championshipId),
+    ])
+      .then(([items, ranking]) => {
+        if (active) {
+          setMatches(items);
+          setStandings(ranking);
+        }
       })
       .catch((e) => {
         if (active)
@@ -147,6 +155,36 @@ export function ChampionshipFinalBracket({
       })),
     [matches, divisionId],
   );
+  // Only the committee decides who skips the first knockout round.
+  // For 2027 first series, ranks 4 and 5 are explicitly exempted;
+  // their established seed branches meet in the quarter-finals.
+  const directQuarter = useMemo(() => {
+    if (!isFirstSeries) return null;
+    const eighths = matches.filter(
+      (match) => match.divisionId === divisionId && roundIndex(match.phase) === 3,
+    );
+    if (eighths.length === 0) return null;
+    const rank4 = standings.find(
+      (team) => team.divisionId === divisionId && team.generalRank === 4,
+    );
+    const rank5 = standings.find(
+      (team) => team.divisionId === divisionId && team.generalRank === 5,
+    );
+    if (!rank4 || !rank5) return null;
+    const competing = new Set(
+      eighths.flatMap((match) => [match.team1Id, match.team2Id]),
+    );
+    if (competing.has(rank4.teamId) || competing.has(rank5.teamId)) return null;
+    const quarters = rounds.find((round) => round.name === "Quarts de finale");
+    if (
+      quarters?.matches.some(
+        (match) =>
+          [match.team1Id, match.team2Id].includes(rank4.teamId) ||
+          [match.team1Id, match.team2Id].includes(rank5.teamId),
+      )
+    ) return null;
+    return { rank4, rank5 };
+  }, [isFirstSeries, matches, divisionId, standings, rounds]);
   const hasFinals = rounds.some((r) => r.matches.length > 0);
 
   return (
@@ -264,6 +302,20 @@ export function ChampionshipFinalBracket({
                 </div>
               ))}
           </div>
+          {directQuarter && (
+            <div className="championship-bracket__regulation">
+              <strong>Quart de finale projeté · branche 4–5</strong>
+              <p>
+                {playerNames(directQuarter.rank4.players, directQuarter.rank4.teamLabel)}
+                {" contre "}
+                {playerNames(directQuarter.rank5.players, directQuarter.rank5.teamLabel)}
+              </p>
+              <p>
+                Les deux équipes sont exemptées des huitièmes. Projection selon
+                le croisement des branches, en attente de publication du comité.
+              </p>
+            </div>
+          )}
           <p className="championship-bracket__hint">
             Seules les rencontres publiées par le comité sont affichées.
             Aucune branche ou exemption n'est déduite du classement.
