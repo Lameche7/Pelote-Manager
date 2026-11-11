@@ -446,11 +446,11 @@ export function ChampionshipFinalBracket({
           </strong>
           <p>
             Il manque un ou plusieurs rangs parmi les équipes qualifiées.
-            Pilotoki doit disposer des {firstSeriesRanking[0]?.qualificationCutoff ?? 12}
-            premiers rangs officiels, sans doublon, pour afficher les huitièmes
-            et les quatre qualifiés directement en quarts. Les équipes forfait
-            général peuvent être absentes du classement. Vérifiez l'import
-            officiel du comité.
+            Pilotoki doit disposer des{" "}
+            {firstSeriesRanking[0]?.qualificationCutoff ?? 12} premiers rangs
+            officiels, sans doublon, pour afficher les huitièmes et les quatre
+            qualifiés directement en quarts. Les équipes forfait général peuvent
+            être absentes du classement. Vérifiez l'import officiel du comité.
           </p>
         </div>
       ) : !hasFinals ? (
