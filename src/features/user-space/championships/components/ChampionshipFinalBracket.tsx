@@ -442,14 +442,15 @@ export function ChampionshipFinalBracket({
       ) : incompleteFirstSeriesRanking ? (
         <div className="championship-bracket__regulation" role="status">
           <strong>
-            Classement général incomplet — qualification suspendue
+            Classement officiel insuffisant — qualification suspendue
           </strong>
           <p>
-            La 1re série nécessite les 15 équipes classées après quatre parties
-            chacune. Pilotoki n'a actuellement que {firstSeriesRanking.length}
-            équipes classées. Les quatre qualifiés directement en quarts et les
-            huitièmes ne sont pas affichés pour éviter de présenter de mauvais
-            adversaires. Relancez l'import du classement officiel du comité.
+            Il manque un ou plusieurs rangs parmi les équipes qualifiées.
+            Pilotoki doit disposer des{" "}
+            {firstSeriesRanking[0]?.qualificationCutoff ?? 12} premiers rangs
+            officiels, sans doublon, pour afficher les huitièmes et les quatre
+            qualifiés directement en quarts. Les équipes forfait général peuvent
+            être absentes du classement. Vérifiez l'import officiel du comité.
           </p>
         </div>
       ) : !hasFinals ? (
