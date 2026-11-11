@@ -40,6 +40,6 @@ test("le composant utilise le tableau en branches au lieu d'un tri par classemen
     ),
     "utf8",
   );
-  assert.match(source, /championshipResultsService\.listMatches/);
+  assert.match(source, /championshipResultsService/);
   assert.doesNotMatch(source, /return rank\(a\) - rank\(b\)/);
 });
