@@ -283,7 +283,7 @@ begin
 
   return inserted_count;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.admin_publish_tournament_final_round(target_tournament_id uuid, target_series_id uuid)
@@ -479,7 +479,7 @@ begin
 
   return published_count;
 end;
-$function$
+$function$;
 
 
 revoke all on function public.admin_generate_tournament_final_stage(uuid,uuid) from public,anon;
