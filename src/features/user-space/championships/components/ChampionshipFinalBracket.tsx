@@ -9,7 +9,10 @@ import {
   firstSeries2027Weekends,
   isFirstSeries2027,
 } from "../domain/firstSeries2027Rules.mjs";
-import { championshipStandingsService, type ChampionshipGeneralStandingBrowserRow } from "@/features/user-space/championships/services/championshipStandingsService";
+import {
+  championshipStandingsService,
+  type ChampionshipGeneralStandingBrowserRow,
+} from "@/features/user-space/championships/services/championshipStandingsService";
 import "./ChampionshipFinalBracket.css";
 
 const roundNames = [
@@ -182,7 +185,9 @@ export function ChampionshipFinalBracket({
           [match.team1Id, match.team2Id].includes(rank4.teamId) ||
           [match.team1Id, match.team2Id].includes(rank5.teamId),
       )
-    ) return null;
+    ) {
+      return null;
+    }
     return { rank4, rank5 };
   }, [isFirstSeries, matches, divisionId, standings, rounds]);
   const hasFinals = rounds.some((r) => r.matches.length > 0);
@@ -306,9 +311,15 @@ export function ChampionshipFinalBracket({
             <div className="championship-bracket__regulation">
               <strong>Quart de finale projeté · branche 4–5</strong>
               <p>
-                {playerNames(directQuarter.rank4.players, directQuarter.rank4.teamLabel)}
+                {playerNames(
+                  directQuarter.rank4.players,
+                  directQuarter.rank4.teamLabel,
+                )}
                 {" contre "}
-                {playerNames(directQuarter.rank5.players, directQuarter.rank5.teamLabel)}
+                {playerNames(
+                  directQuarter.rank5.players,
+                  directQuarter.rank5.teamLabel,
+                )}
               </p>
               <p>
                 Les deux équipes sont exemptées des huitièmes. Projection selon
