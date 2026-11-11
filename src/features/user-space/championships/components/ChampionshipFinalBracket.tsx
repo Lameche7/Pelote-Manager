@@ -6,20 +6,13 @@ import {
   type ChampionshipResultsCatalogItem,
 } from "@/features/user-space/championships/services/championshipResultsService";
 import {
+  firstSeries2027Weekends,
+  isFirstSeries2027,
+} from "../domain/firstSeries2027Rules.mjs";
+import {
   championshipStandingsService,
   type ChampionshipGeneralStandingBrowserRow,
 } from "@/features/user-space/championships/services/championshipStandingsService";
-import {
-  seedOrder,
-  orderRoundOf32MatchesBySeed,
-} from "../domain/officialSeedBracket.mjs";
-import {
-  firstSeries2027Weekends,
-  firstSeriesEighthWinnerLabel,
-  firstSeriesRankingIsComplete,
-  isFirstSeries2027,
-  openingRoundMatches,
-} from "../domain/firstSeries2027Rules.mjs";
 import "./ChampionshipFinalBracket.css";
 
 const roundNames = [
@@ -47,24 +40,6 @@ const roundIndex = (phase: string) => {
 };
 const playerNames = (players: string[], fallback: string) =>
   players.length ? players.join(" / ") : fallback;
-const roundLabel = (size: number) =>
-  size === 64
-    ? "32es de finale"
-    : size === 32
-      ? "16es de finale"
-      : size === 16
-        ? "8es de finale"
-        : size === 8
-          ? "Quarts de finale"
-          : size === 4
-            ? "Demi-finales"
-            : "Finale";
-type ProjectedSlot = { label: string; isClub: boolean; teamId?: string };
-type ProjectedMatch = {
-  left: ProjectedSlot;
-  right: ProjectedSlot;
-  official?: ChampionshipBrowserMatch;
-};
 const score = (match: ChampionshipBrowserMatch, side: 1 | 2) =>
   (side === 1 ? match.displayedScoreTeam1 : match.displayedScoreTeam2) ?? "—";
 
@@ -169,206 +144,6 @@ export function ChampionshipFinalBracket({
     championship?.divisions.find((division) => division.id === divisionId)
       ?.name ?? "",
   );
-  const firstSeriesRanking = standings.filter(
-    (team) => team.divisionId === divisionId,
-  );
-  const incompleteFirstSeriesRanking =
-    isFirstSeries && !firstSeriesRankingIsComplete(firstSeriesRanking);
-  const firstSeriesNationalBTeams = isFirstSeries
-    ? standings
-        .filter(
-          (team) =>
-            team.divisionId === divisionId &&
-            team.generalRank >= 9 &&
-            team.generalRank <= 12,
-        )
-        .sort((a, b) => a.generalRank - b.generalRank)
-    : [];
-
-  const projection = useMemo(() => {
-    const ranking = standings.filter((x) => x.divisionId === divisionId);
-    if (incompleteFirstSeriesRanking) return null;
-    const cutoff = ranking[0]?.qualificationCutoff;
-    // No bracket is guessed without an explicitly supplied qualification size.
-    if (!cutoff || !Number.isInteger(cutoff) || cutoff < 2 || cutoff > 64)
-      return null;
-    const size = 2 ** Math.ceil(Math.log2(cutoff));
-    const order = seedOrder(size);
-    const rankMap = new Map(ranking.map((x) => [x.generalRank, x]));
-    // Resolve the current club from the server-side club membership flags, not a hard-coded club name.
-    const currentClubNames = new Set(
-      matches
-        .flatMap((m) => [
-          ...(m.team1IsMyClub ? [m.team1ClubName] : []),
-          ...(m.team2IsMyClub ? [m.team2ClubName] : []),
-        ])
-        .filter(Boolean),
-    );
-    const slot = (rank: number): ProjectedSlot => {
-      const team = rank <= cutoff ? rankMap.get(rank) : undefined;
-      return {
-        label: team
-          ? playerNames(team.players, team.teamLabel)
-          : rank <= cutoff
-            ? `Classé n°${rank} à déterminer`
-            : "Exempt",
-        isClub: Boolean(team && currentClubNames.has(team.clubName)),
-        teamId: team?.teamId,
-      };
-    };
-    // A 48-team qualification has 16 barrages followed by an official 32-team round.
-    // Never invent the 64-slot bye arrangement: the imported 16es are authoritative.
-    if (cutoff === 48) {
-      const official16 = matches.filter(
-        (m) => m.divisionId === divisionId && roundIndex(m.phase) === 2,
-      );
-      if (official16.length === 16) {
-        const teamRank = new Map(
-          ranking.map((team) => [team.teamId, team.generalRank]),
-        );
-        // These 16 fixtures correspond to ranks 1–16 against the winners
-        // of the 16 barrages. The next tour crosses branch 1 with branch 16,
-        // branch 8 with 9, etc. Ascending-rank sorting would wrongly pair 1–2.
-        const first = orderRoundOf32MatchesBySeed(
-          official16.map((m) => ({
-            left: {
-              label: playerNames(m.team1Players, m.team1Label),
-              isClub: m.team1IsMyClub,
-              teamId: m.team1Id,
-            },
-            right: {
-              label: playerNames(m.team2Players, m.team2Label),
-              isClub: m.team2IsMyClub,
-              teamId: m.team2Id,
-            },
-            official: m,
-          })),
-          (pair) =>
-            Math.min(
-              teamRank.get(pair.left.teamId ?? "") ?? 999,
-              teamRank.get(pair.right.teamId ?? "") ?? 999,
-            ),
-        );
-        const result: { name: string; matches: ProjectedMatch[] }[] = [
-          { name: "16es de finale", matches: first },
-        ];
-        let current: ProjectedMatch[] = first;
-        for (let count = 16; count >= 2; count /= 2) {
-          const next: ProjectedMatch[] = [];
-          for (let i = 0; i < current.length; i += 2) {
-            const winner = (
-              pair: ProjectedMatch,
-              number: number,
-            ): ProjectedSlot => {
-              const m = pair.official;
-              if (
-                m?.resultSource === "official" &&
-                m.officialScoreTeam1 != null &&
-                m.officialScoreTeam2 != null &&
-                m.officialScoreTeam1 !== m.officialScoreTeam2
-              )
-                return m.officialScoreTeam1 > m.officialScoreTeam2
-                  ? pair.left
-                  : pair.right;
-              return { label: `Vainqueur match ${number}`, isClub: false };
-            };
-            next.push({
-              left: winner(current[i], i + 1),
-              right: winner(current[i + 1], i + 2),
-            });
-          }
-          const name = roundLabel(count);
-          const published = matches.filter(
-            (m) =>
-              m.divisionId === divisionId &&
-              roundIndex(m.phase) === roundNames.indexOf(name),
-          );
-          for (const pair of next) {
-            const m = published.find(
-              (m) =>
-                pair.left.teamId &&
-                pair.right.teamId &&
-                ((m.team1Id === pair.left.teamId &&
-                  m.team2Id === pair.right.teamId) ||
-                  (m.team2Id === pair.left.teamId &&
-                    m.team1Id === pair.right.teamId)),
-            );
-            if (m) pair.official = m;
-          }
-          result.push({ name, matches: next });
-          current = next;
-        }
-        return result;
-      }
-    }
-    let current: ProjectedMatch[] = [];
-    for (let i = 0; i < order.length; i += 2)
-      current.push({ left: slot(order[i]), right: slot(order[i + 1]) });
-    const result: { name: string; matches: ProjectedMatch[] }[] = [];
-    for (let count = size; count >= 2; count /= 2) {
-      const name = roundLabel(count);
-      const actual = matches.filter(
-        (m) =>
-          m.divisionId === divisionId &&
-          roundIndex(m.phase) === roundNames.indexOf(name),
-      );
-      const enriched = current.map((pair) => {
-        const official = actual.find(
-          (m) =>
-            [pair.left.teamId, pair.right.teamId].every(Boolean) &&
-            ((m.team1Id === pair.left.teamId &&
-              m.team2Id === pair.right.teamId) ||
-              (m.team2Id === pair.left.teamId &&
-                m.team1Id === pair.right.teamId)),
-        );
-        return { ...pair, official };
-      });
-      result.push({
-        name,
-        matches: openingRoundMatches(cutoff, count, enriched),
-      });
-      if (count === 2) break;
-      current = [];
-      for (let i = 0; i < enriched.length; i += 2) {
-        const a = enriched[i],
-          b = enriched[i + 1];
-        const nextSlot = (
-          pair: ProjectedMatch,
-          index: number,
-        ): ProjectedSlot => {
-          const scoreA = pair.official?.displayedScoreTeam1,
-            scoreB = pair.official?.displayedScoreTeam2;
-          if (
-            pair.official?.resultSource === "official" &&
-            scoreA != null &&
-            scoreB != null &&
-            scoreA !== scoreB
-          ) {
-            const winnerId =
-              scoreA > scoreB ? pair.official.team1Id : pair.official.team2Id;
-            return winnerId === pair.left.teamId ? pair.left : pair.right;
-          }
-          if (pair.right.label === "Exempt") return pair.left;
-          if (pair.left.label === "Exempt") return pair.right;
-          return {
-            label:
-              (isFirstSeries && count === 16
-                ? firstSeriesEighthWinnerLabel(index)
-                : null) ?? `Vainqueur match ${index + 1}`,
-            isClub: false,
-          };
-        };
-        current.push({ left: nextSlot(a, i), right: nextSlot(b, i + 1) });
-      }
-    }
-    return result;
-  }, [
-    matches,
-    standings,
-    divisionId,
-    incompleteFirstSeriesRanking,
-    isFirstSeries,
-  ]);
   const rounds = useMemo(
     () =>
       roundNames.map((name, index) => ({
@@ -385,8 +160,40 @@ export function ChampionshipFinalBracket({
       })),
     [matches, divisionId],
   );
-  const hasFinals =
-    Boolean(projection) || rounds.some((r) => r.matches.length > 0);
+  // Only the committee decides who skips the first knockout round.
+  // For 2027 first series, ranks 4 and 5 are explicitly exempted;
+  // their established seed branches meet in the quarter-finals.
+  const directQuarter = useMemo(() => {
+    if (!isFirstSeries) return null;
+    const eighths = matches.filter(
+      (match) =>
+        match.divisionId === divisionId && roundIndex(match.phase) === 3,
+    );
+    if (eighths.length === 0) return null;
+    const rank4 = standings.find(
+      (team) => team.divisionId === divisionId && team.generalRank === 4,
+    );
+    const rank5 = standings.find(
+      (team) => team.divisionId === divisionId && team.generalRank === 5,
+    );
+    if (!rank4 || !rank5) return null;
+    const competing = new Set(
+      eighths.flatMap((match) => [match.team1Id, match.team2Id]),
+    );
+    if (competing.has(rank4.teamId) || competing.has(rank5.teamId)) return null;
+    const quarters = rounds.find((round) => round.name === "Quarts de finale");
+    if (
+      quarters?.matches.some(
+        (match) =>
+          [match.team1Id, match.team2Id].includes(rank4.teamId) ||
+          [match.team1Id, match.team2Id].includes(rank5.teamId),
+      )
+    ) {
+      return null;
+    }
+    return { rank4, rank5 };
+  }, [isFirstSeries, matches, divisionId, standings, rounds]);
+  const hasFinals = rounds.some((r) => r.matches.length > 0);
 
   return (
     <section
@@ -439,20 +246,6 @@ export function ChampionshipFinalBracket({
         <p role="alert">{error}</p>
       ) : loading ? (
         <p>Chargement du tableau…</p>
-      ) : incompleteFirstSeriesRanking ? (
-        <div className="championship-bracket__regulation" role="status">
-          <strong>
-            Classement officiel insuffisant — qualification suspendue
-          </strong>
-          <p>
-            Il manque un ou plusieurs rangs parmi les équipes qualifiées.
-            Pilotoki doit disposer des{" "}
-            {firstSeriesRanking[0]?.qualificationCutoff ?? 12} premiers rangs
-            officiels, sans doublon, pour afficher les huitièmes et les quatre
-            qualifiés directement en quarts. Les équipes forfait général peuvent
-            être absentes du classement. Vérifiez l'import officiel du comité.
-          </p>
-        </div>
       ) : !hasFinals ? (
         <p>
           Le tableau des phases finales n’est pas encore disponible pour cette
@@ -460,18 +253,15 @@ export function ChampionshipFinalBracket({
         </p>
       ) : (
         <>
-          {isFirstSeries && (
-            <div className="championship-bracket__regulation">
-              <strong>1ère série · Championnat du Béarn 2026–2027</strong>
-              <p>
-                15 équipes en 3 poules de 5. Après le classement général du 9
-                novembre : les rangs 1 à 4 vont directement en quarts. Les rangs
-                5 à 12 jouent quatre huitièmes (5–12, 6–11, 7–10, 8–9). Les
-                rencontres restent des projections tant que le comité ne les a
-                pas publiées.
-              </p>
-            </div>
-          )}
+          <div className="championship-bracket__regulation">
+            <strong>Rencontres officielles du comité</strong>
+            <p>
+              Le classement ne détermine plus les qualifications, exemptions ni
+              adversaires à la sortie des poules. Les tours suivants seront
+              projetés uniquement lorsque leurs correspondances officielles
+              seront connues.
+            </p>
+          </div>
           <p className="championship-bracket__hint">
             Faites défiler horizontalement pour parcourir les tours. Touchez une
             rencontre pour voir son détail.
@@ -481,119 +271,75 @@ export function ChampionshipFinalBracket({
             tabIndex={0}
             aria-label="Tableau des tours éliminatoires"
           >
-            {projection
-              ? projection.map((round) => (
-                  <div className="championship-bracket__round" key={round.name}>
-                    <h3>{round.name}</h3>
-                    {isFirstSeries && firstSeries2027Weekends[round.name] && (
-                      <p className="championship-bracket__hint">
-                        Week-end prévu : {firstSeries2027Weekends[round.name]}
-                      </p>
-                    )}
-                    {round.matches.map((pair, index) => (
-                      <button
-                        type="button"
-                        key={index}
-                        className="championship-bracket__match"
-                        disabled={!pair.official}
-                        onClick={() =>
-                          pair.official && setSelected(pair.official)
-                        }
-                        aria-label={
-                          pair.left.label + " contre " + pair.right.label
-                        }
-                      >
-                        <span className={pair.left.isClub ? "is-club" : ""}>
-                          <strong>{pair.left.label}</strong>
-                          <b>
-                            {pair.official
-                              ? score(
-                                  pair.official,
-                                  pair.official.team1Id === pair.left.teamId
-                                    ? 1
-                                    : 2,
-                                )
-                              : "—"}
-                          </b>
-                        </span>
-                        <span className={pair.right.isClub ? "is-club" : ""}>
-                          <strong>{pair.right.label}</strong>
-                          <b>
-                            {pair.official
-                              ? score(
-                                  pair.official,
-                                  pair.official.team1Id === pair.right.teamId
-                                    ? 1
-                                    : 2,
-                                )
-                              : "—"}
-                          </b>
-                        </span>
-                        <small>
-                          {pair.official
-                            ? (pair.official.effectiveOn ??
-                              pair.official.theoreticalOn ??
-                              "Date à définir")
-                            : "Projection selon classement"}
-                        </small>
-                      </button>
-                    ))}
-                  </div>
-                ))
-              : rounds.map((round) => (
-                  <div className="championship-bracket__round" key={round.name}>
-                    <h3>{round.name}</h3>
-                    {round.matches.map((m) => (
-                      <button
-                        type="button"
-                        key={m.matchId}
-                        className="championship-bracket__match"
-                        onClick={() => setSelected(m)}
-                      >
-                        <span className={m.team1IsMyClub ? "is-club" : ""}>
-                          <strong>
-                            {playerNames(m.team1Players, m.team1Label)}
-                          </strong>
-                          <b>{score(m, 1)}</b>
-                        </span>
-                        <span className={m.team2IsMyClub ? "is-club" : ""}>
-                          <strong>
-                            {playerNames(m.team2Players, m.team2Label)}
-                          </strong>
-                          <b>{score(m, 2)}</b>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                ))}
+            {rounds
+              .filter(
+                (round) =>
+                  round.matches.length > 0 ||
+                  (round.name === "Quarts de finale" && directQuarter),
+              )
+              .map((round) => (
+                <div className="championship-bracket__round" key={round.name}>
+                  <h3>{round.name}</h3>
+                  {isFirstSeries && firstSeries2027Weekends[round.name] && (
+                    <p className="championship-bracket__hint">
+                      Week-end prévu : {firstSeries2027Weekends[round.name]}
+                    </p>
+                  )}
+                  {round.name === "Quarts de finale" && directQuarter && (
+                    <div className="championship-bracket__match">
+                      <span>
+                        <strong>
+                          {playerNames(
+                            directQuarter.rank4.players,
+                            directQuarter.rank4.teamLabel,
+                          )}
+                        </strong>
+                        <b>—</b>
+                      </span>
+                      <span>
+                        <strong>
+                          {playerNames(
+                            directQuarter.rank5.players,
+                            directQuarter.rank5.teamLabel,
+                          )}
+                        </strong>
+                        <b>—</b>
+                      </span>
+                      <small>Projection · 4e contre 5e</small>
+                    </div>
+                  )}
+                  {round.matches.map((match) => (
+                    <button
+                      type="button"
+                      key={match.matchId}
+                      className="championship-bracket__match"
+                      onClick={() => setSelected(match)}
+                    >
+                      <span className={match.team1IsMyClub ? "is-club" : ""}>
+                        <strong>
+                          {playerNames(match.team1Players, match.team1Label)}
+                        </strong>
+                        <b>{score(match, 1)}</b>
+                      </span>
+                      <span className={match.team2IsMyClub ? "is-club" : ""}>
+                        <strong>
+                          {playerNames(match.team2Players, match.team2Label)}
+                        </strong>
+                        <b>{score(match, 2)}</b>
+                      </span>
+                      <small>
+                        {match.effectiveOn ??
+                          match.theoreticalOn ??
+                          "Date à définir"}
+                      </small>
+                    </button>
+                  ))}
+                </div>
+              ))}
           </div>
-          {isFirstSeries && (
-            <div className="championship-bracket__regulation">
-              <strong>Barrages Nationale B — compétition distincte</strong>
-              <p>
-                Les équipes classées 9e à 12e disputent deux tours de barrage
-                les week-ends des quarts et demi-finales du Béarn (21–22 et
-                28–29 novembre). Le règlement fourni ne précise pas les
-                croisements : aucun adversaire n'est inventé dans ce tableau.
-              </p>
-              <p>
-                Équipes concernées :{" "}
-                {firstSeriesNationalBTeams.length === 4
-                  ? firstSeriesNationalBTeams
-                      .map(
-                        (team) =>
-                          `${team.generalRank}e : ${playerNames(team.players, team.teamLabel)}`,
-                      )
-                      .join(" · ")
-                  : "Classement général à confirmer"}
-                .
-              </p>
-            </div>
-          )}
           <p className="championship-bracket__hint">
-            Les rencontres publiées sont prioritaires. Les tours suivants sont
-            des projections indicatives : leur ordre peut être ajusté selon le
-            tableau officiel du comité.
+            Seules les rencontres publiées par le comité sont affichées. Aucune
+            branche ou exemption n'est déduite du classement.
           </p>
           {selected && (
             <div
