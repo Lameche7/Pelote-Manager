@@ -18,7 +18,16 @@ test("pool rank is primary general ranking key", () => {
   );
 });
 test("qualification cutoff ties cannot cross pool ranks", () => {
-  assert.match(sql, /count\(\*\) over \(\s*partition by\s*calculated\.pool_rank,/);
-  assert.match(sql, /min\(seeded\.seed\) over \(\s*partition by\s*seeded\.pool_rank,/);
-  assert.match(sql, /max\(seeded\.seed\) over \(\s*partition by\s*seeded\.pool_rank,/);
+  assert.match(
+    sql,
+    /count\(\*\) over \(\s*partition by\s*calculated\.pool_rank,/,
+  );
+  assert.match(
+    sql,
+    /min\(seeded\.seed\) over \(\s*partition by\s*seeded\.pool_rank,/,
+  );
+  assert.match(
+    sql,
+    /max\(seeded\.seed\) over \(\s*partition by\s*seeded\.pool_rank,/,
+  );
 });
