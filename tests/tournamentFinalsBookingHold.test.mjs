@@ -12,7 +12,10 @@ const sql = readFileSync(
 
 test("only configured finals slots inside finals dates are held", () => {
   assert.match(sql, /generated\.phase = 'finals'/);
-  assert.match(sql, /generated\.play_date between tournament\.finals_starts_on and tournament\.finals_ends_on/);
+  assert.match(
+    sql,
+    /generated\.play_date between tournament\.finals_starts_on and tournament\.finals_ends_on/,
+  );
   assert.match(sql, /tstzrange\(/);
 });
 
@@ -22,8 +25,17 @@ test("calendar shows an unavailable finals hold", () => {
 });
 
 test("all three standard booking entrypoints reject finals holds", () => {
-  assert.match(sql, /public\.create_reservation\(uuid,timestamptz,text,text,text\)/);
-  assert.match(sql, /public\.reserve_for_payment\(uuid,timestamptz,text,text,text\)/);
-  assert.match(sql, /public\.reserve_for_split_payment\(uuid,timestamptz,uuid\[\]\)/);
+  assert.match(
+    sql,
+    /public\.create_reservation\(uuid,timestamptz,text,text,text\)/,
+  );
+  assert.match(
+    sql,
+    /public\.reserve_for_payment\(uuid,timestamptz,text,text,text\)/,
+  );
+  assert.match(
+    sql,
+    /public\.reserve_for_split_payment\(uuid,timestamptz,uuid\[\]\)/,
+  );
   assert.match(sql, /assert_not_tournament_finals_slot/);
 });
