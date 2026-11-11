@@ -26,13 +26,21 @@ export function openingRoundMatches(cutoff, size, matches) {
 }
 
 export function firstSeriesRankingIsComplete(ranking) {
-  // 15 teams, three pools of five playing each other once: four matches each.
-  // A partially synchronized ranking must never assign direct quarter-final byes.
+  // General forfeits can leave registered teams absent from the official
+  // standings. Only the qualifying seeds need to be present and unambiguous.
+  const cutoff = ranking[0]?.qualificationCutoff;
+  if (!Number.isInteger(cutoff) || cutoff < 2 || cutoff > 64) return false;
+  const ranks = new Set(
+    ranking
+      .filter((team) => team.generalRank >= 1 && team.generalRank <= cutoff)
+      .map((team) => team.generalRank),
+  );
   return (
-    ranking.length === 15 &&
-    ranking.every((team) => team.played === 4) &&
-    new Set(ranking.map((team) => team.generalRank)).size === 15 &&
-    ranking.every((team) => team.generalRank >= 1 && team.generalRank <= 15)
+    ranks.size === cutoff &&
+    ranking.filter(
+      (team) => team.generalRank >= 1 && team.generalRank <= cutoff,
+    ).length === cutoff &&
+    ranking.every((team) => team.qualificationCutoff === cutoff)
   );
 }
 
