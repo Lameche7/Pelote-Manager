@@ -136,7 +136,7 @@ export function AdminTournamentFinalStageControl({
         stage.finalsStartsOn &&
         stage.finalsEndsOn &&
         stage.series.length > 0 &&
-        stage.series.every(seriesReadyForGeneration),
+        stage.series.filter((series) => !series.generated).every(seriesReadyForGeneration),
       ),
     [stage],
   );
@@ -200,8 +200,11 @@ export function AdminTournamentFinalStageControl({
 
   const generate = () =>
     run(async () => {
-      const count =
-        await tournamentFinalStageAdminService.generate(tournamentId);
+      const pending = stage?.series.filter((series) => !series.generated) ?? [];
+      let count = 0;
+      for (const series of pending) {
+        count += await tournamentFinalStageAdminService.generateSeries(tournamentId, series.seriesId);
+      }
       await tournamentFinalStageAdminService.prepareFullPlanning(tournamentId);
       return `Phase finale générée : ${count} première${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""} créée${count > 1 ? "s" : ""}. Préparez maintenant le planning complet de toutes les séries.`;
     });
@@ -283,7 +286,7 @@ export function AdminTournamentFinalStageControl({
         </p>
       )}
 
-      {!stage.generated ? (
+      {stage.series.some((series) => !series.generated) ? (
         <>
           <div className="final-stage-readiness">
             {stage.series.map((series) => (
