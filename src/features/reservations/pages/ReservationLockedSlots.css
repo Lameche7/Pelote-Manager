@@ -117,3 +117,23 @@
   text-overflow: clip;
   white-space: pre-line;
 }
+
+.reservation-slot--locked.reservation-slot--finals-hold {
+  border-color: #b7a0d3;
+  background: linear-gradient(135deg, #faf6ff, #efe7f8);
+}
+
+.reservation-slot--locked.reservation-slot--finals-hold::before {
+  background: #7751a0;
+}
+
+.reservation-slot--locked.reservation-slot--finals-hold span {
+  display: block;
+  color: #563478;
+  font-weight: 750;
+}
+
+.reservation-slot--locked.reservation-slot--finals-hold span::before {
+  content: "🏆";
+  margin-right: 0.35rem;
+}
