@@ -136,7 +136,9 @@ export function AdminTournamentFinalStageControl({
         stage.finalsStartsOn &&
         stage.finalsEndsOn &&
         stage.series.length > 0 &&
-        stage.series.filter((series) => !series.generated).every(seriesReadyForGeneration),
+        stage.series
+          .filter((series) => !series.generated)
+          .every(seriesReadyForGeneration),
       ),
     [stage],
   );
@@ -157,18 +159,21 @@ export function AdminTournamentFinalStageControl({
     unresolved.length > 0 &&
     unresolved.every(({ match }) => match.planned) &&
     !hasPublished;
-  const canPublish = planningReady && stage?.series.every((series) => series.generated);
+  const canPublish =
+    planningReady && stage?.series.every((series) => series.generated);
   const hasUnplannedCurrentMatches =
     unresolved.length > 0 && unresolved.some(({ match }) => !match.planned);
   const canAdvance =
-    (stage?.series.every((series) => series.generated) && stage?.series.some((series) => {
-      const matches = currentMatches(series);
-      return (
-        matches.length > 0 &&
-        matches.every((match) => match.resultStatus === "validated") &&
-        !(matches.length === 1 && matches[0]?.round === "final")
-      );
-    })) ?? false;
+    (stage?.series.every((series) => series.generated) &&
+      stage?.series.some((series) => {
+        const matches = currentMatches(series);
+        return (
+          matches.length > 0 &&
+          matches.every((match) => match.resultStatus === "validated") &&
+          !(matches.length === 1 && matches[0]?.round === "final")
+        );
+      })) ??
+    false;
   const finalsComplete =
     Boolean(stage?.generated) &&
     stage?.series.every((series) => {
@@ -203,7 +208,10 @@ export function AdminTournamentFinalStageControl({
       const pending = stage?.series.filter((series) => !series.generated) ?? [];
       let count = 0;
       for (const series of pending) {
-        count += await tournamentFinalStageAdminService.generateSeries(tournamentId, series.seriesId);
+        count += await tournamentFinalStageAdminService.generateSeries(
+          tournamentId,
+          series.seriesId,
+        );
       }
       await tournamentFinalStageAdminService.prepareFullPlanning(tournamentId);
       return `Phase finale générée : ${count} première${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""} créée${count > 1 ? "s" : ""}. Préparez maintenant le planning complet de toutes les séries.`;
@@ -334,16 +342,23 @@ export function AdminTournamentFinalStageControl({
           )}
 
           <div className="final-stage-series-list">
-            {stage.series.filter((series) => !series.generated).map((series) => (
-              <button
-                key={series.seriesId}
-                type="button"
-                disabled={busy || !stage.finalsStartsOn || !stage.finalsEndsOn || !seriesReadyForGeneration(series)}
-                onClick={() => void generateSeries(series)}
-              >
-                Générer uniquement : {series.seriesName}
-              </button>
-            ))}
+            {stage.series
+              .filter((series) => !series.generated)
+              .map((series) => (
+                <button
+                  key={series.seriesId}
+                  type="button"
+                  disabled={
+                    busy ||
+                    !stage.finalsStartsOn ||
+                    !stage.finalsEndsOn ||
+                    !seriesReadyForGeneration(series)
+                  }
+                  onClick={() => void generateSeries(series)}
+                >
+                  Générer uniquement : {series.seriesName}
+                </button>
+              ))}
           </div>
 
           <button
@@ -401,7 +416,10 @@ export function AdminTournamentFinalStageControl({
 
                   {!series.generated && (
                     <div>
-                      <span>{series.validatedPoolMatchCount}/{series.poolMatchCount} résultats validés</span>
+                      <span>
+                        {series.validatedPoolMatchCount}/{series.poolMatchCount}{" "}
+                        résultats validés
+                      </span>
                       <button
                         type="button"
                         disabled={busy || !seriesReadyForGeneration(series)}
@@ -411,24 +429,46 @@ export function AdminTournamentFinalStageControl({
                       </button>
                     </div>
                   )}
-                  {series.generated && matches.length > 0 &&
-                    matches.some((match) => match.resultStatus !== "validated") &&
-                    matches.filter((match) => match.resultStatus !== "validated").every((match) => match.planned && !match.published) && (
-                      <button type="button" disabled={busy} onClick={() => void publishSeries(series)}>
+                  {series.generated &&
+                    matches.length > 0 &&
+                    matches.some(
+                      (match) => match.resultStatus !== "validated",
+                    ) &&
+                    matches
+                      .filter((match) => match.resultStatus !== "validated")
+                      .every((match) => match.planned && !match.published) && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void publishSeries(series)}
+                      >
                         Publier uniquement {series.seriesName} et notifier
                       </button>
                     )}
-                  {series.generated && matches.length > 0 &&
-                    matches.every((match) => match.resultStatus === "validated") &&
-                    !(matches.length === 1 && matches[0]?.round === "final") && (
-                      <button type="button" disabled={busy} onClick={() => void advanceSeries(series)}>
+                  {series.generated &&
+                    matches.length > 0 &&
+                    matches.every(
+                      (match) => match.resultStatus === "validated",
+                    ) &&
+                    !(
+                      matches.length === 1 && matches[0]?.round === "final"
+                    ) && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void advanceSeries(series)}
+                      >
                         Préparer le tour suivant : {series.seriesName}
                       </button>
                     )}
                   {series.generated &&
                     matches.length > 0 &&
-                    matches.every((match) => match.resultStatus === "validated") &&
-                    !(matches.length === 1 && matches[0]?.round === "final") && (
+                    matches.every(
+                      (match) => match.resultStatus === "validated",
+                    ) &&
+                    !(
+                      matches.length === 1 && matches[0]?.round === "final"
+                    ) && (
                       <button
                         type="button"
                         disabled={busy}
@@ -447,13 +487,15 @@ export function AdminTournamentFinalStageControl({
             })}
           </div>
 
-          {hasUnplannedCurrentMatches && !hasPublished && stage.series.every((series) => series.generated) && (
-            <p className="qualification-alert qualification-alert--error">
-              Certaines parties actuellement jouables sont « À programmer ».
-              Modifiez manuellement l’étape correspondante dans le planning
-              complet avant publication.
-            </p>
-          )}
+          {hasUnplannedCurrentMatches &&
+            !hasPublished &&
+            stage.series.every((series) => series.generated) && (
+              <p className="qualification-alert qualification-alert--error">
+                Certaines parties actuellement jouables sont « À programmer ».
+                Modifiez manuellement l’étape correspondante dans le planning
+                complet avant publication.
+              </p>
+            )}
 
           {canPublish && (
             <p className="qualification-alert" role="status">
@@ -470,15 +512,16 @@ export function AdminTournamentFinalStageControl({
             </p>
           ) : (
             <div className="final-stage-actions">
-              {hasPublished && stage.series.every((series) => series.generated) && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void unpublish()}
-                >
-                  Retirer du calendrier pour modifier
-                </button>
-              )}
+              {hasPublished &&
+                stage.series.every((series) => series.generated) && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void unpublish()}
+                  >
+                    Retirer du calendrier pour modifier
+                  </button>
+                )}
               {canPublish && (
                 <button
                   type="button"

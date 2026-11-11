@@ -464,7 +464,10 @@ export const tournamentFinalStageAdminService = {
     return mapState(data);
   },
 
-  async generateSeries(tournamentId: string, seriesId: string): Promise<number> {
+  async generateSeries(
+    tournamentId: string,
+    seriesId: string,
+  ): Promise<number> {
     const { data, error } = await supabase.rpc(
       "admin_generate_tournament_final_stage",
       { target_tournament_id: tournamentId, target_series_id: seriesId },
@@ -496,7 +499,8 @@ export const tournamentFinalStageAdminService = {
       "admin_advance_tournament_final_stage",
       { target_tournament_id: tournamentId, target_series_id: seriesId },
     );
-    if (error) fail(error, "Impossible de préparer le tour suivant de cette série.");
+    if (error)
+      fail(error, "Impossible de préparer le tour suivant de cette série.");
     return Number(data ?? 0);
   },
 
