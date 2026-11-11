@@ -10,6 +10,7 @@ import { Phone } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
+import { MyTournamentFinalBracket } from "@/features/user-space/tournaments/components/MyTournamentFinalBracket";
 import { TournamentRescheduleRequestsPanel } from "@/features/user-space/tournaments/components/TournamentRescheduleRequestsPanel";
 import { TournamentRescheduleSuggestions } from "@/features/user-space/tournaments/components/TournamentRescheduleSuggestions";
 import {
@@ -452,38 +453,49 @@ function TournamentCard({
         </div>
       </div>
 
-      {qualification && qualification.qualifierCount > 0 && (
-        <div
-          className={`my-tournaments__qualification my-tournaments__qualification--${qualification.status}`}
-          role="status"
-        >
-          <div className="my-tournaments__qualification-heading">
-            <div>
-              <p className="my-tournaments__label">Course à la qualification</p>
-              <strong>
-                {qualification.currentPosition}
-                <sup>e</sup> au général · {qualification.qualifierCount}{" "}
-                qualifiés
-              </strong>
+      <MyTournamentFinalBracket
+        tournamentId={tournament.id}
+        seriesId={tournament.team.seriesId}
+        teamId={tournament.team.id}
+      />
+
+      <details className="my-tournaments__pool-details">
+        <summary>Afficher / masquer les informations de poules</summary>
+        {qualification && qualification.qualifierCount > 0 && (
+          <div
+            className={`my-tournaments__qualification my-tournaments__qualification--${qualification.status}`}
+            role="status"
+          >
+            <div className="my-tournaments__qualification-heading">
+              <div>
+                <p className="my-tournaments__label">
+                  Course à la qualification
+                </p>
+                <strong>
+                  {qualification.currentPosition}
+                  <sup>e</sup> au général · {qualification.qualifierCount}{" "}
+                  qualifiés
+                </strong>
+              </div>
+              <span>
+                {qualification.remainingMatches} partie
+                {qualification.remainingMatches > 1 ? "s" : ""} restante
+                {qualification.remainingMatches > 1 ? "s" : ""}
+              </span>
             </div>
-            <span>
-              {qualification.remainingMatches} partie
-              {qualification.remainingMatches > 1 ? "s" : ""} restante
-              {qualification.remainingMatches > 1 ? "s" : ""}
-            </span>
+            <p>{qualification.message}</p>
+            {qualification.bestPossiblePosition !== null &&
+              qualification.worstPossiblePosition !== null && (
+                <small>
+                  Selon le score de votre prochaine partie : classement possible
+                  entre {qualification.bestPossiblePosition}
+                  <sup>e</sup> et {qualification.worstPossiblePosition}
+                  <sup>e</sup>.
+                </small>
+              )}
           </div>
-          <p>{qualification.message}</p>
-          {qualification.bestPossiblePosition !== null &&
-            qualification.worstPossiblePosition !== null && (
-              <small>
-                Selon le score de votre prochaine partie : classement possible
-                entre {qualification.bestPossiblePosition}
-                <sup>e</sup> et {qualification.worstPossiblePosition}
-                <sup>e</sup>.
-              </small>
-            )}
-        </div>
-      )}
+        )}
+      </details>
 
       {!tournament.planningPublished ? (
         <div className="my-tournaments__planning-waiting">

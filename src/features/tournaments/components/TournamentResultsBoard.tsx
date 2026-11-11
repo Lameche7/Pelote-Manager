@@ -179,7 +179,7 @@ function FinalMatchCard({
   );
 }
 
-function TournamentFinalBracket({
+export function TournamentFinalBracket({
   series,
 }: {
   series: PublicTournamentResultSeries;

@@ -226,7 +226,7 @@ const mapState = (value: unknown): TournamentFinalStageState => {
     status: String(root.status ?? ""),
     finalsStartsOn: nullableString(root.finals_starts_on),
     finalsEndsOn: nullableString(root.finals_ends_on),
-    generated: Boolean(root.generated),
+    generated: rows(root.series).some((series) => Boolean(series.generated)),
     series: rows(root.series).map((series) => ({
       seriesId: String(series.series_id ?? ""),
       seriesName: String(series.series_name ?? "Série"),
@@ -464,12 +464,43 @@ export const tournamentFinalStageAdminService = {
     return mapState(data);
   },
 
+  async generateSeries(
+    tournamentId: string,
+    seriesId: string,
+  ): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_generate_tournament_final_stage",
+      { target_tournament_id: tournamentId, target_series_id: seriesId },
+    );
+    if (error) fail(error, "Impossible de générer cette série.");
+    return Number(data ?? 0);
+  },
+
+  async publishSeries(tournamentId: string, seriesId: string): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_publish_tournament_final_round",
+      { target_tournament_id: tournamentId, target_series_id: seriesId },
+    );
+    if (error) fail(error, "Impossible de publier cette série.");
+    return Number(data ?? 0);
+  },
+
   async generate(tournamentId: string): Promise<number> {
     const { data, error } = await supabase.rpc(
       "admin_generate_tournament_final_stage",
       { target_tournament_id: tournamentId },
     );
     if (error) fail(error, "Impossible de générer la phase finale.");
+    return Number(data ?? 0);
+  },
+
+  async advanceSeries(tournamentId: string, seriesId: string): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_advance_tournament_final_stage",
+      { target_tournament_id: tournamentId, target_series_id: seriesId },
+    );
+    if (error)
+      fail(error, "Impossible de préparer le tour suivant de cette série.");
     return Number(data ?? 0);
   },
 
