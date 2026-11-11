@@ -226,7 +226,7 @@ const mapState = (value: unknown): TournamentFinalStageState => {
     status: String(root.status ?? ""),
     finalsStartsOn: nullableString(root.finals_starts_on),
     finalsEndsOn: nullableString(root.finals_ends_on),
-    generated: Boolean(root.generated),
+    generated: rows(root.series).some((series) => Boolean(series.generated)),
     series: rows(root.series).map((series) => ({
       seriesId: String(series.series_id ?? ""),
       seriesName: String(series.series_name ?? "Série"),
