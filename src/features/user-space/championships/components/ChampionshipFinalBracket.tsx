@@ -5,7 +5,10 @@ import {
   type ChampionshipBrowserMatch,
   type ChampionshipResultsCatalogItem,
 } from "@/features/user-space/championships/services/championshipResultsService";
-import { firstSeries2027Weekends, isFirstSeries2027 } from "../domain/firstSeries2027Rules.mjs";
+import {
+  firstSeries2027Weekends,
+  isFirstSeries2027,
+} from "../domain/firstSeries2027Rules.mjs";
 import "./ChampionshipFinalBracket.css";
 
 const roundNames = [
@@ -102,7 +105,8 @@ export function ChampionshipFinalBracket({
     setError("");
     setMatches([]);
     setSelected(null);
-    championshipResultsService.listMatches(championshipId)
+    championshipResultsService
+      .listMatches(championshipId)
       .then((items) => {
         if (active) setMatches(items);
       })
