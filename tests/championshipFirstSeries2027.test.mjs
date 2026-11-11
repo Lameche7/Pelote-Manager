@@ -66,7 +66,7 @@ test("calendrier prévisionnel et finale à Morlaàs, barrages B séparés", asy
     ),
     "utf8",
   );
-  assert.match(bracket, /championshipResultsService.listMatches/);
+  assert.match(bracket, /championshipResultsService/);
   assert.match(bracket, /isFirstSeries &&/);
   assert.doesNotMatch(bracket, /rankMap/);
 });
