@@ -219,6 +219,17 @@ export function AdminTournamentFinalStageControl({
       return `${series.seriesName} : ${count} rencontre(s) de phase finale créées. Planning à préparer avant publication.`;
     });
 
+  const advanceSeries = (series: TournamentFinalSeriesState) =>
+    run(async () => {
+      const count = await tournamentFinalStageAdminService.advanceSeries(
+        tournamentId,
+        series.seriesId,
+      );
+      return count > 0
+        ? `${series.seriesName} : ${count} partie(s) du tour suivant créées.`
+        : `${series.seriesName} : aucun nouveau tour à créer.`;
+    });
+
   const publishSeries = (series: TournamentFinalSeriesState) =>
     run(async () => {
       const count = await tournamentFinalStageAdminService.publishSeries(
@@ -405,6 +416,13 @@ export function AdminTournamentFinalStageControl({
                     matches.filter((match) => match.resultStatus !== "validated").every((match) => match.planned && !match.published) && (
                       <button type="button" disabled={busy} onClick={() => void publishSeries(series)}>
                         Publier uniquement {series.seriesName} et notifier
+                      </button>
+                    )}
+                  {series.generated && matches.length > 0 &&
+                    matches.every((match) => match.resultStatus === "validated") &&
+                    !(matches.length === 1 && matches[0]?.round === "final") && (
+                      <button type="button" disabled={busy} onClick={() => void advanceSeries(series)}>
+                        Préparer le tour suivant : {series.seriesName}
                       </button>
                     )}
                   <div className="final-stage-matches">
