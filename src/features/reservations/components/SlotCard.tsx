@@ -123,11 +123,22 @@ export function SlotCard({
           ? { type: "button" as const, onClick: () => onInspect(slot) }
           : {})}
         className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}${isFinalsHold ? " reservation-slot--finals-hold" : ""}`}
-        aria-label={isFinalsHold ? `${slotTime} : réservé aux phases finales du tournoi` : `${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`}
+        aria-label={
+          isFinalsHold
+            ? `${slotTime} : réservé aux phases finales du tournoi`
+            : `${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`
+        }
       >
         <strong>{slotTime}</strong>
         <span>
-          {isFinalsHold ? "Réservé · Phases finales du tournoi" : <>{isChampionship ? "Championnat · " : ""}Réservable dès le{" "}{openingLabel}</>}
+          {isFinalsHold ? (
+            "Réservé · Phases finales du tournoi"
+          ) : (
+            <>
+              {isChampionship ? "Championnat · " : ""}Réservable dès le{" "}
+              {openingLabel}
+            </>
+          )}
         </span>
       </LockedContainer>
     );
