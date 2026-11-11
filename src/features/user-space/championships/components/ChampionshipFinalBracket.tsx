@@ -103,7 +103,9 @@ export function ChampionshipFinalBracket({
     setError("");
     setMatches([]);
     setSelected(null);
-    championshipResultsService.listMatches(championshipId).then((items) => {
+    championshipResultsService
+      .listMatches(championshipId)
+      .then((items) => {
         if (active) setMatches(items);
       })
       .catch((e) => {
