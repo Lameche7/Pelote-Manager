@@ -455,6 +455,8 @@ function TournamentCard({
 
       <MyTournamentFinalBracket tournamentId={tournament.id} seriesId={tournament.team.seriesId} teamId={tournament.team.id} />
 
+      <details className="my-tournaments__pool-details">
+        <summary>Afficher / masquer les informations de poules</summary>
       {qualification && qualification.qualifierCount > 0 && (
         <div
           className={`my-tournaments__qualification my-tournaments__qualification--${qualification.status}`}
@@ -487,6 +489,8 @@ function TournamentCard({
             )}
         </div>
       )}
+
+      </details>
 
       {!tournament.planningPublished ? (
         <div className="my-tournaments__planning-waiting">
