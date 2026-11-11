@@ -338,8 +338,8 @@ export function ChampionshipFinalBracket({
               ))}
           </div>
           <p className="championship-bracket__hint">
-            Seules les rencontres publiées par le comité sont affichées.
-            Aucune branche ou exemption n'est déduite du classement.
+            Seules les rencontres publiées par le comité sont affichées. Aucune
+            branche ou exemption n'est déduite du classement.
           </p>
           {selected && (
             <div
