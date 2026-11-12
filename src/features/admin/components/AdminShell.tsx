@@ -53,6 +53,10 @@ function AdminShellContent() {
     );
   if (!access) return <Navigate to={ROUTES.forbidden} replace />;
 
+  // Explicit club selection remains read-only until the business RPCs and
+  // platform lease are deployed and validated end-to-end. In particular,
+  // never mount Outlet for a selected foreign club: other admin routes still
+  // use implicit legacy club context.
   // Business RPCs are still based on the legacy implicit club context.
   // Never expose an admin screen for an explicit cross-club selection until
   // every business read/write is scoped and authorized by club ID server-side.
