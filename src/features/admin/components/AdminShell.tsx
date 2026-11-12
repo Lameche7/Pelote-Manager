@@ -17,8 +17,11 @@ const isEnabled = <T extends object>(item: T) =>
   !("enabled" in item) || item.enabled !== false;
 
 export function AdminShell() {
+  const location = useLocation();
+  const requestedClubId =
+    new URLSearchParams(location.search).get("adminClubId") ?? "";
   return (
-    <AdminAccessProvider>
+    <AdminAccessProvider key={requestedClubId}>
       <AdminShellContent />
     </AdminAccessProvider>
   );
@@ -28,6 +31,13 @@ function AdminShellContent() {
   const { access, error, hasPermission, isLoading } = useAdminAccess();
   const location = useLocation();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const requestedClubId = new URLSearchParams(location.search).get(
+    "adminClubId",
+  );
+  const adminLink = (path: string) =>
+    requestedClubId
+      ? `${path}?adminClubId=${encodeURIComponent(requestedClubId)}`
+      : path;
 
   useEffect(() => {
     setMobileNavigationOpen(false);
@@ -42,6 +52,30 @@ function AdminShellContent() {
       </section>
     );
   if (!access) return <Navigate to={ROUTES.forbidden} replace />;
+
+  // Explicit club selection remains read-only until the business RPCs and
+  // platform lease are deployed and validated end-to-end. In particular,
+  // never mount Outlet for a selected foreign club: other admin routes still
+  // use implicit legacy club context.
+  // Business RPCs are still based on the legacy implicit club context.
+  // Never expose an admin screen for an explicit cross-club selection until
+  // every business read/write is scoped and authorized by club ID server-side.
+  if (requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration inter-clubs en préparation</h1>
+        <p>
+          Le club {access.clubName} est identifié et vos droits sont vérifiés,
+          mais ses données ne peuvent pas encore être administrées depuis cet
+          espace.
+        </p>
+        <p>
+          Les opérations restent désactivées jusqu’à validation de l’isolation
+          des données.
+        </p>
+      </section>
+    );
+  }
 
   const visibleLinks: Array<{ label: string; to: string }> = [];
   adminNavigation.forEach((item) => {
@@ -129,7 +163,7 @@ function AdminShellContent() {
                       <NavLink
                         key={child.to}
                         className={linkClass}
-                        to={child.to}
+                        to={adminLink(child.to)}
                         onClick={() => setMobileNavigationOpen(false)}
                       >
                         {child.label}
@@ -140,7 +174,7 @@ function AdminShellContent() {
                 <NavLink
                   key={item.to}
                   className={linkClass}
-                  to={item.to}
+                  to={adminLink(item.to)}
                   end={item.to === "/admin"}
                   onClick={() => setMobileNavigationOpen(false)}
                 >
