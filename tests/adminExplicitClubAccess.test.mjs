@@ -9,7 +9,10 @@ const source = readFileSync(
 
 test("un club explicite doit appartenir aux habilitations métier", () => {
   assert.match(source, /async getAccessForClub\(clubId: string\)/);
-  assert.match(source, /accesses\.find\(\(access\) => access\.clubId === clubId\)/);
+  assert.match(
+    source,
+    /accesses\.find\(\(access\) => access\.clubId === clubId\)/,
+  );
   assert.match(source, /Aucune habilitation pour le club sélectionné/);
 });
 
