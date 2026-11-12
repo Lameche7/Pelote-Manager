@@ -18,7 +18,8 @@ test("lease issuance requires both authenticated sessions", () => {
 
 test("lease expiry is checked before granting local access", () => {
   assert.ok(leaseService.includes("Date.parse(data.expiresAt)"));
-  assert.ok(leaseService.includes("expiresAt <= Date.now()"));
+  assert.ok(leaseService.includes("remainingMs <= 0"));
+  assert.ok(leaseService.includes("remainingMs > 15 * 60 * 1000"));
   assert.ok(leaseService.includes("Number.isFinite(expiresAt)"));
 });
 
