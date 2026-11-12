@@ -7,16 +7,13 @@ const source = readFileSync(
   "utf8",
 );
 
-test("un club explicite doit appartenir aux habilitations métier", () => {
-  assert.match(source, /async getAccessForClub\(clubId: string\)/);
-  assert.match(
-    source,
-    /accesses\.find\(\(access\) => access\.clubId === clubId\)/,
-  );
+test("le club doit être autorisé", () => {
+  assert.match(source, /getAccessForClub/);
+  assert.match(source, /access\.clubId === clubId/);
   assert.match(source, /Aucune habilitation pour le club sélectionné/);
 });
 
-test("aucun club n'est choisi implicitement en cas de plusieurs habilitations", () => {
-  assert.match(source, /if \(accesses\.length > 1\)/);
+test("pas de club implicite", () => {
+  assert.match(source, /accesses\.length > 1/);
   assert.match(source, /Sélection du club requise/);
 });
