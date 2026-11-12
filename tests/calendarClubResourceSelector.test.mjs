@@ -3,11 +3,17 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const page = readFileSync(
-  new URL("../src/features/reservations/pages/ReservationsPage.tsx", import.meta.url),
+  new URL(
+    "../src/features/reservations/pages/ReservationsPage.tsx",
+    import.meta.url,
+  ),
   "utf8",
 );
 const sql = readFileSync(
-  new URL("../supabase/migrations/20261112193000_public_calendar_resources_by_club.sql", import.meta.url),
+  new URL(
+    "../supabase/migrations/20261112193000_public_calendar_resources_by_club.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 
