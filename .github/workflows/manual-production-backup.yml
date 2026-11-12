@@ -46,7 +46,7 @@ jobs:
           test -s "$ENCRYPTED"
           # Verify the encrypted file can be decrypted and parsed without
           # leaving a second plaintext dump on disk.
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 -in "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE | pg_restore --list >/dev/null
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 -in "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE | docker run --rm -i postgres:17 pg_restore --list >/dev/null
           sha256sum "$ENCRYPTED" > "$ENCRYPTED.sha256"
           rm -f "$RAW"
           echo "Sauvegarde chiffrée vérifiée ; aucune restauration effectuée."
