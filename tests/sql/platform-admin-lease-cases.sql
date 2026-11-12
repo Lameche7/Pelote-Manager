@@ -39,6 +39,35 @@ begin
     raise exception 'Unknown permission was accepted';
   end if;
 end $$;
+-- Another authenticated user must not inherit the lease.
+select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000002', true);
+do $
+begin
+  if public.has_club_permission('00000000-0000-0000-0000-000000000001', 'settings.manage') then
+    raise exception 'Another club administrator inherited the lease';
+  end if;
+  if (select count(*) from public.get_my_club_access()) <> 1 then
+    raise exception 'Another club administrator sees both clubs';
+  end if;
+end $;
+select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
+reset role;
+-- A service may not issue leases longer than the server-side maximum.
+select set_config('request.jwt.claim.role', 'service_role', true);
+set local role service_role;
+do $
+begin
+  begin
+    perform public.issue_platform_admin_lease(
+      '20000000-0000-0000-0000-000000000001',
+      901
+    );
+    raise exception 'Lease longer than 15 minutes was accepted';
+  exception when invalid_parameter_value then null;
+  end;
+end $;
+reset role;
+select set_config('request.jwt.claim.role', 'authenticated', true);
 reset role;
 -- Simulate an expired lease, without waiting five minutes.
 update pilotoki_private.platform_admin_leases
