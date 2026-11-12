@@ -6,6 +6,7 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { adminAccessService, type ClubAccess } from "./adminAccessService";
 import type { AdminPermission } from "@/features/admin/config/adminPermissions";
 
@@ -21,14 +22,19 @@ const AdminAccessContext = createContext<AdminAccessValue | undefined>(
 );
 
 export function AdminAccessProvider({ children }: PropsWithChildren) {
+  const location = useLocation();
+  const requestedClubId = new URLSearchParams(location.search).get("adminClubId")?.trim() || null;
   const [access, setAccess] = useState<ClubAccess | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
+    setAccess(null);
+    setError(null);
+    setIsLoading(true);
     adminAccessService
-      .getOptionalAccess()
+      .getOptionalAccess(requestedClubId ?? undefined)
       .then((value) => {
         if (active) setAccess(value);
       })
@@ -46,7 +52,7 @@ export function AdminAccessProvider({ children }: PropsWithChildren) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [requestedClubId]);
 
   const value = useMemo<AdminAccessValue>(
     () => ({
