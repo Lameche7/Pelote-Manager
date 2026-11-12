@@ -50,7 +50,9 @@ export function AdminReadOnlyClubDashboard({
   return (
     <section className="simple-page" aria-label="Tableau de bord du club">
       <h1>Tableau de bord · {clubName}</h1>
-      <p>Consultation uniquement. Aucune opération administrative disponible.</p>
+      <p>
+        Consultation uniquement. Aucune opération administrative disponible.
+      </p>
       {loading ? <p role="status">Chargement des données du club…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
       {!loading && !error && dashboard ? (
