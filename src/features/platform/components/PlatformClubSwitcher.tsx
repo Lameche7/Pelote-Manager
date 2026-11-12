@@ -28,10 +28,12 @@ export function PlatformClubSwitcher() {
       if (!active || roleError || allowed !== true) return;
       setIsVerifiedAdmin(true);
 
-      const { data, error: catalogueError } =
-        await client.functions.invoke("platform-business-clubs", {
+      const { data, error: catalogueError } = await client.functions.invoke(
+        "platform-business-clubs",
+        {
           method: "GET",
-        });
+        },
+      );
       if (!active) return;
       if (catalogueError || !Array.isArray(data?.clubs)) {
         setError("Catalogue des clubs indisponible.");
