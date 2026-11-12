@@ -1,0 +1,62 @@
+name: Sauvegarde manuelle chiffrée Supabase
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Sauvegarde PostgreSQL chiffrée
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production-backup
+    steps:
+      - name: Vérifier les secrets nécessaires
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.SUPABASE_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          test -n "$DATABASE_URL" || { echo "::error::Secret SUPABASE_BACKUP_DATABASE_URL absent"; exit 1; }
+          test -n "$BACKUP_PASSPHRASE" || { echo "::error::Secret SUPABASE_BACKUP_PASSPHRASE absent"; exit 1; }
+          test "${#BACKUP_PASSPHRASE}" -ge 24 || { echo "::error::Phrase secrète trop courte (24 caractères minimum)"; exit 1; }
+          echo "::add-mask::$DATABASE_URL"
+          echo "::add-mask::$BACKUP_PASSPHRASE"
+
+      - name: Exporter et chiffrer sans publier le fichier brut
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.SUPABASE_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/pilotoki-backup"
+          RAW="$RUNNER_TEMP/pilotoki-backup/database.dump"
+          ENCRYPTED="$RUNNER_TEMP/pilotoki-backup/pilotoki-production.dump.enc"
+          trap 'rm -f "$RAW"' EXIT
+          docker run --rm --user "$(id -u):$(id -g)" \
+            --env DATABASE_URL \
+            --volume "$RUNNER_TEMP/pilotoki-backup:/backup" \
+            postgres:17 \
+            sh -c 'pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=/backup/database.dump'
+          test -s "$RAW"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in "$RAW" -out "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE
+          test -s "$ENCRYPTED"
+          # Verify the encrypted file can be decrypted and parsed without
+          # leaving a second plaintext dump on disk.
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 -in "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE | docker run --rm -i postgres:17 pg_restore --list >/dev/null
+          sha256sum "$ENCRYPTED" > "$ENCRYPTED.sha256"
+          rm -f "$RAW"
+          echo "Sauvegarde chiffrée vérifiée ; aucune restauration effectuée."
+
+      - name: Publier uniquement la sauvegarde chiffrée
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilotoki-production-backup-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/pilotoki-backup/pilotoki-production.dump.enc
+            ${{ runner.temp }}/pilotoki-backup/pilotoki-production.dump.enc.sha256
+          if-no-files-found: error
+          retention-days: 3
