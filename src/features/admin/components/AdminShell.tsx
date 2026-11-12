@@ -17,8 +17,11 @@ const isEnabled = <T extends object>(item: T) =>
   !("enabled" in item) || item.enabled !== false;
 
 export function AdminShell() {
+  const location = useLocation();
+  const requestedClubId =
+    new URLSearchParams(location.search).get("adminClubId") ?? "";
   return (
-    <AdminAccessProvider>
+    <AdminAccessProvider key={requestedClubId}>
       <AdminShellContent />
     </AdminAccessProvider>
   );
