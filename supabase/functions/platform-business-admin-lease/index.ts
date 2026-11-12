@@ -5,7 +5,10 @@ const defaultOrigin = "https://app.pelotemanager.fr";
 function cors(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin");
   const allowed = new Set(
-    [defaultOrigin, ...(Deno.env.get("PLATFORM_ALLOWED_ORIGINS") ?? "").split(",")]
+    [
+      defaultOrigin,
+      ...(Deno.env.get("PLATFORM_ALLOWED_ORIGINS") ?? "").split(","),
+    ]
       .map((value) => value.trim())
       .filter(Boolean),
   );
