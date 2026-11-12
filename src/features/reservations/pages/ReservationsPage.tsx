@@ -504,6 +504,7 @@ export function ReservationsPage() {
   const [searchParams] = useSearchParams();
   const championshipMatchId = searchParams.get("championshipMatch");
   const requestedDate = searchParams.get("date");
+  const clubSlug = searchParams.get("club")?.trim() || null;
   const [resources, setResources] = useState<ReservableResource[]>([]);
   const [resourceId, setResourceId] = useState("");
   const [anchorDate, setAnchorDate] = useState(() =>
@@ -854,11 +855,15 @@ export function ReservationsPage() {
   useEffect(() => {
     let isCurrent = true;
     void reservationCalendarService
-      .listResources()
+      .listResources(clubSlug)
       .then((availableResources) => {
         if (!isCurrent) return;
         setResources(availableResources);
-        setResourceId((current) => current || availableResources[0]?.id || "");
+        setResourceId((current) =>
+          availableResources.some((resource) => resource.id === current)
+            ? current
+            : (availableResources[0]?.id ?? ""),
+        );
       })
       .catch(() => {
         if (isCurrent)
@@ -870,7 +875,7 @@ export function ReservationsPage() {
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [clubSlug]);
 
   const loadChampionshipContext = async () => {
     if (!championshipMatchId || !isAuthenticated) {
