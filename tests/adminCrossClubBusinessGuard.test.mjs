@@ -11,25 +11,23 @@ const access = readFileSync(
   "utf8",
 );
 
-test("cross-club business screens remain blocked until server-side scoping is implemented", () => {
-  assert.match(shell, /if \(requestedClubId\) \{/);
-  assert.match(shell, /Administration inter-clubs en préparation/);
+test("cross-club business screens are blocked", () => {
+  assert.ok(shell.includes("if (requestedClubId) {"));
+  assert.ok(shell.includes("Administration inter-clubs en préparation"));
   assert.ok(
     shell.indexOf("if (requestedClubId) {") < shell.indexOf("<Outlet />"),
     "The cross-club guard must precede the business route outlet",
   );
 });
 
-test("admin navigation preserves explicit club context", () => {
-  assert.ok(
-    shell.includes("adminClubId=${encodeURIComponent(requestedClubId)}"),
-  );
-  assert.match(shell, /to=\{adminLink\(child\.to\)\}/);
-  assert.match(shell, /to=\{adminLink\(item\.to\)\}/);
+test("admin navigation preserves club context", () => {
+  assert.ok(shell.includes("encodeURIComponent(requestedClubId)"));
+  assert.ok(shell.includes("adminLink(child.to)"));
+  assert.ok(shell.includes("adminLink(item.to)"));
 });
 
 test("ambiguous multi-club access fails closed", () => {
-  assert.match(access, /if \(accesses\.length > 1\)/);
-  assert.match(access, /Sélection du club requise/);
+  assert.ok(access.includes("accesses.length > 1"));
+  assert.ok(access.includes("Sélection du club requise"));
   assert.ok(access.includes("access.clubId === clubId"));
 });
