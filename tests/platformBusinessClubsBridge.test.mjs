@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const source = readFileSync(
-  new URL("../supabase/functions/platform-business-clubs/index.ts", import.meta.url),
+  new URL(
+    "../supabase/functions/platform-business-clubs/index.ts",
+    import.meta.url,
+  ),
   "utf8",
 );
 
