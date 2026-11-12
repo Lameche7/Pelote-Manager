@@ -7,30 +7,21 @@ export type PlatformBusinessIdentity = {
   crossClubAdministrationEnabled: false;
 };
 
-/**
- * Read-only verification of two independent authenticated sessions.
- * Never use this result to authorize a business mutation.
- */
-export async function verifyPlatformBusinessIdentity() {
-  const denied: PlatformBusinessIdentity = {
-    linked: false,
-    crossClubAdministrationEnabled: false,
-  };
-  if (!platformSupabase) {
-    return denied;
-  }
+const denied: PlatformBusinessIdentity = {
+  linked: false,
+  crossClubAdministrationEnabled: false,
+};
 
-  const sessions = await Promise.all([
-    platformSupabase.auth.getSession(),
-    supabase.auth.getSession(),
-  ]);
-  const platformSession = sessions[0].data;
-  const businessSession = sessions[1].data;
-  const platformToken = platformSession.session?.access_token;
-  const businessToken = businessSession.session?.access_token;
-  if (!platformToken || !businessToken) {
-    return denied;
-  }
+/** Proof of matching sessions only; never a grant of business permissions. */
+export async function verifyPlatformBusinessIdentity() {
+  const client = platformSupabase;
+  if (!client) return denied;
+
+  const platformSession = await client.auth.getSession();
+  const businessSession = await supabase.auth.getSession();
+  const platformToken = platformSession.data.session?.access_token;
+  const businessToken = businessSession.data.session?.access_token;
+  if (!platformToken || !businessToken) return denied;
 
   const options = {
     method: "POST" as const,
@@ -38,20 +29,17 @@ export async function verifyPlatformBusinessIdentity() {
       "X-Business-Authorization": `Bearer ${businessToken}`,
     },
   };
-  const { data, error } = await platformSupabase.functions.invoke(
+  const response = await client.functions.invoke(
     "platform-business-identity",
     options,
   );
-  if (error || data?.linked !== true) {
-    return denied;
-  }
+  if (response.error || response.data?.linked !== true) return denied;
 
+  const businessUserId = response.data.businessUserId;
   const verified: PlatformBusinessIdentity = {
     linked: true,
     businessUserId:
-      typeof data.businessUserId === "string"
-        ? data.businessUserId
-        : undefined,
+      typeof businessUserId === "string" ? businessUserId : undefined,
     crossClubAdministrationEnabled: false,
   };
   return verified;
