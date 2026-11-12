@@ -32,14 +32,15 @@ export async function verifyPlatformBusinessIdentity() {
     return denied;
   }
 
+  const options = {
+    method: "POST" as const,
+    headers: {
+      "X-Business-Authorization": `Bearer ${businessToken}`,
+    },
+  };
   const { data, error } = await platformSupabase.functions.invoke(
     "platform-business-identity",
-    {
-      method: "POST",
-      headers: {
-        "X-Business-Authorization": `Bearer ${businessToken}`,
-      },
-    },
+    options,
   );
   if (error || data?.linked !== true) {
     return denied;
