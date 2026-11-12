@@ -51,7 +51,11 @@ export function PlatformClubSwitcher() {
 
     void refresh();
     const { data: listener } = client.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+      if (
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "USER_UPDATED"
+      ) {
         // Supabase may emit TOKEN_REFRESHED during catalogue requests.
         // Avoid recursive catalogue calls on token refresh.
         void refresh();
