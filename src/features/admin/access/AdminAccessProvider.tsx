@@ -23,7 +23,8 @@ const AdminAccessContext = createContext<AdminAccessValue | undefined>(
 
 export function AdminAccessProvider({ children }: PropsWithChildren) {
   const location = useLocation();
-  const requestedClubId = new URLSearchParams(location.search).get("adminClubId")?.trim() || null;
+  const requestedClubId =
+    new URLSearchParams(location.search).get("adminClubId")?.trim() || null;
   const [access, setAccess] = useState<ClubAccess | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
