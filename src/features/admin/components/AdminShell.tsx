@@ -53,6 +53,22 @@ function AdminShellContent() {
     );
   if (!access) return <Navigate to={ROUTES.forbidden} replace />;
 
+  // Business RPCs are still based on the legacy implicit club context.
+  // Never expose an admin screen for an explicit cross-club selection until
+  // every business read/write is scoped and authorized by club ID server-side.
+  if (requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration inter-clubs en préparation</h1>
+        <p>
+          Le club {access.clubName} est identifié et vos droits sont vérifiés,
+          mais ses données ne peuvent pas encore être administrées depuis cet espace.
+        </p>
+        <p>Les opérations restent désactivées jusqu’à validation de l’isolation des données.</p>
+      </section>
+    );
+  }
+
   const visibleLinks: Array<{ label: string; to: string }> = [];
   adminNavigation.forEach((item) => {
     if (!isEnabled(item)) return;
