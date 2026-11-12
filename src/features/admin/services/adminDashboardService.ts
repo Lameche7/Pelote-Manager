@@ -169,11 +169,11 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
 const loadExplicitClubDashboard = async (
   clubId: string,
 ): Promise<AdminDashboard> => {
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+  const validClubId =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       clubId,
-    )
-  ) {
+    );
+  if (!validClubId) {
     throw new Error("Identifiant du club invalide.");
   }
   const args = { target_club_id: clubId };
