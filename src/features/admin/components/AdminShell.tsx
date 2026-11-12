@@ -31,7 +31,9 @@ function AdminShellContent() {
   const { access, error, hasPermission, isLoading } = useAdminAccess();
   const location = useLocation();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
-  const requestedClubId = new URLSearchParams(location.search).get("adminClubId");
+  const requestedClubId = new URLSearchParams(location.search).get(
+    "adminClubId",
+  );
   const adminLink = (path: string) =>
     requestedClubId
       ? `${path}?adminClubId=${encodeURIComponent(requestedClubId)}`
