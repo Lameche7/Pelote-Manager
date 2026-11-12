@@ -25,6 +25,37 @@ jobs:
           echo "::add-mask::$DATABASE_URL"
           echo "::add-mask::$BACKUP_PASSPHRASE"
 
+      - name: Vérifier la connexion PostgreSQL sans exposer les identifiants
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          echo "Diagnostic : démarrage de la vérification PostgreSQL"
+          ERR="$(mktemp)"
+          trap 'rm -f "$ERR"' EXIT
+          if docker run --rm --env DATABASE_URL postgres:17 \
+            sh -c 'exec psql "$DATABASE_URL" -X -q -t -A -v ON_ERROR_STOP=1 -c "SELECT 1"' \
+            > /dev/null 2> "$ERR"; then
+            echo "Diagnostic : connexion PostgreSQL réussie"
+          else
+            if grep -Eqi 'password authentication failed|invalid password|authentication failed' "$ERR"; then
+              echo "::error::Authentification PostgreSQL refusée : vérifier le nom utilisateur et le mot de passe dans le secret."
+            elif grep -Eqi 'tenant or user not found|unknown tenant|invalid user' "$ERR"; then
+              echo "::error::Session pooler : utilisateur ou identifiant de projet non reconnu."
+            elif grep -Eqi 'could not translate host name|name or service not known|nodename nor servname' "$ERR"; then
+              echo "::error::Nom du serveur Session pooler introuvable."
+            elif grep -Eqi 'connection refused|timeout expired|timed out|network is unreachable|no route to host' "$ERR"; then
+              echo "::error::Connexion réseau au serveur PostgreSQL impossible."
+            elif grep -Eqi 'database .* does not exist' "$ERR"; then
+              echo "::error::Nom de base PostgreSQL incorrect."
+            elif grep -Eqi 'no pg_hba.conf entry|SSL off|SSL required' "$ERR"; then
+              echo "::error::Connexion SSL refusée."
+            else
+              echo "::error::Connexion PostgreSQL impossible (cause non classée). Aucun secret n'a été affiché."
+            fi
+            exit 1
+          fi
+
       - name: Exporter et chiffrer sans publier le fichier brut
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
@@ -64,9 +95,11 @@ jobs:
             fi
             exit 1
           fi
-          test -s "$RAW"
+          echo "Diagnostic : export terminé, vérification de la taille du fichier"
+          test -s "$RAW" || { echo "::error::Export vide"; exit 1; }
           openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in "$RAW" -out "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE
-          test -s "$ENCRYPTED"
+          echo "Diagnostic : chiffrement terminé"
+          test -s "$ENCRYPTED" || { echo "::error::Fichier chiffré vide"; exit 1; }
           # Verify the encrypted file can be decrypted and parsed without
           # leaving a second plaintext dump on disk.
           openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 -in "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE | docker run --rm -i postgres:17 pg_restore --list >/dev/null
