@@ -50,8 +50,12 @@ export function PlatformClubSwitcher() {
     };
 
     void refresh();
-    const { data: listener } = client.auth.onAuthStateChange(() => {
-      void refresh();
+    const { data: listener } = client.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        // Supabase may emit TOKEN_REFRESHED during catalogue requests.
+        // Avoid recursive catalogue calls on token refresh.
+        void refresh();
+      }
     });
     return () => {
       active = false;
@@ -66,7 +70,7 @@ export function PlatformClubSwitcher() {
 
   return (
     <label className="app-club-selection">
-      <span>Club (super-admin)</span>
+      <span>Club à consulter (super-admin)</span>
       <select
         aria-label="Club à consulter"
         value={clubs.some((club) => club.slug === activeSlug) ? activeSlug : ""}
@@ -80,7 +84,7 @@ export function PlatformClubSwitcher() {
           navigate({ pathname: location.pathname, search: next.toString() });
         }}
       >
-        <option value="">Club par défaut (Lourdes)</option>
+        <option value="">Club par défaut</option>
         {clubs.map((club) => (
           <option key={club.id} value={club.slug}>
             {club.name}
