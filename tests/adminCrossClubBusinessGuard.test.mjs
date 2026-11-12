@@ -29,5 +29,8 @@ test("admin navigation preserves explicit club context", () => {
 test("ambiguous multi-club access fails closed", () => {
   assert.match(access, /if \(accesses\.length > 1\)/);
   assert.match(access, /Sélection du club requise/);
-  assert.match(access, /accesses\.find\(\(access\) => access\.clubId === clubId\)/);
+  assert.match(
+    access,
+    /accesses\.find\(\(access\) => access\.clubId === clubId\)/,
+  );
 });
