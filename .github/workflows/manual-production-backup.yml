@@ -102,7 +102,17 @@ jobs:
           test -s "$ENCRYPTED" || { echo "::error::Fichier chiffré vide"; exit 1; }
           # Verify the encrypted file can be decrypted and parsed without
           # leaving a second plaintext dump on disk.
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 -in "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE | docker run --rm -i postgres:17 pg_restore --list >/dev/null
+          # Verify decryption matches the original without piping into pg_restore.
+          if ! cmp -s "$RAW" <(openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 -in "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE); then
+            echo "::error::Le fichier chiffré ne correspond pas à l'export original."
+            exit 1
+          fi
+          # Verify PostgreSQL can read the original archive.
+          if ! docker run --rm -i postgres:17 pg_restore --list < "$RAW" > /dev/null; then
+            echo "::error::L'archive PostgreSQL n'a pas pu être lue."
+            exit 1
+          fi
+          echo "Diagnostic : déchiffrement et catalogue PostgreSQL vérifiés"
           sha256sum "$ENCRYPTED" > "$ENCRYPTED.sha256"
           rm -f "$RAW"
           echo "Sauvegarde chiffrée vérifiée ; aucune restauration effectuée."
