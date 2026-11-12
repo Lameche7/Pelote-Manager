@@ -32,7 +32,6 @@ export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [branding, setBranding] = useState(clubBrandingService.fallback);
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
-  const [authorizedClubs, setAuthorizedClubs] = useState<ClubAccess[]>([]);
   const clubSlug =
     typeof window === "undefined"
       ? null
@@ -77,7 +76,6 @@ export function MainLayout() {
 
     if (isLoading || !isAuthenticated || !user) {
       setAdminAccess(null);
-      setAuthorizedClubs([]);
       setIsAdminAccessLoading(false);
       return () => {
         active = false;
@@ -90,13 +88,11 @@ export function MainLayout() {
       .listAuthorizedClubs()
       .then((accesses) => {
         if (!active) return;
-        setAuthorizedClubs(accesses);
         setAdminAccess(accesses.length === 1 ? accesses[0] : null);
       })
       .catch(() => {
         if (active) {
           setAdminAccess(null);
-          setAuthorizedClubs([]);
         }
       })
       .finally(() => {
