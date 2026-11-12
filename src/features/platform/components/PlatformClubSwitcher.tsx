@@ -78,7 +78,7 @@ export function PlatformClubSwitcher() {
           navigate({ pathname: location.pathname, search: next.toString() });
         }}
       >
-        <option value="">Lourdes (par défaut)</option>
+        <option value="">Club par défaut (Lourdes)</option>
         {clubs.map((club) => (
           <option key={club.id} value={club.slug}>
             {club.name}
