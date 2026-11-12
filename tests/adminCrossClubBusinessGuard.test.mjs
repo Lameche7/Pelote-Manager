@@ -21,7 +21,9 @@ test("cross-club business screens remain blocked until server-side scoping is im
 });
 
 test("admin navigation preserves explicit club context", () => {
-  assert.ok(shell.includes("adminClubId=${encodeURIComponent(requestedClubId)}"));
+  assert.ok(
+    shell.includes("adminClubId=${encodeURIComponent(requestedClubId)}"),
+  );
   assert.match(shell, /to=\{adminLink\(child\.to\)\}/);
   assert.match(shell, /to=\{adminLink\(item\.to\)\}/);
 });
