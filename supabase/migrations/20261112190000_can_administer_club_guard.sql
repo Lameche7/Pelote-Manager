@@ -15,7 +15,7 @@ as $function$
     auth.uid() is not null
     and target_club_id is not null
     and required_permission is not null
-    and public.my_club_has_permission(target_club_id, required_permission);
+    and public.has_club_permission(target_club_id, required_permission);
 $function$;
 
 revoke all on function public.can_administer_club(uuid, text) from public;
