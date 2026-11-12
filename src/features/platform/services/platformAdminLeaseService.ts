@@ -35,6 +35,10 @@ export const platformAdminLeaseService = {
     if (error || data?.enabled !== true || typeof data.expiresAt !== "string") {
       throw new Error("Autorisation inter-clubs refusée.");
     }
+    const expiresAt = Date.parse(data.expiresAt);
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      throw new Error("Autorisation inter-clubs expirée ou invalide.");
+    }
     return { enabled: true, expiresAt: data.expiresAt };
   },
 
