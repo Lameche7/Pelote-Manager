@@ -28,7 +28,7 @@ function reply(request: Request, status: number, data: unknown): Response {
 }
 
 function bearer(value: string | null): string | null {
-  return /^Bearer ([^\\s]+)$/.exec(value ?? "")?.[1] ?? null;
+  return /^Bearer ([^\s]+)$/.exec(value ?? "")?.[1] ?? null;
 }
 
 /**
