@@ -40,7 +40,8 @@ export const adminAccessService = {
     return selected;
   },
 
-  async getOptionalAccess(): Promise<ClubAccess | null> {
+  async getOptionalAccess(clubId?: string): Promise<ClubAccess | null> {
+    if (clubId) return this.getAccessForClub(clubId);
     const accesses = await this.listAuthorizedClubs();
     if (accesses.length > 1) {
       throw new Error(
@@ -50,8 +51,8 @@ export const adminAccessService = {
     return accesses[0] ?? null;
   },
 
-  async getAccess(): Promise<ClubAccess> {
-    const access = await this.getOptionalAccess();
+  async getAccess(clubId?: string): Promise<ClubAccess> {
+    const access = await this.getOptionalAccess(clubId);
     if (!access) {
       throw new Error(
         "Aucune habilitation d’administration n’est associée à votre compte.",
