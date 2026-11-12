@@ -2,10 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const source = readFileSync(
-  new URL("../src/features/admin/access/adminAccessService.ts", import.meta.url),
-  "utf8",
-);
+const sourcePath = new URL("../src/features/admin/access/adminAccessService.ts", import.meta.url);
+const source = readFileSync(sourcePath, "utf8");
 
 test("le club doit être autorisé", () => {
   assert.match(source, /getAccessForClub/);
