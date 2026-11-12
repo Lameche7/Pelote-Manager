@@ -11,20 +11,25 @@ export type PlatformBusinessIdentity = {
  * Read-only verification of two independent authenticated sessions.
  * Never use this result to authorize a business mutation.
  */
-export async function verifyPlatformBusinessIdentity(): Promise<PlatformBusinessIdentity> {
+export async function verifyPlatformBusinessIdentity() {
+  const denied: PlatformBusinessIdentity = {
+    linked: false,
+    crossClubAdministrationEnabled: false,
+  };
   if (!platformSupabase) {
-    return { linked: false, crossClubAdministrationEnabled: false };
+    return denied;
   }
 
-  const [{ data: platformSession }, { data: businessSession }] =
-    await Promise.all([
-      platformSupabase.auth.getSession(),
-      supabase.auth.getSession(),
-    ]);
+  const sessions = await Promise.all([
+    platformSupabase.auth.getSession(),
+    supabase.auth.getSession(),
+  ]);
+  const platformSession = sessions[0].data;
+  const businessSession = sessions[1].data;
   const platformToken = platformSession.session?.access_token;
   const businessToken = businessSession.session?.access_token;
   if (!platformToken || !businessToken) {
-    return { linked: false, crossClubAdministrationEnabled: false };
+    return denied;
   }
 
   const { data, error } = await platformSupabase.functions.invoke(
@@ -37,10 +42,10 @@ export async function verifyPlatformBusinessIdentity(): Promise<PlatformBusiness
     },
   );
   if (error || data?.linked !== true) {
-    return { linked: false, crossClubAdministrationEnabled: false };
+    return denied;
   }
 
-  return {
+  const verified: PlatformBusinessIdentity = {
     linked: true,
     businessUserId:
       typeof data.businessUserId === "string"
@@ -48,4 +53,5 @@ export async function verifyPlatformBusinessIdentity(): Promise<PlatformBusiness
         : undefined,
     crossClubAdministrationEnabled: false,
   };
+  return verified;
 }
