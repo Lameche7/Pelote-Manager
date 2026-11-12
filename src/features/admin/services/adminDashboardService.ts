@@ -166,7 +166,9 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
  * corresponding server RPCs and short-lived lease are deployed and verified.
  * Never fall back to legacy no-argument RPCs after a scoped request fails.
  */
-const loadExplicitClubDashboard = async (clubId: string): Promise<AdminDashboard> => {
+const loadExplicitClubDashboard = async (
+  clubId: string,
+): Promise<AdminDashboard> => {
   const clubIdPattern = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
   if (!clubIdPattern.test(clubId)) {
     throw new Error("Identifiant du club invalide.");
