@@ -159,3 +159,46 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
+
+  format-pr497:
+    name: Corriger automatiquement le formatage de la PR 497
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'feat/superadmin-club-switcher' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Appliquer Prettier aux sept fichiers signalés
+        run: |
+          npx prettier --write \
+            src/features/admin/access/adminAccessService.ts \
+            src/features/admin/access/clubSelection.ts \
+            src/features/platform/pages/PlatformDashboardPage.tsx \
+            tests/adminAccessMultiClub.test.mjs \
+            tests/clubSelection.test.mjs \
+            tests/explicitClubPermissionGuard.test.mjs \
+            tests/platformClubSelector.test.mjs
+      - name: Enregistrer les corrections si nécessaire
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            src/features/admin/access/adminAccessService.ts \
+            src/features/admin/access/clubSelection.ts \
+            src/features/platform/pages/PlatformDashboardPage.tsx \
+            tests/adminAccessMultiClub.test.mjs \
+            tests/clubSelection.test.mjs \
+            tests/explicitClubPermissionGuard.test.mjs \
+            tests/platformClubSelector.test.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format PR 497 with Prettier"
+            git push origin HEAD:feat/superadmin-club-switcher
+          fi
