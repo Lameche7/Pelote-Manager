@@ -19,3 +19,23 @@ test("plusieurs clubs ne donnent pas un accès arbitraire au premier club", () =
   assert.match(source, /if \(accesses\.length > 1\)/);
   assert.match(source, /Sélection du club requise/);
 });
+
+const provider = readFileSync(
+  new URL(
+    "../src/features/admin/access/AdminAccessProvider.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
+test("le contexte admin vérifie le club explicitement demandé auprès de la RPC", () => {
+  assert.match(provider, /get\("adminClubId"\)/);
+  assert.match(provider, /getOptionalAccess\(requestedClubId \?\? undefined\)/);
+  assert.match(provider, /\[requestedClubId\]/);
+});
+
+test("un changement de club efface immédiatement les anciennes permissions", () => {
+  assert.match(provider, /setAccess\(null\);/);
+  assert.match(provider, /setError\(null\);/);
+  assert.match(provider, /setIsLoading\(true\);/);
+});
