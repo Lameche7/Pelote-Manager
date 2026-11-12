@@ -29,11 +29,11 @@ create function public.admin_current_club_id() returns uuid
  if n!=1 then raise exception 'Club selection required' using errcode='P0003'; end if;
  return cid;
  end $$;
-create function public.has_club_permission(cid uuid,perm text) returns boolean
+create function public.has_club_permission(target_club_id uuid,target_permission text) returns boolean
  language sql stable security definer set search_path='' as $$
  select exists(select 1 from public.club_memberships cm
  join public.club_role_permissions cp on cp.role_id=cm.role_id
- where cm.profile_id=auth.uid() and cm.club_id=cid and cp.permission_key=perm)
+ where cm.profile_id=auth.uid() and cm.club_id=target_club_id and cp.permission_key=target_permission)
  $$;
 create function public.is_active_licensee_for_club(pid uuid,cid uuid,dt date default current_date)
  returns boolean language sql stable security definer set search_path='' as $$

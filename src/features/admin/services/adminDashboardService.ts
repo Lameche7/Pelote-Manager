@@ -161,8 +161,82 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
   };
 };
 
+/**
+ * Prepared explicit-club read path. Not wired to AdminShell until the
+ * corresponding server RPCs and short-lived lease are deployed and verified.
+ * Never fall back to legacy no-argument RPCs after a scoped request fails.
+ */
+const loadExplicitClubDashboard = async (
+  clubId: string,
+): Promise<AdminDashboard> => {
+  const clubIdPattern = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+  if (!clubIdPattern.test(clubId)) {
+    throw new Error("Identifiant du club invalide.");
+  }
+  const args = { target_club_id: clubId };
+  const { data, error } = await supabase.rpc("admin_get_dashboard", args);
+  if (error) {
+    throw new Error(
+      getSupabaseErrorMessage(error, "Tableau de bord du club indisponible."),
+    );
+  }
+  const dashboard = mapDashboard(data);
+  const { data: countsData, error: countsError } = await supabase.rpc(
+    "admin_dashboard_match_counts",
+    args,
+  );
+  if (countsError) {
+    throw new Error(
+      getSupabaseErrorMessage(
+        countsError,
+        "Statistiques du club indisponibles.",
+      ),
+    );
+  }
+  const { data: monthlyData, error: monthlyError } = await supabase.rpc(
+    "admin_monthly_match_report",
+    args,
+  );
+  if (monthlyError) {
+    throw new Error(
+      getSupabaseErrorMessage(
+        monthlyError,
+        "Bilan mensuel du club indisponible.",
+      ),
+    );
+  }
+  const counts = asRecord(countsData);
+  dashboard.metrics.tournamentMatches = asNumber(counts.tournament_matches);
+  dashboard.metrics.championshipMatches = asNumber(counts.championship_matches);
+  dashboard.metrics.championshipMatchesTotal = asNumber(
+    counts.championship_matches_total,
+  );
+  dashboard.metrics.championshipWinRate = asNumber(
+    counts.championship_win_rate,
+  );
+  dashboard.monthlyMatches = asRows(monthlyData).map((item) => ({
+    month: asString(item.month),
+    tournamentMatches: asNumber(item.tournament_matches),
+    championshipMatches: asNumber(item.championship_matches),
+  }));
+  return dashboard;
+};
+
 export const adminDashboardService = {
-  async getDashboard(): Promise<AdminDashboard> {
+  /** Prepared explicit-club read path; not used by the UI. */
+  getDashboardForClub: loadExplicitClubDashboard,
+  /**
+   * Legacy dashboard RPCs do not accept a club identifier. Reject explicit
+   * cross-club requests instead of silently returning the default club data.
+   * Replace this guard only after all three RPCs are scoped and authorized
+   * server-side, including match counts and monthly reports.
+   */
+  async getDashboard(clubId?: string): Promise<AdminDashboard> {
+    if (clubId) {
+      throw new Error(
+        "Tableau de bord inter-clubs indisponible : isolation des données non validée.",
+      );
+    }
     const { data, error } = await supabase.rpc("admin_get_dashboard");
     if (error) {
       throw new Error(
