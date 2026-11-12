@@ -48,8 +48,9 @@ Deno.serve(async (request: Request): Promise<Response> => {
       return json(401, { error: "Session invalide" });
     }
 
-    const { data: isAdmin, error: roleError } =
-      await platform.rpc("platform_is_admin");
+    const { data: isAdmin, error: roleError } = await platform.rpc(
+      "platform_is_admin",
+    );
     if (roleError || isAdmin !== true) {
       return json(403, { error: "Accès refusé" });
     }
