@@ -102,7 +102,7 @@ export function PlatformClubSwitcher() {
         ))}
       </select>
       <small>
-        Le choix change uniquement l’apparence du club, pas les données ni les droits d’administration.
+        {"Le choix change uniquement l’apparence du club, pas les données ni les droits d’administration."}
       </small>
       <small>
         {identityLinked
