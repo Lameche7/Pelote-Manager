@@ -3,7 +3,7 @@ begin;
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
-do $$
+do $check$
 begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Club A administrator unexpectedly manages B';
@@ -19,7 +19,7 @@ begin
     raise exception 'Authenticated user issued own lease';
   exception when insufficient_privilege then null;
   end;
-end $$;
+end $check$;
 reset role;
 select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
@@ -27,7 +27,7 @@ select public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001',
 reset role;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
-do $$
+do $check$
 begin
   if not public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Active platform lease did not authorize club B';
@@ -38,10 +38,10 @@ begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'invented.permission') then
     raise exception 'Unknown permission was accepted';
   end if;
-end $;
+end $check$;
 -- Another authenticated user must not inherit the lease.
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000002', true);
-do $lease$
+do $check$
 begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000001', 'settings.manage') then
     raise exception 'Another club administrator inherited the lease';
@@ -49,13 +49,13 @@ begin
   if (select count(*) from public.get_my_club_access()) <> 1 then
     raise exception 'Another club administrator sees both clubs';
   end if;
-end $lease$;
+end $check$;
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
 reset role;
 -- A service may not issue leases longer than the server-side maximum.
 select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
-do $lease$
+do $check$
 begin
   begin
     perform public.issue_platform_admin_lease(
@@ -65,7 +65,7 @@ begin
     raise exception 'Lease longer than 15 minutes was accepted';
   exception when invalid_parameter_value then null;
   end;
-end $lease$;
+end $check$;
 reset role;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 reset role;
@@ -74,12 +74,12 @@ update pilotoki_private.platform_admin_leases
 set expires_at = now() - interval '1 second'
 where business_user_id = '20000000-0000-0000-0000-000000000001';
 set local role authenticated;
-do $$
+do $check$
 begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Expired lease still authorizes another club';
   end if;
-end $$;
+end $check$;
 reset role;
 select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
@@ -88,7 +88,7 @@ select public.revoke_platform_admin_lease('20000000-0000-0000-0000-000000000001'
 reset role;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
-do $$
+do $check$
 begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Revoked lease still authorizes another club';
@@ -96,5 +96,5 @@ begin
   if (select count(*) from public.get_my_club_access()) <> 1 then
     raise exception 'Revoked lease still lists another club';
   end if;
-end $$;
+end $check$;
 rollback;
