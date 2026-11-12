@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { RouteScrollReset } from "@/app/router/RouteScrollReset";
 import { ExternalParticipationPrompt } from "@/features/auth/components/ExternalParticipationPrompt";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/features/notifications/services/notificationService";
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
+import { PlatformClubSwitcher } from "@/features/platform/components/PlatformClubSwitcher";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MainLayout.css";
@@ -29,13 +30,10 @@ type ClubLayoutStyle = CSSProperties & {
 
 export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const location = useLocation();
   const [branding, setBranding] = useState(clubBrandingService.fallback);
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
-  const [authorizedClubs, setAuthorizedClubs] = useState<ClubAccess[]>([]);
-  const clubSlug =
-    typeof window === "undefined"
-      ? null
-      : new URLSearchParams(window.location.search).get("club")?.trim() || null;
+  const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
   const layoutStyle: ClubLayoutStyle = {
     "--club-primary": branding.primaryColor,
     "--club-secondary": branding.secondaryColor,
@@ -76,7 +74,6 @@ export function MainLayout() {
 
     if (isLoading || !isAuthenticated || !user) {
       setAdminAccess(null);
-      setAuthorizedClubs([]);
       setIsAdminAccessLoading(false);
       return () => {
         active = false;
@@ -89,13 +86,11 @@ export function MainLayout() {
       .listAuthorizedClubs()
       .then((accesses) => {
         if (!active) return;
-        setAuthorizedClubs(accesses);
         setAdminAccess(accesses.length === 1 ? accesses[0] : null);
       })
       .catch(() => {
         if (active) {
           setAdminAccess(null);
-          setAuthorizedClubs([]);
         }
       })
       .finally(() => {
@@ -162,11 +157,7 @@ export function MainLayout() {
           </span>
         </Link>
 
-        {authorizedClubs.length > 1 && (
-          <div className="app-club-selection" role="status">
-            Plusieurs clubs autorisés : sélection sécurisée en préparation
-          </div>
-        )}
+        <PlatformClubSwitcher />
         <nav className="app-navigation" aria-label="Navigation principale">
           <NavLink className={navClassName} to={ROUTES.home}>
             Accueil
