@@ -101,9 +101,7 @@ export function PlatformClubSwitcher() {
           </option>
         ))}
       </select>
-      <small>
-        {"Le choix change uniquement l’apparence du club, pas les données ni les droits d’administration."}
-      </small>
+      <small>Aperçu uniquement : aucune donnée ni permission modifiée.</small>
       <small>
         {identityLinked
           ? "Identité vérifiée · administration inter-clubs non activée"
