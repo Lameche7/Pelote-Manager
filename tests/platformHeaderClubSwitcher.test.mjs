@@ -26,3 +26,10 @@ test("les clubs viennent du catalogue protégé et non du navigateur", () => {
   assert.match(switcher, /clubs\.some\(\(club\) => club\.slug === slug\)/);
   assert.match(layout, /<PlatformClubSwitcher \/>/);
 });
+
+test("le sélecteur n'annonce pas des droits d'administration inter-clubs", () => {
+  assert.match(switcher, /Club à consulter \(super-admin\)/);
+  assert.doesNotMatch(switcher, /Club par défaut \(Lourdes\)/);
+  assert.match(switcher, /event === "SIGNED_IN"/);
+  assert.doesNotMatch(switcher, /event === "TOKEN_REFRESHED"/);
+});
