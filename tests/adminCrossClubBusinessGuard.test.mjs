@@ -2,8 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const shell = readFileSync("src/features/admin/components/AdminShell.tsx", "utf8");
-const access = readFileSync("src/features/admin/access/adminAccessService.ts", "utf8");
+const shell = readFileSync(
+  "src/features/admin/components/AdminShell.tsx",
+  "utf8",
+);
+const access = readFileSync(
+  "src/features/admin/access/adminAccessService.ts",
+  "utf8",
+);
 
 test("cross-club access is guarded", () => {
   assert.ok(shell.includes("if (requestedClubId) {"));
