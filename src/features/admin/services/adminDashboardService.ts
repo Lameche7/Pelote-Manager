@@ -162,7 +162,18 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
 };
 
 export const adminDashboardService = {
-  async getDashboard(): Promise<AdminDashboard> {
+  /**
+   * Legacy dashboard RPCs do not accept a club identifier. Reject explicit
+   * cross-club requests instead of silently returning the default club data.
+   * Replace this guard only after all three RPCs are scoped and authorized
+   * server-side, including match counts and monthly reports.
+   */
+  async getDashboard(clubId?: string): Promise<AdminDashboard> {
+    if (clubId) {
+      throw new Error(
+        "Tableau de bord inter-clubs indisponible : isolation des données non validée.",
+      );
+    }
     const { data, error } = await supabase.rpc("admin_get_dashboard");
     if (error) {
       throw new Error(
