@@ -28,4 +28,67 @@ begin
     end loop;
   end loop;
 end $check$;
+-- Même avec un bail plateforme expiré ou révoqué, les RPC doivent refuser B.
+reset role;
+select set_config('request.jwt.claim.role', 'service_role', true);
+set local role service_role;
+select public.issue_platform_admin_lease(
+  '20000000-0000-0000-0000-000000000001',
+  300
+);
+reset role;
+update pilotoki_private.platform_admin_leases
+set expires_at = now() - interval '1 second'
+where business_user_id = '20000000-0000-0000-0000-000000000001';
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+do $check$
+declare
+  function_name text;
+begin
+  foreach function_name in array array[
+    'admin_get_dashboard',
+    'admin_dashboard_match_counts',
+    'admin_monthly_match_report'
+  ] loop
+    begin
+      execute format('select public.%I($1)', function_name)
+        using '00000000-0000-0000-0000-000000000002'::uuid;
+      raise exception '% accepted expired lease', function_name;
+    exception when insufficient_privilege then
+      null;
+    end;
+  end loop;
+end $check$;
+reset role;
+select set_config('request.jwt.claim.role', 'service_role', true);
+set local role service_role;
+select public.issue_platform_admin_lease(
+  '20000000-0000-0000-0000-000000000001',
+  300
+);
+select public.revoke_platform_admin_lease(
+  '20000000-0000-0000-0000-000000000001'
+);
+reset role;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+do $check$
+declare
+  function_name text;
+begin
+  foreach function_name in array array[
+    'admin_get_dashboard',
+    'admin_dashboard_match_counts',
+    'admin_monthly_match_report'
+  ] loop
+    begin
+      execute format('select public.%I($1)', function_name)
+        using '00000000-0000-0000-0000-000000000002'::uuid;
+      raise exception '% accepted revoked lease', function_name;
+    exception when insufficient_privilege then
+      null;
+    end;
+  end loop;
+end $check$;
 rollback;
