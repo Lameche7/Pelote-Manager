@@ -28,6 +28,11 @@ function AdminShellContent() {
   const { access, error, hasPermission, isLoading } = useAdminAccess();
   const location = useLocation();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const requestedClubId = new URLSearchParams(location.search).get("adminClubId");
+  const adminLink = (path: string) =>
+    requestedClubId
+      ? `${path}?adminClubId=${encodeURIComponent(requestedClubId)}`
+      : path;
 
   useEffect(() => {
     setMobileNavigationOpen(false);
@@ -129,7 +134,7 @@ function AdminShellContent() {
                       <NavLink
                         key={child.to}
                         className={linkClass}
-                        to={child.to}
+                        to={adminLink(child.to)}
                         onClick={() => setMobileNavigationOpen(false)}
                       >
                         {child.label}
@@ -140,7 +145,7 @@ function AdminShellContent() {
                 <NavLink
                   key={item.to}
                   className={linkClass}
-                  to={item.to}
+                  to={adminLink(item.to)}
                   end={item.to === "/admin"}
                   onClick={() => setMobileNavigationOpen(false)}
                 >
