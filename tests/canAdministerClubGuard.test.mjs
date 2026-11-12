@@ -12,7 +12,7 @@ test("le contrôle cible un club et une permission explicites", () => {
   assert.match(sql, /target_club_id uuid/i);
   assert.match(sql, /required_permission text/i);
   assert.match(sql, /auth\.uid\(\) is not null/i);
-  assert.match(sql, /public\.my_club_has_permission\(target_club_id, required_permission\)/i);
+  assert.match(sql, /public\.has_club_permission\(target_club_id, required_permission\)/i);
 });
 
 test("aucune permission anonyme ni élévation super-admin implicite", () => {
