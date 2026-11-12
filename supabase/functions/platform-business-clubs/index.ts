@@ -30,9 +30,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
   const platformUrl = Deno.env.get("SUPABASE_URL");
   const platformAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const businessUrl = Deno.env.get("BUSINESS_SUPABASE_URL");
-  const businessServiceKey = Deno.env.get(
-    "BUSINESS_SUPABASE_SERVICE_ROLE_KEY",
-  );
+  const businessServiceKey = Deno.env.get("BUSINESS_SUPABASE_SERVICE_ROLE_KEY");
 
   if (!platformUrl || !platformAnonKey || !businessUrl || !businessServiceKey) {
     return json(503, { error: "Service indisponible" });
