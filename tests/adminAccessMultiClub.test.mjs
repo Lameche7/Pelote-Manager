@@ -39,3 +39,18 @@ test("un changement de club efface immédiatement les anciennes permissions", ()
   assert.match(provider, /setError\(null\);/);
   assert.match(provider, /setIsLoading\(true\);/);
 });
+
+const shell = readFileSync(
+  new URL("../src/features/admin/components/AdminShell.tsx", import.meta.url),
+  "utf8",
+);
+
+test("les liens du back-office conservent le club choisi", () => {
+  assert.match(shell, /const adminLink = \(path: string\)/);
+  assert.match(shell, /to=\{adminLink\(child\.to\)\}/);
+  assert.match(shell, /to=\{adminLink\(item\.to\)\}/);
+});
+
+test("changer de club remonte le contexte et ne conserve pas les droits précédents", () => {
+  assert.match(shell, /<AdminAccessProvider key=\{requestedClubId\}>/);
+});
