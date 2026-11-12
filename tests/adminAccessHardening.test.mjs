@@ -70,7 +70,7 @@ test("le lien et la route Administration exigent une permission réelle", () => 
   assert.match(layout, /adminAccessService/);
   assert.match(layout, /listAuthorizedClubs\(\)/);
   assert.match(layout, /canAccessAdminDashboard\(adminAccess\)/);
-  assert.match(provider, /getOptionalAccess\(\)/);
+  assert.match(provider, /getOptionalAccess\(requestedClubId \?\? undefined\)/);
   assert.match(
     shell,
     /if \(!access\) return <Navigate to=\{ROUTES\.forbidden\} replace \/>/,
