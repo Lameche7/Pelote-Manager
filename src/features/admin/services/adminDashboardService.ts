@@ -167,10 +167,7 @@ const mapDashboard = (payload: unknown): AdminDashboard => {
  * Never fall back to legacy no-argument RPCs after a scoped request fails.
  */
 const loadExplicitClubDashboard = async (clubId: string): Promise<AdminDashboard> => {
-  const clubIdPattern = new RegExp(
-    "^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
-    "i",
-  );
+  const clubIdPattern = new RegExp("^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$", "i");
   if (!clubIdPattern.test(clubId)) {
     throw new Error("Identifiant du club invalide.");
   }
