@@ -72,6 +72,7 @@ const openProvisioningStatuses = new Set<PlatformProvisioningStatus>([
 export function PlatformDashboardPage() {
   const { email, logout } = usePlatformAuth();
   const [clubs, setClubs] = useState<PlatformClub[]>([]);
+  const [selectedClubId, setSelectedClubId] = useState("");
   const [provisioningJobs, setProvisioningJobs] = useState<
     PlatformProvisioningJob[]
   >([]);
@@ -325,6 +326,41 @@ export function PlatformDashboardPage() {
             plan{pendingCostPlanCount > 1 ? "s" : ""} de coût à examiner
           </span>
         </article>
+      </section>
+
+      <section className="platform-card" aria-label="Club actif de la plateforme">
+        <p className="platform-kicker">Sélection du club</p>
+        <h2>Choisir un club à consulter</h2>
+        <p>
+          Cette sélection affiche la fiche du registre de plateforme.
+          Elle ne donne pas encore accès aux opérations de gestion métier du club.
+        </p>
+        <label className="platform-form">
+          Club
+          <select
+            value={selectedClubId}
+            onChange={(event) => setSelectedClubId(event.target.value)}
+          >
+            <option value="">Sélectionner un club</option>
+            {clubs.map((club) => (
+              <option key={club.id} value={club.id}>
+                {club.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {clubs.filter((club) => club.id === selectedClubId).map((club) => (
+          <div key={club.id} aria-live="polite">
+            <p><strong>{club.name}</strong></p>
+            <p>Identifiant : {club.slug}</p>
+            <p>Statut : {statusLabels[club.status]}</p>
+            <p>Formule : {planLabels[club.subscriptionPlan]}</p>
+            <p>
+              L'administration des réservations et tournois nécessite
+              encore une autorisation sécurisée dans la base métier.
+            </p>
+          </div>
+        ))}
       </section>
 
       <PlatformRegistrationRequestsPanel onClubRegistered={loadPlatform} />
