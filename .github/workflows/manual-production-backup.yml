@@ -36,11 +36,11 @@ jobs:
           RAW="$RUNNER_TEMP/pilotoki-backup/database.dump"
           ENCRYPTED="$RUNNER_TEMP/pilotoki-backup/pilotoki-production.dump.enc"
           trap 'rm -f "$RAW"' EXIT
-          docker run --rm --user "$(id -u):$(id -g)" \
+          # Stream pg_dump to the runner: no Docker bind-mount permissions.
+          docker run --rm \
             --env DATABASE_URL \
-            --volume "$RUNNER_TEMP/pilotoki-backup:/backup" \
             postgres:17 \
-            sh -c 'pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=/backup/database.dump'
+            sh -c 'exec pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=-' > "$RAW"
           test -s "$RAW"
           openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in "$RAW" -out "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE
           test -s "$ENCRYPTED"
