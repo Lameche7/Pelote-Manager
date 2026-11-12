@@ -7,13 +7,18 @@ const defaultOrigin = "https://app.pelotemanager.fr";
 function corsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin");
   const allowed = new Set(
-    [defaultOrigin, ...(Deno.env.get("PLATFORM_ALLOWED_ORIGINS") ?? "").split(",")]
+    [
+      defaultOrigin,
+      ...(Deno.env.get("PLATFORM_ALLOWED_ORIGINS") ?? "").split(","),
+    ]
       .map((value) => value.trim())
       .filter(Boolean),
   );
   return {
-    "Access-Control-Allow-Origin": origin && allowed.has(origin) ? origin : defaultOrigin,
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+    "Access-Control-Allow-Origin":
+      origin && allowed.has(origin) ? origin : defaultOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, apikey, content-type, x-client-info",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     Vary: "Origin",
   };
