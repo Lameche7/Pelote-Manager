@@ -15,17 +15,17 @@ declare
   championship_scored_count bigint := 0;
   championship_wins bigint := 0;
 begin
-  if auth.uid() is null or requested_club_id is null or not public.has_club_permission(requested_club_id, 'admin.dashboard.read') then
+  if auth.uid() is null or requested_club_id is null or not public.can_read_scoped_club_dashboard(requested_club_id) then
     raise exception 'Club administrateur introuvable' using errcode='42501';
   end if;
-  if public.has_club_permission(requested_club_id, 'tournaments.manage') then
+  if public.can_read_scoped_club_dashboard(requested_club_id) then
     select count(*) into tournament_count
     from public.tournament_matches m
     join public.tournaments t on t.id = m.tournament_id
     join public.tournament_match_results result on result.match_id = m.id
     where t.club_id = requested_club_id and result.status::text = 'validated';
   end if;
-  if public.has_club_permission(requested_club_id, 'championships.manage') then
+  if public.can_read_scoped_club_dashboard(requested_club_id) then
     select count(distinct m.id),
       count(distinct m.id) filter (where exists (
         select 1 from public.reservations reservation
@@ -77,7 +77,7 @@ declare
   day_start timestamptz := date_trunc('day', timezone('Europe/Paris', now())) at time zone 'Europe/Paris';
   day_end timestamptz := (date_trunc('day', timezone('Europe/Paris', now())) + interval '1 day') at time zone 'Europe/Paris';
 begin
-  if auth.uid() is null or club is null or not public.has_club_permission(club, 'admin.dashboard.read') then
+  if auth.uid() is null or club is null or not public.can_read_scoped_club_dashboard(club) then
     raise exception 'Forbidden' using errcode = '42501';
   end if;
 
@@ -293,7 +293,7 @@ declare
   requested_club_id uuid := target_club_id;
   output jsonb;
 begin
-  if auth.uid() is null or requested_club_id is null or not public.has_club_permission(requested_club_id, 'admin.dashboard.read') then
+  if auth.uid() is null or requested_club_id is null or not public.can_read_scoped_club_dashboard(requested_club_id) then
     raise exception 'Club administrateur introuvable' using errcode='42501';
   end if;
   with months as (
@@ -309,7 +309,7 @@ begin
     join public.tournament_match_results result on result.match_id=m.id and result.status::text='validated'
     join public.tournament_match_planning p on p.match_id=m.id
     where t.club_id=requested_club_id and p.play_date<= (now() at time zone 'Europe/Paris')::date
-      and public.has_club_permission(requested_club_id,'tournaments.manage')
+      and public.can_read_scoped_club_dashboard(requested_club_id)
     group by 1
   ), championships as (
     select date_trunc('month', r.starts_at at time zone 'Europe/Paris')::date as month_start,
@@ -323,7 +323,7 @@ begin
     join public.reservable_resources resource on resource.id=r.resource_id
       and resource.club_id=requested_club_id
     where m.status::text='played' and r.starts_at<=now()
-      and public.has_club_permission(requested_club_id,'championships.manage')
+      and public.can_read_scoped_club_dashboard(requested_club_id)
       and exists (
         select 1 from public.championship_club_links l
         where l.club_id=requested_club_id and l.championship_id=d.championship_id
