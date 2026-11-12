@@ -8,7 +8,7 @@ function json(status: number, payload: unknown): Response {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store",
-      "Vary": "Origin",
+      Vary: "Origin",
     },
   });
 }
@@ -48,9 +48,8 @@ Deno.serve(async (request: Request): Promise<Response> => {
       return json(401, { error: "Session invalide" });
     }
 
-    const { data: isAdmin, error: roleError } = await platform.rpc(
-      "platform_is_admin",
-    );
+    const { data: isAdmin, error: roleError } =
+      await platform.rpc("platform_is_admin");
     if (roleError || isAdmin !== true) {
       return json(403, { error: "Accès refusé" });
     }
