@@ -79,52 +79,21 @@ revoke all on function public.revoke_platform_admin_lease(uuid)
 grant execute on function public.revoke_platform_admin_lease(uuid)
   to service_role;
 
--- Keep existing membership permissions; add a time-limited platform lease.
-create or replace function public.has_club_permission(
-  target_club_id uuid, target_permission text
-) returns boolean language sql stable security definer set search_path = ''
+-- Do NOT alter has_club_permission or get_my_club_access:
+-- legacy admin mutation routes must never inherit platform-wide permissions.
+-- Only the explicit-club, read-only dashboard RPCs call this guard.
+create or replace function public.can_read_scoped_club_dashboard(target_club_id uuid)
+returns boolean language sql stable security definer set search_path = ''
 as $$
   select auth.uid() is not null
     and target_club_id is not null
-    and target_permission is not null
+    and exists (select 1 from public.clubs c where c.id = target_club_id)
     and (
-      exists (
-        select 1 from public.club_memberships m
-        join public.club_role_permissions grants on grants.role_id = m.role_id
-        where m.club_id = target_club_id
-          and m.profile_id = auth.uid()
-          and grants.permission_key = target_permission
-      )
-      or (
-        exists (select 1 from public.clubs c where c.id = target_club_id)
-        and exists (
-          select 1 from public.club_role_permissions grants
-          where grants.permission_key = target_permission
-        )
-        and pilotoki_private.has_active_platform_lease(auth.uid())
-      )
+      public.has_club_permission(target_club_id, 'admin.dashboard.read')
+      or pilotoki_private.has_active_platform_lease(auth.uid())
     );
 $$;
--- A SECURITY DEFINER function can invoke the private lookup without
--- granting access to the private schema to browser roles.
-
-create or replace function public.get_my_club_access()
-returns table(club_id uuid, club_name text, permission_keys text[])
-language sql stable security definer set search_path = ''
-as $$
-  with allowed as (
-    select m.club_id, grants.permission_key
-    from public.club_memberships m
-    join public.club_role_permissions grants on grants.role_id = m.role_id
-    where m.profile_id = auth.uid()
-    union
-    select c.id, grants.permission_key
-    from public.clubs c
-    cross join (select distinct permission_key from public.club_role_permissions) grants
-    where auth.uid() is not null
-      and pilotoki_private.has_active_platform_lease(auth.uid())
-  )
-  select c.id, c.name, array_agg(allowed.permission_key order by allowed.permission_key)
-  from allowed join public.clubs c on c.id = allowed.club_id
-  group by c.id, c.name;
-$$;
+revoke all on function public.can_read_scoped_club_dashboard(uuid)
+  from public, anon, authenticated;
+grant execute on function public.can_read_scoped_club_dashboard(uuid)
+  to authenticated;
