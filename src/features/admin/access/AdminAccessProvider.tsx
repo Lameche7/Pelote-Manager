@@ -55,15 +55,19 @@ export function AdminAccessProvider({ children }: PropsWithChildren) {
     };
   }, [requestedClubId]);
 
+  // Never render a prior club's permissions while the URL is changing.
+  const visibleAccess =
+    requestedClubId && access?.clubId !== requestedClubId ? null : access;
+
   const value = useMemo<AdminAccessValue>(
     () => ({
-      access,
+      access: visibleAccess,
       error,
       isLoading,
       hasPermission: (permission) =>
-        access?.permissions.includes(permission) ?? false,
+        visibleAccess?.permissions.includes(permission) ?? false,
     }),
-    [access, error, isLoading],
+    [visibleAccess, error, isLoading],
   );
 
   return (
