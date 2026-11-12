@@ -187,7 +187,10 @@ const loadExplicitClubDashboard = async (
   );
   if (countsError) {
     throw new Error(
-      getSupabaseErrorMessage(countsError, "Statistiques du club indisponibles."),
+      getSupabaseErrorMessage(
+        countsError,
+        "Statistiques du club indisponibles.",
+      ),
     );
   }
   const { data: monthlyData, error: monthlyError } = await supabase.rpc(
@@ -196,7 +199,10 @@ const loadExplicitClubDashboard = async (
   );
   if (monthlyError) {
     throw new Error(
-      getSupabaseErrorMessage(monthlyError, "Bilan mensuel du club indisponible."),
+      getSupabaseErrorMessage(
+        monthlyError,
+        "Bilan mensuel du club indisponible.",
+      ),
     );
   }
   const counts = asRecord(countsData);
@@ -205,7 +211,9 @@ const loadExplicitClubDashboard = async (
   dashboard.metrics.championshipMatchesTotal = asNumber(
     counts.championship_matches_total,
   );
-  dashboard.metrics.championshipWinRate = asNumber(counts.championship_win_rate);
+  dashboard.metrics.championshipWinRate = asNumber(
+    counts.championship_win_rate,
+  );
   dashboard.monthlyMatches = asRows(monthlyData).map((item) => ({
     month: asString(item.month),
     tournamentMatches: asNumber(item.tournament_matches),
@@ -215,7 +223,7 @@ const loadExplicitClubDashboard = async (
 };
 
 export const adminDashboardService = {
-  /** Prepared for a future read-only multi-club dashboard; not used by the UI. */
+  /** Prepared explicit-club read path; not used by the UI. */
   getDashboardForClub: loadExplicitClubDashboard,
   /**
    * Legacy dashboard RPCs do not accept a club identifier. Reject explicit
