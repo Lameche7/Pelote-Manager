@@ -33,7 +33,6 @@ begin
         where reservation.championship_match_id = m.id
           and reservation.status::text = 'confirmed'
           and resource.club_id = requested_club_id
-          and resource.name = 'Trinquet Robert Cathala'
           and reservation.starts_at <= now()
       )),
       count(distinct m.id) filter (where m.score_team1 is not null and m.score_team2 is not null),
@@ -322,7 +321,7 @@ begin
     join public.championship_teams b on b.id=m.team2_id
     join public.reservations r on r.championship_match_id=m.id and r.status::text='confirmed'
     join public.reservable_resources resource on resource.id=r.resource_id
-      and resource.club_id=requested_club_id and resource.name='Trinquet Robert Cathala'
+      and resource.club_id=requested_club_id
     where m.status::text='played' and r.starts_at<=now()
       and public.has_club_permission(requested_club_id,'championships.manage')
       and exists (
