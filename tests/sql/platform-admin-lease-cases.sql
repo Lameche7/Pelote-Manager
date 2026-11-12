@@ -38,7 +38,7 @@ begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'invented.permission') then
     raise exception 'Unknown permission was accepted';
   end if;
-end $$;
+end $;
 -- Another authenticated user must not inherit the lease.
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000002', true);
 do $
