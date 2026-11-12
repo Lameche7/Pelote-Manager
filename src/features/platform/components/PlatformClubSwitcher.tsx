@@ -12,23 +12,24 @@ export function PlatformClubSwitcher() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!platformSupabase) return;
+    const client = platformSupabase;
+    if (!client) return;
     let active = true;
     const refresh = async () => {
       setIsVerifiedAdmin(false);
       setClubs([]);
       setError("");
       const { data: identity, error: identityError } =
-        await platformSupabase.auth.getUser();
+        await client.auth.getUser();
       if (identityError || !identity.user || !active) return;
 
       const { data: allowed, error: roleError } =
-        await platformSupabase.rpc("platform_is_admin");
+        await client.rpc("platform_is_admin");
       if (!active || roleError || allowed !== true) return;
       setIsVerifiedAdmin(true);
 
       const { data, error: catalogueError } =
-        await platformSupabase.functions.invoke("platform-business-clubs", {
+        await client.functions.invoke("platform-business-clubs", {
           method: "GET",
         });
       if (!active) return;
@@ -47,7 +48,7 @@ export function PlatformClubSwitcher() {
     };
 
     void refresh();
-    const { data: listener } = platformSupabase.auth.onAuthStateChange(() => {
+    const { data: listener } = client.auth.onAuthStateChange(() => {
       void refresh();
     });
     return () => {
