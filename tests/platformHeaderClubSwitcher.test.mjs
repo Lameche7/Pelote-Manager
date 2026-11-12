@@ -15,7 +15,7 @@ const layout = readFileSync(
 );
 
 test("le sélecteur exige une identité et un rôle plateforme vérifiés", () => {
-  assert.match(switcher, /platformSupabase\.auth\.getUser\(\)/);
+  assert.match(switcher, /client\.auth\.getUser\(\)/);
   assert.match(switcher, /platform_is_admin/);
   assert.match(switcher, /allowed !== true/);
   assert.match(switcher, /if \(!isVerifiedAdmin\) return null/);
