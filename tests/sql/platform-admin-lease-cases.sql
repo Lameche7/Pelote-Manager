@@ -38,10 +38,10 @@ begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'invented.permission') then
     raise exception 'Unknown permission was accepted';
   end if;
-end $;
+end $lease$;
 -- Another authenticated user must not inherit the lease.
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000002', true);
-do $
+do $lease$
 begin
   if public.has_club_permission('00000000-0000-0000-0000-000000000001', 'settings.manage') then
     raise exception 'Another club administrator inherited the lease';
@@ -49,13 +49,13 @@ begin
   if (select count(*) from public.get_my_club_access()) <> 1 then
     raise exception 'Another club administrator sees both clubs';
   end if;
-end $;
+end $lease$;
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
 reset role;
 -- A service may not issue leases longer than the server-side maximum.
 select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
-do $
+do $lease$
 begin
   begin
     perform public.issue_platform_admin_lease(
@@ -65,7 +65,7 @@ begin
     raise exception 'Lease longer than 15 minutes was accepted';
   exception when invalid_parameter_value then null;
   end;
-end $;
+end $lease$;
 reset role;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 reset role;
