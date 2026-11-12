@@ -8,7 +8,9 @@ const source = readFileSync(
 );
 
 test("explicit club dashboard sends the same club identifier to all three RPCs", () => {
-  const scoped = source.split("const loadExplicitClubDashboard = async (")[1].split("export const adminDashboardService = {")[0];
+  const scoped = source
+    .split("const loadExplicitClubDashboard = async (")[1]
+    .split("export const adminDashboardService = {")[0];
   assert.ok(scoped.includes("const args = { target_club_id: clubId };"));
   for (const name of [
     "admin_get_dashboard",
