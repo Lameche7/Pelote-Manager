@@ -38,7 +38,13 @@ test("les autorisations expirent et sont révocables", () => {
 });
 
 test("les utilisateurs ne peuvent pas s'attribuer des droits", () => {
-  assert.match(migration, /revoke all on pilotoki_private\.platform_admin_leases/);
+  assert.match(
+    migration,
+    /revoke all on pilotoki_private\.platform_admin_leases/,
+  );
   assert.match(migration, /from public, anon, authenticated/);
-  assert.match(migration, /grant execute on function public\.issue_platform_admin_lease/);
+  assert.match(
+    migration,
+    /grant execute on function public\.issue_platform_admin_lease/,
+  );
 });
