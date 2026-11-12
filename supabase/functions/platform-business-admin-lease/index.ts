@@ -46,6 +46,12 @@ Deno.serve(async (request: Request): Promise<Response> => {
   if (request.method !== "POST" && request.method !== "DELETE") {
     return reply(request, 405, { error: "Méthode non autorisée" });
   }
+  if (
+    request.method === "POST" &&
+    Deno.env.get("PLATFORM_ADMIN_LEASES_ENABLED") !== "true"
+  ) {
+    return reply(request, 503, { error: "Fonctionnalité non activée" });
+  }
 
   const platformToken = bearer(request.headers.get("Authorization"));
   const businessToken = bearer(request.headers.get("X-Business-Authorization"));
