@@ -11,6 +11,7 @@ const access = readFileSync(
   "utf8",
 );
 
+// prettier-ignore
 test("cross-club business screens are blocked", () => {
   assert.ok(shell.includes("if (requestedClubId) {"));
   assert.ok(shell.includes("Administration inter-clubs en préparation"));
@@ -20,12 +21,14 @@ test("cross-club business screens are blocked", () => {
   );
 });
 
+// prettier-ignore
 test("admin navigation preserves club context", () => {
   assert.ok(shell.includes("encodeURIComponent(requestedClubId)"));
   assert.ok(shell.includes("adminLink(child.to)"));
   assert.ok(shell.includes("adminLink(item.to)"));
 });
 
+// prettier-ignore
 test("ambiguous multi-club access fails closed", () => {
   assert.ok(access.includes("accesses.length > 1"));
   assert.ok(access.includes("Sélection du club requise"));
