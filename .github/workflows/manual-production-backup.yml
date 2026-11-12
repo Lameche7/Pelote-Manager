@@ -73,7 +73,7 @@ jobs:
           if ! docker run --rm \
             --env DATABASE_URL \
             postgres:17 \
-            sh -c 'exec pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=-' > "$RAW" 2> "$ERR"; then
+            sh -c 'exec pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl' > "$RAW" 2> "$ERR"; then
             if grep -Eqi 'password authentication failed|invalid password|authentication failed' "$ERR"; then
               echo "::error::Connexion PostgreSQL refusée : vérifier utilisateur et mot de passe du secret GitHub."
             elif grep -Eqi 'could not translate host name|name or service not known|nodename nor servname' "$ERR"; then
