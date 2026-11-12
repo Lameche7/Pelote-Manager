@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const switcher = readFileSync(
-  new URL("../src/features/platform/components/PlatformClubSwitcher.tsx", import.meta.url),
+  new URL(
+    "../src/features/platform/components/PlatformClubSwitcher.tsx",
+    import.meta.url,
+  ),
   "utf8",
 );
 const layout = readFileSync(
