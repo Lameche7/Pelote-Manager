@@ -28,6 +28,28 @@ begin
     end loop;
   end loop;
 end $check$;
+-- Un utilisateur sans identité authentifiée ne peut lire aucun tableau de bord.
+select set_config('request.jwt.claim.sub', '', true);
+do $check$
+declare
+  function_name text;
+begin
+  foreach function_name in array array[
+    'admin_get_dashboard',
+    'admin_dashboard_match_counts',
+    'admin_monthly_match_report'
+  ] loop
+    begin
+      execute format('select public.%I($1)', function_name)
+        using '00000000-0000-0000-0000-000000000001'::uuid;
+      raise exception '% accepted missing identity', function_name;
+    exception when insufficient_privilege then
+      null;
+    end;
+  end loop;
+end $check$;
+select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
+
 -- Administrateur B : les fonctions doivent également refuser le club A.
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000002', true);
 do $check$
