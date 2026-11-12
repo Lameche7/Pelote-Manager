@@ -13,33 +13,28 @@ type AccessRow = {
   permission_keys: AdminPermission[];
 };
 
-function readSingleAccess(data: unknown): ClubAccess | null {
+function readAccesses(data: unknown): ClubAccess[] {
   const memberships = (data ?? []) as AccessRow[];
-
-  if (memberships.length === 0) {
-    return null;
-  }
-
-  if (memberships.length > 1) {
-    throw new Error(
-      "Plusieurs clubs sont associés à votre compte. Le sélecteur multi-club n’est pas encore disponible.",
-    );
-  }
-
-  const membership = memberships[0];
-  return {
+  return memberships.map((membership) => ({
     clubId: membership.club_id,
     clubName: membership.club_name,
     permissions: membership.permission_keys,
-  };
+  }));
 }
 
 export const adminAccessService = {
-  async getOptionalAccess(): Promise<ClubAccess | null> {
+  async listAuthorizedClubs(): Promise<ClubAccess[]> {
     const { data, error } = await supabase.rpc("get_my_club_access");
     if (error) throw error;
+    return readAccesses(data);
+  },
 
-    return readSingleAccess(data);
+  async getOptionalAccess(): Promise<ClubAccess | null> {
+    const accesses = await this.listAuthorizedClubs();
+    if (accesses.length > 1) {
+      throw new Error("Sélection du club requise : aucun accès n'est choisi implicitement.");
+    }
+    return accesses[0] ?? null;
   },
 
   async getAccess(): Promise<ClubAccess> {
