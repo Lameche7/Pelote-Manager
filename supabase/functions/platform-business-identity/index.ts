@@ -31,7 +31,7 @@ function respond(request: Request, status: number, body: unknown): Response {
 }
 
 function bearer(header: string | null): string | null {
-  return /^Bearer ([^\\s]+)$/.exec(header ?? "")?.[1] ?? null;
+  return /^Bearer ([^\s]+)$/.exec(header ?? "")?.[1] ?? null;
 }
 
 /**
