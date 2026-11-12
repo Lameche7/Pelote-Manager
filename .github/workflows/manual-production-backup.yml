@@ -25,11 +25,6 @@ jobs:
           echo "::add-mask::$DATABASE_URL"
           echo "::add-mask::$BACKUP_PASSPHRASE"
 
-      - name: Installer le client PostgreSQL 17
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
-
       - name: Exporter et chiffrer sans publier le fichier brut
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
@@ -41,7 +36,11 @@ jobs:
           RAW="$RUNNER_TEMP/pilotoki-backup/database.dump"
           ENCRYPTED="$RUNNER_TEMP/pilotoki-backup/pilotoki-production.dump.enc"
           trap 'rm -f "$RAW"' EXIT
-          pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file="$RAW"
+          docker run --rm --user "$(id -u):$(id -g)" \
+            --env DATABASE_URL \
+            --volume "$RUNNER_TEMP/pilotoki-backup:/backup" \
+            postgres:17 \
+            sh -c 'pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=/backup/database.dump'
           test -s "$RAW"
           openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in "$RAW" -out "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE
           test -s "$ENCRYPTED"
