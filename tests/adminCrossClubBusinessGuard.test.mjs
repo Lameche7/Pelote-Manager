@@ -14,7 +14,9 @@ const access = readFileSync(
 test("cross-club access is guarded", () => {
   assert.ok(shell.includes("if (requestedClubId) {"));
   assert.ok(shell.includes("Administration inter-clubs en préparation"));
-  assert.ok(shell.indexOf("if (requestedClubId) {") < shell.indexOf("<Outlet />"));
+  assert.ok(
+    shell.indexOf("if (requestedClubId) {") < shell.indexOf("<Outlet />"),
+  );
   assert.ok(shell.includes("encodeURIComponent(requestedClubId)"));
   assert.ok(shell.includes("adminLink(child.to)"));
   assert.ok(shell.includes("adminLink(item.to)"));
