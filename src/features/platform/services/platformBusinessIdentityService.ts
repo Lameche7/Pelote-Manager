@@ -17,10 +17,7 @@ export async function verifyPlatformBusinessIdentity(): Promise<PlatformBusiness
   }
 
   const [{ data: platformSession }, { data: businessSession }] =
-    await Promise.all([
-      platformSupabase.auth.getSession(),
-      supabase.auth.getSession(),
-    ]);
+    await Promise.all([platformSupabase.auth.getSession(), supabase.auth.getSession()]);
   const platformToken = platformSession.session?.access_token;
   const businessToken = businessSession.session?.access_token;
   if (!platformToken || !businessToken) {
