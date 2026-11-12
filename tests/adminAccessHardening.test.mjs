@@ -68,7 +68,7 @@ test("la gestion des utilisateurs synchronise le rôle et l'habilitation", () =>
 
 test("le lien et la route Administration exigent une permission réelle", () => {
   assert.match(layout, /adminAccessService/);
-  assert.match(layout, /getOptionalAccess\(\)/);
+  assert.match(layout, /listAuthorizedClubs\(\)/);
   assert.match(layout, /canAccessAdminDashboard\(adminAccess\)/);
   assert.match(provider, /getOptionalAccess\(\)/);
   assert.match(
