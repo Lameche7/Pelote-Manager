@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const source = readFileSync(
-  new URL("../supabase/functions/platform-business-clubs/index.ts", import.meta.url),
+  new URL(
+    "../supabase/functions/platform-business-clubs/index.ts",
+    import.meta.url,
+  ),
   "utf8",
 );
 
@@ -16,7 +19,10 @@ test("le catalogue métier valide la session et le rôle plateforme côté serve
 });
 
 test("la clé privilégiée métier reste côté fonction et seules les colonnes publiques sont lues", () => {
-  assert.match(source, /Deno\.env\.get\("BUSINESS_SUPABASE_SERVICE_ROLE_KEY"\)/);
+  assert.match(
+    source,
+    /Deno\.env\.get\("BUSINESS_SUPABASE_SERVICE_ROLE_KEY"\)/,
+  );
   assert.match(source, /\.from\("clubs"\)/);
   assert.match(source, /\.select\("id,name,slug"\)/);
   assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(|\.upsert\(/);
