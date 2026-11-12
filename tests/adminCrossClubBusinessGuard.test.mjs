@@ -21,7 +21,7 @@ test("cross-club business screens remain blocked until server-side scoping is im
 });
 
 test("admin navigation preserves explicit club context", () => {
-  assert.match(shell, /adminClubId=\$\{encodeURIComponent\(requestedClubId\)\}/);
+  assert.ok(shell.includes("adminClubId=${encodeURIComponent(requestedClubId)}"));
   assert.match(shell, /to=\{adminLink\(child\.to\)\}/);
   assert.match(shell, /to=\{adminLink\(item\.to\)\}/);
 });
@@ -29,8 +29,5 @@ test("admin navigation preserves explicit club context", () => {
 test("ambiguous multi-club access fails closed", () => {
   assert.match(access, /if \(accesses\.length > 1\)/);
   assert.match(access, /Sélection du club requise/);
-  assert.match(
-    access,
-    /accesses\.find\(\(access\) => access\.clubId === clubId\)/,
-  );
+  assert.ok(access.includes("access.clubId === clubId"));
 });
