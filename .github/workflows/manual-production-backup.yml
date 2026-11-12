@@ -36,11 +36,34 @@ jobs:
           RAW="$RUNNER_TEMP/pilotoki-backup/database.dump"
           ENCRYPTED="$RUNNER_TEMP/pilotoki-backup/pilotoki-production.dump.enc"
           trap 'rm -f "$RAW"' EXIT
-          # Stream pg_dump to the runner: no Docker bind-mount permissions.
-          docker run --rm \
+          # Capture stderr privately. Never print connection strings or secrets.
+          ERR="$RUNNER_TEMP/pilotoki-backup/pg_dump.stderr"
+          trap 'rm -f "$RAW" "$ERR"' EXIT
+          if ! docker run --rm \
             --env DATABASE_URL \
             postgres:17 \
-            sh -c 'exec pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=-' > "$RAW"
+            sh -c 'exec pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=-' > "$RAW" 2> "$ERR"; then
+            if grep -Eqi 'password authentication failed|invalid password|authentication failed' "$ERR"; then
+              echo "::error::Connexion PostgreSQL refusée : vérifier utilisateur et mot de passe du secret GitHub."
+            elif grep -Eqi 'could not translate host name|name or service not known|nodename nor servname' "$ERR"; then
+              echo "::error::Hôte PostgreSQL introuvable : vérifier le serveur Session pooler dans l’URL."
+            elif grep -Eqi 'connection refused|timeout expired|timed out|network is unreachable|no route to host' "$ERR"; then
+              echo "::error::Serveur PostgreSQL inaccessible : vérifier l’hôte, le port et le mode Session pooler."
+            elif grep -Eqi 'permission denied|must be owner|insufficient privilege|row-level security' "$ERR"; then
+              echo "::error::Permissions PostgreSQL insuffisantes pour la sauvegarde."
+            elif grep -Eqi 'server version mismatch|aborting because of server version mismatch' "$ERR"; then
+              echo "::error::Version du client pg_dump incompatible avec le serveur PostgreSQL."
+            elif grep -Eqi 'role .* does not exist|user .* does not exist' "$ERR"; then
+              echo "::error::Utilisateur PostgreSQL inconnu : vérifier le nom du compte de sauvegarde."
+            elif grep -Eqi 'database .* does not exist' "$ERR"; then
+              echo "::error::Base PostgreSQL introuvable : vérifier le nom de base dans l’URL."
+            elif grep -Eqi 'no pg_hba.conf entry|SSL off|SSL required' "$ERR"; then
+              echo "::error::Connexion SSL refusée : vérifier les paramètres de connexion Supabase."
+            else
+              echo "::error::Échec pg_dump non classé. Le journal brut est volontairement masqué pour protéger les secrets."
+            fi
+            exit 1
+          fi
           test -s "$RAW"
           openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in "$RAW" -out "$ENCRYPTED" -pass env:BACKUP_PASSPHRASE
           test -s "$ENCRYPTED"
