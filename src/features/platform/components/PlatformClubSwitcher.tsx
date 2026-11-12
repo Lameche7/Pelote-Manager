@@ -80,9 +80,9 @@ export function PlatformClubSwitcher() {
 
   return (
     <label className="app-club-selection">
-      <span>Club à consulter (super-admin)</span>
+      <span>Aperçu visuel du club (super-admin)</span>
       <select
-        aria-label="Club à consulter"
+        aria-label="Aperçu visuel du club"
         value={clubs.some((club) => club.slug === activeSlug) ? activeSlug : ""}
         disabled={!clubs.length}
         onChange={(event) => {
@@ -101,6 +101,9 @@ export function PlatformClubSwitcher() {
           </option>
         ))}
       </select>
+      <small>
+        Le choix change uniquement l’apparence du club, pas les données ni les droits d’administration.
+      </small>
       <small>
         {identityLinked
           ? "Identité vérifiée · administration inter-clubs non activée"
