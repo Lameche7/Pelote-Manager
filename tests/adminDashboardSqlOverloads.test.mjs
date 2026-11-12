@@ -23,6 +23,9 @@ test("each new dashboard RPC requires an explicit club", () => {
 
 test("dashboard RPCs never resolve the implicit membership club", () => {
   assert.ok(!sql.includes("admin_current_club_id()"));
+  assert.ok(!sql.includes("Trinquet Robert Cathala"));
+  assert.ok(sql.includes("resource.club_id = requested_club_id"));
+  assert.ok(sql.includes("resource.club_id=requested_club_id"));
   assert.equal((sql.match(/auth\.uid\(\) is null/g) ?? []).length, 3);
   assert.equal((sql.match(/'admin\.dashboard\.read'/g) ?? []).length, 3);
 });
