@@ -195,6 +195,10 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/admin-dashboard-club-overloads.draft.sql
       - name: Vérifier les refus d'accès inter-clubs
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/admin-dashboard-club-overloads-cases.sql
+      - name: Installer les données fictives du tableau de bord
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/admin-dashboard-authorized-fixture.sql
+      - name: Vérifier les lectures autorisées de chaque club
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/admin-dashboard-authorized-cases.sql
 
   formatting-user-admin:
     runs-on: ubuntu-latest
