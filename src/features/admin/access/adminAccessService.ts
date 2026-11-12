@@ -32,7 +32,9 @@ export const adminAccessService = {
   async getOptionalAccess(): Promise<ClubAccess | null> {
     const accesses = await this.listAuthorizedClubs();
     if (accesses.length > 1) {
-      throw new Error("Sélection du club requise : aucun accès n'est choisi implicitement.");
+      throw new Error(
+        "Sélection du club requise : aucun accès n'est choisi implicitement.",
+      );
     }
     return accesses[0] ?? null;
   },

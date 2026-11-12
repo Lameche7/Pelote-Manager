@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const sql = readFileSync(
-  new URL("../supabase/migrations/20261112180000_explicit_club_permission_guard.sql", import.meta.url),
+  new URL(
+    "../supabase/migrations/20261112180000_explicit_club_permission_guard.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 
@@ -15,6 +18,12 @@ test("l'autorisation est liée à l'identité Supabase authentifiée", () => {
 });
 
 test("aucun accès anonyme à la fonction de contrôle", () => {
-  assert.match(sql, /revoke all on function public\.my_club_has_permission\(uuid, text\) from anon/);
-  assert.match(sql, /grant execute on function public\.my_club_has_permission\(uuid, text\) to authenticated/);
+  assert.match(
+    sql,
+    /revoke all on function public\.my_club_has_permission\(uuid, text\) from anon/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.my_club_has_permission\(uuid, text\) to authenticated/,
+  );
 });

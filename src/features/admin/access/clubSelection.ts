@@ -15,6 +15,8 @@ export function resolveAuthorizedClub(
   return accesses.length === 1 ? accesses[0] : null;
 }
 
-export function requiresClubSelection(accesses: readonly ClubAccess[]): boolean {
+export function requiresClubSelection(
+  accesses: readonly ClubAccess[],
+): boolean {
   return accesses.length > 1;
 }

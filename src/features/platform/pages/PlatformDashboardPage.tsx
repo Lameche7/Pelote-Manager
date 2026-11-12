@@ -329,12 +329,15 @@ export function PlatformDashboardPage() {
         </article>
       </section>
 
-      <section className="platform-card" aria-label="Club actif de la plateforme">
+      <section
+        className="platform-card"
+        aria-label="Club actif de la plateforme"
+      >
         <p className="platform-kicker">Sélection du club</p>
         <h2>Choisir un club à consulter</h2>
         <p>
-          Cette sélection affiche la fiche du registre de plateforme.
-          Elle ne donne pas encore accès aux opérations de gestion métier du club.
+          Cette sélection affiche la fiche du registre de plateforme. Elle ne
+          donne pas encore accès aux opérations de gestion métier du club.
         </p>
         <label className="platform-form">
           Club
@@ -352,13 +355,15 @@ export function PlatformDashboardPage() {
         </label>
         {selectedClub && (
           <div aria-live="polite">
-            <p><strong>{selectedClub.name}</strong></p>
+            <p>
+              <strong>{selectedClub.name}</strong>
+            </p>
             <p>Identifiant : {selectedClub.slug}</p>
             <p>Statut : {statusLabels[selectedClub.status]}</p>
             <p>Formule : {planLabels[selectedClub.subscriptionPlan]}</p>
             <p>
-              L'administration des réservations et tournois nécessite
-              encore une autorisation sécurisée dans la base métier.
+              L'administration des réservations et tournois nécessite encore une
+              autorisation sécurisée dans la base métier.
             </p>
           </div>
         )}

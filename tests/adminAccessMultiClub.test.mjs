@@ -2,7 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const source = readFileSync(new URL("../src/features/admin/access/adminAccessService.ts", import.meta.url), "utf8");
+const source = readFileSync(
+  new URL(
+    "../src/features/admin/access/adminAccessService.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 test("les clubs administrables proviennent de la RPC authentifiée", () => {
   assert.match(source, /async listAuthorizedClubs\(\)/);
