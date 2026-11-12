@@ -165,6 +165,37 @@ jobs:
       - name: Tester les permissions et la révocation
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-lease-cases.sql
 
+  dashboard-multiclub-sql:
+    name: Tableau de bord multi-clubs (PostgreSQL éphémère)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer les clubs fictifs et les droits de plateforme
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-lease-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261112210000_platform_admin_short_lived_leases.sql
+      - name: Installer les surcharges expérimentales du tableau de bord
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/admin-dashboard-club-overloads.draft.sql
+      - name: Vérifier les refus d'accès inter-clubs
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/admin-dashboard-club-overloads-cases.sql
+
   formatting-user-admin:
     runs-on: ubuntu-latest
     steps:
