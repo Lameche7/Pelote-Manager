@@ -73,6 +73,7 @@ export function PlatformDashboardPage() {
   const { email, logout } = usePlatformAuth();
   const [clubs, setClubs] = useState<PlatformClub[]>([]);
   const [selectedClubId, setSelectedClubId] = useState("");
+  const selectedClub = clubs.find((club) => club.id === selectedClubId) ?? null;
   const [provisioningJobs, setProvisioningJobs] = useState<
     PlatformProvisioningJob[]
   >([]);
@@ -349,18 +350,18 @@ export function PlatformDashboardPage() {
             ))}
           </select>
         </label>
-        {clubs.filter((club) => club.id === selectedClubId).map((club) => (
-          <div key={club.id} aria-live="polite">
-            <p><strong>{club.name}</strong></p>
-            <p>Identifiant : {club.slug}</p>
-            <p>Statut : {statusLabels[club.status]}</p>
-            <p>Formule : {planLabels[club.subscriptionPlan]}</p>
+        {selectedClub && (
+          <div aria-live="polite">
+            <p><strong>{selectedClub.name}</strong></p>
+            <p>Identifiant : {selectedClub.slug}</p>
+            <p>Statut : {statusLabels[selectedClub.status]}</p>
+            <p>Formule : {planLabels[selectedClub.subscriptionPlan]}</p>
             <p>
               L'administration des réservations et tournois nécessite
               encore une autorisation sécurisée dans la base métier.
             </p>
           </div>
-        ))}
+        )}
       </section>
 
       <PlatformRegistrationRequestsPanel onClubRegistered={loadPlatform} />
