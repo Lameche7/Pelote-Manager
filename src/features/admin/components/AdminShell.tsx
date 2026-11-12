@@ -62,9 +62,13 @@ function AdminShellContent() {
         <h1>Administration inter-clubs en préparation</h1>
         <p>
           Le club {access.clubName} est identifié et vos droits sont vérifiés,
-          mais ses données ne peuvent pas encore être administrées depuis cet espace.
+          mais ses données ne peuvent pas encore être administrées depuis cet
+          espace.
         </p>
-        <p>Les opérations restent désactivées jusqu’à validation de l’isolation des données.</p>
+        <p>
+          Les opérations restent désactivées jusqu’à validation de l’isolation
+          des données.
+        </p>
       </section>
     );
   }
