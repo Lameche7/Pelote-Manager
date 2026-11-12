@@ -42,12 +42,11 @@ type SlotRow = {
 };
 
 export const reservationCalendarService = {
-  async listResources(): Promise<ReservableResource[]> {
-    const { data, error } = await supabase
-      .from("reservable_resources")
-      .select("id, club_id, name, description, timezone")
-      .eq("is_active", true)
-      .order("name");
+  async listResources(clubSlug?: string | null): Promise<ReservableResource[]> {
+    const { data, error } = await supabase.rpc(
+      "list_public_calendar_resources",
+      { target_slug: clubSlug || null },
+    );
 
     if (error)
       throw new Error(
