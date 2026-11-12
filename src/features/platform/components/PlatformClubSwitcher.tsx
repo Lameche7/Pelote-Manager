@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
+import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 
 type Club = { id: string; name: string; slug: string };
 
@@ -10,6 +11,7 @@ export function PlatformClubSwitcher() {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
+  const [identityLinked, setIdentityLinked] = useState(false);
 
   useEffect(() => {
     const client = platformSupabase;
@@ -19,6 +21,7 @@ export function PlatformClubSwitcher() {
       setIsVerifiedAdmin(false);
       setClubs([]);
       setError("");
+      setIdentityLinked(false);
       const { data: identity, error: identityError } =
         await client.auth.getUser();
       if (identityError || !identity.user || !active) return;
@@ -27,6 +30,9 @@ export function PlatformClubSwitcher() {
         await client.rpc("platform_is_admin");
       if (!active || roleError || allowed !== true) return;
       setIsVerifiedAdmin(true);
+      const proof = await verifyPlatformBusinessIdentity();
+      if (!active) return;
+      setIdentityLinked(proof.linked);
 
       const { data, error: catalogueError } = await client.functions.invoke(
         "platform-business-clubs",
@@ -95,6 +101,11 @@ export function PlatformClubSwitcher() {
           </option>
         ))}
       </select>
+      <small>
+        {identityLinked
+          ? "Identité vérifiée · administration inter-clubs non activée"
+          : "Liaison des deux sessions non vérifiée"}
+      </small>
       {error && <small role="alert">{error}</small>}
     </label>
   );
