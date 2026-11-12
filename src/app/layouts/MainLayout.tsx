@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { RouteScrollReset } from "@/app/router/RouteScrollReset";
 import { ExternalParticipationPrompt } from "@/features/auth/components/ExternalParticipationPrompt";
 import {
@@ -30,12 +30,10 @@ type ClubLayoutStyle = CSSProperties & {
 
 export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const location = useLocation();
   const [branding, setBranding] = useState(clubBrandingService.fallback);
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
-  const clubSlug =
-    typeof window === "undefined"
-      ? null
-      : new URLSearchParams(window.location.search).get("club")?.trim() || null;
+  const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
   const layoutStyle: ClubLayoutStyle = {
     "--club-primary": branding.primaryColor,
     "--club-secondary": branding.secondaryColor,
