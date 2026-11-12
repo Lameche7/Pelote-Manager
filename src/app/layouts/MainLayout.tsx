@@ -31,6 +31,7 @@ export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [branding, setBranding] = useState(clubBrandingService.fallback);
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
+  const [authorizedClubs, setAuthorizedClubs] = useState<ClubAccess[]>([]);
   const clubSlug =
     typeof window === "undefined"
       ? null
@@ -75,6 +76,7 @@ export function MainLayout() {
 
     if (isLoading || !isAuthenticated || !user) {
       setAdminAccess(null);
+      setAuthorizedClubs([]);
       setIsAdminAccessLoading(false);
       return () => {
         active = false;
@@ -84,12 +86,17 @@ export function MainLayout() {
     setAdminAccess(null);
     setIsAdminAccessLoading(true);
     adminAccessService
-      .getOptionalAccess()
-      .then((access) => {
-        if (active) setAdminAccess(access);
+      .listAuthorizedClubs()
+      .then((accesses) => {
+        if (!active) return;
+        setAuthorizedClubs(accesses);
+        setAdminAccess(accesses.length === 1 ? accesses[0] : null);
       })
       .catch(() => {
-        if (active) setAdminAccess(null);
+        if (active) {
+          setAdminAccess(null);
+          setAuthorizedClubs([]);
+        }
       })
       .finally(() => {
         if (active) setIsAdminAccessLoading(false);
@@ -155,6 +162,11 @@ export function MainLayout() {
           </span>
         </Link>
 
+        {authorizedClubs.length > 1 && (
+          <div className="app-club-selection" role="status">
+            Plusieurs clubs autorisés : sélection sécurisée en préparation
+          </div>
+        )}
         <nav className="app-navigation" aria-label="Navigation principale">
           <NavLink className={navClassName} to={ROUTES.home}>
             Accueil
