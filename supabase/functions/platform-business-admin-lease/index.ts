@@ -86,7 +86,8 @@ Deno.serve(async (request: Request): Promise<Response> => {
 
     const { data: isAdmin, error: roleError } =
       await platform.rpc("platform_is_admin");
-    if (roleError || isAdmin !== true) {
+    // Revocation must remain possible after a platform role is removed.
+    if (request.method === "POST" && (roleError || isAdmin !== true)) {
       return reply(request, 403, { error: "Super-admin requis" });
     }
 
