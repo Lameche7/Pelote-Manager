@@ -82,11 +82,20 @@ export function MainLayout() {
 
     setAdminAccess(null);
     setIsAdminAccessLoading(true);
+    const requestedClubId = new URLSearchParams(location.search)
+      .get("adminClubId")
+      ?.trim();
     adminAccessService
       .listAuthorizedClubs()
       .then((accesses) => {
         if (!active) return;
-        setAdminAccess(accesses.length === 1 ? accesses[0] : null);
+        setAdminAccess(
+          requestedClubId
+            ? accesses.find((access) => access.clubId === requestedClubId) ?? null
+            : accesses.length === 1
+              ? accesses[0]
+              : null,
+        );
       })
       .catch(() => {
         if (active) {
@@ -100,7 +109,7 @@ export function MainLayout() {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, isLoading, user]);
+  }, [isAuthenticated, isLoading, user, location.search]);
 
   useEffect(() => {
     let active = true;
@@ -181,7 +190,10 @@ export function MainLayout() {
           {!isLoading &&
             !isAdminAccessLoading &&
             canAccessAdminDashboard(adminAccess) && (
-              <NavLink className={navClassName} to={ROUTES.admin}>
+              <NavLink
+                className={navClassName}
+                to={`${ROUTES.admin}${new URLSearchParams(location.search).get("adminClubId") ? `?adminClubId=${encodeURIComponent(new URLSearchParams(location.search).get("adminClubId") ?? "")}` : ""}`}
+              >
                 Administration
               </NavLink>
             )}
