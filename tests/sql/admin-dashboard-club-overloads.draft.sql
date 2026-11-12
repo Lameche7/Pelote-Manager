@@ -61,7 +61,7 @@ begin
     'championship_win_rate', case when championship_scored_count > 0 then round(100.0 * championship_wins / championship_scored_count, 1) else 0 end
   );
 end;
-$function$
+$function$;
 
 revoke all on function public.admin_dashboard_match_counts(uuid) from public, anon;
 grant execute on function public.admin_dashboard_match_counts(uuid) to authenticated;
@@ -278,7 +278,7 @@ begin
     )
   );
 end;
-$function$
+$function$;
 
 revoke all on function public.admin_get_dashboard(uuid) from public, anon;
 grant execute on function public.admin_get_dashboard(uuid) to authenticated;
@@ -341,7 +341,7 @@ begin
   left join championships using(month_start);
   return output;
 end;
-$function$
+$function$;
 
 revoke all on function public.admin_monthly_match_report(uuid) from public, anon;
 grant execute on function public.admin_monthly_match_report(uuid) to authenticated;
