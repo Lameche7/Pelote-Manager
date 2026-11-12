@@ -13,6 +13,7 @@ import {
 } from "@/features/notifications/services/notificationService";
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
 import { ClubLogo } from "@/shared/components/ClubLogo";
+import { PlatformClubSwitcher } from "@/features/platform/components/PlatformClubSwitcher";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MainLayout.css";
@@ -162,11 +163,7 @@ export function MainLayout() {
           </span>
         </Link>
 
-        {authorizedClubs.length > 1 && (
-          <div className="app-club-selection" role="status">
-            Plusieurs clubs autorisés : sélection sécurisée en préparation
-          </div>
-        )}
+        <PlatformClubSwitcher />
         <nav className="app-navigation" aria-label="Navigation principale">
           <NavLink className={navClassName} to={ROUTES.home}>
             Accueil
