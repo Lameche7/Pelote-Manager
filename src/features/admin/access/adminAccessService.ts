@@ -29,6 +29,17 @@ export const adminAccessService = {
     return readAccesses(data);
   },
 
+  /** Never infer a club when multiple memberships are available. */
+  async getAccessForClub(clubId: string): Promise<ClubAccess> {
+    if (!clubId) throw new Error("Identifiant du club requis.");
+    const accesses = await this.listAuthorizedClubs();
+    const selected = accesses.find((access) => access.clubId === clubId);
+    if (!selected) {
+      throw new Error("Aucune habilitation pour le club sélectionné.");
+    }
+    return selected;
+  },
+
   async getOptionalAccess(): Promise<ClubAccess | null> {
     const accesses = await this.listAuthorizedClubs();
     if (accesses.length > 1) {
