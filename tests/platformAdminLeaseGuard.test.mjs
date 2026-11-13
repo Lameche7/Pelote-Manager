@@ -38,10 +38,18 @@ const scopedDashboardSql = readFileSync(
 );
 
 test("platform lease cannot change legacy club permissions or access listing", () => {
-  assert.ok(!/create or replace function public\.has_club_permission\s*\(/i.test(leaseMigration));
-  assert.ok(!/create or replace function public\.get_my_club_access\s*\(/i.test(leaseMigration));
-  assert.ok(leaseMigration.includes("public.can_read_scoped_club_dashboard"));
-  assert.ok(leaseMigration.includes("pilotoki_private.has_active_platform_lease(auth.uid())"));
+  assert.ok(
+    !/create or replace function public\.has_club_permission\s*\(/i.test(leaseMigration),
+  );
+  assert.ok(
+    !/create or replace function public\.get_my_club_access\s*\(/i.test(leaseMigration),
+  );
+  assert.ok(
+    leaseMigration.includes("public.can_read_scoped_club_dashboard"),
+  );
+  assert.ok(
+    leaseMigration.includes("pilotoki_private.has_active_platform_lease(auth.uid())"),
+  );
 });
 
 test("all three explicit-club dashboard RPCs use the scoped read-only guard", () => {
@@ -50,11 +58,18 @@ test("all three explicit-club dashboard RPCs use the scoped read-only guard", ()
     "admin_dashboard_match_counts",
     "admin_monthly_match_report",
   ]) {
-    assert.ok(scopedDashboardSql.includes(`public.${name}(target_club_id uuid)`));
+    assert.ok(
+      scopedDashboardSql.includes(`public.${name}(target_club_id uuid)`),
+    );
   }
   assert.equal(
-    (scopedDashboardSql.match(/public\.can_read_scoped_club_dashboard\(/g) ?? []).length >= 3,
+    (scopedDashboardSql.match(/public\.can_read_scoped_club_dashboard\(/g) ?? [])
+      .length >= 3,
     true,
   );
-  assert.ok(!scopedDashboardSql.includes("public.has_club_permission(requested_club_id, 'admin.dashboard.read')"));
+  assert.ok(
+    !scopedDashboardSql.includes(
+      "public.has_club_permission(requested_club_id, 'admin.dashboard.read')",
+    ),
+  );
 });
