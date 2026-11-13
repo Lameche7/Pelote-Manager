@@ -128,6 +128,7 @@ export function TournamentFinalsAvailabilityEditor({
       </p>
       <TournamentAvailabilityGrid
         tournament={finalGrid}
+        variant="finals"
         value={selected}
         disabled={saving || loadingBusy}
         busyDates={busyDates.filter(
