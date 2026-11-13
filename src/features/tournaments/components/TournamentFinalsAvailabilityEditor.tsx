@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
-  MyTournamentRegistration,
+  MyTournamentFinalsAvailability,
   PublicTournamentDetail,
   TournamentAvailabilitySlot,
 } from "@/features/tournaments/types";
 
 type Props = {
   tournament: PublicTournamentDetail;
-  registration: MyTournamentRegistration;
+  registration: MyTournamentFinalsAvailability;
   onSaved: () => Promise<void>;
 };
 
@@ -54,9 +54,7 @@ export function TournamentFinalsAvailabilityEditor({
     let active = true;
     const playerIds = [
       null,
-      ...registration.players
-        .map((player) => player.memberId)
-        .filter((id): id is string => Boolean(id)),
+      ...registration.playerMemberIds,
     ];
     setLoadingBusy(true);
     Promise.all(
@@ -77,7 +75,7 @@ export function TournamentFinalsAvailabilityEditor({
     return () => {
       active = false;
     };
-  }, [tournament.id, registration.players]);
+  }, [tournament.id, registration.playerMemberIds]);
 
   const finalGrid = useMemo(
     () => ({
