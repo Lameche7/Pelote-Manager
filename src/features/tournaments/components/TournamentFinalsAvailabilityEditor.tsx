@@ -97,14 +97,14 @@ export function TournamentFinalsAvailabilityEditor({
     );
     for (const conflict of busyDates) {
       const origin = originsByDate.get(conflict.date);
-      const person =
-        origin?.blockedBySelf && origin.blockedByPartner
-          ? "Vous et votre partenaire avez chacun une partie programmée"
-        : origin?.blockedBySelf
-          ? "Vous avez déjà une partie programmée"
-          : origin?.blockedByPartner
-            ? "Votre partenaire a déjà une partie programmée"
-            : "Un joueur de votre équipe a déjà une partie programmée";
+      let person = "Un joueur de votre équipe a déjà une partie programmée";
+      if (origin?.blockedBySelf && origin.blockedByPartner) {
+        person = "Vous et votre partenaire avez chacun une partie programmée";
+      } else if (origin?.blockedBySelf) {
+        person = "Vous avez déjà une partie programmée";
+      } else if (origin?.blockedByPartner) {
+        person = "Votre partenaire a déjà une partie programmée";
+      }
       const reason = `${person} — ${conflict.title}`;
       reasons[conflict.date] = reasons[conflict.date]
         ? `${reasons[conflict.date]} ; ${reason}`
