@@ -3,6 +3,7 @@ import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages
 import type {
   MyTournamentRegistration,
   MyTournamentRegistrationDraft,
+  MyTournamentFinalsAvailability,
   PublicTournamentDetail,
   PublicTournamentSummary,
   TournamentAvailabilityRule,
@@ -267,6 +268,26 @@ export const tournamentService = {
       players: mapPlayers(row.players),
       availabilityRules: mapAvailability(row.availability_rules),
       availabilitySlots: mapAvailabilitySlots(row.availability_slots),
+    };
+  },
+
+  async getMyFinalsAvailability(
+    tournamentId: string,
+  ): Promise<MyTournamentFinalsAvailability | null> {
+    const { data, error } = await supabase.rpc(
+      "get_my_tournament_finals_availability",
+      { target_tournament_id: tournamentId },
+    );
+    if (error)
+      fail(error, "Impossible de charger vos disponibilités de phase finale.");
+    if (!data) return null;
+    const row = data as Row;
+    return {
+      teamId: String(row.team_id),
+      availabilitySlots: mapAvailabilitySlots(row.availability_slots),
+      playerMemberIds: Array.isArray(row.player_member_ids)
+        ? row.player_member_ids.map(String)
+        : [],
     };
   },
 

@@ -19,6 +19,7 @@ import {
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type {
   MyTournamentRegistration,
+  MyTournamentFinalsAvailability,
   PublicTournamentDetail,
 } from "@/features/tournaments/types";
 import { ROUTES } from "@/shared/config";
@@ -62,6 +63,8 @@ export function TournamentDetailPage() {
   const [results, setResults] = useState<PublicTournamentResults | null>(null);
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
+  const [linkedFinals, setLinkedFinals] =
+    useState<MyTournamentFinalsAvailability | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -84,13 +87,20 @@ export function TournamentDetailPage() {
     setResults(publicTournament ? loadedResults : null);
     if (!publicTournament) {
       setRegistration(null);
+      setLinkedFinals(null);
       return;
     }
 
     if (isAuthenticated) {
-      setRegistration(await tournamentService.getMine(tournamentId));
+      const [mine, finals] = await Promise.all([
+        tournamentService.getMine(tournamentId),
+        tournamentService.getMyFinalsAvailability(tournamentId),
+      ]);
+      setRegistration(mine);
+      setLinkedFinals(finals);
     } else {
       setRegistration(null);
+      setLinkedFinals(null);
     }
   }, [isAuthenticated, tournamentId]);
 
@@ -132,6 +142,22 @@ export function TournamentDetailPage() {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [loading, results, tournament]);
+
+  useEffect(() => {
+    if (
+      loading ||
+      !linkedFinals ||
+      window.location.hash !== "#disponibilites-finales"
+    )
+      return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("disponibilites-finales")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, linkedFinals]);
 
   const teamsBySeries = useMemo(() => {
     const map = new Map<string, PublicTournamentDetail["teams"]>();
@@ -192,13 +218,12 @@ export function TournamentDetailPage() {
       )}
 
       {isAuthenticated &&
-        registration &&
-        registrationConfirmed &&
+        linkedFinals &&
         !tournament.canRegister &&
         tournament.availableFinalsSlotCount > 0 && (
           <TournamentFinalsAvailabilityEditor
             tournament={tournament}
-            registration={registration}
+            registration={linkedFinals}
             onSaved={load}
           />
         )}
