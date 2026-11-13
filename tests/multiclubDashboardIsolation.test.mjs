@@ -47,9 +47,9 @@ test("le libellé de statistiques ne suppose pas le trinquet de Lourdes", () => 
 test(
   "la navigation admin conserve le club visuel sans l’utiliser comme permission",
   () => {
-  assert.match(shell, /params\.set\("club", visualClubSlug\)/);
-  assert.match(shell, /params\.set\("adminClubId", requestedClubId\)/);
-  assert.match(shell, /if \(requestedClubId\) \{/);
+    assert.match(shell, /params\.set\("club", visualClubSlug\)/);
+    assert.match(shell, /params\.set\("adminClubId", requestedClubId\)/);
+    assert.match(shell, /if \(requestedClubId\) \{/);
     assert.match(layout, /withClubPreview/);
   },
 );
