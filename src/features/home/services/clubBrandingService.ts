@@ -36,6 +36,10 @@ const foreignFallback: ClubBranding = {
   name: "Club indisponible",
   logoUrl: "",
   heroImageUrl: "",
+  primaryColor: "#374151",
+  secondaryColor: "#4B5563",
+  accentColor: "#6B7280",
+  neutralColor: "#9CA3AF",
 };
 
 const value = (input: unknown, defaultValue: string) =>
