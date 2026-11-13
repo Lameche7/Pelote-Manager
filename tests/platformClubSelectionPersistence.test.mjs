@@ -63,8 +63,13 @@ test("la plateforme et le catalogue indisponibles révoquent le choix local", ()
 test("la restauration du club efface aussi un ancien contexte admin", () => {
   assert.match(
     source,
-    /if \(activeSlug === desired\) return;[\s\S]*?next\.delete\("adminClubId"\);[\s\S]*?navigate\(/,
+    /if \(activeSlug === desired && !hasStaleAdminContext\) return;[\s\S]*?next\.delete\("adminClubId"\);[\s\S]*?navigate\(/,
   );
+});
+
+test("le contexte admin périmé est supprimé même sans changement de club", () => {
+  assert.match(source, /new URLSearchParams\(location\.search\)\.has\(/);
+  assert.match(source, /activeSlug === desired && !hasStaleAdminContext/);
 });
 
 test("changer le club visuel réinitialise tout contexte admin précédent", () => {
