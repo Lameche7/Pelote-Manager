@@ -128,6 +128,7 @@ type Props = {
   value: TournamentAvailabilitySlot[];
   disabled?: boolean;
   busyDates?: string[];
+  busyReasons?: Record<string, string>;
   variant?: "registration" | "admin" | "finals";
   onChange: (slots: TournamentAvailabilitySlot[]) => void;
 };
@@ -137,6 +138,7 @@ export function TournamentAvailabilityGrid({
   value,
   disabled = false,
   busyDates = [],
+  busyReasons = {},
   variant = "registration",
   onChange,
 }: Props) {
@@ -319,7 +321,8 @@ export function TournamentAvailabilityGrid({
       {busyDates.length > 0 && !admin && (
         <p role="status">
           {busyDates.length} journée(s) bloquée(s) : au moins un joueur
-          identifié dispute déjà une partie dans un autre tournoi Pilotoki.
+          identifié dispute déjà une partie dans un autre tournoi, y compris
+          extérieur importé.
         </p>
       )}
 
@@ -417,6 +420,15 @@ export function TournamentAvailabilityGrid({
                             <th scope="row">
                               <div className="tournament-availability-day">
                                 <strong>{formatDay(day.date)}</strong>
+                                {blocked.has(day.date) && !admin && (
+                                  <small
+                                    title={
+                                      busyReasons[day.date] ?? "Autre tournoi"
+                                    }
+                                  >
+                                    {busyReasons[day.date] ?? "Indisponible"}
+                                  </small>
+                                )}
                                 <label>
                                   <input
                                     type="checkbox"
@@ -443,11 +455,12 @@ export function TournamentAvailabilityGrid({
                                   {slot ? (
                                     <input
                                       type="checkbox"
-                                      aria-label={`${formatDay(day.date)} à ${time}`}
+                                      aria-label={`${formatDay(day.date)} à ${time}${isBlocked(slot) ? ` — ${busyReasons[slot.date] ?? "Indisponible : autre tournoi"}` : ""}`}
                                       disabled={disabled || isBlocked(slot)}
                                       title={
                                         isBlocked(slot)
-                                          ? "Indisponible : partie programmée dans un autre tournoi Pilotoki"
+                                          ? (busyReasons[slot.date] ??
+                                            "Indisponible : autre tournoi")
                                           : undefined
                                       }
                                       checked={
