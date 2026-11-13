@@ -65,3 +65,9 @@ test("un aperçu visuel étranger bloque les données administratives implicites
     "Le blocage inter-clubs doit précéder le chargement des accès métier",
   );
 });
+
+test("un échec de branding étranger ne réaffiche pas le club historique", () => {
+  assert.match(layout, /name: "Club indisponible"/);
+  assert.match(layout, /const safeFallback = clubSlug/);
+  assert.match(layout, /if \(active\) setBranding\(safeFallback\)/);
+});
