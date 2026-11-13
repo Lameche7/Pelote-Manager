@@ -12,7 +12,9 @@ export function PlatformClubSwitcher() {
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
   const [identityLinked, setIdentityLinked] = useState(false);
-  const [status, setStatus] = useState<"checking" | "ready" | "session" | "role" | "configuration">("checking");
+  const [status, setStatus] = useState<
+    "checking" | "ready" | "session" | "role" | "configuration"
+  >("checking");
 
   useEffect(() => {
     const client = platformSupabase;
@@ -89,12 +91,17 @@ export function PlatformClubSwitcher() {
 
   if (!isVerifiedAdmin) {
     if (status === "checking") return null;
-    const message = status === "configuration"
-      ? "Sélection des clubs indisponible : configuration de la plateforme manquante."
-      : status === "session"
-        ? "Sélection des clubs indisponible : session de la plateforme centrale absente ou expirée."
-        : "Sélection des clubs indisponible : droits super-administrateur non confirmés sur la plateforme centrale.";
-    return <small className="app-club-selection" role="status">{message}</small>;
+    const message =
+      status === "configuration"
+        ? "Sélection des clubs indisponible : configuration de la plateforme manquante."
+        : status === "session"
+          ? "Sélection des clubs indisponible : session de la plateforme centrale absente ou expirée."
+          : "Sélection des clubs indisponible : droits super-administrateur non confirmés sur la plateforme centrale.";
+    return (
+      <small className="app-club-selection" role="status">
+        {message}
+      </small>
+    );
   }
 
   const params = new URLSearchParams(location.search);
