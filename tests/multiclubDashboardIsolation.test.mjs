@@ -18,7 +18,10 @@ const shell = readFileSync(
   "utf8",
 );
 const brandingService = readFileSync(
-  new URL("../src/features/home/services/clubBrandingService.ts", import.meta.url),
+  new URL(
+    "../src/features/home/services/clubBrandingService.ts",
+    import.meta.url,
+  ),
   "utf8",
 );
 const layout = readFileSync(
@@ -77,7 +80,10 @@ test("un échec de branding étranger ne réaffiche pas le club historique", () 
 });
 
 test("le service de branding ne réutilise pas les valeurs Lourdes pour un club étranger", () => {
-  assert.match(brandingService, /const defaults = clubSlug \? foreignFallback : fallback/);
+  assert.match(
+    brandingService,
+    /const defaults = clubSlug \? foreignFallback : fallback/,
+  );
   assert.match(brandingService, /if \(clubSlug && \(!row\.name/);
   assert.match(brandingService, /name: value\(row\.name, defaults\.name\)/);
 });
