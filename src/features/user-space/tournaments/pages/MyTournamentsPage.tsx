@@ -578,7 +578,7 @@ function TournamentCard({
       <footer className="my-tournaments__actions">
         {["planning_published", "in_progress"].includes(tournament.status) && (
           <Link
-            to={`${ROUTES.tournaments}/${tournament.id}#disponibilites-finales`}
+            to={`${ROUTES.tournaments}/${tournament.id}#disponibilites-finales-${tournament.team.id}`}
           >
             Modifier mes disponibilités — phase finale
           </Link>
