@@ -27,6 +27,8 @@ export function PlatformClubSwitcher() {
   useEffect(() => {
     const client = platformSupabase;
     if (!client) {
+      window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
+      setSelectedSlug("");
       setStatus("configuration");
       return;
     }
@@ -70,6 +72,8 @@ export function PlatformClubSwitcher() {
       );
       if (!active) return;
       if (catalogueError || !Array.isArray(data?.clubs)) {
+        window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
+        setSelectedSlug("");
         setError("Catalogue des clubs indisponible.");
         return;
       }
@@ -134,7 +138,7 @@ export function PlatformClubSwitcher() {
       <span className="app-club-selection" role="status">
         <small>{message}</small>
         {status === "session" && (
-          <Link to={ROUTES.platform + "/connexion"}>Connexion à la plateforme centrale</Link>
+          <Link to={ROUTES.platformLogin}>Connexion à la plateforme centrale</Link>
         )}
       </span>
     );
