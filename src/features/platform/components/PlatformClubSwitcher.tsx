@@ -12,23 +12,37 @@ export function PlatformClubSwitcher() {
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
   const [identityLinked, setIdentityLinked] = useState(false);
+  const [status, setStatus] = useState<"checking" | "ready" | "session" | "role" | "configuration">("checking");
 
   useEffect(() => {
     const client = platformSupabase;
-    if (!client) return;
+    if (!client) {
+      setStatus("configuration");
+      return;
+    }
     let active = true;
     const refresh = async () => {
+      setStatus("checking");
       setIsVerifiedAdmin(false);
       setClubs([]);
       setError("");
       setIdentityLinked(false);
       const { data: identity, error: identityError } =
         await client.auth.getUser();
-      if (identityError || !identity.user || !active) return;
+      if (!active) return;
+      if (identityError || !identity.user) {
+        setStatus("session");
+        return;
+      }
 
       const { data: allowed, error: roleError } =
         await client.rpc("platform_is_admin");
-      if (!active || roleError || allowed !== true) return;
+      if (!active) return;
+      if (roleError || allowed !== true) {
+        setStatus("role");
+        return;
+      }
+      setStatus("ready");
       setIsVerifiedAdmin(true);
       const proof = await verifyPlatformBusinessIdentity();
       if (!active) return;
@@ -73,7 +87,15 @@ export function PlatformClubSwitcher() {
     };
   }, []);
 
-  if (!isVerifiedAdmin) return null;
+  if (!isVerifiedAdmin) {
+    if (status === "checking") return null;
+    const message = status === "configuration"
+      ? "Sélection des clubs indisponible : configuration de la plateforme manquante."
+      : status === "session"
+        ? "Sélection des clubs indisponible : session de la plateforme centrale absente ou expirée."
+        : "Sélection des clubs indisponible : droits super-administrateur non confirmés sur la plateforme centrale.";
+    return <small className="app-club-selection" role="status">{message}</small>;
+  }
 
   const params = new URLSearchParams(location.search);
   const activeSlug = params.get("club") || "";
