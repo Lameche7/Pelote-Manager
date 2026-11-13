@@ -49,8 +49,9 @@ export function PlatformClubSwitcher() {
         return;
       }
 
-      const { data: allowed, error: roleError } =
-        await client.rpc("platform_is_admin");
+      const { data: allowed, error: roleError } = await client.rpc(
+        "platform_is_admin",
+      );
       if (!active) return;
       if (roleError || allowed !== true) {
         window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
