@@ -31,7 +31,11 @@ type ClubLayoutStyle = CSSProperties & {
 export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const location = useLocation();
-  const [branding, setBranding] = useState(clubBrandingService.fallback);
+  const [branding, setBranding] = useState(() =>
+    new URLSearchParams(window.location.search).has("club")
+      ? clubBrandingService.unavailableFallback
+      : clubBrandingService.fallback,
+  );
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
   // Presentation context only: authorization is checked by business RPCs.
