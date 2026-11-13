@@ -29,7 +29,7 @@ test("explicit club routes remain blocked without validated rollout", () => {
 });
 
 const leaseMigration = readFileSync(
-  "supabase/migrations/20261112210000_platform_admin_short_lived_leases.sql",
+  "tests/sql/platform-admin-short-lived-leases.draft.sql",
   "utf8",
 );
 const scopedDashboardSql = readFileSync(
