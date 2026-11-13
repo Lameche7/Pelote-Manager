@@ -21,9 +21,9 @@ test("les documents du pilote sont accessibles depuis des routes publiques", asy
 test("le pied de page rend les documents juridiques visibles", async () => {
   const layout = await read("src/app/layouts/MainLayout.tsx");
 
-  assert.match(layout, /to=\{ROUTES\.legalNotice\}/);
-  assert.match(layout, /to=\{ROUTES\.privacy\}/);
-  assert.match(layout, /to=\{ROUTES\.terms\}/);
+  assert.match(layout, /to=\{withClubPreview\(ROUTES\.legalNotice\)\}/);
+  assert.match(layout, /to=\{withClubPreview\(ROUTES\.privacy\)\}/);
+  assert.match(layout, /to=\{withClubPreview\(ROUTES\.terms\)\}/);
 });
 
 test("la politique explique le rattachement des participations importées", async () => {
