@@ -47,9 +47,12 @@ export function MainLayout() {
   useEffect(() => {
     let active = true;
     const reloadBranding = () => {
+      setBranding(clubBrandingService.fallback);
       void clubBrandingService.getPublicBranding(clubSlug).then((value) => {
         if (active) setBranding(value);
-      }).catch(() => undefined);
+      }).catch(() => {
+        if (active) setBranding(clubBrandingService.fallback);
+      });
     };
     reloadBranding();
     window.addEventListener("club-branding-updated", reloadBranding);
@@ -62,15 +65,15 @@ export function MainLayout() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
-    document.title = `${APP_CONFIG.name} · ${CLUB_CONFIG.name}`;
+    document.title = `${APP_CONFIG.name} · ${branding.name}`;
     const description = document.querySelector<HTMLMetaElement>(
       'meta[name="description"]',
     );
     description?.setAttribute(
       "content",
-      `${APP_CONFIG.name}, l’espace de réservation de ${CLUB_CONFIG.name}.`,
+      `${APP_CONFIG.name}, l’espace de réservation de ${branding.name}.`,
     );
-  }, []);
+  }, [branding.name]);
 
   useEffect(() => {
     let active = true;
@@ -165,7 +168,7 @@ export function MainLayout() {
             />
           )}
           <span className="app-brand__club">
-            <small>{CLUB_CONFIG.name}</small>
+            <small>{branding.name}</small>
           </span>
         </Link>
 
@@ -228,7 +231,7 @@ export function MainLayout() {
         <div className="app-footer__brand">
           <ClubLogo compact />
           <div>
-            <strong>{CLUB_CONFIG.name}</strong>
+            <strong>{branding.name}</strong>
             <span>
               {CLUB_CONFIG.foundedYear
                 ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
