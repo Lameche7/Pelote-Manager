@@ -145,14 +145,19 @@ export function TournamentDetailPage() {
   }, [loading, results, tournament]);
 
   useEffect(() => {
-    if (
-      loading ||
-      linkedFinals.length === 0 ||
-      window.location.hash !== "#disponibilites-finales"
-    )
-      return;
+    if (loading || linkedFinals.length === 0) return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#disponibilites-finales")) return;
+
+    const targetTeamId = hash.startsWith("#disponibilites-finales-")
+      ? hash.slice("#disponibilites-finales-".length)
+      : null;
+    const targetId = linkedFinals.some((team) => team.teamId === targetTeamId)
+      ? `disponibilites-finales-${targetTeamId}`
+      : "disponibilites-finales";
+
     const frame = window.requestAnimationFrame(() => {
-      document.getElementById("disponibilites-finales")?.scrollIntoView({
+      document.getElementById(targetId)?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
