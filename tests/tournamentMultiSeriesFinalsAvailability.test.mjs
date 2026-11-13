@@ -4,7 +4,7 @@ import test from "node:test";
 
 const read = (file) => readFile(new URL(file, import.meta.url), "utf8");
 
-test("chaque série du joueur a son propre formulaire de phase finale", async () => {
+test("formulaires de finales par série", async () => {
   const [page, editor, service, migration] = await Promise.all([
     read("../src/features/tournaments/pages/TournamentDetailPage.tsx"),
     read(
