@@ -28,6 +28,13 @@ type ClubLayoutStyle = CSSProperties & {
   "--club-neutral": string;
 };
 
+const unavailableClubBranding = {
+  ...clubBrandingService.fallback,
+  name: "Club indisponible",
+  logoUrl: "",
+  heroImageUrl: "",
+};
+
 export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const location = useLocation();
@@ -47,11 +54,16 @@ export function MainLayout() {
   useEffect(() => {
     let active = true;
     const reloadBranding = () => {
-      setBranding(clubBrandingService.fallback);
+      // Never display Lourdes branding as a foreign club while loading or
+      // after a failed foreign-club lookup.
+      const safeFallback = clubSlug
+        ? unavailableClubBranding
+        : clubBrandingService.fallback;
+      setBranding(safeFallback);
       void clubBrandingService.getPublicBranding(clubSlug).then((value) => {
         if (active) setBranding(value);
       }).catch(() => {
-        if (active) setBranding(clubBrandingService.fallback);
+        if (active) setBranding(safeFallback);
       });
     };
     reloadBranding();
