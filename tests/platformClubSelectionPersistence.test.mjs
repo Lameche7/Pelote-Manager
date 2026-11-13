@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const source = readFileSync(
-  new URL("../src/features/platform/components/PlatformClubSwitcher.tsx", import.meta.url),
+  new URL(
+    "../src/features/platform/components/PlatformClubSwitcher.tsx",
+    import.meta.url,
+  ),
   "utf8",
 );
 
@@ -11,7 +14,10 @@ test("la sélection visuelle est conservée en session et restaurée dans l'URL"
   assert.match(source, /CLUB_PREFERENCE_KEY/);
   assert.match(source, /sessionStorage\.getItem\(CLUB_PREFERENCE_KEY\)/);
   assert.match(source, /sessionStorage\.setItem\(CLUB_PREFERENCE_KEY, slug\)/);
-  assert.match(source, /navigate\(\{ pathname: location\.pathname, search: next\.toString\(\), hash: location\.hash \}, \{ replace: true \}\)/);
+  assert.match(
+    source,
+    /navigate\(\{ pathname: location\.pathname, search: next\.toString\(\), hash: location\.hash \}, \{ replace: true \}\)/,
+  );
 });
 
 test("la sélection mémorisée est vérifiée par le catalogue serveur", () => {
@@ -21,8 +27,14 @@ test("la sélection mémorisée est vérifiée par le catalogue serveur", () => 
 });
 
 test("une session absente ou un rôle révoqué efface la préférence", () => {
-  assert.match(source, /if \(identityError \|\| !identity\.user\) \{\s*window\.sessionStorage\.removeItem/);
-  assert.match(source, /if \(roleError \|\| allowed !== true\) \{\s*window\.sessionStorage\.removeItem/);
+  assert.match(
+    source,
+    /if \(identityError \|\| !identity\.user\) \{\s*window\.sessionStorage\.removeItem/,
+  );
+  assert.match(
+    source,
+    /if \(roleError \|\| allowed !== true\) \{\s*window\.sessionStorage\.removeItem/,
+  );
 });
 
 test("le changement de club ne donne aucun droit métier", () => {
@@ -31,8 +43,14 @@ test("le changement de club ne donne aucun droit métier", () => {
 });
 
 test("la plateforme et le catalogue indisponibles révoquent le choix local", () => {
-  assert.match(source, /if \(!client\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/);
-  assert.match(source, /if \(catalogueError \|\| !Array\.isArray\(data\?\.clubs\)\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/);
+  assert.match(
+    source,
+    /if \(!client\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/,
+  );
+  assert.match(
+    source,
+    /if \(catalogueError \|\| !Array\.isArray\(data\?\.clubs\)\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/,
+  );
   assert.match(source, /to=\{ROUTES\.platformLogin\}/);
 });
 
