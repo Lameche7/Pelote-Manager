@@ -57,8 +57,11 @@ test(
   },
 );
 
-test("un aperçu visuel étranger bloque les données administratives implicites", () => {
-  assert.match(shell, /if \(visualClubSlug && !requestedClubId\)/);
-  assert.match(shell, /Administration du club sélectionné indisponible/);
-  assert.match(shell, /if \(requestedClubId\) \{/);
-});
+test(
+  "un aperçu visuel étranger bloque les données administratives implicites",
+  () => {
+    assert.match(shell, /if \(visualClubSlug && !requestedClubId\)/);
+    assert.match(shell, /Administration du club sélectionné indisponible/);
+    assert.match(shell, /if \(requestedClubId\) \{/);
+  },
+);
