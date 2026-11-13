@@ -143,6 +143,22 @@ export function TournamentDetailPage() {
     return () => window.cancelAnimationFrame(frame);
   }, [loading, results, tournament]);
 
+  useEffect(() => {
+    if (
+      loading ||
+      !linkedFinals ||
+      window.location.hash !== "#disponibilites-finales"
+    )
+      return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("disponibilites-finales")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, linkedFinals]);
+
   const teamsBySeries = useMemo(() => {
     const map = new Map<string, PublicTournamentDetail["teams"]>();
     for (const team of tournament?.teams ?? []) {
