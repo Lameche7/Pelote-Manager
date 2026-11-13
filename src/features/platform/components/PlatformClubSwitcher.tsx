@@ -14,9 +14,8 @@ export function PlatformClubSwitcher() {
   const [selectedSlug, setSelectedSlug] = useState(() =>
     typeof window === "undefined"
       ? ""
-      : (new URLSearchParams(window.location.search).get("club") ??
-        window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ??
-        ""),
+      : new URLSearchParams(window.location.search).get("club") ??
+        window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ?? "",
   );
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
