@@ -68,6 +68,34 @@ begin
     raise exception 'Tournament finals availability minimum not reached' using errcode = '22023';
   end if;
 
+  -- Reject newly selected days already occupied by either identified player
+  -- in another Pilotoki tournament. Existing selections remain grandfathered.
+  if exists (
+    select 1 from jsonb_array_elements(selected_slots) candidate
+    where not exists (
+      select 1 from public.tournament_team_availability_slots previous
+      where previous.team_id = team_id
+        and previous.play_date = (candidate->>'date')::date
+        and previous.starts_at = (candidate->>'starts_at')::time
+        and previous.ends_at = (candidate->>'ends_at')::time
+    )
+    and (
+      exists (
+        select 1 from public.tournament_registration_busy_dates(target_tournament_id, null) busy
+        where busy.play_date = (candidate->>'date')::date
+      )
+      or exists (
+        select 1 from public.tournament_team_players teammate
+        join public.tournament_registration_busy_dates(
+          target_tournament_id, teammate.member_id
+        ) busy on busy.play_date = (candidate->>'date')::date
+        where teammate.team_id = team_id and teammate.member_id is not null
+      )
+    )
+  ) then
+    raise exception 'Tournament cross-event busy date' using errcode = '22023';
+  end if;
+
   -- Never alter pool availability, or out-of-window selections kept when dates changed.
   delete from public.tournament_team_availability_slots a
   where a.team_id = team_id
