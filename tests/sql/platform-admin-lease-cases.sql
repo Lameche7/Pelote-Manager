@@ -29,11 +29,14 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 do $check$
 begin
-  if not public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
-    raise exception 'Active platform lease did not authorize club B';
+  if not public.can_read_scoped_club_dashboard('00000000-0000-0000-0000-000000000002') then
+    raise exception 'Active platform lease did not authorize read-only dashboard for B';
   end if;
-  if (select count(*) from public.get_my_club_access()) <> 2 then
-    raise exception 'Active lease must list both clubs';
+  if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
+    raise exception 'Active platform lease granted cross-club write access';
+  end if;
+  if (select count(*) from public.get_my_club_access()) <> 1 then
+    raise exception 'Active lease must not change legacy club listing';
   end if;
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'invented.permission') then
     raise exception 'Unknown permission was accepted';
@@ -76,7 +79,7 @@ where business_user_id = '20000000-0000-0000-0000-000000000001';
 set local role authenticated;
 do $check$
 begin
-  if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
+  if public.can_read_scoped_club_dashboard('00000000-0000-0000-0000-000000000002') then
     raise exception 'Expired lease still authorizes another club';
   end if;
 end $check$;
@@ -90,7 +93,7 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 do $check$
 begin
-  if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
+  if public.can_read_scoped_club_dashboard('00000000-0000-0000-0000-000000000002') then
     raise exception 'Revoked lease still authorizes another club';
   end if;
   if (select count(*) from public.get_my_club_access()) <> 1 then
