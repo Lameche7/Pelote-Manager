@@ -44,6 +44,7 @@ export function TournamentFinalsAvailabilityEditor({
   const [selected, setSelected] = useState(initial);
   const [busyDates, setBusyDates] = useState<Array<{ date: string; title: string }>>([]);
   const [loadingBusy, setLoadingBusy] = useState(true);
+  const [conflictsLoaded, setConflictsLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -53,11 +54,13 @@ export function TournamentFinalsAvailabilityEditor({
   useEffect(() => {
     let active = true;
     setLoadingBusy(true);
+    setConflictsLoaded(false);
     tournamentService
       .getTeamBusyDates(tournament.id)
       .then((results) => {
         if (!active) return;
         setBusyDates(results);
+        setConflictsLoaded(true);
         const conflicts = new Set(results.map((row) => row.date));
         setSelected((current) =>
           current.filter((slot) => !conflicts.has(slot.date)),
@@ -109,7 +112,7 @@ export function TournamentFinalsAvailabilityEditor({
   async function save() {
     setError("");
     setSuccess("");
-    if (loadingBusy) return;
+    if (loadingBusy || !conflictsLoaded) return;
     if (!minimumReached) {
       setError(
         `Veuillez sélectionner au moins ${tournament.minimumFinalsAvailabilitySlots} créneaux de phase finale.`,
@@ -156,7 +159,7 @@ export function TournamentFinalsAvailabilityEditor({
         tournament={finalGrid}
         variant="finals"
         value={selected}
-        disabled={saving || loadingBusy}
+        disabled={saving || loadingBusy || !conflictsLoaded}
         busyDates={[...blockedDays]}
         busyReasons={busyReasons}
         onChange={setSelected}
@@ -174,7 +177,7 @@ export function TournamentFinalsAvailabilityEditor({
       <button
         className="button button--primary"
         type="button"
-        disabled={saving || loadingBusy || !minimumReached}
+        disabled={saving || loadingBusy || !conflictsLoaded || !minimumReached}
         onClick={() => void save()}
       >
         {saving
