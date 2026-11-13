@@ -251,7 +251,13 @@ export function TournamentAvailabilityGrid({
     <section className="tournament-availability-grid">
       <header className="tournament-availability-grid__heading">
         <div>
-          <p>{admin ? "Administration" : finalsOnly ? "Mise à jour" : "Étape 3 / 5"}</p>
+          <p>
+            {admin
+              ? "Administration"
+              : finalsOnly
+                ? "Mise à jour"
+                : "Étape 3 / 5"}
+          </p>
           <h3>
             {admin
               ? "Disponibilités datées de l’équipe"
@@ -290,22 +296,22 @@ export function TournamentAvailabilityGrid({
           </>
         ) : (
           <>
-          {admin
-            ? "Pour les poules, l’équipe doit conserver au moins "
-            : "Pour les poules, vous devez cocher au moins "}
-          <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux dont{" "}
-          <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
-          week-end.
-          {hasFinals && (
-            <>
-              {" "}
-              {admin
-                ? "Pour la phase finale, l’équipe doit conserver au moins "
-                : "Pour la phase finale, vous devez cocher au moins "}
-              <strong>{tournament.minimumFinalsAvailabilitySlots}</strong>{" "}
-              créneaux.
-            </>
-          )}
+            {admin
+              ? "Pour les poules, l’équipe doit conserver au moins "
+              : "Pour les poules, vous devez cocher au moins "}
+            <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux dont{" "}
+            <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
+            week-end.
+            {hasFinals && (
+              <>
+                {" "}
+                {admin
+                  ? "Pour la phase finale, l’équipe doit conserver au moins "
+                  : "Pour la phase finale, vous devez cocher au moins "}
+                <strong>{tournament.minimumFinalsAvailabilitySlots}</strong>{" "}
+                créneaux.
+              </>
+            )}
           </>
         )}
       </p>
@@ -320,8 +326,8 @@ export function TournamentAvailabilityGrid({
       <div className="tournament-availability-grid__stats">
         {!finalsOnly && (
           <span>
-            Poules : <strong>{poolSelected.length}</strong> créneaux — Week-end :{" "}
-            <strong>{poolWeekendCount}</strong>
+            Poules : <strong>{poolSelected.length}</strong> créneaux — Week-end
+            : <strong>{poolWeekendCount}</strong>
           </span>
         )}
         {hasFinals && (
