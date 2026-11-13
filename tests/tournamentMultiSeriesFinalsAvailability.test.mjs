@@ -26,7 +26,7 @@ test("formulaires de finales par série", async () => {
   );
   assert.match(
     editor,
-    /getTeamBusyDateOrigins\(tournament\.id, registration\.teamId\)/,
+    /getTeamBusyDateOrigins\(\s*tournament\.id,\s*registration\.teamId,?\s*\)/,
   );
   assert.match(editor, /registration\.teamId,\s*selected,/);
   assert.match(service, /get_my_tournament_finals_availabilities/);
