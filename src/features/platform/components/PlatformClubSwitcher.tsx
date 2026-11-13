@@ -4,11 +4,13 @@ import { platformSupabase } from "@/infrastructure/platform/platformClient";
 import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 
 type Club = { id: string; name: string; slug: string };
+const CLUB_PREFERENCE_KEY = "pilotoki-superadmin-selected-club";
 
 export function PlatformClubSwitcher() {
   const location = useLocation();
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [selectedSlug, setSelectedSlug] = useState(() => window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ?? "");
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
   const [identityLinked, setIdentityLinked] = useState(false);
@@ -107,16 +109,34 @@ export function PlatformClubSwitcher() {
   const params = new URLSearchParams(location.search);
   const activeSlug = params.get("club") || "";
 
+  // A persisted preference is not an authorization: validate against server catalogue.
+  useEffect(() => {
+    if (!isVerifiedAdmin || !clubs.length) return;
+    const valid = clubs.some((club) => club.slug === selectedSlug);
+    if (!valid && selectedSlug) {
+      window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
+      setSelectedSlug("");
+    }
+    const desired = valid ? selectedSlug : "";
+    if (activeSlug === desired) return;
+    const next = new URLSearchParams(location.search);
+    if (desired) next.set("club", desired);
+    else next.delete("club");
+    navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash }, { replace: true });
+  }, [isVerifiedAdmin, clubs, selectedSlug, activeSlug, location.pathname, location.search, location.hash, navigate]);
+
   return (
     <label className="app-club-selection">
       <span>Aperçu visuel du club (super-admin)</span>
       <select
         aria-label="Aperçu visuel du club"
-        value={clubs.some((club) => club.slug === activeSlug) ? activeSlug : ""}
+        value={clubs.some((club) => club.slug === selectedSlug) ? selectedSlug : ""}
         disabled={!clubs.length}
         onChange={(event) => {
           const slug = event.target.value;
           if (slug && !clubs.some((club) => club.slug === slug)) return;
+          window.sessionStorage.setItem(CLUB_PREFERENCE_KEY, slug);
+          setSelectedSlug(slug);
           const next = new URLSearchParams(location.search);
           if (slug) next.set("club", slug);
           else next.delete("club");
