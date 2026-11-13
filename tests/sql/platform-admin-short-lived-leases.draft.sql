@@ -130,9 +130,7 @@ begin
 
   update public.clubs c
   set name = case when changes ? 'name' then changes->>'name' else c.name end,
-      logo_url = case when changes ? 'logo_url' then changes->>'logo_url' else c.logo_url end,
-      hero_image_url = case when changes ? 'hero_image_url' then changes->>'hero_image_url' else c.hero_image_url end,
-      primary_color = case when changes ? 'primary_color' then changes->>'primary_color' else c.primary_color end,
+          primary_color = case when changes ? 'primary_color' then changes->>'primary_color' else c.primary_color end,
       secondary_color = case when changes ? 'secondary_color' then changes->>'secondary_color' else c.secondary_color end,
       accent_color = case when changes ? 'accent_color' then changes->>'accent_color' else c.accent_color end,
       neutral_color = case when changes ? 'neutral_color' then changes->>'neutral_color' else c.neutral_color end,
