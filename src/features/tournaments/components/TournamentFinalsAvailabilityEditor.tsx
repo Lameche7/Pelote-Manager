@@ -45,6 +45,9 @@ export function TournamentFinalsAvailabilityEditor({
   const [busyDates, setBusyDates] = useState<
     Array<{ date: string; title: string }>
   >([]);
+  const [busyOrigins, setBusyOrigins] = useState<
+    Array<{ date: string; blockedBySelf: boolean; blockedByPartner: boolean }>
+  >([]);
   const [loadingBusy, setLoadingBusy] = useState(true);
   const [conflictsLoaded, setConflictsLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -57,11 +60,14 @@ export function TournamentFinalsAvailabilityEditor({
     let active = true;
     setLoadingBusy(true);
     setConflictsLoaded(false);
-    tournamentService
-      .getTeamBusyDates(tournament.id)
-      .then((results) => {
+    Promise.all([
+      tournamentService.getTeamBusyDates(tournament.id),
+      tournamentService.getTeamBusyDateOrigins(tournament.id),
+    ])
+      .then(([results, origins]) => {
         if (!active) return;
         setBusyDates(results);
+        setBusyOrigins(origins);
         setConflictsLoaded(true);
         const conflicts = new Set(results.map((row) => row.date));
         setSelected((current) =>
@@ -86,14 +92,23 @@ export function TournamentFinalsAvailabilityEditor({
   );
   const busyReasons = useMemo(() => {
     const reasons: Record<string, string> = {};
+    const originsByDate = new Map(busyOrigins.map((entry) => [entry.date, entry]));
     for (const conflict of busyDates) {
-      const reason = `Partie programmée — ${conflict.title}`;
+      const origin = originsByDate.get(conflict.date);
+      const person = origin?.blockedBySelf && origin.blockedByPartner
+        ? "Vous et votre partenaire avez chacun une partie programmée"
+        : origin?.blockedBySelf
+          ? "Vous avez déjà une partie programmée"
+          : origin?.blockedByPartner
+            ? "Votre partenaire a déjà une partie programmée"
+            : "Un joueur de votre équipe a déjà une partie programmée";
+      const reason = `${person} — ${conflict.title}`;
       reasons[conflict.date] = reasons[conflict.date]
         ? `${reasons[conflict.date]} ; ${reason}`
         : reason;
     }
     return reasons;
-  }, [busyDates]);
+  }, [busyDates, busyOrigins]);
   const previouslySelectedBlocked = initial.some((slot) =>
     blockedDays.has(slot.date),
   );
