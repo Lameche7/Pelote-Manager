@@ -69,15 +69,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Préparer les deux fichiers formatés (diagnostic temporaire)
-        run: |
-          npx prettier --write src/features/platform/components/PlatformClubSwitcher.tsx tests/multiclubDashboardIsolation.test.mjs
-          echo '===PRETTIER_SWITCHER_BEGIN==='
-          cat src/features/platform/components/PlatformClubSwitcher.tsx
-          echo '===PRETTIER_SWITCHER_END==='
-          echo '===PRETTIER_TEST_BEGIN==='
-          cat tests/multiclubDashboardIsolation.test.mjs
-          echo '===PRETTIER_TEST_END==='
       - run: npm run format:check
 
   network-user-admin:
