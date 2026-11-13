@@ -34,6 +34,9 @@ export function MainLayout() {
   const [branding, setBranding] = useState(clubBrandingService.fallback);
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
+  // Presentation context only: authorization is checked by business RPCs.
+  const withClubPreview = (path: string) =>
+    clubSlug ? `${path}${path.includes("?") ? "&" : "?"}club=${encodeURIComponent(clubSlug)}` : path;
   const layoutStyle: ClubLayoutStyle = {
     "--club-primary": branding.primaryColor,
     "--club-secondary": branding.secondaryColor,
@@ -146,7 +149,7 @@ export function MainLayout() {
       <header className="app-header">
         <Link
           className="app-brand"
-          to={ROUTES.home}
+          to={withClubPreview(ROUTES.home)}
           aria-label={`${APP_CONFIG.name} - Accueil`}
         >
           <img
@@ -168,14 +171,14 @@ export function MainLayout() {
 
         <PlatformClubSwitcher />
         <nav className="app-navigation" aria-label="Navigation principale">
-          <NavLink className={navClassName} to={ROUTES.home}>
+          <NavLink className={navClassName} to={withClubPreview(ROUTES.home)}>
             Accueil
           </NavLink>
-          <NavLink className={navClassName} to={ROUTES.reservations}>
+          <NavLink className={navClassName} to={withClubPreview(ROUTES.reservations)}>
             Réservations
           </NavLink>
           {!isLoading && isAuthenticated && (
-            <NavLink className={navClassName} to={ROUTES.userSpace}>
+            <NavLink className={navClassName} to={withClubPreview(ROUTES.userSpace)}>
               Mon espace
               {unreadNotifications > 0 && (
                 <span
@@ -209,7 +212,7 @@ export function MainLayout() {
             ) : (
               <Link
                 className="button button--small button--primary"
-                to={ROUTES.login}
+                to={withClubPreview(ROUTES.login)}
               >
                 Connexion
               </Link>
@@ -238,9 +241,9 @@ export function MainLayout() {
             © {new Date().getFullYear()} {APP_CONFIG.name}
           </small>
           <nav className="app-footer__legal" aria-label="Informations légales">
-            <Link to={ROUTES.legalNotice}>Mentions légales</Link>
-            <Link to={ROUTES.privacy}>Confidentialité</Link>
-            <Link to={ROUTES.terms}>Conditions d’utilisation</Link>
+            <Link to={withClubPreview(ROUTES.legalNotice)}>Mentions légales</Link>
+            <Link to={withClubPreview(ROUTES.privacy)}>Confidentialité</Link>
+            <Link to={withClubPreview(ROUTES.terms)}>Conditions d’utilisation</Link>
           </nav>
         </div>
       </footer>
