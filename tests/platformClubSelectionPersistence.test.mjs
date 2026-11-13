@@ -29,3 +29,9 @@ test("le changement de club ne donne aucun droit métier", () => {
   assert.match(source, /Aperçu uniquement : aucune donnée ni permission modifiée/);
   assert.doesNotMatch(source, /service_role/);
 });
+
+test("la plateforme et le catalogue indisponibles révoquent le choix local", () => {
+  assert.match(source, /if \(!client\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/);
+  assert.match(source, /if \(catalogueError \|\| !Array\.isArray\(data\?\.clubs\)\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/);
+  assert.match(source, /to=\{ROUTES\.platformLogin\}/);
+});
