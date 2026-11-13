@@ -191,8 +191,11 @@ export function TournamentDetailPage() {
         </p>
       )}
 
-      {isAuthenticated && registration && registrationConfirmed &&
-        !tournament.canRegister && tournament.availableFinalsSlotCount > 0 && (
+      {isAuthenticated &&
+        registration &&
+        registrationConfirmed &&
+        !tournament.canRegister &&
+        tournament.availableFinalsSlotCount > 0 && (
           <TournamentFinalsAvailabilityEditor
             tournament={tournament}
             registration={registration}
