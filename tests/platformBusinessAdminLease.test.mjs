@@ -11,7 +11,7 @@ const endpoint = readFileSync(
 );
 const migration = readFileSync(
   new URL(
-    "../supabase/migrations/20261112210000_platform_admin_short_lived_leases.sql",
+    "../tests/sql/platform-admin-short-lived-leases.draft.sql",
     import.meta.url,
   ),
   "utf8",
