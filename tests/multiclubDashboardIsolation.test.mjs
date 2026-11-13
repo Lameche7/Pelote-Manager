@@ -29,6 +29,14 @@ const layout = readFileSync(
   "utf8",
 );
 
+const clubAdminService = readFileSync(
+  new URL(
+    "../src/features/admin/club/services/clubAdminService.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 test("le tableau de bord efface les données avant un nouveau chargement", () => {
   assert.match(page, /setDashboard\(null\);\s*setLoading\(true\)/);
   assert.match(page, /requestId !== requestSequence\.current/);
@@ -96,4 +104,10 @@ test("un accès direct à un aperçu étranger ne montre pas Lourdes au premier 
     /useState\(\(\) =>\s*new URLSearchParams\(window\.location\.search\)\.has\("club"\)/,
   );
   assert.match(layout, /\? clubBrandingService\.unavailableFallback/);
+});
+
+test("les informations ne peuvent pas modifier un autre club par identifiant", () => {
+  assert.match(clubAdminService, /const authorizedClubId = await currentClubId\(\)/);
+  assert.match(clubAdminService, /club\.id !== authorizedClubId/);
+  assert.match(clubAdminService, /Modification interdite pour le club sélectionné/);
 });
