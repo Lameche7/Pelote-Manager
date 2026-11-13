@@ -112,6 +112,9 @@ test("les informations ne peuvent pas modifier un autre club par identifiant", (
     /const authorizedClubId = await currentClubId\(\)/,
   );
   assert.match(clubAdminService, /club\.id !== authorizedClubId/);
+  assert.match(clubAdminService, /\.eq\("id", authorizedClubId\)/);
+  assert.match(clubAdminService, /\.select\("id"\)/);
+  assert.match(clubAdminService, /data\.length !== 1/);
   assert.match(
     clubAdminService,
     /Modification interdite pour le club sélectionné/,
