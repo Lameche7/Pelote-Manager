@@ -82,11 +82,15 @@ export function PlatformClubInformationEditor({
           setError("");
           try {
             await clubAdminService.updateClubForPlatformLease(club);
-            const refreshed = await clubAdminService.getClubForPlatformLease(clubId);
+            const refreshed = await clubAdminService.getClubForPlatformLease(
+              clubId,
+            );
             setClub(refreshed);
           } catch {
             setClub(null);
-            setError("Modification refusée ou autorisation expirée. Rechargez l’accès.");
+            setError(
+              "Modification refusée ou autorisation expirée. Rechargez l’accès.",
+            );
           } finally {
             setSaving(false);
           }
