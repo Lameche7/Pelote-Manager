@@ -29,7 +29,19 @@ export const adminAccessService = {
     return readAccesses(data);
   },
 
-  async getOptionalAccess(): Promise<ClubAccess | null> {
+  /** Never infer a club when multiple memberships are available. */
+  async getAccessForClub(clubId: string): Promise<ClubAccess> {
+    if (!clubId) throw new Error("Identifiant du club requis.");
+    const accesses = await this.listAuthorizedClubs();
+    const selected = accesses.find((access) => access.clubId === clubId);
+    if (!selected) {
+      throw new Error("Aucune habilitation pour le club sélectionné.");
+    }
+    return selected;
+  },
+
+  async getOptionalAccess(clubId?: string): Promise<ClubAccess | null> {
+    if (clubId) return this.getAccessForClub(clubId);
     const accesses = await this.listAuthorizedClubs();
     if (accesses.length > 1) {
       throw new Error(
@@ -39,8 +51,8 @@ export const adminAccessService = {
     return accesses[0] ?? null;
   },
 
-  async getAccess(): Promise<ClubAccess> {
-    const access = await this.getOptionalAccess();
+  async getAccess(clubId?: string): Promise<ClubAccess> {
+    const access = await this.getOptionalAccess(clubId);
     if (!access) {
       throw new Error(
         "Aucune habilitation d’administration n’est associée à votre compte.",
