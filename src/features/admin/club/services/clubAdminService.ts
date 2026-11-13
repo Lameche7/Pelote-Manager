@@ -113,6 +113,45 @@ export const clubAdminService = {
     }
     return mapClub(row);
   },
+  /** Explicit server-scoped update; never reuse the legacy implicit write. */
+  async updateClubForPlatformLease(club: Club): Promise<void> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        club.id,
+      )
+    ) {
+      throw new Error("Identifiant de club invalide.");
+    }
+    const changes = {
+      name: club.name,
+      logo_url: club.logoUrl || null,
+      hero_image_url: club.heroImageUrl || null,
+      primary_color: club.primaryColor,
+      secondary_color: club.secondaryColor,
+      accent_color: club.accentColor,
+      neutral_color: club.neutralColor,
+      address: club.address || null,
+      phone: club.phone || null,
+      email: club.email || null,
+      website: club.website || null,
+      social_links: club.socialLinks || null,
+      affiliation_number: club.affiliationNumber || null,
+      notes: club.notes || null,
+    };
+    const { data, error } = await supabase.rpc(
+      "platform_admin_update_club_information",
+      { target_club_id: club.id, changes },
+    );
+    if (error) throw error;
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data) ||
+      data.id !== club.id
+    ) {
+      throw new Error("Modification inter-clubs non confirmée.");
+    }
+  },
   async updateClub(club: Club) {
     // The information editor still uses the implicit business-club context.
     // Never accept a foreign club ID from a stale form or visual preview.
