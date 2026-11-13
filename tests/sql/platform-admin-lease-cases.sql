@@ -94,6 +94,19 @@ begin
   if public.can_read_scoped_club_dashboard('00000000-0000-0000-0000-000000000002') then
     raise exception 'Expired lease still authorizes another club';
   end if;
+  begin
+    perform public.platform_admin_get_club_information('00000000-0000-0000-0000-000000000002');
+    raise exception 'Expired lease allowed club information read';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"notes":"should be refused"}'::jsonb
+    );
+    raise exception 'Expired lease allowed club information update';
+  exception when insufficient_privilege then null;
+  end;
 end $check$;
 reset role;
 select set_config('request.jwt.claim.role', 'service_role', true);
