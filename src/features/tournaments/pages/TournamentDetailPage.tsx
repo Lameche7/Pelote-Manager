@@ -63,9 +63,8 @@ export function TournamentDetailPage() {
   const [results, setResults] = useState<PublicTournamentResults | null>(null);
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
-  const [linkedFinals, setLinkedFinals] = useState<
-    MyTournamentFinalsAvailability[]
-  >([]);
+  const [linkedFinals, setLinkedFinals] =
+    useState<MyTournamentFinalsAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
