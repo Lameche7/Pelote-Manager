@@ -40,11 +40,13 @@ export function TournamentFinalsAvailabilityEditor({
 
   useEffect(() => {
     let active = true;
-    const partnerMemberId =
-      registration.players.find((player) => player.memberId)?.memberId ?? null;
+    const playerIds = [
+      null,
+      ...registration.players.map((player) => player.memberId).filter((id): id is string => Boolean(id)),
+    ];
     setLoadingBusy(true);
-    tournamentService.getInterTournamentBusyDates(tournament.id, partnerMemberId)
-      .then((days) => { if (active) setBusyDates(days); })
+    Promise.all(playerIds.map((id) => tournamentService.getInterTournamentBusyDates(tournament.id, id)))
+      .then((results) => { if (active) setBusyDates([...new Set(results.flat())]); })
       .catch(() => { if (active) setError("Impossible de vérifier les conflits entre tournois."); })
       .finally(() => { if (active) setLoadingBusy(false); });
     return () => { active = false; };
