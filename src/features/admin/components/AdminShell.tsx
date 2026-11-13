@@ -70,8 +70,14 @@ function AdminShellContent() {
     return (
       <section className="simple-page" role="status">
         <h1>Administration du club sélectionné indisponible</h1>
-        <p>Le club du bandeau est un aperçu visuel. Ses données administratives ne sont pas encore accessibles.</p>
-        <p>Revenez au club par défaut dans le sélecteur pour administrer votre club habituel.</p>
+        <p>
+          Le club du bandeau est un aperçu visuel. Ses données administratives
+          ne sont pas encore accessibles.
+        </p>
+        <p>
+          Revenez au club par défaut dans le sélecteur pour administrer votre
+          club habituel.
+        </p>
       </section>
     );
   }
