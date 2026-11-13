@@ -161,6 +161,9 @@ export function PlatformClubSwitcher() {
           const next = new URLSearchParams(location.search);
           if (slug) next.set("club", slug);
           else next.delete("club");
+          // An adminClubId belongs to a separate verified business context.
+          // Never carry it over when changing the visual club.
+          next.delete("adminClubId");
           navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash });
         }}
       >
