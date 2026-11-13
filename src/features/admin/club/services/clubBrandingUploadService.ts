@@ -42,7 +42,7 @@ export const clubBrandingUploadService = {
       "admin_current_club_id",
     );
     if (identityError || !authorizedClubId || authorizedClubId !== clubId) {
-      throw new Error("Vous n\u0027avez pas l\u0027autorisation de modifier ce club.");
+      throw new Error("Vous n'avez pas l'autorisation de modifier ce club.");
     }
     const publicPrefix = supabase.storage.from(BUCKET).getPublicUrl("")
       .data.publicUrl;
