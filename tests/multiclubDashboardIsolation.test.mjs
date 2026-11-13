@@ -37,6 +37,14 @@ const clubAdminService = readFileSync(
   "utf8",
 );
 
+const brandingUploadService = readFileSync(
+  new URL(
+    "../src/features/admin/club/services/clubBrandingUploadService.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 test("le tableau de bord efface les données avant un nouveau chargement", () => {
   assert.match(page, /setDashboard\(null\);\s*setLoading\(true\)/);
   assert.match(page, /requestId !== requestSequence\.current/);
@@ -119,4 +127,12 @@ test("les informations ne peuvent pas modifier un autre club par identifiant", (
     clubAdminService,
     /Modification interdite pour le club sélectionné/,
   );
+});
+
+test("le nettoyage des images vérifie également le club autorisé", () => {
+  const cleanup = brandingUploadService.split("async discardUploadedImage(")[1];
+  assert.ok(cleanup);
+  assert.match(cleanup, /admin_current_club_id/);
+  assert.match(cleanup, /authorizedClubId !== clubId/);
+  assert.match(cleanup, /storage\.from\(BUCKET\)\.remove/);
 });
