@@ -20,7 +20,7 @@ test("le sélecteur exige une identité et un rôle plateforme vérifiés", () =
   assert.match(switcher, /allowed !== true/);
   assert.match(switcher, /if \(!isVerifiedAdmin\)/);
   assert.match(switcher, /status === "session"/);
-  assert.match(switcher, /status === "role"/);
+  assert.match(switcher, /setStatus\("role"\)/);
   assert.match(switcher, /role="status"/);
   assert.match(switcher, /droits super-administrateur non confirmés/);
 });
