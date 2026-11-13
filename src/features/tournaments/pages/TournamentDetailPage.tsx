@@ -152,11 +152,9 @@ export function TournamentDetailPage() {
     const targetTeamId = hash.startsWith("#disponibilites-finales-")
       ? hash.slice("#disponibilites-finales-".length)
       : null;
-    const targetId =
-      targetTeamId &&
-      linkedFinals.some((team) => team.teamId === targetTeamId)
-        ? `disponibilites-finales-${targetTeamId}`
-        : "disponibilites-finales";
+    const targetId = linkedFinals.some((team) => team.teamId === targetTeamId)
+      ? `disponibilites-finales-${targetTeamId}`
+      : "disponibilites-finales";
 
     const frame = window.requestAnimationFrame(() => {
       document.getElementById(targetId)?.scrollIntoView({
