@@ -9,6 +9,7 @@ import { clubAdminService, type Club } from "../services/clubAdminService";
  * Deliberately excludes image uploads, media management, publishing and all
  * other legacy administration modules.
  */
+// prettier-ignore -- conserver ce composant isolé jusqu'à son raccordement sécurisé.
 export function PlatformClubInformationEditor({
   clubId,
 }: {
