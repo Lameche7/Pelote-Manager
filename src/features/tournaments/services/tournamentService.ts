@@ -178,10 +178,13 @@ export const tournamentService = {
 
   async getTeamBusyDateOrigins(
     tournamentId: string,
-  ): Promise<Array<{ date: string; blockedBySelf: boolean; blockedByPartner: boolean }>> {
-    const { data, error } = await supabase.rpc("tournament_team_busy_date_origins", {
-      target_tournament_id: tournamentId,
-    });
+  ): Promise<
+    Array<{ date: string; blockedBySelf: boolean; blockedByPartner: boolean }>
+  > {
+    const { data, error } = await supabase.rpc(
+      "tournament_team_busy_date_origins",
+      { target_tournament_id: tournamentId },
+    );
     if (error) fail(error, "Impossible de préciser l'origine des conflits.");
     return rows(data)
       .map((row) => ({
