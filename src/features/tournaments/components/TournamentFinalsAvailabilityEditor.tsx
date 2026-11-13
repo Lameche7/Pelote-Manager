@@ -22,8 +22,16 @@ export function TournamentFinalsAvailabilityEditor({
   onSaved,
 }: Props) {
   const finalSlots = useMemo(
-    () => tournament.availableSlots.filter((slot) => slot.phase === "finals"),
-    [tournament.availableSlots],
+    () =>
+      tournament.availableSlots.filter(
+        (slot) =>
+          slot.phase === "finals" &&
+          Boolean(tournament.finalsStartsOn) &&
+          Boolean(tournament.finalsEndsOn) &&
+          slot.date >= tournament.finalsStartsOn! &&
+          slot.date <= tournament.finalsEndsOn!,
+      ),
+    [tournament.availableSlots, tournament.finalsStartsOn, tournament.finalsEndsOn],
   );
   const initial = useMemo(() => {
     const keys = new Set(registration.availabilitySlots.map(key));
