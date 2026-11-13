@@ -123,6 +123,12 @@ export type MyTournamentRegistration = {
   availabilitySlots: TournamentAvailabilitySlot[];
 };
 
+export type MyTournamentFinalsAvailability = {
+  teamId: string;
+  availabilitySlots: TournamentAvailabilitySlot[];
+  playerMemberIds: string[];
+};
+
 export type MyTournamentRegistrationDraft = {
   seriesId: string;
   submitterRole: TournamentPlayerRole;
