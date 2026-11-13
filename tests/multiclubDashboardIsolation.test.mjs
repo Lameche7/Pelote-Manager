@@ -74,7 +74,9 @@ test("un aperçu visuel étranger bloque les données administratives implicites
 });
 
 test("un échec de branding étranger ne réaffiche pas le club historique", () => {
-  assert.match(layout, /name: "Club indisponible"/);
+  assert.match(layout, /clubBrandingService\.unavailableFallback/);
+  assert.match(brandingService, /name: "Club indisponible"/);
+  assert.match(brandingService, /primaryColor: "#374151"/);
   assert.match(layout, /const safeFallback = clubSlug/);
   assert.match(layout, /if \(active\) setBranding\(safeFallback\)/);
 });
