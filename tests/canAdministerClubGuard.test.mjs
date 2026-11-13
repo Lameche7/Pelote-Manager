@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const sql = readFileSync(
-  new URL("../supabase/migrations/20261112190000_can_administer_club_guard.sql", import.meta.url),
+  new URL(
+    "../supabase/migrations/20261112190000_can_administer_club_guard.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 
