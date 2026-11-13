@@ -195,7 +195,7 @@ export function MainLayout() {
             canAccessAdminDashboard(adminAccess) && (
               <NavLink
                 className={navClassName}
-                to={`${ROUTES.admin}${new URLSearchParams(location.search).get("adminClubId") ? `?adminClubId=${encodeURIComponent(new URLSearchParams(location.search).get("adminClubId") ?? "")}` : ""}`}
+                to={withClubPreview(`${ROUTES.admin}${new URLSearchParams(location.search).get("adminClubId") ? `?adminClubId=${encodeURIComponent(new URLSearchParams(location.search).get("adminClubId") ?? "")}` : ""}`)}
               >
                 Administration
               </NavLink>
