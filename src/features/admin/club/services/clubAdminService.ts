@@ -92,7 +92,11 @@ export const clubAdminService = {
    * contract has been deployed and verified.
    */
   async getClubForPlatformLease(clubId: string): Promise<Club> {
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clubId)) {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        clubId,
+      )
+    ) {
       throw new Error("Identifiant de club invalide.");
     }
     const { data, error } = await supabase.rpc(
