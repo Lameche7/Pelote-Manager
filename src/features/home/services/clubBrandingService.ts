@@ -68,6 +68,7 @@ function brandingAssetUrl(input: unknown, defaultValue: string) {
 
 export const clubBrandingService = {
   fallback,
+  unavailableFallback: foreignFallback,
   async getPublicBranding(clubSlug?: string | null): Promise<ClubBranding> {
     const request = clubSlug
       ? supabase.rpc("get_public_club_branding_for_slug", {
