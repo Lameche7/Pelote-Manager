@@ -17,6 +17,10 @@ const shell = readFileSync(
   new URL("../src/features/admin/components/AdminShell.tsx", import.meta.url),
   "utf8",
 );
+const brandingService = readFileSync(
+  new URL("../src/features/home/services/clubBrandingService.ts", import.meta.url),
+  "utf8",
+);
 const layout = readFileSync(
   new URL("../src/app/layouts/MainLayout.tsx", import.meta.url),
   "utf8",
@@ -70,4 +74,10 @@ test("un échec de branding étranger ne réaffiche pas le club historique", () 
   assert.match(layout, /name: "Club indisponible"/);
   assert.match(layout, /const safeFallback = clubSlug/);
   assert.match(layout, /if \(active\) setBranding\(safeFallback\)/);
+});
+
+test("le service de branding ne réutilise pas les valeurs Lourdes pour un club étranger", () => {
+  assert.match(brandingService, /const defaults = clubSlug \? foreignFallback : fallback/);
+  assert.match(brandingService, /if \(clubSlug && \(!row\.name/);
+  assert.match(brandingService, /name: value\(row\.name, defaults\.name\)/);
 });
