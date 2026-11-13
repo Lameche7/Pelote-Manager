@@ -163,7 +163,9 @@ test("un bail inter-clubs exige une identité liée et le rôle plateforme", () 
 });
 
 test("la lecture super-admin des informations utilise un RPC à club explicite", () => {
-  const scopedRead = clubAdminService.split("async getClubForPlatformLease(")[1];
+  const scopedRead = clubAdminService.split(
+    "async getClubForPlatformLease(",
+  )[1];
   assert.ok(scopedRead);
   assert.match(scopedRead, /platform_admin_get_club_information/);
   assert.match(scopedRead, /target_club_id: clubId/);
