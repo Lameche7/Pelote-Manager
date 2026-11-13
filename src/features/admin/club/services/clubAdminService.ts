@@ -85,6 +85,30 @@ export const clubAdminService = {
     }
     return mapClub(data as Record<string, unknown>);
   },
+  /**
+   * Future inter-club read: only a server-authorized, explicitly scoped RPC
+   * may return the selected club. Do not substitute a public clubs query.
+   * The RPC is intentionally not wired to the UI until its RLS/lease
+   * contract has been deployed and verified.
+   */
+  async getClubForPlatformLease(clubId: string): Promise<Club> {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clubId)) {
+      throw new Error("Identifiant de club invalide.");
+    }
+    const { data, error } = await supabase.rpc(
+      "platform_admin_get_club_information",
+      { target_club_id: clubId },
+    );
+    if (error) throw error;
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new Error("Informations du club indisponibles.");
+    }
+    const row = data as Record<string, unknown>;
+    if (row.id !== clubId) {
+      throw new Error("Réponse inter-clubs non conforme.");
+    }
+    return mapClub(row);
+  },
   async updateClub(club: Club) {
     // The information editor still uses the implicit business-club context.
     // Never accept a foreign club ID from a stale form or visual preview.
