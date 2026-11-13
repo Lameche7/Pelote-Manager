@@ -27,5 +27,8 @@ test("dashboard RPCs never resolve the implicit membership club", () => {
   assert.ok(sql.includes("resource.club_id = requested_club_id"));
   assert.ok(sql.includes("resource.club_id=requested_club_id"));
   assert.equal((sql.match(/auth\.uid\(\) is null/g) ?? []).length, 3);
-  assert.equal((sql.match(/public\.can_read_scoped_club_dashboard\(/g) ?? []).length >= 3, true);
+  assert.equal(
+    (sql.match(/public\.can_read_scoped_club_dashboard\(/g) ?? []).length >= 3,
+    true,
+  );
 });
