@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TournamentRankings } from "@/features/tournaments/components/TournamentRankings";
 import { TournamentRegistrationForm } from "@/features/tournaments/components/TournamentRegistrationForm";
+import { TournamentFinalsAvailabilityEditor } from "@/features/tournaments/components/TournamentFinalsAvailabilityEditor";
 import { TournamentResultsBoard } from "@/features/tournaments/components/TournamentResultsBoard";
 import {
   tournamentGeneralRankingService,
@@ -86,7 +87,7 @@ export function TournamentDetailPage() {
       return;
     }
 
-    if (isAuthenticated && !loadedResults) {
+    if (isAuthenticated) {
       setRegistration(await tournamentService.getMine(tournamentId));
     } else {
       setRegistration(null);
@@ -189,6 +190,18 @@ export function TournamentDetailPage() {
           {message}
         </p>
       )}
+
+      {isAuthenticated &&
+        registration &&
+        registrationConfirmed &&
+        !tournament.canRegister &&
+        tournament.availableFinalsSlotCount > 0 && (
+          <TournamentFinalsAvailabilityEditor
+            tournament={tournament}
+            registration={registration}
+            onSaved={load}
+          />
+        )}
 
       {results ? (
         <>
@@ -315,9 +328,8 @@ export function TournamentDetailPage() {
                   </span>
                 ) : (
                   <span>
-                    Les inscriptions sont maintenant clôturées : votre équipe
-                    reste inscrite, mais ses disponibilités ne sont plus
-                    modifiables.
+                    Les inscriptions sont clôturées : vos disponibilités de
+                    phase finale restent modifiables dans le panneau dédié.
                   </span>
                 )}
               </div>

@@ -128,7 +128,7 @@ type Props = {
   value: TournamentAvailabilitySlot[];
   disabled?: boolean;
   busyDates?: string[];
-  variant?: "registration" | "admin";
+  variant?: "registration" | "admin" | "finals";
   onChange: (slots: TournamentAvailabilitySlot[]) => void;
 };
 
@@ -245,16 +245,25 @@ export function TournamentAvailabilityGrid({
   };
 
   const admin = variant === "admin";
+  const finalsOnly = variant === "finals";
 
   return (
     <section className="tournament-availability-grid">
       <header className="tournament-availability-grid__heading">
         <div>
-          <p>{admin ? "Administration" : "Étape 3 / 5"}</p>
+          <p>
+            {admin
+              ? "Administration"
+              : finalsOnly
+                ? "Mise à jour"
+                : "Étape 3 / 5"}
+          </p>
           <h3>
             {admin
               ? "Disponibilités datées de l’équipe"
-              : "Créneaux disponibles — poules & phase finale"}
+              : finalsOnly
+                ? "Créneaux disponibles — phase finale"
+                : "Créneaux disponibles — poules & phase finale"}
             {!admin && (
               <>
                 {" "}
@@ -279,20 +288,30 @@ export function TournamentAvailabilityGrid({
         role="status"
       >
         {minimumReached ? "✅" : "⚠️"}{" "}
-        {admin
-          ? "Pour les poules, l’équipe doit conserver au moins "
-          : "Pour les poules, vous devez cocher au moins "}
-        <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux dont{" "}
-        <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
-        week-end.
-        {hasFinals && (
+        {finalsOnly ? (
           <>
-            {" "}
-            {admin
-              ? "Pour la phase finale, l’équipe doit conserver au moins "
-              : "Pour la phase finale, vous devez cocher au moins "}
+            Pour la phase finale, vous devez cocher au moins{" "}
             <strong>{tournament.minimumFinalsAvailabilitySlots}</strong>{" "}
             créneaux.
+          </>
+        ) : (
+          <>
+            {admin
+              ? "Pour les poules, l’équipe doit conserver au moins "
+              : "Pour les poules, vous devez cocher au moins "}
+            <strong>{tournament.minimumAvailabilitySlots}</strong> créneaux dont{" "}
+            <strong>{tournament.minimumWeekendAvailabilitySlots}</strong> le
+            week-end.
+            {hasFinals && (
+              <>
+                {" "}
+                {admin
+                  ? "Pour la phase finale, l’équipe doit conserver au moins "
+                  : "Pour la phase finale, vous devez cocher au moins "}
+                <strong>{tournament.minimumFinalsAvailabilitySlots}</strong>{" "}
+                créneaux.
+              </>
+            )}
           </>
         )}
       </p>
@@ -305,21 +324,25 @@ export function TournamentAvailabilityGrid({
       )}
 
       <div className="tournament-availability-grid__stats">
-        <span>
-          Poules : <strong>{poolSelected.length}</strong> créneaux — Week-end :{" "}
-          <strong>{poolWeekendCount}</strong>
-        </span>
+        {!finalsOnly && (
+          <span>
+            Poules : <strong>{poolSelected.length}</strong> créneaux — Week-end
+            : <strong>{poolWeekendCount}</strong>
+          </span>
+        )}
         {hasFinals && (
           <span>
             Phase finale : <strong>{finalsSelected.length}</strong> créneau
             {finalsSelected.length > 1 ? "x" : ""}
           </span>
         )}
-        <span>
-          Minimum poules — Total :{" "}
-          <strong>{tournament.minimumAvailabilitySlots}</strong> / Week-end :{" "}
-          <strong>{tournament.minimumWeekendAvailabilitySlots}</strong>
-        </span>
+        {!finalsOnly && (
+          <span>
+            Minimum poules — Total :{" "}
+            <strong>{tournament.minimumAvailabilitySlots}</strong> / Week-end :{" "}
+            <strong>{tournament.minimumWeekendAvailabilitySlots}</strong>
+          </span>
+        )}
         {hasFinals && (
           <span>
             Minimum phase finale :{" "}
