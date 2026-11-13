@@ -57,12 +57,12 @@ export function PlatformClubInformationEditor({
     { key: "accentColor", label: "Couleur d’accent" },
     { key: "neutralColor", label: "Couleur neutre" },
   ];
-  const update = (key: keyof Club, value: string) =>
-    setClub((previous) =>
-      previous && previous.id === clubId
-        ? { ...previous, [key]: value }
-        : previous,
-    );
+  const update = (key: keyof Club, value: string) => {
+    setClub((previous) => {
+      if (!previous || previous.id !== clubId) return previous;
+      return { ...previous, [key]: value };
+    });
+  };
 
   return (
     <section className="admin-page">
@@ -82,9 +82,8 @@ export function PlatformClubInformationEditor({
           setError("");
           try {
             await clubAdminService.updateClubForPlatformLease(club);
-            const refreshed = await clubAdminService.getClubForPlatformLease(
-              clubId,
-            );
+            const refreshed =
+              await clubAdminService.getClubForPlatformLease(clubId);
             setClub(refreshed);
           } catch {
             setClub(null);
@@ -104,9 +103,7 @@ export function PlatformClubInformationEditor({
               value={String(club[key])}
               disabled={saving}
               onChange={(event) => update(key, event.target.value)}
-              {...(key.endsWith("Color")
-                ? { pattern: "#[0-9a-fA-F]{6}" }
-                : {})}
+              pattern={key.endsWith("Color") ? "#[0-9a-fA-F]{6}" : undefined}
             />
           </label>
         ))}
