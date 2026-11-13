@@ -161,7 +161,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-lease-fixture.sql
       - name: Appliquer la migration en base éphémère
-        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261112210000_platform_admin_short_lived_leases.sql
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-short-lived-leases.draft.sql
       - name: Tester les permissions et la révocation
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-lease-cases.sql
 
@@ -190,7 +190,7 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-lease-fixture.sql
-          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261112210000_platform_admin_short_lived_leases.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-short-lived-leases.draft.sql
       - name: Installer les surcharges expérimentales du tableau de bord
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/admin-dashboard-club-overloads.draft.sql
       - name: Vérifier les refus d'accès inter-clubs
