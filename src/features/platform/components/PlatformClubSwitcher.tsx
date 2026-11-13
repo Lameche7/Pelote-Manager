@@ -14,8 +14,8 @@ export function PlatformClubSwitcher() {
   const [selectedSlug, setSelectedSlug] = useState(() =>
     typeof window === "undefined"
       ? ""
-      : window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ??
-        new URLSearchParams(window.location.search).get("club") ?? "",
+      : new URLSearchParams(window.location.search).get("club") ??
+        window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ?? "",
   );
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
@@ -113,6 +113,7 @@ export function PlatformClubSwitcher() {
       setSelectedSlug("");
     }
     const desired = valid ? selectedSlug : "";
+    if (valid) window.sessionStorage.setItem(CLUB_PREFERENCE_KEY, selectedSlug);
     if (activeSlug === desired) return;
     const next = new URLSearchParams(location.search);
     if (desired) next.set("club", desired);
@@ -156,7 +157,7 @@ export function PlatformClubSwitcher() {
           const next = new URLSearchParams(location.search);
           if (slug) next.set("club", slug);
           else next.delete("club");
-          navigate({ pathname: location.pathname, search: next.toString() });
+          navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash });
         }}
       >
         <option value="">Club par défaut</option>
