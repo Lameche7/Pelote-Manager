@@ -45,6 +45,14 @@ const brandingUploadService = readFileSync(
   "utf8",
 );
 
+const leaseService = readFileSync(
+  new URL(
+    "../src/features/platform/services/platformAdminLeaseService.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 test("le tableau de bord efface les données avant un nouveau chargement", () => {
   assert.match(page, /setDashboard\(null\);\s*setLoading\(true\)/);
   assert.match(page, /requestId !== requestSequence\.current/);
@@ -143,4 +151,11 @@ test("la lecture explicite des informations exige une habilitation métier", () 
   assert.match(scopedRead, /adminAccessService\.getAccessForClub\(clubId\)/);
   assert.match(scopedRead, /\.eq\("id", clubId\)/);
   assert.match(scopedRead, /data\.id !== clubId/);
+});
+
+test("un bail inter-clubs exige une identité liée et le rôle plateforme", () => {
+  assert.match(leaseService, /verifyPlatformBusinessIdentity\(\)/);
+  assert.match(leaseService, /!identity\.linked/);
+  assert.match(leaseService, /platform\.rpc\("platform_is_admin"\)/);
+  assert.match(leaseService, /allowed !== true/);
 });
