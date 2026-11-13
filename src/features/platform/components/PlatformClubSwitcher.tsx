@@ -123,6 +123,8 @@ export function PlatformClubSwitcher() {
     const next = new URLSearchParams(location.search);
     if (desired) next.set("club", desired);
     else next.delete("club");
+    // Restoring a visual preference must not retain a previous business club.
+    next.delete("adminClubId");
     navigate(
       {
         pathname: location.pathname,
