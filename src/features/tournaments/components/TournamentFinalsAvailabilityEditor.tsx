@@ -52,10 +52,7 @@ export function TournamentFinalsAvailabilityEditor({
 
   useEffect(() => {
     let active = true;
-    const playerIds = [
-      null,
-      ...registration.playerMemberIds,
-    ];
+    const playerIds = [null, ...registration.playerMemberIds];
     setLoadingBusy(true);
     Promise.all(
       playerIds.map((id) =>

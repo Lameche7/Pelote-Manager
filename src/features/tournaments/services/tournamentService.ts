@@ -278,7 +278,8 @@ export const tournamentService = {
       "get_my_tournament_finals_availability",
       { target_tournament_id: tournamentId },
     );
-    if (error) fail(error, "Impossible de charger vos disponibilités de phase finale.");
+    if (error)
+      fail(error, "Impossible de charger vos disponibilités de phase finale.");
     if (!data) return null;
     const row = data as Row;
     return {
