@@ -79,13 +79,13 @@ export const clubBrandingService = {
       throw new Error("Identité visuelle du club sélectionné indisponible.");
     }
     return {
-      name: value(row.name, fallback.name),
-      logoUrl: brandingAssetUrl(row.logo_url, fallback.logoUrl),
-      heroImageUrl: brandingAssetUrl(row.hero_image_url, fallback.heroImageUrl),
-      primaryColor: value(row.primary_color, fallback.primaryColor),
-      secondaryColor: value(row.secondary_color, fallback.secondaryColor),
-      accentColor: value(row.accent_color, fallback.accentColor),
-      neutralColor: value(row.neutral_color, fallback.neutralColor),
+      name: value(row.name, defaults.name),
+      logoUrl: brandingAssetUrl(row.logo_url, defaults.logoUrl),
+      heroImageUrl: brandingAssetUrl(row.hero_image_url, defaults.heroImageUrl),
+      primaryColor: value(row.primary_color, defaults.primaryColor),
+      secondaryColor: value(row.secondary_color, defaults.secondaryColor),
+      accentColor: value(row.accent_color, defaults.accentColor),
+      neutralColor: value(row.neutral_color, defaults.neutralColor),
     };
   },
 };
