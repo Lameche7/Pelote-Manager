@@ -31,6 +31,13 @@ const fallback: ClubBranding = {
   neutralColor: "#6B7280",
 };
 
+const foreignFallback: ClubBranding = {
+  ...fallback,
+  name: "Club indisponible",
+  logoUrl: "",
+  heroImageUrl: "",
+};
+
 const value = (input: unknown, defaultValue: string) =>
   typeof input === "string" && input.trim() ? input.trim() : defaultValue;
 
@@ -67,6 +74,10 @@ export const clubBrandingService = {
     if (error) throw error;
 
     const row = (data ?? {}) as ClubBrandingRow;
+    const defaults = clubSlug ? foreignFallback : fallback;
+    if (clubSlug && (!row.name || typeof row.name !== "string")) {
+      throw new Error("Identité visuelle du club sélectionné indisponible.");
+    }
     return {
       name: value(row.name, fallback.name),
       logoUrl: brandingAssetUrl(row.logo_url, fallback.logoUrl),
