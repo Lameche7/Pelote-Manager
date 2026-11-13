@@ -330,6 +330,25 @@ export const tournamentService = {
     return String(data);
   },
 
+
+  async saveMyFinalsAvailability(
+    tournamentId: string,
+    slots: TournamentAvailabilitySlot[],
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "update_my_tournament_finals_availability",
+      {
+        target_tournament_id: tournamentId,
+        selected_slots: slots.map((slot) => ({
+          date: slot.date,
+          starts_at: slot.startsAt,
+          ends_at: slot.endsAt,
+        })),
+      },
+    );
+    if (error) fail(error, "Impossible d'enregistrer les disponibilités de phase finale.");
+  },
+
   async withdrawMine(tournamentId: string): Promise<void> {
     const { error } = await supabase.rpc(
       "withdraw_my_tournament_registration",
