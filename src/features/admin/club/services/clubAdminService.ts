@@ -1,4 +1,5 @@
 import { supabase } from "@/infrastructure/supabase/client";
+import { adminAccessService } from "@/features/admin/access/adminAccessService";
 
 export type Club = {
   id: string;
@@ -67,6 +68,21 @@ export const clubAdminService = {
       .eq("id", id)
       .single();
     if (error) throw error;
+    return mapClub(data as Record<string, unknown>);
+  },
+  /** Explicit, membership-scoped read; platform visual previews grant no access. */
+  async getClubForAuthorizedMembership(clubId: string): Promise<Club> {
+    if (!clubId) throw new Error("Identifiant du club requis.");
+    await adminAccessService.getAccessForClub(clubId);
+    const { data, error } = await supabase
+      .from("clubs")
+      .select("*")
+      .eq("id", clubId)
+      .single();
+    if (error) throw error;
+    if (!data || data.id !== clubId) {
+      throw new Error("Informations du club sélectionné indisponibles.");
+    }
     return mapClub(data as Record<string, unknown>);
   },
   async updateClub(club: Club) {
