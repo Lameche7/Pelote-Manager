@@ -146,7 +146,9 @@ test("le nettoyage des images vérifie également le club autorisé", () => {
 });
 
 test("la lecture explicite des informations exige une habilitation métier", () => {
-  const scopedRead = clubAdminService.split("async getClubForAuthorizedMembership(")[1];
+  const scopedRead = clubAdminService.split(
+    "async getClubForAuthorizedMembership(",
+  )[1];
   assert.ok(scopedRead);
   assert.match(scopedRead, /adminAccessService\.getAccessForClub\(clubId\)/);
   assert.match(scopedRead, /\.eq\("id", clubId\)/);
