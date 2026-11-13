@@ -42,7 +42,7 @@ export function TournamentFinalsAvailabilityEditor({
     return finalSlots.filter((slot) => keys.has(key(slot)));
   }, [registration.availabilitySlots, finalSlots]);
   const [selected, setSelected] = useState(initial);
-  const [busyDates, setBusyDates] = useState<string[]>([]);
+  const [busyDates, setBusyDates] = useState<Array<{ date: string; title: string }>>([]);
   const [loadingBusy, setLoadingBusy] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -52,15 +52,16 @@ export function TournamentFinalsAvailabilityEditor({
 
   useEffect(() => {
     let active = true;
-    const playerIds = [null, ...registration.playerMemberIds];
     setLoadingBusy(true);
-    Promise.all(
-      playerIds.map((id) =>
-        tournamentService.getInterTournamentBusyDates(tournament.id, id),
-      ),
-    )
+    tournamentService
+      .getTeamBusyDates(tournament.id)
       .then((results) => {
-        if (active) setBusyDates([...new Set(results.flat())]);
+        if (!active) return;
+        setBusyDates(results);
+        const conflicts = new Set(results.map((row) => row.date));
+        setSelected((current) =>
+          current.filter((slot) => !conflicts.has(slot.date)),
+        );
       })
       .catch(() => {
         if (active)
@@ -72,7 +73,25 @@ export function TournamentFinalsAvailabilityEditor({
     return () => {
       active = false;
     };
-  }, [tournament.id, registration.playerMemberIds]);
+  }, [tournament.id, registration.teamId]);
+
+  const blockedDays = useMemo(
+    () => new Set(busyDates.map((row) => row.date)),
+    [busyDates],
+  );
+  const busyReasons = useMemo(() => {
+    const reasons: Record<string, string> = {};
+    for (const conflict of busyDates) {
+      const reason = `Partie programmée — ${conflict.title}`;
+      reasons[conflict.date] = reasons[conflict.date]
+        ? `${reasons[conflict.date]} ; ${reason}`
+        : reason;
+    }
+    return reasons;
+  }, [busyDates]);
+  const previouslySelectedBlocked = initial.some((slot) =>
+    blockedDays.has(slot.date),
+  );
 
   const finalGrid = useMemo(
     () => ({
@@ -84,7 +103,8 @@ export function TournamentFinalsAvailabilityEditor({
     [tournament, finalSlots],
   );
   const minimumReached =
-    selected.length >= tournament.minimumFinalsAvailabilitySlots;
+    selected.filter((slot) => !blockedDays.has(slot.date)).length >=
+    tournament.minimumFinalsAvailabilitySlots;
 
   async function save() {
     setError("");
@@ -96,16 +116,8 @@ export function TournamentFinalsAvailabilityEditor({
       );
       return;
     }
-    if (
-      selected.some(
-        (slot) =>
-          busyDates.includes(slot.date) &&
-          !initial.some((old) => key(old) === key(slot)),
-      )
-    ) {
-      setError(
-        "Un nouveau créneau est en conflit avec une partie d'un autre tournoi.",
-      );
+    if (selected.some((slot) => blockedDays.has(slot.date))) {
+      setError("Une date déjà programmée dans un autre tournoi doit rester décochée.");
       return;
     }
     setSaving(true);
@@ -133,14 +145,20 @@ export function TournamentFinalsAvailabilityEditor({
         phase finale, notamment les mercredis. Vos disponibilités de poules,
         votre équipe et vos résultats ne seront pas modifiés.
       </p>
+      {previouslySelectedBlocked && (
+        <p role="status">
+          Certaines dates déjà cochées sont désormais bloquées par une partie
+          extérieure. Elles sont décochées dans cette grille et seront retirées
+          de vos disponibilités uniquement lorsque vous enregistrerez.
+        </p>
+      )}
       <TournamentAvailabilityGrid
         tournament={finalGrid}
         variant="finals"
         value={selected}
         disabled={saving || loadingBusy}
-        busyDates={busyDates.filter(
-          (day) => !initial.some((slot) => slot.date === day),
-        )}
+        busyDates={[...blockedDays]}
+        busyReasons={busyReasons}
         onChange={setSelected}
       />
       {error && (
