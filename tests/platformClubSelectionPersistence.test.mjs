@@ -4,7 +4,7 @@ import test from "node:test";
 
 const source = readFileSync(
   new URL(
-  "../src/features/platform/components/PlatformClubSwitcher.tsx",
+    "../src/features/platform/components/PlatformClubSwitcher.tsx",
     import.meta.url,
   ),
   "utf8",
@@ -12,7 +12,7 @@ const source = readFileSync(
 
 test(
   "la sélection visuelle est conservée en session et restaurée dans l'URL",
-    () => {
+  () => {
     assert.match(source, /CLUB_PREFERENCE_KEY/);
     assert.match(source, /sessionStorage\.getItem\(CLUB_PREFERENCE_KEY\)/);
     assert.match(source, /sessionStorage\.setItem\(CLUB_PREFERENCE_KEY, slug\)/);
@@ -53,7 +53,7 @@ test("le changement de club ne donne aucun droit métier", () => {
 
 test(
   "la plateforme et le catalogue indisponibles révoquent le choix local",
-    () => {
+  () => {
     assert.match(
       source,
       /if \(!client\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/,
@@ -68,7 +68,7 @@ test(
 
 test(
   "changer le club visuel réinitialise tout contexte admin précédent",
-    () => {
+  () => {
     assert.match(source, /next\.delete\("adminClubId"\)/);
     assert.match(source, /if \(slug\) next\.set\("club", slug\)/);
   },
