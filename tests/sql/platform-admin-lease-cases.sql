@@ -67,6 +67,22 @@ begin
     raise exception 'Inter-club image update bypassed storage authorization';
   exception when invalid_parameter_value then null;
   end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"hero_image_url":"https://example.org/unauthorized.jpg"}'::jsonb
+    );
+    raise exception 'Inter-club background update bypassed storage authorization';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"is_active":false}'::jsonb
+    );
+    raise exception 'Inter-club update accepted a non-whitelisted field';
+  exception when invalid_parameter_value then null;
+  end;
   if (public.platform_admin_update_club_information(
     '00000000-0000-0000-0000-000000000002',
     '{"notes":"Mise à jour testée"}'::jsonb
