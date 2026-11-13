@@ -125,6 +125,9 @@ export type MyTournamentRegistration = {
 
 export type MyTournamentFinalsAvailability = {
   teamId: string;
+  seriesId: string;
+  seriesName: string;
+  teamLabel: string;
   availabilitySlots: TournamentAvailabilitySlot[];
   playerMemberIds: string[];
 };
