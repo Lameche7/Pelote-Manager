@@ -65,6 +65,17 @@ function AdminShellContent() {
   // Business RPCs are still based on the legacy implicit club context.
   // Never expose an admin screen for an explicit cross-club selection until
   // every business read/write is scoped and authorized by club ID server-side.
+  // A visual preview is never a business authorization.
+  if (visualClubSlug && !requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration du club sélectionné indisponible</h1>
+        <p>Le club du bandeau est un aperçu visuel. Ses données administratives ne sont pas encore accessibles.</p>
+        <p>Revenez au club par défaut dans le sélecteur pour administrer votre club habituel.</p>
+      </section>
+    );
+  }
+
   if (requestedClubId) {
     return (
       <section className="simple-page" role="status">
