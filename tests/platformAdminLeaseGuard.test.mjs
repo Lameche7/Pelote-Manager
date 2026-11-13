@@ -48,9 +48,7 @@ test("lease preserves legacy club permissions", () => {
       leaseMigration,
     ),
   );
-  assert.ok(
-    leaseMigration.includes("public.can_read_scoped_club_dashboard"),
-  );
+  assert.ok(leaseMigration.includes("public.can_read_scoped_club_dashboard"));
   assert.ok(
     leaseMigration.includes(
       "pilotoki_private.has_active_platform_lease(auth.uid())",
@@ -64,9 +62,7 @@ test("scoped dashboards use read-only guard", () => {
     "admin_dashboard_match_counts",
     "admin_monthly_match_report",
   ]) {
-    assert.ok(
-      scopedDashboardSql.includes(`public.${name}(target_club_id uuid)`),
-    );
+    assert.ok(scopedDashboardSql.includes(`public.${name}(target_club_id uuid)`));
   }
   const guardCalls = scopedDashboardSql.match(/can_read_scoped_club_dashboard/g);
   assert.ok((guardCalls?.length ?? 0) >= 3);
