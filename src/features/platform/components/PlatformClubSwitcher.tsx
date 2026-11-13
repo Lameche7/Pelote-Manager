@@ -119,7 +119,10 @@ export function PlatformClubSwitcher() {
     }
     const desired = valid ? selectedSlug : "";
     if (valid) window.sessionStorage.setItem(CLUB_PREFERENCE_KEY, selectedSlug);
-    if (activeSlug === desired) return;
+    const hasStaleAdminContext = new URLSearchParams(location.search).has(
+      "adminClubId",
+    );
+    if (activeSlug === desired && !hasStaleAdminContext) return;
     const next = new URLSearchParams(location.search);
     if (desired) next.set("club", desired);
     else next.delete("club");
