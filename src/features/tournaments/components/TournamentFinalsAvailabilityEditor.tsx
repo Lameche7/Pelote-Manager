@@ -42,7 +42,9 @@ export function TournamentFinalsAvailabilityEditor({
     return finalSlots.filter((slot) => keys.has(key(slot)));
   }, [registration.availabilitySlots, finalSlots]);
   const [selected, setSelected] = useState(initial);
-  const [busyDates, setBusyDates] = useState<Array<{ date: string; title: string }>>([]);
+  const [busyDates, setBusyDates] = useState<
+    Array<{ date: string; title: string }>
+  >([]);
   const [loadingBusy, setLoadingBusy] = useState(true);
   const [conflictsLoaded, setConflictsLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -120,7 +122,9 @@ export function TournamentFinalsAvailabilityEditor({
       return;
     }
     if (selected.some((slot) => blockedDays.has(slot.date))) {
-      setError("Une date déjà programmée dans un autre tournoi doit rester décochée.");
+      setError(
+        "Une date déjà programmée dans un autre tournoi doit rester décochée.",
+      );
       return;
     }
     setSaving(true);

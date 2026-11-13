@@ -321,7 +321,8 @@ export function TournamentAvailabilityGrid({
       {busyDates.length > 0 && !admin && (
         <p role="status">
           {busyDates.length} journée(s) bloquée(s) : au moins un joueur
-          identifié dispute déjà une partie dans un autre tournoi, y compris extérieur importé.
+          identifié dispute déjà une partie dans un autre tournoi, y compris
+          extérieur importé.
         </p>
       )}
 
@@ -420,7 +421,11 @@ export function TournamentAvailabilityGrid({
                               <div className="tournament-availability-day">
                                 <strong>{formatDay(day.date)}</strong>
                                 {blocked.has(day.date) && !admin && (
-                                  <small title={busyReasons[day.date] ?? "Autre tournoi"}>
+                                  <small
+                                    title={
+                                      busyReasons[day.date] ?? "Autre tournoi"
+                                    }
+                                  >
                                     {busyReasons[day.date] ?? "Indisponible"}
                                   </small>
                                 )}
@@ -454,7 +459,8 @@ export function TournamentAvailabilityGrid({
                                       disabled={disabled || isBlocked(slot)}
                                       title={
                                         isBlocked(slot)
-                                          ? (busyReasons[slot.date] ?? "Indisponible : autre tournoi")
+                                          ? (busyReasons[slot.date] ??
+                                            "Indisponible : autre tournoi")
                                           : undefined
                                       }
                                       checked={
