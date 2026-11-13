@@ -163,10 +163,12 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
 export const tournamentService = {
   async getTeamBusyDates(
     tournamentId: string,
+    teamId: string,
   ): Promise<Array<{ date: string; title: string }>> {
-    const { data, error } = await supabase.rpc("tournament_team_busy_dates", {
-      target_tournament_id: tournamentId,
-    });
+    const { data, error } = await supabase.rpc(
+      "tournament_team_busy_dates_for_team",
+      { target_tournament_id: tournamentId, target_team_id: teamId },
+    );
     if (error) fail(error, "Impossible de vérifier les tournois extérieurs.");
     return rows(data)
       .map((row) => ({
@@ -178,12 +180,13 @@ export const tournamentService = {
 
   async getTeamBusyDateOrigins(
     tournamentId: string,
+    teamId: string,
   ): Promise<
     Array<{ date: string; blockedBySelf: boolean; blockedByPartner: boolean }>
   > {
     const { data, error } = await supabase.rpc(
-      "tournament_team_busy_date_origins",
-      { target_tournament_id: tournamentId },
+      "tournament_team_busy_date_origins_for_team",
+      { target_tournament_id: tournamentId, target_team_id: teamId },
     );
     if (error) fail(error, "Impossible de préciser l'origine des conflits.");
     return rows(data)
@@ -305,24 +308,25 @@ export const tournamentService = {
     };
   },
 
-  async getMyFinalsAvailability(
+  async getMyFinalsAvailabilities(
     tournamentId: string,
-  ): Promise<MyTournamentFinalsAvailability | null> {
+  ): Promise<MyTournamentFinalsAvailability[]> {
     const { data, error } = await supabase.rpc(
-      "get_my_tournament_finals_availability",
+      "get_my_tournament_finals_availabilities",
       { target_tournament_id: tournamentId },
     );
     if (error)
       fail(error, "Impossible de charger vos disponibilités de phase finale.");
-    if (!data) return null;
-    const row = data as Row;
-    return {
+    return rows(data).map((row) => ({
       teamId: String(row.team_id),
+      seriesId: String(row.series_id),
+      seriesName: String(row.series_name ?? "Série"),
+      teamLabel: String(row.team_label ?? "Équipe"),
       availabilitySlots: mapAvailabilitySlots(row.availability_slots),
       playerMemberIds: Array.isArray(row.player_member_ids)
         ? row.player_member_ids.map(String)
         : [],
-    };
+    }));
   },
 
   async getIdentity(
@@ -387,12 +391,14 @@ export const tournamentService = {
 
   async saveMyFinalsAvailability(
     tournamentId: string,
+    teamId: string,
     slots: TournamentAvailabilitySlot[],
   ): Promise<void> {
     const { error } = await supabase.rpc(
-      "update_my_tournament_finals_availability",
+      "update_my_tournament_team_finals_availability",
       {
         target_tournament_id: tournamentId,
+        target_team_id: teamId,
         selected_slots: slots.map((slot) => ({
           date: slot.date,
           starts_at: slot.startsAt,
