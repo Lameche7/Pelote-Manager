@@ -15,6 +15,21 @@ begin
     raise exception 'Ordinary administrator can see other clubs';
   end if;
   begin
+    perform public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000002'
+    );
+    raise exception 'User without lease read foreign club information';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"notes":"unauthorized"}'::jsonb
+    );
+    raise exception 'User without lease modified foreign club information';
+  exception when insufficient_privilege then null;
+  end;
+  begin
     perform public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', 300);
     raise exception 'Authenticated user issued own lease';
   exception when insufficient_privilege then null;
@@ -80,6 +95,21 @@ begin
   if (select count(*) from public.get_my_club_access()) <> 1 then
     raise exception 'Another club administrator sees both clubs';
   end if;
+  begin
+    perform public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000001'
+    );
+    raise exception 'Another user inherited platform information read';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000001',
+      '{"notes":"wrong user"}'::jsonb
+    );
+    raise exception 'Another user inherited platform information write';
+  exception when insufficient_privilege then null;
+  end;
 end $check$;
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
 reset role;
