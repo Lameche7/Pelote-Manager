@@ -1,0 +1,31 @@
+name: Temporary format finals PR
+on:
+  push:
+    branches:
+      - feat/finals-availability-after-registration-20261113
+    paths:
+      - .github/workflows/temporary-format-finals-pr.yml
+permissions:
+  contents: write
+jobs:
+  format-finals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/finals-availability-after-registration-20261113
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format changed TypeScript files and push
+        run: |
+          npx prettier --write src/features/tournaments/components/TournamentFinalsAvailabilityEditor.tsx src/features/tournaments/pages/TournamentDetailPage.tsx src/features/tournaments/services/tournamentService.ts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/tournaments/components/TournamentFinalsAvailabilityEditor.tsx src/features/tournaments/pages/TournamentDetailPage.tsx src/features/tournaments/services/tournamentService.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "style: apply Prettier to finals availability changes"
+            git push origin HEAD:feat/finals-availability-after-registration-20261113
+          fi
