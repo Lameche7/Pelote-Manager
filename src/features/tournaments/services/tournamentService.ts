@@ -330,7 +330,6 @@ export const tournamentService = {
     return String(data);
   },
 
-
   async saveMyFinalsAvailability(
     tournamentId: string,
     slots: TournamentAvailabilitySlot[],
@@ -346,7 +345,8 @@ export const tournamentService = {
         })),
       },
     );
-    if (error) fail(error, "Impossible d'enregistrer les disponibilités de phase finale.");
+    if (error)
+      fail(error, "Impossible d'enregistrer les disponibilités de phase finale.");
   },
 
   async withdrawMine(tournamentId: string): Promise<void> {
