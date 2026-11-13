@@ -62,7 +62,10 @@ export function TournamentFinalsAvailabilityEditor({
     setConflictsLoaded(false);
     Promise.all([
       tournamentService.getTeamBusyDates(tournament.id, registration.teamId),
-      tournamentService.getTeamBusyDateOrigins(tournament.id, registration.teamId),
+      tournamentService.getTeamBusyDateOrigins(
+        tournament.id,
+        registration.teamId,
+      ),
     ])
       .then(([results, origins]) => {
         if (!active) return;
@@ -172,7 +175,9 @@ export function TournamentFinalsAvailabilityEditor({
       id={`disponibilites-finales-${registration.teamId}`}
     >
       <h2>Mes disponibilités — phase finale · {registration.seriesName}</h2>
-      <p><strong>Équipe :</strong> {registration.teamLabel}</p>
+      <p>
+        <strong>Équipe :</strong> {registration.teamLabel}
+      </p>
       <p>
         Les inscriptions sont closes, mais vous pouvez ajuster vos créneaux de
         phase finale, notamment les mercredis. Vos disponibilités de poules,
