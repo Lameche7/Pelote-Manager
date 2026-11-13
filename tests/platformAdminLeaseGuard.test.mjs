@@ -37,7 +37,7 @@ const scopedDashboardSql = readFileSync(
   "utf8",
 );
 
-test("platform lease cannot change legacy club permissions or access listing", () => {
+test("lease preserves legacy club permissions", () => {
   assert.ok(
     !/create or replace function public\.has_club_permission\s*\(/i.test(
       leaseMigration,
@@ -58,7 +58,7 @@ test("platform lease cannot change legacy club permissions or access listing", (
   );
 });
 
-test("all three explicit-club dashboard RPCs use the scoped read-only guard", () => {
+test("scoped dashboards use read-only guard", () => {
   for (const name of [
     "admin_get_dashboard",
     "admin_dashboard_match_counts",
@@ -68,11 +68,8 @@ test("all three explicit-club dashboard RPCs use the scoped read-only guard", ()
       scopedDashboardSql.includes(`public.${name}(target_club_id uuid)`),
     );
   }
-  assert.equal(
-    (scopedDashboardSql.match(/public\.can_read_scoped_club_dashboard\(/g) ?? [])
-      .length >= 3,
-    true,
-  );
+  const guardCalls = scopedDashboardSql.match(/can_read_scoped_club_dashboard/g);
+  assert.ok((guardCalls?.length ?? 0) >= 3);
   assert.ok(
     !scopedDashboardSql.includes(
       "public.has_club_permission(requested_club_id, 'admin.dashboard.read')",
