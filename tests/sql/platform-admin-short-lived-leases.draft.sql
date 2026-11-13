@@ -104,7 +104,7 @@ create or replace function public.platform_admin_update_club_information(
   target_club_id uuid,
   changes jsonb
 ) returns jsonb language plpgsql volatile security definer set search_path = ''
-as $
+as $$
 declare
   result jsonb;
 begin
@@ -151,7 +151,7 @@ begin
   end if;
   return result;
 end;
-$;
+$$;
 revoke all on function public.platform_admin_update_club_information(uuid, jsonb)
   from public, anon, authenticated;
 grant execute on function public.platform_admin_update_club_information(uuid, jsonb)
