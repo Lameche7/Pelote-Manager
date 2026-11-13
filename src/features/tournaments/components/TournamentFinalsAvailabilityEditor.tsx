@@ -31,7 +31,11 @@ export function TournamentFinalsAvailabilityEditor({
           slot.date >= tournament.finalsStartsOn! &&
           slot.date <= tournament.finalsEndsOn!,
       ),
-    [tournament.availableSlots, tournament.finalsStartsOn, tournament.finalsEndsOn],
+    [
+      tournament.availableSlots,
+      tournament.finalsStartsOn,
+      tournament.finalsEndsOn,
+    ],
   );
   const initial = useMemo(() => {
     const keys = new Set(registration.availabilitySlots.map(key));
