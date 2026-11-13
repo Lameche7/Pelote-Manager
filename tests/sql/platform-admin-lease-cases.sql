@@ -32,6 +32,18 @@ begin
   if not public.can_read_scoped_club_dashboard('00000000-0000-0000-0000-000000000002') then
     raise exception 'Active platform lease did not authorize read-only dashboard for B';
   end if;
+  if (public.platform_admin_get_club_information('00000000-0000-0000-0000-000000000002')->>'id')
+     is distinct from '00000000-0000-0000-0000-000000000002' then
+    raise exception 'Scoped club information read returned wrong club';
+  end if;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"id":"00000000-0000-0000-0000-000000000001"}'::jsonb
+    );
+    raise exception 'Scoped club information update accepted immutable id';
+  exception when invalid_parameter_value then null;
+  end;
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Active platform lease granted cross-club write access';
   end if;
