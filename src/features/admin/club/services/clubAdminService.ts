@@ -70,6 +70,12 @@ export const clubAdminService = {
     return mapClub(data as Record<string, unknown>);
   },
   async updateClub(club: Club) {
+    // The information editor still uses the implicit business-club context.
+    // Never accept a foreign club ID from a stale form or visual preview.
+    const authorizedClubId = await currentClubId();
+    if (!authorizedClubId || club.id !== authorizedClubId) {
+      throw new Error("Modification interdite pour le club sélectionné.");
+    }
     const { error } = await supabase
       .from("clubs")
       .update({
