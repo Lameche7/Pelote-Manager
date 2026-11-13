@@ -161,6 +161,21 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
 });
 
 export const tournamentService = {
+  async getTeamBusyDates(
+    tournamentId: string,
+  ): Promise<Array<{ date: string; title: string }>> {
+    const { data, error } = await supabase.rpc("tournament_team_busy_dates", {
+      target_tournament_id: tournamentId,
+    });
+    if (error) fail(error, "Impossible de vérifier les tournois extérieurs.");
+    return rows(data)
+      .map((row) => ({
+        date: String(row.play_date ?? ""),
+        title: String(row.source_title ?? "Autre tournoi"),
+      }))
+      .filter((row) => Boolean(row.date));
+  },
+
   async getInterTournamentBusyDates(
     tournamentId: string,
     partnerMemberId: string | null,
