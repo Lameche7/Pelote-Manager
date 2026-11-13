@@ -122,9 +122,24 @@ export function PlatformClubSwitcher() {
     const next = new URLSearchParams(location.search);
     if (desired) next.set("club", desired);
     else next.delete("club");
-    navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash }, { replace: true });
-  }, [isVerifiedAdmin, clubs, selectedSlug, activeSlug, location.pathname, location.search, location.hash, navigate]);
-
+    navigate(
+      {
+        pathname: location.pathname,
+        search: next.toString(),
+        hash: location.hash,
+      },
+      { replace: true },
+    );
+  }, [
+    isVerifiedAdmin,
+    clubs,
+    selectedSlug,
+    activeSlug,
+    location.pathname,
+    location.search,
+    location.hash,
+    navigate,
+  ]);
 
   if (!isVerifiedAdmin) {
     if (status === "checking") return null;
@@ -138,19 +153,22 @@ export function PlatformClubSwitcher() {
       <span className="app-club-selection" role="status">
         <small>{message}</small>
         {status === "session" && (
-          <Link to={ROUTES.platformLogin}>Connexion à la plateforme centrale</Link>
+          <Link to={ROUTES.platformLogin}>
+            Connexion à la plateforme centrale
+          </Link>
         )}
       </span>
     );
   }
-
 
   return (
     <label className="app-club-selection">
       <span>Aperçu visuel du club (super-admin)</span>
       <select
         aria-label="Aperçu visuel du club"
-        value={clubs.some((club) => club.slug === selectedSlug) ? selectedSlug : ""}
+        value={
+          clubs.some((club) => club.slug === selectedSlug) ? selectedSlug : ""
+        }
         disabled={!clubs.length}
         onChange={(event) => {
           const slug = event.target.value;
@@ -164,7 +182,11 @@ export function PlatformClubSwitcher() {
           // An adminClubId belongs to a separate verified business context.
           // Never carry it over when changing the visual club.
           next.delete("adminClubId");
-          navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash });
+          navigate({
+            pathname: location.pathname,
+            search: next.toString(),
+            hash: location.hash,
+          });
         }}
       >
         <option value="">Club par défaut</option>
