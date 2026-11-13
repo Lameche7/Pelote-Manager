@@ -59,6 +59,14 @@ begin
     raise exception 'Scoped club information update accepted immutable id';
   exception when invalid_parameter_value then null;
   end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"logo_url":"https://example.org/unauthorized.png"}'::jsonb
+    );
+    raise exception 'Inter-club image update bypassed storage authorization';
+  exception when invalid_parameter_value then null;
+  end;
   if (public.platform_admin_update_club_information(
     '00000000-0000-0000-0000-000000000002',
     '{"notes":"Mise à jour testée"}'::jsonb
