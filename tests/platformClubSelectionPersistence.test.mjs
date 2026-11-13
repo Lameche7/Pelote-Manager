@@ -60,6 +60,13 @@ test("la plateforme et le catalogue indisponibles révoquent le choix local", ()
   assert.match(source, /to=\{ROUTES\.platformLogin\}/);
 });
 
+test("la restauration du club efface aussi un ancien contexte admin", () => {
+  assert.match(
+    source,
+    /if \(activeSlug === desired\) return;[\s\S]*?next\.delete\("adminClubId"\);[\s\S]*?navigate\(/,
+  );
+});
+
 test("changer le club visuel réinitialise tout contexte admin précédent", () => {
   assert.match(source, /next\.delete\("adminClubId"\)/);
   assert.match(source, /if \(slug\) next\.set\("club", slug\)/);
