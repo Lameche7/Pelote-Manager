@@ -39,16 +39,22 @@ const scopedDashboardSql = readFileSync(
 
 test("platform lease cannot change legacy club permissions or access listing", () => {
   assert.ok(
-    !/create or replace function public\.has_club_permission\s*\(/i.test(leaseMigration),
+    !/create or replace function public\.has_club_permission\s*\(/i.test(
+      leaseMigration,
+    ),
   );
   assert.ok(
-    !/create or replace function public\.get_my_club_access\s*\(/i.test(leaseMigration),
+    !/create or replace function public\.get_my_club_access\s*\(/i.test(
+      leaseMigration,
+    ),
   );
   assert.ok(
     leaseMigration.includes("public.can_read_scoped_club_dashboard"),
   );
   assert.ok(
-    leaseMigration.includes("pilotoki_private.has_active_platform_lease(auth.uid())"),
+    leaseMigration.includes(
+      "pilotoki_private.has_active_platform_lease(auth.uid())",
+    ),
   );
 });
 
