@@ -91,21 +91,6 @@ export function PlatformClubSwitcher() {
     };
   }, []);
 
-  if (!isVerifiedAdmin) {
-    if (status === "checking") return null;
-    const message =
-      status === "configuration"
-        ? "Sélection des clubs indisponible : configuration de la plateforme manquante."
-        : status === "session"
-          ? "Sélection des clubs indisponible : session de la plateforme centrale absente ou expirée."
-          : "Sélection des clubs indisponible : droits super-administrateur non confirmés sur la plateforme centrale.";
-    return (
-      <small className="app-club-selection" role="status">
-        {message}
-      </small>
-    );
-  }
-
   const params = new URLSearchParams(location.search);
   const activeSlug = params.get("club") || "";
 
@@ -124,6 +109,23 @@ export function PlatformClubSwitcher() {
     else next.delete("club");
     navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash }, { replace: true });
   }, [isVerifiedAdmin, clubs, selectedSlug, activeSlug, location.pathname, location.search, location.hash, navigate]);
+
+
+  if (!isVerifiedAdmin) {
+    if (status === "checking") return null;
+    const message =
+      status === "configuration"
+        ? "Sélection des clubs indisponible : configuration de la plateforme manquante."
+        : status === "session"
+          ? "Sélection des clubs indisponible : session de la plateforme centrale absente ou expirée."
+          : "Sélection des clubs indisponible : droits super-administrateur non confirmés sur la plateforme centrale.";
+    return (
+      <small className="app-club-selection" role="status">
+        {message}
+      </small>
+    );
+  }
+
 
   return (
     <label className="app-club-selection">
