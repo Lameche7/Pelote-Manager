@@ -7,7 +7,10 @@ const page = readFileSync(
   "utf8",
 );
 const service = readFileSync(
-  new URL("../src/features/admin/services/adminDashboardService.ts", import.meta.url),
+  new URL(
+    "../src/features/admin/services/adminDashboardService.ts",
+    import.meta.url,
+  ),
   "utf8",
 );
 const shell = readFileSync(
@@ -54,11 +57,8 @@ test(
   },
 );
 
-test(
-  "un aperçu visuel étranger bloque les données administratives implicites",
-  () => {
-    assert.match(shell, /if \(visualClubSlug && !requestedClubId\)/);
-    assert.match(shell, /Administration du club sélectionné indisponible/);
-    assert.match(shell, /if \(requestedClubId\) \{/);
-  },
-);
+test("un aperçu visuel étranger bloque les données administratives implicites", () => {
+  assert.match(shell, /if \(visualClubSlug && !requestedClubId\)/);
+  assert.match(shell, /Administration du club sélectionné indisponible/);
+  assert.match(shell, /if \(requestedClubId\) \{/);
+});
