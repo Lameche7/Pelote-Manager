@@ -69,8 +69,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Diagnostic exact du formatage de l'éditeur
-        run: npx prettier src/features/admin/club/pages/PlatformClubInformationEditor.tsx | diff -u src/features/admin/club/pages/PlatformClubInformationEditor.tsx - || true
       - run: npm run format:check
 
   network-user-admin:
