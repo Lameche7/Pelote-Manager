@@ -10,7 +10,11 @@ export function PlatformClubSwitcher() {
   const location = useLocation();
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [selectedSlug, setSelectedSlug] = useState(() => window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ?? "");
+  const [selectedSlug, setSelectedSlug] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ?? "",
+  );
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
   const [identityLinked, setIdentityLinked] = useState(false);
@@ -35,6 +39,8 @@ export function PlatformClubSwitcher() {
         await client.auth.getUser();
       if (!active) return;
       if (identityError || !identity.user) {
+        window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
+        setSelectedSlug("");
         setStatus("session");
         return;
       }
@@ -43,6 +49,8 @@ export function PlatformClubSwitcher() {
         await client.rpc("platform_is_admin");
       if (!active) return;
       if (roleError || allowed !== true) {
+        window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
+        setSelectedSlug("");
         setStatus("role");
         return;
       }
@@ -137,7 +145,8 @@ export function PlatformClubSwitcher() {
         onChange={(event) => {
           const slug = event.target.value;
           if (slug && !clubs.some((club) => club.slug === slug)) return;
-          window.sessionStorage.setItem(CLUB_PREFERENCE_KEY, slug);
+          if (slug) window.sessionStorage.setItem(CLUB_PREFERENCE_KEY, slug);
+          else window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
           setSelectedSlug(slug);
           const next = new URLSearchParams(location.search);
           if (slug) next.set("club", slug);
