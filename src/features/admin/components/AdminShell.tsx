@@ -38,6 +38,19 @@ export function AdminShell() {
       </section>
     );
   }
+  // A requested foreign business context must also be stopped before
+  // mounting the legacy access provider or issuing implicit-club RPCs.
+  if (requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration inter-clubs en préparation</h1>
+        <p>
+          Le contexte métier demandé n’est pas encore autorisé pour cet écran.
+          Aucune donnée administrative ne sera chargée.
+        </p>
+      </section>
+    );
+  }
   return (
     <AdminAccessProvider key={requestedClubId}>
       <AdminShellContent />
@@ -75,30 +88,6 @@ function AdminShellContent() {
       </section>
     );
   if (!access) return <Navigate to={ROUTES.forbidden} replace />;
-
-  // Explicit club selection remains read-only until the business RPCs and
-  // platform lease are deployed and validated end-to-end. In particular,
-  // never mount Outlet for a selected foreign club: other admin routes still
-  // use implicit legacy club context.
-  // Business RPCs are still based on the legacy implicit club context.
-  // Never expose an admin screen for an explicit cross-club selection until
-  // every business read/write is scoped and authorized by club ID server-side.
-  if (requestedClubId) {
-    return (
-      <section className="simple-page" role="status">
-        <h1>Administration inter-clubs en préparation</h1>
-        <p>
-          Le club {access.clubName} est identifié et vos droits sont vérifiés,
-          mais ses données ne peuvent pas encore être administrées depuis cet
-          espace.
-        </p>
-        <p>
-          Les opérations restent désactivées jusqu’à validation de l’isolation
-          des données.
-        </p>
-      </section>
-    );
-  }
 
   const visibleLinks: Array<{ label: string; to: string }> = [];
   adminNavigation.forEach((item) => {
