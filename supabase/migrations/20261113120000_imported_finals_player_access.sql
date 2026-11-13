@@ -8,7 +8,7 @@ language plpgsql
 stable
 security definer
 set search_path = ''
-as $
+as $finals_reader$
 declare
   team_id uuid;
 begin
@@ -47,7 +47,7 @@ begin
     )
   );
 end;
-$;
+$finals_reader$;
 revoke all on function public.get_my_tournament_finals_availability(uuid) from public, anon;
 grant execute on function public.get_my_tournament_finals_availability(uuid) to authenticated;
 
