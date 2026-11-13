@@ -18,7 +18,11 @@ test("le sélecteur exige une identité et un rôle plateforme vérifiés", () =
   assert.match(switcher, /client\.auth\.getUser\(\)/);
   assert.match(switcher, /platform_is_admin/);
   assert.match(switcher, /allowed !== true/);
-  assert.match(switcher, /if \(!isVerifiedAdmin\) return null/);
+  assert.match(switcher, /if \(!isVerifiedAdmin\)/);
+  assert.match(switcher, /status === "session"/);
+  assert.match(switcher, /status === "role"/);
+  assert.match(switcher, /role="status"/);
+  assert.match(switcher, /droits super-administrateur non confirmés/);
 });
 
 test("les clubs viennent du catalogue protégé et non du navigateur", () => {
