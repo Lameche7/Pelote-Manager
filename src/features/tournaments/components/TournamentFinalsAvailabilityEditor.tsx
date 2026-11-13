@@ -42,14 +42,29 @@ export function TournamentFinalsAvailabilityEditor({
     let active = true;
     const playerIds = [
       null,
-      ...registration.players.map((player) => player.memberId).filter((id): id is string => Boolean(id)),
+      ...registration.players
+        .map((player) => player.memberId)
+        .filter((id): id is string => Boolean(id)),
     ];
     setLoadingBusy(true);
-    Promise.all(playerIds.map((id) => tournamentService.getInterTournamentBusyDates(tournament.id, id)))
-      .then((results) => { if (active) setBusyDates([...new Set(results.flat())]); })
-      .catch(() => { if (active) setError("Impossible de vérifier les conflits entre tournois."); })
-      .finally(() => { if (active) setLoadingBusy(false); });
-    return () => { active = false; };
+    Promise.all(
+      playerIds.map((id) =>
+        tournamentService.getInterTournamentBusyDates(tournament.id, id),
+      ),
+    )
+      .then((results) => {
+        if (active) setBusyDates([...new Set(results.flat())]);
+      })
+      .catch(() => {
+        if (active)
+          setError("Impossible de vérifier les conflits entre tournois.");
+      })
+      .finally(() => {
+        if (active) setLoadingBusy(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [tournament.id, registration.players]);
 
   const finalGrid = useMemo(
@@ -69,20 +84,34 @@ export function TournamentFinalsAvailabilityEditor({
     setSuccess("");
     if (loadingBusy) return;
     if (!minimumReached) {
-      setError(`Veuillez sélectionner au moins ${tournament.minimumFinalsAvailabilitySlots} créneaux de phase finale.`);
+      setError(
+        `Veuillez sélectionner au moins ${tournament.minimumFinalsAvailabilitySlots} créneaux de phase finale.`,
+      );
       return;
     }
-    if (selected.some((slot) => busyDates.includes(slot.date) && !initial.some((old) => key(old) === key(slot)))) {
-      setError("Un nouveau créneau est en conflit avec une partie d'un autre tournoi.");
+    if (
+      selected.some(
+        (slot) =>
+          busyDates.includes(slot.date) &&
+          !initial.some((old) => key(old) === key(slot)),
+      )
+    ) {
+      setError(
+        "Un nouveau créneau est en conflit avec une partie d'un autre tournoi.",
+      );
       return;
     }
     setSaving(true);
     try {
       await tournamentService.saveMyFinalsAvailability(tournament.id, selected);
       await onSaved();
-      setSuccess("Vos disponibilités pour la phase finale ont été enregistrées.");
+      setSuccess(
+        "Vos disponibilités pour la phase finale ont été enregistrées.",
+      );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Enregistrement impossible.");
+      setError(
+        cause instanceof Error ? cause.message : "Enregistrement impossible.",
+      );
     } finally {
       setSaving(false);
     }
@@ -101,18 +130,30 @@ export function TournamentFinalsAvailabilityEditor({
         tournament={finalGrid}
         value={selected}
         disabled={saving || loadingBusy}
-        busyDates={busyDates.filter((day) => !initial.some((slot) => slot.date === day))}
+        busyDates={busyDates.filter(
+          (day) => !initial.some((slot) => slot.date === day),
+        )}
         onChange={setSelected}
       />
-      {error && <p role="alert" className="public-tournaments__error">{error}</p>}
-      {success && <p role="status" className="public-tournaments__success">{success}</p>}
+      {error && (
+        <p role="alert" className="public-tournaments__error">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p role="status" className="public-tournaments__success">
+          {success}
+        </p>
+      )}
       <button
         className="button button--primary"
         type="button"
         disabled={saving || loadingBusy || !minimumReached}
         onClick={() => void save()}
       >
-        {saving ? "Enregistrement…" : "Enregistrer mes disponibilités de phase finale"}
+        {saving
+          ? "Enregistrement…"
+          : "Enregistrer mes disponibilités de phase finale"}
       </button>
     </section>
   );
