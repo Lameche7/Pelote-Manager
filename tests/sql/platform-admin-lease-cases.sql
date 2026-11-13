@@ -50,13 +50,14 @@ begin
   )->>'id') is distinct from '00000000-0000-0000-0000-000000000002' then
     raise exception 'Scoped club information update returned wrong club';
   end if;
-  if (select notes from public.clubs
-      where id = '00000000-0000-0000-0000-000000000002')
-      is distinct from 'Mise à jour testée' then
+  if (public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000002'
+    )->>'notes') is distinct from 'Mise à jour testée' then
     raise exception 'Scoped club information update did not persist';
   end if;
-  if (select notes from public.clubs
-      where id = '00000000-0000-0000-0000-000000000001') is not null then
+  if (public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000001'
+    )->>'notes') is not null then
     raise exception 'Scoped update modified another club';
   end if;
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
