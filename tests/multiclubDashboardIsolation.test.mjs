@@ -89,3 +89,8 @@ test("le service de branding ne réutilise pas les valeurs Lourdes pour un club 
   assert.match(brandingService, /if \(clubSlug && \(!row\.name/);
   assert.match(brandingService, /name: value\(row\.name, defaults\.name\)/);
 });
+
+test("un accès direct à un aperçu étranger ne montre pas Lourdes au premier rendu", () => {
+  assert.match(layout, /useState\(\(\) =>\s*new URLSearchParams\(window\.location\.search\)\.has\("club"\)/);
+  assert.match(layout, /\? clubBrandingService\.unavailableFallback/);
+});
