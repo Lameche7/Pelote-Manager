@@ -43,9 +43,9 @@ begin
 
   for item in select value from jsonb_array_elements(selected_slots)
   loop
-    if coalesce(item->>'date', '') !~ '^\\d{4}-\\d{2}-\\d{2}$'
-      or coalesce(item->>'starts_at', '') !~ '^\\d{2}:\\d{2}(:\\d{2})?$'
-      or coalesce(item->>'ends_at', '') !~ '^\\d{2}:\\d{2}(:\\d{2})?$'
+    if coalesce(item->>'date', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+      or coalesce(item->>'starts_at', '') !~ '^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$'
+      or coalesce(item->>'ends_at', '') !~ '^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$'
       or not exists (
         select 1
         from public.tournament_generated_slots(target_tournament_id) slot
