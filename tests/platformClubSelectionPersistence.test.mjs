@@ -16,7 +16,7 @@ test("la sélection visuelle est conservée en session et restaurée dans l'URL"
   assert.match(source, /sessionStorage\.setItem\(CLUB_PREFERENCE_KEY, slug\)/);
   assert.match(
     source,
-    /navigate\(\{ pathname: location\.pathname, search: next\.toString\(\), hash: location\.hash \}, \{ replace: true \}\)/,
+    /navigate\([\s\S]*?pathname: location\.pathname,[\s\S]*?search: next\.toString\(\),[\s\S]*?hash: location\.hash,[\s\S]*?replace: true/,
   );
 });
 
