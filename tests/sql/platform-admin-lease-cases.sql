@@ -44,6 +44,21 @@ begin
     raise exception 'Scoped club information update accepted immutable id';
   exception when invalid_parameter_value then null;
   end;
+  if (public.platform_admin_update_club_information(
+    '00000000-0000-0000-0000-000000000002',
+    '{"notes":"Mise à jour testée"}'::jsonb
+  )->>'id') is distinct from '00000000-0000-0000-0000-000000000002' then
+    raise exception 'Scoped club information update returned wrong club';
+  end if;
+  if (select notes from public.clubs
+      where id = '00000000-0000-0000-0000-000000000002')
+      is distinct from 'Mise à jour testée' then
+    raise exception 'Scoped club information update did not persist';
+  end if;
+  if (select notes from public.clubs
+      where id = '00000000-0000-0000-0000-000000000001') is not null then
+    raise exception 'Scoped update modified another club';
+  end if;
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Active platform lease granted cross-club write access';
   end if;
