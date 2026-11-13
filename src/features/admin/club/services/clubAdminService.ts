@@ -76,7 +76,7 @@ export const clubAdminService = {
     if (!authorizedClubId || club.id !== authorizedClubId) {
       throw new Error("Modification interdite pour le club sélectionné.");
     }
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("clubs")
       .update({
         name: club.name,
@@ -94,8 +94,12 @@ export const clubAdminService = {
         affiliation_number: club.affiliationNumber || null,
         notes: club.notes || null,
       })
-      .eq("id", club.id);
+      .eq("id", authorizedClubId)
+      .select("id");
     if (error) throw error;
+    if (!data || data.length !== 1 || data[0].id !== authorizedClubId) {
+      throw new Error("Enregistrement non autorisé ou non effectué.");
+    }
   },
   async listSeasons(): Promise<Season[]> {
     const clubId = await currentClubId();
