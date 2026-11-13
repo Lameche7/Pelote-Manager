@@ -63,8 +63,9 @@ export function TournamentDetailPage() {
   const [results, setResults] = useState<PublicTournamentResults | null>(null);
   const [registration, setRegistration] =
     useState<MyTournamentRegistration | null>(null);
-  const [linkedFinals, setLinkedFinals] =
-    useState<MyTournamentFinalsAvailability | null>(null);
+  const [linkedFinals, setLinkedFinals] = useState<
+    MyTournamentFinalsAvailability[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -87,20 +88,20 @@ export function TournamentDetailPage() {
     setResults(publicTournament ? loadedResults : null);
     if (!publicTournament) {
       setRegistration(null);
-      setLinkedFinals(null);
+      setLinkedFinals([]);
       return;
     }
 
     if (isAuthenticated) {
       const [mine, finals] = await Promise.all([
         tournamentService.getMine(tournamentId),
-        tournamentService.getMyFinalsAvailability(tournamentId),
+        tournamentService.getMyFinalsAvailabilities(tournamentId),
       ]);
       setRegistration(mine);
       setLinkedFinals(finals);
     } else {
       setRegistration(null);
-      setLinkedFinals(null);
+      setLinkedFinals([]);
     }
   }, [isAuthenticated, tournamentId]);
 
@@ -146,7 +147,7 @@ export function TournamentDetailPage() {
   useEffect(() => {
     if (
       loading ||
-      !linkedFinals ||
+      linkedFinals.length === 0 ||
       window.location.hash !== "#disponibilites-finales"
     )
       return;
@@ -218,14 +219,19 @@ export function TournamentDetailPage() {
       )}
 
       {isAuthenticated &&
-        linkedFinals &&
+        linkedFinals.length > 0 &&
         !tournament.canRegister &&
         tournament.availableFinalsSlotCount > 0 && (
-          <TournamentFinalsAvailabilityEditor
-            tournament={tournament}
-            registration={linkedFinals}
-            onSaved={load}
-          />
+          <div id="disponibilites-finales">
+            {linkedFinals.map((team) => (
+              <TournamentFinalsAvailabilityEditor
+                key={team.teamId}
+                tournament={tournament}
+                registration={team}
+                onSaved={load}
+              />
+            ))}
+          </div>
         )}
 
       {results ? (
