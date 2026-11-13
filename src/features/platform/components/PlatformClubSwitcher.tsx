@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
+import { ROUTES } from "@/shared/config";
 import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 
 type Club = { id: string; name: string; slug: string };
@@ -13,7 +14,8 @@ export function PlatformClubSwitcher() {
   const [selectedSlug, setSelectedSlug] = useState(() =>
     typeof window === "undefined"
       ? ""
-      : window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ?? "",
+      : window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ??
+        new URLSearchParams(window.location.search).get("club") ?? "",
   );
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
@@ -128,9 +130,12 @@ export function PlatformClubSwitcher() {
           ? "Sélection des clubs indisponible : session de la plateforme centrale absente ou expirée."
           : "Sélection des clubs indisponible : droits super-administrateur non confirmés sur la plateforme centrale.";
     return (
-      <small className="app-club-selection" role="status">
-        {message}
-      </small>
+      <span className="app-club-selection" role="status">
+        <small>{message}</small>
+        {status === "session" && (
+          <Link to={ROUTES.platform + "/connexion"}>Connexion à la plateforme centrale</Link>
+        )}
+      </span>
     );
   }
 
