@@ -346,7 +346,10 @@ export const tournamentService = {
       },
     );
     if (error)
-      fail(error, "Impossible d'enregistrer les disponibilités de phase finale.");
+      fail(
+        error,
+        "Impossible d'enregistrer les disponibilités de phase finale.",
+      );
   },
 
   async withdrawMine(tournamentId: string): Promise<void> {

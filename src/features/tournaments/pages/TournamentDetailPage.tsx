@@ -328,8 +328,8 @@ export function TournamentDetailPage() {
                   </span>
                 ) : (
                   <span>
-                    Les inscriptions sont clôturées : vos disponibilités de phase
-                    finale restent modifiables dans le panneau dédié.
+                    Les inscriptions sont clôturées : vos disponibilités de
+                    phase finale restent modifiables dans le panneau dédié.
                   </span>
                 )}
               </div>
