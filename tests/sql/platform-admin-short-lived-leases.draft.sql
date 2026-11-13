@@ -119,7 +119,7 @@ begin
      or exists (
        select 1 from jsonb_object_keys(changes) as field(key)
        where field.key not in (
-         'name', 'logo_url', 'hero_image_url',
+         'name',
          'primary_color', 'secondary_color', 'accent_color',
          'neutral_color', 'address', 'phone', 'email',
          'website', 'social_links', 'affiliation_number', 'notes'
@@ -130,7 +130,7 @@ begin
 
   update public.clubs c
   set name = case when changes ? 'name' then changes->>'name' else c.name end,
-          primary_color = case when changes ? 'primary_color' then changes->>'primary_color' else c.primary_color end,
+      primary_color = case when changes ? 'primary_color' then changes->>'primary_color' else c.primary_color end,
       secondary_color = case when changes ? 'secondary_color' then changes->>'secondary_color' else c.secondary_color end,
       accent_color = case when changes ? 'accent_color' then changes->>'accent_color' else c.accent_color end,
       neutral_color = case when changes ? 'neutral_color' then changes->>'neutral_color' else c.neutral_color end,
