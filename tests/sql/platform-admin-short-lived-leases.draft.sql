@@ -97,3 +97,50 @@ revoke all on function public.can_read_scoped_club_dashboard(uuid)
   from public, anon, authenticated;
 grant execute on function public.can_read_scoped_club_dashboard(uuid)
   to authenticated;
+
+-- DRAFT: a lease permits a narrowly scoped information read only.
+-- No write privileges or implicit access to other business modules.
+create or replace function public.platform_admin_get_club_information(
+  target_club_id uuid
+) returns jsonb language plpgsql stable security definer set search_path = ''
+as $$
+declare
+  club_info jsonb;
+begin
+  if auth.uid() is null
+     or target_club_id is null
+     or not pilotoki_private.has_active_platform_lease(auth.uid()) then
+    raise exception 'Club information access denied' using errcode = '42501';
+  end if;
+
+  select jsonb_build_object(
+    'id', c.id,
+    'name', c.name,
+    'logo_url', c.logo_url,
+    'hero_image_url', c.hero_image_url,
+    'primary_color', c.primary_color,
+    'secondary_color', c.secondary_color,
+    'accent_color', c.accent_color,
+    'neutral_color', c.neutral_color,
+    'address', c.address,
+    'phone', c.phone,
+    'email', c.email,
+    'website', c.website,
+    'social_links', c.social_links,
+    'affiliation_number', c.affiliation_number,
+    'notes', c.notes
+  )
+  into club_info
+  from public.clubs c
+  where c.id = target_club_id;
+
+  if club_info is null then
+    raise exception 'Club information unavailable' using errcode = 'P0002';
+  end if;
+  return club_info;
+end;
+$$;
+revoke all on function public.platform_admin_get_club_information(uuid)
+  from public, anon, authenticated;
+grant execute on function public.platform_admin_get_club_information(uuid)
+  to authenticated;
