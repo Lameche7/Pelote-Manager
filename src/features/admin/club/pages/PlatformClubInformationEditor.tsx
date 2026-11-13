@@ -9,12 +9,7 @@ import { clubAdminService, type Club } from "../services/clubAdminService";
  * Deliberately excludes image uploads, media management, publishing and all
  * other legacy administration modules.
  */
-// prettier-ignore -- conserver ce composant isolé jusqu'à son raccordement sécurisé.
-export function PlatformClubInformationEditor({
-  clubId,
-}: {
-  clubId: string;
-}) {
+export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
   const [club, setClub] = useState<Club | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -83,9 +78,8 @@ export function PlatformClubInformationEditor({
           setError("");
           try {
             await clubAdminService.updateClubForPlatformLease(club);
-            const refreshed = await clubAdminService.getClubForPlatformLease(
-              clubId,
-            );
+            const refreshed =
+              await clubAdminService.getClubForPlatformLease(clubId);
             setClub(refreshed);
           } catch {
             setClub(null);
