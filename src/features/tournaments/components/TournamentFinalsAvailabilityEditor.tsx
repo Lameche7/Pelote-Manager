@@ -92,11 +92,14 @@ export function TournamentFinalsAvailabilityEditor({
   );
   const busyReasons = useMemo(() => {
     const reasons: Record<string, string> = {};
-    const originsByDate = new Map(busyOrigins.map((entry) => [entry.date, entry]));
+    const originsByDate = new Map(
+      busyOrigins.map((entry) => [entry.date, entry]),
+    );
     for (const conflict of busyDates) {
       const origin = originsByDate.get(conflict.date);
-      const person = origin?.blockedBySelf && origin.blockedByPartner
-        ? "Vous et votre partenaire avez chacun une partie programmée"
+      const person =
+        origin?.blockedBySelf && origin.blockedByPartner
+          ? "Vous et votre partenaire avez chacun une partie programmée"
         : origin?.blockedBySelf
           ? "Vous avez déjà une partie programmée"
           : origin?.blockedByPartner
