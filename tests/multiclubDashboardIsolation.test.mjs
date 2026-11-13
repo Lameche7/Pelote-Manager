@@ -34,3 +34,9 @@ test("la navigation admin conserve le club visuel sans l’utiliser comme permis
   assert.match(shell, /if \(requestedClubId\) \{/);
   assert.match(layout, /withClubPreview/);
 });
+
+test("un aperçu visuel étranger bloque les données administratives implicites", () => {
+  assert.match(shell, /if \(visualClubSlug && !requestedClubId\)/);
+  assert.match(shell, /Administration du club sélectionné indisponible/);
+  assert.match(shell, /if \(requestedClubId\) \{/);
+});
