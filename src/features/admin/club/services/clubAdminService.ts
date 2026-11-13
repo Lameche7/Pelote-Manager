@@ -124,8 +124,6 @@ export const clubAdminService = {
     }
     const changes = {
       name: club.name,
-      logo_url: club.logoUrl || null,
-      hero_image_url: club.heroImageUrl || null,
       primary_color: club.primaryColor,
       secondary_color: club.secondaryColor,
       accent_color: club.accentColor,
