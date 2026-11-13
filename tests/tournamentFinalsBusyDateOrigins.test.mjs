@@ -6,7 +6,9 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("les conflits des phases finales distinguent joueur et partenaire", async () => {
   const [migration, service, editor] = await Promise.all([
-    read("../supabase/migrations/20261113150000_finals_busy_date_player_origins.sql"),
+    read(
+      "../supabase/migrations/20261113150000_finals_busy_date_player_origins.sql",
+    ),
     read("../src/features/tournaments/services/tournamentService.ts"),
     read(
       "../src/features/tournaments/components/TournamentFinalsAvailabilityEditor.tsx",
@@ -14,7 +16,10 @@ test("les conflits des phases finales distinguent joueur et partenaire", async (
   ]);
   assert.match(migration, /tournament_team_busy_date_origins/);
   assert.match(migration, /tournament_profile_is_linked_to_team/);
-  assert.match(migration, /blocked_by_self boolean, blocked_by_partner boolean/);
+  assert.match(
+    migration,
+    /blocked_by_self boolean, blocked_by_partner boolean/,
+  );
   assert.match(migration, /bool_or\(conflicts\.is_self\)/);
   assert.match(migration, /bool_or\(not conflicts\.is_self\)/);
   assert.match(
