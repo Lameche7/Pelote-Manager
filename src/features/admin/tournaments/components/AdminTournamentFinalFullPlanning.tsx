@@ -406,8 +406,8 @@ export function AdminTournamentFinalFullPlanning({
       <p className="final-stage-full-planning__hint">
         Toutes les séries et toutes les étapes partagent les mêmes créneaux
         Finals. L’automatique place ce qu’il peut avec les disponibilités
-        déclarées et les dates limites de chaque tour ; le reste est conservé
-        « À programmer ». Un nouveau calcul replace les créneaux automatiques,
+        déclarées et les dates limites de chaque tour ; le reste est conservé «
+        À programmer ». Un nouveau calcul replace les créneaux automatiques,
         sans modifier les créneaux fixés manuellement ni les matchs publiés.
       </p>
 
