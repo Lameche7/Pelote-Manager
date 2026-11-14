@@ -75,38 +75,32 @@ test("un domaine ambigu ou un slug invalide ne résout aucun club", () => {
   );
 });
 
-test(
-  "le favori prime sur la licence vérifiée puis sur le lien d'entrée",
-  () => {
+test("le club favori prime sur la licence puis sur le lien", () => {
     assert.equal(resolvePlayerHomeClub("morlaas", null, null), "morlaas");
     assert.equal(resolvePlayerHomeClub("morlaas", "lourdes", null), "lourdes");
     assert.equal(
       resolvePlayerHomeClub("morlaas", "lourdes", "morlaas"),
       "morlaas",
     );
-    assert.equal(resolvePlayerHomeClub(null, null, null), null);
-  },
-);
+  assert.equal(resolvePlayerHomeClub(null, null, null), null);
+});
 
-test(
-  "les liens publics n'accordent aucun droit et rejettent les slugs invalides",
-  () => {
-    assert.equal(
-      publicClubQuery("pelotari-club-morlaas"),
-      "?club=pelotari-club-morlaas",
-    );
-    assert.equal(publicClubQuery("../admin"), "");
-    assert.equal(publicClubQuery(""), "");
-    assert.equal(
-      publicClubConfirmationRedirect(
-        "https://pilotoki.example/",
-        "pelotari-club-morlaas",
-      ),
-      "https://pilotoki.example/?club=pelotari-club-morlaas",
-    );
-    assert.equal(
-      publicClubConfirmationRedirect("https://pilotoki.example", "../admin"),
+test("les liens publics rejettent les slugs invalides", () => {
+  assert.equal(
+  publicClubQuery("pelotari-club-morlaas"),
+    "?club=pelotari-club-morlaas",
+  );
+  assert.equal(publicClubQuery("../admin"), "");
+  assert.equal(publicClubQuery(""), "");
+  assert.equal(
+    publicClubConfirmationRedirect(
       "https://pilotoki.example/",
-    );
-  },
-);
+      "pelotari-club-morlaas",
+    ),
+    "https://pilotoki.example/?club=pelotari-club-morlaas",
+  );
+  assert.equal(
+    publicClubConfirmationRedirect("https://pilotoki.example", "../admin"),
+    "https://pilotoki.example/",
+  );
+});
