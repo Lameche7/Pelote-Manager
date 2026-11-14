@@ -91,5 +91,5 @@ export function publicClubConfirmationRedirect(
   origin: string,
   clubSlug: string | null | undefined,
 ): string {
-  return `${origin.replace(/\\/$/, "")}/${publicClubQuery(clubSlug)}`;
+  return `${origin.replace(/\/$/, "")}/${publicClubQuery(clubSlug)}`;
 }
