@@ -315,7 +315,7 @@ export function AdminTournamentFinalFullPlanning({
     setEditingRound(roundNumber);
     setError("");
     setMessage(
-      "En manuel, l’admin peut forcer un créneau hors disponibilités déclarées. Respectez les périodes des tours et les temps de repos.",
+      "Tous les créneaux Finals sont proposés. L’admin peut forcer les disponibilités, mais doit respecter les périodes des tours et les temps de repos.",
     );
   };
 
