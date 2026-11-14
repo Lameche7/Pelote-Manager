@@ -143,6 +143,9 @@ export function AdminTournamentResultsPage() {
   const [poolFilter, setPoolFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
+  const [editingUnprogrammedId, setEditingUnprogrammedId] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -201,8 +204,11 @@ export function AdminTournamentResultsPage() {
     ).length ?? 0;
 
   const validatedCount =
-    selected?.matches.filter((match) => match.result?.status === "validated")
-      .length ?? 0;
+    (selected?.matches.filter((match) => match.result?.status === "validated")
+      .length ?? 0) +
+    unprogrammedForTournament.filter(
+      (match) => match.result?.status === "validated",
+    ).length;
 
   const missingFinishedCount =
     selected?.matches.filter(
@@ -214,7 +220,8 @@ export function AdminTournamentResultsPage() {
   const remainingScheduledCount =
     selected?.matches.filter((match) => !match.result).length ?? 0;
   const remainingCount =
-    remainingScheduledCount + unprogrammedForTournament.length;
+    remainingScheduledCount +
+    unprogrammedForTournament.filter((match) => !match.result).length;
   const totalCount =
     (selected?.matches.length ?? 0) + unprogrammedForTournament.length;
   const completedPercent =
@@ -301,6 +308,11 @@ export function AdminTournamentResultsPage() {
     );
   }, [dateFilter, poolFilter, search, selected, seriesFilter, view]);
 
+  const editingUnprogrammed =
+    unprogrammedForTournament.find(
+      (match) => match.matchId === editingUnprogrammedId,
+    ) ?? null;
+
   const editingMatch = useMemo(
     () =>
       selected?.matches.find((match) => match.id === editingMatchId) ?? null,
@@ -340,6 +352,7 @@ export function AdminTournamentResultsPage() {
     try {
       await tournamentResultsAdminService.save(matchId, score);
       setEditingMatchId(null);
+      setEditingUnprogrammedId(null);
       await load();
       setMessage("Résultat enregistré.");
     } catch (saveError) {
@@ -483,7 +496,7 @@ export function AdminTournamentResultsPage() {
                         (match) => match.seriesName === series,
                       ) ?? [];
                     const seriesUnprogrammed = unprogrammedForTournament.filter(
-                      (match) => match.seriesName === series,
+                      (match) => match.seriesName === series && !match.result,
                     );
                     return (
                       <tr key={series}>
@@ -499,7 +512,12 @@ export function AdminTournamentResultsPage() {
                           {seriesMatches.filter((match) => !match.result)
                             .length + seriesUnprogrammed.length}
                         </td>
-                        <td>{seriesUnprogrammed.length}</td>
+                        <td>
+                          {
+                            seriesUnprogrammed.filter((match) => !match.result)
+                              .length
+                          }
+                        </td>
                       </tr>
                     );
                   })}
@@ -523,9 +541,9 @@ export function AdminTournamentResultsPage() {
                   {unprogrammedForTournament.length} partie(s) à programmer
                 </strong>
                 <p>
-                  Ces parties n'ont plus de créneau. Elles ne sont pas
-                  considérées comme jouées et ne figurent pas parmi les scores
-                  manquants.
+                  Ces parties n'ont plus de créneau. Si une rencontre a déjà été
+                  jouée, vous pouvez saisir directement son score sans la
+                  programmer.
                 </p>
               </div>
               <Link to={ROUTES.adminTournamentReschedules}>
@@ -547,7 +565,17 @@ export function AdminTournamentResultsPage() {
                       <span>
                         {match.seriesName} · Ancien créneau :{" "}
                         {match.previousDate} à {match.previousStart}
+                        {match.result
+                          ? " · Résultat validé"
+                          : " · Sans résultat"}
                       </span>
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => setEditingUnprogrammedId(match.matchId)}
+                      >
+                        {match.result ? "Modifier le score" : "Saisir le score"}
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -814,13 +842,14 @@ export function AdminTournamentResultsPage() {
         </>
       )}
 
-      {selected && editingMatch && (
+      {selected && (editingMatch || editingUnprogrammed) && (
         <div
           className="tournament-results-modal-backdrop"
           role="presentation"
           onMouseDown={(event) => {
             if (event.currentTarget === event.target && !saving) {
               setEditingMatchId(null);
+              setEditingUnprogrammedId(null);
             }
           }}
         >
@@ -833,21 +862,26 @@ export function AdminTournamentResultsPage() {
             <header>
               <div>
                 <span>
-                  {editingMatch.seriesName} · {matchStageLabel(editingMatch)}
+                  {editingMatch
+                    ? `${editingMatch.seriesName} · ${matchStageLabel(editingMatch)}`
+                    : `${editingUnprogrammed?.seriesName} · Partie sans créneau`}
                 </span>
                 <h2 id="tournament-score-editor-title">
-                  {editingMatch.result
+                  {editingMatch?.result || editingUnprogrammed?.result
                     ? "Modifier le score"
                     : "Saisir le score"}
                 </h2>
                 <p>
-                  {editingMatch.teamALabel} — {editingMatch.teamBLabel}
+                  {editingMatch
+                    ? `${editingMatch.teamALabel} — ${editingMatch.teamBLabel}`
+                    : `${editingUnprogrammed?.teamA} — ${editingUnprogrammed?.teamB}`}
                 </p>
                 <small>
-                  {dateFormatter.format(
-                    new Date(`${editingMatch.playDate}T12:00:00`),
-                  )}{" "}
-                  · {editingMatch.startsAt}
+                  {editingMatch
+                    ? `${dateFormatter.format(
+                        new Date(`${editingMatch.playDate}T12:00:00`),
+                      )} · ${editingMatch.startsAt}`
+                    : "Sans créneau programmé"}
                 </small>
               </div>
               <button
@@ -855,7 +889,10 @@ export function AdminTournamentResultsPage() {
                 className="tournament-results-modal__close"
                 disabled={saving}
                 aria-label="Fermer la saisie du score"
-                onClick={() => setEditingMatchId(null)}
+                onClick={() => {
+                  setEditingMatchId(null);
+                  setEditingUnprogrammedId(null);
+                }}
               >
                 ×
               </button>
@@ -864,15 +901,28 @@ export function AdminTournamentResultsPage() {
             <TournamentScoreEditor
               rules={selected.sportingRules}
               teamSide="a"
-              leftLabel={editingMatch.teamALabel}
-              rightLabel={editingMatch.teamBLabel}
-              initialScore={editingMatch.result?.score ?? null}
+              leftLabel={
+                editingMatch?.teamALabel ?? editingUnprogrammed?.teamA ?? ""
+              }
+              rightLabel={
+                editingMatch?.teamBLabel ?? editingUnprogrammed?.teamB ?? ""
+              }
+              initialScore={
+                editingMatch?.result?.score ??
+                editingUnprogrammed?.result?.score ??
+                null
+              }
               disabled={saving}
               submitLabel={
                 saving ? "Enregistrement…" : "Enregistrer et valider"
               }
-              onCancel={() => setEditingMatchId(null)}
-              onSubmit={(score) => save(editingMatch.id, score)}
+              onCancel={() => {
+                setEditingMatchId(null);
+                setEditingUnprogrammedId(null);
+              }}
+              onSubmit={(score) =>
+                save((editingMatch?.id ?? editingUnprogrammed?.matchId)!, score)
+              }
             />
           </div>
         </div>
