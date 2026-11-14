@@ -57,17 +57,32 @@ export function AdminTournamentFinalWeeklyOverview({
 
   const first = workspace.tournament.finalsStartsOn;
   const last = workspace.tournament.finalsEndsOn;
-  const firstMonday = mondayOf(first ?? workspace.weeklySlots[0]?.date ?? "2026-01-01");
+  const firstMonday = mondayOf(
+    first ?? workspace.weeklySlots[0]?.date ?? "2026-01-01",
+  );
   const maxIndex = last
-    ? Math.max(0, Math.round((mondayOf(last).getTime() - firstMonday.getTime()) / 604_800_000))
+    ? Math.max(
+        0,
+        Math.round(
+          (mondayOf(last).getTime() - firstMonday.getTime()) / 604_800_000,
+        ),
+      )
     : 0;
   const currentIndex = Math.min(weekIndex, maxIndex);
   const monday = addDays(firstMonday, currentIndex * 7);
-  const days = Array.from({ length: 7 }, (_, index) => toIsoDay(addDays(monday, index)));
+  const days = Array.from({ length: 7 }, (_, index) =>
+    toIsoDay(addDays(monday, index)),
+  );
   const blocked = useMemo(
-    () => new Set(workspace.weeklyOccupiedSlotIds.map((id) =>
-      id.split("|").map((part, index) => index >= 2 ? part.slice(0, 5) : part).join("|"),
-    )),
+    () =>
+      new Set(
+        workspace.weeklyOccupiedSlotIds.map((id) =>
+          id
+            .split("|")
+            .map((part, index) => (index >= 2 ? part.slice(0, 5) : part))
+            .join("|"),
+        ),
+      ),
     [workspace.weeklyOccupiedSlotIds],
   );
   const seriesById = useMemo(
@@ -75,15 +90,22 @@ export function AdminTournamentFinalWeeklyOverview({
     [workspace.series],
   );
   const slotAssignments = useMemo(() => {
-    const bySlot = new Map<string, TournamentFinalFullPlanningWorkspace["nodes"][number]>();
+    const bySlot = new Map<
+      string,
+      TournamentFinalFullPlanningWorkspace["nodes"][number]
+    >();
     for (const node of workspace.nodes) {
-      if (!node.resourceId || !node.playDate || !node.startsAt || !node.endsAt) continue;
-      bySlot.set(slotKey({
-        resourceId: node.resourceId,
-        date: node.playDate,
-        startsAt: node.startsAt,
-        endsAt: node.endsAt,
-      }), node);
+      if (!node.resourceId || !node.playDate || !node.startsAt || !node.endsAt)
+        continue;
+      bySlot.set(
+        slotKey({
+          resourceId: node.resourceId,
+          date: node.playDate,
+          startsAt: node.startsAt,
+          endsAt: node.endsAt,
+        }),
+        node,
+      );
     }
     return bySlot;
   }, [workspace.nodes]);
@@ -129,16 +151,30 @@ export function AdminTournamentFinalWeeklyOverview({
   const visibleSlots = weeklySlots.filter((entry) => {
     if (show === "matches" && entry.kind !== "match") return false;
     if (show === "free" && entry.kind !== "free") return false;
-    if (seriesFilter !== "all" && entry.kind === "match" && entry.seriesId !== seriesFilter) return false;
+    if (
+      seriesFilter !== "all" &&
+      entry.kind === "match" &&
+      entry.seriesId !== seriesFilter
+    )
+      return false;
     return true;
   });
-  const hours = [...new Set(visibleSlots.map(({ slot }) => timeText(slot.startsAt)))].sort();
-  const countMatches = weeklySlots.filter((slot) => slot.kind === "match").length;
+  const hours = [
+    ...new Set(visibleSlots.map(({ slot }) => timeText(slot.startsAt))),
+  ].sort();
+  const countMatches = weeklySlots.filter(
+    (slot) => slot.kind === "match",
+  ).length;
   const countFree = weeklySlots.filter((slot) => slot.kind === "free").length;
-  const countOccupied = weeklySlots.filter((slot) => slot.kind === "occupied").length;
+  const countOccupied = weeklySlots.filter(
+    (slot) => slot.kind === "occupied",
+  ).length;
 
   return (
-    <section className="final-weekly-overview" aria-label="Planning hebdomadaire des finales">
+    <section
+      className="final-weekly-overview"
+      aria-label="Planning hebdomadaire des finales"
+    >
       <header className="final-weekly-overview__header">
         <div>
           <p className="final-weekly-overview__eyebrow">Vue globale</p>
@@ -146,29 +182,67 @@ export function AdminTournamentFinalWeeklyOverview({
           <p>Parties programmées, positions provisoires et créneaux libres.</p>
         </div>
         <div className="final-weekly-overview__navigation">
-          <button type="button" disabled={currentIndex === 0} onClick={() => setWeekIndex(currentIndex - 1)} aria-label="Semaine précédente">←</button>
-          <strong>Semaine du {weekFormatter.format(monday)} au {weekFormatter.format(addDays(monday, 6))}</strong>
-          <button type="button" disabled={currentIndex >= maxIndex} onClick={() => setWeekIndex(currentIndex + 1)} aria-label="Semaine suivante">→</button>
+          <button
+            type="button"
+            disabled={currentIndex === 0}
+            onClick={() => setWeekIndex(currentIndex - 1)}
+            aria-label="Semaine précédente"
+          >
+            ←
+          </button>
+          <strong>
+            Semaine du {weekFormatter.format(monday)} au{" "}
+            {weekFormatter.format(addDays(monday, 6))}
+          </strong>
+          <button
+            type="button"
+            disabled={currentIndex >= maxIndex}
+            onClick={() => setWeekIndex(currentIndex + 1)}
+            aria-label="Semaine suivante"
+          >
+            →
+          </button>
         </div>
       </header>
       <div className="final-weekly-overview__summary">
-        <span><strong>{countMatches}</strong> parties / positions</span>
-        <span><strong>{countFree}</strong> libres</span>
-        <span><strong>{countOccupied}</strong> occupés ailleurs</span>
+        <span>
+          <strong>{countMatches}</strong> parties / positions
+        </span>
+        <span>
+          <strong>{countFree}</strong> libres
+        </span>
+        <span>
+          <strong>{countOccupied}</strong> occupés ailleurs
+        </span>
       </div>
       <div className="final-weekly-overview__filters">
         <label>
           Série
-          <select value={seriesFilter} onChange={(event) => setSeriesFilter(event.target.value)}>
+          <select
+            value={seriesFilter}
+            onChange={(event) => setSeriesFilter(event.target.value)}
+          >
             <option value="all">Toutes les séries</option>
             {workspace.series.map((series) => (
-              <option key={series.id} value={series.id}>{series.name}</option>
+              <option key={series.id} value={series.id}>
+                {series.name}
+              </option>
             ))}
           </select>
         </label>
         <label>
           Afficher
-          <select value={show} onChange={(event) => setShow(event.target.value === "matches" || event.target.value === "free" ? event.target.value : "all")}>
+          <select
+            value={show}
+            onChange={(event) =>
+              setShow(
+                event.target.value === "matches" ||
+                  event.target.value === "free"
+                  ? event.target.value
+                  : "all",
+              )
+            }
+          >
             <option value="all">Tout le planning</option>
             <option value="matches">Parties uniquement</option>
             <option value="free">Créneaux libres uniquement</option>
@@ -181,7 +255,9 @@ export function AdminTournamentFinalWeeklyOverview({
             <tr>
               <th scope="col">Heure</th>
               {days.map((day) => (
-                <th scope="col" key={day}>{dayFormatter.format(toUtcDate(day))}</th>
+                <th scope="col" key={day}>
+                  {dayFormatter.format(toUtcDate(day))}
+                </th>
               ))}
             </tr>
           </thead>
@@ -190,27 +266,40 @@ export function AdminTournamentFinalWeeklyOverview({
               <tr key={hour}>
                 <th scope="row">{hour}</th>
                 {days.map((day) => {
-                  const entries = visibleSlots.filter(({ slot }) =>
-                    slot.date === day && timeText(slot.startsAt) === hour,
+                  const entries = visibleSlots.filter(
+                    ({ slot }) =>
+                      slot.date === day && timeText(slot.startsAt) === hour,
                   );
                   return (
                     <td key={day}>
                       {entries.length === 0 ? (
-                        <span className="final-weekly-overview__unavailable">—</span>
-                      ) : entries.map((entry) => (
-                        <div
-                          key={entry.slot.id}
-                          className={`final-weekly-overview__event final-weekly-overview__event--${entry.kind}`}
-                          style={entry.kind === "match" ? { borderLeftColor: entry.color ?? "#2563eb" } : undefined}
-                          title={`${timeText(entry.slot.startsAt)}–${timeText(entry.slot.endsAt)} · ${entry.title} · ${entry.detail}`}
-                        >
-                          <span className="final-weekly-overview__event-time">
-                            {timeText(entry.slot.startsAt)}–{timeText(entry.slot.endsAt)}
-                          </span>
-                          <strong>{entry.title}</strong>
-                          <small>{entry.detail}{entry.provisional ? " · Provisoire" : ""}</small>
-                        </div>
-                      ))}
+                        <span className="final-weekly-overview__unavailable">
+                          —
+                        </span>
+                      ) : (
+                        entries.map((entry) => (
+                          <div
+                            key={entry.slot.id}
+                            className={`final-weekly-overview__event final-weekly-overview__event--${entry.kind}`}
+                            style={
+                              entry.kind === "match"
+                                ? { borderLeftColor: entry.color ?? "#2563eb" }
+                                : undefined
+                            }
+                            title={`${timeText(entry.slot.startsAt)}–${timeText(entry.slot.endsAt)} · ${entry.title} · ${entry.detail}`}
+                          >
+                            <span className="final-weekly-overview__event-time">
+                              {timeText(entry.slot.startsAt)}–
+                              {timeText(entry.slot.endsAt)}
+                            </span>
+                            <strong>{entry.title}</strong>
+                            <small>
+                              {entry.detail}
+                              {entry.provisional ? " · Provisoire" : ""}
+                            </small>
+                          </div>
+                        ))
+                      )}
                     </td>
                   );
                 })}
@@ -219,14 +308,17 @@ export function AdminTournamentFinalWeeklyOverview({
           </tbody>
         </table>
         {hours.length === 0 && (
-          <p className="final-weekly-overview__empty">Aucun créneau correspondant aux filtres pour cette semaine.</p>
+          <p className="final-weekly-overview__empty">
+            Aucun créneau correspondant aux filtres pour cette semaine.
+          </p>
         )}
       </div>
       <p className="final-weekly-overview__note">
-        « Libre » signifie qu'aucune affectation du tournoi ni réservation connue
-        n'occupe le créneau configuré. Les heures sans créneau configuré sont
-        indiquées par « — » ; les places provisoires restent à confirmer avec les joueurs.
-        Vue en lecture seule : aucune modification ni notification.
+        « Libre » signifie qu'aucune affectation du tournoi ni réservation
+        connue n'occupe le créneau configuré. Les heures sans créneau configuré
+        sont indiquées par « — » ; les places provisoires restent à confirmer
+        avec les joueurs. Vue en lecture seule : aucune modification ni
+        notification.
       </p>
     </section>
   );
