@@ -510,9 +510,7 @@ export function AdminTournamentResultsPage() {
                         </td>
                         <td>
                           {seriesMatches.filter((match) => !match.result)
-                            .length +
-                            seriesUnprogrammed.length
-                          }
+                            .length + seriesUnprogrammed.length}
                         </td>
                         <td>
                           {
@@ -923,10 +921,7 @@ export function AdminTournamentResultsPage() {
                 setEditingUnprogrammedId(null);
               }}
               onSubmit={(score) =>
-                save(
-                  (editingMatch?.id ?? editingUnprogrammed?.matchId)!,
-                  score,
-                )
+                save((editingMatch?.id ?? editingUnprogrammed?.matchId)!, score)
               }
             />
           </div>
