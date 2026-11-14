@@ -6,6 +6,7 @@ import {
   generateFullFinalStagePlanning,
   validateFullFinalStagePlanning,
   finalRoundDateWindow,
+  finalRoundAvailableSlots,
 } from "../.test-dist/src/features/tournaments/domain/finalStageFullPlanningEngine.js";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
@@ -251,4 +252,83 @@ test("Lourdes: barrages et huitièmes restent en novembre, jamais le 11 décembr
     finalsEndsOn: finalEnd,
   });
   assert.equal(invalid.valid, false);
+});
+
+test("exception contrôlée : Brault et Quessette peuvent viser le 24 novembre sans 1/8 tardif", () => {
+  const normal = slot("normal", "2026-11-19", "19:00");
+  const exceptional = slot("exception", "2026-11-24", "19:00");
+  const forbidden = slot("forbidden", "2026-12-11", "19:00");
+  const barrage = {
+    ...planningNodes[0],
+    id: "barrage-brault-quesstte",
+    seriesId: "lourdes-3",
+    round: "preliminary",
+    roundNumber: 0,
+    possibleTeamIds: ["brault", "quessette"],
+    teamAId: "brault",
+    teamBId: "quessette",
+  };
+  const eighth = {
+    ...planningNodes[1],
+    id: "eight",
+    seriesId: "lourdes-3",
+    round: "round_of_16",
+    roundNumber: 1,
+    possibleTeamIds: ["brault", "quessette"],
+  };
+  const quarter = {
+    ...eighth,
+    id: "quarter",
+    round: "quarterfinal",
+    roundNumber: 2,
+  };
+  const semifinal = {
+    ...eighth,
+    id: "semifinal",
+    round: "semifinal",
+    roundNumber: 3,
+  };
+  const final = { ...eighth, id: "final", round: "final", roundNumber: 4 };
+  const nodes = [barrage, eighth, quarter, semifinal, final];
+  const availability = [
+    { teamId: "brault", slots: [normal, exceptional, forbidden] },
+    { teamId: "quessette", slots: [exceptional, forbidden] },
+  ];
+  const options = finalRoundAvailableSlots({
+    node: barrage,
+    nodes,
+    slots: [normal, exceptional, forbidden],
+    availability,
+    finalsStartsOn: "2026-11-16",
+    finalsEndsOn: "2026-12-12",
+  });
+  assert.deepEqual(options.normal, []);
+  assert.deepEqual(options.candidates.map((s) => s.id), ["exception"]);
+  assert.equal(options.exception, true);
+
+  const proposal = generateFullFinalStagePlanning({
+    nodes,
+    slots: [normal, exceptional, forbidden],
+    availability,
+    finalsStartsOn: "2026-11-16",
+    finalsEndsOn: "2026-12-12",
+    iterations: 1,
+    random: () => 0,
+  });
+  assert.ok(proposal.assignments.some((a) => a.nodeId === barrage.id && a.slotId === "exception"));
+  assert.ok(!proposal.assignments.some((a) => a.slotId === "forbidden"));
+
+  const normalAvailable = finalRoundAvailableSlots({
+    node: barrage,
+    nodes,
+    slots: [normal, exceptional],
+    availability: [
+      { teamId: "brault", slots: [normal, exceptional] },
+      { teamId: "quessette", slots: [normal, exceptional] },
+    ],
+    finalsStartsOn: "2026-11-16",
+    finalsEndsOn: "2026-12-12",
+  });
+  assert.equal(normalAvailable.exception, false);
+  assert.deepEqual(normalAvailable.candidates.map((s) => s.id), ["normal"]);
 });
