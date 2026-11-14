@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   useRegisterMember,
   useVerifyMemberIdentity,
@@ -57,6 +57,13 @@ const roleLabel = (candidate: ExternalParticipationCandidate) =>
 export function RegisterPage() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const requestedClubSlug = new URLSearchParams(location.search).get("club");
+  const clubQuery =
+    requestedClubSlug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(requestedClubSlug)
+      ? `?club=${encodeURIComponent(requestedClubSlug)}`
+      : "";
+  const clubHome = `${ROUTES.home}${clubQuery}`;
   const verification = useVerifyMemberIdentity();
   const registration = useRegisterMember();
   const [journey, setJourney] = useState<Journey>("choice");
@@ -77,7 +84,7 @@ export function RegisterPage() {
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) return <Navigate to={ROUTES.home} replace />;
+  if (isAuthenticated) return <Navigate to={clubHome} replace />;
 
   const updateIdentity = (field: keyof MemberIdentity, value: string) => {
     setIdentity((current) => ({ ...current, [field]: value }));
@@ -128,7 +135,7 @@ export function RegisterPage() {
         email,
         password,
       });
-      navigate(ROUTES.login, {
+      navigate(`${ROUTES.login}${clubQuery}`, {
         replace: true,
         state: { accountCreated: outcome },
       });
@@ -195,7 +202,7 @@ export function RegisterPage() {
         password,
         externalIdentityId: selectedCandidate?.externalIdentityId ?? null,
       });
-      navigate(ROUTES.login, {
+      navigate(`${ROUTES.login}${clubQuery}`, {
         replace: true,
         state: { accountCreated: outcome },
       });
