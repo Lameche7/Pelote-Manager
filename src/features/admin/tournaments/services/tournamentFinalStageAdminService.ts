@@ -556,6 +556,22 @@ export const tournamentFinalStageAdminService = {
     return Number(data ?? 0);
   },
 
+  async addFinalDaySlot(
+    tournamentId: string,
+    startsAt: string,
+    endsAt: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "admin_add_tournament_final_event_slot",
+      {
+        target_tournament_id: tournamentId,
+        target_starts_at: startsAt,
+        target_ends_at: endsAt,
+      },
+    );
+    if (error) fail(error, "Impossible d'ajouter le créneau des finales.");
+  },
+
   async getFullPlanning(
     tournamentId: string,
   ): Promise<TournamentFinalFullPlanningWorkspace> {
