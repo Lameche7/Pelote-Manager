@@ -97,3 +97,107 @@ revoke all on function public.can_read_scoped_club_dashboard(uuid)
   from public, anon, authenticated;
 grant execute on function public.can_read_scoped_club_dashboard(uuid)
   to authenticated;
+
+-- DRAFT: narrowly scoped information update. No generic table UPDATE grant.
+-- All fields are whitelisted and the target club id is immutable.
+create or replace function public.platform_admin_update_club_information(
+  target_club_id uuid,
+  changes jsonb
+) returns jsonb language plpgsql volatile security definer set search_path = ''
+as $$
+declare
+  result jsonb;
+begin
+  if auth.uid() is null
+     or target_club_id is null
+     or not pilotoki_private.has_active_platform_lease(auth.uid()) then
+    raise exception 'Club information update denied' using errcode = '42501';
+  end if;
+  if changes is null
+     or jsonb_typeof(changes) <> 'object'
+     or changes = '{}'::jsonb
+     or exists (
+       select 1 from jsonb_object_keys(changes) as field(key)
+       where field.key not in (
+         'name',
+         'primary_color', 'secondary_color', 'accent_color',
+         'neutral_color', 'address', 'phone', 'email',
+         'website', 'social_links', 'affiliation_number', 'notes'
+       )
+     ) then
+    raise exception 'Invalid club information fields' using errcode = '22023';
+  end if;
+
+  update public.clubs c
+  set name = case when changes ? 'name' then changes->>'name' else c.name end,
+      primary_color = case when changes ? 'primary_color' then changes->>'primary_color' else c.primary_color end,
+      secondary_color = case when changes ? 'secondary_color' then changes->>'secondary_color' else c.secondary_color end,
+      accent_color = case when changes ? 'accent_color' then changes->>'accent_color' else c.accent_color end,
+      neutral_color = case when changes ? 'neutral_color' then changes->>'neutral_color' else c.neutral_color end,
+      address = case when changes ? 'address' then changes->>'address' else c.address end,
+      phone = case when changes ? 'phone' then changes->>'phone' else c.phone end,
+      email = case when changes ? 'email' then changes->>'email' else c.email end,
+      website = case when changes ? 'website' then changes->>'website' else c.website end,
+      social_links = case when changes ? 'social_links' then changes->>'social_links' else c.social_links end,
+      affiliation_number = case when changes ? 'affiliation_number' then changes->>'affiliation_number' else c.affiliation_number end,
+      notes = case when changes ? 'notes' then changes->>'notes' else c.notes end
+  where c.id = target_club_id
+  returning jsonb_build_object('id', c.id) into result;
+
+  if result is null then
+    raise exception 'Club information unavailable' using errcode = 'P0002';
+  end if;
+  return result;
+end;
+$$;
+revoke all on function public.platform_admin_update_club_information(uuid, jsonb)
+  from public, anon, authenticated;
+grant execute on function public.platform_admin_update_club_information(uuid, jsonb)
+  to authenticated;
+
+-- DRAFT: a lease permits a narrowly scoped information read only.
+-- No write privileges or implicit access to other business modules.
+create or replace function public.platform_admin_get_club_information(
+  target_club_id uuid
+) returns jsonb language plpgsql stable security definer set search_path = ''
+as $$
+declare
+  club_info jsonb;
+begin
+  if auth.uid() is null
+     or target_club_id is null
+     or not pilotoki_private.has_active_platform_lease(auth.uid()) then
+    raise exception 'Club information access denied' using errcode = '42501';
+  end if;
+
+  select jsonb_build_object(
+    'id', c.id,
+    'name', c.name,
+    'logo_url', c.logo_url,
+    'hero_image_url', c.hero_image_url,
+    'primary_color', c.primary_color,
+    'secondary_color', c.secondary_color,
+    'accent_color', c.accent_color,
+    'neutral_color', c.neutral_color,
+    'address', c.address,
+    'phone', c.phone,
+    'email', c.email,
+    'website', c.website,
+    'social_links', c.social_links,
+    'affiliation_number', c.affiliation_number,
+    'notes', c.notes
+  )
+  into club_info
+  from public.clubs c
+  where c.id = target_club_id;
+
+  if club_info is null then
+    raise exception 'Club information unavailable' using errcode = 'P0002';
+  end if;
+  return club_info;
+end;
+$$;
+revoke all on function public.platform_admin_get_club_information(uuid)
+  from public, anon, authenticated;
+grant execute on function public.platform_admin_get_club_information(uuid)
+  to authenticated;

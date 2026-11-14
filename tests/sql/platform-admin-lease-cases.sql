@@ -15,6 +15,21 @@ begin
     raise exception 'Ordinary administrator can see other clubs';
   end if;
   begin
+    perform public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000002'
+    );
+    raise exception 'User without lease read foreign club information';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"notes":"unauthorized"}'::jsonb
+    );
+    raise exception 'User without lease modified foreign club information';
+  exception when insufficient_privilege then null;
+  end;
+  begin
     perform public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', 300);
     raise exception 'Authenticated user issued own lease';
   exception when insufficient_privilege then null;
@@ -31,6 +46,58 @@ do $check$
 begin
   if not public.can_read_scoped_club_dashboard('00000000-0000-0000-0000-000000000002') then
     raise exception 'Active platform lease did not authorize read-only dashboard for B';
+  end if;
+  if (public.platform_admin_get_club_information('00000000-0000-0000-0000-000000000002')->>'id')
+     is distinct from '00000000-0000-0000-0000-000000000002' then
+    raise exception 'Scoped club information read returned wrong club';
+  end if;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"id":"00000000-0000-0000-0000-000000000001"}'::jsonb
+    );
+    raise exception 'Scoped club information update accepted immutable id';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"logo_url":"https://example.org/unauthorized.png"}'::jsonb
+    );
+    raise exception 'Inter-club image update bypassed storage authorization';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"hero_image_url":"https://example.org/unauthorized.jpg"}'::jsonb
+    );
+    raise exception 'Inter-club background update bypassed storage authorization';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"is_active":false}'::jsonb
+    );
+    raise exception 'Inter-club update accepted a non-whitelisted field';
+  exception when invalid_parameter_value then null;
+  end;
+  if (public.platform_admin_update_club_information(
+    '00000000-0000-0000-0000-000000000002',
+    '{"notes":"Mise à jour testée"}'::jsonb
+  )->>'id') is distinct from '00000000-0000-0000-0000-000000000002' then
+    raise exception 'Scoped club information update returned wrong club';
+  end if;
+  if (public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000002'
+    )->>'notes') is distinct from 'Mise à jour testée' then
+    raise exception 'Scoped club information update did not persist';
+  end if;
+  if (public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000001'
+    )->>'notes') is not null then
+    raise exception 'Scoped update modified another club';
   end if;
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Active platform lease granted cross-club write access';
@@ -52,6 +119,21 @@ begin
   if (select count(*) from public.get_my_club_access()) <> 1 then
     raise exception 'Another club administrator sees both clubs';
   end if;
+  begin
+    perform public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000001'
+    );
+    raise exception 'Another user inherited platform information read';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000001',
+      '{"notes":"wrong user"}'::jsonb
+    );
+    raise exception 'Another user inherited platform information write';
+  exception when insufficient_privilege then null;
+  end;
 end $check$;
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
 reset role;
@@ -82,6 +164,19 @@ begin
   if public.can_read_scoped_club_dashboard('00000000-0000-0000-0000-000000000002') then
     raise exception 'Expired lease still authorizes another club';
   end if;
+  begin
+    perform public.platform_admin_get_club_information('00000000-0000-0000-0000-000000000002');
+    raise exception 'Expired lease allowed club information read';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"notes":"should be refused"}'::jsonb
+    );
+    raise exception 'Expired lease allowed club information update';
+  exception when insufficient_privilege then null;
+  end;
 end $check$;
 reset role;
 select set_config('request.jwt.claim.role', 'service_role', true);
@@ -99,5 +194,20 @@ begin
   if (select count(*) from public.get_my_club_access()) <> 1 then
     raise exception 'Revoked lease still lists another club';
   end if;
+  begin
+    perform public.platform_admin_get_club_information(
+      '00000000-0000-0000-0000-000000000002'
+    );
+    raise exception 'Revoked lease allowed information read';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.platform_admin_update_club_information(
+      '00000000-0000-0000-0000-000000000002',
+      '{"notes":"revoked write"}'::jsonb
+    );
+    raise exception 'Revoked lease allowed information update';
+  exception when insufficient_privilege then null;
+  end;
 end $check$;
 rollback;

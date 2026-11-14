@@ -4,7 +4,21 @@ create table auth.users (id uuid primary key);
 create function auth.role() returns text language sql stable as $$
   select nullif(current_setting('request.jwt.claim.role', true), '')
 $$;
-alter table public.clubs add column name text not null default 'Club de test';
+alter table public.clubs
+  add column name text not null default 'Club de test',
+  add column logo_url text,
+  add column hero_image_url text,
+  add column primary_color text,
+  add column secondary_color text,
+  add column accent_color text,
+  add column neutral_color text,
+  add column address text,
+  add column phone text,
+  add column email text,
+  add column website text,
+  add column social_links text,
+  add column affiliation_number text,
+  add column notes text;
 update public.clubs set name = case
   when id = '00000000-0000-0000-0000-000000000001' then 'Club A'
   else 'Club B'

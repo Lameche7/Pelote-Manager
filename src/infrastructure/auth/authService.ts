@@ -2,7 +2,10 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/infrastructure/supabase/client";
 import type { AuthUser } from "@/shared/types/auth";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
-import { currentApplicationOrigin } from "@/shared/config/domains";
+import {
+  currentApplicationOrigin,
+  publicClubConfirmationRedirect,
+} from "@/shared/config/domains";
 
 type AuthStateListener = (user: AuthUser | null) => void;
 
@@ -74,7 +77,10 @@ export const authService: AuthService = {
   },
 };
 
-export async function resendSignupConfirmation(email: string): Promise<void> {
+export async function resendSignupConfirmation(
+  email: string,
+  clubQuery = "",
+): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail) {
     throw new Error(
@@ -86,7 +92,7 @@ export async function resendSignupConfirmation(email: string): Promise<void> {
     type: "signup",
     email: normalizedEmail,
     options: {
-      emailRedirectTo: currentApplicationOrigin(),
+      emailRedirectTo: `${currentApplicationOrigin()}/${clubQuery}`,
     },
   });
 
@@ -200,6 +206,7 @@ export async function registerAccount(input: {
   email: string;
   password: string;
   externalIdentityId?: string | null;
+  entryClubSlug?: string | null;
 }): Promise<"completed" | "confirmation_required"> {
   const firstName = input.firstName.trim();
   const lastName = input.lastName.trim();
@@ -210,7 +217,10 @@ export async function registerAccount(input: {
     email,
     password: input.password,
     options: {
-      emailRedirectTo: currentApplicationOrigin(),
+      emailRedirectTo: publicClubConfirmationRedirect(
+        currentApplicationOrigin(),
+        input.entryClubSlug,
+      ),
       data: {
         first_name: firstName,
         last_name: lastName,

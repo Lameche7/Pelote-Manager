@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useFinalizeMemberRegistration } from "@/features/members/hooks/useMemberLookup";
 import {
   finalizePendingExternalParticipation,
@@ -25,7 +24,16 @@ export function LoginPage() {
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) return <Navigate to={ROUTES.home} replace />;
+  // Conserver uniquement le contexte visuel du club lors de la connexion.
+  // Ce paramètre ne constitue jamais une autorisation métier.
+  const requestedClubSlug = new URLSearchParams(location.search).get("club");
+  const clubQuery =
+    requestedClubSlug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(requestedClubSlug)
+      ? `?club=${encodeURIComponent(requestedClubSlug)}`
+      : "";
+  const clubHome = `${ROUTES.home}${clubQuery}`;
+
+  if (isAuthenticated) return <Navigate to={clubHome} replace />;
 
   const confirmationRequired =
     location.state?.accountCreated === "confirmation_required" ||
@@ -42,7 +50,7 @@ export function LoginPage() {
       const participationFinalized =
         await finalizePendingExternalParticipation();
       if (memberFinalized || participationFinalized) await refreshProfile();
-      navigate(ROUTES.home, { replace: true });
+      navigate(clubHome, { replace: true });
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -59,7 +67,7 @@ export function LoginPage() {
     setError(null);
     setResendStatus(null);
     try {
-      await resendSignupConfirmation(email);
+      await resendSignupConfirmation(email, clubQuery);
       setResendStatus(
         "Un nouvel email de confirmation vient de vous être envoyé. Vérifiez aussi vos courriers indésirables.",
       );
@@ -147,7 +155,8 @@ export function LoginPage() {
         </div>
       )}
       <p>
-        Pas encore de compte ? <Link to={ROUTES.register}>Créer un compte</Link>
+        Pas encore de compte ?{" "}
+        <Link to={`${ROUTES.register}${clubQuery}`}>Créer un compte</Link>
       </p>
     </section>
   );

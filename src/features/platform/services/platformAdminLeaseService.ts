@@ -1,5 +1,6 @@
 import { supabase } from "@/infrastructure/supabase/client";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
+import { verifyPlatformBusinessIdentity } from "./platformBusinessIdentityService";
 
 export type PlatformAdminLease = {
   enabled: boolean;
@@ -14,6 +15,15 @@ export const platformAdminLeaseService = {
   async issue(): Promise<PlatformAdminLease> {
     const platform = platformSupabase;
     if (!platform) throw new Error("Session plateforme indisponible.");
+    const identity = await verifyPlatformBusinessIdentity();
+    if (!identity.linked || !identity.businessUserId) {
+      throw new Error("Identités plateforme et métier non vérifiées.");
+    }
+    const { data: allowed, error: roleError } =
+      await platform.rpc("platform_is_admin");
+    if (roleError || allowed !== true) {
+      throw new Error("Super-administrateur requis.");
+    }
     const [platformSession, businessSession] = await Promise.all([
       platform.auth.getSession(),
       supabase.auth.getSession(),

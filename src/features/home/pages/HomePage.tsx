@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { HomeTournaments } from "@/features/home/components/HomeTournaments";
 import { formatPublicEventPeriod } from "@/features/home/domain/publicEventPresentation";
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
@@ -12,7 +12,7 @@ import {
   type MemberHomeBanner,
 } from "@/features/notifications/services/notificationService";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
-import { MARKETING_HOST } from "@/shared/config/domains";
+import { MARKETING_HOST, publicClubQuery } from "@/shared/config/domains";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
@@ -66,20 +66,27 @@ const showOctoberRose = () => {
 
 export function HomePage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const location = useLocation();
   const octoberRoseVisible = showOctoberRose();
   const movemberVisible = showMovember();
   const publicClubSlug =
-    typeof window === "undefined"
-      ? null
-      : new URLSearchParams(window.location.search).get("club")?.trim() || null;
+    new URLSearchParams(location.search).get("club")?.trim() || null;
+  // Public navigation hint only: never grants business-club access.
+  const publicLink = (path: string) => `${path}${publicClubQuery(publicClubSlug)}`;
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
   const [banners, setBanners] = useState<MemberHomeBanner[]>([]);
-  const [branding, setBranding] = useState(clubBrandingService.fallback);
-  const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
-    .filter(Boolean)
-    .join(" · ");
+  const [branding, setBranding] = useState(
+    publicClubSlug
+      ? clubBrandingService.unavailableFallback
+      : clubBrandingService.fallback,
+  );
+  const venueLabel = publicClubSlug
+    ? ""
+    : [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
+        .filter(Boolean)
+        .join(" · ");
   const heroStyle: ClubHeroStyle = {
     "--club-hero-image": `url("${branding.heroImageUrl}")`,
     "--club-primary": branding.primaryColor,
@@ -91,13 +98,26 @@ export function HomePage() {
   useEffect(() => {
     let active = true;
     const loadBranding = () => {
+      setBranding(
+        publicClubSlug
+          ? clubBrandingService.unavailableFallback
+          : clubBrandingService.fallback,
+      );
       const brandingRequest =
         clubBrandingService.getPublicBranding(publicClubSlug);
       brandingRequest
         .then((value) => {
           if (active) setBranding(value);
         })
-        .catch(() => undefined);
+        .catch(() => {
+          if (active) {
+            setBranding(
+              publicClubSlug
+                ? clubBrandingService.unavailableFallback
+                : clubBrandingService.fallback,
+            );
+          }
+        });
     };
     loadBranding();
     window.addEventListener("club-branding-updated", loadBranding);
@@ -160,11 +180,13 @@ export function HomePage() {
         <div className="premium-home__veil" aria-hidden="true" />
         <div className="premium-home__content">
           <div className="premium-home__identity">
-            <img
-              className="premium-home__logo"
-              src={branding.logoUrl}
-              alt={branding.name}
-            />
+            {branding.logoUrl && (
+              <img
+                className="premium-home__logo"
+                src={branding.logoUrl}
+                alt={branding.name}
+              />
+            )}
             {movemberVisible && (
               <img
                 className="premium-home__movember-moustache"
@@ -187,18 +209,18 @@ export function HomePage() {
             alt="PILOTOKI"
           />
           <p className="premium-home__signature">
-            {CLUB_CONFIG.foundedYear && (
+            {!publicClubSlug && CLUB_CONFIG.foundedYear && (
               <>
                 Depuis <strong>{CLUB_CONFIG.foundedYear}</strong> –{" "}
               </>
             )}
-            {CLUB_CONFIG.tagline}
+            {!publicClubSlug && CLUB_CONFIG.tagline}
           </p>
           <div className="premium-home__actions">
-            <Link className="button button--primary" to={ROUTES.reservations}>
+            <Link className="button button--primary" to={publicLink(ROUTES.reservations)}>
               ▦ Réserver un créneau
             </Link>
-            <Link className="button button--secondary" to={ROUTES.login}>
+            <Link className="button button--secondary" to={publicLink(ROUTES.login)}>
               ♙ Accéder à mon compte
             </Link>
             <a
@@ -229,7 +251,7 @@ export function HomePage() {
                   <h2>{banner.title}</h2>
                   <span>{banner.body}</span>
                 </div>
-                <Link to={ROUTES.myNotifications}>
+                <Link to={publicLink(ROUTES.myNotifications)}>
                   Voir mes notifications →
                 </Link>
               </article>
@@ -327,16 +349,18 @@ export function HomePage() {
 
       <section className="premium-home__club">
         <div className="premium-home__club-card">
-          <img
-            className="premium-home__club-logo"
-            src={branding.logoUrl}
-            alt={branding.name}
-          />
+          {branding.logoUrl && (
+            <img
+              className="premium-home__club-logo"
+              src={branding.logoUrl}
+              alt={branding.name}
+            />
+          )}
           <div>
-            <p className="section-kicker">{venueLabel}</p>
+            {venueLabel && <p className="section-kicker">{venueLabel}</p>}
             <h2>Le club, notre passion.</h2>
-            <p>{CLUB_CONFIG.description}</p>
-            <Link className="text-link" to={ROUTES.reservations}>
+            {!publicClubSlug && <p>{CLUB_CONFIG.description}</p>}
+            <Link className="text-link" to={publicLink(ROUTES.reservations)}>
               Voir les créneaux disponibles →
             </Link>
           </div>

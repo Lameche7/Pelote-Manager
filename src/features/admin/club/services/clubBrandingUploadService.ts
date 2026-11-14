@@ -38,6 +38,12 @@ export const clubBrandingUploadService = {
   },
 
   async discardUploadedImage(clubId: string, url: string): Promise<void> {
+    const { data: authorizedClubId, error: identityError } = await supabase.rpc(
+      "admin_current_club_id",
+    );
+    if (identityError || !authorizedClubId || authorizedClubId !== clubId) {
+      throw new Error("Vous n'avez pas l'autorisation de modifier ce club.");
+    }
     const publicPrefix = supabase.storage.from(BUCKET).getPublicUrl("")
       .data.publicUrl;
     const prefix = publicPrefix.endsWith("/")

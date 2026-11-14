@@ -18,8 +18,39 @@ const isEnabled = <T extends object>(item: T) =>
 
 export function AdminShell() {
   const location = useLocation();
-  const requestedClubId =
-    new URLSearchParams(location.search).get("adminClubId") ?? "";
+  const params = new URLSearchParams(location.search);
+  const requestedClubId = params.get("adminClubId") ?? "";
+  const visualClubSlug = params.get("club");
+  // Stop before mounting the legacy admin provider: visual selection is not
+  // an authorized business context, and must not trigger legacy admin reads.
+  if (visualClubSlug && !requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration du club sélectionné indisponible</h1>
+        <p>
+          Le club du bandeau est un aperçu visuel. Ses données administratives
+          ne sont pas encore accessibles.
+        </p>
+        <p>
+          Revenez au club par défaut dans le sélecteur pour administrer votre
+          club habituel.
+        </p>
+      </section>
+    );
+  }
+  // A requested foreign business context must also be stopped before
+  // mounting the legacy access provider or issuing implicit-club RPCs.
+  if (requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration inter-clubs en préparation</h1>
+        <p>
+          Le contexte métier demandé n’est pas encore autorisé pour cet écran.
+          Aucune donnée administrative ne sera chargée.
+        </p>
+      </section>
+    );
+  }
   return (
     <AdminAccessProvider key={requestedClubId}>
       <AdminShellContent />
@@ -34,10 +65,15 @@ function AdminShellContent() {
   const requestedClubId = new URLSearchParams(location.search).get(
     "adminClubId",
   );
-  const adminLink = (path: string) =>
-    requestedClubId
-      ? `${path}?adminClubId=${encodeURIComponent(requestedClubId)}`
-      : path;
+  const visualClubSlug = new URLSearchParams(location.search).get("club");
+  // Preserve the visual club selection; never infer authorization from it.
+  const adminLink = (path: string) => {
+    const params = new URLSearchParams();
+    if (requestedClubId) params.set("adminClubId", requestedClubId);
+    if (visualClubSlug) params.set("club", visualClubSlug);
+    const query = params.toString();
+    return query ? path + "?" + query : path;
+  };
 
   useEffect(() => {
     setMobileNavigationOpen(false);
@@ -52,30 +88,6 @@ function AdminShellContent() {
       </section>
     );
   if (!access) return <Navigate to={ROUTES.forbidden} replace />;
-
-  // Explicit club selection remains read-only until the business RPCs and
-  // platform lease are deployed and validated end-to-end. In particular,
-  // never mount Outlet for a selected foreign club: other admin routes still
-  // use implicit legacy club context.
-  // Business RPCs are still based on the legacy implicit club context.
-  // Never expose an admin screen for an explicit cross-club selection until
-  // every business read/write is scoped and authorized by club ID server-side.
-  if (requestedClubId) {
-    return (
-      <section className="simple-page" role="status">
-        <h1>Administration inter-clubs en préparation</h1>
-        <p>
-          Le club {access.clubName} est identifié et vos droits sont vérifiés,
-          mais ses données ne peuvent pas encore être administrées depuis cet
-          espace.
-        </p>
-        <p>
-          Les opérations restent désactivées jusqu’à validation de l’isolation
-          des données.
-        </p>
-      </section>
-    );
-  }
 
   const visibleLinks: Array<{ label: string; to: string }> = [];
   adminNavigation.forEach((item) => {
