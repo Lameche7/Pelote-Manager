@@ -484,10 +484,14 @@ export function AdminTournamentFinalFullPlanning({
       )}
 
       {officialFinalDate && finalDaySlotCount === 0 && (
-        <p className="qualification-alert qualification-alert--error" role="status">
-          Aucun créneau n'est défini pour la journée des finales ({formatDate(officialFinalDate)}).
-          Les quatre finales ne peuvent pas être placées avant que leurs horaires
-          soient configurés dans les créneaux du tournoi.
+        <p
+          className="qualification-alert qualification-alert--error"
+          role="status"
+        >
+          Aucun créneau n'est défini pour la journée des finales (
+          {formatDate(officialFinalDate)}). Les quatre finales ne peuvent pas
+          être placées avant que leurs horaires soient configurés dans les
+          créneaux du tournoi.
         </p>
       )}
 
