@@ -77,3 +77,19 @@ export function resolvePlayerHomeClub(
 ): string | null {
   return preferredClubSlug || verifiedAffiliationSlug || entryClubSlug;
 }
+
+/** Keep only a syntactically safe public club hint in auth return links.
+ * The hint is not verified membership or an authorization.
+ */
+export function publicClubQuery(clubSlug: string | null | undefined): string {
+  return clubSlug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(clubSlug)
+    ? `?club=${encodeURIComponent(clubSlug)}`
+    : "";
+}
+
+export function publicClubConfirmationRedirect(
+  origin: string,
+  clubSlug: string | null | undefined,
+): string {
+  return `${origin.replace(/\\/$/, "")}/${publicClubQuery(clubSlug)}`;
+}
