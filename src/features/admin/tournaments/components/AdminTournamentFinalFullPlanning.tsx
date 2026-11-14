@@ -13,6 +13,8 @@ import {
   type FinalStagePlanningNode,
 } from "@/features/tournaments/domain/finalStagePlanningEngine";
 import {
+  finalRoundAvailableSlots,
+  finalRoundDateWindow,
   generateFullFinalStagePlanning,
   validateFullFinalStagePlanning,
 } from "@/features/tournaments/domain/finalStageFullPlanningEngine";
@@ -231,6 +233,56 @@ export function AdminTournamentFinalFullPlanning({
     () => assignmentMap(manualAssignments),
     [manualAssignments],
   );
+  const unprogrammedDiagnostics = useMemo(() => {
+    if (!workspace) return new Map<string, string>();
+    const used = new Set(persistedAssignments.map((item) => item.slotId));
+    const result = new Map<string, string>();
+    for (const node of nodes) {
+      if (persistedByNode.has(node.id)) continue;
+      const availability = finalRoundAvailableSlots({
+        node,
+        nodes,
+        slots: workspace.slots,
+        availability: workspace.availability,
+        finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
+        finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
+      });
+      const normalWindow =
+        workspace.tournament.finalsStartsOn &&
+        workspace.tournament.finalsEndsOn
+          ? finalRoundDateWindow({
+              node,
+              nodes,
+              finalsStartsOn: workspace.tournament.finalsStartsOn,
+              finalsEndsOn: workspace.tournament.finalsEndsOn,
+            })
+          : null;
+      const available = availability.candidates.filter(
+        (slot) => !used.has(slot.id),
+      );
+      const first = available[0];
+      if (first) {
+        result.set(
+          node.id,
+          availability.exception
+            ? `Dérogation possible : ${slotLabel(first)}. Date normale limite : ${normalWindow ? formatDate(normalWindow.latest) : "—"}. À vérifier avec les tours suivants.`
+            : `Créneau commun : ${slotLabel(first)}. Le placement reste contraint par les autres rencontres et les tours suivants.`,
+        );
+      } else if (availability.candidates.length > 0) {
+        result.set(
+          node.id,
+          `Disponibilités communes trouvées, mais les créneaux sont déjà affectés. Exemple : ${slotLabel(availability.candidates[0])}. Réorganisation nécessaire.`,
+        );
+      } else {
+        result.set(
+          node.id,
+          `Aucune disponibilité commune compatible avec ce tour${normalWindow ? ` (période normale jusqu’au ${formatDate(normalWindow.latest)})` : ""}. Relancer les équipes ou prévoir un ajustement manuel.`,
+        );
+      }
+    }
+    return result;
+  }, [nodes, persistedAssignments, persistedByNode, workspace]);
+
   const plannedCount = persistedAssignments.length;
   const unplannedCount = Math.max(0, nodes.length - plannedCount);
 
@@ -406,8 +458,10 @@ export function AdminTournamentFinalFullPlanning({
       <p className="final-stage-full-planning__hint">
         Toutes les séries et toutes les étapes partagent les mêmes créneaux
         Finals. L’automatique place ce qu’il peut avec les disponibilités
-        déclarées et les dates limites de chaque tour ; le reste est conservé «
-        À programmer ». Un nouveau calcul replace les créneaux automatiques,
+        déclarées et les échéances des tours. Une dérogation limitée est
+        recherchée seulement si aucune disponibilité commune n'existe en
+        période normale. Les parties impossibles restent « À programmer ».
+        Un nouveau calcul remplace les créneaux automatiques,
         sans modifier les créneaux fixés manuellement ni les matchs publiés.
       </p>
 
@@ -516,6 +570,19 @@ export function AdminTournamentFinalFullPlanning({
                                           : "Planifié"
                                         : "À programmer"}
                                 </span>
+                                {!slot && row?.resultStatus !== "validated" && (
+                                  <small>{unprogrammedDiagnostics.get(node.id)}</small>
+                                )}
+                                {slot && workspace.tournament.finalsStartsOn && workspace.tournament.finalsEndsOn &&
+                                  slot.date > finalRoundDateWindow({
+                                    node,
+                                    nodes,
+                                    finalsStartsOn: workspace.tournament.finalsStartsOn,
+                                    finalsEndsOn: workspace.tournament.finalsEndsOn,
+                                  }).latest && (
+                                    <small>Dérogation de calendrier : vérifier l’enchaînement des tours.</small>
+                                  )}
+                                 
                               </div>
 
                               {isEditing && !locked ? (
