@@ -369,6 +369,8 @@ const mapFullPlanningWorkspace = (
       name: String(resource.name ?? "Terrain"),
       displayOrder: Number(resource.display_order ?? 0),
     })),
+    weeklySlots: [],
+    weeklyOccupiedSlotIds: [],
     slots: rows(root.slots).map((slot) => ({
       id: String(slot.id ?? ""),
       resourceId: String(slot.resource_id ?? ""),
