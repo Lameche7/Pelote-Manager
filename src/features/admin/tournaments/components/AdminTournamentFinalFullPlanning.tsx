@@ -248,8 +248,7 @@ export function AdminTournamentFinalFullPlanning({
         finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
       });
       const normalWindow =
-        workspace.tournament.finalsStartsOn &&
-        workspace.tournament.finalsEndsOn
+        workspace.tournament.finalsStartsOn && workspace.tournament.finalsEndsOn
           ? finalRoundDateWindow({
               node,
               nodes,
@@ -459,10 +458,10 @@ export function AdminTournamentFinalFullPlanning({
         Toutes les séries et toutes les étapes partagent les mêmes créneaux
         Finals. L’automatique place ce qu’il peut avec les disponibilités
         déclarées et les échéances des tours. Une dérogation limitée est
-        recherchée seulement si aucune disponibilité commune n'existe en
-        période normale. Les parties impossibles restent « À programmer ».
-        Un nouveau calcul remplace les créneaux automatiques,
-        sans modifier les créneaux fixés manuellement ni les matchs publiés.
+        recherchée seulement si aucune disponibilité commune n'existe en période
+        normale. Les parties impossibles restent « À programmer ». Un nouveau
+        calcul remplace les créneaux automatiques, sans modifier les créneaux
+        fixés manuellement ni les matchs publiés.
       </p>
 
       {error && (
@@ -571,16 +570,26 @@ export function AdminTournamentFinalFullPlanning({
                                         : "À programmer"}
                                 </span>
                                 {!slot && row?.resultStatus !== "validated" && (
-                                  <small>{unprogrammedDiagnostics.get(node.id)}</small>
+                                  <small>
+                                    {unprogrammedDiagnostics.get(node.id)}
+                                  </small>
                                 )}
-                                {slot && workspace.tournament.finalsStartsOn && workspace.tournament.finalsEndsOn &&
-                                  slot.date > finalRoundDateWindow({
-                                    node,
-                                    nodes,
-                                    finalsStartsOn: workspace.tournament.finalsStartsOn,
-                                    finalsEndsOn: workspace.tournament.finalsEndsOn,
-                                  }).latest && (
-                                    <small>Dérogation de calendrier : vérifier l’enchaînement des tours.</small>
+                                {slot &&
+                                  workspace.tournament.finalsStartsOn &&
+                                  workspace.tournament.finalsEndsOn &&
+                                  slot.date >
+                                    finalRoundDateWindow({
+                                      node,
+                                      nodes,
+                                      finalsStartsOn:
+                                        workspace.tournament.finalsStartsOn,
+                                      finalsEndsOn:
+                                        workspace.tournament.finalsEndsOn,
+                                    }).latest && (
+                                    <small>
+                                      Dérogation de calendrier : vérifier
+                                      l’enchaînement des tours.
+                                    </small>
                                   )}
                                  
                               </div>
