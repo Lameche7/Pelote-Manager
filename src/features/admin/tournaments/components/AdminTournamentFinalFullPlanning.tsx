@@ -282,6 +282,11 @@ export function AdminTournamentFinalFullPlanning({
     return result;
   }, [nodes, persistedAssignments, persistedByNode, workspace]);
 
+  const officialFinalDate = workspace?.tournament.finalsEndsOn;
+  const finalDaySlotCount = officialFinalDate
+    ? (workspace?.slots ?? []).filter((slot) => slot.date === officialFinalDate)
+        .length
+    : 0;
   const plannedCount = persistedAssignments.length;
   const unplannedCount = Math.max(0, nodes.length - plannedCount);
 
@@ -327,7 +332,7 @@ export function AdminTournamentFinalFullPlanning({
         existingAssignments: existing,
         fixedNodeIds,
         minimumRestMinutes: workspace.tournament.minimumRestMinutes,
-        iterations: 600,
+        iterations: 80,
         finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
         finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
       });
@@ -478,6 +483,14 @@ export function AdminTournamentFinalFullPlanning({
         </p>
       )}
 
+      {officialFinalDate && finalDaySlotCount === 0 && (
+        <p className="qualification-alert qualification-alert--error" role="status">
+          Aucun créneau n'est défini pour la journée des finales ({formatDate(officialFinalDate)}).
+          Les quatre finales ne peuvent pas être placées avant que leurs horaires
+          soient configurés dans les créneaux du tournoi.
+        </p>
+      )}
+
       <div className="final-stage-full-planning__actions">
         <button type="button" disabled={busy} onClick={() => void autoPlan()}>
           {busy ? "Calcul…" : "Compléter automatiquement le planning"}
@@ -566,7 +579,9 @@ export function AdminTournamentFinalFullPlanning({
                                       : slot
                                         ? row?.needsManual
                                           ? "À vérifier manuellement"
-                                          : "Planifié"
+                                          : !node.actualMatchId
+                                            ? "Créneau provisoire · adversaires à confirmer"
+                                            : "Planifié"
                                         : "À programmer"}
                                 </span>
                                 {!slot && row?.resultStatus !== "validated" && (
