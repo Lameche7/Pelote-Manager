@@ -81,9 +81,11 @@ export function HomePage() {
       ? clubBrandingService.unavailableFallback
       : clubBrandingService.fallback,
   );
-  const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
-    .filter(Boolean)
-    .join(" · ");
+  const venueLabel = publicClubSlug
+    ? ""
+    : [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
+        .filter(Boolean)
+        .join(" · ");
   const heroStyle: ClubHeroStyle = {
     "--club-hero-image": `url("${branding.heroImageUrl}")`,
     "--club-primary": branding.primaryColor,
@@ -350,9 +352,9 @@ export function HomePage() {
             alt={branding.name}
           />
           <div>
-            <p className="section-kicker">{venueLabel}</p>
+            {venueLabel && <p className="section-kicker">{venueLabel}</p>}
             <h2>Le club, notre passion.</h2>
-            <p>{CLUB_CONFIG.description}</p>
+            {!publicClubSlug && <p>{CLUB_CONFIG.description}</p>}
             <Link className="text-link" to={ROUTES.reservations}>
               Voir les créneaux disponibles →
             </Link>
