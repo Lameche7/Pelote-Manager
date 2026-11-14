@@ -209,8 +209,10 @@ test("Lourdes: barrages et huitièmes restent en novembre, jamais le 11 décembr
   assert.deepEqual(
     rounds.map((node) =>
       finalRoundDateWindow({
-        node, nodes: rounds,
-        finalsStartsOn: finalStart, finalsEndsOn: finalEnd,
+        node,
+        nodes: rounds,
+        finalsStartsOn: finalStart,
+        finalsEndsOn: finalEnd,
       }),
     ),
     [
