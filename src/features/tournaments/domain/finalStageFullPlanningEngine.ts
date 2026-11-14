@@ -23,6 +23,70 @@ const dateOrdinal = (date: string) => {
   );
 };
 
+/**
+ * Keep each knockout round in its own chronological window.
+ * The cut-offs scale with the tournament duration; for Lourdes (Nov 16–Dec 12)
+ * they end on Nov 20 (barrages), Nov 27 (1/8), Dec 4 (1/4),
+ * Dec 10 (1/2), with the final on Dec 12.
+ */
+export const finalRoundDateWindow = ({
+  node,
+  nodes,
+  finalsStartsOn,
+  finalsEndsOn,
+}: {
+  node: FinalStagePlanningNode;
+  nodes: FinalStagePlanningNode[];
+  finalsStartsOn: string;
+  finalsEndsOn: string;
+}): { earliest: string; latest: string } => {
+  const start = dateOrdinal(finalsStartsOn);
+  const end = dateOrdinal(finalsEndsOn);
+  const days = Math.max(0, end - start);
+  const fraction: Record<string, number> = {
+    preliminary: 4,
+    round_of_32: 8,
+    round_of_16: 11,
+    quarterfinal: 18,
+    semifinal: 24,
+    final: 26,
+  };
+  const offset = (round: string) =>
+    Math.min(days, Math.floor((days * (fraction[round] ?? 26)) / 26));
+  const rounds = [...new Map(
+    nodes
+      .filter((candidate) => candidate.seriesId === node.seriesId)
+      .map((candidate) => [candidate.roundNumber, candidate.round]),
+  ).entries()].sort((left, right) => left[0] - right[0]);
+  const index = rounds.findIndex(([number]) => number === node.roundNumber);
+  const previous = index > 0 ? rounds[index - 1]?.[1] : null;
+  const firstDay = previous ? start + offset(previous) + 1 : start;
+  const lastDay = start + offset(node.round);
+  const toDate = (ordinal: number) =>
+    new Date(ordinal * 86_400_000).toISOString().slice(0, 10);
+  return {
+    earliest: toDate(firstDay),
+    latest: toDate(lastDay),
+  };
+};
+
+const slotWithinRound = (
+  node: FinalStagePlanningNode,
+  slot: PlanningSlot,
+  nodes: FinalStagePlanningNode[],
+  finalsStartsOn?: string,
+  finalsEndsOn?: string,
+) => {
+  if (!finalsStartsOn || !finalsEndsOn) return true;
+  const window = finalRoundDateWindow({
+    node,
+    nodes,
+    finalsStartsOn,
+    finalsEndsOn,
+  });
+  return slot.date >= window.earliest && slot.date <= window.latest;
+};
+
 const slotRange = (slot: PlanningSlot) => {
   const day = dateOrdinal(slot.date) * 1_440;
   return {
@@ -82,6 +146,8 @@ export const validateFullFinalStagePlanning = ({
   assignments,
   minimumRestMinutes = 0,
   respectAvailability = false,
+  finalsStartsOn,
+  finalsEndsOn,
 }: {
   nodes: FinalStagePlanningNode[];
   slots: PlanningSlot[];
@@ -89,6 +155,8 @@ export const validateFullFinalStagePlanning = ({
   assignments: FinalStagePlanningAssignment[];
   minimumRestMinutes?: number;
   respectAvailability?: boolean;
+  finalsStartsOn?: string;
+  finalsEndsOn?: string;
 }): FinalStagePlanningValidation => {
   const diagnostics: FinalStagePlanningDiagnostic[] = [];
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
@@ -120,6 +188,15 @@ export const validateFullFinalStagePlanning = ({
     const node = nodeById.get(assignment.nodeId);
     const slot = slotById.get(assignment.slotId);
     if (!node || !slot) continue;
+
+    if (!slotWithinRound(node, slot, nodes, finalsStartsOn, finalsEndsOn)) {
+      diagnostics.push({
+        nodeId: node.id,
+        code: "invalid_assignment",
+        message: "Ce créneau ne respecte pas la période de ce tour.",
+      });
+      continue;
+    }
 
     if (
       respectAvailability &&
@@ -179,6 +256,8 @@ export const generateFullFinalStagePlanning = ({
   minimumRestMinutes = 0,
   iterations = 400,
   random = Math.random,
+  finalsStartsOn,
+  finalsEndsOn,
 }: {
   nodes: FinalStagePlanningNode[];
   slots: PlanningSlot[];
@@ -188,6 +267,8 @@ export const generateFullFinalStagePlanning = ({
   minimumRestMinutes?: number;
   iterations?: number;
   random?: () => number;
+  finalsStartsOn?: string;
+  finalsEndsOn?: string;
 }): FinalStagePlanningProposal => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const slotById = new Map(slots.map((slot) => [slot.id, slot]));
@@ -195,7 +276,9 @@ export const generateFullFinalStagePlanning = ({
   const commonSlots = new Map(
     nodes.map((node) => [
       node.id,
-      commonSlotsForNode(node, slots, availability),
+      commonSlotsForNode(node, slots, availability).filter((slot) =>
+        slotWithinRound(node, slot, nodes, finalsStartsOn, finalsEndsOn),
+      ),
     ]),
   );
   let best: FinalStagePlanningProposal | null = null;
