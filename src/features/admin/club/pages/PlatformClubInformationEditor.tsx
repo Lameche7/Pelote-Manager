@@ -14,11 +14,13 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     let active = true;
     setClub(null);
     setError("");
+    setSuccess("");
     setLoading(true);
     clubAdminService
       .getClubForPlatformLease(clubId)
@@ -76,11 +78,13 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
           if (saving || !club || club.id !== clubId) return;
           setSaving(true);
           setError("");
+          setSuccess("");
           try {
             await clubAdminService.updateClubForPlatformLease(club);
             const refreshed =
               await clubAdminService.getClubForPlatformLease(clubId);
             setClub(refreshed);
+            setSuccess("Informations enregistrées.");
           } catch {
             setClub(null);
             setError(
@@ -107,6 +111,7 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
           {saving ? "Enregistrement…" : "Enregistrer"}
         </button>
         {error && <p role="alert">{error}</p>}
+        {success && <p role="status">{success}</p>}
       </form>
     </section>
   );
