@@ -303,7 +303,10 @@ test("exception contrôlée : Brault et Quessette peuvent viser le 24 novembre s
     finalsEndsOn: "2026-12-12",
   });
   assert.deepEqual(options.normal, []);
-  assert.deepEqual(options.candidates.map((s) => s.id), ["exception"]);
+  assert.deepEqual(
+    options.candidates.map((s) => s.id),
+    ["exception"],
+  );
   assert.equal(options.exception, true);
 
   const proposal = generateFullFinalStagePlanning({
@@ -315,7 +318,11 @@ test("exception contrôlée : Brault et Quessette peuvent viser le 24 novembre s
     iterations: 1,
     random: () => 0,
   });
-  assert.ok(proposal.assignments.some((a) => a.nodeId === barrage.id && a.slotId === "exception"));
+  assert.ok(
+    proposal.assignments.some(
+      (a) => a.nodeId === barrage.id && a.slotId === "exception",
+    ),
+  );
   assert.ok(!proposal.assignments.some((a) => a.slotId === "forbidden"));
 
   const normalAvailable = finalRoundAvailableSlots({
@@ -330,5 +337,8 @@ test("exception contrôlée : Brault et Quessette peuvent viser le 24 novembre s
     finalsEndsOn: "2026-12-12",
   });
   assert.equal(normalAvailable.exception, false);
-  assert.deepEqual(normalAvailable.candidates.map((s) => s.id), ["normal"]);
+  assert.deepEqual(
+    normalAvailable.candidates.map((s) => s.id),
+    ["normal"],
+  );
 });
