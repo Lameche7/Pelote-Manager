@@ -83,11 +83,17 @@ test("le favori prime sur la licence vérifiée puis sur le lien d'entrée", () 
 });
 
 test("les liens publics n'accordent aucun droit et rejettent les slugs invalides", () => {
-  assert.equal(publicClubQuery("pelotari-club-morlaas"), "?club=pelotari-club-morlaas");
+  assert.equal(
+    publicClubQuery("pelotari-club-morlaas"),
+    "?club=pelotari-club-morlaas",
+  );
   assert.equal(publicClubQuery("../admin"), "");
   assert.equal(publicClubQuery(""), "");
   assert.equal(
-    publicClubConfirmationRedirect("https://pilotoki.example/", "pelotari-club-morlaas"),
+    publicClubConfirmationRedirect(
+      "https://pilotoki.example/",
+      "pelotari-club-morlaas",
+    ),
     "https://pilotoki.example/?club=pelotari-club-morlaas",
   );
   assert.equal(
