@@ -505,14 +505,13 @@ export function AdminTournamentFinalFullPlanning({
               className="qualification-alert qualification-alert--error"
               role="status"
             >
-              Aucun créneau n'est encore défini le {formatDate(officialFinalDate)}
+              Aucun créneau n'est encore défini le{" "}
+              {formatDate(officialFinalDate)}
               pour les finales. Indiquez leurs horaires ci-dessous avant le
               prochain calcul.
             </p>
           )}
-          <strong>
-            Journée des finales · {formatDate(officialFinalDate)}
-          </strong>
+          <strong>Journée des finales · {formatDate(officialFinalDate)}</strong>
           <p>
             {finalDaySlotCount} créneau(x) disponible(s) à cette date. Les
             horaires doivent être confirmés par l'organisation.
@@ -538,7 +537,12 @@ export function AdminTournamentFinalFullPlanning({
             </label>
             <button
               type="button"
-              disabled={busy || !finalDayStart || !finalDayEnd || finalDayEnd <= finalDayStart}
+              disabled={
+                busy ||
+                !finalDayStart ||
+                !finalDayEnd ||
+                finalDayEnd <= finalDayStart
+              }
               onClick={() => void addFinalDaySlot()}
             >
               Ajouter un créneau des finales
