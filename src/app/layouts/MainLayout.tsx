@@ -238,13 +238,25 @@ export function MainLayout() {
 
       <footer className="app-footer">
         <div className="app-footer__brand">
-          <ClubLogo compact />
+          {clubSlug ? (
+            branding.logoUrl ? (
+              <img
+                className="club-logo club-logo--compact"
+                src={branding.logoUrl}
+                alt={`Logo de ${branding.name}`}
+              />
+            ) : null
+          ) : (
+            <ClubLogo compact />
+          )}
           <div>
             <strong>{branding.name}</strong>
             <span>
-              {CLUB_CONFIG.foundedYear
-                ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
-                : CLUB_CONFIG.tagline}
+              {clubSlug
+                ? ""
+                : CLUB_CONFIG.foundedYear
+                  ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
+                  : CLUB_CONFIG.tagline}
             </span>
           </div>
         </div>
