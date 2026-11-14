@@ -48,7 +48,7 @@ export function resolveEntryClubSlug(
   hostname: string,
   verifiedDomains: ReadonlyArray<{ hostname: string; clubSlug: string }>,
 ): string | null {
-  const normalized = hostname.trim().toLowerCase().replace(/\\.$/, "");
+  const normalized = hostname.trim().toLowerCase().replace(/\.$/, "");
   if (
     !normalized ||
     normalized.includes(":") ||
@@ -63,7 +63,7 @@ export function resolveEntryClubSlug(
 
   const matches = verifiedDomains.filter(
     (entry) =>
-      entry.hostname.trim().toLowerCase().replace(/\\.$/, "") === normalized &&
+      entry.hostname.trim().toLowerCase().replace(/\.$/, "") === normalized &&
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.clubSlug),
   );
   return matches.length === 1 ? matches[0].clubSlug : null;
