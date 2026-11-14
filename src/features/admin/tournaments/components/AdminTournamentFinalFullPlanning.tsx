@@ -139,6 +139,8 @@ export function AdminTournamentFinalFullPlanning({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [editingRound, setEditingRound] = useState<number | null>(null);
+  const [finalDayStart, setFinalDayStart] = useState("");
+  const [finalDayEnd, setFinalDayEnd] = useState("");
   const [manualAssignments, setManualAssignments] = useState<
     FinalStagePlanningAssignment[]
   >([]);
@@ -308,6 +310,19 @@ export function AdminTournamentFinalFullPlanning({
       setBusy(false);
     }
   };
+
+  const addFinalDaySlot = () =>
+    run(async () => {
+      if (!workspace || !finalDayStart || !finalDayEnd) return "";
+      await tournamentFinalStageAdminService.addFinalDaySlot(
+        tournamentId,
+        finalDayStart,
+        finalDayEnd,
+      );
+      setFinalDayStart("");
+      setFinalDayEnd("");
+      return "Créneau des finales ajouté. Relancez le calcul pour le proposer dans le planning.";
+    });
 
   const autoPlan = () =>
     run(async () => {
@@ -483,16 +498,53 @@ export function AdminTournamentFinalFullPlanning({
         </p>
       )}
 
-      {officialFinalDate && finalDaySlotCount === 0 && (
-        <p
-          className="qualification-alert qualification-alert--error"
-          role="status"
-        >
-          Aucun créneau n'est défini pour la journée des finales (
-          {formatDate(officialFinalDate)}). Les quatre finales ne peuvent pas
-          être placées avant que leurs horaires soient configurés dans les
-          créneaux du tournoi.
-        </p>
+      {officialFinalDate && (
+        <section className="final-stage-full-planning__final-day">
+          {finalDaySlotCount === 0 && (
+            <p
+              className="qualification-alert qualification-alert--error"
+              role="status"
+            >
+              Aucun créneau n'est encore défini le {formatDate(officialFinalDate)}
+              pour les finales. Indiquez leurs horaires ci-dessous avant le
+              prochain calcul.
+            </p>
+          )}
+          <strong>
+            Journée des finales · {formatDate(officialFinalDate)}
+          </strong>
+          <p>
+            {finalDaySlotCount} créneau(x) disponible(s) à cette date. Les
+            horaires doivent être confirmés par l'organisation.
+          </p>
+          <div className="final-stage-full-planning__actions">
+            <label>
+              Début
+              <input
+                type="time"
+                value={finalDayStart}
+                onChange={(event) => setFinalDayStart(event.target.value)}
+                disabled={busy}
+              />
+            </label>
+            <label>
+              Fin
+              <input
+                type="time"
+                value={finalDayEnd}
+                onChange={(event) => setFinalDayEnd(event.target.value)}
+                disabled={busy}
+              />
+            </label>
+            <button
+              type="button"
+              disabled={busy || !finalDayStart || !finalDayEnd || finalDayEnd <= finalDayStart}
+              onClick={() => void addFinalDaySlot()}
+            >
+              Ajouter un créneau des finales
+            </button>
+          </div>
+        </section>
       )}
 
       <div className="final-stage-full-planning__actions">
