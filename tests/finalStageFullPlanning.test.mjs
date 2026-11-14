@@ -434,10 +434,18 @@ test("les finales ont des horaires explicitement ajoutés par un administrateur"
 
 test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux libres", async () => {
   const [calendar, admin, service, migration] = await Promise.all([
-    read("../src/features/admin/tournaments/components/AdminTournamentFinalWeeklyOverview.tsx"),
-    read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
-    read("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts"),
-    read("../supabase/migrations/20261114223000_weekly_final_planning_occupied_slots.sql"),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentFinalWeeklyOverview.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
+    ),
+    read(
+      "../supabase/migrations/20261114223000_weekly_final_planning_occupied_slots.sql",
+    ),
   ]);
   assert.match(calendar, /Array\.from\(\{ length: 7 \}/);
   assert.match(calendar, /Semaine précédente/);
@@ -447,12 +455,21 @@ test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux
   assert.match(calendar, /Créneau occupé/);
   assert.match(calendar, /adversaires à confirmer/);
   assert.match(calendar, /Vue en lecture seule/);
-  assert.match(admin, /<AdminTournamentFinalWeeklyOverview workspace=\{workspace\}/);
+  assert.match(
+    admin,
+    /<AdminTournamentFinalWeeklyOverview workspace=\{workspace\}/,
+  );
   assert.match(service, /admin_get_tournament_final_external_occupied_slots/);
   assert.match(service, /weeklyOccupiedSlotIds/);
   assert.match(migration, /public\.has_club_permission/);
   assert.match(migration, /public\.reservations/);
   assert.match(migration, /public\.tournament_match_planning/);
-  assert.match(migration, /grant execute.*admin_get_tournament_final_external_occupied_slots/s);
-  assert.doesNotMatch(calendar, /saveFullPlanning|publishSeries|\.insert\(|\.update\(/);
+  assert.match(
+    migration,
+    /grant execute.*admin_get_tournament_final_external_occupied_slots/s,
+  );
+  assert.doesNotMatch(
+    calendar,
+    /saveFullPlanning|publishSeries|\.insert\(|\.update\(/,
+  );
 });
