@@ -600,3 +600,171 @@
     display: grid;
   }
 }
+
+/* Admin-only read-only overview of the entire finals calendar. */
+.final-weekly-overview {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgb(100 116 139 / 18%);
+  border-radius: 0.9rem;
+  background: #fff;
+}
+
+.final-weekly-overview__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.final-weekly-overview__header h4,
+.final-weekly-overview__header p {
+  margin: 0;
+}
+
+.final-weekly-overview__eyebrow {
+  color: var(--club-accent, #1e5aa8);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.final-weekly-overview__navigation,
+.final-weekly-overview__summary,
+.final-weekly-overview__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.final-weekly-overview__navigation button {
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  border: 1px solid rgb(100 116 139 / 26%);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+}
+
+.final-weekly-overview__navigation button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.final-weekly-overview__summary > span {
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.55rem;
+  background: rgb(15 23 42 / 5%);
+  font-size: 0.79rem;
+}
+
+.final-weekly-overview__filters label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.final-weekly-overview__filters select {
+  min-height: 2.3rem;
+  border: 1px solid rgb(100 116 139 / 28%);
+  border-radius: 0.6rem;
+  padding: 0.3rem 0.55rem;
+  background: #fff;
+  color: inherit;
+}
+
+.final-weekly-overview__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.final-weekly-overview__table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: separate;
+  border-spacing: 3px;
+  table-layout: fixed;
+}
+
+.final-weekly-overview__table thead th {
+  position: sticky;
+  top: 0;
+  padding: 0.55rem 0.25rem;
+  border-radius: 0.4rem;
+  background: rgb(15 23 42 / 8%);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.final-weekly-overview__table th:first-child {
+  width: 4.2rem;
+}
+
+.final-weekly-overview__table tbody th {
+  padding: 0.3rem;
+  background: rgb(15 23 42 / 4%);
+  font-size: 0.75rem;
+}
+
+.final-weekly-overview__table td {
+  vertical-align: top;
+  padding: 0.15rem;
+  background: rgb(15 23 42 / 2%);
+}
+
+.final-weekly-overview__event {
+  display: grid;
+  gap: 0.2rem;
+  min-height: 4rem;
+  margin-bottom: 0.2rem;
+  padding: 0.42rem;
+  border-left: 4px solid transparent;
+  border-radius: 0.45rem;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.final-weekly-overview__event--match {
+  background: rgb(37 99 235 / 8%);
+}
+
+.final-weekly-overview__event--free {
+  background: rgb(22 163 74 / 10%);
+  color: #166534;
+}
+
+.final-weekly-overview__event--occupied {
+  background: rgb(100 116 139 / 14%);
+  color: #475569;
+}
+
+.final-weekly-overview__event-time,
+.final-weekly-overview__event small {
+  font-size: 0.67rem;
+}
+
+.final-weekly-overview__unavailable {
+  display: block;
+  padding: 0.4rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.final-weekly-overview__note,
+.final-weekly-overview__empty {
+  margin: 0;
+  font-size: 0.79rem;
+  color: #64748b;
+}
+
+@media (max-width: 760px) {
+  .final-weekly-overview {
+    padding: 0.6rem;
+  }
+}

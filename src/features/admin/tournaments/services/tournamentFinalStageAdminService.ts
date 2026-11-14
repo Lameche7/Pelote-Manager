@@ -196,6 +196,10 @@ export type TournamentFinalFullPlanningWorkspace = {
     displayOrder: number;
   }>;
   slots: PlanningSlot[];
+  /** Full set of configured finals slots for the read-only weekly overview. */
+  weeklySlots: PlanningSlot[];
+  /** Slot IDs occupied by reservations or other tournament matches. */
+  weeklyOccupiedSlotIds: string[];
   availability: TeamPlanningAvailability[];
   nodes: TournamentFinalFullPlanningNodeRow[];
 };
@@ -365,6 +369,8 @@ const mapFullPlanningWorkspace = (
       name: String(resource.name ?? "Terrain"),
       displayOrder: Number(resource.display_order ?? 0),
     })),
+    weeklySlots: [],
+    weeklyOccupiedSlotIds: [],
     slots: rows(root.slots).map((slot) => ({
       id: String(slot.id ?? ""),
       resourceId: String(slot.resource_id ?? ""),
@@ -576,14 +582,18 @@ export const tournamentFinalStageAdminService = {
     tournamentId: string,
   ): Promise<TournamentFinalFullPlanningWorkspace> {
     await this.prepareFullPlanning(tournamentId);
-    const [workspaceResponse, occupiedResponse] = await Promise.all([
-      supabase.rpc("admin_get_tournament_final_full_planning_workspace", {
-        target_tournament_id: tournamentId,
-      }),
-      supabase.rpc("admin_get_tournament_finals_occupied_pool_slots", {
-        target_tournament_id: tournamentId,
-      }),
-    ]);
+    const [workspaceResponse, occupiedResponse, externalResponse] =
+      await Promise.all([
+        supabase.rpc("admin_get_tournament_final_full_planning_workspace", {
+          target_tournament_id: tournamentId,
+        }),
+        supabase.rpc("admin_get_tournament_finals_occupied_pool_slots", {
+          target_tournament_id: tournamentId,
+        }),
+        supabase.rpc("admin_get_tournament_final_external_occupied_slots", {
+          target_tournament_id: tournamentId,
+        }),
+      ]);
     if (workspaceResponse.error)
       fail(
         workspaceResponse.error,
@@ -594,6 +604,11 @@ export const tournamentFinalStageAdminService = {
         occupiedResponse.error,
         "Impossible de vérifier les créneaux déjà occupés.",
       );
+    if (externalResponse.error)
+      fail(
+        externalResponse.error,
+        "Impossible de vérifier les réservations et les autres tournois.",
+      );
     const workspace = mapFullPlanningWorkspace(workspaceResponse.data);
     const occupied = new Set(
       (Array.isArray(occupiedResponse.data) ? occupiedResponse.data : []).map(
@@ -602,6 +617,16 @@ export const tournamentFinalStageAdminService = {
     );
     return {
       ...workspace,
+      weeklySlots: workspace.slots.filter(
+        (slot) =>
+          (!workspace.tournament.finalsStartsOn ||
+            slot.date >= workspace.tournament.finalsStartsOn) &&
+          (!workspace.tournament.finalsEndsOn ||
+            slot.date <= workspace.tournament.finalsEndsOn),
+      ),
+      weeklyOccupiedSlotIds: Array.isArray(externalResponse.data)
+        ? externalResponse.data.map(String)
+        : [],
       slots: workspace.slots.filter(
         (slot) =>
           (!workspace.tournament.finalsStartsOn ||

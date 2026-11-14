@@ -19,6 +19,7 @@ import {
   validateFullFinalStagePlanning,
 } from "@/features/tournaments/domain/finalStageFullPlanningEngine";
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
+import { AdminTournamentFinalWeeklyOverview } from "./AdminTournamentFinalWeeklyOverview";
 
 const roundLabels: Record<string, string> = {
   preliminary: "Barrages",
@@ -497,6 +498,8 @@ export function AdminTournamentFinalFullPlanning({
           {message}
         </p>
       )}
+
+      <AdminTournamentFinalWeeklyOverview workspace={workspace} />
 
       {officialFinalDate && (
         <section className="final-stage-full-planning__final-day">
