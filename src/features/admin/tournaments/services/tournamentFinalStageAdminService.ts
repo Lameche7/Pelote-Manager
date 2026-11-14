@@ -560,16 +560,41 @@ export const tournamentFinalStageAdminService = {
     tournamentId: string,
   ): Promise<TournamentFinalFullPlanningWorkspace> {
     await this.prepareFullPlanning(tournamentId);
-    const { data, error } = await supabase.rpc(
-      "admin_get_tournament_final_full_planning_workspace",
-      { target_tournament_id: tournamentId },
-    );
-    if (error)
+    const [workspaceResponse, occupiedResponse] = await Promise.all([
+      supabase.rpc("admin_get_tournament_final_full_planning_workspace", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_finals_occupied_pool_slots", {
+        target_tournament_id: tournamentId,
+      }),
+    ]);
+    if (workspaceResponse.error)
       fail(
-        error,
+        workspaceResponse.error,
         "Impossible de charger le planning global des phases finales.",
       );
-    return mapFullPlanningWorkspace(data);
+    if (occupiedResponse.error)
+      fail(
+        occupiedResponse.error,
+        "Impossible de vérifier les créneaux déjà occupés.",
+      );
+    const workspace = mapFullPlanningWorkspace(workspaceResponse.data);
+    const occupied = new Set(
+      (Array.isArray(occupiedResponse.data) ? occupiedResponse.data : []).map(
+        String,
+      ),
+    );
+    return {
+      ...workspace,
+      slots: workspace.slots.filter(
+        (slot) =>
+          (!workspace.tournament.finalsStartsOn ||
+            slot.date >= workspace.tournament.finalsStartsOn) &&
+          (!workspace.tournament.finalsEndsOn ||
+            slot.date <= workspace.tournament.finalsEndsOn) &&
+          !occupied.has(slot.id),
+      ),
+    };
   },
 
   async saveFullPlanning(
