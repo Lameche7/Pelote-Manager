@@ -53,11 +53,13 @@ export const finalRoundDateWindow = ({
   };
   const offset = (round: string) =>
     Math.min(days, Math.floor((days * (fraction[round] ?? 26)) / 26));
-  const rounds = [...new Map(
-    nodes
-      .filter((candidate) => candidate.seriesId === node.seriesId)
-      .map((candidate) => [candidate.roundNumber, candidate.round]),
-  ).entries()].sort((left, right) => left[0] - right[0]);
+  const rounds = [
+    ...new Map(
+      nodes
+        .filter((candidate) => candidate.seriesId === node.seriesId)
+        .map((candidate) => [candidate.roundNumber, candidate.round]),
+    ).entries(),
+  ].sort((left, right) => left[0] - right[0]);
   const index = rounds.findIndex(([number]) => number === node.roundNumber);
   const previous = index > 0 ? rounds[index - 1]?.[1] : null;
   const firstDay =
