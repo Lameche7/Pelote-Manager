@@ -94,6 +94,91 @@ const slotWithinRound = (
   return slot.date >= window.earliest && slot.date <= window.latest;
 };
 
+/**
+ * Only a round lacking *any* common availability in its standard window may
+ * use a limited exception. Two days are kept before the next round deadline
+ * and the final itself is never moved off its official date.
+ */
+export const finalRoundExceptionWindow = (args: {
+  node: FinalStagePlanningNode;
+  nodes: FinalStagePlanningNode[];
+  finalsStartsOn: string;
+  finalsEndsOn: string;
+}) => {
+  const normal = finalRoundDateWindow(args);
+  const { node, nodes, finalsStartsOn, finalsEndsOn } = args;
+  if (node.round === "final" || node.round === "semifinal") return normal;
+  const next = nodes
+    .filter(
+      (candidate) =>
+        candidate.seriesId === node.seriesId &&
+        candidate.roundNumber > node.roundNumber,
+    )
+    .sort((a, b) => a.roundNumber - b.roundNumber)[0];
+  if (!next) return normal;
+  const nextDeadline = finalRoundDateWindow({
+    node: next,
+    nodes,
+    finalsStartsOn,
+    finalsEndsOn,
+  }).latest;
+  const latestOrdinal = Math.min(
+    dateOrdinal(normal.latest) + 4,
+    dateOrdinal(nextDeadline) - 2,
+  );
+  return {
+    earliest: normal.earliest,
+    latest: new Date(
+      Math.max(dateOrdinal(normal.latest), latestOrdinal) * 86_400_000,
+    )
+      .toISOString()
+      .slice(0, 10),
+  };
+};
+
+export const finalRoundAvailableSlots = ({
+  node,
+  nodes,
+  slots,
+  availability,
+  finalsStartsOn,
+  finalsEndsOn,
+}: {
+  node: FinalStagePlanningNode;
+  nodes: FinalStagePlanningNode[];
+  slots: PlanningSlot[];
+  availability: TeamPlanningAvailability[];
+  finalsStartsOn?: string;
+  finalsEndsOn?: string;
+}) => {
+  const common = slots.filter((slot) =>
+    isFinalStageSlotCommonForNode({ node, slot, availability }),
+  );
+  if (!finalsStartsOn || !finalsEndsOn) {
+    return { normal: common, candidates: common, exception: false };
+  }
+  const normal = common.filter((slot) =>
+    slotWithinRound(node, slot, nodes, finalsStartsOn, finalsEndsOn),
+  );
+  if (normal.length > 0) {
+    return { normal, candidates: normal, exception: false };
+  }
+  const window = finalRoundExceptionWindow({
+    node,
+    nodes,
+    finalsStartsOn,
+    finalsEndsOn,
+  });
+  const candidates = common.filter(
+    (slot) => slot.date >= window.earliest && slot.date <= window.latest,
+  );
+  return {
+    normal,
+    candidates,
+    exception: candidates.length > 0,
+  };
+};
+
 const slotRange = (slot: PlanningSlot) => {
   const day = dateOrdinal(slot.date) * 1_440;
   return {
@@ -196,7 +281,32 @@ export const validateFullFinalStagePlanning = ({
     const slot = slotById.get(assignment.slotId);
     if (!node || !slot) continue;
 
-    if (!slotWithinRound(node, slot, nodes, finalsStartsOn, finalsEndsOn)) {
+    const normalWindow =
+      finalsStartsOn && finalsEndsOn
+        ? finalRoundDateWindow({ node, nodes, finalsStartsOn, finalsEndsOn })
+        : null;
+    const exceptionWindow =
+      finalsStartsOn && finalsEndsOn
+        ? finalRoundExceptionWindow({
+            node,
+            nodes,
+            finalsStartsOn,
+            finalsEndsOn,
+          })
+        : null;
+    const withinException =
+      exceptionWindow &&
+      slot.date >= exceptionWindow.earliest &&
+      slot.date <= exceptionWindow.latest;
+    const withinNormal =
+      normalWindow &&
+      slot.date >= normalWindow.earliest &&
+      slot.date <= normalWindow.latest;
+    if (
+      normalWindow &&
+      !withinNormal &&
+      !(withinException && !respectAvailability)
+    ) {
       diagnostics.push({
         nodeId: node.id,
         code: "invalid_assignment",
@@ -239,15 +349,6 @@ export const validateFullFinalStagePlanning = ({
   return { valid: diagnostics.length === 0, diagnostics };
 };
 
-const commonSlotsForNode = (
-  node: FinalStagePlanningNode,
-  slots: PlanningSlot[],
-  availability: TeamPlanningAvailability[],
-) =>
-  slots.filter((slot) =>
-    isFinalStageSlotCommonForNode({ node, slot, availability }),
-  );
-
 const signature = (assignments: FinalStagePlanningAssignment[]) =>
   [...assignments]
     .sort((left, right) => left.nodeId.localeCompare(right.nodeId))
@@ -283,9 +384,14 @@ export const generateFullFinalStagePlanning = ({
   const commonSlots = new Map(
     nodes.map((node) => [
       node.id,
-      commonSlotsForNode(node, slots, availability).filter((slot) =>
-        slotWithinRound(node, slot, nodes, finalsStartsOn, finalsEndsOn),
-      ),
+      finalRoundAvailableSlots({
+        node,
+        nodes,
+        slots,
+        availability,
+        finalsStartsOn,
+        finalsEndsOn,
+      }).candidates,
     ]),
   );
   let best: FinalStagePlanningProposal | null = null;
