@@ -84,7 +84,7 @@ test(
       resolvePlayerHomeClub("morlaas", "lourdes", "morlaas"),
       "morlaas",
     );
-      assert.equal(resolvePlayerHomeClub(null, null, null), null);
+    assert.equal(resolvePlayerHomeClub(null, null, null), null);
   },
 );
 
