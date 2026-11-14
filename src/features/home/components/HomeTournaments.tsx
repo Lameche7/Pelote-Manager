@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
 import type { PublicTournamentSummary } from "@/features/tournaments/types";
 import { ROUTES } from "@/shared/config";
+import { publicClubQuery } from "@/shared/config/domains";
 import "./HomeTournaments.css";
 
 const formatDate = (value: string) =>
@@ -44,6 +45,7 @@ type HomeTournamentsProps = {
 };
 
 export function HomeTournaments({ clubSlug }: HomeTournamentsProps) {
+  const clubQuery = publicClubQuery(clubSlug);
   const [tournaments, setTournaments] = useState<PublicTournamentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
@@ -108,7 +110,7 @@ export function HomeTournaments({ clubSlug }: HomeTournamentsProps) {
           {currentTournaments.map((tournament) => {
             const isOpen = registrationIsOpen(tournament, now);
             const opensLater = Date.parse(tournament.registrationOpensAt) > now;
-            const target = `${ROUTES.tournaments}/${tournament.id}${
+            const target = `${ROUTES.tournaments}/${tournament.id}${clubQuery}${
               isOpen ? "#inscription" : ""
             }`;
 
@@ -163,7 +165,7 @@ export function HomeTournaments({ clubSlug }: HomeTournamentsProps) {
           })}
         </div>
 
-        <Link className="home-tournaments__all-link" to={ROUTES.tournaments}>
+        <Link className="home-tournaments__all-link" to={`${ROUTES.tournaments}${clubQuery}`}>
           Voir tous les tournois →
         </Link>
       </div>
