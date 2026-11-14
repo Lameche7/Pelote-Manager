@@ -11,9 +11,9 @@ const [authService, loginPage, memberService] = await Promise.all([
 ]);
 
 test("les inscriptions peuvent exiger la confirmation email Supabase", () => {
-  assert.match(authService, /emailRedirectTo: currentApplicationOrigin\(\)/);
+  assert.match(authService, /emailRedirectTo: publicClubConfirmationRedirect\(/);
   assert.match(authService, /return "confirmation_required"/);
-  assert.match(memberService, /emailRedirectTo: currentApplicationOrigin\(\)/);
+  assert.match(memberService, /emailRedirectTo: publicClubConfirmationRedirect\(/);
   assert.match(memberService, /confirmation_required/);
 });
 
