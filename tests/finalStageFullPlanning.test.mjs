@@ -5,6 +5,7 @@ import { buildFinalStagePlanningNodes } from "../.test-dist/src/features/tournam
 import {
   generateFullFinalStagePlanning,
   validateFullFinalStagePlanning,
+  finalRoundDateWindow,
 } from "../.test-dist/src/features/tournaments/domain/finalStageFullPlanningEngine.js";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
@@ -193,4 +194,61 @@ test("l admin voit le planning complet et tous les créneaux en manuel", async (
   assert.doesNotMatch(component, /compatibleSlots/);
   assert.doesNotMatch(control, /Proposer automatiquement un planning/);
   assert.match(control, /Publier le tour et notifier les joueurs/);
+});
+
+test("Lourdes: barrages et huitièmes restent en novembre, jamais le 11 décembre", () => {
+  const finalStart = "2026-11-16";
+  const finalEnd = "2026-12-12";
+  const rounds = [
+    { ...planningNodes[0], id: "p", round: "preliminary", roundNumber: 0 },
+    { ...planningNodes[1], id: "r16", round: "round_of_16", roundNumber: 1 },
+    { ...planningNodes[1], id: "qf", round: "quarterfinal", roundNumber: 2 },
+    { ...planningNodes[1], id: "sf", round: "semifinal", roundNumber: 3 },
+    { ...planningNodes[1], id: "f", round: "final", roundNumber: 4 },
+  ];
+  assert.deepEqual(
+    rounds.map((node) =>
+      finalRoundDateWindow({
+        node,
+        nodes: rounds,
+        finalsStartsOn: finalStart,
+        finalsEndsOn: finalEnd,
+      }),
+    ),
+    [
+      { earliest: "2026-11-16", latest: "2026-11-20" },
+      { earliest: "2026-11-21", latest: "2026-11-27" },
+      { earliest: "2026-11-28", latest: "2026-12-04" },
+      { earliest: "2026-12-05", latest: "2026-12-10" },
+      { earliest: "2026-12-12", latest: "2026-12-12" },
+    ],
+  );
+
+  const offeredSlots = [
+    slot("good", "2026-11-23", "18:00"),
+    slot("too-late", "2026-12-11", "18:00"),
+  ];
+  const target = rounds[1];
+  const result = generateFullFinalStagePlanning({
+    nodes: [target],
+    slots: offeredSlots,
+    availability: [
+      { teamId: "C", slots: offeredSlots },
+      { teamId: "D", slots: offeredSlots },
+    ],
+    finalsStartsOn: finalStart,
+    finalsEndsOn: finalEnd,
+    iterations: 1,
+    random: () => 0,
+  });
+  assert.equal(result.assignments[0]?.slotId, "good");
+  const invalid = validateFullFinalStagePlanning({
+    nodes: [target],
+    slots: offeredSlots,
+    availability: [],
+    assignments: [{ nodeId: target.id, slotId: "too-late" }],
+    finalsStartsOn: finalStart,
+    finalsEndsOn: finalEnd,
+  });
+  assert.equal(invalid.valid, false);
 });

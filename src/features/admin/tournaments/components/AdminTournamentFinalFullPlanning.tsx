@@ -256,7 +256,11 @@ export function AdminTournamentFinalFullPlanning({
   const autoPlan = () =>
     run(async () => {
       if (!workspace) return "";
-      const existing = assignmentsFromWorkspace(workspace);
+      // Recalculate automatically generated placements, not just empty nodes.
+      // Keep manual, published and validated assignments untouched.
+      const existing = assignmentsFromWorkspace(workspace).filter(
+        (assignment) => rowById.get(assignment.nodeId)?.source !== "generated",
+      );
       const fixedNodeIds = workspace.nodes
         .filter(
           (row) =>
@@ -273,6 +277,8 @@ export function AdminTournamentFinalFullPlanning({
         fixedNodeIds,
         minimumRestMinutes: workspace.tournament.minimumRestMinutes,
         iterations: 600,
+        finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
+        finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
       });
       const proposedByNode = assignmentMap(proposal.assignments);
       const updates: TournamentFinalFullPlanningUpdate[] = workspace.nodes
@@ -309,7 +315,7 @@ export function AdminTournamentFinalFullPlanning({
     setEditingRound(roundNumber);
     setError("");
     setMessage(
-      "Tous les créneaux Finals sont proposés. ⚠ signale un créneau hors disponibilités déclarées, mais l’admin peut le forcer.",
+      "Tous les créneaux Finals sont proposés. L’admin peut forcer les disponibilités, mais doit respecter les périodes des tours et les temps de repos.",
     );
   };
 
@@ -326,6 +332,8 @@ export function AdminTournamentFinalFullPlanning({
       assignments: next,
       minimumRestMinutes: workspace.tournament.minimumRestMinutes,
       respectAvailability: false,
+      finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
+      finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
     });
     if (!validation.valid) {
       setError(
@@ -398,7 +406,9 @@ export function AdminTournamentFinalFullPlanning({
       <p className="final-stage-full-planning__hint">
         Toutes les séries et toutes les étapes partagent les mêmes créneaux
         Finals. L’automatique place ce qu’il peut avec les disponibilités
-        déclarées ; le reste est conservé « À programmer ».
+        déclarées et les dates limites de chaque tour ; le reste est conservé «
+        À programmer ». Un nouveau calcul replace les créneaux automatiques,
+        sans modifier les créneaux fixés manuellement ni les matchs publiés.
       </p>
 
       {error && (
