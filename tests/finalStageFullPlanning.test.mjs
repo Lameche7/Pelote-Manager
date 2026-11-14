@@ -218,7 +218,7 @@ test("Lourdes: barrages et huitièmes restent en novembre, jamais le 11 décembr
       { earliest: "2026-11-21", latest: "2026-11-27" },
       { earliest: "2026-11-28", latest: "2026-12-04" },
       { earliest: "2026-12-05", latest: "2026-12-10" },
-      { earliest: "2026-12-11", latest: "2026-12-12" },
+      { earliest: "2026-12-12", latest: "2026-12-12" },
     ],
   );
 
