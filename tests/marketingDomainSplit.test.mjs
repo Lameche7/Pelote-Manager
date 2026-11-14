@@ -52,8 +52,14 @@ test("les confirmations de compte reviennent toujours sur le domaine application
   assert.match(domains, /function currentApplicationOrigin\(\)/);
   assert.ok(domains.includes("return `https://${APP_HOST}`;"));
   assert.match(domains, /function publicClubConfirmationRedirect\(/);
-  assert.match(authService, /emailRedirectTo: publicClubConfirmationRedirect\(/);
-  assert.match(memberService, /emailRedirectTo: publicClubConfirmationRedirect\(/);
+  assert.match(
+    authService,
+    /emailRedirectTo: publicClubConfirmationRedirect\(/,
+  );
+  assert.match(
+    memberService,
+    /emailRedirectTo: publicClubConfirmationRedirect\(/,
+  );
 });
 
 test("la vitrine n'enregistre pas la PWA de l'application", () => {
