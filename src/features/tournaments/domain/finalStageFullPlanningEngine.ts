@@ -410,8 +410,12 @@ export const generateFullFinalStagePlanning = ({
     // Bipartite augmenting-path matching rather than first-fit: if a new match
     // needs an occupied slot, move the occupant to another compatible slot.
     // Fixed, manually assigned, validated and published nodes are never moved.
-    const byNode = new Map(assignments.map((item) => [item.nodeId, item.slotId]));
-    const bySlot = new Map(assignments.map((item) => [item.slotId, item.nodeId]));
+    const byNode = new Map(
+      assignments.map((item) => [item.nodeId, item.slotId]),
+    );
+    const bySlot = new Map(
+      assignments.map((item) => [item.slotId, item.nodeId]),
+    );
     const editable = nodes
       .filter((node) => !fixed.has(node.id) && !byNode.has(node.id))
       .sort((left, right) => {
@@ -441,18 +445,20 @@ export const generateFullFinalStagePlanning = ({
       node: FinalStagePlanningNode,
       visited: Set<string>,
     ): boolean => {
-      const candidates = [...(commonSlots.get(node.id) ?? [])]
-        .sort((a, b) => {
-          const time = slotRange(a).start - slotRange(b).start;
-          // Alternate early candidates across attempts to avoid local minima.
-          return time === 0 ? random() - 0.5 : time;
-        });
+      const candidates = [...(commonSlots.get(node.id) ?? [])].sort((a, b) => {
+        const time = slotRange(a).start - slotRange(b).start;
+        // Alternate early candidates across attempts to avoid local minima.
+        return time === 0 ? random() - 0.5 : time;
+      });
       for (const slot of candidates) {
         if (visited.has(slot.id) || !canPlace(node, slot)) continue;
         visited.add(slot.id);
         const occupantId = bySlot.get(slot.id);
-        if (occupantId && (fixed.has(occupantId) ||
-          nodeById.get(occupantId)?.roundNumber !== node.roundNumber)) {
+        if (
+          occupantId &&
+          (fixed.has(occupantId) ||
+            nodeById.get(occupantId)?.roundNumber !== node.roundNumber)
+        ) {
           continue;
         }
         if (occupantId) {
