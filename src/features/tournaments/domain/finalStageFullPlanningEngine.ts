@@ -60,7 +60,12 @@ export const finalRoundDateWindow = ({
   ).entries()].sort((left, right) => left[0] - right[0]);
   const index = rounds.findIndex(([number]) => number === node.roundNumber);
   const previous = index > 0 ? rounds[index - 1]?.[1] : null;
-  const firstDay = previous ? start + offset(previous) + 1 : start;
+  const firstDay =
+    node.round === "final"
+      ? end
+      : previous
+        ? start + offset(previous) + 1
+        : start;
   const lastDay = start + offset(node.round);
   const toDate = (ordinal: number) =>
     new Date(ordinal * 86_400_000).toISOString().slice(0, 10);
