@@ -12,7 +12,7 @@ import {
   type MemberHomeBanner,
 } from "@/features/notifications/services/notificationService";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
-import { MARKETING_HOST } from "@/shared/config/domains";
+import { MARKETING_HOST, publicClubQuery } from "@/shared/config/domains";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
@@ -71,6 +71,8 @@ export function HomePage() {
   const movemberVisible = showMovember();
   const publicClubSlug =
     new URLSearchParams(location.search).get("club")?.trim() || null;
+  // Public navigation hint only: never grants business-club access.
+  const publicLink = (path: string) => `${path}${publicClubQuery(publicClubSlug)}`;
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
@@ -215,10 +217,10 @@ export function HomePage() {
             {!publicClubSlug && CLUB_CONFIG.tagline}
           </p>
           <div className="premium-home__actions">
-            <Link className="button button--primary" to={ROUTES.reservations}>
+            <Link className="button button--primary" to={publicLink(ROUTES.reservations)}>
               ▦ Réserver un créneau
             </Link>
-            <Link className="button button--secondary" to={ROUTES.login}>
+            <Link className="button button--secondary" to={publicLink(ROUTES.login)}>
               ♙ Accéder à mon compte
             </Link>
             <a
@@ -249,7 +251,7 @@ export function HomePage() {
                   <h2>{banner.title}</h2>
                   <span>{banner.body}</span>
                 </div>
-                <Link to={ROUTES.myNotifications}>
+                <Link to={publicLink(ROUTES.myNotifications)}>
                   Voir mes notifications →
                 </Link>
               </article>
@@ -358,7 +360,7 @@ export function HomePage() {
             {venueLabel && <p className="section-kicker">{venueLabel}</p>}
             <h2>Le club, notre passion.</h2>
             {!publicClubSlug && <p>{CLUB_CONFIG.description}</p>}
-            <Link className="text-link" to={ROUTES.reservations}>
+            <Link className="text-link" to={publicLink(ROUTES.reservations)}>
               Voir les créneaux disponibles →
             </Link>
           </div>
