@@ -240,11 +240,13 @@ export function MainLayout() {
         <div className="app-footer__brand">
           {clubSlug ? (
             branding.logoUrl ? (
-              <img
-                className="club-logo club-logo--compact"
-                src={branding.logoUrl}
-                alt={`Logo de ${branding.name}`}
-              />
+              <span className="club-logo club-logo--compact">
+                <img
+                  src={branding.logoUrl}
+                  alt={`Logo de ${branding.name}`}
+                  style={{ display: "block", width: "100%", height: "auto" }}
+                />
+              </span>
             ) : null
           ) : (
             <ClubLogo compact />
