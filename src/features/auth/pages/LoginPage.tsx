@@ -59,7 +59,7 @@ export function LoginPage() {
     setError(null);
     setResendStatus(null);
     try {
-      await resendSignupConfirmation(email);
+      await resendSignupConfirmation(email, clubQuery);
       setResendStatus(
         "Un nouvel email de confirmation vient de vous être envoyé. Vérifiez aussi vos courriers indésirables.",
       );
