@@ -412,3 +412,18 @@ test("un tour futur inconnu réserve sans exiger la disponibilité de tous les v
     ["future"],
   );
 });
+
+test("les finales ont des horaires explicitement ajoutés par un administrateur", async () => {
+  const [migration, service, component] = await Promise.all([
+    read("../supabase/migrations/20261114200000_final_event_slots.sql"),
+    read("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts"),
+    read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
+  ]);
+  assert.match(migration, /tournament_final_event_slots/);
+  assert.match(migration, /admin_add_tournament_final_event_slot/);
+  assert.match(migration, /tournament_generated_slots/);
+  assert.match(migration, /has_club_permission/);
+  assert.match(service, /async addFinalDaySlot/);
+  assert.match(component, /Ajouter un créneau des finales/);
+  assert.match(component, /Créneau provisoire/);
+});
