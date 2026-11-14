@@ -407,5 +407,8 @@ test("un tour futur inconnu réserve sans exiger la disponibilité de tous les v
     finalsStartsOn: "2026-11-16",
     finalsEndsOn: "2026-12-12",
   });
-  assert.deepEqual(available.candidates.map((candidate) => candidate.id), ["future"]);
+  assert.deepEqual(
+    available.candidates.map((candidate) => candidate.id),
+    ["future"],
+  );
 });
