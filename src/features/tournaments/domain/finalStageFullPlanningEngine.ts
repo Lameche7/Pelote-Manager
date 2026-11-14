@@ -151,9 +151,15 @@ export const finalRoundAvailableSlots = ({
   finalsStartsOn?: string;
   finalsEndsOn?: string;
 }) => {
-  const common = slots.filter((slot) =>
-    isFinalStageSlotCommonForNode({ node, slot, availability }),
-  );
+  // A future bracket position is a provisional reservation, not a matchup:
+  // do not require every possible winner to share the same availability.
+  // Once both opponents are known, ordinary availability rules apply.
+  const common =
+    !node.actualMatchId && node.round !== "preliminary"
+      ? slots
+      : slots.filter((slot) =>
+          isFinalStageSlotCommonForNode({ node, slot, availability }),
+        );
   if (!finalsStartsOn || !finalsEndsOn) {
     return { normal: common, candidates: common, exception: false };
   }
@@ -401,11 +407,13 @@ export const generateFullFinalStagePlanning = ({
       (assignment) =>
         nodeById.has(assignment.nodeId) && slotById.has(assignment.slotId),
     );
-    const assignedNodes = new Set(assignments.map((item) => item.nodeId));
-    const usedSlots = new Set(assignments.map((item) => item.slotId));
-
+    // Bipartite augmenting-path matching rather than first-fit: if a new match
+    // needs an occupied slot, move the occupant to another compatible slot.
+    // Fixed, manually assigned, validated and published nodes are never moved.
+    const byNode = new Map(assignments.map((item) => [item.nodeId, item.slotId]));
+    const bySlot = new Map(assignments.map((item) => [item.slotId, item.nodeId]));
     const editable = nodes
-      .filter((node) => !fixed.has(node.id) && !assignedNodes.has(node.id))
+      .filter((node) => !fixed.has(node.id) && !byNode.has(node.id))
       .sort((left, right) => {
         if (left.roundNumber !== right.roundNumber) {
           return left.roundNumber - right.roundNumber;
@@ -416,31 +424,64 @@ export const generateFullFinalStagePlanning = ({
         return difference !== 0 ? difference : random() - 0.5;
       });
 
-    for (const node of editable) {
-      const candidates = (commonSlots.get(node.id) ?? [])
-        .filter((slot) => !usedSlots.has(slot.id))
-        .filter((slot) =>
-          stageOrderIsValid({
-            node,
-            slot,
-            assignments,
-            nodeById,
-            slotById,
-            minimumRestMinutes,
-          }),
-        )
-        .sort((left, right) => {
-          const leftRange = slotRange(left);
-          const rightRange = slotRange(right);
-          return leftRange.start - rightRange.start || random() - 0.5;
-        });
+    const canPlace = (node: FinalStagePlanningNode, slot: PlanningSlot) =>
+      stageOrderIsValid({
+        node,
+        slot,
+        assignments: [...byNode.entries()].map(([nodeId, slotId]) => ({
+          nodeId,
+          slotId,
+        })),
+        nodeById,
+        slotById,
+        minimumRestMinutes,
+      });
 
-      const selected = candidates[0];
-      if (!selected) continue;
-      assignments.push({ nodeId: node.id, slotId: selected.id });
-      assignedNodes.add(node.id);
-      usedSlots.add(selected.id);
+    const moveToSlot = (
+      node: FinalStagePlanningNode,
+      visited: Set<string>,
+    ): boolean => {
+      const candidates = [...(commonSlots.get(node.id) ?? [])]
+        .sort((a, b) => {
+          const time = slotRange(a).start - slotRange(b).start;
+          // Alternate early candidates across attempts to avoid local minima.
+          return time === 0 ? random() - 0.5 : time;
+        });
+      for (const slot of candidates) {
+        if (visited.has(slot.id) || !canPlace(node, slot)) continue;
+        visited.add(slot.id);
+        const occupantId = bySlot.get(slot.id);
+        if (occupantId && (fixed.has(occupantId) ||
+          nodeById.get(occupantId)?.roundNumber !== node.roundNumber)) {
+          continue;
+        }
+        if (occupantId) {
+          const occupant = nodeById.get(occupantId);
+          if (!occupant) continue;
+          bySlot.delete(slot.id);
+          byNode.delete(occupantId);
+          if (!moveToSlot(occupant, visited)) {
+            byNode.set(occupantId, slot.id);
+            bySlot.set(slot.id, occupantId);
+            continue;
+          }
+        }
+        byNode.set(node.id, slot.id);
+        bySlot.set(slot.id, node.id);
+        return true;
+      }
+      return false;
+    };
+
+    for (const node of editable) {
+      moveToSlot(node, new Set<string>());
     }
+    assignments.splice(
+      0,
+      assignments.length,
+      ...[...byNode.entries()].map(([nodeId, slotId]) => ({ nodeId, slotId })),
+    );
+    const assignedNodes = new Set(byNode.keys());
 
     const unscheduledNodeIds = nodes
       .filter((node) => !assignedNodes.has(node.id))
