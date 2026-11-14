@@ -342,3 +342,70 @@ test("exception contrôlée : Brault et Quessette peuvent viser le 24 novembre s
     ["normal"],
   );
 });
+
+test("le moteur réaffecte les créneaux d'un tour sans doublon", () => {
+  const early = slot("early", "2026-11-18", "17:00");
+  const late = slot("late", "2026-11-19", "17:00");
+  const template = planningNodes[0];
+  const matches = [
+    {
+      ...template,
+      id: "match-a",
+      displayOrder: 0,
+      teamAId: "A",
+      teamBId: "B",
+      possibleTeamIds: ["A", "B"],
+    },
+    {
+      ...template,
+      id: "match-b",
+      displayOrder: 1,
+      teamAId: "C",
+      teamBId: "D",
+      possibleTeamIds: ["C", "D"],
+    },
+  ];
+  const proposed = generateFullFinalStagePlanning({
+    nodes: matches,
+    slots: [early, late],
+    availability: [
+      { teamId: "A", slots: [early, late] },
+      { teamId: "B", slots: [early, late] },
+      { teamId: "C", slots: [early] },
+      { teamId: "D", slots: [early] },
+    ],
+    finalsStartsOn: "2026-11-16",
+    finalsEndsOn: "2026-12-12",
+    random: () => 0,
+    iterations: 1,
+  });
+  assert.equal(proposed.assignments.length, 2);
+  assert.equal(
+    new Set(proposed.assignments.map((assignment) => assignment.slotId)).size,
+    2,
+  );
+  assert.equal(
+    proposed.assignments.find((assignment) => assignment.nodeId === "match-b")
+      ?.slotId,
+    "early",
+  );
+});
+
+test("un tour futur inconnu réserve sans exiger la disponibilité de tous les vainqueurs possibles", () => {
+  const future = {
+    ...planningNodes[1],
+    round: "semifinal",
+    actualMatchId: null,
+    possibleTeamIds: ["A", "B", "C", "D"],
+  };
+  const nextSlot = slot("future", "2026-12-07", "19:00");
+  const available = finalRoundAvailableSlots({
+    node: future,
+    nodes: [future],
+    slots: [nextSlot],
+    availability: [],
+    finalsStartsOn: "2026-11-16",
+    finalsEndsOn: "2026-12-12",
+  });
+  assert.deepEqual(available.candidates.map((candidate) => candidate.id), ["future"]);
+});
