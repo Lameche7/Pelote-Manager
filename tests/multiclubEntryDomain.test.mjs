@@ -36,7 +36,10 @@ test("le domaine public doit figurer dans le catalogue vérifié", () => {
     resolveEntryClubSlug("MORLAAS.PELOTEMANAGER.FR.", verified),
     "pelotari-club-morlaas",
   );
-  assert.equal(resolveEntryClubSlug("inconnu.pelotemanager.fr", verified), null);
+  assert.equal(
+    resolveEntryClubSlug("inconnu.pelotemanager.fr", verified),
+    null,
+  );
   assert.equal(
     resolveEntryClubSlug("morlaas.pelotemanager.fr.attacker.test", verified),
     null,
@@ -82,7 +85,9 @@ test("le favori prime sur la licence vérifiée puis sur le lien d'entrée", () 
   assert.equal(resolvePlayerHomeClub(null, null, null), null);
 });
 
-test("les liens publics n'accordent aucun droit et rejettent les slugs invalides", () => {
+test(
+  "les liens publics n'accordent aucun droit et rejettent les slugs invalides",
+  () => {
   assert.equal(
     publicClubQuery("pelotari-club-morlaas"),
     "?club=pelotari-club-morlaas",
@@ -100,4 +105,5 @@ test("les liens publics n'accordent aucun droit et rejettent les slugs invalides
     publicClubConfirmationRedirect("https://pilotoki.example", "../admin"),
     "https://pilotoki.example/",
   );
-});
+  },
+);
