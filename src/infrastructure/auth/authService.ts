@@ -2,7 +2,10 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/infrastructure/supabase/client";
 import type { AuthUser } from "@/shared/types/auth";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/errorMessages";
-import { currentApplicationOrigin, publicClubConfirmationRedirect } from "@/shared/config/domains";
+import {
+  currentApplicationOrigin,
+  publicClubConfirmationRedirect,
+} from "@/shared/config/domains";
 
 type AuthStateListener = (user: AuthUser | null) => void;
 
@@ -214,7 +217,10 @@ export async function registerAccount(input: {
     email,
     password: input.password,
     options: {
-      emailRedirectTo: publicClubConfirmationRedirect(currentApplicationOrigin(), input.entryClubSlug),
+      emailRedirectTo: publicClubConfirmationRedirect(
+        currentApplicationOrigin(),
+        input.entryClubSlug,
+      ),
       data: {
         first_name: firstName,
         last_name: lastName,
