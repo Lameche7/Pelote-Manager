@@ -18,7 +18,10 @@ export type UnprogrammedTournamentMatch = {
   previousStart: string;
   previousEnd: string;
   reason: string;
-  result: { status: "validated" | "pending_validation"; score: TournamentScorePayload } | null;
+  result: {
+    status: "validated" | "pending_validation";
+    score: TournamentScorePayload;
+  } | null;
   resources: { id: string; name: string }[];
 };
 
@@ -70,15 +73,21 @@ export const adminTournamentUnprogrammedService = {
       previousStart: formatTime(row.previous_start),
       previousEnd: formatTime(row.previous_end),
       reason: String(row.reason ?? ""),
-      result: row.result_status ? {
-        status: String(row.result_status) as "validated" | "pending_validation",
-        score: {
-          sets: objects((row.result_score as Row | null)?.sets).map((set) => ({
-            teamA: Number(set.team_a ?? 0),
-            teamB: Number(set.team_b ?? 0),
-          })),
-        },
-      } : null,
+      result: row.result_status
+        ? {
+            status: String(row.result_status) as
+              | "validated"
+              | "pending_validation",
+            score: {
+              sets: objects((row.result_score as Row | null)?.sets).map(
+                (set) => ({
+                  teamA: Number(set.team_a ?? 0),
+                  teamB: Number(set.team_b ?? 0),
+                }),
+              ),
+            },
+          }
+        : null,
       resources: objects(row.resources).map((resource) => ({
         id: String(resource.id ?? ""),
         name: String(resource.name ?? ""),
