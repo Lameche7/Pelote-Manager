@@ -76,7 +76,11 @@ export function HomePage() {
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
   const [banners, setBanners] = useState<MemberHomeBanner[]>([]);
-  const [branding, setBranding] = useState(clubBrandingService.fallback);
+  const [branding, setBranding] = useState(
+    publicClubSlug
+      ? clubBrandingService.unavailableFallback
+      : clubBrandingService.fallback,
+  );
   const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
     .filter(Boolean)
     .join(" · ");
@@ -91,13 +95,26 @@ export function HomePage() {
   useEffect(() => {
     let active = true;
     const loadBranding = () => {
+      setBranding(
+        publicClubSlug
+          ? clubBrandingService.unavailableFallback
+          : clubBrandingService.fallback,
+      );
       const brandingRequest =
         clubBrandingService.getPublicBranding(publicClubSlug);
       brandingRequest
         .then((value) => {
           if (active) setBranding(value);
         })
-        .catch(() => undefined);
+        .catch(() => {
+          if (active) {
+            setBranding(
+              publicClubSlug
+                ? clubBrandingService.unavailableFallback
+                : clubBrandingService.fallback,
+            );
+          }
+        });
     };
     loadBranding();
     window.addEventListener("club-branding-updated", loadBranding);
@@ -187,12 +204,12 @@ export function HomePage() {
             alt="PILOTOKI"
           />
           <p className="premium-home__signature">
-            {CLUB_CONFIG.foundedYear && (
+            {!publicClubSlug && CLUB_CONFIG.foundedYear && (
               <>
                 Depuis <strong>{CLUB_CONFIG.foundedYear}</strong> –{" "}
               </>
             )}
-            {CLUB_CONFIG.tagline}
+            {!publicClubSlug && CLUB_CONFIG.tagline}
           </p>
           <div className="premium-home__actions">
             <Link className="button button--primary" to={ROUTES.reservations}>
