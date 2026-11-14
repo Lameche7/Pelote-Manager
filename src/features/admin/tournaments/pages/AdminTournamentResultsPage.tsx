@@ -143,7 +143,9 @@ export function AdminTournamentResultsPage() {
   const [poolFilter, setPoolFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
-  const [editingUnprogrammedId, setEditingUnprogrammedId] = useState<string | null>(null);
+  const [editingUnprogrammedId, setEditingUnprogrammedId] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -204,7 +206,9 @@ export function AdminTournamentResultsPage() {
   const validatedCount =
     (selected?.matches.filter((match) => match.result?.status === "validated")
       .length ?? 0) +
-    unprogrammedForTournament.filter((match) => match.result?.status === "validated").length;
+    unprogrammedForTournament.filter(
+      (match) => match.result?.status === "validated",
+    ).length;
 
   const missingFinishedCount =
     selected?.matches.filter(
@@ -216,7 +220,8 @@ export function AdminTournamentResultsPage() {
   const remainingScheduledCount =
     selected?.matches.filter((match) => !match.result).length ?? 0;
   const remainingCount =
-    remainingScheduledCount + unprogrammedForTournament.filter((match) => !match.result).length;
+    remainingScheduledCount +
+    unprogrammedForTournament.filter((match) => !match.result).length;
   const totalCount =
     (selected?.matches.length ?? 0) + unprogrammedForTournament.length;
   const completedPercent =
@@ -303,9 +308,10 @@ export function AdminTournamentResultsPage() {
     );
   }, [dateFilter, poolFilter, search, selected, seriesFilter, view]);
 
-  const editingUnprogrammed = unprogrammedForTournament.find(
-    (match) => match.matchId === editingUnprogrammedId,
-  ) ?? null;
+  const editingUnprogrammed =
+    unprogrammedForTournament.find(
+      (match) => match.matchId === editingUnprogrammedId,
+    ) ?? null;
 
   const editingMatch = useMemo(
     () =>
@@ -504,9 +510,17 @@ export function AdminTournamentResultsPage() {
                         </td>
                         <td>
                           {seriesMatches.filter((match) => !match.result)
-                            .length + seriesUnprogrammed.filter((match) => !match.result).length}
+                            .length +
+                            seriesUnprogrammed.filter((match) => !match.result)
+                              .length
+                          }
                         </td>
-                        <td>{seriesUnprogrammed.filter((match) => !match.result).length}</td>
+                        <td>
+                          {
+                            seriesUnprogrammed.filter((match) => !match.result)
+                              .length
+                          }
+                        </td>
                       </tr>
                     );
                   })}
@@ -531,7 +545,8 @@ export function AdminTournamentResultsPage() {
                 </strong>
                 <p>
                   Ces parties n'ont plus de créneau. Si une rencontre a déjà été
-                  jouée, vous pouvez saisir directement son score sans la programmer.
+                  jouée, vous pouvez saisir directement son score sans la
+                  programmer.
                 </p>
               </div>
               <Link to={ROUTES.adminTournamentReschedules}>
@@ -553,7 +568,9 @@ export function AdminTournamentResultsPage() {
                       <span>
                         {match.seriesName} · Ancien créneau :{" "}
                         {match.previousDate} à {match.previousStart}
-                        {match.result ? " · Résultat validé" : " · Sans résultat"}
+                        {match.result
+                          ? " · Résultat validé"
+                          : " · Sans résultat"}
                       </span>
                       <button
                         type="button"
@@ -853,7 +870,7 @@ export function AdminTournamentResultsPage() {
                     : `${editingUnprogrammed?.seriesName} · Partie sans créneau`}
                 </span>
                 <h2 id="tournament-score-editor-title">
-                  {(editingMatch?.result ?? editingUnprogrammed?.result)
+                  {editingMatch?.result || editingUnprogrammed?.result
                     ? "Modifier le score"
                     : "Saisir le score"}
                 </h2>
@@ -864,7 +881,9 @@ export function AdminTournamentResultsPage() {
                 </p>
                 <small>
                   {editingMatch
-                    ? `${dateFormatter.format(new Date(`${editingMatch.playDate}T12:00:00`))} · ${editingMatch.startsAt}`
+                    ? `${dateFormatter.format(
+                        new Date(`${editingMatch.playDate}T12:00:00`),
+                      )} · ${editingMatch.startsAt}`
                     : "Sans créneau programmé"}
                 </small>
               </div>
@@ -905,7 +924,10 @@ export function AdminTournamentResultsPage() {
                 setEditingUnprogrammedId(null);
               }}
               onSubmit={(score) =>
-                save((editingMatch?.id ?? editingUnprogrammed?.matchId)!, score)
+                save(
+                  (editingMatch?.id ?? editingUnprogrammed?.matchId)!,
+                  score,
+                )
               }
             />
           </div>
