@@ -496,7 +496,7 @@ export function AdminTournamentResultsPage() {
                         (match) => match.seriesName === series,
                       ) ?? [];
                     const seriesUnprogrammed = unprogrammedForTournament.filter(
-                      (match) => match.seriesName === series,
+                      (match) => match.seriesName === series && !match.result,
                     );
                     return (
                       <tr key={series}>
@@ -511,8 +511,7 @@ export function AdminTournamentResultsPage() {
                         <td>
                           {seriesMatches.filter((match) => !match.result)
                             .length +
-                            seriesUnprogrammed.filter((match) => !match.result)
-                              .length
+                            seriesUnprogrammed.length
                           }
                         </td>
                         <td>
