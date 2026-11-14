@@ -168,7 +168,7 @@ export function AdminTournamentFinalWeeklyOverview({
         </label>
         <label>
           Afficher
-          <select value={show} onChange={(event) => setShow(event.target.value)}>
+          <select value={show} onChange={(event) => setShow(event.target.value === "matches" || event.target.value === "free" ? event.target.value : "all")}>
             <option value="all">Tout le planning</option>
             <option value="matches">Parties uniquement</option>
             <option value="free">Créneaux libres uniquement</option>
