@@ -9,7 +9,10 @@ import {
   VerificationAttemptLimiter,
 } from "@/features/members/domain/memberRegistration";
 import { mapSupabaseUser } from "@/infrastructure/auth/authService";
-import { currentApplicationOrigin, publicClubConfirmationRedirect } from "@/shared/config/domains";
+import {
+  currentApplicationOrigin,
+  publicClubConfirmationRedirect,
+} from "@/shared/config/domains";
 export { MemberRegistrationError } from "@/features/members/domain/memberRegistration";
 
 export type MemberIdentity = {
@@ -214,7 +217,10 @@ export const memberService = {
       email: input.email,
       password: input.password,
       options: {
-        emailRedirectTo: publicClubConfirmationRedirect(currentApplicationOrigin(), input.entryClubSlug),
+        emailRedirectTo: publicClubConfirmationRedirect(
+          currentApplicationOrigin(),
+          input.entryClubSlug,
+        ),
         data: {
           [REGISTRATION_PENDING_KEY]: true,
           [PENDING_IDENTITY_KEY]: input.identity,
