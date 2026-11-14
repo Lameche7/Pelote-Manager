@@ -25,7 +25,7 @@ export function LoginPage() {
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) return <Navigate to={ROUTES.home} replace />;
+  // Conserver uniquement le contexte visuel du club lors de la connexion.\n  // Ce paramètre ne constitue jamais une autorisation métier.\n  const requestedClubSlug = new URLSearchParams(location.search).get("club");\n  const clubQuery =\n    requestedClubSlug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(requestedClubSlug)\n      ? `?club=${encodeURIComponent(requestedClubSlug)}`\n      : "";\n  const clubHome = `${ROUTES.home}${clubQuery}`;\n\n  if (isAuthenticated) return <Navigate to={clubHome} replace />;
 
   const confirmationRequired =
     location.state?.accountCreated === "confirmation_required" ||
@@ -42,7 +42,7 @@ export function LoginPage() {
       const participationFinalized =
         await finalizePendingExternalParticipation();
       if (memberFinalized || participationFinalized) await refreshProfile();
-      navigate(ROUTES.home, { replace: true });
+      navigate(clubHome, { replace: true });
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -147,7 +147,7 @@ export function LoginPage() {
         </div>
       )}
       <p>
-        Pas encore de compte ? <Link to={ROUTES.register}>Créer un compte</Link>
+        Pas encore de compte ? <Link to={`${ROUTES.register}${clubQuery}`}>Créer un compte</Link>
       </p>
     </section>
   );
