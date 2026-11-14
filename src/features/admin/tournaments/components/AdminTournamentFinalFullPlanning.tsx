@@ -591,7 +591,7 @@ export function AdminTournamentFinalFullPlanning({
                                       l’enchaînement des tours.
                                     </small>
                                   )}
-                                 
+
                               </div>
 
                               {isEditing && !locked ? (
