@@ -76,8 +76,7 @@ export const adminTournamentUnprogrammedService = {
       result: row.result_status
         ? {
             status: String(row.result_status) as
-              | "validated"
-              | "pending_validation",
+              "validated" | "pending_validation",
             score: {
               sets: objects((row.result_score as Row | null)?.sets).map(
                 (set) => ({
