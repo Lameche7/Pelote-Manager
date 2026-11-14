@@ -119,7 +119,7 @@ AS $function$
   where special.tournament_id = target_tournament_id
 
   order by play_date, starts_at, ends_at, phase;
-$function$
+$function$;
 
 
 create or replace function public.admin_add_tournament_final_event_slot(
