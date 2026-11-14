@@ -586,7 +586,14 @@ export const tournamentFinalStageAdminService = {
     );
     return {
       ...workspace,
-      slots: workspace.slots.filter((slot) => !occupied.has(slot.id)),
+      slots: workspace.slots.filter(
+        (slot) =>
+          (!workspace.tournament.finalsStartsOn ||
+            slot.date >= workspace.tournament.finalsStartsOn) &&
+          (!workspace.tournament.finalsEndsOn ||
+            slot.date <= workspace.tournament.finalsEndsOn) &&
+          !occupied.has(slot.id),
+      ),
     };
   },
 
