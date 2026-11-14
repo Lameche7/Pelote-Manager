@@ -134,6 +134,7 @@ export function RegisterPage() {
         identity,
         email,
         password,
+        entryClubSlug: requestedClubSlug,
       });
       navigate(`${ROUTES.login}${clubQuery}`, {
         replace: true,
@@ -201,6 +202,7 @@ export function RegisterPage() {
         email,
         password,
         externalIdentityId: selectedCandidate?.externalIdentityId ?? null,
+        entryClubSlug: requestedClubSlug,
       });
       navigate(`${ROUTES.login}${clubQuery}`, {
         replace: true,
