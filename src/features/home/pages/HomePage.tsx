@@ -178,11 +178,13 @@ export function HomePage() {
         <div className="premium-home__veil" aria-hidden="true" />
         <div className="premium-home__content">
           <div className="premium-home__identity">
-            <img
-              className="premium-home__logo"
-              src={branding.logoUrl}
-              alt={branding.name}
-            />
+            {branding.logoUrl && (
+              <img
+                className="premium-home__logo"
+                src={branding.logoUrl}
+                alt={branding.name}
+              />
+            )}
             {movemberVisible && (
               <img
                 className="premium-home__movember-moustache"
@@ -345,11 +347,13 @@ export function HomePage() {
 
       <section className="premium-home__club">
         <div className="premium-home__club-card">
-          <img
-            className="premium-home__club-logo"
-            src={branding.logoUrl}
-            alt={branding.name}
-          />
+          {branding.logoUrl && (
+            <img
+              className="premium-home__club-logo"
+              src={branding.logoUrl}
+              alt={branding.name}
+            />
+          )}
           <div>
             {venueLabel && <p className="section-kicker">{venueLabel}</p>}
             <h2>Le club, notre passion.</h2>
