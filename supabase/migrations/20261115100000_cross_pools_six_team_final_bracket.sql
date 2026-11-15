@@ -1058,5 +1058,4 @@ begin
     ), '[]'::jsonb)
   );
 end;
-$function$
-
+$function$;
