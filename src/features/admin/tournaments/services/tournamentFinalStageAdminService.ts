@@ -205,6 +205,8 @@ export type TournamentFinalFullPlanningWorkspace = {
   weeklySlots: PlanningSlot[];
   /** Slot IDs occupied by reservations or other tournament matches. */
   weeklyOccupiedSlotIds: string[];
+  /** Existing manual assignments that do not belong to generated slots. */
+  exceptionalSlotIds: string[];
   availability: TeamPlanningAvailability[];
   nodes: TournamentFinalFullPlanningNodeRow[];
 };
@@ -394,6 +396,7 @@ const mapFullPlanningWorkspace = (
     })),
     weeklySlots: [],
     weeklyOccupiedSlotIds: [],
+    exceptionalSlotIds: [],
     slots: rows(root.slots).map((slot) => ({
       id: String(slot.id ?? ""),
       resourceId: String(slot.resource_id ?? ""),
@@ -680,6 +683,33 @@ export const tournamentFinalStageAdminService = {
       fail(modesResponse.error, "Impossible de charger le mode de tableau.");
     const workspace = mapFullPlanningWorkspace(workspaceResponse.data);
     const bySeries = crossPoolMap(modesResponse.data);
+    const generatedSlotIds = new Set(workspace.slots.map((slot) => slot.id));
+    const resourceNames = new Map(
+      workspace.resources.map((resource) => [resource.id, resource.name]),
+    );
+    const exceptionalSlots: PlanningSlot[] = workspace.nodes.flatMap((node) => {
+      if (!node.resourceId || !node.playDate || !node.startsAt || !node.endsAt) {
+        return [];
+      }
+      const id = `${node.resourceId}|${node.playDate}|${node.startsAt.slice(0, 5)}|${node.endsAt.slice(0, 5)}`;
+      return generatedSlotIds.has(id)
+        ? []
+        : [{
+            id,
+            resourceId: node.resourceId,
+            resourceName: resourceNames.get(node.resourceId) ?? "Terrain",
+            date: node.playDate,
+            startsAt: node.startsAt,
+            endsAt: node.endsAt,
+          }];
+    });
+    const exceptionalSlotIds = [...new Set(exceptionalSlots.map((slot) => slot.id))];
+    const allSlots = [
+      ...workspace.slots,
+      ...exceptionalSlots.filter(
+        (slot, index, entries) => entries.findIndex((item) => item.id === slot.id) === index,
+      ),
+    ];
     const occupied = new Set(
       (Array.isArray(occupiedResponse.data) ? occupiedResponse.data : []).map(
         String,
@@ -687,11 +717,18 @@ export const tournamentFinalStageAdminService = {
     );
     return {
       ...workspace,
+      slots: allSlots.filter(
+        (slot) =>
+          (!workspace.tournament.finalsStartsOn || slot.date >= workspace.tournament.finalsStartsOn) &&
+          (!workspace.tournament.finalsEndsOn || slot.date <= workspace.tournament.finalsEndsOn) &&
+          (!occupied.has(slot.id) || exceptionalSlotIds.includes(slot.id)),
+      ),
+      exceptionalSlotIds,
       series: workspace.series.map((series) => ({
         ...series,
         crossPools: bySeries.get(series.id)?.crossPools ?? false,
       })),
-      weeklySlots: workspace.slots.filter(
+      weeklySlots: allSlots.filter(
         (slot) =>
           (!workspace.tournament.finalsStartsOn ||
             slot.date >= workspace.tournament.finalsStartsOn) &&
@@ -701,15 +738,35 @@ export const tournamentFinalStageAdminService = {
       weeklyOccupiedSlotIds: Array.isArray(externalResponse.data)
         ? externalResponse.data.map(String)
         : [],
-      slots: workspace.slots.filter(
-        (slot) =>
-          (!workspace.tournament.finalsStartsOn ||
-            slot.date >= workspace.tournament.finalsStartsOn) &&
-          (!workspace.tournament.finalsEndsOn ||
-            slot.date <= workspace.tournament.finalsEndsOn) &&
-          !occupied.has(slot.id),
-      ),
     };
+  },
+
+  async setExceptionalManualSlot(
+    tournamentId: string,
+    input: {
+      seriesId: string;
+      roundNumber: number;
+      displayOrder: number;
+      resourceId: string;
+      playDate: string;
+      startsAt: string;
+      endsAt: string;
+    },
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "admin_set_tournament_final_manual_datetime",
+      {
+        target_tournament_id: tournamentId,
+        target_series_id: input.seriesId,
+        target_round_number: input.roundNumber,
+        target_display_order: input.displayOrder,
+        target_resource_id: input.resourceId,
+        target_play_date: input.playDate,
+        target_starts_at: input.startsAt,
+        target_ends_at: input.endsAt,
+      },
+    );
+    if (error) fail(error, "Impossible de programmer ce créneau exceptionnel.");
   },
 
   async saveFullPlanning(
