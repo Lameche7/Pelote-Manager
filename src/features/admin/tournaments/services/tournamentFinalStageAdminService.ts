@@ -683,7 +683,9 @@ export const tournamentFinalStageAdminService = {
       fail(modesResponse.error, "Impossible de charger le mode de tableau.");
     const workspace = mapFullPlanningWorkspace(workspaceResponse.data);
     const bySeries = crossPoolMap(modesResponse.data);
-    const generatedSlotIds = new Set(workspace.slots.map((slot) => slot.id));
+    const normalizedSlotKey = (slot: PlanningSlot) =>
+      `${slot.resourceId}|${slot.date}|${slot.startsAt.slice(0, 5)}|${slot.endsAt.slice(0, 5)}`;
+    const generatedSlotIds = new Set(workspace.slots.map(normalizedSlotKey));
     const resourceNames = new Map(
       workspace.resources.map((resource) => [resource.id, resource.name]),
     );
@@ -692,7 +694,14 @@ export const tournamentFinalStageAdminService = {
         return [];
       }
       const id = `${node.resourceId}|${node.playDate}|${node.startsAt.slice(0, 5)}|${node.endsAt.slice(0, 5)}`;
-      return generatedSlotIds.has(id)
+      return generatedSlotIds.has(normalizedSlotKey({
+        id,
+        resourceId: node.resourceId,
+        resourceName: "",
+        date: node.playDate,
+        startsAt: node.startsAt,
+        endsAt: node.endsAt,
+      }))
         ? []
         : [{
             id,
