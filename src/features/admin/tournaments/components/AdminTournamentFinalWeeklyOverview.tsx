@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import type { TournamentFinalFullPlanningWorkspace } from "../services/tournamentFinalStageAdminService";
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
 import {
@@ -58,7 +58,6 @@ export function AdminTournamentFinalWeeklyOverview({
 }) {
   const [weekIndex, setWeekIndex] = useState(0);
   const [printError, setPrintError] = useState("");
-  const weeklyTableRef = useRef<HTMLTableElement>(null);
   const [seriesFilter, setSeriesFilter] = useState("all");
   const [show, setShow] = useState<"all" | "matches" | "free">("all");
 
@@ -145,10 +144,10 @@ export function AdminTournamentFinalWeeklyOverview({
     }
     return bySlot;
   }, [workspace.nodes]);
-  const weeklySlots = useMemo(() => {
+  const slotsForDays = (targetDays: string[]): WeeklySlot[] => {
     const result: WeeklySlot[] = [];
     for (const slot of workspace.weeklySlots) {
-      if (!days.includes(slot.date)) continue;
+      if (!targetDays.includes(slot.date)) continue;
       const key = slotKey(slot);
       const node = slotAssignments.get(key);
       if (node) {
@@ -194,17 +193,11 @@ export function AdminTournamentFinalWeeklyOverview({
       }
     }
     return result;
-  }, [
-    workspace.weeklySlots,
-    days,
-    slotAssignments,
-    seriesById,
-    blocked,
-    bracketNodes,
-    bracketNodesById,
-  ]);
+  };
+  const weeklySlots = slotsForDays(days);
 
-  const visibleSlots = weeklySlots.filter((entry) => {
+  const filterSlots = (candidates: WeeklySlot[]) =>
+    candidates.filter((entry) => {
     if (show === "matches" && entry.kind !== "match") return false;
     if (show === "free" && entry.kind !== "free") return false;
     if (
@@ -213,8 +206,9 @@ export function AdminTournamentFinalWeeklyOverview({
       entry.seriesId !== seriesFilter
     )
       return false;
-    return true;
-  });
+      return true;
+    });
+  const visibleSlots = filterSlots(weeklySlots);
   const hours = [
     ...new Set(visibleSlots.map(({ slot }) => timeText(slot.startsAt))),
   ].sort();
@@ -227,10 +221,8 @@ export function AdminTournamentFinalWeeklyOverview({
   ).length;
 
   const exportWeekAsPdf = () => {
-    const source = weeklyTableRef.current;
-    if (!source) return;
-    // Native print-to-PDF keeps French characters and long team names readable,
-    // including tables that flow onto more than one page.
+    // All weeks are generated from the same current workspace and filters:
+    // the user does not need to visit each week before exporting.
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
       setPrintError(
@@ -240,16 +232,20 @@ export function AdminTournamentFinalWeeklyOverview({
     }
     setPrintError("");
     const document = printWindow.document;
-    document.title = `Pilotoki - Planning ${toIsoDay(monday)}`;
+    document.title = `Pilotoki - Planning complet - ${workspace.tournament.name}`;
     const style = document.createElement("style");
     style.textContent = `
       @page { size: A3 landscape; margin: 11mm; }
       * { box-sizing: border-box; }
       body { font: 10px Arial, sans-serif; color: #17253a; background: white; }
       h1 { font-size: 19px; margin: 0 0 5px; }
+      h2 { font-size: 14px; margin: 0 0 7px; }
       .subheading { font-size: 11px; margin: 0 0 10px; }
       .summary { font-weight: bold; margin: 0 0 9px; }
+      .printed-week { break-after: page; page-break-after: always; }
+      .printed-week:last-of-type { break-after: auto; page-break-after: auto; }
       table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      thead { display: table-header-group; }
       th, td { border: 1px solid #d4dce7; padding: 4px; vertical-align: top; }
       th { background: #eaf0f6; }
       th:first-child { width: 45px; }
@@ -279,13 +275,91 @@ export function AdminTournamentFinalWeeklyOverview({
     const selectedSeries = workspace.series.find(
       (series) => series.id === seriesFilter,
     );
-    subheading.textContent = `Planning hebdomadaire · ${weekFormatter.format(monday)} au ${weekFormatter.format(addDays(monday, 6))} · ${selectedSeries?.name ?? "Toutes les séries"} · ${show === "matches" ? "Parties uniquement" : show === "free" ? "Créneaux libres uniquement" : "Tous les créneaux"}`;
+    subheading.textContent = `Planning complet des phases finales · ${selectedSeries?.name ?? "Toutes les séries"} · ${show === "matches" ? "Parties uniquement" : show === "free" ? "Créneaux libres uniquement" : "Tous les créneaux"}`;
     document.body.appendChild(subheading);
-    const summary = document.createElement("p");
-    summary.className = "summary";
-    summary.textContent = `${visibleSlots.filter((item) => item.kind === "match").length} parties / positions · ${visibleSlots.filter((item) => item.kind === "free").length} libres · ${visibleSlots.filter((item) => item.kind === "occupied").length} occupés ailleurs`;
-    document.body.appendChild(summary);
-    document.body.appendChild(source.cloneNode(true));
+
+    const append = (parent: HTMLElement, tag: string, value: string) => {
+      const item = document.createElement(tag);
+      item.textContent = value;
+      parent.appendChild(item);
+      return item;
+    };
+    for (let index = 0; index <= maxIndex; index += 1) {
+      const weekMonday = addDays(firstMonday, index * 7);
+      const weekDays = Array.from({ length: 7 }, (_, day) =>
+        toIsoDay(addDays(weekMonday, day)),
+      );
+      const entries = filterSlots(slotsForDays(weekDays));
+      const hoursForWeek = [
+        ...new Set(entries.map(({ slot }) => timeText(slot.startsAt))),
+      ].sort();
+      const section = document.createElement("section");
+      section.className = "printed-week";
+      append(
+        section,
+        "h2",
+        `Semaine du ${weekFormatter.format(weekMonday)} au ${weekFormatter.format(addDays(weekMonday, 6))}`,
+      );
+      const summary = append(
+        section,
+        "p",
+        `${entries.filter((entry) => entry.kind === "match").length} parties / positions · ${entries.filter((entry) => entry.kind === "free").length} libres · ${entries.filter((entry) => entry.kind === "occupied").length} occupés ailleurs`,
+      );
+      summary.className = "summary";
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const header = document.createElement("tr");
+      append(header, "th", "Heure");
+      for (const day of weekDays) {
+        append(header, "th", dayFormatter.format(toUtcDate(day)));
+      }
+      thead.appendChild(header);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      for (const hour of hoursForWeek) {
+        const row = document.createElement("tr");
+        append(row, "th", hour);
+        for (const day of weekDays) {
+          const cell = document.createElement("td");
+          const matching = entries.filter(
+            (entry) =>
+              entry.slot.date === day &&
+              timeText(entry.slot.startsAt) === hour,
+          );
+          if (matching.length === 0) {
+            append(cell, "span", "—").className =
+              "final-weekly-overview__unavailable";
+          }
+          for (const entry of matching) {
+            const event = document.createElement("div");
+            event.className = `final-weekly-overview__event final-weekly-overview__event--${entry.kind}`;
+            if (entry.kind === "match" && entry.color) {
+              event.style.borderLeftColor = entry.color;
+            }
+            append(
+              event,
+              "span",
+              `${timeText(entry.slot.startsAt)}–${timeText(entry.slot.endsAt)}`,
+            ).className = "final-weekly-overview__event-time";
+            append(event, "strong", entry.title);
+            append(
+              event,
+              "small",
+              `${entry.detail}${entry.provisional ? " · Provisoire" : ""}`,
+            );
+            cell.appendChild(event);
+          }
+          row.appendChild(cell);
+        }
+        tbody.appendChild(row);
+      }
+      table.appendChild(tbody);
+      section.appendChild(table);
+      if (hoursForWeek.length === 0) {
+        append(section, "p", "Aucun créneau correspondant aux filtres pour cette semaine.");
+      }
+      document.body.appendChild(section);
+    }
     const footer = document.createElement("footer");
     footer.textContent =
       "Planning prévisionnel. Les rencontres provisoires restent à confirmer. Les créneaux non configurés ne sont pas considérés comme libres.";
@@ -309,10 +383,10 @@ export function AdminTournamentFinalWeeklyOverview({
           <button
             type="button"
             onClick={exportWeekAsPdf}
-            aria-label="Exporter le planning de cette semaine en PDF"
+            aria-label="Exporter toutes les semaines en PDF"
             title="Ouvre l'impression : choisir Enregistrer au format PDF"
           >
-            Exporter la semaine en PDF
+            Exporter tout le planning en PDF
           </button>
           <button
             type="button"
@@ -390,7 +464,7 @@ export function AdminTournamentFinalWeeklyOverview({
         </p>
       )}
       <div className="final-weekly-overview__scroll">
-        <table ref={weeklyTableRef} className="final-weekly-overview__table">
+        <table className="final-weekly-overview__table">
           <thead>
             <tr>
               <th scope="col">Heure</th>
