@@ -19,6 +19,7 @@ import {
   validateFullFinalStagePlanning,
 } from "@/features/tournaments/domain/finalStageFullPlanningEngine";
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
+import { describeFinalStageOpponents } from "@/features/tournaments/domain/finalStageOpponentDescription";
 import { AdminTournamentFinalWeeklyOverview } from "./AdminTournamentFinalWeeklyOverview";
 
 const roundLabels: Record<string, string> = {
@@ -110,19 +111,6 @@ const assignmentMap = (assignments: FinalStagePlanningAssignment[]) =>
   new Map(
     assignments.map((assignment) => [assignment.nodeId, assignment.slotId]),
   );
-
-const nodeTitle = (
-  node: FinalStagePlanningNode,
-  row: TournamentFinalFullPlanningNodeRow | undefined,
-) => {
-  if (row?.teamALabel && row.teamBLabel) {
-    return `${row.teamALabel} — ${row.teamBLabel}`;
-  }
-  if (node.roundNumber === 0 && node.possibleTeamLabels.length === 2) {
-    return `${node.possibleTeamLabels[0]} — ${node.possibleTeamLabels[1]}`;
-  }
-  return "Participants à déterminer";
-};
 
 export function AdminTournamentFinalFullPlanning({
   tournamentId,
@@ -650,7 +638,14 @@ export function AdminTournamentFinalFullPlanning({
                               className="final-stage-full-planning__match"
                             >
                               <div>
-                                <strong>{nodeTitle(node, row)}</strong>
+                                <strong>{describeFinalStageOpponents({
+                                    node,
+                                    nodes,
+                                    seeds:
+                                      workspace.series.find(
+                                        (series) => series.id === node.seriesId,
+                                      )?.seeds ?? [],
+                                  })}</strong>
                                 <span>
                                   {row?.resultStatus === "validated"
                                     ? "Résultat validé"
