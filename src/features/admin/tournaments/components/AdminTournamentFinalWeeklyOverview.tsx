@@ -1,6 +1,11 @@
 import { useMemo, useRef, useState } from "react";
 import type { TournamentFinalFullPlanningWorkspace } from "../services/tournamentFinalStageAdminService";
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
+import {
+  buildFinalStagePlanningNodes,
+  finalStagePlanningNodeId,
+} from "@/features/tournaments/domain/finalStagePlanningEngine";
+import { describeFinalStageOpponents } from "@/features/tournaments/domain/finalStageOpponentDescription";
 
 type WeeklySlot = {
   slot: PlanningSlot;
@@ -91,6 +96,35 @@ export function AdminTournamentFinalWeeklyOverview({
     () => new Map(workspace.series.map((series) => [series.id, series])),
     [workspace.series],
   );
+  const bracketNodes = useMemo(
+    () =>
+      workspace.series.flatMap((series) =>
+        buildFinalStagePlanningNodes({
+          seriesId: series.id,
+          qualifierCount: series.qualifierCount,
+          seeds: series.seeds,
+          actualMatches: workspace.nodes
+            .filter((row) => row.seriesId === series.id && row.actualMatchId)
+            .map((row) => ({
+              id: row.actualMatchId ?? "",
+              round: row.round,
+              roundNumber: row.roundNumber,
+              displayOrder: row.displayOrder,
+              teamAId: row.teamAId ?? "",
+              teamALabel: row.teamALabel ?? "",
+              teamBId: row.teamBId ?? "",
+              teamBLabel: row.teamBLabel ?? "",
+              resultStatus: row.resultStatus,
+              published: row.published,
+            })),
+        }),
+      ),
+    [workspace.series, workspace.nodes],
+  );
+  const bracketNodesById = useMemo(
+    () => new Map(bracketNodes.map((node) => [node.id, node])),
+    [bracketNodes],
+  );
   const slotAssignments = useMemo(() => {
     const bySlot = new Map<
       string,
@@ -120,12 +154,24 @@ export function AdminTournamentFinalWeeklyOverview({
       if (node) {
         const series = seriesById.get(node.seriesId);
         const provisional = !node.actualMatchId;
+        const bracketNode = bracketNodesById.get(
+          finalStagePlanningNodeId(
+            node.seriesId,
+            node.roundNumber,
+            node.displayOrder,
+          ),
+        );
+        const title = bracketNode
+          ? describeFinalStageOpponents({
+              node: bracketNode,
+              nodes: bracketNodes,
+              seeds: series?.seeds ?? [],
+            })
+          : [node.teamALabel, node.teamBLabel].filter(Boolean).join(" — ");
         result.push({
           slot,
           kind: "match",
-          title: provisional
-            ? `${series?.name ?? "Série"} · adversaires à confirmer`
-            : [node.teamALabel, node.teamBLabel].filter(Boolean).join(" / "),
+          title,
           detail: `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.published ? " · Publié" : ""}`,
           seriesId: node.seriesId,
           provisional,
@@ -148,7 +194,15 @@ export function AdminTournamentFinalWeeklyOverview({
       }
     }
     return result;
-  }, [workspace.weeklySlots, days, slotAssignments, seriesById, blocked]);
+  }, [
+    workspace.weeklySlots,
+    days,
+    slotAssignments,
+    seriesById,
+    blocked,
+    bracketNodes,
+    bracketNodesById,
+  ]);
 
   const visibleSlots = weeklySlots.filter((entry) => {
     if (show === "matches" && entry.kind !== "match") return false;
