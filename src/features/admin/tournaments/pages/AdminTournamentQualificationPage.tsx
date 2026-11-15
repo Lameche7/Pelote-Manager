@@ -372,8 +372,8 @@ export function AdminTournamentQualificationPage() {
                   </small>
                   {crossPoolsBySeries[seriesId] && (
                     <small>
-                      Mode « Tableau croisé entre poules » actif : les premières de
-                      chaque poule entrent directement en demi-finale.
+                      Mode « Tableau croisé entre poules » actif : les premières
+                      de chaque poule entrent directement en demi-finale.
                     </small>
                   )}
                 </label>
@@ -423,8 +423,15 @@ export function AdminTournamentQualificationPage() {
                       <div className="qualification-pairings">
                         {plan.firstRoundMatches.map((match) => (
                           <span key={match.matchIndex}>
-                            {sideLabel(match.sideA, crossPoolsBySeries[seriesId] ?? false)} vs{" "}
-                            {sideLabel(match.sideB, crossPoolsBySeries[seriesId] ?? false)}
+                            {sideLabel(
+                              match.sideA,
+                              crossPoolsBySeries[seriesId] ?? false,
+                            )}{" "}
+                            vs{" "}
+                            {sideLabel(
+                              match.sideB,
+                              crossPoolsBySeries[seriesId] ?? false,
+                            )}
                           </span>
                         ))}
                       </div>
