@@ -21,6 +21,8 @@ export type PlanningSlot = {
   date: string;
   startsAt: string;
   endsAt: string;
+  /** Manual placement outside the configured tournament slots. */
+  custom?: boolean;
 };
 
 export type TeamPlanningAvailability = {
