@@ -135,12 +135,20 @@ export function AdminTournamentFinalFullPlanning({
   const [manualAssignments, setManualAssignments] = useState<
     FinalStagePlanningAssignment[]
   >([]);
+  const [exceptionSlots, setExceptionSlots] = useState<PlanningSlot[]>([]);
+  const [customNodeId, setCustomNodeId] = useState<string | null>(null);
+  const [customDate, setCustomDate] = useState("");
+  const [customStart, setCustomStart] = useState("14:00");
+  const [customEnd, setCustomEnd] = useState("15:00");
+  const [customResource, setCustomResource] = useState("");
 
   const load = useCallback(async () => {
     const loaded =
       await tournamentFinalStageAdminService.getFullPlanning(tournamentId);
     setWorkspace(loaded);
     setManualAssignments(assignmentsFromWorkspace(loaded));
+    setExceptionSlots([]);
+    setCustomNodeId(null);
   }, [tournamentId]);
 
   useEffect(() => {
@@ -153,6 +161,8 @@ export function AdminTournamentFinalFullPlanning({
         if (!active) return;
         setWorkspace(loaded);
         setManualAssignments(assignmentsFromWorkspace(loaded));
+        setExceptionSlots([]);
+        setCustomNodeId(null);
       })
       .catch((loadError: unknown) => {
         if (!active) return;
@@ -181,9 +191,13 @@ export function AdminTournamentFinalFullPlanning({
       ),
     [workspace?.nodes],
   );
+  const allSlots = useMemo(
+    () => [...(workspace?.slots ?? []), ...exceptionSlots],
+    [workspace?.slots, exceptionSlots],
+  );
   const slotById = useMemo(
-    () => new Map((workspace?.slots ?? []).map((slot) => [slot.id, slot])),
-    [workspace?.slots],
+    () => new Map(allSlots.map((slot) => [slot.id, slot])),
+    [allSlots],
   );
   const sortedSlots = useMemo(
     () =>
@@ -373,13 +387,89 @@ export function AdminTournamentFinalFullPlanning({
         : `Planning complet enregistré${mode} : les ${count} parties de toutes les séries sont placées.`;
     });
 
+  const beginCustomSlot = (nodeId: string) => {
+    const assigned = manualByNode.get(nodeId);
+    const current = assigned ? slotById.get(assigned) : null;
+    setCustomNodeId(nodeId);
+    setCustomDate(
+      current?.date ?? workspace?.tournament.finalsStartsOn ?? "",
+    );
+    setCustomStart(current?.startsAt.slice(0, 5) ?? "14:00");
+    setCustomEnd(current?.endsAt.slice(0, 5) ?? "15:00");
+    setCustomResource(
+      current?.resourceId ?? workspace?.resources[0]?.id ?? "",
+    );
+    setError("");
+  };
+
+  const applyCustomSlot = (nodeId: string) => {
+    if (!workspace) return;
+    if (
+      !customDate ||
+      !customResource ||
+      !/^\\d{2}:\\d{2}$/.test(customStart) ||
+      !/^\\d{2}:\\d{2}$/.test(customEnd) ||
+      customEnd <= customStart ||
+      (workspace.tournament.finalsStartsOn &&
+        customDate < workspace.tournament.finalsStartsOn) ||
+      (workspace.tournament.finalsEndsOn &&
+        customDate > workspace.tournament.finalsEndsOn)
+    ) {
+      setError("Saisis une date des phases finales et des horaires cohérents.");
+      return;
+    }
+    const selectedResource = workspace.resources.find(
+      (resource) => resource.id === customResource,
+    );
+    if (!selectedResource) {
+      setError("Choisis un terrain du tournoi.");
+      return;
+    }
+    const slot: PlanningSlot = {
+      id: `${customResource}|${customDate}|${customStart}|${customEnd}`,
+      resourceId: customResource,
+      resourceName: selectedResource.name,
+      date: customDate,
+      startsAt: customStart,
+      endsAt: customEnd,
+      custom: true,
+    };
+    const occupied = allSlots.some((candidate) => {
+      if (candidate.resourceId !== slot.resourceId ||
+          candidate.date !== slot.date ||
+          candidate.startsAt >= slot.endsAt ||
+          candidate.endsAt <= slot.startsAt) return false;
+      return manualAssignments.some(
+        (assignment) =>
+          assignment.nodeId !== nodeId &&
+          assignment.slotId === candidate.id,
+      );
+    });
+    if (occupied) {
+      setError("Ce terrain est déjà occupé par une autre partie à cet horaire.");
+      return;
+    }
+    setExceptionSlots((current) => [
+      ...current.filter((item) => item.id !== slot.id),
+      slot,
+    ]);
+    const next = [
+      ...manualAssignments.filter((item) => item.nodeId !== nodeId),
+      { nodeId, slotId: slot.id },
+    ];
+    setManualAssignments(next);
+    setCustomNodeId(null);
+    setError("");
+    setMessage("Horaire exceptionnel sélectionné. Enregistre les modifications de cette étape pour le confirmer.");
+  };
+
   const openManualRound = (roundNumber: number) => {
     if (!workspace) return;
     setManualAssignments(assignmentsFromWorkspace(workspace));
     setEditingRound(roundNumber);
     setError("");
     setMessage(
-      "Tous les créneaux Finals sont proposés. L’admin peut forcer les disponibilités, mais doit respecter les périodes des tours et les temps de repos.",
+      "Tu peux choisir un créneau existant ou saisir un autre jour et un horaire personnalisé (samedi compris). Vérifie la disponibilité des joueurs avant d’enregistrer.",
     );
   };
 
@@ -391,7 +481,7 @@ export function AdminTournamentFinalFullPlanning({
     ];
     const validation = validateFullFinalStagePlanning({
       nodes,
-      slots: workspace.slots,
+      slots: allSlots,
       availability: workspace.availability,
       assignments: next,
       minimumRestMinutes: workspace.tournament.minimumRestMinutes,
@@ -434,7 +524,7 @@ export function AdminTournamentFinalFullPlanning({
       const count = await tournamentFinalStageAdminService.saveFullPlanning(
         tournamentId,
         updates,
-        workspace.slots,
+        allSlots,
       );
       setEditingRound(null);
       return `${roundLabel(editableRows[0]?.round ?? "tour")} : ${count} partie(s) programmée(s). Les autres restent « À programmer ».`;
@@ -691,6 +781,7 @@ export function AdminTournamentFinalFullPlanning({
                               </div>
 
                               {isEditing && !locked ? (
+                                <div className="final-stage-full-planning__manual-slot-choice">
                                 <select
                                   value={currentSlotId ?? ""}
                                   disabled={busy}
@@ -720,6 +811,46 @@ export function AdminTournamentFinalFullPlanning({
                                     );
                                   })}
                                 </select>
+                                <button type="button" disabled={busy}
+                                  onClick={() => beginCustomSlot(node.id)}>
+                                  Autre date / horaire…
+                                </button>
+                                {customNodeId === node.id && (
+                                  <div className="final-stage-full-planning__custom-date">
+                                    <label>Date
+                                      <input type="date" value={customDate}
+                                        min={workspace.tournament.finalsStartsOn ?? undefined}
+                                        max={workspace.tournament.finalsEndsOn ?? undefined}
+                                        onChange={(event) => setCustomDate(event.target.value)} />
+                                    </label>
+                                    <label>Début
+                                      <input type="time" value={customStart}
+                                        onChange={(event) => setCustomStart(event.target.value)} />
+                                    </label>
+                                    <label>Fin
+                                      <input type="time" value={customEnd}
+                                        onChange={(event) => setCustomEnd(event.target.value)} />
+                                    </label>
+                                    <label>Terrain
+                                      <select value={customResource}
+                                        onChange={(event) => setCustomResource(event.target.value)}>
+                                        {workspace.resources.map((resource) => (
+                                          <option key={resource.id} value={resource.id}>
+                                            {resource.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                    <button type="button" disabled={busy}
+                                      onClick={() => applyCustomSlot(node.id)}>
+                                      Utiliser cet horaire
+                                    </button>
+                                    <button type="button" onClick={() => setCustomNodeId(null)}>
+                                      Annuler
+                                    </button>
+                                  </div>
+                                )}
+                                </div>
                               ) : slot ? (
                                 <span
                                   className={
