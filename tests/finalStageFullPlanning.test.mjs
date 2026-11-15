@@ -584,7 +584,7 @@ test("les adversaires à confirmer sont décrits selon leur position réelle dan
   assert.match(descriptions[3], /Vainqueur du barrage n°/);
   assert.equal(
     descriptions[4],
-    "Vainqueur du demi-finale n°1 — Vainqueur du demi-finale n°2",
+    "Vainqueur de la demi-finale n°1 — Vainqueur de la demi-finale n°2",
   );
 
   const decided = buildFinalStagePlanningNodes({
