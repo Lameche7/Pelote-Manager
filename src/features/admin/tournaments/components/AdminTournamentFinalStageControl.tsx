@@ -161,6 +161,22 @@ export function AdminTournamentFinalStageControl({
     unresolved.length > 0 &&
     unresolved.every(({ match }) => match.planned) &&
     !hasPublished;
+  const unplannedBySeries =
+    stage?.series
+      .map((series) => ({
+        name: series.seriesName,
+        count: currentMatches(series).filter(
+          (match) => match.resultStatus !== "validated" && !match.planned,
+        ).length,
+      }))
+      .filter(({ count }) => count > 0) ?? [];
+  const blockingMessage = hasPublished
+    ? "Des rencontres de ce tour sont déjà publiées. Utilise la publication par série pour les rencontres restantes."
+    : unplannedBySeries.length > 0
+      ? `Publication générale en attente : ${unplannedBySeries
+          .map(({ name, count }) => `${name} (${count} à programmer)`)
+          .join(", ")}.`
+      : "La publication générale sera disponible dès que toutes les séries auront leurs rencontres jouables programmées.";
   const canPublish =
     planningReady && stage?.series.every((series) => series.generated);
   const hasUnplannedCurrentMatches =
@@ -506,20 +522,42 @@ export function AdminTournamentFinalStageControl({
                     </div>
                   )}
                   {series.generated &&
-                    matches.length > 0 &&
                     matches.some(
                       (match) => match.resultStatus !== "validated",
-                    ) &&
-                    matches
-                      .filter((match) => match.resultStatus !== "validated")
-                      .every((match) => match.planned && !match.published) && (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void publishSeries(series)}
-                      >
-                        Publier uniquement {series.seriesName} et notifier
-                      </button>
+                    ) && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={
+                            busy ||
+                            matches.some(
+                              (match) =>
+                                match.resultStatus !== "validated" &&
+                                (!match.planned || match.published),
+                            )
+                          }
+                          onClick={() => void publishSeries(series)}
+                        >
+                          Publier uniquement {series.seriesName} et notifier
+                        </button>
+                        {matches.some(
+                          (match) =>
+                            match.resultStatus !== "validated" &&
+                            !match.planned,
+                        ) && (
+                          <p className="final-stage-control__hint">
+                            Publication en attente :{" "}
+                            {
+                              matches.filter(
+                                (match) =>
+                                  match.resultStatus !== "validated" &&
+                                  !match.planned,
+                              ).length
+                            }{" "}
+                            partie(s) restent à programmer pour cette série.
+                          </p>
+                        )}
+                      </>
                     )}
                   {series.generated &&
                     matches.length > 0 &&
@@ -598,14 +636,22 @@ export function AdminTournamentFinalStageControl({
                     Retirer du calendrier pour modifier
                   </button>
                 )}
-              {canPublish && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void publish()}
-                >
-                  Publier le tour et notifier les joueurs
-                </button>
+              {unresolved.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    disabled={busy || !canPublish}
+                    onClick={() => void publish()}
+                    title={!canPublish ? blockingMessage : undefined}
+                  >
+                    Publier le tour et notifier les joueurs
+                  </button>
+                  {!canPublish && (
+                    <p className="final-stage-control__hint" role="status">
+                      {blockingMessage}
+                    </p>
+                  )}
+                </>
               )}
               {canAdvance && (
                 <button

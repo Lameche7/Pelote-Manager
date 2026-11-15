@@ -66,3 +66,14 @@ test("un planning final global mène clairement à la publication des parties jo
   assert.match(planner, /À programmer/);
   assert.match(planner, /saisir une date et une heure exceptionnelles/);
 });
+
+test("le bouton de publication reste visible lorsque des parties manquent, avec explication", async () => {
+  const admin = await read(adminControl);
+  assert.match(admin, /Publier le tour et notifier les joueurs/);
+  assert.match(admin, /disabled=\{busy \|\| !canPublish\}/);
+  assert.match(admin, /unplannedBySeries/);
+  assert.match(admin, /Publication générale en attente/);
+  assert.match(admin, /role="status"/);
+  assert.match(admin, /Publier uniquement \{series.seriesName\} et notifier/);
+  assert.match(admin, /Publication en attente :/);
+});
