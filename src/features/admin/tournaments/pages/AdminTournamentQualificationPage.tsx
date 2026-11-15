@@ -333,7 +333,9 @@ export function AdminTournamentQualificationPage() {
             const plan =
               qualifierCount >= 2
                 ? buildFinalStagePlan(
-                    qualifier...[truncated]
+                    qualifierCount,
+                    crossPoolsBySeries[seriesId] ?? false,
+                  )
                 : null;
 
             return (
