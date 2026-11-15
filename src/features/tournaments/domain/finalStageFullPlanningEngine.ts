@@ -11,6 +11,15 @@ import {
   type FinalStagePlanningValidation,
 } from "./finalStagePlanningEngine.js";
 
+/** Filter automatic candidates only; existing manual/published allocations stay fixed. */
+export const automaticFinalPlanningSlots = (
+  slots: PlanningSlot[],
+  excludeLateStarts: boolean,
+): PlanningSlot[] =>
+  excludeLateStarts
+    ? slots.filter((slot) => slot.startsAt.slice(0, 5) !== "21:30")
+    : slots;
+
 const timeToMinutes = (value: string) => {
   const [hours = "0", minutes = "0"] = value.split(":");
   return Number(hours) * 60 + Number(minutes);
