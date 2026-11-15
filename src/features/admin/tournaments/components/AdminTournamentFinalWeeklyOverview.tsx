@@ -222,7 +222,9 @@ export function AdminTournamentFinalWeeklyOverview({
     document.body.appendChild(heading);
     const subheading = document.createElement("p");
     subheading.className = "subheading";
-    const selectedSeries = workspace.series.find((series) => series.id === seriesFilter);
+    const selectedSeries = workspace.series.find(
+      (series) => series.id === seriesFilter,
+    );
     subheading.textContent = `Planning hebdomadaire · ${weekFormatter.format(monday)} au ${weekFormatter.format(addDays(monday, 6))} · ${selectedSeries?.name ?? "Toutes les séries"} · ${show === "matches" ? "Parties uniquement" : show === "free" ? "Créneaux libres uniquement" : "Tous les créneaux"}`;
     document.body.appendChild(subheading);
     const summary = document.createElement("p");
@@ -326,7 +328,10 @@ export function AdminTournamentFinalWeeklyOverview({
         </label>
       </div>
       {printError && (
-        <p role="alert" className="qualification-alert qualification-alert--error">
+        <p
+          role="alert"
+          className="qualification-alert qualification-alert--error"
+        >
           {printError}
         </p>
       )}
