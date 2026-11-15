@@ -13,7 +13,6 @@ import {
   type FinalStagePlanningNode,
 } from "@/features/tournaments/domain/finalStagePlanningEngine";
 import {
-  automaticFinalPlanningSlots,
   finalRoundAvailableSlots,
   finalRoundDateWindow,
   generateFullFinalStagePlanning,
@@ -345,7 +344,8 @@ export function AdminTournamentFinalFullPlanning({
         .map(rowNodeId);
       const proposal = generateFullFinalStagePlanning({
         nodes,
-        slots: automaticFinalPlanningSlots(workspace.slots, exclude2130),
+        slots: workspace.slots,
+        excludeStartsAt2130: exclude2130,
         availability: workspace.availability,
         existingAssignments: existing,
         fixedNodeIds,
