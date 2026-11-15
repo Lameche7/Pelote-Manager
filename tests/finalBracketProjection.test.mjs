@@ -112,7 +112,6 @@ test("un 1/8 réel non joué affiche aussi ses deux équipes possibles au tour s
   assert.equal(firstSemifinal?.sideB.teamLabel, "");
 });
 
-
 test("le tableau croisé place chaque première de poule contre le bon barrage", () => {
   const projected = buildFinalBracketProjectedMatches({
     qualifierCount: 6,
