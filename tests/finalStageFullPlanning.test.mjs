@@ -591,18 +591,20 @@ test("les adversaires à confirmer sont décrits selon leur position réelle dan
     seriesId: "series-6",
     qualifierCount: 6,
     seeds,
-    actualMatches: [{
-      id: "decided",
-      round: "semifinal",
-      roundNumber: 1,
-      displayOrder: 0,
-      teamAId: "team-1",
-      teamALabel: "Équipe 1",
-      teamBId: "team-3",
-      teamBLabel: "Équipe 3",
-      resultStatus: null,
-      published: false,
-    }],
+    actualMatches: [
+      {
+        id: "decided",
+        round: "semifinal",
+        roundNumber: 1,
+        displayOrder: 0,
+        teamAId: "team-1",
+        teamALabel: "Équipe 1",
+        teamBId: "team-3",
+        teamBLabel: "Équipe 3",
+        resultStatus: null,
+        published: false,
+      },
+    ],
   });
   assert.equal(
     describeFinalStageOpponents({ node: decided[2], nodes: decided, seeds }),
