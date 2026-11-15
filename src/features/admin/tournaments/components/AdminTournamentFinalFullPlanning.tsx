@@ -142,6 +142,7 @@ export function AdminTournamentFinalFullPlanning({
   const [editingRound, setEditingRound] = useState<number | null>(null);
   const [finalDayStart, setFinalDayStart] = useState("");
   const [finalDayEnd, setFinalDayEnd] = useState("");
+  const [exclude2130, setExclude2130] = useState(false);
   const [manualAssignments, setManualAssignments] = useState<
     FinalStagePlanningAssignment[]
   >([]);
@@ -344,6 +345,7 @@ export function AdminTournamentFinalFullPlanning({
       const proposal = generateFullFinalStagePlanning({
         nodes,
         slots: workspace.slots,
+        excludeStartsAt2130: exclude2130,
         availability: workspace.availability,
         existingAssignments: existing,
         fixedNodeIds,
@@ -376,9 +378,10 @@ export function AdminTournamentFinalFullPlanning({
         workspace.slots,
       );
       const missing = proposal.unscheduledNodeIds.length;
+      const mode = exclude2130 ? " (départs à 21h30 exclus du calcul)" : "";
       return missing > 0
-        ? `Planning complet enregistré : ${count} partie(s) placée(s), ${missing} partie(s) restent « À programmer » manuellement.`
-        : `Planning complet enregistré : les ${count} parties de toutes les séries sont placées.`;
+        ? `Planning complet enregistré${mode} : ${count} partie(s) placée(s), ${missing} partie(s) restent « À programmer » manuellement.`
+        : `Planning complet enregistré${mode} : les ${count} parties de toutes les séries sont placées.`;
     });
 
   const openManualRound = (roundNumber: number) => {
@@ -555,10 +558,24 @@ export function AdminTournamentFinalFullPlanning({
       )}
 
       <div className="final-stage-full-planning__actions">
+        <label className="final-stage-full-planning__auto-option">
+          <input
+            type="checkbox"
+            checked={exclude2130}
+            onChange={(event) => setExclude2130(event.target.checked)}
+            disabled={busy}
+          />
+          Exclure les créneaux de 21h30 du calcul automatique
+        </label>
         <button type="button" disabled={busy} onClick={() => void autoPlan()}>
           {busy ? "Calcul…" : "Compléter automatiquement le planning"}
         </button>
       </div>
+      <p className="final-stage-full-planning__hint">
+        {exclude2130
+          ? "Le prochain calcul ne proposera aucune nouvelle partie à 21h30. Les créneaux déjà fixés manuellement ou publiés à cette heure seront conservés."
+          : "Les créneaux de 21h30 restent autorisés pour le prochain calcul. Cette option ne concerne pas les modifications manuelles."}
+      </p>
 
       <div className="final-stage-full-planning__stages">
         {stages.map((stage) => {
