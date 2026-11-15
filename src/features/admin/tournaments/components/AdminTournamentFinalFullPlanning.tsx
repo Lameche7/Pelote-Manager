@@ -132,6 +132,11 @@ export function AdminTournamentFinalFullPlanning({
   const [finalDayStart, setFinalDayStart] = useState("");
   const [finalDayEnd, setFinalDayEnd] = useState("");
   const [exclude2130, setExclude2130] = useState(false);
+  const [exceptionNodeId, setExceptionNodeId] = useState<string | null>(null);
+  const [exceptionDate, setExceptionDate] = useState("");
+  const [exceptionStart, setExceptionStart] = useState("");
+  const [exceptionEnd, setExceptionEnd] = useState("");
+  const [exceptionResourceId, setExceptionResourceId] = useState("");
   const [manualAssignments, setManualAssignments] = useState<
     FinalStagePlanningAssignment[]
   >([]);
@@ -187,10 +192,12 @@ export function AdminTournamentFinalFullPlanning({
   );
   const sortedSlots = useMemo(
     () =>
-      [...(workspace?.slots ?? [])].sort((left, right) =>
-        slotSortKey(left).localeCompare(slotSortKey(right)),
-      ),
-    [workspace?.slots],
+      (workspace?.slots ?? [])
+        .filter((slot) => !workspace?.exceptionalSlotIds.includes(slot.id))
+        .sort((left, right) =>
+          slotSortKey(left).localeCompare(slotSortKey(right)),
+        ),
+    [workspace?.slots, workspace?.exceptionalSlotIds],
   );
 
   const stages = useMemo(() => {
@@ -335,6 +342,7 @@ export function AdminTournamentFinalFullPlanning({
         nodes,
         slots: workspace.slots,
         excludeStartsAt2130: exclude2130,
+        nonCandidateSlotIds: workspace.exceptionalSlotIds,
         availability: workspace.availability,
         existingAssignments: existing,
         fixedNodeIds,
@@ -345,7 +353,18 @@ export function AdminTournamentFinalFullPlanning({
       });
       const proposedByNode = assignmentMap(proposal.assignments);
       const updates: TournamentFinalFullPlanningUpdate[] = workspace.nodes
-        .filter((row) => row.resultStatus !== "validated" && !row.published)
+        .filter(
+          (row) =>
+            row.resultStatus !== "validated" &&
+            !row.published &&
+            !(
+              row.resourceId &&
+              persistedByNode.get(rowNodeId(row)) &&
+              workspace.exceptionalSlotIds.includes(
+                persistedByNode.get(rowNodeId(row)) ?? "",
+              )
+            ),
+        )
         .map((row) => {
           const nodeId = rowNodeId(row);
           const preservedManual = row.source === "manual";
@@ -373,13 +392,63 @@ export function AdminTournamentFinalFullPlanning({
         : `Planning complet enregistré${mode} : les ${count} parties de toutes les séries sont placées.`;
     });
 
+  const editExceptionalSlot = (
+    nodeId: string,
+    row: TournamentFinalFullPlanningNodeRow | undefined,
+  ) => {
+    if (!workspace) return;
+    setExceptionNodeId(nodeId);
+    setExceptionDate(row?.playDate ?? "");
+    setExceptionStart(row?.startsAt?.slice(0, 5) ?? "16:30");
+    setExceptionEnd(row?.endsAt?.slice(0, 5) ?? "17:30");
+    setExceptionResourceId(row?.resourceId ?? workspace.resources[0]?.id ?? "");
+  };
+
+  const saveExceptionalSlot = (node: FinalStagePlanningNode) =>
+    run(async () => {
+      if (!workspace || !exceptionResourceId || !exceptionDate) {
+        throw new Error("Indique une date, un horaire et un terrain.");
+      }
+      if (exceptionEnd <= exceptionStart) {
+        throw new Error(
+          "L'heure de fin doit être postérieure à l'heure de début.",
+        );
+      }
+      if (
+        (workspace.tournament.finalsStartsOn &&
+          exceptionDate < workspace.tournament.finalsStartsOn) ||
+        (workspace.tournament.finalsEndsOn &&
+          exceptionDate > workspace.tournament.finalsEndsOn)
+      ) {
+        throw new Error(
+          "La date doit appartenir à la période des phases finales.",
+        );
+      }
+      await tournamentFinalStageAdminService.setExceptionalManualSlot(
+        tournamentId,
+        {
+          seriesId: node.seriesId,
+          roundNumber: node.roundNumber,
+          displayOrder: node.displayOrder,
+          resourceId: exceptionResourceId,
+          playDate: exceptionDate,
+          startsAt: exceptionStart,
+          endsAt: exceptionEnd,
+        },
+      );
+      setExceptionNodeId(null);
+      setEditingRound(null);
+      return "Horaire exceptionnel enregistré. Les rencontres déjà publiées restent inchangées.";
+    });
+
   const openManualRound = (roundNumber: number) => {
     if (!workspace) return;
     setManualAssignments(assignmentsFromWorkspace(workspace));
     setEditingRound(roundNumber);
+    setExceptionNodeId(null);
     setError("");
     setMessage(
-      "Tous les créneaux Finals sont proposés. L’admin peut forcer les disponibilités, mais doit respecter les périodes des tours et les temps de repos.",
+      "Tu peux choisir un créneau prévu ou saisir une date et une heure exceptionnelles (samedi, avant 17h30, etc.). Les conflits de terrain et l’ordre des tours restent contrôlés.",
     );
   };
 
@@ -420,7 +489,14 @@ export function AdminTournamentFinalFullPlanning({
         (row) =>
           row.roundNumber === editingRound &&
           row.resultStatus !== "validated" &&
-          !row.published,
+          !row.published &&
+          !(
+            workspace.exceptionalSlotIds.includes(
+              persistedByNode.get(rowNodeId(row)) ?? "",
+            ) &&
+            manualByNode.get(rowNodeId(row)) ===
+              persistedByNode.get(rowNodeId(row))
+          ),
       );
       const updates: TournamentFinalFullPlanningUpdate[] = editableRows.map(
         (row) => ({
@@ -691,35 +767,154 @@ export function AdminTournamentFinalFullPlanning({
                               </div>
 
                               {isEditing && !locked ? (
-                                <select
-                                  value={currentSlotId ?? ""}
-                                  disabled={busy}
-                                  onChange={(event) =>
-                                    changeManualSlot(
-                                      node.id,
-                                      event.target.value,
-                                    )
-                                  }
-                                >
-                                  <option value="">À programmer</option>
-                                  {sortedSlots.map((candidate) => {
-                                    const isCommon =
-                                      isFinalStageSlotCommonForNode({
-                                        node,
-                                        slot: candidate,
-                                        availability: workspace.availability,
-                                      });
-                                    return (
-                                      <option
-                                        key={candidate.id}
-                                        value={candidate.id}
+                                <div className="final-stage-full-planning__manual-choice">
+                                  <select
+                                    value={currentSlotId ?? ""}
+                                    disabled={busy}
+                                    onChange={(event) =>
+                                      changeManualSlot(
+                                        node.id,
+                                        event.target.value,
+                                      )
+                                    }
+                                  >
+                                    <option value="">À programmer</option>
+                                    {sortedSlots.map((candidate) => {
+                                      const isCommon =
+                                        isFinalStageSlotCommonForNode({
+                                          node,
+                                          slot: candidate,
+                                          availability: workspace.availability,
+                                        });
+                                      return (
+                                        <option
+                                          key={candidate.id}
+                                          value={candidate.id}
+                                        >
+                                          {isCommon ? "✓ " : "⚠ "}
+                                          {slotLabel(candidate)}
+                                        </option>
+                                      );
+                                    })}
+                                    {slot &&
+                                      workspace.exceptionalSlotIds.includes(
+                                        slot.id,
+                                      ) && (
+                                        <option value={slot.id}>
+                                          Exceptionnel · {slotLabel(slot)}
+                                        </option>
+                                      )}
+                                  </select>
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() =>
+                                      exceptionNodeId === node.id
+                                        ? setExceptionNodeId(null)
+                                        : editExceptionalSlot(node.id, row)
+                                    }
+                                  >
+                                    {exceptionNodeId === node.id
+                                      ? "Annuler la saisie"
+                                      : "Choisir une autre date / heure"}
+                                  </button>
+                                  {exceptionNodeId === node.id && (
+                                    <div className="final-stage-full-planning__exception-form">
+                                      <p>
+                                        Créneau exceptionnel, même un samedi ou
+                                        avant 17h30. À convenir avec les
+                                        équipes.
+                                      </p>
+                                      <label>
+                                        Date
+                                        <input
+                                          type="date"
+                                          value={exceptionDate}
+                                          min={
+                                            workspace.tournament
+                                              .finalsStartsOn ?? undefined
+                                          }
+                                          max={
+                                            workspace.tournament.finalsEndsOn ??
+                                            undefined
+                                          }
+                                          onChange={(event) =>
+                                            setExceptionDate(event.target.value)
+                                          }
+                                          disabled={busy}
+                                        />
+                                      </label>
+                                      <label>
+                                        Début
+                                        <input
+                                          type="time"
+                                          value={exceptionStart}
+                                          onChange={(event) =>
+                                            setExceptionStart(
+                                              event.target.value,
+                                            )
+                                          }
+                                          disabled={busy}
+                                        />
+                                      </label>
+                                      <label>
+                                        Fin
+                                        <input
+                                          type="time"
+                                          value={exceptionEnd}
+                                          onChange={(event) =>
+                                            setExceptionEnd(event.target.value)
+                                          }
+                                          disabled={busy}
+                                        />
+                                      </label>
+                                      <label>
+                                        Terrain
+                                        <select
+                                          value={exceptionResourceId}
+                                          onChange={(event) =>
+                                            setExceptionResourceId(
+                                              event.target.value,
+                                            )
+                                          }
+                                          disabled={busy}
+                                        >
+                                          {workspace.resources.map(
+                                            (resource) => (
+                                              <option
+                                                key={resource.id}
+                                                value={resource.id}
+                                              >
+                                                {resource.name}
+                                              </option>
+                                            ),
+                                          )}
+                                        </select>
+                                      </label>
+                                      <button
+                                        type="button"
+                                        disabled={
+                                          busy ||
+                                          !exceptionDate ||
+                                          !exceptionStart ||
+                                          !exceptionEnd ||
+                                          !exceptionResourceId ||
+                                          exceptionEnd <= exceptionStart
+                                        }
+                                        onClick={() =>
+                                          void saveExceptionalSlot(node)
+                                        }
                                       >
-                                        {isCommon ? "✓ " : "⚠ "}
-                                        {slotLabel(candidate)}
-                                      </option>
-                                    );
-                                  })}
-                                </select>
+                                        Enregistrer ce créneau exceptionnel
+                                      </button>
+                                      <small>
+                                        Enregistrement immédiat de cette partie
+                                        uniquement. Enregistre séparément toute
+                                        autre modification en cours.
+                                      </small>
+                                    </div>
+                                  )}
+                                </div>
                               ) : slot ? (
                                 <span
                                   className={

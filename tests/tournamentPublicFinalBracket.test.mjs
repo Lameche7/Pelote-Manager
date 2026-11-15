@@ -64,5 +64,5 @@ test("un planning final global mène clairement à la publication des parties jo
   assert.match(planner, /Compléter automatiquement le planning/);
   assert.match(planner, /Modifier manuellement/);
   assert.match(planner, /À programmer/);
-  assert.match(planner, /Tous les créneaux Finals sont proposés/);
+  assert.match(planner, /saisir une date et une heure exceptionnelles/);
 });
