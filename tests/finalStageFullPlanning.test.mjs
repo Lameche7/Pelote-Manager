@@ -496,7 +496,8 @@ test("la case d'exclusion de 21h30 retire uniquement ces départs du calcul auto
   ];
   const excluded = generateFullFinalStagePlanning({
     nodes: [known],
-    slots: automaticFinalPlanningSlots(offered, true),
+    slots: offered,
+    excludeStartsAt2130: true,
     availability: declared,
     iterations: 1,
     random: () => 0,
@@ -504,12 +505,26 @@ test("la case d'exclusion de 21h30 retire uniquement ces départs du calcul auto
   assert.equal(excluded.assignments[0]?.slotId, "early");
   const unrestricted = generateFullFinalStagePlanning({
     nodes: [known],
-    slots: automaticFinalPlanningSlots([late], false),
+    slots: [late],
+    excludeStartsAt2130: false,
     availability: declared,
     iterations: 1,
     random: () => 0,
   });
   assert.equal(unrestricted.assignments[0]?.slotId, "late");
+
+  const fixedAt2130 = generateFullFinalStagePlanning({
+    nodes: [known],
+    slots: offered,
+    availability: declared,
+    existingAssignments: [{ nodeId: known.id, slotId: "late" }],
+    fixedNodeIds: [known.id],
+    excludeStartsAt2130: true,
+    iterations: 1,
+  });
+  assert.deepEqual(fixedAt2130.assignments, [
+    { nodeId: known.id, slotId: "late" },
+  ]);
 
   const [component] = await Promise.all([
     read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
@@ -517,7 +532,7 @@ test("la case d'exclusion de 21h30 retire uniquement ces départs du calcul auto
   assert.match(component, /useState\(false\)/);
   assert.match(component, /type="checkbox"/);
   assert.match(component, /Exclure les créneaux de 21h30/);
-  assert.match(component, /automaticFinalPlanningSlots\(workspace\.slots, exclude2130\)/);
+  assert.match(component, /excludeStartsAt2130: exclude2130/);
   assert.match(component, /row\.source === "manual"/);
   assert.match(component, /row\.published/);
 });
