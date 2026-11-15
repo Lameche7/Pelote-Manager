@@ -455,7 +455,7 @@ test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux
   assert.match(calendar, /Toutes les séries/);
   assert.match(calendar, /Créneaux libres uniquement/);
   assert.match(calendar, /Créneau occupé/);
-  assert.match(calendar, /adversaires à confirmer/);
+  assert.match(calendar, /describeFinalStageOpponents/);
   assert.match(calendar, /Vue en lecture seule/);
   assert.match(
     admin,
