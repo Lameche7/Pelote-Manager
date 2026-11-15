@@ -690,6 +690,8 @@ test("un créneau manuel hors grille est conservé sans devenir candidat au reca
     id: "free-match",
     actualMatchId: "free-match",
     possibleTeamIds: ["C", "D"],
+    teamAId: "C",
+    teamBId: "D",
   };
   const proposal = generateFullFinalStagePlanning({
     nodes: [fixed, other],
