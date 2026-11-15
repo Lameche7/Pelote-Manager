@@ -493,8 +493,10 @@ export const tournamentFinalStageAdminService = {
         target_tournament_id: tournamentId,
       }),
     ]);
-    if (state.error) fail(state.error, "Impossible de charger la phase finale.");
-    if (modes.error) fail(modes.error, "Impossible de charger le mode des tableaux.");
+    if (state.error)
+      fail(state.error, "Impossible de charger la phase finale.");
+    if (modes.error)
+      fail(modes.error, "Impossible de charger le mode des tableaux.");
     const bySeries = crossPoolMap(modes.data);
     const loaded = mapState(state.data);
     return {
@@ -517,11 +519,14 @@ export const tournamentFinalStageAdminService = {
     seriesId: string,
     enabled: boolean,
   ): Promise<void> {
-    const { error } = await supabase.rpc("admin_set_tournament_final_cross_pools", {
-      target_tournament_id: tournamentId,
-      target_series_id: seriesId,
-      enable_cross_pools: enabled,
-    });
+    const { error } = await supabase.rpc(
+      "admin_set_tournament_final_cross_pools",
+      {
+        target_tournament_id: tournamentId,
+        target_series_id: seriesId,
+        enable_cross_pools: enabled,
+      },
+    );
     if (error) fail(error, "Impossible de modifier le mode de tableau.");
   },
 
@@ -637,21 +642,25 @@ export const tournamentFinalStageAdminService = {
     tournamentId: string,
   ): Promise<TournamentFinalFullPlanningWorkspace> {
     await this.prepareFullPlanning(tournamentId);
-    const [workspaceResponse, occupiedResponse, externalResponse, modesResponse] =
-      await Promise.all([
-        supabase.rpc("admin_get_tournament_final_full_planning_workspace", {
-          target_tournament_id: tournamentId,
-        }),
-        supabase.rpc("admin_get_tournament_finals_occupied_pool_slots", {
-          target_tournament_id: tournamentId,
-        }),
-        supabase.rpc("admin_get_tournament_final_external_occupied_slots", {
-          target_tournament_id: tournamentId,
-        }),
-        supabase.rpc("admin_get_tournament_final_cross_pools", {
-          target_tournament_id: tournamentId,
-        }),
-      ]);
+    const [
+      workspaceResponse,
+      occupiedResponse,
+      externalResponse,
+      modesResponse,
+    ] = await Promise.all([
+      supabase.rpc("admin_get_tournament_final_full_planning_workspace", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_finals_occupied_pool_slots", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_final_external_occupied_slots", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_final_cross_pools", {
+        target_tournament_id: tournamentId,
+      }),
+    ]);
     if (workspaceResponse.error)
       fail(
         workspaceResponse.error,
