@@ -679,6 +679,29 @@ export const tournamentFinalStageAdminService = {
     if (modesResponse.error)
       fail(modesResponse.error, "Impossible de charger le mode de tableau.");
     const workspace = mapFullPlanningWorkspace(workspaceResponse.data);
+    // Persisted manually assigned times may fall outside generated slots.
+    // Reconstruct them so they remain editable and visible after reload.
+    const resourceNames = new Map(
+      workspace.resources.map((resource) => [resource.id, resource.name]),
+    );
+    const generatedIds = new Set(workspace.slots.map((slot) => slot.id));
+    const extras: PlanningSlot[] = [];
+    for (const node of workspace.nodes) {
+      if (!node.resourceId || !node.playDate || !node.startsAt || !node.endsAt) continue;
+      const id = `${node.resourceId}|${node.playDate}|${node.startsAt.slice(0, 5)}|${node.endsAt.slice(0, 5)}`;
+      if (generatedIds.has(id)) continue;
+      extras.push({
+        id,
+        resourceId: node.resourceId,
+        resourceName: resourceNames.get(node.resourceId) ?? "Terrain",
+        date: node.playDate,
+        startsAt: node.startsAt.slice(0, 5),
+        endsAt: node.endsAt.slice(0, 5),
+        custom: true,
+      });
+      generatedIds.add(id);
+    }
+    workspace.slots = [...workspace.slots, ...extras];
     const bySeries = crossPoolMap(modesResponse.data);
     const occupied = new Set(
       (Array.isArray(occupiedResponse.data) ? occupiedResponse.data : []).map(
