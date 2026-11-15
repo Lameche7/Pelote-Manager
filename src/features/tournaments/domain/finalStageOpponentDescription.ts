@@ -50,9 +50,7 @@ export const describeFinalStageOpponents = ({
     return node.possibleTeamLabels.join(" — ");
   }
 
-  const seedsByRank = new Map(
-    seeds.map((seed) => [seed.seed, seed.teamLabel]),
-  );
+  const seedsByRank = new Map(seeds.map((seed) => [seed.seed, seed.teamLabel]));
 
   if (node.roundNumber === 1) {
     const source = buildFinalStagePlan(seeds.length).firstRoundMatches.find(
