@@ -78,8 +78,10 @@ function MatchRow({ match }: { match: TournamentFinalMatch }) {
 
 export function AdminTournamentFinalStageControl({
   tournamentId,
+  onCrossPoolsChanged,
 }: {
   tournamentId: string;
+  onCrossPoolsChanged?: (seriesId: string, enabled: boolean) => void;
 }) {
   const [stage, setStage] = useState<TournamentFinalStageState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,6 +212,7 @@ export function AdminTournamentFinalStageControl({
         series.seriesId,
         checked,
       );
+      onCrossPoolsChanged?.(series.seriesId, checked);
       return `${series.seriesName} : ${checked ? "tableau croisé entre poules activé" : "classement général conservé"}.`;
     });
 
