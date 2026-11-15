@@ -16,9 +16,9 @@ export const automaticFinalPlanningSlots = (
   slots: PlanningSlot[],
   excludeLateStarts: boolean,
 ): PlanningSlot[] =>
-  excludeLateStarts
-    ? slots.filter((slot) => slot.startsAt.slice(0, 5) !== "21:30")
-    : slots;
+  slots.filter(
+    (slot) => !slot.custom && (!excludeLateStarts || slot.startsAt.slice(0, 5) !== "21:30"),
+  );
 
 const timeToMinutes = (value: string) => {
   const [hours = "0", minutes = "0"] = value.split(":");
