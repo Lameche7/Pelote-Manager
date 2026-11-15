@@ -135,15 +135,17 @@ export const buildFinalStagePlanningNodes = ({
   qualifierCount,
   seeds,
   actualMatches,
+  crossPools = false,
 }: {
   seriesId: string;
   qualifierCount: number;
   seeds: FinalStagePlanningSeed[];
   actualMatches: FinalStagePlanningActualMatch[];
+  crossPools?: boolean;
 }): FinalStagePlanningNode[] => {
   if (qualifierCount < 2 || seeds.length < qualifierCount) return [];
 
-  const plan = buildFinalStagePlan(qualifierCount);
+  const plan = buildFinalStagePlan(qualifierCount, crossPools);
   const seedByNumber = new Map(seeds.map((seed) => [seed.seed, seed]));
   const actualByPosition = new Map(
     actualMatches.map((match) => [
