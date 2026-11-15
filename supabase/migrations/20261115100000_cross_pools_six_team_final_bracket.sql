@@ -27,7 +27,23 @@ begin
           where p.series_id=s.id and
             (select count(*) from public.tournament_pool_teams pt where pt.pool_id=p.id)<>3),
       'generated',exists(select 1 from public.tournament_final_seeds seed
-        where seed.tournament_id=target_tournament_id and seed.series_id=s.id)
+        where seed.tournament_id=target_tournament_id and seed.series_id=s.id),
+      'reconfigurable',not exists(
+        select 1 from public.tournament_matches m
+        where m.tournament_id=target_tournament_id
+          and m.series_id=s.id and m.phase='finals'
+          and (m.final_round_number<>0 or m.display_order not in (0,1))
+      ) and not exists(
+        select 1 from public.tournament_matches m
+        join public.tournament_match_results res on res.match_id=m.id
+        where m.tournament_id=target_tournament_id
+          and m.series_id=s.id and m.phase='finals'
+      ) and not exists(
+        select 1 from public.tournament_matches m
+        join public.tournament_match_events e on e.match_id=m.id
+        where m.tournament_id=target_tournament_id
+          and m.series_id=s.id and m.phase='finals'
+      )
     ) order by s.display_order)
     from public.tournament_series s
     where s.tournament_id=target_tournament_id and s.enabled
