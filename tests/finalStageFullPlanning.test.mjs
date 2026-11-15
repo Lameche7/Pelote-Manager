@@ -481,7 +481,11 @@ test("la case d'exclusion de 21h30 retire uniquement ces départs du calcul auto
   const offered = [early, late];
   assert.deepEqual(automaticFinalPlanningSlots(offered, false), offered);
   assert.deepEqual(automaticFinalPlanningSlots(offered, true), [early]);
-  assert.equal(offered.length, 2, "les créneaux sources ne doivent pas être modifiés");
+  assert.equal(
+    offered.length,
+    2,
+    "les créneaux sources ne doivent pas être modifiés",
+  );
 
   const known = {
     ...planningNodes[0],
@@ -527,7 +531,9 @@ test("la case d'exclusion de 21h30 retire uniquement ces départs du calcul auto
   ]);
 
   const [component] = await Promise.all([
-    read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+    ),
   ]);
   assert.match(component, /useState\(false\)/);
   assert.match(component, /type="checkbox"/);
