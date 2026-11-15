@@ -255,6 +255,7 @@ export const validateFullFinalStagePlanning = ({
   respectAvailability = false,
   finalsStartsOn,
   finalsEndsOn,
+  manualDateOverride = false,
 }: {
   nodes: FinalStagePlanningNode[];
   slots: PlanningSlot[];
@@ -264,12 +265,15 @@ export const validateFullFinalStagePlanning = ({
   respectAvailability?: boolean;
   finalsStartsOn?: string;
   finalsEndsOn?: string;
+  manualDateOverride?: boolean;
 }): FinalStagePlanningValidation => {
   const diagnostics: FinalStagePlanningDiagnostic[] = [];
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const slotById = new Map(slots.map((slot) => [slot.id, slot]));
   const seenNodes = new Set<string>();
   const seenSlots = new Set<string>();
+  // Exact slot IDs are insufficient: manually entered hours may partially overlap.
+  const scheduled: Array<{ nodeId: string; slot: PlanningSlot }> = [];
 
   for (const assignment of assignments) {
     const node = nodeById.get(assignment.nodeId);
@@ -289,6 +293,19 @@ export const validateFullFinalStagePlanning = ({
     }
     seenNodes.add(assignment.nodeId);
     seenSlots.add(assignment.slotId);
+    if (scheduled.some(({ slot: other }) =>
+      other.resourceId === slot.resourceId &&
+      other.date === slot.date &&
+      other.startsAt < slot.endsAt &&
+      other.endsAt > slot.startsAt
+    )) {
+      diagnostics.push({
+        nodeId: assignment.nodeId,
+        code: "invalid_assignment",
+        message: "Deux parties se chevauchent sur le même terrain.",
+      });
+    }
+    scheduled.push({ nodeId: assignment.nodeId, slot });
   }
 
   for (const assignment of assignments) {
@@ -320,6 +337,7 @@ export const validateFullFinalStagePlanning = ({
     if (
       normalWindow &&
       !withinNormal &&
+      !manualDateOverride &&
       !(withinException && !respectAvailability)
     ) {
       diagnostics.push({
