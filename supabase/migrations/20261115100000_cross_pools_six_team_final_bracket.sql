@@ -48,6 +48,11 @@ as $$
 declare
   target_club uuid := public.admin_current_club_id();
   selected public.tournament_series;
+  existing_bracket boolean := false;
+  target_seed_order uuid[];
+  seed_i integer;
+  first_team uuid;
+  second_team uuid;
 begin
   if target_club is null or
     not public.has_club_permission(target_club,'tournaments.manage') then
@@ -64,10 +69,33 @@ begin
   if selected.id is null then
     raise exception 'Tournament series not found' using errcode='P0002';
   end if;
-  if exists(select 1 from public.tournament_final_seeds seed
-      where seed.tournament_id=target_tournament_id
-        and seed.series_id=target_series_id) then
-    raise exception 'Final bracket already generated; existing matches cannot be silently changed'
+  if selected.finals_cross_pools = enable_cross_pools then
+    return enable_cross_pools;
+  end if;
+  existing_bracket := exists(
+    select 1 from public.tournament_final_seeds seed
+    where seed.tournament_id=target_tournament_id
+      and seed.series_id=target_series_id
+  );
+  if existing_bracket and (
+    exists(select 1 from public.tournament_matches m
+      where m.tournament_id=target_tournament_id
+        and m.series_id=target_series_id
+        and m.phase='finals'
+        and (m.final_round_number<>0 or m.display_order not in (0,1)))
+    or (select count(*) from public.tournament_matches m
+      where m.tournament_id=target_tournament_id
+        and m.series_id=target_series_id and m.phase='finals') <> 2
+    or exists(select 1 from public.tournament_matches m
+      join public.tournament_match_results r on r.match_id=m.id
+      where m.tournament_id=target_tournament_id and m.series_id=target_series_id
+        and m.phase='finals')
+    or exists(select 1 from public.tournament_matches m
+      join public.tournament_match_events e on e.match_id=m.id
+      where m.tournament_id=target_tournament_id and m.series_id=target_series_id
+        and m.phase='finals')
+  ) then
+    raise exception 'Existing final bracket has results, publications or advanced rounds'
       using errcode='P0001';
   end if;
   if enable_cross_pools and (
@@ -82,8 +110,110 @@ begin
     raise exception 'Cross-pool bracket requires exactly two pools of three'
       using errcode='P0001';
   end if;
+  if existing_bracket then
+    -- Produce the full target seed order before touching any saved pairing.
+    if enable_cross_pools then
+      select array_agg(team_id order by desired_seed) into target_seed_order
+      from (
+        select
+          (team.value->>'team_id')::uuid team_id,
+          case (pool.value->>'number')::integer
+            when 1 then case (team.value->>'position')::integer
+              when 1 then 1 when 2 then 4 when 3 then 6 end
+            when 2 then case (team.value->>'position')::integer
+              when 1 then 2 when 2 then 3 when 3 then 5 end
+          end desired_seed
+        from jsonb_array_elements(
+          coalesce(public.get_tournament_rankings(target_tournament_id)->'series','[]'::jsonb)
+        ) serie(value)
+        cross join lateral jsonb_array_elements(
+          coalesce(serie.value->'pools','[]'::jsonb)
+        ) pool(value)
+        cross join lateral jsonb_array_elements(
+          coalesce(pool.value->'teams','[]'::jsonb)
+        ) team(value)
+        where (serie.value->>'id')::uuid=target_series_id
+      ) mapped;
+    else
+      select array_agg(r.team_id order by r.position)
+      into target_seed_order
+      from public.tournament_general_ranking_rows(
+        target_tournament_id,target_series_id
+      ) r where r.position<=6;
+    end if;
+    if cardinality(target_seed_order)<>6
+      or exists(select 1 from unnest(target_seed_order) id
+        where not exists(select 1 from public.tournament_final_seeds seed
+          where seed.tournament_id=target_tournament_id
+            and seed.series_id=target_series_id and seed.team_id=id))
+    then
+      raise exception 'Existing bracket and official pool standings are inconsistent'
+        using errcode='P0001';
+    end if;
+
+    -- An existing MANUAL placement stays at its date and hour only when both
+    -- newly paired teams explicitly declared that slot. Fail atomically otherwise.
+    if exists(
+      select 1 from public.tournament_matches m
+      join public.tournament_match_planning mp on mp.match_id=m.id
+      where m.tournament_id=target_tournament_id
+        and m.series_id=target_series_id and m.phase='finals'
+        and (
+          not exists(select 1 from public.tournament_team_availability_slots a
+            where a.tournament_id=target_tournament_id
+              and a.team_id=case when m.display_order=0
+                then target_seed_order[3] else target_seed_order[4] end
+              and a.play_date=mp.play_date
+              and a.starts_at=mp.starts_at and a.ends_at=mp.ends_at)
+          or not exists(select 1 from public.tournament_team_availability_slots a
+            where a.tournament_id=target_tournament_id
+              and a.team_id=case when m.display_order=0
+                then target_seed_order[6] else target_seed_order[5] end
+              and a.play_date=mp.play_date
+              and a.starts_at=mp.starts_at and a.ends_at=mp.ends_at)
+        )
+    ) then
+      raise exception 'New cross-pool opponents are not both available for existing fixtures'
+        using errcode='P0001';
+    end if;
+
+    update public.tournament_final_seeds seed set seed=seed.seed+100
+      where seed.tournament_id=target_tournament_id
+        and seed.series_id=target_series_id;
+    for seed_i in 1..6 loop
+      update public.tournament_final_seeds seed set seed=seed_i
+      where seed.tournament_id=target_tournament_id
+        and seed.series_id=target_series_id
+        and seed.team_id=target_seed_order[seed_i];
+    end loop;
+
+    for seed_i in 0..1 loop
+      first_team := target_seed_order[3+seed_i];
+      second_team := target_seed_order[case when seed_i=0 then 6 else 5 end];
+      update public.tournament_matches m set
+        team_a_id=first_team, team_b_id=second_team,
+        final_seed_a=3+seed_i,
+        final_seed_b=case when seed_i=0 then 6 else 5 end,
+        updated_at=now()
+      where m.tournament_id=target_tournament_id
+        and m.series_id=target_series_id
+        and m.phase='finals' and m.final_round_number=0
+        and m.display_order=seed_i;
+    end loop;
+  end if;
+
   update public.tournament_series set finals_cross_pools=enable_cross_pools
     where id=target_series_id;
+  insert into public.tournament_audit_log(
+    tournament_id,action,payload,created_by
+  ) values(
+    target_tournament_id,'final_cross_pools_changed',
+    jsonb_build_object(
+      'series_id',target_series_id,
+      'enabled',enable_cross_pools,
+      'existing_bracket_repaired',existing_bracket
+    ),auth.uid()
+  );
   return enable_cross_pools;
 end;
 $$;
