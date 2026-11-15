@@ -37,10 +37,12 @@ export const describeFinalStageOpponents = ({
   node,
   nodes,
   seeds,
+  crossPools = false,
 }: {
   node: FinalStagePlanningNode;
   nodes: FinalStagePlanningNode[];
   seeds: FinalStagePlanningSeed[];
+  crossPools?: boolean;
 }): string => {
   if (node.teamALabel && node.teamBLabel) {
     return `${node.teamALabel} — ${node.teamBLabel}`;
@@ -53,7 +55,7 @@ export const describeFinalStageOpponents = ({
   const seedsByRank = new Map(seeds.map((seed) => [seed.seed, seed.teamLabel]));
 
   if (node.roundNumber === 1) {
-    const source = buildFinalStagePlan(seeds.length).firstRoundMatches.find(
+    const source = buildFinalStagePlan(seeds.length, crossPools).firstRoundMatches.find(
       (match) => match.matchIndex === node.displayOrder + 1,
     );
     if (source) {
