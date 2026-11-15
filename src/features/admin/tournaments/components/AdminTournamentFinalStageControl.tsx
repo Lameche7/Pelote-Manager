@@ -205,7 +205,10 @@ export function AdminTournamentFinalStageControl({
     }
   };
 
-  const setCrossPools = (series: TournamentFinalSeriesState, checked: boolean) => {
+  const setCrossPools = (
+    series: TournamentFinalSeriesState,
+    checked: boolean,
+  ) => {
     if (
       series.generated &&
       !window.confirm(
@@ -354,17 +357,16 @@ export function AdminTournamentFinalStageControl({
                   Croiser les poules — {series.seriesName}
                 </label>
                 <p className="final-stage-control__hint">
-                  Barrage 1 : 2e poule 2 contre 3e poule 1 ; barrage 2 :
-                  2e poule 1 contre 3e poule 2. Demi-finales : 1re
-                  poule 1 contre vainqueur barrage 1, puis 1re poule 2
-                  contre vainqueur barrage 2.
+                  Barrage 1 : 2e poule 2 contre 3e poule 1 ; barrage 2 : 2e
+                  poule 1 contre 3e poule 2. Demi-finales : 1re poule 1 contre
+                  vainqueur barrage 1, puis 1re poule 2 contre vainqueur barrage
+                  2.
                 </p>
                 {series.generated && series.crossPoolsReconfigurable && (
                   <p className="final-stage-control__hint">
-                    Tableau déjà généré, mais les barrages ne sont ni publiés ni joués.
-                    Tu peux activer le croisement après confirmation. Les créneaux
-                    fixés manuellement sont conservés uniquement si les nouvelles
-                    équipes y sont toutes disponibles.
+                    Tableau déjà généré, mais les barrages ne sont ni publiés ni
+                    joués. Tu peux activer le croisement après confirmation. Les
+          ...[truncated]
                   </p>
                 )}
                 {series.generated && !series.crossPoolsReconfigurable && (
