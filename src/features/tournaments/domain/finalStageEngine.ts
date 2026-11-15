@@ -70,7 +70,9 @@ export const buildFinalStagePlan = (
   crossPools = false,
 ): FinalStagePlan => {
   if (crossPools && qualifierCount !== 6) {
-    throw new Error("Le croisement des poules nécessite exactement six qualifiées.");
+    throw new Error(
+      "Le croisement des poules nécessite exactement six qualifiées.",
+    );
   }
   if (!Number.isInteger(qualifierCount) || qualifierCount < 2) {
     throw new Error("La phase finale doit qualifier au moins deux équipes.");
@@ -117,13 +119,14 @@ export const buildFinalStagePlan = (
       { matchIndex: 1, sideA: sourceForSeed(1), sideB: sourceForSeed(3) },
       { matchIndex: 2, sideA: sourceForSeed(2), sideB: sourceForSeed(4) },
     );
-  } else for (let index = 0; index < seedOrder.length; index += 2) {
-    firstRoundMatches.push({
-      matchIndex: firstRoundMatches.length + 1,
-      sideA: sourceForSeed(seedOrder[index]),
-      sideB: sourceForSeed(seedOrder[index + 1]),
-    });
-  }
+  } else
+    for (let index = 0; index < seedOrder.length; index += 2) {
+      firstRoundMatches.push({
+        matchIndex: firstRoundMatches.length + 1,
+        sideA: sourceForSeed(seedOrder[index]),
+        sideB: sourceForSeed(seedOrder[index + 1]),
+      });
+    }
 
   return {
     qualifierCount,
