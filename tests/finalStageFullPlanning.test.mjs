@@ -555,5 +555,8 @@ test("l'export PDF du planning hebdomadaire conserve la semaine et les filtres e
   assert.match(calendar, /seriesFilter/);
   assert.match(calendar, /show === "matches"/);
   assert.match(calendar, /role="alert"/);
-  assert.doesNotMatch(calendar, /saveFullPlanning|publishSeries|\.insert\(|\.update\(/);
+  assert.doesNotMatch(
+    calendar,
+    /saveFullPlanning|publishSeries|\.insert\(|\.update\(/,
+  );
 });
