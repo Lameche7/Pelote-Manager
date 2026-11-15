@@ -401,9 +401,7 @@ export function AdminTournamentFinalFullPlanning({
     setExceptionDate(row?.playDate ?? "");
     setExceptionStart(row?.startsAt?.slice(0, 5) ?? "16:30");
     setExceptionEnd(row?.endsAt?.slice(0, 5) ?? "17:30");
-    setExceptionResourceId(
-      row?.resourceId ?? workspace.resources[0]?.id ?? "",
-    );
+    setExceptionResourceId(row?.resourceId ?? workspace.resources[0]?.id ?? "");
   };
 
   const saveExceptionalSlot = (node: FinalStagePlanningNode) =>
@@ -412,7 +410,9 @@ export function AdminTournamentFinalFullPlanning({
         throw new Error("Indique une date, un horaire et un terrain.");
       }
       if (exceptionEnd <= exceptionStart) {
-        throw new Error("L'heure de fin doit être postérieure à l'heure de début.");
+        throw new Error(
+          "L'heure de fin doit être postérieure à l'heure de début.",
+        );
       }
       if (
         (workspace.tournament.finalsStartsOn &&
@@ -420,7 +420,9 @@ export function AdminTournamentFinalFullPlanning({
         (workspace.tournament.finalsEndsOn &&
           exceptionDate > workspace.tournament.finalsEndsOn)
       ) {
-        throw new Error("La date doit appartenir à la période des phases finales.");
+        throw new Error(
+          "La date doit appartenir à la période des phases finales.",
+        );
       }
       await tournamentFinalStageAdminService.setExceptionalManualSlot(
         tournamentId,
@@ -767,112 +769,151 @@ export function AdminTournamentFinalFullPlanning({
                               {isEditing && !locked ? (
                                 <div className="final-stage-full-planning__manual-choice">
                                   <select
-                                  value={currentSlotId ?? ""}
-                                  disabled={busy}
-                                  onChange={(event) =>
-                                    changeManualSlot(
-                                      node.id,
-                                      event.target.value,
-                                    )
-                                  }
-                                >
-                                  <option value="">À programmer</option>
-                                  {sortedSlots.map((candidate) => {
-                                    const isCommon =
-                                      isFinalStageSlotCommonForNode({
-                                        node,
-                                        slot: candidate,
-                                        availability: workspace.availability,
-                                      });
-                                    return (
-                                      <option
-                                        key={candidate.id}
-                                        value={candidate.id}
+                                    value={currentSlotId ?? ""}
+                                    disabled={busy}
+                                    onChange={(event) =>
+                                      changeManualSlot(
+                                        node.id,
+                                        event.target.value,
+                                      )
+                                    }
+                                  >
+                                    <option value="">À programmer</option>
+                                    {sortedSlots.map((candidate) => {
+                                      const isCommon =
+                                        isFinalStageSlotCommonForNode({
+                                          node,
+                                          slot: candidate,
+                                          availability: workspace.availability,
+                                        });
+                                      return (
+                                        <option
+                                          key={candidate.id}
+                                          value={candidate.id}
+                                        >
+                                          {isCommon ? "✓ " : "⚠ "}
+                                          {slotLabel(candidate)}
+                                        </option>
+                                      );
+                                    })}
+                                    {slot &&
+                                      workspace.exceptionalSlotIds.includes(
+                                        slot.id,
+                                      ) && (
+                                        <option value={slot.id}>
+                                          Exceptionnel · {slotLabel(slot)}
+                                        </option>
+                                      )}
+                                  </select>
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() =>
+                                      exceptionNodeId === node.id
+                                        ? setExceptionNodeId(null)
+                                        : editExceptionalSlot(node.id, row)
+                                    }
+                                  >
+                                    {exceptionNodeId === node.id
+                                      ? "Annuler la saisie"
+                                      : "Choisir une autre date / heure"}
+                                  </button>
+                                  {exceptionNodeId === node.id && (
+                                    <div className="final-stage-full-planning__exception-form">
+                                      <p>
+                                        Créneau exceptionnel, même un samedi ou
+                                        avant 17h30. À convenir avec les
+                                        équipes.
+                                      </p>
+                                      <label>
+                                        Date
+                                        <input
+                                          type="date"
+                                          value={exceptionDate}
+                                          min={
+                                            workspace.tournament
+                                              .finalsStartsOn ?? undefined
+                                          }
+                                          max={
+                                            workspace.tournament.finalsEndsOn ??
+                                            undefined
+                                          }
+                                          onChange={(event) =>
+                                            setExceptionDate(event.target.value)
+                                          }
+                                          disabled={busy}
+                                        />
+                                      </label>
+                                      <label>
+                                        Début
+                                        <input
+                                          type="time"
+                                          value={exceptionStart}
+                                          onChange={(event) =>
+                                            setExceptionStart(
+                                              event.target.value,
+                                            )
+                                          }
+                                          disabled={busy}
+                                        />
+                                      </label>
+                                      <label>
+                                        Fin
+                                        <input
+                                          type="time"
+                                          value={exceptionEnd}
+                                          onChange={(event) =>
+                                            setExceptionEnd(event.target.value)
+                                          }
+                                          disabled={busy}
+                                        />
+                                      </label>
+                                      <label>
+                                        Terrain
+                                        <select
+                                          value={exceptionResourceId}
+                                          onChange={(event) =>
+                                            setExceptionResourceId(
+                                              event.target.value,
+                                            )
+                                          }
+                                          disabled={busy}
+                                        >
+                                          {workspace.resources.map(
+                                            (resource) => (
+                                              <option
+                                                key={resource.id}
+                                                value={resource.id}
+                                              >
+                                                {resource.name}
+                                              </option>
+                                            ),
+                                          )}
+                                        </select>
+                                      </label>
+                                      <button
+                                        type="button"
+                                        disabled={
+                                          busy ||
+                                          !exceptionDate ||
+                                          !exceptionStart ||
+                                          !exceptionEnd ||
+                                          !exceptionResourceId ||
+                                          exceptionEnd <= exceptionStart
+                                        }
+                                        onClick={() =>
+                                          void saveExceptionalSlot(node)
+                                        }
                                       >
-                                        {isCommon ? "✓ " : "⚠ "}
-                                        {slotLabel(candidate)}
-                                      </option>
-                                    );
-                                  })}
-                                  {slot &&
-                                    workspace.exceptionalSlotIds.includes(slot.id) && (
-                                      <option value={slot.id}>
-                                        Exceptionnel · {slotLabel(slot)}
-                                      </option>
-                                    )}
-                                </select>
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    exceptionNodeId === node.id
-                                      ? setExceptionNodeId(null)
-                                      : editExceptionalSlot(node.id, row)
-                                  }
-                                >
-                                  {exceptionNodeId === node.id
-                                    ? "Annuler la saisie"
-                                    : "Choisir une autre date / heure"}
-                                </button>
-                                {exceptionNodeId === node.id && (
-                                  <div className="final-stage-full-planning__exception-form">
-                                    <p>Créneau exceptionnel, même un samedi ou avant 17h30. À convenir avec les équipes.</p>
-                                    <label>
-                                      Date
-                                      <input
-                                        type="date"
-                                        value={exceptionDate}
-                                        min={workspace.tournament.finalsStartsOn ?? undefined}
-                                        max={workspace.tournament.finalsEndsOn ?? undefined}
-                                        onChange={(event) => setExceptionDate(event.target.value)}
-                                        disabled={busy}
-                                      />
-                                    </label>
-                                    <label>
-                                      Début
-                                      <input
-                                        type="time"
-                                        value={exceptionStart}
-                                        onChange={(event) => setExceptionStart(event.target.value)}
-                                        disabled={busy}
-                                      />
-                                    </label>
-                                    <label>
-                                      Fin
-                                      <input
-                                        type="time"
-                                        value={exceptionEnd}
-                                        onChange={(event) => setExceptionEnd(event.target.value)}
-                                        disabled={busy}
-                                      />
-                                    </label>
-                                    <label>
-                                      Terrain
-                                      <select
-                                        value={exceptionResourceId}
-                                        onChange={(event) => setExceptionResourceId(event.target.value)}
-                                        disabled={busy}
-                                      >
-                                        {workspace.resources.map((resource) => (
-                                          <option key={resource.id} value={resource.id}>
-                                            {resource.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </label>
-                                    <button
-                                      type="button"
-                                      disabled={busy || !exceptionDate || !exceptionStart || !exceptionEnd || !exceptionResourceId || exceptionEnd <= exceptionStart}
-                                      onClick={() => void saveExceptionalSlot(node)}
-                                    >
-                                      Enregistrer ce créneau exceptionnel
-                                    </button>
-                                    <small>
-                                      Enregistrement immédiat de cette partie uniquement.
-                                      Enregistre séparément toute autre modification en cours.
-                                    </small>
-                                  </div>
-                                )}
+                                        Enregistrer ce créneau exceptionnel
+                                      </button>
+                                      <small>
+                                        Enregistrement immédiat de cette partie
+                                        uniquement. Enregistre séparément toute
+                                        autre modification en cours.
+                                      </small>
+                                    </div>
+                                  )}
                                 </div>
                               ) : slot ? (
                                 <span
