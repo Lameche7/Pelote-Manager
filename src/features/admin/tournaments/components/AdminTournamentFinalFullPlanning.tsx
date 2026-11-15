@@ -638,14 +638,16 @@ export function AdminTournamentFinalFullPlanning({
                               className="final-stage-full-planning__match"
                             >
                               <div>
-                                <strong>{describeFinalStageOpponents({
+                                <strong>
+                                  {describeFinalStageOpponents({
                                     node,
                                     nodes,
                                     seeds:
                                       workspace.series.find(
                                         (series) => series.id === node.seriesId,
                                       )?.seeds ?? [],
-                                  })}</strong>
+                                  })}
+                                </strong>
                                 <span>
                                   {row?.resultStatus === "validated"
                                     ? "Résultat validé"
