@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { TournamentFinalFullPlanningWorkspace } from "../services/tournamentFinalStageAdminService";
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
 
@@ -52,6 +52,8 @@ export function AdminTournamentFinalWeeklyOverview({
   workspace: TournamentFinalFullPlanningWorkspace;
 }) {
   const [weekIndex, setWeekIndex] = useState(0);
+  const [printError, setPrintError] = useState("");
+  const weeklyTableRef = useRef<HTMLTableElement>(null);
   const [seriesFilter, setSeriesFilter] = useState("all");
   const [show, setShow] = useState<"all" | "matches" | "free">("all");
 
@@ -170,6 +172,74 @@ export function AdminTournamentFinalWeeklyOverview({
     (slot) => slot.kind === "occupied",
   ).length;
 
+  const exportWeekAsPdf = () => {
+    const source = weeklyTableRef.current;
+    if (!source) return;
+    // Native print-to-PDF keeps French characters and long team names readable,
+    // including tables that flow onto more than one page.
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      setPrintError(
+        "Le navigateur a bloqué la fenêtre d'export. Autorisez les fenêtres de Pilotoki, puis réessayez.",
+      );
+      return;
+    }
+    setPrintError("");
+    const document = printWindow.document;
+    document.title = `Pilotoki - Planning ${toIsoDay(monday)}`;
+    const style = document.createElement("style");
+    style.textContent = `
+      @page { size: A3 landscape; margin: 11mm; }
+      * { box-sizing: border-box; }
+      body { font: 10px Arial, sans-serif; color: #17253a; background: white; }
+      h1 { font-size: 19px; margin: 0 0 5px; }
+      .subheading { font-size: 11px; margin: 0 0 10px; }
+      .summary { font-weight: bold; margin: 0 0 9px; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { border: 1px solid #d4dce7; padding: 4px; vertical-align: top; }
+      th { background: #eaf0f6; }
+      th:first-child { width: 45px; }
+      tr { break-inside: avoid; page-break-inside: avoid; }
+      td { overflow-wrap: anywhere; }
+      .final-weekly-overview__event {
+        display: block; margin-bottom: 3px; padding: 5px;
+        border-left: 3px solid #3b82f6; border-radius: 3px;
+        break-inside: avoid; page-break-inside: avoid;
+      }
+      .final-weekly-overview__event--match { background: #ecf3ff; }
+      .final-weekly-overview__event--free { background: #e9f7ed; border-color: #198754; }
+      .final-weekly-overview__event--occupied { background: #edf0f2; border-color: #64748b; }
+      .final-weekly-overview__event strong,
+      .final-weekly-overview__event small,
+      .final-weekly-overview__event-time { display: block; margin-top: 2px; }
+      .final-weekly-overview__unavailable { color: #8b97a7; }
+      footer { margin-top: 10px; color: #536274; font-size: 9px; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    `;
+    document.head.appendChild(style);
+    const heading = document.createElement("h1");
+    heading.textContent = `Pilotoki · ${workspace.tournament.name}`;
+    document.body.appendChild(heading);
+    const subheading = document.createElement("p");
+    subheading.className = "subheading";
+    const selectedSeries = workspace.series.find(
+      (series) => series.id === seriesFilter,
+    );
+    subheading.textContent = `Planning hebdomadaire · ${weekFormatter.format(monday)} au ${weekFormatter.format(addDays(monday, 6))} · ${selectedSeries?.name ?? "Toutes les séries"} · ${show === "matches" ? "Parties uniquement" : show === "free" ? "Créneaux libres uniquement" : "Tous les créneaux"}`;
+    document.body.appendChild(subheading);
+    const summary = document.createElement("p");
+    summary.className = "summary";
+    summary.textContent = `${visibleSlots.filter((item) => item.kind === "match").length} parties / positions · ${visibleSlots.filter((item) => item.kind === "free").length} libres · ${visibleSlots.filter((item) => item.kind === "occupied").length} occupés ailleurs`;
+    document.body.appendChild(summary);
+    document.body.appendChild(source.cloneNode(true));
+    const footer = document.createElement("footer");
+    footer.textContent =
+      "Planning prévisionnel. Les rencontres provisoires restent à confirmer. Les créneaux non configurés ne sont pas considérés comme libres.";
+    document.body.appendChild(footer);
+    printWindow.focus();
+    printWindow.print();
+  };
+
   return (
     <section
       className="final-weekly-overview"
@@ -182,6 +252,14 @@ export function AdminTournamentFinalWeeklyOverview({
           <p>Parties programmées, positions provisoires et créneaux libres.</p>
         </div>
         <div className="final-weekly-overview__navigation">
+          <button
+            type="button"
+            onClick={exportWeekAsPdf}
+            aria-label="Exporter le planning de cette semaine en PDF"
+            title="Ouvre l'impression : choisir Enregistrer au format PDF"
+          >
+            Exporter la semaine en PDF
+          </button>
           <button
             type="button"
             disabled={currentIndex === 0}
@@ -249,8 +327,16 @@ export function AdminTournamentFinalWeeklyOverview({
           </select>
         </label>
       </div>
+      {printError && (
+        <p
+          role="alert"
+          className="qualification-alert qualification-alert--error"
+        >
+          {printError}
+        </p>
+      )}
       <div className="final-weekly-overview__scroll">
-        <table className="final-weekly-overview__table">
+        <table ref={weeklyTableRef} className="final-weekly-overview__table">
           <thead>
             <tr>
               <th scope="col">Heure</th>

@@ -542,3 +542,21 @@ test("la case d'exclusion de 21h30 retire uniquement ces départs du calcul auto
   assert.match(component, /row\.source === "manual"/);
   assert.match(component, /row\.published/);
 });
+
+test("l'export PDF du planning hebdomadaire conserve la semaine et les filtres en lecture seule", async () => {
+  const calendar = await read(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalWeeklyOverview.tsx",
+  );
+  assert.match(calendar, /Exporter la semaine en PDF/);
+  assert.match(calendar, /ref=\{weeklyTableRef\}/);
+  assert.match(calendar, /source\.cloneNode\(true\)/);
+  assert.match(calendar, /@page \{ size: A3 landscape/);
+  assert.match(calendar, /printWindow\.print\(\)/);
+  assert.match(calendar, /seriesFilter/);
+  assert.match(calendar, /show === "matches"/);
+  assert.match(calendar, /role="alert"/);
+  assert.doesNotMatch(
+    calendar,
+    /saveFullPlanning|publishSeries|\.insert\(|\.update\(/,
+  );
+});
