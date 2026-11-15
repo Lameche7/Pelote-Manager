@@ -749,7 +749,6 @@ test("la saisie exceptionnelle autorise les dates hors créneaux avec contrôle 
   assert.match(migration, /Published or completed match cannot be moved/);
 });
 
-
 test("un barrage peut se jouer après un huitième indépendant mais avant son propre huitième", () => {
   const seeds = Array.from({ length: 24 }, (_, index) => ({
     seed: index + 1,
@@ -808,7 +807,11 @@ test("un barrage peut se jouer après un huitième indépendant mais avant son p
       { nodeId: barrage.id, slotId: late.id },
     ],
   });
-  assert.equal(independent.valid, true, JSON.stringify(independent.diagnostics));
+  assert.equal(
+    independent.valid,
+    true,
+    JSON.stringify(independent.diagnostics),
+  );
 
   const dependentWrongOrder = validateFullFinalStagePlanning({
     nodes: [barrage, dependentEighth],
@@ -820,7 +823,11 @@ test("un barrage peut se jouer après un huitième indépendant mais avant son p
     ],
   });
   assert.equal(dependentWrongOrder.valid, false);
-  assert.ok(dependentWrongOrder.diagnostics.some((entry) => entry.code === "invalid_assignment"));
+  assert.ok(
+    dependentWrongOrder.diagnostics.some(
+      (entry) => entry.code === "invalid_assignment",
+    ),
+  );
 
   const dependentCorrectOrder = validateFullFinalStagePlanning({
     nodes: [barrage, dependentEighth],
