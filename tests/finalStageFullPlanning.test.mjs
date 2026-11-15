@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { buildFinalStagePlanningNodes } from "../.test-dist/src/features/tournaments/domain/finalStagePlanningEngine.js";
+import { describeFinalStageOpponents } from "../.test-dist/src/features/tournaments/domain/finalStageOpponentDescription.js";
 import {
   automaticFinalPlanningSlots,
   generateFullFinalStagePlanning,
@@ -454,7 +455,7 @@ test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux
   assert.match(calendar, /Toutes les séries/);
   assert.match(calendar, /Créneaux libres uniquement/);
   assert.match(calendar, /Créneau occupé/);
-  assert.match(calendar, /adversaires à confirmer/);
+  assert.match(calendar, /describeFinalStageOpponents/);
   assert.match(calendar, /Vue en lecture seule/);
   assert.match(
     admin,
@@ -559,4 +560,64 @@ test("l'export PDF du planning hebdomadaire conserve la semaine et les filtres e
     calendar,
     /saveFullPlanning|publishSeries|\.insert\(|\.update\(/,
   );
+});
+
+test("les adversaires à confirmer sont décrits selon leur position réelle dans le tableau", async () => {
+  const seeds = Array.from({ length: 6 }, (_, index) => ({
+    seed: index + 1,
+    teamId: `team-${index + 1}`,
+    teamLabel: `Équipe ${index + 1}`,
+  }));
+  const nodes = buildFinalStagePlanningNodes({
+    seriesId: "series-6",
+    qualifierCount: 6,
+    seeds,
+    actualMatches: [],
+  });
+  const descriptions = nodes.map((node) =>
+    describeFinalStageOpponents({ node, nodes, seeds }),
+  );
+  assert.equal(descriptions[0], "Équipe 3 — Équipe 6");
+  assert.equal(descriptions[1], "Équipe 4 — Équipe 5");
+  assert.match(descriptions[2], /Équipe 1/);
+  assert.match(descriptions[2], /Vainqueur du barrage n°/);
+  assert.match(descriptions[3], /Vainqueur du barrage n°/);
+  assert.equal(
+    descriptions[4],
+    "Vainqueur de la demi-finale n°1 — Vainqueur de la demi-finale n°2",
+  );
+
+  const decided = buildFinalStagePlanningNodes({
+    seriesId: "series-6",
+    qualifierCount: 6,
+    seeds,
+    actualMatches: [
+      {
+        id: "decided",
+        round: "semifinal",
+        roundNumber: 1,
+        displayOrder: 0,
+        teamAId: "team-1",
+        teamALabel: "Équipe 1",
+        teamBId: "team-3",
+        teamBLabel: "Équipe 3",
+        resultStatus: null,
+        published: false,
+      },
+    ],
+  });
+  assert.equal(
+    describeFinalStageOpponents({ node: decided[2], nodes: decided, seeds }),
+    "Équipe 1 — Équipe 3",
+  );
+
+  const calendar = await read(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalWeeklyOverview.tsx",
+  );
+  const detailed = await read(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+  );
+  assert.match(calendar, /describeFinalStageOpponents/);
+  assert.match(calendar, /source\.cloneNode\(true\)/);
+  assert.match(detailed, /describeFinalStageOpponents/);
 });
