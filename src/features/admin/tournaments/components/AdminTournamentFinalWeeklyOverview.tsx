@@ -198,14 +198,14 @@ export function AdminTournamentFinalWeeklyOverview({
 
   const filterSlots = (candidates: WeeklySlot[]) =>
     candidates.filter((entry) => {
-    if (show === "matches" && entry.kind !== "match") return false;
-    if (show === "free" && entry.kind !== "free") return false;
-    if (
-      seriesFilter !== "all" &&
-      entry.kind === "match" &&
-      entry.seriesId !== seriesFilter
-    )
-      return false;
+      if (show === "matches" && entry.kind !== "match") return false;
+      if (show === "free" && entry.kind !== "free") return false;
+      if (
+        seriesFilter !== "all" &&
+        entry.kind === "match" &&
+        entry.seriesId !== seriesFilter
+      )
+        return false;
       return true;
     });
   const visibleSlots = filterSlots(weeklySlots);
@@ -323,8 +323,7 @@ export function AdminTournamentFinalWeeklyOverview({
           const cell = document.createElement("td");
           const matching = entries.filter(
             (entry) =>
-              entry.slot.date === day &&
-              timeText(entry.slot.startsAt) === hour,
+              entry.slot.date === day && timeText(entry.slot.startsAt) === hour,
           );
           if (matching.length === 0) {
             append(cell, "span", "—").className =
@@ -356,7 +355,11 @@ export function AdminTournamentFinalWeeklyOverview({
       table.appendChild(tbody);
       section.appendChild(table);
       if (hoursForWeek.length === 0) {
-        append(section, "p", "Aucun créneau correspondant aux filtres pour cette semaine.");
+        append(
+          section,
+          "p",
+          "Aucun créneau correspondant aux filtres pour cette semaine.",
+        );
       }
       document.body.appendChild(section);
     }
