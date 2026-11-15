@@ -113,6 +113,7 @@ export type TournamentFinalSeriesState = {
   generated: boolean;
   crossPools: boolean;
   crossPoolsEligible: boolean;
+  crossPoolsReconfigurable: boolean;
   poolCount: number;
   currentRoundNumber: number | null;
   seeds: TournamentFinalSeed[];
@@ -245,6 +246,7 @@ const mapState = (value: unknown): TournamentFinalStageState => {
       generated: Boolean(series.generated),
       crossPools: Boolean(series.cross_pools),
       crossPoolsEligible: Boolean(series.cross_pools_eligible),
+      crossPoolsReconfigurable: Boolean(series.cross_pools_reconfigurable),
       poolCount: Number(series.pool_count ?? 0),
       currentRoundNumber:
         series.current_round_number === null ||
@@ -294,6 +296,7 @@ const crossPoolMap = (value: unknown) =>
       {
         crossPools: Boolean(entry.cross_pools),
         eligible: Boolean(entry.eligible),
+        reconfigurable: Boolean(entry.reconfigurable),
         poolCount: Number(entry.pool_count ?? 0),
       },
     ]),
@@ -502,6 +505,7 @@ export const tournamentFinalStageAdminService = {
           ...series,
           crossPools: mode?.crossPools ?? false,
           crossPoolsEligible: mode?.eligible ?? false,
+          crossPoolsReconfigurable: mode?.reconfigurable ?? false,
           poolCount: mode?.poolCount ?? 0,
         };
       }),
