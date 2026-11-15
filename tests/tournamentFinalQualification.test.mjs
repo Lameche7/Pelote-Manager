@@ -176,6 +176,7 @@ test("deux poules de trois produisent des barrages croisés puis les bonnes demi
   assert.match(migration, /when 1 then 1 when 2 then 4 when 3 then 6/);
   assert.match(migration, /when 1 then 2 when 2 then 3 when 3 then 5/);
   assert.match(migration, /then array\[1,3,2,4\]/);
-  assert.match(migration, /already generated; existing matches cannot be silently changed/);
+  assert.match(migration, /Existing final bracket has results, publications or advanced rounds/);
+  assert.match(migration, /New cross-pool opponents are not both available for existing fixtures/);
   assert.match(migration, /has_club_permission/);
 });
