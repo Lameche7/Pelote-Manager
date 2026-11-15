@@ -50,10 +50,12 @@ export const buildFinalBracketProjectedMatches = ({
   qualifierCount,
   seeds,
   actualMatches,
+  crossPools = false,
 }: {
   qualifierCount: number;
   seeds: FinalBracketProjectionSeed[];
   actualMatches: FinalBracketProjectionActualMatch[];
+  crossPools?: boolean;
 }): FinalBracketProjectedMatch[] => {
   if (
     !Number.isInteger(qualifierCount) ||
@@ -63,7 +65,7 @@ export const buildFinalBracketProjectedMatches = ({
     return [];
   }
 
-  const plan = buildFinalStagePlan(qualifierCount);
+  const plan = buildFinalStagePlan(qualifierCount, crossPools);
   const seedByNumber = new Map(seeds.map((seed) => [seed.seed, seed]));
   const actualByRoundAndOrder = new Map(
     actualMatches.map((match) => [

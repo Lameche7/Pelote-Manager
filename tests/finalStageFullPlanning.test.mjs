@@ -624,3 +624,38 @@ test("les adversaires à confirmer sont décrits selon leur position réelle dan
   assert.match(calendar, /document\.body\.appendChild\(section\)/);
   assert.match(detailed, /describeFinalStageOpponents/);
 });
+
+test("le planning croisé suit les mêmes barrages que le tableau sportif", async () => {
+  const seeds = Array.from({ length: 6 }, (_, index) => ({
+    seed: index + 1,
+    teamId: `team-${index + 1}`,
+    teamLabel: `Équipe ${index + 1}`,
+  }));
+  const crossed = buildFinalStagePlanningNodes({
+    seriesId: "crossed",
+    qualifierCount: 6,
+    seeds,
+    actualMatches: [],
+    crossPools: true,
+  });
+  assert.deepEqual(crossed[2].dependencyNodeIds, ["crossed:0:0"]);
+  assert.deepEqual(crossed[3].dependencyNodeIds, ["crossed:0:1"]);
+  assert.deepEqual(crossed[4].dependencyNodeIds, [
+    "crossed:1:0",
+    "crossed:1:1",
+  ]);
+
+  const calendar = await read(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalWeeklyOverview.tsx",
+  );
+  const fullPlan = await read(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+  );
+  const control = await read(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalStageControl.tsx",
+  );
+  assert.match(calendar, /crossPools: series.crossPools/);
+  assert.match(fullPlan, /crossPools: series.crossPools/);
+  assert.match(control, /Croiser les poules/);
+  assert.match(control, /series.generated/);
+});

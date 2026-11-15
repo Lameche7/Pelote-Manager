@@ -111,3 +111,19 @@ test("un 1/8 réel non joué affiche aussi ses deux équipes possibles au tour s
   assert.equal(firstSemifinal?.sideA.teamLabel, "");
   assert.equal(firstSemifinal?.sideB.teamLabel, "");
 });
+
+test("le tableau croisé place chaque première de poule contre le bon barrage", () => {
+  const projected = buildFinalBracketProjectedMatches({
+    qualifierCount: 6,
+    crossPools: true,
+    seeds,
+    actualMatches: preliminaryMatches,
+  });
+  const semi = projected
+    .filter((match) => match.round === "semifinal")
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+  assert.equal(semi[0].sideA.teamLabel, "Équipe 1");
+  assert.equal(semi[0].sideB.teamLabel, "Équipe 3\nou Équipe 6");
+  assert.equal(semi[1].sideA.teamLabel, "Équipe 2");
+  assert.equal(semi[1].sideB.teamLabel, "Équipe 4\nou Équipe 5");
+});

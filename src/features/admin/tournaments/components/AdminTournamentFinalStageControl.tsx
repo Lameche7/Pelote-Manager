@@ -78,8 +78,10 @@ function MatchRow({ match }: { match: TournamentFinalMatch }) {
 
 export function AdminTournamentFinalStageControl({
   tournamentId,
+  onCrossPoolsChanged,
 }: {
   tournamentId: string;
+  onCrossPoolsChanged?: (seriesId: string, enabled: boolean) => void;
 }) {
   const [stage, setStage] = useState<TournamentFinalStageState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -203,6 +205,29 @@ export function AdminTournamentFinalStageControl({
     }
   };
 
+  const setCrossPools = (
+    series: TournamentFinalSeriesState,
+    checked: boolean,
+  ) => {
+    if (
+      series.generated &&
+      !window.confirm(
+        "Adapter le tableau déjà généré aux poules croisées ? Les deux barrages garderont leurs dates et horaires manuels, après vérification des disponibilités. Aucun résultat ni aucune rencontre publiée ne peut être modifié.",
+      )
+    ) {
+      return;
+    }
+    void run(async () => {
+      await tournamentFinalStageAdminService.setCrossPools(
+        tournamentId,
+        series.seriesId,
+        checked,
+      );
+      onCrossPoolsChanged?.(series.seriesId, checked);
+      return `${series.seriesName} : ${checked ? "tableau croisé entre poules activé" : "classement général conservé"}.${series.generated ? " Barrages adaptés en conservant leurs créneaux." : ""}`;
+    });
+  };
+
   const generate = () =>
     run(async () => {
       const pending = stage?.series.filter((series) => !series.generated) ?? [];
@@ -303,6 +328,57 @@ export function AdminTournamentFinalStageControl({
         <p className="qualification-alert" role="status">
           {message}
         </p>
+      )}
+
+      {stage.series.some(
+        (series) => series.poolCount === 2 && series.qualifierCount === 6,
+      ) && (
+        <div className="final-stage-cross-pools">
+          <h3>Mode du tableau à deux poules</h3>
+          {stage.series
+            .filter(
+              (series) => series.poolCount === 2 && series.qualifierCount === 6,
+            )
+            .map((series) => (
+              <div key={series.seriesId}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={series.crossPools}
+                    disabled={
+                      busy ||
+                      !series.crossPoolsEligible ||
+                      (series.generated && !series.crossPoolsReconfigurable)
+                    }
+                    onChange={(event) =>
+                      void setCrossPools(series, event.target.checked)
+                    }
+                  />
+                  Croiser les poules — {series.seriesName}
+                </label>
+                <p className="final-stage-control__hint">
+                  Barrage 1 : 2e poule 2 contre 3e poule 1 ; barrage 2 : 2e
+                  poule 1 contre 3e poule 2. Demi-finales : 1re poule 1 contre
+                  vainqueur barrage 1, puis 1re poule 2 contre vainqueur barrage
+                  2.
+                </p>
+                {series.generated && series.crossPoolsReconfigurable && (
+                  <p className="final-stage-control__hint">
+                    Tableau déjà généré, mais les barrages ne sont ni publiés ni
+                    joués. Tu peux activer le croisement après confirmation. Les
+                    créneaux fixés manuellement sont conservés uniquement si les
+                    nouvelles équipes y sont toutes disponibles.
+                  </p>
+                )}
+                {series.generated && !series.crossPoolsReconfigurable && (
+                  <p className="final-stage-control__hint">
+                    Tableau verrouillé : des rencontres ont été jouées, publiées
+                    ou les tours suivants ont été créés.
+                  </p>
+                )}
+              </div>
+            ))}
+        </div>
       )}
 
       {stage.series.some((series) => !series.generated) ? (

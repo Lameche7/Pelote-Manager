@@ -67,6 +67,7 @@ export type PublicTournamentResultSeries = {
   displayOrder: number;
   qualifierCount: number;
   finalsGenerated: boolean;
+  crossPools: boolean;
   finalSeeds: PublicTournamentFinalSeed[];
   finalMatches: PublicTournamentFinalMatch[];
   pools: PublicTournamentResultPool[];
@@ -151,6 +152,7 @@ const mapSeries = (series: Row): PublicTournamentResultSeries => {
   const actualFinalMatches = rows(series.final_matches).map(mapFinalMatch);
   const projectedFinalMatches = buildFinalBracketProjectedMatches({
     qualifierCount,
+    crossPools: Boolean(series.finals_cross_pools),
     seeds: finalSeeds,
     actualMatches: actualFinalMatches,
   }).map<PublicTournamentFinalMatch>((match) => ({
@@ -183,6 +185,7 @@ const mapSeries = (series: Row): PublicTournamentResultSeries => {
     displayOrder: Number(series.display_order ?? 0),
     qualifierCount,
     finalsGenerated: Boolean(series.finals_generated),
+    crossPools: Boolean(series.finals_cross_pools),
     finalSeeds,
     finalMatches: [...actualFinalMatches, ...projectedFinalMatches],
     pools: rows(series.pools).map((pool) => ({

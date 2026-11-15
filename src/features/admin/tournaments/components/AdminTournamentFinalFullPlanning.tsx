@@ -94,6 +94,7 @@ const buildNodes = (workspace: TournamentFinalFullPlanningWorkspace) =>
     buildFinalStagePlanningNodes({
       seriesId: series.id,
       qualifierCount: series.qualifierCount,
+      crossPools: series.crossPools,
       seeds: series.seeds,
       actualMatches: actualMatchesForSeries(workspace, series.id),
     }),
@@ -646,6 +647,10 @@ export function AdminTournamentFinalFullPlanning({
                                       workspace.series.find(
                                         (series) => series.id === node.seriesId,
                                       )?.seeds ?? [],
+                                    crossPools:
+                                      workspace.series.find(
+                                        (series) => series.id === node.seriesId,
+                                      )?.crossPools ?? false,
                                   })}
                                 </strong>
                                 <span>

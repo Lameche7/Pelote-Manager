@@ -111,6 +111,10 @@ export type TournamentFinalSeriesState = {
   validatedPoolMatchCount: number;
   cutoffTie: boolean;
   generated: boolean;
+  crossPools: boolean;
+  crossPoolsEligible: boolean;
+  crossPoolsReconfigurable: boolean;
+  poolCount: number;
   currentRoundNumber: number | null;
   seeds: TournamentFinalSeed[];
   matches: TournamentFinalMatch[];
@@ -157,6 +161,7 @@ export type TournamentFinalFullPlanningSeries = {
   color: string;
   displayOrder: number;
   qualifierCount: number;
+  crossPools: boolean;
   seeds: TournamentFinalSeed[];
 };
 
@@ -239,6 +244,10 @@ const mapState = (value: unknown): TournamentFinalStageState => {
       validatedPoolMatchCount: Number(series.validated_pool_match_count ?? 0),
       cutoffTie: Boolean(series.cutoff_tie),
       generated: Boolean(series.generated),
+      crossPools: Boolean(series.cross_pools),
+      crossPoolsEligible: Boolean(series.cross_pools_eligible),
+      crossPoolsReconfigurable: Boolean(series.cross_pools_reconfigurable),
+      poolCount: Number(series.pool_count ?? 0),
       currentRoundNumber:
         series.current_round_number === null ||
         series.current_round_number === undefined
@@ -279,6 +288,19 @@ const mapState = (value: unknown): TournamentFinalStageState => {
     })),
   };
 };
+
+const crossPoolMap = (value: unknown) =>
+  new Map(
+    rows(value).map((entry) => [
+      String(entry.series_id ?? ""),
+      {
+        crossPools: Boolean(entry.cross_pools),
+        eligible: Boolean(entry.eligible),
+        reconfigurable: Boolean(entry.reconfigurable),
+        poolCount: Number(entry.pool_count ?? 0),
+      },
+    ]),
+  );
 
 const mapPlanningWorkspace = (
   value: unknown,
@@ -358,6 +380,7 @@ const mapFullPlanningWorkspace = (
       color: String(series.color ?? "#2563EB"),
       displayOrder: Number(series.display_order ?? 0),
       qualifierCount: Number(series.qualifier_count ?? 0),
+      crossPools: false,
       seeds: rows(series.seeds).map((seed) => ({
         seed: Number(seed.seed ?? 0),
         teamId: String(seed.team_id ?? ""),
@@ -462,12 +485,49 @@ const fullPlanningPayload = (
 
 export const tournamentFinalStageAdminService = {
   async getState(tournamentId: string): Promise<TournamentFinalStageState> {
-    const { data, error } = await supabase.rpc(
-      "admin_get_tournament_final_stage",
-      { target_tournament_id: tournamentId },
+    const [state, modes] = await Promise.all([
+      supabase.rpc("admin_get_tournament_final_stage", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_final_cross_pools", {
+        target_tournament_id: tournamentId,
+      }),
+    ]);
+    if (state.error)
+      fail(state.error, "Impossible de charger la phase finale.");
+    if (modes.error)
+      fail(modes.error, "Impossible de charger le mode des tableaux.");
+    const bySeries = crossPoolMap(modes.data);
+    const loaded = mapState(state.data);
+    return {
+      ...loaded,
+      series: loaded.series.map((series) => {
+        const mode = bySeries.get(series.seriesId);
+        return {
+          ...series,
+          crossPools: mode?.crossPools ?? false,
+          crossPoolsEligible: mode?.eligible ?? false,
+          crossPoolsReconfigurable: mode?.reconfigurable ?? false,
+          poolCount: mode?.poolCount ?? 0,
+        };
+      }),
+    };
+  },
+
+  async setCrossPools(
+    tournamentId: string,
+    seriesId: string,
+    enabled: boolean,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "admin_set_tournament_final_cross_pools",
+      {
+        target_tournament_id: tournamentId,
+        target_series_id: seriesId,
+        enable_cross_pools: enabled,
+      },
     );
-    if (error) fail(error, "Impossible de charger la phase finale.");
-    return mapState(data);
+    if (error) fail(error, "Impossible de modifier le mode de tableau.");
   },
 
   async generateSeries(
@@ -582,18 +642,25 @@ export const tournamentFinalStageAdminService = {
     tournamentId: string,
   ): Promise<TournamentFinalFullPlanningWorkspace> {
     await this.prepareFullPlanning(tournamentId);
-    const [workspaceResponse, occupiedResponse, externalResponse] =
-      await Promise.all([
-        supabase.rpc("admin_get_tournament_final_full_planning_workspace", {
-          target_tournament_id: tournamentId,
-        }),
-        supabase.rpc("admin_get_tournament_finals_occupied_pool_slots", {
-          target_tournament_id: tournamentId,
-        }),
-        supabase.rpc("admin_get_tournament_final_external_occupied_slots", {
-          target_tournament_id: tournamentId,
-        }),
-      ]);
+    const [
+      workspaceResponse,
+      occupiedResponse,
+      externalResponse,
+      modesResponse,
+    ] = await Promise.all([
+      supabase.rpc("admin_get_tournament_final_full_planning_workspace", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_finals_occupied_pool_slots", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_final_external_occupied_slots", {
+        target_tournament_id: tournamentId,
+      }),
+      supabase.rpc("admin_get_tournament_final_cross_pools", {
+        target_tournament_id: tournamentId,
+      }),
+    ]);
     if (workspaceResponse.error)
       fail(
         workspaceResponse.error,
@@ -609,7 +676,10 @@ export const tournamentFinalStageAdminService = {
         externalResponse.error,
         "Impossible de vérifier les réservations et les autres tournois.",
       );
+    if (modesResponse.error)
+      fail(modesResponse.error, "Impossible de charger le mode de tableau.");
     const workspace = mapFullPlanningWorkspace(workspaceResponse.data);
+    const bySeries = crossPoolMap(modesResponse.data);
     const occupied = new Set(
       (Array.isArray(occupiedResponse.data) ? occupiedResponse.data : []).map(
         String,
@@ -617,6 +687,10 @@ export const tournamentFinalStageAdminService = {
     );
     return {
       ...workspace,
+      series: workspace.series.map((series) => ({
+        ...series,
+        crossPools: bySeries.get(series.id)?.crossPools ?? false,
+      })),
       weeklySlots: workspace.slots.filter(
         (slot) =>
           (!workspace.tournament.finalsStartsOn ||
