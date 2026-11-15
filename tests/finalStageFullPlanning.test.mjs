@@ -621,6 +621,6 @@ test("les adversaires à confirmer sont décrits selon leur position réelle dan
     "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
   );
   assert.match(calendar, /describeFinalStageOpponents/);
-  assert.match(calendar, /source\.cloneNode\(true\)/);
+  assert.match(calendar, /document\.body\.appendChild\(section\)/);
   assert.match(detailed, /describeFinalStageOpponents/);
 });
