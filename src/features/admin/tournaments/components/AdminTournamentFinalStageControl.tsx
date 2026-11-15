@@ -366,7 +366,8 @@ export function AdminTournamentFinalStageControl({
                   <p className="final-stage-control__hint">
                     Tableau déjà généré, mais les barrages ne sont ni publiés ni
                     joués. Tu peux activer le croisement après confirmation. Les
-          ...[truncated]
+                    créneaux fixés manuellement sont conservés uniquement si les
+                    nouvelles équipes y sont toutes disponibles.
                   </p>
                 )}
                 {series.generated && !series.crossPoolsReconfigurable && (
