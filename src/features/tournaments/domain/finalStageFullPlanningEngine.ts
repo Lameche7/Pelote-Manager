@@ -202,6 +202,28 @@ const slotRange = (slot: PlanningSlot) => {
   };
 };
 
+/**
+ * An earlier fixture constrains a later one only if its winner can
+ * actually reach that fixture. Walk the full dependency chain (not just
+ * adjacent rounds). Unrelated barrages and eighths can be interleaved.
+ */
+const dependsOn = (
+  laterNode: FinalStagePlanningNode,
+  earlierNodeId: string,
+  nodeById: Map<string, FinalStagePlanningNode>,
+  seen = new Set<string>(),
+): boolean => {
+  if (seen.has(laterNode.id)) return false;
+  seen.add(laterNode.id);
+  return laterNode.dependencyNodeIds.some((dependencyId) => {
+    if (dependencyId === earlierNodeId) return true;
+    const parent = nodeById.get(dependencyId);
+    return parent
+      ? dependsOn(parent, earlierNodeId, nodeById, seen)
+      : false;
+  });
+};
+
 const stageOrderIsValid = ({
   node,
   slot,
@@ -231,12 +253,14 @@ const stageOrderIsValid = ({
     const other = slotRange(otherSlot);
     if (
       otherNode.roundNumber < node.roundNumber &&
+      dependsOn(node, otherNode.id, nodeById) &&
       candidate.start - other.end < minimumRestMinutes
     ) {
       return false;
     }
     if (
       otherNode.roundNumber > node.roundNumber &&
+      dependsOn(otherNode, node.id, nodeById) &&
       other.start - candidate.end < minimumRestMinutes
     ) {
       return false;
@@ -356,7 +380,7 @@ export const validateFullFinalStagePlanning = ({
         nodeId: node.id,
         code: "invalid_assignment",
         message:
-          "Ce créneau place une étape avant un tour précédent ou trop près de celui-ci.",
+          "Ce créneau précède une rencontre dont il dépend ou ne respecte pas le repos entre ces deux parties.",
       });
     }
   }
