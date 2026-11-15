@@ -748,3 +748,88 @@ test("la saisie exceptionnelle autorise les dates hors créneaux avec contrôle 
   assert.match(migration, /sync_tournament_final_planning_node_to_match/);
   assert.match(migration, /Published or completed match cannot be moved/);
 });
+
+
+test("un barrage peut se jouer après un huitième indépendant mais avant son propre huitième", () => {
+  const seeds = Array.from({ length: 24 }, (_, index) => ({
+    seed: index + 1,
+    teamId: `team-${index + 1}`,
+    teamLabel: `Équipe ${index + 1}`,
+  }));
+  const nodes = buildFinalStagePlanningNodes({
+    seriesId: "3me",
+    qualifierCount: 24,
+    seeds,
+    actualMatches: [],
+  });
+  const barrage = nodes.find(
+    (node) => node.roundNumber === 0 && node.displayOrder === 4,
+  );
+  const unrelatedEighth = nodes.find(
+    (node) => node.roundNumber === 1 && node.displayOrder === 6,
+  );
+  const dependentEighth = nodes.find(
+    (node) => node.roundNumber === 1 && node.displayOrder === 2,
+  );
+  assert.ok(barrage);
+  assert.ok(unrelatedEighth);
+  assert.ok(dependentEighth);
+  assert.ok(!unrelatedEighth.dependencyNodeIds.includes(barrage.id));
+  assert.ok(dependentEighth.dependencyNodeIds.includes(barrage.id));
+
+  const before = {
+    id: "tuesday-2030",
+    resourceId: "trinquet",
+    resourceName: "Lourdes",
+    date: "2026-11-24",
+    startsAt: "20:30",
+    endsAt: "21:30",
+  };
+  const late = {
+    ...before,
+    id: "tuesday-2130",
+    startsAt: "21:30",
+    endsAt: "22:30",
+  };
+  const nextDay = {
+    ...before,
+    id: "wednesday-1730",
+    date: "2026-11-25",
+    startsAt: "17:30",
+    endsAt: "18:30",
+  };
+
+  const independent = validateFullFinalStagePlanning({
+    nodes: [barrage, unrelatedEighth],
+    slots: [before, late],
+    availability: [],
+    assignments: [
+      { nodeId: unrelatedEighth.id, slotId: before.id },
+      { nodeId: barrage.id, slotId: late.id },
+    ],
+  });
+  assert.equal(independent.valid, true, JSON.stringify(independent.diagnostics));
+
+  const dependentWrongOrder = validateFullFinalStagePlanning({
+    nodes: [barrage, dependentEighth],
+    slots: [before, late],
+    availability: [],
+    assignments: [
+      { nodeId: dependentEighth.id, slotId: before.id },
+      { nodeId: barrage.id, slotId: late.id },
+    ],
+  });
+  assert.equal(dependentWrongOrder.valid, false);
+  assert.ok(dependentWrongOrder.diagnostics.some((entry) => entry.code === "invalid_assignment"));
+
+  const dependentCorrectOrder = validateFullFinalStagePlanning({
+    nodes: [barrage, dependentEighth],
+    slots: [late, nextDay],
+    availability: [],
+    assignments: [
+      { nodeId: barrage.id, slotId: late.id },
+      { nodeId: dependentEighth.id, slotId: nextDay.id },
+    ],
+  });
+  assert.equal(dependentCorrectOrder.valid, true);
+});
