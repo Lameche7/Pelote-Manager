@@ -381,6 +381,7 @@ export const generateFullFinalStagePlanning = ({
   random = Math.random,
   finalsStartsOn,
   finalsEndsOn,
+  excludeStartsAt2130 = false,
 }: {
   nodes: FinalStagePlanningNode[];
   slots: PlanningSlot[];
@@ -392,17 +393,22 @@ export const generateFullFinalStagePlanning = ({
   random?: () => number;
   finalsStartsOn?: string;
   finalsEndsOn?: string;
+  excludeStartsAt2130?: boolean;
 }): FinalStagePlanningProposal => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const slotById = new Map(slots.map((slot) => [slot.id, slot]));
   const fixed = new Set(fixedNodeIds);
+  const candidateSlots = automaticFinalPlanningSlots(
+    slots,
+    excludeStartsAt2130,
+  );
   const commonSlots = new Map(
     nodes.map((node) => [
       node.id,
       finalRoundAvailableSlots({
         node,
         nodes,
-        slots,
+        slots: candidateSlots,
         availability,
         finalsStartsOn,
         finalsEndsOn,
