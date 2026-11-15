@@ -101,6 +101,7 @@ export function AdminTournamentFinalWeeklyOverview({
         buildFinalStagePlanningNodes({
           seriesId: series.id,
           qualifierCount: series.qualifierCount,
+          crossPools: series.crossPools,
           seeds: series.seeds,
           actualMatches: workspace.nodes
             .filter((row) => row.seriesId === series.id && row.actualMatchId)
@@ -165,6 +166,7 @@ export function AdminTournamentFinalWeeklyOverview({
               node: bracketNode,
               nodes: bracketNodes,
               seeds: series?.seeds ?? [],
+              crossPools: series?.crossPools ?? false,
             })
           : [node.teamALabel, node.teamBLabel].filter(Boolean).join(" — ");
         result.push({
