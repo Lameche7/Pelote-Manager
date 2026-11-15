@@ -382,6 +382,7 @@ export const generateFullFinalStagePlanning = ({
   finalsStartsOn,
   finalsEndsOn,
   excludeStartsAt2130 = false,
+  nonCandidateSlotIds = [],
 }: {
   nodes: FinalStagePlanningNode[];
   slots: PlanningSlot[];
@@ -394,12 +395,14 @@ export const generateFullFinalStagePlanning = ({
   finalsStartsOn?: string;
   finalsEndsOn?: string;
   excludeStartsAt2130?: boolean;
+  nonCandidateSlotIds?: string[];
 }): FinalStagePlanningProposal => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const slotById = new Map(slots.map((slot) => [slot.id, slot]));
   const fixed = new Set(fixedNodeIds);
+  const notAutomatic = new Set(nonCandidateSlotIds);
   const candidateSlots = automaticFinalPlanningSlots(
-    slots,
+    slots.filter((slot) => !notAutomatic.has(slot.id)),
     excludeStartsAt2130,
   );
   const commonSlots = new Map(
