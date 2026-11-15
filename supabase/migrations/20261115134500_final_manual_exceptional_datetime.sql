@@ -138,6 +138,19 @@ begin
       using errcode = 'P0001';
   end if;
 
+  -- Includes published championships, closures and other event blocks,
+  -- not just ordinary user reservations.
+  if exists (
+    select 1 from public.calendar_occupations o
+    where o.resource_id = target_resource_id
+      and o.cancelled_at is null
+      and o.starts_at < until_instant
+      and o.ends_at > from_instant
+  ) then
+    raise exception 'Court occupied by another calendar event'
+      using errcode = 'P0001';
+  end if;
+
   -- No future round may start before the preceding round is finished.
   if exists (
     select 1 from public.tournament_final_planning_nodes n
