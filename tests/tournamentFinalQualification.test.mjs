@@ -150,23 +150,33 @@ test("les interfaces exposent classement general et course a la qualification", 
   assert.match(adminService, /admin_save_tournament_series_qualifiers/);
 });
 
-
 test("deux poules de trois produisent des barrages croisés puis les bonnes demi-finales", async () => {
   const standard = buildFinalStagePlan(6);
   const crossed = buildFinalStagePlan(6, true);
   const asSides = (plan) =>
     plan.firstRoundMatches.map((match) =>
       [match.sideA, match.sideB].map((side) =>
-        side.kind === "seed" ? `T${side.seed}` : `B${side.preliminaryMatchIndex}`,
+        side.kind === "seed"
+          ? `T${side.seed}`
+          : `B${side.preliminaryMatchIndex}`,
       ),
     );
 
   assert.deepEqual(
     crossed.preliminaryMatches.map((match) => [match.seedA, match.seedB]),
-    [[3, 6], [4, 5]],
+    [
+      [3, 6],
+      [4, 5],
+    ],
   );
-  assert.deepEqual(asSides(crossed), [["T1", "B1"], ["T2", "B2"]]);
-  assert.deepEqual(asSides(standard), [["T1", "B2"], ["T2", "B1"]]);
+  assert.deepEqual(asSides(crossed), [
+    ["T1", "B1"],
+    ["T2", "B2"],
+  ]);
+  assert.deepEqual(asSides(standard), [
+    ["T1", "B2"],
+    ["T2", "B1"],
+  ]);
   assert.throws(() => buildFinalStagePlan(8, true), /six qualifiées/);
 
   const migration = await read(
@@ -176,7 +186,13 @@ test("deux poules de trois produisent des barrages croisés puis les bonnes demi
   assert.match(migration, /when 1 then 1 when 2 then 4 when 3 then 6/);
   assert.match(migration, /when 1 then 2 when 2 then 3 when 3 then 5/);
   assert.match(migration, /then array\[1,3,2,4\]/);
-  assert.match(migration, /Existing final bracket has results, publications or advanced rounds/);
-  assert.match(migration, /New cross-pool opponents are not both available for existing fixtures/);
+  assert.match(
+    migration,
+    /Existing final bracket has results, publications or advanced rounds/,
+  );
+  assert.match(
+    migration,
+    /New cross-pool opponents are not both available for existing fixtures/,
+  );
   assert.match(migration, /has_club_permission/);
 });
