@@ -45,8 +45,9 @@ create or replace function public.admin_set_tournament_final_cross_pools(
 ) returns boolean
 language plpgsql security definer set search_path=''
 as $$
-declare target_club uuid := public.admin_current_club_id();
-declare selected public.tournament_series;
+declare
+  target_club uuid := public.admin_current_club_id();
+  selected public.tournament_series;
 begin
   if target_club is null or
     not public.has_club_permission(target_club,'tournaments.manage') then
