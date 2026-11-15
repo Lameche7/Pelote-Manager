@@ -27,7 +27,7 @@ const sideLabel = (
 ) =>
   side.kind === "seed"
     ? crossPools
-      ? crossPoolSeedLabels[side.seed] ?? `N°${side.seed}`
+      ? (crossPoolSeedLabels[side.seed] ?? `N°${side.seed}`)
       : `N°${side.seed}`
     : crossPools
       ? `Vainqueur (${crossPoolSeedLabels[side.seedA]} / ${crossPoolSeedLabels[side.seedB]})`
@@ -38,8 +38,9 @@ export function AdminTournamentQualificationPage() {
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [crossPoolsBySeries, setCrossPoolsBySeries] =
-    useState<Record<string, boolean>>({});
+  const [crossPoolsBySeries, setCrossPoolsBySeries] = useState<
+    Record<string, boolean>
+  >({});
   const [finalsStartsOn, setFinalsStartsOn] = useState("");
   const [finalsEndsOn, setFinalsEndsOn] = useState("");
   const [savingDates, setSavingDates] = useState(false);
@@ -91,9 +92,11 @@ export function AdminTournamentQualificationPage() {
       .then(([loadedDetail, qualifiers, stage]) => {
         if (!active) return;
         setDetail(loadedDetail);
-        setCrossPoolsBySeries(Object.fromEntries(
-          stage.series.map((series) => [series.seriesId, series.crossPools]),
-        ));
+        setCrossPoolsBySeries(
+          Object.fromEntries(
+            stage.series.map((series) => [series.seriesId, series.crossPools]),
+          ),
+        );
         setFinalsStartsOn(loadedDetail.finalsStartsOn ?? "");
         setFinalsEndsOn(loadedDetail.finalsEndsOn ?? "");
         setCounts(
@@ -329,7 +332,8 @@ export function AdminTournamentQualificationPage() {
             const qualifierCount = counts[seriesId] ?? 0;
             const plan =
               qualifierCount >= 2
-                ? buildFinalStagePlan(qualifierCount, crossPoolsBySeries[seriesId] ?? false)
+                ? buildFinalStagePlan(
+                    qualifier...[truncated]
                 : null;
 
             return (
