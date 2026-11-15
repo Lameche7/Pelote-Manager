@@ -832,16 +832,13 @@ grant execute on function public.admin_advance_tournament_final_stage(uuid, uuid
 to authenticated;
 
 
--- Keep public preliminary and semifinal projections aligned with the bracket.
-create or replace function public.get_public_tournament_results(
-  target_tournament_id uuid
-)
-returns jsonb
-language plpgsql
-stable
-security definer
-set search_path = ''
-as $$
+-- Keep public finals projections aligned with official crossed-pool series.
+CREATE OR REPLACE FUNCTION public.get_public_tournament_results(target_tournament_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
 declare
   target_tournament public.tournaments;
 begin
@@ -1061,9 +1058,5 @@ begin
     ), '[]'::jsonb)
   );
 end;
-$$;
-
-revoke all on function public.get_public_tournament_results(uuid) from public;
-grant execute on function public.get_public_tournament_results(uuid)
-to anon, authenticated;
+$function$
 
