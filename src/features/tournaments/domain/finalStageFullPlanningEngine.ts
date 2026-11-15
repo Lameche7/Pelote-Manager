@@ -218,9 +218,7 @@ const dependsOn = (
   return laterNode.dependencyNodeIds.some((dependencyId) => {
     if (dependencyId === earlierNodeId) return true;
     const parent = nodeById.get(dependencyId);
-    return parent
-      ? dependsOn(parent, earlierNodeId, nodeById, seen)
-      : false;
+    return parent ? dependsOn(parent, earlierNodeId, nodeById, seen) : false;
   });
 };
 
