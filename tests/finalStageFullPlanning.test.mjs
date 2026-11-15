@@ -625,7 +625,6 @@ test("les adversaires à confirmer sont décrits selon leur position réelle dan
   assert.match(detailed, /describeFinalStageOpponents/);
 });
 
-
 test("le planning croisé suit les mêmes barrages que le tableau sportif", async () => {
   const seeds = Array.from({ length: 6 }, (_, index) => ({
     seed: index + 1,
@@ -641,7 +640,10 @@ test("le planning croisé suit les mêmes barrages que le tableau sportif", asyn
   });
   assert.deepEqual(crossed[2].dependencyNodeIds, ["crossed:0:0"]);
   assert.deepEqual(crossed[3].dependencyNodeIds, ["crossed:0:1"]);
-  assert.deepEqual(crossed[4].dependencyNodeIds, ["crossed:1:0", "crossed:1:1"]);
+  assert.deepEqual(crossed[4].dependencyNodeIds, [
+    "crossed:1:0",
+    "crossed:1:1",
+  ]);
 
   const calendar = await read(
     "../src/features/admin/tournaments/components/AdminTournamentFinalWeeklyOverview.tsx",
