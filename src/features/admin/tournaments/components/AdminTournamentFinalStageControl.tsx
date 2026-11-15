@@ -203,6 +203,16 @@ export function AdminTournamentFinalStageControl({
     }
   };
 
+  const setCrossPools = (series: TournamentFinalSeriesState, checked: boolean) =>
+    run(async () => {
+      await tournamentFinalStageAdminService.setCrossPools(
+        tournamentId,
+        series.seriesId,
+        checked,
+      );
+      return `${series.seriesName} : ${checked ? "tableau croisé entre poules activé" : "classement général conservé"}.`;
+    });
+
   const generate = () =>
     run(async () => {
       const pending = stage?.series.filter((series) => !series.generated) ?? [];
@@ -303,6 +313,48 @@ export function AdminTournamentFinalStageControl({
         <p className="qualification-alert" role="status">
           {message}
         </p>
+      )}
+
+      {stage.series.some(
+        (series) => series.poolCount === 2 && series.qualifierCount === 6,
+      ) && (
+        <div className="final-stage-cross-pools">
+          <h3>Mode du tableau à deux poules</h3>
+          {stage.series
+            .filter(
+              (series) => series.poolCount === 2 && series.qualifierCount === 6,
+            )
+            .map((series) => (
+              <div key={series.seriesId}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={series.crossPools}
+                    disabled={
+                      busy || series.generated || !series.crossPoolsEligible
+                    }
+                    onChange={(event) =>
+                      void setCrossPools(series, event.target.checked)
+                    }
+                  />
+                  Croiser les poules — {series.seriesName}
+                </label>
+                <p className="final-stage-control__hint">
+                  Barrage 1 : 2e poule 2 contre 3e poule 1 ; barrage 2 :
+                  2e poule 1 contre 3e poule 2. Demi-finales : 1re
+                  poule 1 contre vainqueur barrage 1, puis 1re poule 2
+                  contre vainqueur barrage 2.
+                </p>
+                {series.generated && (
+                  <p className="final-stage-control__hint">
+                    Tableau déjà généré : option verrouillée pour protéger
+                    les rencontres et créneaux existants. Aucune
+                    reconstitution automatique n'est effectuée.
+                  </p>
+                )}
+              </div>
+            ))}
+        </div>
       )}
 
       {stage.series.some((series) => !series.generated) ? (
