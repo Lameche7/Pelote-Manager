@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildFinalStagePlan } from "@/features/tournaments/domain/finalStageEngine";
+import { tournamentFinalStageAdminService } from "@/features/admin/tournaments/services/tournamentFinalStageAdminService";
 import { AdminTournamentFinalStageControl } from "@/features/admin/tournaments/components/AdminTournamentFinalStageControl";
 import {
   tournamentAdminService,
@@ -9,20 +10,36 @@ import {
 import { tournamentQualificationAdminService } from "@/features/admin/tournaments/services/tournamentQualificationAdminService";
 import "./AdminTournamentQualificationPage.css";
 
+const crossPoolSeedLabels: Record<number, string> = {
+  1: "1re poule 1",
+  2: "1re poule 2",
+  3: "2e poule 2",
+  4: "2e poule 1",
+  5: "3e poule 2",
+  6: "3e poule 1",
+};
+
 const sideLabel = (
   side: ReturnType<
     typeof buildFinalStagePlan
   >["firstRoundMatches"][number]["sideA"],
+  crossPools: boolean,
 ) =>
   side.kind === "seed"
-    ? `N°${side.seed}`
-    : `Vainqueur ${side.seedA}–${side.seedB}`;
+    ? crossPools
+      ? crossPoolSeedLabels[side.seed] ?? `N°${side.seed}`
+      : `N°${side.seed}`
+    : crossPools
+      ? `Vainqueur (${crossPoolSeedLabels[side.seedA]} / ${crossPoolSeedLabels[side.seedB]})`
+      : `Vainqueur ${side.seedA}–${side.seedB}`;
 
 export function AdminTournamentQualificationPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [crossPoolsBySeries, setCrossPoolsBySeries] =
+    useState<Record<string, boolean>>({});
   const [finalsStartsOn, setFinalsStartsOn] = useState("");
   const [finalsEndsOn, setFinalsEndsOn] = useState("");
   const [savingDates, setSavingDates] = useState(false);
@@ -57,6 +74,7 @@ export function AdminTournamentQualificationPage() {
     if (!selectedId) {
       setDetail(null);
       setCounts({});
+      setCrossPoolsBySeries({});
       setFinalsStartsOn("");
       setFinalsEndsOn("");
       return;
@@ -68,10 +86,14 @@ export function AdminTournamentQualificationPage() {
     Promise.all([
       tournamentAdminService.get(selectedId),
       tournamentQualificationAdminService.get(selectedId),
+      tournamentFinalStageAdminService.getState(selectedId),
     ])
-      .then(([loadedDetail, qualifiers]) => {
+      .then(([loadedDetail, qualifiers, stage]) => {
         if (!active) return;
         setDetail(loadedDetail);
+        setCrossPoolsBySeries(Object.fromEntries(
+          stage.series.map((series) => [series.seriesId, series.crossPools]),
+        ));
         setFinalsStartsOn(loadedDetail.finalsStartsOn ?? "");
         setFinalsEndsOn(loadedDetail.finalsEndsOn ?? "");
         setCounts(
@@ -306,7 +328,9 @@ export function AdminTournamentQualificationPage() {
             const seriesId = series.id ?? "";
             const qualifierCount = counts[seriesId] ?? 0;
             const plan =
-              qualifierCount >= 2 ? buildFinalStagePlan(qualifierCount) : null;
+              qualifierCount >= 2
+                ? buildFinalStagePlan(qualifierCount, crossPoolsBySeries[seriesId] ?? false)
+                : null;
 
             return (
               <section
@@ -340,6 +364,12 @@ export function AdminTournamentQualificationPage() {
                   <small>
                     0 = non configuré. Sinon, choisissez au moins 2 équipes.
                   </small>
+                  {crossPoolsBySeries[seriesId] && (
+                    <small>
+                      Mode « Tableau croisé entre poules » actif : les premières de
+                      chaque poule entrent directement en demi-finale.
+                    </small>
+                  )}
                 </label>
 
                 {plan ? (
@@ -369,7 +399,13 @@ export function AdminTournamentQualificationPage() {
                         <div className="qualification-pairings">
                           {plan.preliminaryMatches.map((match) => (
                             <span key={match.matchIndex}>
-                              {match.seedA} vs {match.seedB}
+                              {crossPoolsBySeries[seriesId]
+                                ? crossPoolSeedLabels[match.seedA]
+                                : match.seedA}{" "}
+                              vs{" "}
+                              {crossPoolsBySeries[seriesId]
+                                ? crossPoolSeedLabels[match.seedB]
+                                : match.seedB}
                             </span>
                           ))}
                         </div>
@@ -381,7 +417,8 @@ export function AdminTournamentQualificationPage() {
                       <div className="qualification-pairings">
                         {plan.firstRoundMatches.map((match) => (
                           <span key={match.matchIndex}>
-                            {sideLabel(match.sideA)} vs {sideLabel(match.sideB)}
+                            {sideLabel(match.sideA, crossPoolsBySeries[seriesId] ?? false)} vs{" "}
+                            {sideLabel(match.sideB, crossPoolsBySeries[seriesId] ?? false)}
                           </span>
                         ))}
                       </div>
@@ -415,7 +452,15 @@ export function AdminTournamentQualificationPage() {
           )}
 
           {selectedId && (
-            <AdminTournamentFinalStageControl tournamentId={selectedId} />
+            <AdminTournamentFinalStageControl
+              tournamentId={selectedId}
+              onCrossPoolsChanged={(seriesId, enabled) =>
+                setCrossPoolsBySeries((current) => ({
+                  ...current,
+                  [seriesId]: enabled,
+                }))
+              }
+            />
           )}
         </div>
       )}
