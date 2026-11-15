@@ -709,20 +709,30 @@ test("un créneau manuel hors grille est conservé sans devenir candidat au reca
     random: () => 0,
   });
   assert.deepEqual(
-    proposal.assignments.find((assignment) => assignment.nodeId === "manual-saturday"),
+    proposal.assignments.find(
+      (assignment) => assignment.nodeId === "manual-saturday",
+    ),
     { nodeId: "manual-saturday", slotId: saturday.id },
   );
   assert.equal(
-    proposal.assignments.find((assignment) => assignment.nodeId === "free-match")?.slotId,
+    proposal.assignments.find(
+      (assignment) => assignment.nodeId === "free-match",
+    )?.slotId,
     monday.id,
   );
 });
 
 test("la saisie exceptionnelle autorise les dates hors créneaux avec contrôle de collisions et droits", async () => {
   const [component, service, migration] = await Promise.all([
-    read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
-    read("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts"),
-    read("../supabase/migrations/20261115134500_final_manual_exceptional_datetime.sql"),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
+    ),
+    read(
+      "../supabase/migrations/20261115134500_final_manual_exceptional_datetime.sql",
+    ),
   ]);
   assert.match(component, /Choisir une autre date \/ heure/);
   assert.match(component, /type="date"/);
