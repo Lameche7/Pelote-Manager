@@ -200,11 +200,10 @@ export function AdminTournamentFinalFullPlanning({
     [allSlots],
   );
   const sortedSlots = useMemo(
-    () =>
-      [...(workspace?.slots ?? [])].sort((left, right) =>
-        slotSortKey(left).localeCompare(slotSortKey(right)),
-      ),
-    [workspace?.slots],
+    () => [...allSlots].sort((left, right) =>
+      slotSortKey(left).localeCompare(slotSortKey(right)),
+    ),
+    [allSlots],
   );
 
   const stages = useMemo(() => {
@@ -465,6 +464,8 @@ export function AdminTournamentFinalFullPlanning({
 
   const openManualRound = (roundNumber: number) => {
     if (!workspace) return;
+    setExceptionSlots([]);
+    setCustomNodeId(null);
     setManualAssignments(assignmentsFromWorkspace(workspace));
     setEditingRound(roundNumber);
     setError("");
@@ -488,6 +489,7 @@ export function AdminTournamentFinalFullPlanning({
       respectAvailability: false,
       finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
       finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
+      manualDateOverride: true,
     });
     if (!validation.valid) {
       setError(
