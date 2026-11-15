@@ -166,8 +166,7 @@ export function AdminTournamentFinalStageControl({
       .map((series) => ({
         name: series.seriesName,
         count: currentMatches(series).filter(
-          (match) =>
-            match.resultStatus !== "validated" && !match.planned,
+          (match) => match.resultStatus !== "validated" && !match.planned,
         ).length,
       }))
       .filter(({ count }) => count > 0) ?? [];
