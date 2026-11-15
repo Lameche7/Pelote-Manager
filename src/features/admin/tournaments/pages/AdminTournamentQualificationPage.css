@@ -768,3 +768,53 @@
     padding: 0.6rem;
   }
 }
+
+/* Exceptional dates in the manual knockout-stage editor */
+.final-stage-full-planning__manual-choice {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.final-stage-full-planning__manual-choice > button,
+.final-stage-full-planning__exception-form button {
+  min-height: 2.25rem;
+}
+.final-stage-full-planning__exception-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.5rem;
+  border: 1px solid rgb(100 116 139 / 25%);
+  border-radius: 0.65rem;
+  padding: 0.65rem;
+  background: rgb(37 99 235 / 4%);
+}
+.final-stage-full-planning__exception-form p,
+.final-stage-full-planning__exception-form small {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.final-stage-full-planning__exception-form label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.77rem;
+}
+.final-stage-full-planning__exception-form input,
+.final-stage-full-planning__exception-form select {
+  width: 100%;
+  min-height: 2.2rem;
+  border: 1px solid rgb(100 116 139 / 26%);
+  border-radius: 0.4rem;
+  padding: 0.3rem;
+  background: #fff;
+  color: #17253a;
+}
+.final-stage-full-planning__exception-form button {
+  grid-column: 1 / -1;
+}
+@media (max-width: 520px) {
+  .final-stage-full-planning__exception-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
