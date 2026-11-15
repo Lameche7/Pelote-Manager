@@ -659,3 +659,80 @@ test("le planning croisé suit les mêmes barrages que le tableau sportif", asyn
   assert.match(control, /Croiser les poules/);
   assert.match(control, /series.generated/);
 });
+
+test("un créneau manuel hors grille est conservé sans devenir candidat au recalcul", async () => {
+  const saturday = {
+    id: "court-1|2026-11-21|15:00|16:00",
+    resourceId: "court-1",
+    resourceName: "Trinquet",
+    date: "2026-11-21",
+    startsAt: "15:00",
+    endsAt: "16:00",
+  };
+  const monday = {
+    ...saturday,
+    id: "court-1|2026-11-23|18:30|19:30",
+    date: "2026-11-23",
+    startsAt: "18:30",
+    endsAt: "19:30",
+  };
+  const fixed = {
+    ...planningNodes[0],
+    id: "manual-saturday",
+    round: "preliminary",
+    roundNumber: 0,
+    seriesId: "separate",
+    actualMatchId: "manual-saturday",
+    possibleTeamIds: ["A", "B"],
+  };
+  const other = {
+    ...fixed,
+    id: "free-match",
+    actualMatchId: "free-match",
+    possibleTeamIds: ["C", "D"],
+  };
+  const proposal = generateFullFinalStagePlanning({
+    nodes: [fixed, other],
+    slots: [saturday, monday],
+    availability: [
+      { teamId: "A", slots: [] },
+      { teamId: "B", slots: [] },
+      { teamId: "C", slots: [saturday, monday] },
+      { teamId: "D", slots: [saturday, monday] },
+    ],
+    existingAssignments: [{ nodeId: "manual-saturday", slotId: saturday.id }],
+    fixedNodeIds: ["manual-saturday"],
+    nonCandidateSlotIds: [saturday.id],
+    iterations: 1,
+    random: () => 0,
+  });
+  assert.deepEqual(
+    proposal.assignments.find((assignment) => assignment.nodeId === "manual-saturday"),
+    { nodeId: "manual-saturday", slotId: saturday.id },
+  );
+  assert.equal(
+    proposal.assignments.find((assignment) => assignment.nodeId === "free-match")?.slotId,
+    monday.id,
+  );
+});
+
+test("la saisie exceptionnelle autorise les dates hors créneaux avec contrôle de collisions et droits", async () => {
+  const [component, service, migration] = await Promise.all([
+    read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
+    read("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts"),
+    read("../supabase/migrations/20261115134500_final_manual_exceptional_datetime.sql"),
+  ]);
+  assert.match(component, /Choisir une autre date \/ heure/);
+  assert.match(component, /type="date"/);
+  assert.match(component, /type="time"/);
+  assert.match(component, /setExceptionalManualSlot/);
+  assert.match(component, /nonCandidateSlotIds: workspace.exceptionalSlotIds/);
+  assert.match(service, /exceptionalSlotIds/);
+  assert.match(service, /admin_set_tournament_final_manual_datetime/);
+  assert.match(migration, /has_club_permission/);
+  assert.match(migration, /calendar_occupations/);
+  assert.match(migration, /tournament_match_planning/);
+  assert.match(migration, /tournament_final_planning_nodes/);
+  assert.match(migration, /sync_tournament_final_planning_node_to_match/);
+  assert.match(migration, /Published or completed match cannot be moved/);
+});
