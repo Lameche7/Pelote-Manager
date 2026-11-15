@@ -690,33 +690,45 @@ export const tournamentFinalStageAdminService = {
       workspace.resources.map((resource) => [resource.id, resource.name]),
     );
     const exceptionalSlots: PlanningSlot[] = workspace.nodes.flatMap((node) => {
-      if (!node.resourceId || !node.playDate || !node.startsAt || !node.endsAt) {
+      if (
+        !node.resourceId ||
+        !node.playDate ||
+        !node.startsAt ||
+        !node.endsAt
+      ) {
         return [];
       }
       const id = `${node.resourceId}|${node.playDate}|${node.startsAt.slice(0, 5)}|${node.endsAt.slice(0, 5)}`;
-      return generatedSlotIds.has(normalizedSlotKey({
-        id,
-        resourceId: node.resourceId,
-        resourceName: "",
-        date: node.playDate,
-        startsAt: node.startsAt,
-        endsAt: node.endsAt,
-      }))
+      return generatedSlotIds.has(
+        normalizedSlotKey({
+          id,
+          resourceId: node.resourceId,
+          resourceName: "",
+          date: node.playDate,
+          startsAt: node.startsAt,
+          endsAt: node.endsAt,
+        }),
+      )
         ? []
-        : [{
-            id,
-            resourceId: node.resourceId,
-            resourceName: resourceNames.get(node.resourceId) ?? "Terrain",
-            date: node.playDate,
-            startsAt: node.startsAt,
-            endsAt: node.endsAt,
-          }];
+        : [
+            {
+              id,
+              resourceId: node.resourceId,
+              resourceName: resourceNames.get(node.resourceId) ?? "Terrain",
+              date: node.playDate,
+              startsAt: node.startsAt,
+              endsAt: node.endsAt,
+            },
+          ];
     });
-    const exceptionalSlotIds = [...new Set(exceptionalSlots.map((slot) => slot.id))];
+    const exceptionalSlotIds = [
+      ...new Set(exceptionalSlots.map((slot) => slot.id)),
+    ];
     const allSlots = [
       ...workspace.slots,
       ...exceptionalSlots.filter(
-        (slot, index, entries) => entries.findIndex((item) => item.id === slot.id) === index,
+        (slot, index, entries) =>
+          entries.findIndex((item) => item.id === slot.id) === index,
       ),
     ];
     const occupied = new Set(
@@ -728,8 +740,10 @@ export const tournamentFinalStageAdminService = {
       ...workspace,
       slots: allSlots.filter(
         (slot) =>
-          (!workspace.tournament.finalsStartsOn || slot.date >= workspace.tournament.finalsStartsOn) &&
-          (!workspace.tournament.finalsEndsOn || slot.date <= workspace.tournament.finalsEndsOn) &&
+          (!workspace.tournament.finalsStartsOn ||
+            slot.date >= workspace.tournament.finalsStartsOn) &&
+          (!workspace.tournament.finalsEndsOn ||
+            slot.date <= workspace.tournament.finalsEndsOn) &&
           (!occupied.has(slot.id) || exceptionalSlotIds.includes(slot.id)),
       ),
       exceptionalSlotIds,
