@@ -205,16 +205,25 @@ export function AdminTournamentFinalStageControl({
     }
   };
 
-  const setCrossPools = (series: TournamentFinalSeriesState, checked: boolean) =>
-    run(async () => {
+  const setCrossPools = (series: TournamentFinalSeriesState, checked: boolean) => {
+    if (
+      series.generated &&
+      !window.confirm(
+        "Adapter le tableau déjà généré aux poules croisées ? Les deux barrages garderont leurs dates et horaires manuels, après vérification des disponibilités. Aucun résultat ni aucune rencontre publiée ne peut être modifié.",
+      )
+    ) {
+      return;
+    }
+    void run(async () => {
       await tournamentFinalStageAdminService.setCrossPools(
         tournamentId,
         series.seriesId,
         checked,
       );
       onCrossPoolsChanged?.(series.seriesId, checked);
-      return `${series.seriesName} : ${checked ? "tableau croisé entre poules activé" : "classement général conservé"}.`;
+      return `${series.seriesName} : ${checked ? "tableau croisé entre poules activé" : "classement général conservé"}.${series.generated ? " Barrages adaptés en conservant leurs créneaux." : ""}`;
     });
+  };
 
   const generate = () =>
     run(async () => {
@@ -334,7 +343,9 @@ export function AdminTournamentFinalStageControl({
                     type="checkbox"
                     checked={series.crossPools}
                     disabled={
-                      busy || series.generated || !series.crossPoolsEligible
+                      busy ||
+                      !series.crossPoolsEligible ||
+                      (series.generated && !series.crossPoolsReconfigurable)
                     }
                     onChange={(event) =>
                       void setCrossPools(series, event.target.checked)
@@ -348,11 +359,18 @@ export function AdminTournamentFinalStageControl({
                   poule 1 contre vainqueur barrage 1, puis 1re poule 2
                   contre vainqueur barrage 2.
                 </p>
-                {series.generated && (
+                {series.generated && series.crossPoolsReconfigurable && (
                   <p className="final-stage-control__hint">
-                    Tableau déjà généré : option verrouillée pour protéger
-                    les rencontres et créneaux existants. Aucune
-                    reconstitution automatique n'est effectuée.
+                    Tableau déjà généré, mais les barrages ne sont ni publiés ni joués.
+                    Tu peux activer le croisement après confirmation. Les créneaux
+                    fixés manuellement sont conservés uniquement si les nouvelles
+                    équipes y sont toutes disponibles.
+                  </p>
+                )}
+                {series.generated && !series.crossPoolsReconfigurable && (
+                  <p className="final-stage-control__hint">
+                    Tableau verrouillé : des rencontres ont été jouées, publiées
+                    ou les tours suivants ont été créés.
                   </p>
                 )}
               </div>
