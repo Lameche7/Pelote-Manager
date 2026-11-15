@@ -8,16 +8,16 @@ import type {
 } from "./finalStagePlanningEngine.js";
 
 const roundNames: Record<string, string> = {
-  preliminary: "barrage",
-  round_of_32: "1/16",
-  round_of_16: "1/8",
-  quarterfinal: "quart",
-  semifinal: "demi-finale",
-  final: "finale",
+  preliminary: "du barrage",
+  round_of_32: "du 1/16",
+  round_of_16: "du 1/8",
+  quarterfinal: "du quart",
+  semifinal: "de la demi-finale",
+  final: "de la finale",
 };
 
 const qualifiedLabel = (source: FinalStagePlanningNode) =>
-  `Vainqueur du ${roundNames[source.round] ?? "tour"} n°${source.displayOrder + 1}`;
+  `Vainqueur ${roundNames[source.round] ?? "du tour"} n°${source.displayOrder + 1}`;
 
 const preliminarySource = (
   source: Extract<FinalStageSeedSource, { kind: "preliminary_winner" }>,
