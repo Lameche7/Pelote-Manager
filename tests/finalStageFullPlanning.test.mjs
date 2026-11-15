@@ -548,9 +548,12 @@ test("l'export PDF du planning hebdomadaire conserve la semaine et les filtres e
   const calendar = await read(
     "../src/features/admin/tournaments/components/AdminTournamentFinalWeeklyOverview.tsx",
   );
-  assert.match(calendar, /Exporter la semaine en PDF/);
-  assert.match(calendar, /ref=\{weeklyTableRef\}/);
-  assert.match(calendar, /source\.cloneNode\(true\)/);
+  assert.match(calendar, /Exporter tout le planning en PDF/);
+  assert.match(calendar, /index <= maxIndex/);
+  assert.match(calendar, /slotsForDays\(weekDays\)/);
+  assert.match(calendar, /filterSlots\(slotsForDays\(weekDays\)\)/);
+  assert.match(calendar, /printed-week/);
+  assert.match(calendar, /document\.body\.appendChild\(section\)/);
   assert.match(calendar, /@page \{ size: A3 landscape/);
   assert.match(calendar, /printWindow\.print\(\)/);
   assert.match(calendar, /seriesFilter/);
