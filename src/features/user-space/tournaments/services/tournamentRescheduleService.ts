@@ -77,6 +77,7 @@ export type TournamentRescheduleOptions = {
     requesterMayTakeExtraSameDayMatch: boolean;
     otherTeamsSameDayLoadProtected: boolean;
     swapsEnabled: boolean;
+    latestPlayDate: string | null;
     availabilitySource: TournamentRescheduleAvailabilitySource;
     availabilityKnownTeamCount: number;
     availabilityTeamCount: number;
@@ -330,6 +331,9 @@ export const tournamentRescheduleService = {
           policy.other_teams_same_day_load_protected,
         ),
         swapsEnabled: policy.swaps_enabled !== false,
+        latestPlayDate: policy.latest_play_date
+          ? String(policy.latest_play_date)
+          : null,
         availabilitySource: availabilitySource(policy.availability_source),
         availabilityKnownTeamCount: Number(
           policy.availability_known_team_count ?? 0,
