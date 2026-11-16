@@ -165,7 +165,10 @@ export function HomeTournaments({ clubSlug }: HomeTournamentsProps) {
           })}
         </div>
 
-        <Link className="home-tournaments__all-link" to={`${ROUTES.tournaments}${clubQuery}`}>
+        <Link
+          className="home-tournaments__all-link"
+          to={`${ROUTES.tournaments}${clubQuery}`}
+        >
           Voir tous les tournois →
         </Link>
       </div>
