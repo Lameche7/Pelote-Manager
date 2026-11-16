@@ -280,6 +280,13 @@ export function TournamentRescheduleSuggestions({
         est nécessaire, elle reste du côté de votre équipe.
       </p>
 
+      {options?.policy.latestPlayDate && (
+        <p className="tournament-reschedule__policy" role="status">
+          Date limite de ce tour : <strong>{dateLabel(options.policy.latestPlayDate)}</strong>.
+          Les reports et échanges proposés doivent respecter cette échéance.
+        </p>
+      )}
+
       <TournamentRescheduleOpponentContactState
         matchId={matchId}
         teamId={teamId}
