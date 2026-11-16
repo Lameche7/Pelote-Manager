@@ -111,7 +111,8 @@ export function HomeTournaments({ clubSlug }: HomeTournamentsProps) {
             const isOpen = registrationIsOpen(tournament, now);
             const opensLater = Date.parse(tournament.registrationOpensAt) > now;
             const tournamentPath = `${ROUTES.tournaments}/${tournament.id}`;
-            const target = `${tournamentPath}${clubQuery}${isOpen ? "#inscription" : ""}`;
+            const anchor = isOpen ? "#inscription" : "";
+            const target = `${tournamentPath}${clubQuery}${anchor}`;
 
             return (
               <article className="home-tournament-card" key={tournament.id}>
