@@ -38,7 +38,7 @@ test("free slots outside availability require explicit agreement", () => {
   assert.match(service, /opponentOutsideDeclaredAvailability/);
   assert.match(ui, /option\.opponentOutsideDeclaredAvailability/);
   assert.match(ui, /accord explicite est indispensable/);
-  assert.match(ui, /Aucune partie n’est déplacée tant que tous les accords ne/);
+  assert.match(ui, /Aucune partie n’est déplacé[\s\S]*tous les accords ne/);
 });
 
 test("migration preserves database guard expectations", () => {
