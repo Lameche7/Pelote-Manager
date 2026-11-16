@@ -109,6 +109,13 @@ function FreeSlotCard({
         déplacement n’augmente pas la charge de parties le même jour pour vos
         adversaires.
       </p>
+      {option.opponentOutsideDeclaredAvailability && (
+        <p role="status">
+          Ce créneau est hors des disponibilités déclarées par l’équipe adverse.
+          Vous pouvez le proposer, mais son accord explicite est indispensable
+          avant tout déplacement de la partie.
+        </p>
+      )}
       <RequesterWarnings
         option={option}
         availabilityUnknown={availabilityUnknown}
@@ -275,9 +282,10 @@ export function TournamentRescheduleSuggestions({
       </header>
 
       <p className="tournament-reschedule__policy">
-        Pelote Manager protège les équipes qui ne demandent pas le report. Aucun
-        temps de repos minimum n’est imposé : si une contrainte supplémentaire
-        est nécessaire, elle reste du côté de votre équipe.
+        Pour les phases finales, un créneau réellement libre peut être proposé
+        même s’il n’a pas été déclaré disponible par les adversaires. L’accord
+        des équipes reste obligatoire. Les conflits de planning et la date
+        limite de chaque tour sont toujours contrôlés.
       </p>
 
       {options?.policy.latestPlayDate && (
