@@ -271,11 +271,17 @@ test("les reports des phases finales respectent les dates limites de Lourdes", (
   assert.match(deadlineMigration, /'round_of_16','2026-11-26'/);
   assert.match(deadlineMigration, /'quarterfinal','2026-12-03'/);
   assert.match(deadlineMigration, /'semifinal','2026-12-09'/);
-  assert.match(deadlineMigration, /where \(latest_play_date is null or \(item\.value->>'play_date'\)::date <= latest_play_date\)/);
+  assert.match(
+    deadlineMigration,
+    /where \(latest_play_date is null or \(item\.value->>'play_date'\)::date <= latest_play_date\)/,
+  );
   assert.match(deadlineMigration, /swap_moves_to_play_date/);
   assert.match(deadlineMigration, /final_stage_reschedule_deadline/);
   assert.match(deadlineMigration, /public\.mark_tournament_reschedule_stale/);
-  assert.match(deadlineMigration, /create table if not exists public\.tournament_final_reschedule_deadlines/);
+  assert.match(
+    deadlineMigration,
+    /create table if not exists public\.tournament_final_reschedule_deadlines/,
+  );
   assert.match(deadlineMigration, /enable row level security/);
   assert.match(service, /latestPlayDate/);
   assert.match(component, /Date limite de ce tour/);
