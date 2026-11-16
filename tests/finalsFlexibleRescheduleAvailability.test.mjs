@@ -3,15 +3,24 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const migration = readFileSync(
-  new URL("../supabase/migrations/20261116115000_finals_free_slot_optional_availability.sql", import.meta.url),
+  new URL(
+    "../supabase/migrations/20261116115000_finals_free_slot_optional_availability.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 const service = readFileSync(
-  new URL("../src/features/user-space/tournaments/services/tournamentRescheduleService.ts", import.meta.url),
+  new URL(
+    "../src/features/user-space/tournaments/services/tournamentRescheduleService.ts",
+    import.meta.url,
+  ),
   "utf8",
 );
 const ui = readFileSync(
-  new URL("../src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx", import.meta.url),
+  new URL(
+    "../src/features/user-space/tournaments/components/TournamentRescheduleSuggestions.tsx",
+    import.meta.url,
+  ),
   "utf8",
 );
 
@@ -29,12 +38,18 @@ test("free slots outside availability require explicit agreement", () => {
   assert.match(service, /opponentOutsideDeclaredAvailability/);
   assert.match(ui, /option\.opponentOutsideDeclaredAvailability/);
   assert.match(ui, /accord explicite est indispensable/);
-  assert.match(ui, /Aucune partie n’est déplacée à cette étape/);
+  assert.match(ui, /Aucune partie n’est déplacée tant que tous les accords ne/);
 });
 
 test("migration preserves database guard expectations", () => {
   assert.match(migration, /^begin;/m);
-  assert.match(migration, /raise exception 'Expected finals availability filter/);
-  assert.match(migration, /raise exception 'Expected apply-time availability guard/);
+  assert.match(
+    migration,
+    /raise exception 'Expected finals availability filter/,
+  );
+  assert.match(
+    migration,
+    /raise exception 'Expected apply-time availability guard/,
+  );
   assert.match(migration, /commit;\s*$/);
 });
