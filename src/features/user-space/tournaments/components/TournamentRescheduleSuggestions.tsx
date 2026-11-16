@@ -282,8 +282,9 @@ export function TournamentRescheduleSuggestions({
 
       {options?.policy.latestPlayDate && (
         <p className="tournament-reschedule__policy" role="status">
-          Date limite de ce tour : <strong>{dateLabel(options.policy.latestPlayDate)}</strong>.
-          Les reports et échanges proposés doivent respecter cette échéance.
+          Date limite de ce tour :{" "}
+          <strong>{dateLabel(options.policy.latestPlayDate)}</strong>. Les
+          reports et échanges proposés doivent respecter cette échéance.
         </p>
       )}
 
