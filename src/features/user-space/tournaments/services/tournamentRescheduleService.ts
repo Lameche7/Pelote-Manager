@@ -42,6 +42,7 @@ export type TournamentRescheduleFreeSlot = {
   requesterSameDayPenalty: number;
   requesterOutsideDeclaredAvailability: boolean;
   opponentAvailabilityKnown: boolean;
+  opponentOutsideDeclaredAvailability: boolean;
   preference: TournamentReschedulePreference;
 };
 
@@ -150,6 +151,9 @@ const mapFreeSlot = (row: Row): TournamentRescheduleFreeSlot => ({
     row.requester_outside_declared_availability,
   ),
   opponentAvailabilityKnown: Boolean(row.opponent_availability_known),
+  opponentOutsideDeclaredAvailability: Boolean(
+    row.opponent_outside_declared_availability,
+  ),
   preference:
     row.preference === "requester_compromise"
       ? "requester_compromise"
