@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { ExternalLink, RadioTower, Save, ShieldCheck, Youtube } from "lucide-react";
+import { ExternalLink, RadioTower, Save, ShieldCheck, Video } from "lucide-react";
 import {
   adminLiveSettingsService,
   type ClubLiveSettings,
@@ -111,7 +111,7 @@ export function AdminLiveSettingsPage() {
       ) : (
         <form onSubmit={(event) => void save(event)} className="admin-live-settings__form">
           <article className="admin-card">
-            <h2><Youtube aria-hidden="true" /> Chaîne YouTube du club</h2>
+            <h2><Video aria-hidden="true" /> Chaîne YouTube du club</h2>
             <label>
               Nom de la chaîne
               <input
