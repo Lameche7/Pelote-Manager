@@ -13,19 +13,11 @@ const admin = file(
 );
 const card = file("../src/features/reservations/components/SlotCard.tsx");
 
-test("projected final bracket slots retain series color and exact node identity", () => {
-  assert.match(calendar, /displayColor: projectedSeries\?\.color \?\? null/);
-  assert.match(calendar, /finalProjection: \{/);
-  assert.match(calendar, /tournamentId: projection\.tournament_id/);
-  assert.match(calendar, /seriesId: projection\.series_id/);
-  assert.match(calendar, /roundNumber: projection\.round_number/);
-  assert.match(calendar, /displayOrder: projection\.display_order/);
+test("the public calendar does not turn unconfirmed brackets into reservations", () => {
+  assert.doesNotMatch(calendar, /list_public_tournament_final_calendar_projections_v2/);
+  assert.doesNotMatch(calendar, /tournament_finals_projection/);
   assert.match(types, /finalProjection\?: \{/);
-  assert.match(
-    card,
-    /isTournamentMatch \|\| isChampionshipMatch \|\| isProjection/,
-  );
-  assert.match(card, /"Phase finale · prévisionnel"/);
+  assert.match(card, /isTournamentMatch \|\| isChampionshipMatch \|\| isProjection/);
 });
 
 test("the calendar makes direct final-stage scheduling an admin-only action", () => {
