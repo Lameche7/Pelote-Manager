@@ -7,6 +7,7 @@ import type {
   ReservableResource,
 } from "@/features/reservations/domain/calendar";
 import { mapCalendarOccupation } from "@/features/reservations/domain/calendar";
+import { tournamentResultsService } from "@/features/tournaments/services/tournamentResultsService";
 
 type ResourceRow = {
   id: string;
@@ -20,6 +21,10 @@ type FinalsProjectionRow = {
   starts_at: string;
   ends_at: string;
   display_name: string;
+  tournament_id: string;
+  series_id: string;
+  round_number: number;
+  display_order: number;
 };
 
 type RefereedIntervalRow = {
@@ -97,7 +102,7 @@ export const reservationCalendarService = {
         range_start: fromDate,
         range_end: toDate,
       }),
-      supabase.rpc("list_public_tournament_final_calendar_projections", {
+      supabase.rpc("list_public_tournament_final_calendar_projections_v2", {
         target_resource_id: resourceId,
         range_start: fromDate,
         range_end: toDate,
@@ -128,7 +133,34 @@ export const reservationCalendarService = {
 
     const projections = projectionsResponse.status === "fulfilled" && !projectionsResponse.value.error
       ? (projectionsResponse.value.data ?? []) as FinalsProjectionRow[] : [];
+    // Reuse the same projected final-bracket participants as Mes tournois.
+    // Fetch each active tournament only once; results are read on every calendar refresh.
+    const resultsByTournament = new Map(
+      await Promise.all(
+        [...new Set(projections.map((item) => item.tournament_id))].map(
+          async (tournamentId) => {
+            try {
+              return [tournamentId, await tournamentResultsService.get(tournamentId)] as const;
+            } catch {
+              // The schedule remains available if the supplementary results query fails.
+              return [tournamentId, null] as const;
+            }
+          },
+        ),
+      ),
+    );
     for (const projection of projections) {
+      const projectedSeries = resultsByTournament
+        .get(projection.tournament_id)
+        ?.series.find((series) => series.id === projection.series_id);
+      const projectedMatch = projectedSeries?.finalMatches.find(
+        (match) =>
+          match.roundNumber === projection.round_number &&
+          match.displayOrder === projection.display_order,
+      );
+      const displayName = projectedMatch
+        ? `Tournoi · ${projectedSeries?.name ?? "Série"} · ${projection.display_name.split(" · ").slice(2).join(" · ").split(" — ")[0]} — ${projectedMatch.teamALabel} / ${projectedMatch.teamBLabel} (prévisionnel)`
+        : projection.display_name;
       const start = new Date(projection.starts_at).getTime();
       const end = new Date(projection.ends_at).getTime();
       const existing = calendarSlots.find((slot) =>
@@ -147,7 +179,7 @@ export const reservationCalendarService = {
         startsAt: projection.starts_at,
         endsAt: projection.ends_at,
         status: "occupied",
-        bookedByName: projection.display_name,
+        bookedByName: displayName,
         occupationType: "tournament_finals_projection",
         bookingOpensAt: null,
         displayColor: null,
