@@ -7,6 +7,9 @@ import {
   type CSSProperties,
 } from "react";
 import { Phone } from "lucide-react";
+import { TournamentFinalsAvailabilityEditor } from "@/features/tournaments/components/TournamentFinalsAvailabilityEditor";
+import { tournamentService } from "@/features/tournaments/services/tournamentService";
+import type { MyTournamentFinalsAvailability, PublicTournamentDetail } from "@/features/tournaments/types";
 import { Link, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
@@ -354,6 +357,78 @@ function MatchCard({
   );
 }
 
+function MyFinalsAvailabilityToggle({
+  tournamentId,
+  teamId,
+}: {
+  tournamentId: string;
+  teamId: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [detail, setDetail] = useState<PublicTournamentDetail | null>(null);
+  const [registration, setRegistration] =
+    useState<MyTournamentFinalsAvailability | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const reload = useCallback(async () => {
+    const [tournament, teams] = await Promise.all([
+      tournamentService.getPublic(tournamentId),
+      tournamentService.getMyFinalsAvailabilities(tournamentId),
+    ]);
+    setDetail(tournament);
+    setRegistration(teams.find((team) => team.teamId === teamId) ?? null);
+  }, [tournamentId, teamId]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    let active = true;
+    setLoading(true);
+    setError("");
+    Promise.all([
+      tournamentService.getPublic(tournamentId),
+      tournamentService.getMyFinalsAvailabilities(tournamentId),
+    ])
+      .then(([tournament, teams]) => {
+        if (!active) return;
+        setDetail(tournament);
+        setRegistration(teams.find((team) => team.teamId === teamId) ?? null);
+      })
+      .catch((cause: unknown) => {
+        if (active) {
+          setError(cause instanceof Error ? cause.message : "Impossible de charger vos disponibilités.");
+        }
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [expanded, tournamentId, teamId]);
+
+  return (
+    <details
+      className="my-tournaments__availability-details"
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+    >
+      <summary>Afficher / masquer mes disponibilités — phase finale</summary>
+      {expanded && (
+        <div className="my-tournaments__availability-content">
+          {loading && <p role="status">Chargement des disponibilités…</p>}
+          {error && <p role="alert">{error}</p>}
+          {!loading && detail && registration && (
+            <TournamentFinalsAvailabilityEditor
+              tournament={detail}
+              registration={registration}
+              onSaved={reload}
+            />
+          )}
+          {!loading && !error && !registration && (
+            <p>Les disponibilités de cette équipe ne sont pas accessibles avec ce compte.</p>
+          )}
+        </div>
+      )}
+    </details>
+  );
+}
+
 function TournamentCard({
   tournament,
   focusMatchId,
@@ -577,11 +652,16 @@ function TournamentCard({
 
       <footer className="my-tournaments__actions">
         {["planning_published", "in_progress"].includes(tournament.status) && (
-          <Link
-            to={`${ROUTES.tournaments}/${tournament.id}#disponibilites-finales-${tournament.team.id}`}
-          >
-            Modifier mes disponibilités — phase finale
-          </Link>
+          tournament.matches.some((match) => match.phase === "finals") ? (
+            <MyFinalsAvailabilityToggle
+              tournamentId={tournament.id}
+              teamId={tournament.team.id}
+            />
+          ) : (
+            <Link to={`${ROUTES.tournaments}/${tournament.id}#disponibilites-finales-${tournament.team.id}`}>
+              Modifier mes disponibilités — phase finale
+            </Link>
+          )
         )}
         <Link to={`${ROUTES.tournaments}/${tournament.id}`}>
           {tournament.team.canManageRegistration
