@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
-import { adminNavigation } from "@/features/admin/config/adminPermissions";
+import { ADMIN_PERMISSIONS, adminNavigation } from "@/features/admin/config/adminPermissions";
+import { AdminBlockedFinalsAlerts } from "@/features/admin/components/AdminBlockedFinalsAlerts";
 import {
   AdminAccessProvider,
   useAdminAccess,
@@ -185,6 +186,7 @@ function AdminShellContent() {
         </nav>
       </aside>
       <main className="admin-shell__content">
+        {hasPermission(ADMIN_PERMISSIONS.tournaments) && <AdminBlockedFinalsAlerts />}
         <Outlet />
       </main>
     </div>
