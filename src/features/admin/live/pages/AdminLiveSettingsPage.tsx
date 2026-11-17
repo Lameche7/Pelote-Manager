@@ -1,5 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { ExternalLink, RadioTower, Save, ShieldCheck, Video } from "lucide-react";
+import {
+  ExternalLink,
+  RadioTower,
+  Save,
+  ShieldCheck,
+  Video,
+} from "lucide-react";
 import {
   adminLiveSettingsService,
   type ClubLiveSettings,
@@ -73,7 +79,9 @@ export function AdminLiveSettingsPage() {
   };
 
   if (loading) {
-    return <section className="admin-page">Chargement de Pilotoki Live…</section>;
+    return (
+      <section className="admin-page">Chargement de Pilotoki Live…</section>
+    );
   }
 
   return (
@@ -94,14 +102,22 @@ export function AdminLiveSettingsPage() {
           <strong>En préparation — aucun direct n'est activé</strong>
           <p>
             L'identifiant de la chaîne ne donne pas accès au compte YouTube.
-            L'autorisation Google et la passerelle vidéo restent à intégrer.
-            Les joueurs ne verront aucun bouton de diffusion pour le moment.
+            L'autorisation Google et la passerelle vidéo restent à intégrer. Les
+            joueurs ne verront aucun bouton de diffusion pour le moment.
           </p>
         </div>
       </div>
 
-      {error && <p role="alert" className="admin-live-settings__error">{error}</p>}
-      {message && <p role="status" className="admin-live-settings__success">{message}</p>}
+      {error && (
+        <p role="alert" className="admin-live-settings__error">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p role="status" className="admin-live-settings__success">
+          {message}
+        </p>
+      )}
 
       {!settings ? (
         <p className="admin-card">
@@ -109,9 +125,14 @@ export function AdminLiveSettingsPage() {
           administrateur sur le club sélectionné.
         </p>
       ) : (
-        <form onSubmit={(event) => void save(event)} className="admin-live-settings__form">
+        <form
+          onSubmit={(event) => void save(event)}
+          className="admin-live-settings__form"
+        >
           <article className="admin-card">
-            <h2><Video aria-hidden="true" /> Chaîne YouTube du club</h2>
+            <h2>
+              <Video aria-hidden="true" /> Chaîne YouTube du club
+            </h2>
             <label>
               Nom de la chaîne
               <input
@@ -153,14 +174,17 @@ export function AdminLiveSettingsPage() {
           </article>
 
           <article className="admin-card">
-            <h2><ShieldCheck aria-hidden="true" /> Règles prévues pour les directs</h2>
+            <h2>
+              <ShieldCheck aria-hidden="true" /> Règles prévues pour les directs
+            </h2>
             <label>
               Qui pourra demander à diffuser une partie ?
               <select
                 value={settings.broadcasterPolicy}
                 onChange={(event) =>
                   change({
-                    broadcasterPolicy: event.target.value as LiveBroadcasterPolicy,
+                    broadcasterPolicy: event.target
+                      .value as LiveBroadcasterPolicy,
                   })
                 }
               >
@@ -183,8 +207,8 @@ export function AdminLiveSettingsPage() {
             </label>
             <p className="admin-live-settings__hint">
               Ce sont des préférences pour la future version. Elles n'accordent
-              actuellement aucun droit de lancer un direct et ne remplacent
-              pas les autorisations de captation et de diffusion des joueurs.
+              actuellement aucun droit de lancer un direct et ne remplacent pas
+              les autorisations de captation et de diffusion des joueurs.
             </p>
           </article>
 
@@ -192,7 +216,9 @@ export function AdminLiveSettingsPage() {
             <h2>Étapes restantes</h2>
             <ol>
               <li>Validation des directs par YouTube Studio.</li>
-              <li>Autorisation Google de la chaîne par le responsable du club.</li>
+              <li>
+                Autorisation Google de la chaîne par le responsable du club.
+              </li>
               <li>Passerelle sécurisée entre la caméra mobile et YouTube.</li>
               <li>Tests de consentement, modération, direct et replay.</li>
             </ol>
