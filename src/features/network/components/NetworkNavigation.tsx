@@ -18,6 +18,7 @@ export function NetworkNavigation() {
       >
         <NavLink to="/reseau/tournois">Tournois</NavLink>
         <NavLink to="/reseau/clubs">Clubs</NavLink>
+        <NavLink to="/reseau/videos">Vidéos</NavLink>
         <NavLink to="/reseau/decouvrir">Découvrir Pilotoki</NavLink>
         <NavLink
           to="/reseau/abonnement"
