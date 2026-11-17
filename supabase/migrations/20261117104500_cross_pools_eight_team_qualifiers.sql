@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.admin_get_tournament_final_cross_pools(target_
  STABLE SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-declare target_club uuid := public.admin_current_club_id();
+declare target_club uuid := (select t.club_id from public.tournaments t where t.id=target_tournament_id);
 begin
   if target_club is null
     or not public.has_club_permission(target_club,'tournaments.manage')
@@ -245,7 +245,7 @@ CREATE OR REPLACE FUNCTION public.admin_generate_tournament_final_stage(target_t
  SET search_path TO ''
 AS $function$
 declare
-  target_club_id uuid := public.admin_current_club_id();
+  target_club_id uuid := (select t.club_id from public.tournaments t where t.id=target_tournament_id);
   target_tournament public.tournaments;
   target_series public.tournament_series;
   qualifier_count integer;
@@ -588,7 +588,7 @@ CREATE OR REPLACE FUNCTION public.admin_generate_tournament_final_stage(target_t
  SET search_path TO ''
 AS $function$
 declare
-  target_club_id uuid := public.admin_current_club_id();
+  target_club_id uuid := (select t.club_id from public.tournaments t where t.id=target_tournament_id);
   target_tournament public.tournaments;
   target_series public.tournament_series;
   qualifier_count integer;
