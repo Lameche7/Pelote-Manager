@@ -69,9 +69,9 @@ export const buildFinalStagePlan = (
   qualifierCount: number,
   crossPools = false,
 ): FinalStagePlan => {
-  if (crossPools && qualifierCount !== 6) {
+  if (crossPools && ![6, 8].includes(qualifierCount)) {
     throw new Error(
-      "Le croisement des poules nécessite exactement six qualifiées.",
+      "Le croisement des poules nécessite six ou huit équipes qualifiées.",
     );
   }
   if (!Number.isInteger(qualifierCount) || qualifierCount < 2) {
@@ -99,7 +99,12 @@ export const buildFinalStagePlan = (
     }
   }
 
-  const seedOrder = finalStageSeedOrder(mainBracketSize);
+  // Two pools of four: A1-B4, B2-A3, B1-A4, A2-B3.
+  // All quarter-finals cross pools, and the bracket stays symmetric.
+  const seedOrder =
+    crossPools && qualifierCount === 8
+      ? [1, 8, 4, 5, 2, 7, 3, 6]
+      : finalStageSeedOrder(mainBracketSize);
   const sourceForSeed = (seed: number): FinalStageSeedSource => {
     const preliminary = preliminaryByMainSeed.get(seed);
     if (!preliminary) return { kind: "seed", seed };
@@ -112,7 +117,7 @@ export const buildFinalStagePlan = (
   };
 
   const firstRoundMatches: FinalStageFirstRoundMatch[] = [];
-  if (crossPools) {
+  if (crossPools && qualifierCount === 6) {
     // Cross-pool six-team bracket: A1 vs winner(B2/A3),
     // B1 vs winner(A2/B3). Indexing must also match SQL advancement.
     firstRoundMatches.push(
