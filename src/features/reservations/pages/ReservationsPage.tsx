@@ -7,6 +7,7 @@ import { Video } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
+import { CalendarFinalsAdminPanel } from "@/features/reservations/components/CalendarFinalsAdminPanel";
 import {
   formatPrice,
   getBookingErrorMessage,
@@ -166,12 +167,14 @@ function BookingModal({
   championshipContext,
   onClose,
   onSuccess,
+  onOpenFinals,
 }: {
   slot: CalendarSlot;
   resource: ReservableResource;
   championshipContext: ChampionshipMatchReservationContext | null;
   onClose: () => void;
   onSuccess: () => Promise<void>;
+  onOpenFinals?: () => void;
 }) {
   const [terms, setTerms] = useState<ReservationTerms | null>(null);
   const [paymentEnabled, setPaymentEnabled] = useState<boolean | null>(null);
@@ -465,6 +468,15 @@ function BookingModal({
               >
                 Annuler
               </button>
+              {onOpenFinals && (
+                <button
+                  type="button"
+                  className="booking-modal__secondary"
+                  onClick={onOpenFinals}
+                >
+                  Programmer une phase finale
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={
@@ -1065,7 +1077,7 @@ export function ReservationsPage() {
             setLiveComingSoon(false);
             setInspectedSlot(slot);
           }}
-          canInspectLocked={canAdminReservations}
+          canInspectLocked={canAdminReservations || canAdminTournaments}
           onBook={(nextSlot) => {
             if (championshipContext?.existingReservation || championshipContextLoading) return;
             if (nextSlot.reservationAccess === "championship" && !championshipContext && canAdminReservations && canAdminChampionships) {
@@ -1145,6 +1157,20 @@ export function ReservationsPage() {
                 {liveComingSoon && <p role="status">Bientôt disponible</p>}
               </div>
             )}
+            {canAdminTournaments &&
+              (inspectedSlot.finalProjection ||
+                inspectedSlot.status === "available" ||
+                inspectedSlot.status === "locked") && (
+                <CalendarFinalsAdminPanel
+                  slot={inspectedSlot}
+                  calendarSlots={slots}
+                  timezone={selectedResource?.timezone ?? "Europe/Paris"}
+                  onUpdated={async () => {
+                    setInspectedSlot(null);
+                    await loadSlots();
+                  }}
+                />
+              )}
             {inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
               <div className="reservation-slot-actions">
                 <button className="reservation-slot-actions__button" type="button" disabled={competitionBusy} onClick={() => void openInspectedCompetition()}>
@@ -1369,6 +1395,14 @@ export function ReservationsPage() {
             championshipContext={championshipContext}
             onClose={() => setSelectedSlot(null)}
             onSuccess={refreshAfterBooking}
+            onOpenFinals={
+              canAdminTournaments && !championshipContext
+                ? () => {
+                    setInspectedSlot(selectedSlot);
+                    setSelectedSlot(null);
+                  }
+                : undefined
+            }
           />
         ) : (
           <AccountRequiredModal onClose={() => setSelectedSlot(null)} />
