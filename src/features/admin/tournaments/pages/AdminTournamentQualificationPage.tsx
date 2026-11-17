@@ -10,7 +10,7 @@ import {
 import { tournamentQualificationAdminService } from "@/features/admin/tournaments/services/tournamentQualificationAdminService";
 import "./AdminTournamentQualificationPage.css";
 
-const crossPoolSeedLabels: Record<number, string> = {
+const crossPoolSeedLabelsSix: Record<number, string> = {
   1: "1re poule 1",
   2: "1re poule 2",
   3: "2e poule 2",
@@ -19,19 +19,34 @@ const crossPoolSeedLabels: Record<number, string> = {
   6: "3e poule 1",
 };
 
+const crossPoolSeedLabelsEight: Record<number, string> = {
+  1: "1re poule 1",
+  2: "1re poule 2",
+  3: "2e poule 1",
+  4: "2e poule 2",
+  5: "3e poule 1",
+  6: "3e poule 2",
+  7: "4e poule 1",
+  8: "4e poule 2",
+};
+
 const sideLabel = (
   side: ReturnType<
     typeof buildFinalStagePlan
   >["firstRoundMatches"][number]["sideA"],
   crossPools: boolean,
-) =>
-  side.kind === "seed"
+  qualifierCount: number,
+) => {
+  const crossPoolSeedLabels =
+    qualifierCount === 8 ? crossPoolSeedLabelsEight : crossPoolSeedLabelsSix;
+  return side.kind === "seed"
     ? crossPools
       ? (crossPoolSeedLabels[side.seed] ?? `N°${side.seed}`)
       : `N°${side.seed}`
     : crossPools
       ? `Vainqueur (${crossPoolSeedLabels[side.seedA]} / ${crossPoolSeedLabels[side.seedB]})`
       : `Vainqueur ${side.seedA}–${side.seedB}`;
+};
 
 export function AdminTournamentQualificationPage() {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
@@ -372,8 +387,9 @@ export function AdminTournamentQualificationPage() {
                   </small>
                   {crossPoolsBySeries[seriesId] && (
                     <small>
-                      Mode « Tableau croisé entre poules » actif : les premières
-                      de chaque poule entrent directement en demi-finale.
+                      {qualifierCount === 8
+                        ? "Mode « Tableau croisé entre poules » actif : quatre quarts entre équipes de poules différentes."
+                        : "Mode « Tableau croisé entre poules » actif : les premières de chaque poule entrent directement en demi-finale."}
                     </small>
                   )}
                 </label>
@@ -406,11 +422,15 @@ export function AdminTournamentQualificationPage() {
                           {plan.preliminaryMatches.map((match) => (
                             <span key={match.matchIndex}>
                               {crossPoolsBySeries[seriesId]
-                                ? crossPoolSeedLabels[match.seedA]
+                                ? (qualifierCount === 8
+                                    ? crossPoolSeedLabelsEight
+                                    : crossPoolSeedLabelsSix)[match.seedA]
                                 : match.seedA}{" "}
                               vs{" "}
                               {crossPoolsBySeries[seriesId]
-                                ? crossPoolSeedLabels[match.seedB]
+                                ? (qualifierCount === 8
+                                    ? crossPoolSeedLabelsEight
+                                    : crossPoolSeedLabelsSix)[match.seedB]
                                 : match.seedB}
                             </span>
                           ))}
@@ -426,11 +446,13 @@ export function AdminTournamentQualificationPage() {
                             {sideLabel(
                               match.sideA,
                               crossPoolsBySeries[seriesId] ?? false,
+                              qualifierCount,
                             )}{" "}
                             vs{" "}
                             {sideLabel(
                               match.sideB,
                               crossPoolsBySeries[seriesId] ?? false,
+                              qualifierCount,
                             )}
                           </span>
                         ))}

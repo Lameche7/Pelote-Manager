@@ -347,13 +347,16 @@ export function AdminTournamentFinalStageControl({
       )}
 
       {stage.series.some(
-        (series) => series.poolCount === 2 && series.qualifierCount === 6,
+        (series) =>
+          series.poolCount === 2 && [6, 8].includes(series.qualifierCount),
       ) && (
         <div className="final-stage-cross-pools">
           <h3>Mode du tableau à deux poules</h3>
           {stage.series
             .filter(
-              (series) => series.poolCount === 2 && series.qualifierCount === 6,
+              (series) =>
+                series.poolCount === 2 &&
+                [6, 8].includes(series.qualifierCount),
             )
             .map((series) => (
               <div key={series.seriesId}>
@@ -373,10 +376,9 @@ export function AdminTournamentFinalStageControl({
                   Croiser les poules — {series.seriesName}
                 </label>
                 <p className="final-stage-control__hint">
-                  Barrage 1 : 2e poule 2 contre 3e poule 1 ; barrage 2 : 2e
-                  poule 1 contre 3e poule 2. Demi-finales : 1re poule 1 contre
-                  vainqueur barrage 1, puis 1re poule 2 contre vainqueur barrage
-                  2.
+                  {series.qualifierCount === 8
+                    ? "Quarts croisés : 1er P1 / 4e P2, 2e P2 / 3e P1, 1er P2 / 4e P1, 2e P1 / 3e P2. Aucun duel de la même poule au premier tour."
+                    : "Barrage 1 : 2e poule 2 contre 3e poule 1 ; barrage 2 : 2e poule 1 contre 3e poule 2. Demi-finales : 1re poule 1 contre vainqueur barrage 1, puis 1re poule 2 contre vainqueur barrage 2."}
                 </p>
                 {series.generated && series.crossPoolsReconfigurable && (
                   <p className="final-stage-control__hint">
