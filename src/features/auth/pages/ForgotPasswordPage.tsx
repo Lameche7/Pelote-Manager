@@ -1,9 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { requestPasswordReset } from "@/infrastructure/auth/authService";
 import { ROUTES } from "@/shared/config";
+import { publicClubQuery } from "@/shared/config/domains";
 
 export function ForgotPasswordPage() {
+  const location = useLocation();
+  const clubQuery = publicClubQuery(
+    new URLSearchParams(location.search).get("club"),
+  );
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -14,7 +19,7 @@ export function ForgotPasswordPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await requestPasswordReset(email);
+      await requestPasswordReset(email, clubQuery);
       setSent(true);
     } catch (caughtError) {
       setError(
@@ -37,7 +42,9 @@ export function ForgotPasswordPage() {
             vient d’être envoyé. Vérifiez aussi vos courriers indésirables.
           </p>
           <p>
-            <Link to={ROUTES.login}>Retour à la connexion</Link>
+            <Link to={`${ROUTES.login}${clubQuery}`}>
+              Retour à la connexion
+            </Link>
           </p>
         </>
       ) : (
