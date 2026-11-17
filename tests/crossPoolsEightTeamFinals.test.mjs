@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { buildFinalStagePlan } from "../src/features/tournaments/domain/finalStageEngine.ts";
+import { buildFinalStagePlan } from "../.test-dist/src/features/tournaments/domain/finalStageEngine.js";
 
 const migration = readFileSync(
   new URL(
@@ -43,10 +43,16 @@ test("8 players: crossed quarters pair A1-B4, B2-A3, B1-A4, A2-B3", () => {
 
 test("six-player women's crossed semis stay unchanged", () => {
   const plan = buildFinalStagePlan(6, true);
-  assert.deepEqual(pairings(plan), [
-    [1, 3],
-    [2, 4],
-  ]);
+  assert.deepEqual(
+    plan.firstRoundMatches.map(({ sideA, sideB }) => [
+      sideA.seed,
+      sideB.kind === "preliminary_winner" ? sideB.preliminaryMatchIndex : null,
+    ]),
+    [
+      [1, 1],
+      [2, 2],
+    ],
+  );
   assert.deepEqual(
     plan.preliminaryMatches.map(({ seedA, seedB }) => [seedA, seedB]),
     [[3, 6], [4, 5]],
