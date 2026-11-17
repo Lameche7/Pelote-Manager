@@ -165,7 +165,17 @@ begin
   where type.club_id=chosen_tournament.club_id
     and lower(type.name)=lower('Tournoi')
   order by type.display_order,type.id limit 1;
-  if tournament_event_type_id is null then return created_count; end if;
+  if tournament_event_type_id is null then
+    foreach pending_notice_id in array newly_known_matches loop
+      begin
+        perform public.notify_tournament_final_admin_auto_outcome(pending_notice_id);
+      exception when others then
+        raise warning 'Unable to notify admins for finals match %: %',
+          pending_notice_id,sqlerrm;
+      end;
+    end loop;
+    return created_count;
+  end if;
 
   -- Only publish an *already scheduled* future match when both participants
   -- declared the slot and neither occupation nor conflicting match exists.
@@ -245,9 +255,30 @@ begin
     perform public.sync_event_occupations(new_event_id);
   end loop;
 
-  -- Every newly determined matchup generates one admin notification:
-  -- success if published; otherwise a scheduling alert.
-  foreach pending_notice_id in array newly_known_matches loop
+  -- Notify newly resolved brackets exactly once per outcome. Also emit a
+  -- successful update if an earlier blocked fixture was later scheduled.
+  for pending_notice_id in
+    select distinct pending.id
+    from public.tournament_matches pending
+    where pending.tournament_id=target_tournament_id
+      and pending.series_id=target_series_id and pending.phase='finals'
+      and pending.team_a_id is not null and pending.team_b_id is not null
+      and (
+        pending.id=any(newly_known_matches)
+        or exists (
+          select 1 from public.tournament_final_admin_auto_outcomes notice
+          where notice.match_id=pending.id and notice.outcome='blocked'
+        )
+      )
+      and not exists (
+        select 1 from public.tournament_final_admin_auto_outcomes notice
+        where notice.match_id=pending.id
+          and notice.outcome=case when exists (
+            select 1 from public.tournament_match_events linked
+            where linked.match_id=pending.id
+          ) then 'scheduled' else 'blocked' end
+      )
+  loop
     begin
       perform public.notify_tournament_final_admin_auto_outcome(pending_notice_id);
     exception when others then
