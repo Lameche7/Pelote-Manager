@@ -3,10 +3,16 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
-const page = read("../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx");
-const calendar = read("../src/features/reservations/services/reservationCalendarService.ts");
+const page = read(
+  "../src/features/user-space/tournaments/pages/MyTournamentsPage.tsx",
+);
+const calendar = read(
+  "../src/features/reservations/services/reservationCalendarService.ts",
+);
 const card = read("../src/features/reservations/components/SlotCard.tsx");
-const migration = read("../supabase/migrations/20261117094500_public_full_finals_calendar_projection.sql");
+const migration = read(
+  "../supabase/migrations/20261117094500_public_full_finals_calendar_projection.sql",
+);
 
 test("Mes tournois can collapse and lazily load editable finals availabilities", () => {
   assert.match(page, /Afficher \/ masquer mes disponibilités — phase finale/);
@@ -22,8 +28,11 @@ test("calendar shows all future finals nodes without converting them to actual m
   assert.match(migration, /planning_published', 'in_progress/);
   assert.match(migration, /adversaires à déterminer \(prévisionnel\)/);
   assert.match(migration, /not exists \(/);
-  assert.match(calendar, /list_public_tournament_final_calendar_projections/);
-  assert.match(calendar, /existing\?\.status === "occupied"/);
+  assert.match(
+    calendar,
+    /list_public_tournament_final_calendar_projections/,
+  );
+  assert.match(calendar, /slot.status === "occupied"/);
   assert.match(calendar, /tournament_finals_projection/);
   assert.match(card, /Phase finale · prévisionnel/);
   assert.doesNotMatch(migration, /insert into public\.tournament_matches/);
