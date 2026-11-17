@@ -650,19 +650,20 @@ function TournamentCard({
         </section>
       )}
 
+      {["planning_published", "in_progress"].includes(tournament.status) &&
+        tournament.matches.some((match) => match.phase === "finals") && (
+          <MyFinalsAvailabilityToggle
+            tournamentId={tournament.id}
+            teamId={tournament.team.id}
+          />
+        )}
       <footer className="my-tournaments__actions">
-        {["planning_published", "in_progress"].includes(tournament.status) && (
-          tournament.matches.some((match) => match.phase === "finals") ? (
-            <MyFinalsAvailabilityToggle
-              tournamentId={tournament.id}
-              teamId={tournament.team.id}
-            />
-          ) : (
+        {["planning_published", "in_progress"].includes(tournament.status) &&
+          !tournament.matches.some((match) => match.phase === "finals") && (
             <Link to={`${ROUTES.tournaments}/${tournament.id}#disponibilites-finales-${tournament.team.id}`}>
               Modifier mes disponibilités — phase finale
             </Link>
-          )
-        )}
+          )}
         <Link to={`${ROUTES.tournaments}/${tournament.id}`}>
           {tournament.team.canManageRegistration
             ? "Gérer mon inscription"
