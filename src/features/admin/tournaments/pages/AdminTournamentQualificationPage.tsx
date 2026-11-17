@@ -422,11 +422,15 @@ export function AdminTournamentQualificationPage() {
                           {plan.preliminaryMatches.map((match) => (
                             <span key={match.matchIndex}>
                               {crossPoolsBySeries[seriesId]
-                                ? (qualifierCount === 8 ? crossPoolSeedLabelsEight : crossPoolSeedLabelsSix)[match.seedA]
+                                ? (qualifierCount === 8
+                                    ? crossPoolSeedLabelsEight
+                                    : crossPoolSeedLabelsSix)[match.seedA]
                                 : match.seedA}{" "}
                               vs{" "}
                               {crossPoolsBySeries[seriesId]
-                                ? (qualifierCount === 8 ? crossPoolSeedLabelsEight : crossPoolSeedLabelsSix)[match.seedB]
+                                ? (qualifierCount === 8
+                                    ? crossPoolSeedLabelsEight
+                                    : crossPoolSeedLabelsSix)[match.seedB]
                                 : match.seedB}
                             </span>
                           ))}
