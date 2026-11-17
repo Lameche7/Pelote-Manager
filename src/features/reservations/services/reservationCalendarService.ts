@@ -159,7 +159,10 @@ export const reservationCalendarService = {
           match.displayOrder === projection.display_order,
       );
       const displayName = projectedMatch
-        ? `Tournoi · ${projectedSeries?.name ?? "Série"} · ${projection.display_name.split(" · ").slice(2).join(" · ").split(" — ")[0]} — ${projectedMatch.teamALabel} / ${projectedMatch.teamBLabel} (prévisionnel)`
+        ? projection.display_name.replace(
+            "adversaires à déterminer (prévisionnel)",
+            `${projectedMatch.teamALabel} / ${projectedMatch.teamBLabel} (prévisionnel)`,
+          )
         : projection.display_name;
       const start = new Date(projection.starts_at).getTime();
       const end = new Date(projection.ends_at).getTime();
