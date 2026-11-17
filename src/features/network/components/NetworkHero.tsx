@@ -4,7 +4,7 @@ import { NetworkNavigation } from "./NetworkNavigation";
 export function NetworkHero({
   variant = "default",
 }: {
-  variant?: "default" | "discovery" | "subscription";
+  variant?: "default" | "discovery" | "subscription" | "videos";
 }) {
   return (
     <section
@@ -17,7 +17,12 @@ export function NetworkHero({
     >
       <NetworkNavigation />
       <div className="network-directory__hero-copy">
-        {variant === "subscription" ? (
+        {variant === "videos" ? (
+          <>
+            <h1>Pilotoki <span>Vidéos</span></h1>
+            <p>Suivez bientôt les parties en direct et retrouvez les replays des clubs du réseau.</p>
+          </>
+        ) : variant === "subscription" ? (
           <>
             <h1>S'abonner à Pilotoki</h1>
             <p>
