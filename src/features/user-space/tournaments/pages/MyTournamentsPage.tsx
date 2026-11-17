@@ -9,7 +9,10 @@ import {
 import { Phone } from "lucide-react";
 import { TournamentFinalsAvailabilityEditor } from "@/features/tournaments/components/TournamentFinalsAvailabilityEditor";
 import { tournamentService } from "@/features/tournaments/services/tournamentService";
-import type { MyTournamentFinalsAvailability, PublicTournamentDetail } from "@/features/tournaments/types";
+import type {
+  MyTournamentFinalsAvailability,
+  PublicTournamentDetail,
+} from "@/features/tournaments/types";
 import { Link, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { UserSpaceShell } from "@/features/user-space/components/UserSpaceShell";
@@ -396,11 +399,19 @@ function MyFinalsAvailabilityToggle({
       })
       .catch((cause: unknown) => {
         if (active) {
-          setError(cause instanceof Error ? cause.message : "Impossible de charger vos disponibilités.");
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Impossible de charger vos disponibilités.",
+          );
         }
       })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [expanded, tournamentId, teamId]);
 
   return (
@@ -421,7 +432,10 @@ function MyFinalsAvailabilityToggle({
             />
           )}
           {!loading && !error && !registration && (
-            <p>Les disponibilités de cette équipe ne sont pas accessibles avec ce compte.</p>
+            <p>
+              Les disponibilités de cette équipe ne sont pas accessibles avec
+              ce compte.
+            </p>
           )}
         </div>
       )}
@@ -660,7 +674,9 @@ function TournamentCard({
       <footer className="my-tournaments__actions">
         {["planning_published", "in_progress"].includes(tournament.status) &&
           !tournament.matches.some((match) => match.phase === "finals") && (
-            <Link to={`${ROUTES.tournaments}/${tournament.id}#disponibilites-finales-${tournament.team.id}`}>
+            <Link
+              to={`${ROUTES.tournaments}/${tournament.id}#disponibilites-finales-${tournament.team.id}`}
+            >
               Modifier mes disponibilités — phase finale
             </Link>
           )}
