@@ -110,7 +110,9 @@ export function CalendarFinalsAdminPanel({
       .catch((reason: unknown) => {
         if (active)
           setError(
-            reason instanceof Error ? reason.message : "Liste des tournois indisponible.",
+            reason instanceof Error
+              ? reason.message
+              : "Liste des tournois indisponible.",
           );
       })
       .finally(() => {
@@ -164,9 +166,7 @@ export function CalendarFinalsAdminPanel({
   );
   const unplanned = (workspace?.nodes ?? []).filter(
     (node) =>
-      !node.resourceId &&
-      !node.published &&
-      node.resultStatus !== "validated",
+      !node.resourceId && !node.published && node.resultStatus !== "validated",
   );
   const currentNode = workspace?.nodes.find(
     (node) => nodeKey(node) === selectedNode,
@@ -197,7 +197,9 @@ export function CalendarFinalsAdminPanel({
       const date = localDateAndTime(selectedDestination.startsAt, timezone);
       const end = localDateAndTime(selectedDestination.endsAt, timezone);
       if (end.date !== date.date) {
-        throw new Error("Les créneaux traversant minuit ne sont pas pris en charge.");
+        throw new Error(
+          "Les créneaux traversant minuit ne sont pas pris en charge.",
+        );
       }
       await tournamentFinalStageAdminService.setExceptionalManualSlot(
         tournamentId,
@@ -211,11 +213,15 @@ export function CalendarFinalsAdminPanel({
           endsAt: end.time,
         },
       );
-      setMessage("Créneau de phase finale prépositionné. Adversaires non confirmés.");
+      setMessage(
+        "Créneau de phase finale prépositionné. Adversaires non confirmés.",
+      );
       await onUpdated();
     } catch (reason: unknown) {
       setError(
-        reason instanceof Error ? reason.message : "Impossible de programmer ce créneau.",
+        reason instanceof Error
+          ? reason.message
+          : "Impossible de programmer ce créneau.",
       );
     } finally {
       setSaving(false);
@@ -224,7 +230,8 @@ export function CalendarFinalsAdminPanel({
 
   async function clear() {
     if (!projection || !canModify || !workspace || saving) return;
-    if (!window.confirm("Déprogrammer ce créneau prévisionnel et le libérer ?")) return;
+    if (!window.confirm("Déprogrammer ce créneau prévisionnel et le libérer ?"))
+      return;
     setSaving(true);
     setError("");
     try {
@@ -245,7 +252,9 @@ export function CalendarFinalsAdminPanel({
       await onUpdated();
     } catch (reason: unknown) {
       setError(
-        reason instanceof Error ? reason.message : "Déprogrammation impossible.",
+        reason instanceof Error
+          ? reason.message
+          : "Déprogrammation impossible.",
       );
     } finally {
       setSaving(false);
@@ -260,7 +269,9 @@ export function CalendarFinalsAdminPanel({
         type="button"
         onClick={() => setOpen((value) => !value)}
       >
-        {projection ? "Déplacer ou déprogrammer ce créneau" : "Programmer une phase finale ici"}
+        {projection
+          ? "Déplacer ou déprogrammer ce créneau"
+          : "Programmer une phase finale ici"}
       </button>
       {open && (
         <div className="calendar-finals-admin">
@@ -303,12 +314,10 @@ export function CalendarFinalsAdminPanel({
                       )
                     : unplanned
                   ).map((node) => (
-                    <option
-                      key={nodeKey(node)}
-                      value={nodeKey(node)}
-                    >
+                    <option key={nodeKey(node)} value={nodeKey(node)}>
                       {seriesById.get(node.seriesId)?.name ?? "Série"} ·{" "}
-                      {titles[node.round] ?? node.round} n°{node.displayOrder + 1}
+                      {titles[node.round] ?? node.round} n°
+                      {node.displayOrder + 1}
                     </option>
                   ))}
                 </select>
@@ -321,12 +330,17 @@ export function CalendarFinalsAdminPanel({
                     onChange={(event) => setSelectedTarget(event.target.value)}
                     disabled={saving}
                   >
-                    <option value="">Choisir un créneau libre dans cette semaine</option>
+                    <option value="">
+                      Choisir un créneau libre dans cette semaine
+                    </option>
                     {targets.map((target) => {
                       const start = localDateAndTime(target.startsAt, timezone);
                       return (
                         <option key={keyFor(target)} value={keyFor(target)}>
-                          {start.date} · {start.time} · {target.status === "locked" ? "réservé / non ouvert" : "libre"}
+                          {start.date} · {start.time} ·{" "}
+                          {target.status === "locked"
+                            ? "réservé / non ouvert"
+                            : "libre"}
                         </option>
                       );
                     })}
@@ -334,7 +348,11 @@ export function CalendarFinalsAdminPanel({
                 </label>
               )}
               {!projection && (
-                <p>Créneau sélectionné : {localDateAndTime(slot.startsAt, timezone).date} · {localDateAndTime(slot.startsAt, timezone).time}</p>
+                <p>
+                  Créneau sélectionné :{" "}
+                  {localDateAndTime(slot.startsAt, timezone).date} ·{" "}
+                  {localDateAndTime(slot.startsAt, timezone).time}
+                </p>
               )}
               <div className="reservation-slot-actions__list">
                 <button
