@@ -29,16 +29,23 @@ as $function$
     and node.play_date between tournament.finals_starts_on and tournament.finals_ends_on
     and node.starts_at is not null and node.ends_at is not null
     and node.source is not null
-    -- Real materialized fixtures already appear through occupations/calendar.
+    -- Only published fixtures with a real calendar occupation take priority.
+    -- A future-round match may exist in planning without being published yet.
     and not exists (
       select 1
       from public.tournament_matches match
-      join public.tournament_match_planning planning on planning.match_id = match.id
+      join public.tournament_match_events link on link.match_id = match.id
+      join public.events event on event.id = link.event_id
+      join public.event_resources event_resource on event_resource.event_id = event.id
+      join public.calendar_occupations occupation
+        on occupation.id = event_resource.calendar_occupation_id
       where match.tournament_id = node.tournament_id
         and match.series_id = node.series_id
         and match.phase = 'finals'
         and match.final_round_number = node.round_number
         and match.display_order = node.display_order
+        and event.publication_status = 'published'
+        and occupation.cancelled_at is null
     )
   order by 1;
 $function$;
