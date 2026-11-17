@@ -3,6 +3,7 @@ import { tournamentResultsAdminService, type AdminTournamentResultMatch, type Ad
 import { adminChampionshipDayResultsService, type AdminChampionshipDayResult } from "@/features/admin/championships/services/adminChampionshipDayResultsService";
 import { championshipImportService } from "@/features/admin/championships/services/championshipImportService";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Video } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PushActivationNudge } from "@/features/notifications/components/PushActivationNudge";
 import { ReservationSplitPaymentFields } from "@/features/reservations/components/ReservationSplitPaymentFields";
@@ -513,6 +514,7 @@ export function ReservationsPage() {
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [inspectedSlot, setInspectedSlot] = useState<CalendarSlot | null>(null);
+  const [liveComingSoon, setLiveComingSoon] = useState(false);
   const [inspectedActions, setInspectedActions] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [inspectionError, setInspectionError] = useState("");
@@ -1059,7 +1061,10 @@ export function ReservationsPage() {
           slotsByDay={slotsByDay}
           timezone={selectedResource?.timezone ?? "Europe/Paris"}
           championshipMatchSelected={Boolean(championshipContext)}
-          onInspect={setInspectedSlot}
+          onInspect={(slot) => {
+            setLiveComingSoon(false);
+            setInspectedSlot(slot);
+          }}
           canInspectLocked={canAdminReservations}
           onBook={(nextSlot) => {
             if (championshipContext?.existingReservation || championshipContextLoading) return;
@@ -1128,6 +1133,18 @@ export function ReservationsPage() {
             {inspectionError && <p role="alert">{inspectionError}</p>}
             {unprogramError && <p role="alert">{unprogramError}</p>}
             {competitionError && <p role="alert">{competitionError}</p>}
+            {isAuthenticated && inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
+              <div className="reservation-slot-actions">
+                <button
+                  className="reservation-slot-actions__button"
+                  type="button"
+                  onClick={() => setLiveComingSoon(true)}
+                >
+                  <Video aria-hidden="true" size={18} /> Diffuser cette partie
+                </button>
+                {liveComingSoon && <p role="status">Bientôt disponible</p>}
+              </div>
+            )}
             {inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
               <div className="reservation-slot-actions">
                 <button className="reservation-slot-actions__button" type="button" disabled={competitionBusy} onClick={() => void openInspectedCompetition()}>
