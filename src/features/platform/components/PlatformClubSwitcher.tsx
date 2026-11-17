@@ -111,7 +111,7 @@ export function PlatformClubSwitcher() {
 
   // A persisted preference is not an authorization: validate against server catalogue.
   useEffect(() => {
-    if (!isVerifiedAdmin || !clubs.length) return;
+    if (!isVerifiedAdmin || status !== "ready") return;
     const valid = clubs.some((club) => club.slug === selectedSlug);
     if (!valid && selectedSlug) {
       window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
@@ -138,6 +138,7 @@ export function PlatformClubSwitcher() {
     );
   }, [
     isVerifiedAdmin,
+    status,
     clubs,
     selectedSlug,
     activeSlug,
