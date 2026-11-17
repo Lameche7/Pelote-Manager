@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const load = (path) =>
-  readFileSync(new URL(path, import.meta.url), "utf8");
+const load = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const page = load("../src/features/network/pages/NetworkVideosPage.tsx");
-const navigation = load("../src/features/network/components/NetworkNavigation.tsx");
+const navigation = load(
+  "../src/features/network/components/NetworkNavigation.tsx",
+);
 const hero = load("../src/features/network/components/NetworkHero.tsx");
 const router = load("../src/app/router.tsx");
 
