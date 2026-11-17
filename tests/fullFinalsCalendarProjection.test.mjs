@@ -34,9 +34,9 @@ test(
     assert.match(migration, /adversaires à déterminer \(prévisionnel\)/);
     assert.match(migration, /not exists \(/);
     assert.match(
-    calendar,
-    /list_public_tournament_final_calendar_projections/,
-  );
+      calendar,
+      /list_public_tournament_final_calendar_projections/,
+    );
     assert.match(calendar, /slot.status === "occupied"/);
     assert.match(calendar, /tournament_finals_projection/);
     assert.match(card, /Phase finale · prévisionnel/);
