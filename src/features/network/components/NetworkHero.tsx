@@ -19,8 +19,13 @@ export function NetworkHero({
       <div className="network-directory__hero-copy">
         {variant === "videos" ? (
           <>
-            <h1>Pilotoki <span>Vidéos</span></h1>
-            <p>Suivez bientôt les parties en direct et retrouvez les replays des clubs du réseau.</p>
+            <h1>
+              Pilotoki <span>Vidéos</span>
+            </h1>
+            <p>
+              Suivez bientôt les parties en direct et retrouvez les replays des
+              clubs du réseau.
+            </p>
           </>
         ) : variant === "subscription" ? (
           <>
