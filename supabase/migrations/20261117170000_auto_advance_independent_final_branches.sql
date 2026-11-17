@@ -213,6 +213,19 @@ begin
           and other.play_date=p.play_date
           and other.starts_at<p.ends_at and other.ends_at>p.starts_at
       )
+      and not exists (
+        select 1 from public.tournament_final_planning_nodes another
+        where another.resource_id=p.resource_id
+          and another.play_date=p.play_date
+          and another.starts_at<p.ends_at
+          and another.ends_at>p.starts_at
+          and not (
+            another.tournament_id=m.tournament_id
+            and another.series_id=m.series_id
+            and another.round_number=m.final_round_number
+            and another.display_order=m.display_order
+          )
+      )
     order by p.play_date,p.starts_at,m.display_order
   loop
     insert into public.events (
