@@ -34,7 +34,7 @@ begin
     perform public.auto_progress_independent_tournament_final_branches(
       new.tournament_id,selected_series);
     delete from public.tournament_final_auto_progress_errors e
-    where e.tournament_id=new.tournament_id and e.match_id=new.match_id;
+    where e.tournament_id=new.tournament_id and e.series_id=selected_series;
   exception when others then
     insert into public.tournament_final_auto_progress_errors
       (tournament_id,series_id,match_id,diagnostic)
@@ -153,10 +153,8 @@ begin
         and t.club_id=target_club and t.status not in ('completed','archived','cancelled')
       join public.tournament_series s on s.id=e.series_id
       where not exists(
-        select 1 from public.tournament_matches m
-        join public.tournament_match_results result
-          on result.match_id=m.id
-        where m.id=e.match_id and result.status<>'validated'
+        select 1 from public.tournament_match_events link
+        where link.match_id=e.match_id
       )
     ) issue
   ),'[]'::jsonb);
