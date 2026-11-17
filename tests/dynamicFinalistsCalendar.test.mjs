@@ -26,13 +26,12 @@ test("public calendar projections identify their actual bracket positions", () =
   assert.doesNotMatch(migration, /update public\.tournament_matches/);
 });
 
-test("calendar uses the same advancing participant projection as Mes tournois", () => {
+test("projected finalists remain in tournament results, not as fake booked calendar slots", () => {
   assert.match(results, /buildFinalBracketProjectedMatches/);
-  assert.match(calendar, /tournamentResultsService\.get\(tournamentId\)/);
-  assert.match(calendar, /match\.roundNumber === projection\.round_number/);
-  assert.match(calendar, /match\.displayOrder === projection\.display_order/);
-  assert.match(calendar, /projectedMatch\.teamALabel/);
-  assert.match(calendar, /projectedMatch\.teamBLabel/);
-  assert.match(calendar, /adversaires à déterminer \(prévisionnel\)/);
-  assert.match(calendar, /slot\.status === "occupied"/);
+  assert.doesNotMatch(
+    calendar,
+    /tournamentResultsService\.get\(tournamentId\)/,
+  );
+  assert.doesNotMatch(calendar, /projectedMatch\.teamALabel/);
+  assert.doesNotMatch(calendar, /tournament_finals_projection/);
 });
