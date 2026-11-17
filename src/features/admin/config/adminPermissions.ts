@@ -245,6 +245,11 @@ export const adminNavigation = [
     permission: ADMIN_PERMISSIONS.paymentsRead,
   },
   {
+    label: "Pilotoki Live",
+    to: "/admin/parametres/live",
+    permission: ADMIN_PERMISSIONS.settings,
+  },
+  {
     label: "Paramètres",
     to: ROUTES.adminSettings,
     permission: ADMIN_PERMISSIONS.settings,
