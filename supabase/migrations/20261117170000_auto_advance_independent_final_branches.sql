@@ -271,7 +271,9 @@ as $function$
 declare selected_series uuid;
 begin
   if new.status<>'validated' then return new; end if;
-  if tg_op='UPDATE' and old.status='validated' then return new; end if;
+  if tg_op='UPDATE' then
+    if old.status='validated' then return new; end if;
+  end if;
   select m.series_id into selected_series
   from public.tournament_matches m where m.id=new.match_id
     and m.phase='finals';
