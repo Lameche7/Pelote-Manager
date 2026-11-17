@@ -135,8 +135,13 @@ export const reservationCalendarService = {
         new Date(slot.startsAt).getTime() === start &&
         new Date(slot.endsAt).getTime() === end
       );
-      // Never mask an actual reservation, match, or other real occupation.
-      if (existing?.status === "occupied") continue;
+      // Never mask or overlap an actual reservation, match, or occupation.
+      if (calendarSlots.some((slot) =>
+        slot.status === "occupied" &&
+        slot.occupationType !== "tournament_finals_projection" &&
+        new Date(slot.startsAt).getTime() < end &&
+        new Date(slot.endsAt).getTime() > start
+      )) continue;
       const projected: CalendarSlot = {
         resourceId,
         startsAt: projection.starts_at,
