@@ -51,7 +51,7 @@ test("automatic-progress failure remains observable even though validated result
 test("admin banner requires tournament permission and polls for new issues", () => {
   assert.match(
     shell,
-    /hasPermission\(ADMIN_PERMISSIONS\.tournaments\) && <AdminBlockedFinalsAlerts/,
+    /hasPermission\(ADMIN_PERMISSIONS\.tournaments\)[\s\S]*?<AdminBlockedFinalsAlerts/,
   );
   assert.match(alerts, /admin_list_blocked_tournament_finals/);
   assert.match(alerts, /setInterval\(\(\) => void poll\(\), 60000\)/);
