@@ -71,9 +71,7 @@ export function ResetPasswordPage() {
         {error && <p role="alert">{error}</p>}
       </form>
       <p>
-        <Link to={`${ROUTES.login}${clubQuery}`}>
-          Retour à la connexion
-        </Link>
+        <Link to={`${ROUTES.login}${clubQuery}`}>Retour à la connexion</Link>
       </p>
     </section>
   );
