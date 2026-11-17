@@ -52,10 +52,12 @@ export function SlotCard({
 
   if (slot.status === "occupied") {
     const bookedBy = slot.bookedByName ?? "Réservation";
+    const isProjection = slot.occupationType === "tournament_finals_projection";
     const isTournamentMatch =
       slot.occupationType === "match" && Boolean(slot.displayColor);
     const isChampionshipMatch = slot.occupationType === "championship_match";
-    const isColoredMatch = isTournamentMatch || isChampionshipMatch;
+    const isColoredMatch =
+      isTournamentMatch || isChampionshipMatch || isProjection;
     const bookedByDetails = slot.resultDisplay
       ? isChampionshipMatch
         ? bookedBy.split("\\n").slice(0, 2).join("\\n")
@@ -87,9 +89,11 @@ export function SlotCard({
         >
           {isChampionshipMatch
             ? "Partie championnat"
-            : isTournamentMatch
-              ? "Partie tournoi"
-              : "Occupé"}
+            : isProjection
+              ? "Phase finale · prévisionnel"
+              : isTournamentMatch
+                ? "Partie tournoi"
+                : "Occupé"}
         </span>
         <small>{bookedByDetails}</small>
         {(isChampionshipMatch || isTournamentMatch) && slot.hasReferee && (

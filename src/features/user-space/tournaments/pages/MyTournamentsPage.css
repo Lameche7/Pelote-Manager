@@ -538,3 +538,25 @@
   border-top: 1px solid #e5e7eb;
   padding-top: 10px;
 }
+
+.my-tournaments__availability-details {
+  margin: 0.7rem 1rem;
+  border: 1px solid rgb(100 116 139 / 22%);
+  border-radius: 0.8rem;
+  overflow: hidden;
+}
+
+.my-tournaments__availability-details > summary {
+  cursor: pointer;
+  padding: 0.8rem 1rem;
+  font-weight: 750;
+  color: var(--club-accent, #1e5aa8);
+}
+
+.my-tournaments__availability-content {
+  padding: 0.5rem 1rem 1rem;
+}
+
+.my-tournaments__availability-content .public-tournament-panel {
+  max-width: 100%;
+}
