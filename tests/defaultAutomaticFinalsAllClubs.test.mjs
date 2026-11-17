@@ -29,7 +29,10 @@ test("new tournaments across every club get automatic finals by default", () => 
 test("active existing tournaments are enabled without reprogramming fixtures", () => {
   assert.match(migration, /update public\.tournaments/);
   assert.match(migration, /where finals_auto_advance_enabled = false/);
-  assert.match(migration, /status not in \('completed', 'archived', 'cancelled'\)/);
+  assert.match(
+    migration,
+    /status not in \('completed', 'archived', 'cancelled'\)/,
+  );
   assert.doesNotMatch(
     migration,
     /(?:insert into|delete from|update) public\.(?:tournament_matches|tournament_final_planning_nodes|tournament_match_results|tournament_match_events)/i,
@@ -43,5 +46,8 @@ test("the existing guarded result trigger remains shared by all clubs", () => {
   );
   assert.match(engine, /if new\.status<>'validated' then return new/);
   assert.match(engine, /and t\.finals_auto_advance_enabled/);
-  assert.match(engine, /not exists\(select 1 from public\.tournament_match_events me/);
+  assert.match(
+    engine,
+    /not exists\(select 1 from public\.tournament_match_events me/,
+  );
 });
