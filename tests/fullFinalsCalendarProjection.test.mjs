@@ -25,7 +25,10 @@ test("historical projection data may exist but the player calendar never blocks 
   assert.match(migration, /tournament_final_planning_nodes/);
   assert.match(migration, /node\.round_number/);
   assert.match(migration, /adversaires à déterminer \(prévisionnel\)/);
-  assert.doesNotMatch(calendar, /list_public_tournament_final_calendar_projections/);
+  assert.doesNotMatch(
+    calendar,
+    /list_public_tournament_final_calendar_projections/,
+  );
   assert.doesNotMatch(calendar, /tournament_finals_projection/);
   assert.doesNotMatch(migration, /insert into public\.tournament_matches/);
   assert.doesNotMatch(migration, /update public\.reservations/);
