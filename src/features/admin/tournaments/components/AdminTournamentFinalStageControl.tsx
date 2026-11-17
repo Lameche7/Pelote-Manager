@@ -347,13 +347,16 @@ export function AdminTournamentFinalStageControl({
       )}
 
       {stage.series.some(
-        (series) => series.poolCount === 2 && [6, 8].includes(series.qualifierCount),
+        (series) =>
+          series.poolCount === 2 && [6, 8].includes(series.qualifierCount),
       ) && (
         <div className="final-stage-cross-pools">
           <h3>Mode du tableau à deux poules</h3>
           {stage.series
             .filter(
-              (series) => series.poolCount === 2 && [6, 8].includes(series.qualifierCount),
+              (series) =>
+                series.poolCount === 2 &&
+                [6, 8].includes(series.qualifierCount),
             )
             .map((series) => (
               <div key={series.seriesId}>
