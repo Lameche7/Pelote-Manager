@@ -177,7 +177,7 @@ test("deux poules de trois produisent des barrages croisés puis les bonnes demi
     ["T1", "B2"],
     ["T2", "B1"],
   ]);
-  assert.throws(() => buildFinalStagePlan(8, true), /six qualifiées/);
+  assert.throws(() => buildFinalStagePlan(10, true), /six ou huit/);
 
   const migration = await read(
     "../supabase/migrations/20261115100000_cross_pools_six_team_final_bracket.sql",
