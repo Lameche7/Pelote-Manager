@@ -52,7 +52,7 @@ begin
     where s.tournament_id=target_tournament_id and s.enabled
   ),'[]'::jsonb);
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_set_tournament_final_cross_pools(target_tournament_id uuid, target_series_id uuid, enable_cross_pools boolean)
  RETURNS boolean
@@ -236,7 +236,7 @@ begin
   );
   return enable_cross_pools;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_generate_tournament_final_stage(target_tournament_id uuid, target_series_id uuid)
  RETURNS integer
@@ -579,7 +579,7 @@ begin
 
   return inserted_count;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_generate_tournament_final_stage(target_tournament_id uuid)
  RETURNS integer
@@ -862,6 +862,6 @@ begin
 
   return inserted_count;
 end;
-$function$
+$function$;
 
 commit;
