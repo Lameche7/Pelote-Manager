@@ -1,9 +1,7 @@
 import { supabase } from "@/infrastructure/supabase/client";
 
 export type LiveBroadcasterPolicy =
-  | "admin_only"
-  | "participants"
-  | "approval_required";
+  "admin_only" | "participants" | "approval_required";
 
 export type ClubLiveSettings = {
   clubId: string;
@@ -40,14 +38,17 @@ export const adminLiveSettingsService = {
   },
 
   async save(settings: ClubLiveSettings): Promise<ClubLiveSettings> {
-    const { data, error } = await supabase.rpc("admin_save_club_live_settings", {
-      payload: {
-        youtube_channel_id: settings.youtubeChannelId,
-        youtube_channel_label: settings.youtubeChannelLabel,
-        broadcaster_policy: settings.broadcasterPolicy,
-        allow_replays: settings.allowReplays,
+    const { data, error } = await supabase.rpc(
+      "admin_save_club_live_settings",
+      {
+        payload: {
+          youtube_channel_id: settings.youtubeChannelId,
+          youtube_channel_label: settings.youtubeChannelLabel,
+          broadcaster_policy: settings.broadcasterPolicy,
+          allow_replays: settings.allowReplays,
+        },
       },
-    });
+    );
     if (error) throw error;
     return mapSettings(data);
   },
