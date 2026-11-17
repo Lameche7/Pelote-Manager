@@ -41,12 +41,12 @@ test("the calendar makes direct final-stage scheduling an admin-only action", ()
 });
 
 test("admin mutations reuse protected existing final-stage RPCs", () => {
-  assert.match(admin, /tournamentFinalStageAdminService\.getFullPlanning/);
+  assert.match(admin, /tournamentFinalStageAdminService\s*\.getFullPlanning/);
   assert.match(
     admin,
-    /tournamentFinalStageAdminService\.setExceptionalManualSlot/,
+    /tournamentFinalStageAdminService\s*\.setExceptionalManualSlot/,
   );
-  assert.match(admin, /tournamentFinalStageAdminService\.saveFullPlanning/);
+  assert.match(admin, /tournamentFinalStageAdminService\s*\.saveFullPlanning/);
   assert.match(admin, /slotId: null/);
   assert.match(admin, /!node\.published/);
   assert.match(admin, /node\.resultStatus !== "validated"/);
