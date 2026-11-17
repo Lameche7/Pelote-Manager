@@ -28,5 +28,5 @@ test("calendar uses the same advancing participant projection as Mes tournois", 
   assert.match(calendar, /projectedMatch\.teamALabel/);
   assert.match(calendar, /projectedMatch\.teamBLabel/);
   assert.match(calendar, /adversaires à déterminer \(prévisionnel\)/);
-  assert.match(calendar, /existing\.startsAt/);
+  assert.match(calendar, /slot\.status === "occupied"/);
 });
