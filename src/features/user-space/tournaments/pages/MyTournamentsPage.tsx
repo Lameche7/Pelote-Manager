@@ -433,8 +433,8 @@ function MyFinalsAvailabilityToggle({
           )}
           {!loading && !error && !registration && (
             <p>
-              Les disponibilités de cette équipe ne sont pas accessibles avec
-              ce compte.
+              Les disponibilités de cette équipe ne sont pas accessibles avec ce
+              compte.
             </p>
           )}
         </div>
