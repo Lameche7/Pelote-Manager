@@ -1,0 +1,80 @@
+.admin-finals-alerts {
+  padding: 1rem;
+  margin-bottom: 1.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid #e6b46b;
+  background: #fff9ed;
+  color: #5b3a12;
+}
+.admin-finals-alerts__header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.admin-finals-alerts__header > svg {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.admin-finals-alerts__header > div {
+  flex: 1;
+  min-width: 0;
+}
+.admin-finals-alerts__header strong {
+  font-size: 1rem;
+}
+.admin-finals-alerts__header p {
+  margin: 0.25rem 0 0;
+}
+.admin-finals-alerts__header button {
+  padding: 0.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.5rem;
+  border: 1px solid #d1a15c;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+}
+.admin-finals-alerts__header button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+.admin-finals-alerts ul {
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+}
+.admin-finals-alerts li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.65rem;
+  border: 1px solid #efd6ab;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+.admin-finals-alerts li svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+.admin-finals-alerts li div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.admin-finals-alerts li span,
+.admin-finals-alerts li small {
+  overflow-wrap: anywhere;
+}
+.admin-finals-alerts li small {
+  color: #785e3e;
+}
+.admin-finals-alerts > a {
+  display: inline-block;
+  font-weight: 700;
+  color: #7a4c14;
+}
