@@ -16,6 +16,12 @@ type ResourceRow = {
   timezone: string;
 };
 
+type FinalsProjectionRow = {
+  starts_at: string;
+  ends_at: string;
+  display_name: string;
+};
+
 type RefereedIntervalRow = {
   starts_at: string;
   ends_at: string;
@@ -80,7 +86,7 @@ export const reservationCalendarService = {
 
     // Referee decorations are nonessential to availability: do not hide the
     // entire timetable if either supplementary RPC temporarily fails.
-    const [intervalResponse, nameResponse] = await Promise.allSettled([
+    const [intervalResponse, nameResponse, projectionsResponse] = await Promise.allSettled([
       supabase.rpc("list_refereed_calendar_intervals", {
         target_resource_id: resourceId,
         range_start: fromDate,
@@ -91,13 +97,18 @@ export const reservationCalendarService = {
         range_start: fromDate,
         range_end: toDate,
       }),
+      supabase.rpc("list_public_tournament_final_calendar_projections", {
+        target_resource_id: resourceId,
+        range_start: fromDate,
+        range_end: toDate,
+      }),
     ]);
     const refereedIntervals = intervalResponse.status === "fulfilled" && !intervalResponse.value.error
       ? intervalResponse.value.data : [];
     const refereeNames = nameResponse.status === "fulfilled" && !nameResponse.value.error
       ? nameResponse.value.data : [];
     const assignments = (refereeNames ?? []) as RefereeNameRow[];
-    return ((data ?? []) as SlotRow[]).map((slot) => ({
+    const calendarSlots: CalendarSlot[] = ((data ?? []) as SlotRow[]).map((slot) => ({
       resourceId: slot.resource_id,
       startsAt: slot.starts_at,
       endsAt: slot.ends_at,
@@ -114,6 +125,40 @@ export const reservationCalendarService = {
         new Date(item.ends_at).getTime() > new Date(slot.starts_at).getTime()
       )?.referee_name ?? null,
     }));
+
+    const projections = projectionsResponse.status === "fulfilled" && !projectionsResponse.value.error
+      ? (projectionsResponse.value.data ?? []) as FinalsProjectionRow[] : [];
+    for (const projection of projections) {
+      const start = new Date(projection.starts_at).getTime();
+      const end = new Date(projection.ends_at).getTime();
+      const existing = calendarSlots.find((slot) =>
+        new Date(slot.startsAt).getTime() === start &&
+        new Date(slot.endsAt).getTime() === end
+      );
+      // Never mask an actual reservation, match, or other real occupation.
+      if (existing?.status === "occupied") continue;
+      const projected: CalendarSlot = {
+        resourceId,
+        startsAt: projection.starts_at,
+        endsAt: projection.ends_at,
+        status: "occupied",
+        bookedByName: projection.display_name,
+        occupationType: "tournament_finals_projection",
+        bookingOpensAt: null,
+        displayColor: null,
+        reservationAccess: null,
+        resultDisplay: null,
+      };
+      if (existing) {
+        Object.assign(existing, projected);
+      } else {
+        // Exceptional finals slots may be outside the regular booking grid.
+        calendarSlots.push(projected);
+      }
+    }
+    return calendarSlots.sort((a, b) =>
+      new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()
+    );
   },
 
   async listOccupations(
