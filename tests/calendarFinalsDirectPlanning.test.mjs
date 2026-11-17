@@ -14,10 +14,16 @@ const admin = file(
 const card = file("../src/features/reservations/components/SlotCard.tsx");
 
 test("the public calendar does not turn unconfirmed brackets into reservations", () => {
-  assert.doesNotMatch(calendar, /list_public_tournament_final_calendar_projections_v2/);
+  assert.doesNotMatch(
+    calendar,
+    /list_public_tournament_final_calendar_projections_v2/,
+  );
   assert.doesNotMatch(calendar, /tournament_finals_projection/);
   assert.match(types, /finalProjection\?: \{/);
-  assert.match(card, /isTournamentMatch \|\| isChampionshipMatch \|\| isProjection/);
+  assert.match(
+    card,
+    /isTournamentMatch \|\| isChampionshipMatch \|\| isProjection/,
+  );
 });
 
 test("the calendar makes direct final-stage scheduling an admin-only action", () => {
