@@ -56,7 +56,8 @@ export function SlotCard({
     const isTournamentMatch =
       slot.occupationType === "match" && Boolean(slot.displayColor);
     const isChampionshipMatch = slot.occupationType === "championship_match";
-    const isColoredMatch = isTournamentMatch || isChampionshipMatch || isProjection;
+    const isColoredMatch =
+      isTournamentMatch || isChampionshipMatch || isProjection;
     const bookedByDetails = slot.resultDisplay
       ? isChampionshipMatch
         ? bookedBy.split("\\n").slice(0, 2).join("\\n")
