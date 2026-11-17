@@ -28,7 +28,10 @@ test("public calendar projections identify their actual bracket positions", () =
 
 test("projected finalists remain in tournament results, not as fake booked calendar slots", () => {
   assert.match(results, /buildFinalBracketProjectedMatches/);
-  assert.doesNotMatch(calendar, /tournamentResultsService\.get\(tournamentId\)/);
+  assert.doesNotMatch(
+    calendar,
+    /tournamentResultsService\.get\(tournamentId\)/,
+  );
   assert.doesNotMatch(calendar, /projectedMatch\.teamALabel/);
   assert.doesNotMatch(calendar, /tournament_finals_projection/);
 });
