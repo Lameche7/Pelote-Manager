@@ -185,9 +185,15 @@ export const reservationCalendarService = {
         bookedByName: displayName,
         occupationType: "tournament_finals_projection",
         bookingOpensAt: null,
-        displayColor: null,
+        displayColor: projectedSeries?.color ?? null,
         reservationAccess: null,
         resultDisplay: null,
+        finalProjection: {
+          tournamentId: projection.tournament_id,
+          seriesId: projection.series_id,
+          roundNumber: projection.round_number,
+          displayOrder: projection.display_order,
+        },
       };
       if (existing) {
         Object.assign(existing, projected);

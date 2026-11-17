@@ -13,6 +13,12 @@ export type CalendarSlot = {
   resultDisplay?: string | null;
   hasReferee?: boolean;
   refereeName?: string | null;
+  finalProjection?: {
+    tournamentId: string;
+    seriesId: string;
+    roundNumber: number;
+    displayOrder: number;
+  } | null;
 };
 
 export type CalendarOccupation = {
