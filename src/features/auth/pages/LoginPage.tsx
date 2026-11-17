@@ -130,8 +130,8 @@ export function LoginPage() {
         />
         <p>
           <Link to={`${ROUTES.forgotPassword}${clubQuery}`}>
-          Mot de passe oublié ?
-        </Link>
+            Mot de passe oublié ?
+          </Link>
         </p>
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Connexion…" : "Se connecter"}
