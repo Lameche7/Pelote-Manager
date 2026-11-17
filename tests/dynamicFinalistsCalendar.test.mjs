@@ -14,8 +14,14 @@ const results = read(
 );
 
 test("public calendar projections identify their actual bracket positions", () => {
-  assert.match(migration, /list_public_tournament_final_calendar_projections_v2/);
-  assert.match(migration, /node\.tournament_id, node\.series_id, node\.round_number, node\.display_order/);
+  assert.match(
+    migration,
+    /list_public_tournament_final_calendar_projections_v2/,
+  );
+  assert.match(
+    migration,
+    /node\.tournament_id, node\.series_id, node\.round_number, node\.display_order/,
+  );
   assert.match(migration, /event\.publication_status = 'published'/);
   assert.doesNotMatch(migration, /update public\.tournament_matches/);
 });
