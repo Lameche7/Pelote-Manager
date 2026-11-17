@@ -19,10 +19,7 @@ const control = readFileSync(
 );
 
 const pairings = (plan) =>
-  plan.firstRoundMatches.map(({ sideA, sideB }) => [
-    sideA.seed,
-    sideB.seed,
-  ]);
+  plan.firstRoundMatches.map(({ sideA, sideB }) => [sideA.seed, sideB.seed]);
 
 test("8 players: crossed quarters pair A1-B4, B2-A3, B1-A4, A2-B3", () => {
   const crossed = buildFinalStagePlan(8, true);
@@ -55,7 +52,10 @@ test("six-player women's crossed semis stay unchanged", () => {
   );
   assert.deepEqual(
     plan.preliminaryMatches.map(({ seedA, seedB }) => [seedA, seedB]),
-    [[3, 6], [4, 5]],
+    [
+      [3, 6],
+      [4, 5],
+    ],
   );
 });
 
@@ -63,7 +63,10 @@ test("SQL seeding and admin choice match the client", () => {
   assert.match(migration, /array\[1,8,4,5,2,7,3,6\]/);
   assert.match(migration, /finals_qualifier_count in \(6,8\)/);
   assert.match(migration, /selected\.finals_qualifier_count not in \(6,8\)/);
-  assert.match(migration, /Eight-team crossed bracket is locked after generation/);
+  assert.match(
+    migration,
+    /Eight-team crossed bracket is locked after generation/,
+  );
   assert.match(migration, /validated_match_count <> pool_match_count/);
   assert.match(control, /\[6, 8\]\.includes\(series\.qualifierCount\)/);
   assert.match(control, /Aucun duel de la même poule au premier tour/);
