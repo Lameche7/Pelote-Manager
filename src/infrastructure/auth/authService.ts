@@ -106,12 +106,15 @@ export async function resendSignupConfirmation(
   }
 }
 
-export async function requestPasswordReset(email: string): Promise<void> {
+export async function requestPasswordReset(
+  email: string,
+  clubQuery = "",
+): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail) throw new Error("Saisissez votre adresse email.");
 
   const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-    redirectTo: `${currentApplicationOrigin()}/reinitialiser-mot-de-passe`,
+    redirectTo: `${currentApplicationOrigin()}/reinitialiser-mot-de-passe${clubQuery}`,
   });
   if (error) {
     throw new Error(
