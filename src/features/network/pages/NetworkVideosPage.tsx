@@ -1,4 +1,10 @@
-import { Clapperboard, ExternalLink, PlayCircle, Radio, Video } from "lucide-react";
+import {
+  Clapperboard,
+  ExternalLink,
+  PlayCircle,
+  Radio,
+  Video,
+} from "lucide-react";
 import { NetworkHero } from "@/features/network/components/NetworkHero";
 import "./NetworkDirectoryPage.css";
 import "./NetworkVideosPage.css";
@@ -11,7 +17,10 @@ export function NetworkVideosPage() {
     <main className="network-directory network-videos">
       <NetworkHero variant="videos" />
       <div className="network-videos__body">
-        <section className="network-videos__intro" aria-label="Présentation des vidéos">
+        <section
+          className="network-videos__intro"
+          aria-label="Présentation des vidéos"
+        >
           <p className="network-directory__eyebrow">Pilotoki Live</p>
           <h2>Vivez les parties, même à distance.</h2>
           <p>
@@ -21,7 +30,11 @@ export function NetworkVideosPage() {
         </section>
 
         <div className="network-videos__sections">
-          <section className="network-videos__panel" id="directs" aria-labelledby="directs-heading">
+          <section
+            className="network-videos__panel"
+            id="directs"
+            aria-labelledby="directs-heading"
+          >
             <div className="network-videos__panel-heading">
               <span className="network-videos__icon network-videos__icon--live">
                 <Radio aria-hidden="true" />
@@ -42,7 +55,11 @@ export function NetworkVideosPage() {
             </div>
           </section>
 
-          <section className="network-videos__panel" id="replays" aria-labelledby="replays-heading">
+          <section
+            className="network-videos__panel"
+            id="replays"
+            aria-labelledby="replays-heading"
+          >
             <div className="network-videos__panel-heading">
               <span className="network-videos__icon">
                 <Clapperboard aria-hidden="true" />
@@ -64,7 +81,10 @@ export function NetworkVideosPage() {
           </section>
         </div>
 
-        <section className="network-videos__club" aria-labelledby="video-club-heading">
+        <section
+          className="network-videos__club"
+          aria-labelledby="video-club-heading"
+        >
           <div>
             <p className="network-directory__eyebrow">Premier club pilote</p>
             <h2 id="video-club-heading">Pelotaris Club Lourdais</h2>
@@ -74,7 +94,11 @@ export function NetworkVideosPage() {
               connectée aux directs de Pilotoki.
             </p>
           </div>
-          <a href={PCL_YOUTUBE_CHANNEL} target="_blank" rel="noopener noreferrer">
+          <a
+            href={PCL_YOUTUBE_CHANNEL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Découvrir la chaîne YouTube du PCL
             <ExternalLink aria-hidden="true" />
           </a>
