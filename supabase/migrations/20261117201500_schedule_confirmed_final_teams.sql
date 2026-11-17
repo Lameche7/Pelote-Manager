@@ -159,6 +159,12 @@ begin
     if candidate.resource_id is null then
       delete from public.tournament_match_planning p
       where p.match_id=entry.id and p.source='generated';
+      update public.tournament_final_planning_nodes n
+      set resource_id=null,play_date=null,starts_at=null,ends_at=null,
+        source=null,updated_at=now()
+      where n.tournament_id=target_tournament_id and n.series_id=entry.series_id
+        and n.round_number=entry.final_round_number
+        and n.display_order=entry.display_order and n.source='generated';
       update public.tournament_matches set status='to_schedule',updated_at=now()
       where id=entry.id and status='scheduled'
         and not exists(select 1 from public.tournament_match_events e where e.match_id=entry.id);
