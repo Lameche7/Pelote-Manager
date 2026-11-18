@@ -143,23 +143,34 @@ test("Lourdes 3e série : Pasi / Pasi reste visible et Garoby / Lolibe n'est pas
     teamBLabel: `Équipe ${24 - index}`,
     winnerTeamId: index === 5 ? "team-19" : null,
   }));
-  const actual = [{
-    round: "round_of_16",
-    displayOrder: 6,
-    teamAId: "team-3",
-    teamALabel: "Garoby / Elorza",
-    teamBId: "team-19",
-    teamBLabel: "Lolibe / Bonamy",
-    winnerTeamId: null,
-  }];
+  const actual = [
+    {
+      round: "round_of_16",
+      displayOrder: 6,
+      teamAId: "team-3",
+      teamALabel: "Garoby / Elorza",
+      teamBId: "team-19",
+      teamBLabel: "Lolibe / Bonamy",
+      winnerTeamId: null,
+    },
+  ];
   const projected = buildFinalBracketProjectedMatches({
     qualifierCount: 24,
     seeds: seeds24,
     actualMatches: [...prelim, ...actual],
   });
-  const eighths = projected.filter(match => match.round === "round_of_16");
+  const eighths = projected.filter(
+    (match) => match.round === "round_of_16",
+  );
   assert.equal(eighths.length, 7);
-  assert.equal(eighths.find(match => match.displayOrder === 5)?.sideA.teamLabel, "Pasi / Pasi");
-  assert.equal(eighths.some(match => match.displayOrder === 6), false);
-  assert.equal(eighths.filter(match => match.sideA.teamLabel === "Garoby / Elorza").length, 0);
+  assert.equal(
+    eighths.find((match) => match.displayOrder === 5)?.sideA.teamLabel,
+    "Pasi / Pasi",
+  );
+  assert.equal(eighths.some((match) => match.displayOrder === 6), false);
+  assert.equal(
+    eighths.filter((match) => match.sideA.teamLabel === "Garoby / Elorza")
+      .length,
+    0,
+  );
 });
