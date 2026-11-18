@@ -40,7 +40,8 @@ const largestPowerOfTwoAtMost = (value: number) => {
  * Placement sportif des têtes de série dans le tableau principal.
  *
  * L'ordre 16 est celui retenu pour la pelote :
- * 1-16, 8-9, 4-13, 5-12, 3-14, 6-11, 7-10, 2-15.
+ * 1-16, 8-9, 4-13, 5-12, 2-15, 7-10, 3-14, 6-11.
+ * Cet ordre doit rester identique à public.tournament_final_seed_order(16).
  * Deux matchs consécutifs alimentent le même quart / tour suivant.
  */
 export const finalStageSeedOrder = (bracketSize: number): number[] => {
@@ -54,7 +55,7 @@ export const finalStageSeedOrder = (bracketSize: number): number[] => {
   if (bracketSize === 4) return [1, 4, 2, 3];
   if (bracketSize === 8) return [1, 8, 4, 5, 3, 6, 7, 2];
   if (bracketSize === 16) {
-    return [1, 16, 8, 9, 4, 13, 5, 12, 3, 14, 6, 11, 7, 10, 2, 15];
+    return [1, 16, 8, 9, 4, 13, 5, 12, 2, 15, 7, 10, 3, 14, 6, 11];
   }
 
   const previous = finalStageSeedOrder(bracketSize / 2);
