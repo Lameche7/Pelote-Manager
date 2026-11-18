@@ -68,6 +68,19 @@ begin
       raise exception 'Invalid or already started final slot' using errcode='22023';
     end if;
 
+    -- Once a final has begun, it cannot be moved to a later time.
+    select n.* into current_node from public.tournament_final_planning_nodes n
+    where n.tournament_id=target_tournament_id
+      and n.series_id=entry.series_id and n.round='final';
+    if current_node.play_date is not null
+      and current_node.starts_at is not null
+      and current_node.resource_id is not null
+      and (current_node.play_date+current_node.starts_at)
+            at time zone entry.timezone <= now() then
+      raise exception 'A final that already started cannot be moved'
+        using errcode='P0001';
+    end if;
+
     if exists (
       select 1 from public.tournament_matches m
       left join public.tournament_match_results result on result.match_id=m.id
