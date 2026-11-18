@@ -98,3 +98,27 @@ test("manual final publication uses the existing protected automatic engine", ()
   );
   assert.match(admin, /Créneau enregistré, mais non publié/);
 });
+
+// Published finals are the sole source of the displayed knockout-stage badge.
+test("calendar cards display the published tournament final round, never projected brackets", () => {
+  const service = file(
+    "../src/features/reservations/services/reservationCalendarService.ts",
+  );
+  const domain = file("../src/features/reservations/domain/calendar.ts");
+  const migration = file(
+    "../supabase/migrations/20261118160000_public_tournament_final_calendar_round_labels.sql",
+  );
+  assert.match(service, /list_published_tournament_final_calendar_rounds/);
+  assert.match(service, /slot\.occupation_type === "match"/);
+  assert.match(service, /tournamentFinalRound:/);
+  assert.match(domain, /tournamentFinalRound\?: string \| null/);
+  assert.match(card, /slot\.tournamentFinalRound/);
+  assert.match(card, /"Barrage"/);
+  assert.match(card, /"1\/8 de finale"/);
+  assert.match(card, /"Quart de finale"/);
+  assert.match(card, /"Demi-finale"/);
+  assert.match(card, /"Finale"/);
+  assert.match(migration, /event\.publication_status = 'published'/);
+  assert.match(migration, /match\.phase = 'finals'/);
+  assert.match(migration, /occupation\.cancelled_at is null/);
+});

@@ -11,6 +11,7 @@ export type CalendarSlot = {
   displayColor?: string | null;
   reservationAccess?: "standard" | "championship" | null;
   resultDisplay?: string | null;
+  tournamentFinalRound?: string | null;
   hasReferee?: boolean;
   refereeName?: string | null;
   finalProjection?: {

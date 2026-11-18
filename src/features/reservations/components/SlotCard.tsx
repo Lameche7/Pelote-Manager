@@ -31,6 +31,15 @@ function getContrastTextColor(color: string): "#111827" | "#ffffff" {
   return contrastWithDark >= contrastWithWhite ? "#111827" : "#ffffff";
 }
 
+const tournamentFinalRoundLabels: Record<string, string> = {
+  preliminary: "Barrage",
+  round_of_32: "1/16 de finale",
+  round_of_16: "1/8 de finale",
+  quarterfinal: "Quart de finale",
+  semifinal: "Demi-finale",
+  final: "Finale",
+};
+
 export function SlotCard({
   slot,
   timezone,
@@ -92,7 +101,9 @@ export function SlotCard({
             : isProjection
               ? "Phase finale · prévisionnel"
               : isTournamentMatch
-                ? "Partie tournoi"
+                ? slot.tournamentFinalRound
+                  ? `Tournoi · ${tournamentFinalRoundLabels[slot.tournamentFinalRound] ?? "Phase finale"}`
+                  : "Partie tournoi"
                 : "Occupé"}
         </span>
         <small>{bookedByDetails}</small>
