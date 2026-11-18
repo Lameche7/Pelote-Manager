@@ -850,9 +850,15 @@ test("un barrage peut se jouer après un huitième indépendant mais avant son p
 
 test("les cartes de rattrapage privilégient les parties à deux adversaires connus sans changer le moteur automatique", async () => {
   const [admin, styles, service] = await Promise.all([
-    read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
-    read("../src/features/admin/tournaments/pages/AdminTournamentQualificationPage.css"),
-    read("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts"),
+    read(
+      "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+    ),
+    read(
+      "../src/features/admin/tournaments/pages/AdminTournamentQualificationPage.css",
+    ),
+    read(
+      "../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
+    ),
   ]);
   assert.match(admin, /!persistedByNode\.has\(node\.id\)/);
   assert.match(admin, /row\?\.teamAId && row\?\.teamBId/);

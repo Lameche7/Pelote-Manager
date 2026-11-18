@@ -819,7 +819,6 @@
   }
 }
 
-
 /* Manual interventions only: compact, series-colored final-stage queue. */
 .final-stage-queue__summary {
   margin: 0.5rem 0;
@@ -849,7 +848,9 @@
   white-space: normal;
   overflow-wrap: anywhere;
   box-shadow: 0 4px 10px rgb(15 23 42 / 9%);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .final-stage-queue__card:hover:not(:disabled) {

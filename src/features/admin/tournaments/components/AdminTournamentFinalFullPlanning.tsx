@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   tournamentFinalStageAdminService,
   type TournamentFinalFullPlanningNodeRow,
@@ -316,15 +322,21 @@ export function AdminTournamentFinalFullPlanning({
   };
   const queuePriority = (node: FinalStagePlanningNode) => {
     if (!hasResolvedOpponents(node)) return 2;
-    return unprogrammedDiagnostics.get(node.id)?.startsWith("Créneau commun") ? 0 : 1;
+    return unprogrammedDiagnostics.get(node.id)?.startsWith("Créneau commun")
+      ? 0
+      : 1;
   };
   const visibleQuickQueue = quickQueue
-    .filter((node) => quickQueueFilter === "all" || node.seriesId === quickQueueFilter)
-    .sort((left, right) =>
-      queuePriority(left) - queuePriority(right) ||
-      left.seriesId.localeCompare(right.seriesId) ||
-      left.roundNumber - right.roundNumber ||
-      left.displayOrder - right.displayOrder,
+    .filter(
+      (node) =>
+        quickQueueFilter === "all" || node.seriesId === quickQueueFilter,
+    )
+    .sort(
+      (left, right) =>
+        queuePriority(left) - queuePriority(right) ||
+        left.seriesId.localeCompare(right.seriesId) ||
+        left.roundNumber - right.roundNumber ||
+        left.displayOrder - right.displayOrder,
     );
   const resolvedQueueCount = quickQueue.filter(hasResolvedOpponents).length;
   const quickNode = nodes.find((node) => node.id === quickNodeId);
@@ -825,41 +837,66 @@ export function AdminTournamentFinalFullPlanning({
           </select>
         </label>
         <p className="final-stage-queue__summary">
-          <strong>{resolvedQueueCount} rencontre(s) avec deux adversaires connus</strong>
-          <span> · {quickQueue.length - resolvedQueueCount} position(s) encore théoriques</span>
+          <strong>
+            {resolvedQueueCount} rencontre(s) avec deux adversaires connus
+          </strong>
+          <span>
+            {" "}
+            · {quickQueue.length - resolvedQueueCount} position(s) encore
+            théoriques
+          </span>
         </p>
         {visibleQuickQueue.length === 0 ? (
           <p role="status">Aucune rencontre en attente pour ce filtre.</p>
         ) : (
           <div className="final-stage-queue__grid">
             {visibleQuickQueue.map((node) => {
-              const series = workspace.series.find((item) => item.id === node.seriesId);
+              const series = workspace.series.find(
+                (item) => item.id === node.seriesId,
+              );
               const row = rowById.get(node.id);
               const known = hasResolvedOpponents(node);
-              const common = unprogrammedDiagnostics.get(node.id)?.startsWith("Créneau commun") ?? false;
-              const status = !known ? "waiting" : common ? "ready" : "constrained";
+              const common =
+                unprogrammedDiagnostics
+                  .get(node.id)
+                  ?.startsWith("Créneau commun") ?? false;
+              const status = !known
+                ? "waiting"
+                : common
+                  ? "ready"
+                  : "constrained";
               const statusLabel = !known
                 ? "Adversaires en attente"
                 : common
                   ? "Deux équipes connues"
                   : "Placement à examiner";
-              const matchLabel = known && row?.teamALabel && row.teamBLabel
-                ? `${row.teamALabel} — ${row.teamBLabel}`
-                : describeFinalStageOpponents({
-                    node,
-                    nodes,
-                    seeds: series?.seeds ?? [],
-                    crossPools: series?.crossPools ?? false,
-                  });
+              const matchLabel =
+                known && row?.teamALabel && row.teamBLabel
+                  ? `${row.teamALabel} — ${row.teamBLabel}`
+                  : describeFinalStageOpponents({
+                      node,
+                      nodes,
+                      seeds: series?.seeds ?? [],
+                      crossPools: series?.crossPools ?? false,
+                    });
               return (
                 <button
                   key={node.id}
                   type="button"
                   className={`final-stage-queue__card final-stage-queue__card--${status}`}
-                  style={{ "--series-color": series?.color ?? "#64748b" } as CSSProperties}
+                  style={
+                    {
+                      "--series-color": series?.color ?? "#64748b",
+                    } as CSSProperties
+                  }
                   disabled={busy || !known}
                   aria-pressed={quickNodeId === node.id}
-                  title={unprogrammedDiagnostics.get(node.id) ?? (known ? "Choisir une rencontre" : "En attente de la connaissance des deux équipes")}
+                  title={
+                    unprogrammedDiagnostics.get(node.id) ??
+                    (known
+                      ? "Choisir une rencontre"
+                      : "En attente de la connaissance des deux équipes")
+                  }
                   onClick={() => {
                     setQuickNodeId(node.id);
                     setQuickSlotId("");
@@ -868,12 +905,22 @@ export function AdminTournamentFinalFullPlanning({
                   }}
                 >
                   <span className="final-stage-queue__heading">
-                    <strong>{series?.name ?? "Série"} · {roundLabel(node.round)}</strong>
-                    <span className={`final-stage-queue__badge final-stage-queue__badge--${status}`}>{statusLabel}</span>
+                    <strong>
+                      {series?.name ?? "Série"} · {roundLabel(node.round)}
+                    </strong>
+                    <span
+                      className={`final-stage-queue__badge final-stage-queue__badge--${status}`}
+                    >
+                      {statusLabel}
+                    </span>
                   </span>
-                  <span className="final-stage-queue__opponents">{matchLabel}</span>
+                  <span className="final-stage-queue__opponents">
+                    {matchLabel}
+                  </span>
                   <span className="final-stage-queue__footnote">
-                    {known ? "À programmer manuellement · Voir les créneaux conseillés" : "Le moteur attend les deux adversaires"}
+                    {known
+                      ? "À programmer manuellement · Voir les créneaux conseillés"
+                      : "Le moteur attend les deux adversaires"}
                   </span>
                 </button>
               );
@@ -897,7 +944,11 @@ export function AdminTournamentFinalFullPlanning({
               .filter((node) => {
                 const row = rowById.get(node.id);
                 return (
-                  row && row.teamAId && row.teamBId && !row.published && row.resultStatus !== "validated"
+                  row &&
+                  row.teamAId &&
+                  row.teamBId &&
+                  !row.published &&
+                  row.resultStatus !== "validated"
                 );
               })
               .map((node) => {
