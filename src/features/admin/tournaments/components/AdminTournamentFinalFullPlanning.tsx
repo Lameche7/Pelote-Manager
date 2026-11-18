@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   tournamentFinalStageAdminService,
   type TournamentFinalFullPlanningNodeRow,
@@ -856,7 +856,7 @@ export function AdminTournamentFinalFullPlanning({
                   key={node.id}
                   type="button"
                   className={`final-stage-queue__card final-stage-queue__card--${status}`}
-                  style={{ "--series-color": series?.color ?? "#64748b" } as React.CSSProperties}
+                  style={{ "--series-color": series?.color ?? "#64748b" } as CSSProperties}
                   disabled={busy || !known}
                   aria-pressed={quickNodeId === node.id}
                   title={unprogrammedDiagnostics.get(node.id) ?? (known ? "Choisir une rencontre" : "En attente de la connaissance des deux équipes")}
