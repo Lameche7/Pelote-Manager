@@ -456,11 +456,18 @@ test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux
   assert.match(calendar, /Créneaux libres uniquement/);
   assert.match(calendar, /Créneau occupé/);
   assert.match(calendar, /describeFinalStageOpponents/);
-  assert.match(calendar, /Vue en lecture seule/);
-  assert.match(
-    admin,
-    /<AdminTournamentFinalWeeklyOverview workspace=\{workspace\}/,
-  );
+  assert.match(calendar, /Choisir ce créneau/);
+  assert.match(calendar, /onSelectFreeSlot/);
+  assert.match(admin, /Rencontres à programmer/);
+  assert.match(admin, /quickOccupied/);
+  assert.match(admin, /saveQuickAssignment/);
+  assert.match(admin, /Créneaux conseillés/);
+  assert.match(admin, /quickRecommendations/);
+  assert.match(admin, /weeklyOccupiedSlotIds/);
+  assert.match(admin, /minimumRestMinutes/);
+  assert.match(admin, /finalRoundDateWindow/);
+  assert.match(calendar, /focusDate/);
+  assert.match(admin, /<AdminTournamentFinalWeeklyOverview/);
   assert.match(service, /admin_get_tournament_final_external_occupied_slots/);
   assert.match(service, /weeklyOccupiedSlotIds/);
   assert.match(migration, /public\.has_club_permission/);

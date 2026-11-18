@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TournamentFinalFullPlanningWorkspace } from "../services/tournamentFinalStageAdminService";
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
 import {
@@ -53,8 +53,16 @@ const timeText = (value: string) => value.slice(0, 5);
 
 export function AdminTournamentFinalWeeklyOverview({
   workspace,
+  onSelectFreeSlot,
+  selectedSlotId,
+  focusDate,
+  disabled = false,
 }: {
   workspace: TournamentFinalFullPlanningWorkspace;
+  onSelectFreeSlot?: (slot: PlanningSlot) => void;
+  selectedSlotId?: string | null;
+  focusDate?: string | null;
+  disabled?: boolean;
 }) {
   const [weekIndex, setWeekIndex] = useState(0);
   const [printError, setPrintError] = useState("");
@@ -74,6 +82,13 @@ export function AdminTournamentFinalWeeklyOverview({
         ),
       )
     : 0;
+  useEffect(() => {
+    if (!focusDate) return;
+    const offset = Math.round(
+      (mondayOf(focusDate).getTime() - firstMonday.getTime()) / 604_800_000,
+    );
+    setWeekIndex(Math.max(0, Math.min(maxIndex, offset)));
+  }, [focusDate, first, last, maxIndex]);
   const currentIndex = Math.min(weekIndex, maxIndex);
   const monday = addDays(firstMonday, currentIndex * 7);
   const days = Array.from({ length: 7 }, (_, index) =>
@@ -173,7 +188,7 @@ export function AdminTournamentFinalWeeklyOverview({
           slot,
           kind: "match",
           title,
-          detail: `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.published ? " · Publié" : ""}`,
+          detail: `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.resultStatus === "validated" ? " · Jouée" : node.published ? " · Publiée" : " · Projetée"}`,
           seriesId: node.seriesId,
           provisional,
           color: series?.color,
@@ -516,6 +531,23 @@ export function AdminTournamentFinalWeeklyOverview({
                               {entry.detail}
                               {entry.provisional ? " · Provisoire" : ""}
                             </small>
+                            {entry.kind === "free" && onSelectFreeSlot && (
+                              <button
+                                type="button"
+                                disabled={
+                                  disabled ||
+                                  !workspace.slots.some(
+                                    (slot) => slot.id === entry.slot.id,
+                                  )
+                                }
+                                aria-pressed={selectedSlotId === entry.slot.id}
+                                onClick={() => onSelectFreeSlot(entry.slot)}
+                              >
+                                {selectedSlotId === entry.slot.id
+                                  ? "Créneau sélectionné"
+                                  : "Choisir ce créneau"}
+                              </button>
+                            )}
                           </div>
                         ))
                       )}
@@ -536,8 +568,8 @@ export function AdminTournamentFinalWeeklyOverview({
         « Libre » signifie qu'aucune affectation du tournoi ni réservation
         connue n'occupe le créneau configuré. Les heures sans créneau configuré
         sont indiquées par « — » ; les places provisoires restent à confirmer
-        avec les joueurs. Vue en lecture seule : aucune modification ni
-        notification.
+        avec les joueurs. Sélectionner un créneau prépare une affectation sans
+        publier la rencontre ni envoyer de notification.
       </p>
     </section>
   );

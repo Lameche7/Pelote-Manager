@@ -129,6 +129,10 @@ export function AdminTournamentFinalFullPlanning({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [editingRound, setEditingRound] = useState<number | null>(null);
+  const [quickNodeId, setQuickNodeId] = useState("");
+  const [quickSlotId, setQuickSlotId] = useState("");
+  const [quickFocusDate, setQuickFocusDate] = useState<string | null>(null);
+  const [quickQueueFilter, setQuickQueueFilter] = useState("all");
   const [finalDayStart, setFinalDayStart] = useState("");
   const [finalDayEnd, setFinalDayEnd] = useState("");
   const [exclude2130, setExclude2130] = useState(false);
@@ -174,6 +178,14 @@ export function AdminTournamentFinalFullPlanning({
       active = false;
     };
   }, [tournamentId, refreshKey]);
+
+  useEffect(() => {
+    if (workspace && window.location.hash === "#planning-phases-finales") {
+      document
+        .getElementById("planning-phases-finales")
+        ?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [workspace]);
 
   const nodes = useMemo(
     () => (workspace ? buildNodes(workspace) : []),
@@ -287,6 +299,169 @@ export function AdminTournamentFinalFullPlanning({
     ? (workspace?.slots ?? []).filter((slot) => slot.date === officialFinalDate)
         .length
     : 0;
+  const quickQueue = nodes.filter((node) => {
+    const row = rowById.get(node.id);
+    return (
+      row &&
+      !persistedByNode.has(node.id) &&
+      !row.published &&
+      row.resultStatus !== "validated"
+    );
+  });
+  const visibleQuickQueue = quickQueue.filter(
+    (node) => quickQueueFilter === "all" || node.seriesId === quickQueueFilter,
+  );
+  const quickNode = nodes.find((node) => node.id === quickNodeId);
+  const quickSlot = workspace?.slots.find((slot) => slot.id === quickSlotId);
+  const quickRow = quickNode ? rowById.get(quickNode.id) : null;
+  const quickAssignable = Boolean(
+    quickNode &&
+    quickRow &&
+    !quickRow.published &&
+    quickRow.resultStatus !== "validated",
+  );
+  const quickCommon =
+    quickNode && quickSlot && workspace
+      ? isFinalStageSlotCommonForNode({
+          node: quickNode,
+          slot: quickSlot,
+          availability: workspace.availability,
+        })
+      : false;
+  const quickSlotKey = quickSlot
+    ? `${quickSlot.resourceId}|${quickSlot.date}|${quickSlot.startsAt.slice(0, 5)}|${quickSlot.endsAt.slice(0, 5)}`
+    : "";
+  const quickOccupied = Boolean(
+    workspace &&
+    quickSlot &&
+    (workspace.weeklyOccupiedSlotIds.some(
+      (value) =>
+        value
+          .split("|")
+          .map((part, i) => (i >= 2 ? part.slice(0, 5) : part))
+          .join("|") === quickSlotKey,
+    ) ||
+      workspace.nodes.some(
+        (row) =>
+          rowNodeId(row) !== quickNodeId &&
+          row.resourceId === quickSlot.resourceId &&
+          row.playDate === quickSlot.date &&
+          row.startsAt?.slice(0, 5) === quickSlot.startsAt.slice(0, 5) &&
+          row.endsAt?.slice(0, 5) === quickSlot.endsAt.slice(0, 5),
+      )),
+  );
+  const quickAssignments =
+    quickNode && quickSlot
+      ? [
+          ...persistedAssignments.filter(
+            (assignment) => assignment.nodeId !== quickNode.id,
+          ),
+          { nodeId: quickNode.id, slotId: quickSlot.id },
+        ]
+      : persistedAssignments;
+  const quickValidation =
+    workspace && quickNode && quickSlot
+      ? validateFullFinalStagePlanning({
+          nodes,
+          slots: workspace.slots,
+          availability: workspace.availability,
+          assignments: quickAssignments,
+          minimumRestMinutes: workspace.tournament.minimumRestMinutes,
+          respectAvailability: false,
+          finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
+          finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
+        })
+      : null;
+  const quickError = quickOccupied
+    ? "Ce créneau est déjà occupé par une réservation ou une autre rencontre."
+    : quickValidation && !quickValidation.valid
+      ? (quickValidation.diagnostics.find(
+          (diagnostic) => diagnostic.nodeId === quickNodeId,
+        )?.message ?? quickValidation.diagnostics[0]?.message)
+      : null;
+  const quickRecommendations = useMemo(() => {
+    if (!workspace || !quickNode || !quickAssignable) return [];
+    const occupied = new Set(
+      workspace.weeklyOccupiedSlotIds.map((value) =>
+        value
+          .split("|")
+          .map((part, index) => (index >= 2 ? part.slice(0, 5) : part))
+          .join("|"),
+      ),
+    );
+    const assigned = new Set(
+      workspace.nodes
+        .filter(
+          (row) =>
+            rowNodeId(row) !== quickNode.id &&
+            row.resourceId &&
+            row.playDate &&
+            row.startsAt &&
+            row.endsAt,
+        )
+        .map(
+          (row) =>
+            `${row.resourceId}|${row.playDate}|${row.startsAt?.slice(0, 5)}|${row.endsAt?.slice(0, 5)}`,
+        ),
+    );
+    const suggestions = [] as Array<{
+      slot: PlanningSlot;
+      common: boolean;
+      normal: boolean;
+    }>;
+    const normalWindow =
+      workspace.tournament.finalsStartsOn && workspace.tournament.finalsEndsOn
+        ? finalRoundDateWindow({
+            node: quickNode,
+            nodes,
+            finalsStartsOn: workspace.tournament.finalsStartsOn,
+            finalsEndsOn: workspace.tournament.finalsEndsOn,
+          })
+        : null;
+    for (const slot of [...workspace.slots].sort((a, b) =>
+      slotSortKey(a).localeCompare(slotSortKey(b)),
+    )) {
+      const key = `${slot.resourceId}|${slot.date}|${slot.startsAt.slice(0, 5)}|${slot.endsAt.slice(0, 5)}`;
+      if (occupied.has(key) || assigned.has(key)) continue;
+      const assignments = [
+        ...persistedAssignments.filter((item) => item.nodeId !== quickNode.id),
+        { nodeId: quickNode.id, slotId: slot.id },
+      ];
+      const validation = validateFullFinalStagePlanning({
+        nodes,
+        slots: workspace.slots,
+        availability: workspace.availability,
+        assignments,
+        minimumRestMinutes: workspace.tournament.minimumRestMinutes,
+        respectAvailability: false,
+        finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
+        finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
+      });
+      if (!validation.valid) continue;
+      suggestions.push({
+        slot,
+        common: isFinalStageSlotCommonForNode({
+          node: quickNode,
+          slot,
+          availability: workspace.availability,
+        }),
+        normal:
+          !normalWindow ||
+          (slot.date >= normalWindow.earliest &&
+            slot.date <= normalWindow.latest),
+      });
+    }
+    // Explicit preference order: jointly available within the normal round window.
+    return suggestions
+      .sort(
+        (a, b) =>
+          Number(b.common && b.normal) - Number(a.common && a.normal) ||
+          Number(b.common) - Number(a.common) ||
+          Number(b.normal) - Number(a.normal) ||
+          slotSortKey(a.slot).localeCompare(slotSortKey(b.slot)),
+      )
+      .slice(0, 6);
+  }, [workspace, quickNode, quickAssignable, nodes, persistedAssignments]);
   const plannedCount = persistedAssignments.length;
   const unplannedCount = Math.max(0, nodes.length - plannedCount);
 
@@ -308,6 +483,47 @@ export function AdminTournamentFinalFullPlanning({
       setBusy(false);
     }
   };
+
+  const saveQuickAssignment = () =>
+    run(async () => {
+      if (
+        !workspace ||
+        !quickNode ||
+        !quickSlot ||
+        !quickAssignable ||
+        quickOccupied ||
+        !quickValidation?.valid
+      ) {
+        throw new Error(
+          "Sélectionnez une rencontre modifiable et un créneau compatible.",
+        );
+      }
+      // A slot without common availability is an explicit organizer override.
+      if (
+        !quickCommon &&
+        !window.confirm(
+          "Ce créneau n'est pas déclaré disponible par toutes les équipes concernées. Confirmer la préprogrammation manuelle ? Aucun joueur ne sera notifié à cette étape.",
+        )
+      )
+        return "Programmation annulée.";
+      await tournamentFinalStageAdminService.saveFullPlanning(
+        tournamentId,
+        [
+          {
+            seriesId: quickNode.seriesId,
+            roundNumber: quickNode.roundNumber,
+            displayOrder: quickNode.displayOrder,
+            slotId: quickSlot.id,
+            source: "manual",
+          },
+        ],
+        workspace.slots,
+      );
+      setQuickNodeId("");
+      setQuickSlotId("");
+      setQuickFocusDate(null);
+      return "Rencontre préprogrammée. La publication et les notifications restent séparées.";
+    });
 
   const addFinalDaySlot = () =>
     run(async () => {
@@ -527,7 +743,7 @@ export function AdminTournamentFinalFullPlanning({
   if (!workspace) return null;
 
   return (
-    <section className="final-stage-full-planning">
+    <section className="final-stage-full-planning" id="planning-phases-finales">
       <header className="final-stage-full-planning__header">
         <div>
           <p>Organisation globale</p>
@@ -567,7 +783,187 @@ export function AdminTournamentFinalFullPlanning({
         </p>
       )}
 
-      <AdminTournamentFinalWeeklyOverview workspace={workspace} />
+      <section
+        className="final-stage-full-planning__quick"
+        aria-label="Programmation rapide"
+      >
+        <h4>Rencontres à programmer ({quickQueue.length})</h4>
+        <p>
+          Choisissez une partie en attente, puis un créneau libre dans le
+          calendrier. Les rencontres déjà placées restent modifiables dans le
+          sélecteur.
+        </p>
+        <label>
+          Afficher les rencontres de
+          <select
+            value={quickQueueFilter}
+            onChange={(event) => setQuickQueueFilter(event.target.value)}
+          >
+            <option value="all">Toutes les séries</option>
+            {workspace.series.map((series) => (
+              <option key={series.id} value={series.id}>
+                {series.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {visibleQuickQueue.length === 0 ? (
+          <p role="status">Aucune rencontre en attente pour ce filtre.</p>
+        ) : (
+          <div className="final-stage-full-planning__series-grid">
+            {visibleQuickQueue.map((node) => {
+              const series = workspace.series.find(
+                (item) => item.id === node.seriesId,
+              );
+              const row = rowById.get(node.id);
+              const teams =
+                row?.teamALabel && row?.teamBLabel
+                  ? `${row.teamALabel} — ${row.teamBLabel}`
+                  : describeFinalStageOpponents({
+                      node,
+                      nodes,
+                      seeds: series?.seeds ?? [],
+                      crossPools: series?.crossPools ?? false,
+                    });
+              return (
+                <button
+                  type="button"
+                  key={node.id}
+                  disabled={busy}
+                  aria-pressed={quickNodeId === node.id}
+                  onClick={() => {
+                    setQuickNodeId(node.id);
+                    setQuickSlotId("");
+                    setQuickFocusDate(null);
+                    setError("");
+                  }}
+                >
+                  {series?.name ?? "Série"} · {roundLabel(node.round)} : {teams}
+                  {unprogrammedDiagnostics.get(node.id)
+                    ? ` · ${unprogrammedDiagnostics.get(node.id)}`
+                    : ""}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <label>
+          Partie à programmer
+          <select
+            value={quickNodeId}
+            disabled={busy}
+            onChange={(event) => {
+              setQuickNodeId(event.target.value);
+              setQuickSlotId("");
+              setQuickFocusDate(null);
+              setError("");
+            }}
+          >
+            <option value="">Choisir une rencontre</option>
+            {nodes
+              .filter((node) => {
+                const row = rowById.get(node.id);
+                return (
+                  row && !row.published && row.resultStatus !== "validated"
+                );
+              })
+              .map((node) => {
+                const row = rowById.get(node.id);
+                const series = workspace.series.find(
+                  (item) => item.id === node.seriesId,
+                );
+                return (
+                  <option value={node.id} key={node.id}>
+                    {series?.name ?? "Série"} · {roundLabel(node.round)} ·{" "}
+                    {row?.teamALabel && row?.teamBLabel
+                      ? `${row.teamALabel} — ${row.teamBLabel}`
+                      : describeFinalStageOpponents({
+                          node,
+                          nodes,
+                          seeds: series?.seeds ?? [],
+                          crossPools: series?.crossPools ?? false,
+                        })}
+                    {row?.playDate ? " · Déjà prépositionnée" : ""}
+                  </option>
+                );
+              })}
+          </select>
+        </label>
+        {quickNode && (
+          <div className="final-stage-full-planning__recommendations">
+            <h5>Créneaux conseillés</h5>
+            {quickRecommendations.length === 0 ? (
+              <p role="status">
+                Aucun créneau configuré sans conflit. Utilisez la programmation
+                avancée ou ajustez les disponibilités.
+              </p>
+            ) : (
+              <div className="final-stage-full-planning__series-grid">
+                {quickRecommendations.map(({ slot, common, normal }) => (
+                  <button
+                    key={slot.id}
+                    type="button"
+                    disabled={busy}
+                    aria-pressed={quickSlotId === slot.id}
+                    onClick={() => {
+                      setQuickSlotId(slot.id);
+                      setQuickFocusDate(slot.date);
+                      setError("");
+                    }}
+                  >
+                    {slotLabel(slot)} ·{" "}
+                    {common && normal
+                      ? "✓ Disponibilités communes"
+                      : common
+                        ? "⚠ Dérogation de période"
+                        : "⚠ Disponibilités à confirmer"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <small>
+              Propositions non réservées : leur compatibilité est revérifiée
+              lors de l'enregistrement.
+            </small>
+          </div>
+        )}
+        {quickSlot && (
+          <p role="status">Créneau retenu : {slotLabel(quickSlot)}</p>
+        )}
+        {quickNode && quickSlot && (
+          <p role="status">
+            {quickError
+              ? `⛔ ${quickError}`
+              : quickCommon
+                ? "✓ Créneau compatible avec les disponibilités déclarées et l'ordre des tours."
+                : "⚠ Disponibilités non communes ou encore inconnues : validation exceptionnelle nécessaire."}
+          </p>
+        )}
+        <button
+          type="button"
+          disabled={
+            busy ||
+            !quickAssignable ||
+            !quickSlot ||
+            quickOccupied ||
+            !quickValidation?.valid
+          }
+          onClick={() => void saveQuickAssignment()}
+        >
+          {busy ? "Enregistrement…" : "Préprogrammer la rencontre ici"}
+        </button>
+      </section>
+
+      <AdminTournamentFinalWeeklyOverview
+        workspace={workspace}
+        selectedSlotId={quickSlotId}
+        focusDate={quickFocusDate}
+        disabled={busy}
+        onSelectFreeSlot={(slot) => {
+          setQuickSlotId(slot.id);
+          setError("");
+        }}
+      />
 
       {officialFinalDate && (
         <section className="final-stage-full-planning__final-day">
@@ -642,319 +1038,335 @@ export function AdminTournamentFinalFullPlanning({
           : "Les créneaux de 21h30 restent autorisés pour le prochain calcul. Cette option ne concerne pas les modifications manuelles."}
       </p>
 
-      <div className="final-stage-full-planning__stages">
-        {stages.map((stage) => {
-          const editableNodes = stage.nodes.filter((node) => {
-            const row = rowById.get(node.id);
-            return row?.resultStatus !== "validated" && !row?.published;
-          });
-          const isEditing = editingRound === stage.roundNumber;
-          return (
-            <section
-              key={stage.roundNumber}
-              className="final-stage-full-planning__stage"
-            >
-              <header>
-                <div>
-                  <p>Étape {stage.roundNumber + 1}</p>
-                  <h4>{roundLabel(stage.round)}</h4>
-                </div>
-                {editableNodes.length > 0 && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      isEditing
-                        ? setEditingRound(null)
-                        : openManualRound(stage.roundNumber)
-                    }
-                  >
-                    {isEditing ? "Fermer" : "Modifier manuellement"}
-                  </button>
-                )}
-              </header>
-
-              <div className="final-stage-full-planning__series-grid">
-                {workspace.series.map((series) => {
-                  const seriesNodes = stage.nodes.filter(
-                    (node) => node.seriesId === series.id,
-                  );
-                  if (seriesNodes.length === 0) return null;
-                  return (
-                    <div
-                      key={series.id}
-                      className="final-stage-full-planning__series"
-                      style={
-                        {
-                          "--series-color": series.color,
-                        } as React.CSSProperties
+      <details className="final-stage-full-planning__advanced">
+        <summary>
+          Programmation avancée par tour (modifier les rencontres
+          individuellement)
+        </summary>
+        <div className="final-stage-full-planning__stages">
+          {stages.map((stage) => {
+            const editableNodes = stage.nodes.filter((node) => {
+              const row = rowById.get(node.id);
+              return row?.resultStatus !== "validated" && !row?.published;
+            });
+            const isEditing = editingRound === stage.roundNumber;
+            return (
+              <section
+                key={stage.roundNumber}
+                className="final-stage-full-planning__stage"
+              >
+                <header>
+                  <div>
+                    <p>Tour de compétition</p>
+                    <h4>{roundLabel(stage.round)}</h4>
+                  </div>
+                  {editableNodes.length > 0 && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() =>
+                        isEditing
+                          ? setEditingRound(null)
+                          : openManualRound(stage.roundNumber)
                       }
                     >
-                      <strong>{series.name}</strong>
-                      <div className="final-stage-full-planning__matches">
-                        {seriesNodes.map((node) => {
-                          const row = rowById.get(node.id);
-                          const currentSlotId = isEditing
-                            ? manualByNode.get(node.id)
-                            : persistedByNode.get(node.id);
-                          const slot = currentSlotId
-                            ? slotById.get(currentSlotId)
-                            : undefined;
-                          const locked =
-                            row?.published || row?.resultStatus === "validated";
-                          const common = slot
-                            ? isFinalStageSlotCommonForNode({
-                                node,
-                                slot,
-                                availability: workspace.availability,
-                              })
-                            : false;
-                          return (
-                            <div
-                              key={node.id}
-                              className="final-stage-full-planning__match"
-                            >
-                              <div>
-                                <strong>
-                                  {describeFinalStageOpponents({
-                                    node,
-                                    nodes,
-                                    seeds:
-                                      workspace.series.find(
-                                        (series) => series.id === node.seriesId,
-                                      )?.seeds ?? [],
-                                    crossPools:
-                                      workspace.series.find(
-                                        (series) => series.id === node.seriesId,
-                                      )?.crossPools ?? false,
-                                  })}
-                                </strong>
-                                <span>
-                                  {row?.resultStatus === "validated"
-                                    ? "Résultat validé"
-                                    : row?.published
-                                      ? "Publié"
-                                      : slot
-                                        ? row?.needsManual
-                                          ? "À vérifier manuellement"
-                                          : !node.actualMatchId
-                                            ? "Créneau provisoire · adversaires à confirmer"
-                                            : "Planifié"
-                                        : "À programmer"}
-                                </span>
-                                {!slot && row?.resultStatus !== "validated" && (
-                                  <small>
-                                    {unprogrammedDiagnostics.get(node.id)}
-                                  </small>
-                                )}
-                                {slot &&
-                                  workspace.tournament.finalsStartsOn &&
-                                  workspace.tournament.finalsEndsOn &&
-                                  slot.date >
-                                    finalRoundDateWindow({
+                      {isEditing ? "Fermer" : "Modifier manuellement"}
+                    </button>
+                  )}
+                </header>
+
+                <div className="final-stage-full-planning__series-grid">
+                  {workspace.series.map((series) => {
+                    const seriesNodes = stage.nodes.filter(
+                      (node) => node.seriesId === series.id,
+                    );
+                    if (seriesNodes.length === 0) return null;
+                    return (
+                      <div
+                        key={series.id}
+                        className="final-stage-full-planning__series"
+                        style={
+                          {
+                            "--series-color": series.color,
+                          } as React.CSSProperties
+                        }
+                      >
+                        <strong>{series.name}</strong>
+                        <div className="final-stage-full-planning__matches">
+                          {seriesNodes.map((node) => {
+                            const row = rowById.get(node.id);
+                            const currentSlotId = isEditing
+                              ? manualByNode.get(node.id)
+                              : persistedByNode.get(node.id);
+                            const slot = currentSlotId
+                              ? slotById.get(currentSlotId)
+                              : undefined;
+                            const locked =
+                              row?.published ||
+                              row?.resultStatus === "validated";
+                            const common = slot
+                              ? isFinalStageSlotCommonForNode({
+                                  node,
+                                  slot,
+                                  availability: workspace.availability,
+                                })
+                              : false;
+                            return (
+                              <div
+                                key={node.id}
+                                className="final-stage-full-planning__match"
+                              >
+                                <div>
+                                  <strong>
+                                    {describeFinalStageOpponents({
                                       node,
                                       nodes,
-                                      finalsStartsOn:
-                                        workspace.tournament.finalsStartsOn,
-                                      finalsEndsOn:
-                                        workspace.tournament.finalsEndsOn,
-                                    }).latest && (
-                                    <small>
-                                      Dérogation de calendrier : vérifier
-                                      l’enchaînement des tours.
-                                    </small>
-                                  )}
-                              </div>
-
-                              {isEditing && !locked ? (
-                                <div className="final-stage-full-planning__manual-choice">
-                                  <select
-                                    value={currentSlotId ?? ""}
-                                    disabled={busy}
-                                    onChange={(event) =>
-                                      changeManualSlot(
-                                        node.id,
-                                        event.target.value,
-                                      )
-                                    }
-                                  >
-                                    <option value="">À programmer</option>
-                                    {sortedSlots.map((candidate) => {
-                                      const isCommon =
-                                        isFinalStageSlotCommonForNode({
-                                          node,
-                                          slot: candidate,
-                                          availability: workspace.availability,
-                                        });
-                                      return (
-                                        <option
-                                          key={candidate.id}
-                                          value={candidate.id}
-                                        >
-                                          {isCommon ? "✓ " : "⚠ "}
-                                          {slotLabel(candidate)}
-                                        </option>
-                                      );
+                                      seeds:
+                                        workspace.series.find(
+                                          (series) =>
+                                            series.id === node.seriesId,
+                                        )?.seeds ?? [],
+                                      crossPools:
+                                        workspace.series.find(
+                                          (series) =>
+                                            series.id === node.seriesId,
+                                        )?.crossPools ?? false,
                                     })}
-                                    {slot &&
-                                      workspace.exceptionalSlotIds.includes(
-                                        slot.id,
-                                      ) && (
-                                        <option value={slot.id}>
-                                          Exceptionnel · {slotLabel(slot)}
-                                        </option>
-                                      )}
-                                  </select>
-                                  <button
-                                    type="button"
-                                    disabled={busy}
-                                    onClick={() =>
-                                      exceptionNodeId === node.id
-                                        ? setExceptionNodeId(null)
-                                        : editExceptionalSlot(node.id, row)
+                                  </strong>
+                                  <span>
+                                    {row?.resultStatus === "validated"
+                                      ? "Résultat validé"
+                                      : row?.published
+                                        ? "Publié"
+                                        : slot
+                                          ? row?.needsManual
+                                            ? "À vérifier manuellement"
+                                            : !node.actualMatchId
+                                              ? "Créneau provisoire · adversaires à confirmer"
+                                              : "Planifié"
+                                          : "À programmer"}
+                                  </span>
+                                  {!slot &&
+                                    row?.resultStatus !== "validated" && (
+                                      <small>
+                                        {unprogrammedDiagnostics.get(node.id)}
+                                      </small>
+                                    )}
+                                  {slot &&
+                                    workspace.tournament.finalsStartsOn &&
+                                    workspace.tournament.finalsEndsOn &&
+                                    slot.date >
+                                      finalRoundDateWindow({
+                                        node,
+                                        nodes,
+                                        finalsStartsOn:
+                                          workspace.tournament.finalsStartsOn,
+                                        finalsEndsOn:
+                                          workspace.tournament.finalsEndsOn,
+                                      }).latest && (
+                                      <small>
+                                        Dérogation de calendrier : vérifier
+                                        l’enchaînement des tours.
+                                      </small>
+                                    )}
+                                </div>
+
+                                {isEditing && !locked ? (
+                                  <div className="final-stage-full-planning__manual-choice">
+                                    <select
+                                      value={currentSlotId ?? ""}
+                                      disabled={busy}
+                                      onChange={(event) =>
+                                        changeManualSlot(
+                                          node.id,
+                                          event.target.value,
+                                        )
+                                      }
+                                    >
+                                      <option value="">À programmer</option>
+                                      {sortedSlots.map((candidate) => {
+                                        const isCommon =
+                                          isFinalStageSlotCommonForNode({
+                                            node,
+                                            slot: candidate,
+                                            availability:
+                                              workspace.availability,
+                                          });
+                                        return (
+                                          <option
+                                            key={candidate.id}
+                                            value={candidate.id}
+                                          >
+                                            {isCommon ? "✓ " : "⚠ "}
+                                            {slotLabel(candidate)}
+                                          </option>
+                                        );
+                                      })}
+                                      {slot &&
+                                        workspace.exceptionalSlotIds.includes(
+                                          slot.id,
+                                        ) && (
+                                          <option value={slot.id}>
+                                            Exceptionnel · {slotLabel(slot)}
+                                          </option>
+                                        )}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() =>
+                                        exceptionNodeId === node.id
+                                          ? setExceptionNodeId(null)
+                                          : editExceptionalSlot(node.id, row)
+                                      }
+                                    >
+                                      {exceptionNodeId === node.id
+                                        ? "Annuler la saisie"
+                                        : "Choisir une autre date / heure"}
+                                    </button>
+                                    {exceptionNodeId === node.id && (
+                                      <div className="final-stage-full-planning__exception-form">
+                                        <p>
+                                          Créneau exceptionnel, même un samedi
+                                          ou avant 17h30. À convenir avec les
+                                          équipes.
+                                        </p>
+                                        <label>
+                                          Date
+                                          <input
+                                            type="date"
+                                            value={exceptionDate}
+                                            min={
+                                              workspace.tournament
+                                                .finalsStartsOn ?? undefined
+                                            }
+                                            max={
+                                              workspace.tournament
+                                                .finalsEndsOn ?? undefined
+                                            }
+                                            onChange={(event) =>
+                                              setExceptionDate(
+                                                event.target.value,
+                                              )
+                                            }
+                                            disabled={busy}
+                                          />
+                                        </label>
+                                        <label>
+                                          Début
+                                          <input
+                                            type="time"
+                                            value={exceptionStart}
+                                            onChange={(event) =>
+                                              setExceptionStart(
+                                                event.target.value,
+                                              )
+                                            }
+                                            disabled={busy}
+                                          />
+                                        </label>
+                                        <label>
+                                          Fin
+                                          <input
+                                            type="time"
+                                            value={exceptionEnd}
+                                            onChange={(event) =>
+                                              setExceptionEnd(
+                                                event.target.value,
+                                              )
+                                            }
+                                            disabled={busy}
+                                          />
+                                        </label>
+                                        <label>
+                                          Terrain
+                                          <select
+                                            value={exceptionResourceId}
+                                            onChange={(event) =>
+                                              setExceptionResourceId(
+                                                event.target.value,
+                                              )
+                                            }
+                                            disabled={busy}
+                                          >
+                                            {workspace.resources.map(
+                                              (resource) => (
+                                                <option
+                                                  key={resource.id}
+                                                  value={resource.id}
+                                                >
+                                                  {resource.name}
+                                                </option>
+                                              ),
+                                            )}
+                                          </select>
+                                        </label>
+                                        <button
+                                          type="button"
+                                          disabled={
+                                            busy ||
+                                            !exceptionDate ||
+                                            !exceptionStart ||
+                                            !exceptionEnd ||
+                                            !exceptionResourceId ||
+                                            exceptionEnd <= exceptionStart
+                                          }
+                                          onClick={() =>
+                                            void saveExceptionalSlot(node)
+                                          }
+                                        >
+                                          Enregistrer ce créneau exceptionnel
+                                        </button>
+                                        <small>
+                                          Enregistrement immédiat de cette
+                                          partie uniquement. Enregistre
+                                          séparément toute autre modification en
+                                          cours.
+                                        </small>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : slot ? (
+                                  <span
+                                    className={
+                                      common
+                                        ? "final-stage-full-planning__slot"
+                                        : "final-stage-full-planning__slot final-stage-full-planning__slot--warning"
                                     }
                                   >
-                                    {exceptionNodeId === node.id
-                                      ? "Annuler la saisie"
-                                      : "Choisir une autre date / heure"}
-                                  </button>
-                                  {exceptionNodeId === node.id && (
-                                    <div className="final-stage-full-planning__exception-form">
-                                      <p>
-                                        Créneau exceptionnel, même un samedi ou
-                                        avant 17h30. À convenir avec les
-                                        équipes.
-                                      </p>
-                                      <label>
-                                        Date
-                                        <input
-                                          type="date"
-                                          value={exceptionDate}
-                                          min={
-                                            workspace.tournament
-                                              .finalsStartsOn ?? undefined
-                                          }
-                                          max={
-                                            workspace.tournament.finalsEndsOn ??
-                                            undefined
-                                          }
-                                          onChange={(event) =>
-                                            setExceptionDate(event.target.value)
-                                          }
-                                          disabled={busy}
-                                        />
-                                      </label>
-                                      <label>
-                                        Début
-                                        <input
-                                          type="time"
-                                          value={exceptionStart}
-                                          onChange={(event) =>
-                                            setExceptionStart(
-                                              event.target.value,
-                                            )
-                                          }
-                                          disabled={busy}
-                                        />
-                                      </label>
-                                      <label>
-                                        Fin
-                                        <input
-                                          type="time"
-                                          value={exceptionEnd}
-                                          onChange={(event) =>
-                                            setExceptionEnd(event.target.value)
-                                          }
-                                          disabled={busy}
-                                        />
-                                      </label>
-                                      <label>
-                                        Terrain
-                                        <select
-                                          value={exceptionResourceId}
-                                          onChange={(event) =>
-                                            setExceptionResourceId(
-                                              event.target.value,
-                                            )
-                                          }
-                                          disabled={busy}
-                                        >
-                                          {workspace.resources.map(
-                                            (resource) => (
-                                              <option
-                                                key={resource.id}
-                                                value={resource.id}
-                                              >
-                                                {resource.name}
-                                              </option>
-                                            ),
-                                          )}
-                                        </select>
-                                      </label>
-                                      <button
-                                        type="button"
-                                        disabled={
-                                          busy ||
-                                          !exceptionDate ||
-                                          !exceptionStart ||
-                                          !exceptionEnd ||
-                                          !exceptionResourceId ||
-                                          exceptionEnd <= exceptionStart
-                                        }
-                                        onClick={() =>
-                                          void saveExceptionalSlot(node)
-                                        }
-                                      >
-                                        Enregistrer ce créneau exceptionnel
-                                      </button>
-                                      <small>
-                                        Enregistrement immédiat de cette partie
-                                        uniquement. Enregistre séparément toute
-                                        autre modification en cours.
-                                      </small>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : slot ? (
-                                <span
-                                  className={
-                                    common
-                                      ? "final-stage-full-planning__slot"
-                                      : "final-stage-full-planning__slot final-stage-full-planning__slot--warning"
-                                  }
-                                >
-                                  {!common && "⚠ "}
-                                  {slotLabel(slot)}
-                                </span>
-                              ) : (
-                                <span className="final-stage-full-planning__unscheduled">
-                                  À programmer
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
+                                    {!common && "⚠ "}
+                                    {slotLabel(slot)}
+                                  </span>
+                                ) : (
+                                  <span className="final-stage-full-planning__unscheduled">
+                                    À programmer
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {isEditing && (
-                <div className="final-stage-full-planning__manual-actions">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void saveManualRound()}
-                  >
-                    Enregistrer les modifications de cette étape
-                  </button>
+                    );
+                  })}
                 </div>
-              )}
-            </section>
-          );
-        })}
-      </div>
+
+                {isEditing && (
+                  <div className="final-stage-full-planning__manual-actions">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void saveManualRound()}
+                    >
+                      Enregistrer les modifications de cette étape
+                    </button>
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </details>
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { buildFinalStagePlan } from "@/features/tournaments/domain/finalStageEngine";
 import { tournamentFinalStageAdminService } from "@/features/admin/tournaments/services/tournamentFinalStageAdminService";
 import { AdminTournamentFinalStageControl } from "@/features/admin/tournaments/components/AdminTournamentFinalStageControl";
@@ -49,6 +50,8 @@ const sideLabel = (
 };
 
 export function AdminTournamentQualificationPage() {
+  const [searchParams] = useSearchParams();
+  const requestedTournamentId = searchParams.get("tournoi");
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
@@ -70,10 +73,12 @@ export function AdminTournamentQualificationPage() {
       .then((items) => {
         setTournaments(items);
         const first =
+          items.find((item) => item.id === requestedTournamentId) ??
           items.find(
             (item) =>
               !["completed", "archived", "cancelled"].includes(item.status),
-          ) ?? items[0];
+          ) ??
+          items[0];
         if (first) setSelectedId(first.id);
       })
       .catch((loadError: unknown) =>
@@ -84,7 +89,7 @@ export function AdminTournamentQualificationPage() {
         ),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [requestedTournamentId]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -291,200 +296,208 @@ export function AdminTournamentQualificationPage() {
 
       {!loading && detail && (
         <div className="qualification-series-list">
-          <section
-            className="admin-card qualification-series"
-            aria-label="Dates de la phase finale"
-          >
-            <header>
-              <div>
-                <p>Calendrier du tournoi</p>
-                <h2>Dates de la phase finale</h2>
-              </div>
-            </header>
-            <p>Modifiez les dates même après la génération des poules.</p>
-            <p>Les disponibilités enregistrées restent conservées.</p>
-            <p>Les parties déjà programmées doivent rester dans la période.</p>
-            <p>Fin des poules : {detail.poolEndsOn}</p>
-            <div className="qualification-preview__numbers">
-              <label>
-                Début de la phase finale
-                <input
-                  type="date"
-                  min={detail.poolEndsOn}
-                  value={finalsStartsOn}
-                  disabled={savingDates || saving}
-                  onChange={(event) => setFinalsStartsOn(event.target.value)}
-                />
-              </label>
-              <label>
-                Fin de la phase finale
-                <input
-                  type="date"
-                  min={finalsStartsOn || detail.poolEndsOn}
-                  value={finalsEndsOn}
-                  disabled={savingDates || saving}
-                  onChange={(event) => setFinalsEndsOn(event.target.value)}
-                />
-              </label>
-            </div>
-            <button
-              type="button"
-              className="qualification-save"
-              disabled={
-                savingDates ||
-                saving ||
-                ["completed", "archived", "cancelled"].includes(detail.status)
-              }
-              onClick={() => void saveFinalsDates()}
+          <details className="admin-card qualification-series">
+            <summary>
+              Paramètres et tableaux théoriques de qualification (ouvrir pour
+              modifier)
+            </summary>
+            <section
+              className="admin-card qualification-series"
+              aria-label="Dates de la phase finale"
             >
-              {savingDates
-                ? "Enregistrement…"
-                : "Enregistrer les dates de phase finale"}
-            </button>
-          </section>
-          {activeSeries.map((series) => {
-            const seriesId = series.id ?? "";
-            const qualifierCount = counts[seriesId] ?? 0;
-            const plan =
-              qualifierCount >= 2
-                ? buildFinalStagePlan(
-                    qualifierCount,
-                    crossPoolsBySeries[seriesId] ?? false,
-                  )
-                : null;
-
-            return (
-              <section
-                className="admin-card qualification-series"
-                key={seriesId}
-              >
-                <header>
-                  <div>
-                    <p>Série</p>
-                    <h2>{series.name}</h2>
-                  </div>
-                  <span>Capacité : {series.capacity} équipes</span>
-                </header>
-
-                <label className="qualification-series__count">
-                  Nombre d’équipes qualifiées
+              <header>
+                <div>
+                  <p>Calendrier du tournoi</p>
+                  <h2>Dates de la phase finale</h2>
+                </div>
+              </header>
+              <p>Modifiez les dates même après la génération des poules.</p>
+              <p>Les disponibilités enregistrées restent conservées.</p>
+              <p>
+                Les parties déjà programmées doivent rester dans la période.
+              </p>
+              <p>Fin des poules : {detail.poolEndsOn}</p>
+              <div className="qualification-preview__numbers">
+                <label>
+                  Début de la phase finale
                   <input
-                    type="number"
-                    min="0"
-                    max={series.capacity}
-                    step="1"
-                    value={qualifierCount}
-                    disabled={saving}
-                    onChange={(event) =>
-                      setCounts((current) => ({
-                        ...current,
-                        [seriesId]: Number(event.target.value),
-                      }))
-                    }
+                    type="date"
+                    min={detail.poolEndsOn}
+                    value={finalsStartsOn}
+                    disabled={savingDates || saving}
+                    onChange={(event) => setFinalsStartsOn(event.target.value)}
                   />
-                  <small>
-                    0 = non configuré. Sinon, choisissez au moins 2 équipes.
-                  </small>
-                  {crossPoolsBySeries[seriesId] && (
-                    <small>
-                      {qualifierCount === 8
-                        ? "Mode « Tableau croisé entre poules » actif : quatre quarts entre équipes de poules différentes."
-                        : "Mode « Tableau croisé entre poules » actif : les premières de chaque poule entrent directement en demi-finale."}
-                    </small>
-                  )}
                 </label>
+                <label>
+                  Fin de la phase finale
+                  <input
+                    type="date"
+                    min={finalsStartsOn || detail.poolEndsOn}
+                    value={finalsEndsOn}
+                    disabled={savingDates || saving}
+                    onChange={(event) => setFinalsEndsOn(event.target.value)}
+                  />
+                </label>
+              </div>
+              <button
+                type="button"
+                className="qualification-save"
+                disabled={
+                  savingDates ||
+                  saving ||
+                  ["completed", "archived", "cancelled"].includes(detail.status)
+                }
+                onClick={() => void saveFinalsDates()}
+              >
+                {savingDates
+                  ? "Enregistrement…"
+                  : "Enregistrer les dates de phase finale"}
+              </button>
+            </section>
+            {activeSeries.map((series) => {
+              const seriesId = series.id ?? "";
+              const qualifierCount = counts[seriesId] ?? 0;
+              const plan =
+                qualifierCount >= 2
+                  ? buildFinalStagePlan(
+                      qualifierCount,
+                      crossPoolsBySeries[seriesId] ?? false,
+                    )
+                  : null;
 
-                {plan ? (
-                  <div className="qualification-preview">
-                    <div className="qualification-preview__numbers">
-                      <span>
-                        <strong>{plan.qualifierCount}</strong>
-                        qualifiés
-                      </span>
-                      <span>
-                        <strong>{plan.mainBracketSize}</strong>
-                        tableau principal
-                      </span>
-                      <span>
-                        <strong>{plan.directEntryCount}</strong>
-                        accès directs
-                      </span>
-                      <span>
-                        <strong>{plan.preliminaryMatches.length}</strong>
-                        barrages
-                      </span>
+              return (
+                <section
+                  className="admin-card qualification-series"
+                  key={seriesId}
+                >
+                  <header>
+                    <div>
+                      <p>Série</p>
+                      <h2>{series.name}</h2>
                     </div>
+                    <span>Capacité : {series.capacity} équipes</span>
+                  </header>
 
-                    {plan.preliminaryMatches.length > 0 && (
+                  <label className="qualification-series__count">
+                    Nombre d’équipes qualifiées
+                    <input
+                      type="number"
+                      min="0"
+                      max={series.capacity}
+                      step="1"
+                      value={qualifierCount}
+                      disabled={saving}
+                      onChange={(event) =>
+                        setCounts((current) => ({
+                          ...current,
+                          [seriesId]: Number(event.target.value),
+                        }))
+                      }
+                    />
+                    <small>
+                      0 = non configuré. Sinon, choisissez au moins 2 équipes.
+                    </small>
+                    {crossPoolsBySeries[seriesId] && (
+                      <small>
+                        {qualifierCount === 8
+                          ? "Mode « Tableau croisé entre poules » actif : quatre quarts entre équipes de poules différentes."
+                          : "Mode « Tableau croisé entre poules » actif : les premières de chaque poule entrent directement en demi-finale."}
+                      </small>
+                    )}
+                  </label>
+
+                  {plan ? (
+                    <div className="qualification-preview">
+                      <div className="qualification-preview__numbers">
+                        <span>
+                          <strong>{plan.qualifierCount}</strong>
+                          qualifiés
+                        </span>
+                        <span>
+                          <strong>{plan.mainBracketSize}</strong>
+                          tableau principal
+                        </span>
+                        <span>
+                          <strong>{plan.directEntryCount}</strong>
+                          accès directs
+                        </span>
+                        <span>
+                          <strong>{plan.preliminaryMatches.length}</strong>
+                          barrages
+                        </span>
+                      </div>
+
+                      {plan.preliminaryMatches.length > 0 && (
+                        <div>
+                          <h3>Barrages</h3>
+                          <div className="qualification-pairings">
+                            {plan.preliminaryMatches.map((match) => (
+                              <span key={match.matchIndex}>
+                                {crossPoolsBySeries[seriesId]
+                                  ? (qualifierCount === 8
+                                      ? crossPoolSeedLabelsEight
+                                      : crossPoolSeedLabelsSix)[match.seedA]
+                                  : match.seedA}{" "}
+                                vs{" "}
+                                {crossPoolsBySeries[seriesId]
+                                  ? (qualifierCount === 8
+                                      ? crossPoolSeedLabelsEight
+                                      : crossPoolSeedLabelsSix)[match.seedB]
+                                  : match.seedB}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div>
-                        <h3>Barrages</h3>
+                        <h3>Premier tour du tableau principal</h3>
                         <div className="qualification-pairings">
-                          {plan.preliminaryMatches.map((match) => (
+                          {plan.firstRoundMatches.map((match) => (
                             <span key={match.matchIndex}>
-                              {crossPoolsBySeries[seriesId]
-                                ? (qualifierCount === 8
-                                    ? crossPoolSeedLabelsEight
-                                    : crossPoolSeedLabelsSix)[match.seedA]
-                                : match.seedA}{" "}
+                              {sideLabel(
+                                match.sideA,
+                                crossPoolsBySeries[seriesId] ?? false,
+                                qualifierCount,
+                              )}{" "}
                               vs{" "}
-                              {crossPoolsBySeries[seriesId]
-                                ? (qualifierCount === 8
-                                    ? crossPoolSeedLabelsEight
-                                    : crossPoolSeedLabelsSix)[match.seedB]
-                                : match.seedB}
+                              {sideLabel(
+                                match.sideB,
+                                crossPoolsBySeries[seriesId] ?? false,
+                                qualifierCount,
+                              )}
                             </span>
                           ))}
                         </div>
                       </div>
-                    )}
-
-                    <div>
-                      <h3>Premier tour du tableau principal</h3>
-                      <div className="qualification-pairings">
-                        {plan.firstRoundMatches.map((match) => (
-                          <span key={match.matchIndex}>
-                            {sideLabel(
-                              match.sideA,
-                              crossPoolsBySeries[seriesId] ?? false,
-                              qualifierCount,
-                            )}{" "}
-                            vs{" "}
-                            {sideLabel(
-                              match.sideB,
-                              crossPoolsBySeries[seriesId] ?? false,
-                              qualifierCount,
-                            )}
-                          </span>
-                        ))}
-                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <p className="qualification-series__empty">
-                    Configurez le nombre de qualifiés pour afficher le tableau
-                    prévisionnel.
-                  </p>
-                )}
-              </section>
-            );
-          })}
+                  ) : (
+                    <p className="qualification-series__empty">
+                      Configurez le nombre de qualifiés pour afficher le tableau
+                      prévisionnel.
+                    </p>
+                  )}
+                </section>
+              );
+            })}
 
-          {activeSeries.length === 0 && (
-            <div className="admin-card">
-              <p>Aucune série active n’est configurée sur ce tournoi.</p>
-            </div>
-          )}
+            {activeSeries.length === 0 && (
+              <div className="admin-card">
+                <p>Aucune série active n’est configurée sur ce tournoi.</p>
+              </div>
+            )}
 
-          {activeSeries.length > 0 && (
-            <button
-              className="qualification-save"
-              type="button"
-              disabled={saving}
-              onClick={() => void save()}
-            >
-              {saving ? "Enregistrement…" : "Enregistrer les qualifications"}
-            </button>
-          )}
+            {activeSeries.length > 0 && (
+              <button
+                className="qualification-save"
+                type="button"
+                disabled={saving}
+                onClick={() => void save()}
+              >
+                {saving ? "Enregistrement…" : "Enregistrer les qualifications"}
+              </button>
+            )}
+          </details>
 
           {selectedId && (
             <AdminTournamentFinalStageControl

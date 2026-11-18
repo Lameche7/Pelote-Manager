@@ -318,6 +318,10 @@ export function CalendarFinalsAdminPanel({
                       {seriesById.get(node.seriesId)?.name ?? "Série"} ·{" "}
                       {titles[node.round] ?? node.round} n°
                       {node.displayOrder + 1}
+                      {node.teamALabel && node.teamBLabel
+                        ? ` · ${node.teamALabel} — ${node.teamBLabel}`
+                        : " · Adversaires à déterminer"}
+                      {node.playDate ? ` · ${node.playDate}` : ""}
                     </option>
                   ))}
                 </select>
