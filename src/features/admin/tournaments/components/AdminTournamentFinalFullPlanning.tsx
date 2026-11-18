@@ -27,6 +27,7 @@ import {
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
 import { describeFinalStageOpponents } from "@/features/tournaments/domain/finalStageOpponentDescription";
 import { AdminTournamentFinalWeeklyOverview } from "./AdminTournamentFinalWeeklyOverview";
+import { AdminTournamentFinalDayLineup } from "./AdminTournamentFinalDayLineup";
 
 const roundLabels: Record<string, string> = {
   preliminary: "Barrages",
@@ -1072,6 +1073,14 @@ export function AdminTournamentFinalFullPlanning({
             </p>
           )}
           <strong>Journée des finales · {formatDate(officialFinalDate)}</strong>
+          <AdminTournamentFinalDayLineup
+            tournamentId={tournamentId}
+            workspace={workspace}
+            onChanged={async () => {
+              await load();
+              await onPlanningChanged?.();
+            }}
+          />
           <p>
             {finalDaySlotCount} créneau(x) disponible(s) à cette date. Les
             horaires doivent être confirmés par l'organisation.
