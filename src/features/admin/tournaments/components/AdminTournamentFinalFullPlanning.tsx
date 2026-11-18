@@ -129,6 +129,8 @@ export function AdminTournamentFinalFullPlanning({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [editingRound, setEditingRound] = useState<number | null>(null);
+  const [quickNodeId, setQuickNodeId] = useState("");
+  const [quickSlotId, setQuickSlotId] = useState("");
   const [finalDayStart, setFinalDayStart] = useState("");
   const [finalDayEnd, setFinalDayEnd] = useState("");
   const [exclude2130, setExclude2130] = useState(false);
@@ -293,6 +295,34 @@ export function AdminTournamentFinalFullPlanning({
     ? (workspace?.slots ?? []).filter((slot) => slot.date === officialFinalDate)
         .length
     : 0;
+  const quickNode = nodes.find((node) => node.id === quickNodeId);
+  const quickSlot = workspace?.slots.find((slot) => slot.id === quickSlotId);
+  const quickRow = quickNode ? rowById.get(quickNode.id) : null;
+  const quickAssignable = Boolean(quickNode && quickRow && !quickRow.published && quickRow.resultStatus !== "validated");
+  const quickCommon = quickNode && quickSlot && workspace
+    ? isFinalStageSlotCommonForNode({ node: quickNode, slot: quickSlot, availability: workspace.availability })
+    : false;
+  const quickAssignments = quickNode && quickSlot
+    ? [
+        ...persistedAssignments.filter((assignment) => assignment.nodeId !== quickNode.id),
+        { nodeId: quickNode.id, slotId: quickSlot.id },
+      ]
+    : persistedAssignments;
+  const quickValidation = workspace && quickNode && quickSlot
+    ? validateFullFinalStagePlanning({
+        nodes,
+        slots: workspace.slots,
+        availability: workspace.availability,
+        assignments: quickAssignments,
+        minimumRestMinutes: workspace.tournament.minimumRestMinutes,
+        respectAvailability: false,
+        finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
+        finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
+      })
+    : null;
+  const quickError = quickValidation && !quickValidation.valid
+    ? quickValidation.diagnostics.find((diagnostic) => diagnostic.nodeId === quickNodeId)?.message ?? quickValidation.diagnostics[0]?.message
+    : null;
   const plannedCount = persistedAssignments.length;
   const unplannedCount = Math.max(0, nodes.length - plannedCount);
 
@@ -314,6 +344,27 @@ export function AdminTournamentFinalFullPlanning({
       setBusy(false);
     }
   };
+
+  const saveQuickAssignment = () =>
+    run(async () => {
+      if (!workspace || !quickNode || !quickSlot || !quickAssignable || !quickValidation?.valid) {
+        throw new Error("Sélectionnez une rencontre modifiable et un créneau compatible.");
+      }
+      // A slot without common availability is an explicit organizer override.
+      if (!quickCommon && !window.confirm(
+        "Ce créneau n'est pas déclaré disponible par toutes les équipes concernées. Confirmer la préprogrammation manuelle ? Aucun joueur ne sera notifié à cette étape.",
+      )) return "Programmation annulée.";
+      await tournamentFinalStageAdminService.saveFullPlanning(tournamentId, [{
+        seriesId: quickNode.seriesId,
+        roundNumber: quickNode.roundNumber,
+        displayOrder: quickNode.displayOrder,
+        slotId: quickSlot.id,
+        source: "manual",
+      }], workspace.slots);
+      setQuickNodeId("");
+      setQuickSlotId("");
+      return "Rencontre préprogrammée. La publication et les notifications restent séparées.";
+    });
 
   const addFinalDaySlot = () =>
     run(async () => {
@@ -573,7 +624,51 @@ export function AdminTournamentFinalFullPlanning({
         </p>
       )}
 
-      <AdminTournamentFinalWeeklyOverview workspace={workspace} />
+      <section className="final-stage-full-planning__quick" aria-label="Programmation rapide">
+        <h4>Programmer une rencontre</h4>
+        <p>Choisissez une partie, puis cliquez sur un créneau libre du planning ci-dessous.</p>
+        <label>
+          Partie à programmer
+          <select value={quickNodeId} disabled={busy} onChange={(event) => { setQuickNodeId(event.target.value); setError(""); }}>
+            <option value="">Choisir une rencontre</option>
+            {nodes.filter((node) => {
+              const row = rowById.get(node.id);
+              return row && !row.published && row.resultStatus !== "validated";
+            }).map((node) => {
+              const row = rowById.get(node.id);
+              const series = workspace.series.find((item) => item.id === node.seriesId);
+              return (
+                <option value={node.id} key={node.id}>
+                  {series?.name ?? "Série"} · {roundLabel(node.round)} · {row?.teamALabel && row?.teamBLabel
+                    ? `${row.teamALabel} — ${row.teamBLabel}`
+                    : describeFinalStageOpponents({ node, nodes, seeds: series?.seeds ?? [], crossPools: series?.crossPools ?? false })}
+                  {row?.playDate ? " · Déjà prépositionnée" : ""}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+        {quickSlot && <p role="status">Créneau retenu : {slotLabel(quickSlot)}</p>}
+        {quickNode && quickSlot && (
+          <p role="status">
+            {quickError
+              ? `⛔ ${quickError}`
+              : quickCommon
+                ? "✓ Créneau compatible avec les disponibilités déclarées et l'ordre des tours."
+                : "⚠ Disponibilités non communes ou encore inconnues : validation exceptionnelle nécessaire."}
+          </p>
+        )}
+        <button type="button" disabled={busy || !quickAssignable || !quickSlot || !quickValidation?.valid} onClick={() => void saveQuickAssignment()}>
+          {busy ? "Enregistrement…" : "Préprogrammer la rencontre ici"}
+        </button>
+      </section>
+
+      <AdminTournamentFinalWeeklyOverview
+        workspace={workspace}
+        selectedSlotId={quickSlotId}
+        disabled={busy}
+        onSelectFreeSlot={(slot) => { setQuickSlotId(slot.id); setError(""); }}
+      />
 
       {officialFinalDate && (
         <section className="final-stage-full-planning__final-day">
