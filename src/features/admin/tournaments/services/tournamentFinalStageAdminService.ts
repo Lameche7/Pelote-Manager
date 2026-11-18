@@ -807,7 +807,11 @@ export const tournamentFinalStageAdminService = {
         target_display_order: displayOrder,
       },
     );
-    if (error) fail(error, "Le créneau est enregistré, mais la publication automatique a échoué.");
+    if (error)
+      fail(
+        error,
+        "Le créneau est enregistré, mais la publication automatique a échoué.",
+      );
     return data === true;
   },
 

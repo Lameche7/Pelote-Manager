@@ -71,9 +71,15 @@ test("calendar manual fallback lists only complete finals without an automatic p
 });
 
 test("manual final publication uses the existing protected automatic engine", () => {
-  const service = file("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts");
-  const quick = file("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx");
-  const migration = file("../supabase/migrations/20261118153000_publish_ready_manually_placed_finals.sql");
+  const service = file(
+    "../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
+  );
+  const quick = file(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+  );
+  const migration = file(
+    "../supabase/migrations/20261118153000_publish_ready_manually_placed_finals.sql",
+  );
   assert.match(admin, /publishReadyManualFinal/);
   assert.match(quick, /publishReadyManualFinal/);
   assert.match(service, /admin_publish_ready_manual_final/);
@@ -81,7 +87,13 @@ test("manual final publication uses the existing protected automatic engine", ()
   assert.match(migration, /team_a_id is null/);
   assert.match(migration, /team_b_id is null/);
   assert.match(migration, /tournament_team_availability_slots/);
-  assert.match(migration, /auto_progress_independent_tournament_final_branches/);
-  assert.match(migration, /revoke all on function public.admin_publish_ready_manual_final/);
+  assert.match(
+    migration,
+    /auto_progress_independent_tournament_final_branches/,
+  );
+  assert.match(
+    migration,
+    /revoke all on function public.admin_publish_ready_manual_final/,
+  );
   assert.match(admin, /Créneau enregistré, mais non publié/);
 });

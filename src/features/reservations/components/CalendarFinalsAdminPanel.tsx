@@ -225,12 +225,13 @@ export function CalendarFinalsAdminPanel({
           endsAt: end.time,
         },
       );
-      const published = await tournamentFinalStageAdminService.publishReadyManualFinal(
-        tournamentId,
-        currentNode.seriesId,
-        currentNode.roundNumber,
-        currentNode.displayOrder,
-      );
+      const published =
+        await tournamentFinalStageAdminService.publishReadyManualFinal(
+          tournamentId,
+          currentNode.seriesId,
+          currentNode.roundNumber,
+          currentNode.displayOrder,
+        );
       setMessage(
         published
           ? "Partie publiée dans le calendrier. Les notifications habituelles ont été déclenchées."
@@ -296,11 +297,11 @@ export function CalendarFinalsAdminPanel({
       {open && (
         <div className="calendar-finals-admin">
           <p>
-            Seules les rencontres complètes encore sans créneau sont
-            proposées. Après validation, une partie compatible avec les
-            disponibilités communes est publiée dans le calendrier et les
-            joueurs reçoivent les notifications habituelles. Sinon, le
-            créneau reste provisoire et aucune notification n'est envoyée.
+            Seules les rencontres complètes encore sans créneau sont proposées.
+            Après validation, une partie compatible avec les disponibilités
+            communes est publiée dans le calendrier et les joueurs reçoivent les
+            notifications habituelles. Sinon, le créneau reste provisoire et
+            aucune notification n'est envoyée.
           </p>
           {!projection && (
             <label>

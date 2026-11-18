@@ -548,12 +548,13 @@ export function AdminTournamentFinalFullPlanning({
         ],
         workspace.slots,
       );
-      const published = await tournamentFinalStageAdminService.publishReadyManualFinal(
-        tournamentId,
-        quickNode.seriesId,
-        quickNode.roundNumber,
-        quickNode.displayOrder,
-      );
+      const published =
+        await tournamentFinalStageAdminService.publishReadyManualFinal(
+          tournamentId,
+          quickNode.seriesId,
+          quickNode.roundNumber,
+          quickNode.displayOrder,
+        );
       setQuickNodeId("");
       setQuickSlotId("");
       setQuickFocusDate(null);
