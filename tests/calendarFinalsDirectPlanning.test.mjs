@@ -122,3 +122,26 @@ test("calendar cards display the published tournament final round, never project
   assert.match(migration, /match\.phase = 'finals'/);
   assert.match(migration, /occupation\.cancelled_at is null/);
 });
+
+test("the final day running order is editable and updates the public calendar without fake bookings", () => {
+  const editor = file("../src/features/admin/tournaments/components/AdminTournamentFinalDayLineup.tsx");
+  const planning = file("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx");
+  const service = file("../src/features/reservations/services/reservationCalendarService.ts");
+  const slot = file("../src/features/reservations/components/SlotCard.tsx");
+  const mutation = file("../supabase/migrations/20261118170000_final_day_lineup_reorder_and_public_calendar.sql");
+  assert.match(planning, /AdminTournamentFinalDayLineup/);
+  assert.match(editor, /Enregistrer le programme des finales/);
+  assert.match(editor, /Monter/);
+  assert.match(editor, /Descendre/);
+  assert.match(editor, /saveFinalDayLineup/);
+  assert.match(service, /list_public_tournament_final_day_program/);
+  assert.match(service, /status: "locked"/);
+  assert.match(slot, /tournament_final_day_program/);
+  assert.match(slot, /Finale du tournoi/);
+  assert.match(mutation, /admin_save_tournament_final_day_lineup/);
+  assert.match(mutation, /sync_tournament_reschedule_match_event/);
+  assert.match(mutation, /match_reprogrammed/);
+  assert.match(mutation, /is_tournament_finals_reserved_slot/);
+  assert.match(mutation, /team_a_id/);
+  assert.match(mutation, /Adversaires à déterminer/);
+});
