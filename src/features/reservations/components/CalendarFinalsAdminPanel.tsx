@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CalendarSlot } from "@/features/reservations/domain/calendar";
+import { supabase } from "@/infrastructure/supabase/client";
 import {
   tournamentFinalStageAdminService,
   type TournamentFinalFullPlanningWorkspace,
@@ -166,13 +167,14 @@ export function CalendarFinalsAdminPanel({
   );
   const unplanned = (workspace?.nodes ?? []).filter(
     (node) =>
-      !node.resourceId && !node.published && node.resultStatus !== "validated",
+      node.actualMatchId && !node.published && node.resultStatus !== "validated",
   );
   const currentNode = workspace?.nodes.find(
     (node) => nodeKey(node) === selectedNode,
   );
   const canModify =
     currentNode &&
+    Boolean(currentNode.actualMatchId) &&
     !currentNode.published &&
     currentNode.resultStatus !== "validated" &&
     Boolean(tournamentId);
@@ -188,6 +190,29 @@ export function CalendarFinalsAdminPanel({
   const selectedDestination = projection
     ? targets.find((candidate) => keyFor(candidate) === selectedTarget)
     : slot;
+  const destinationStart = selectedDestination
+    ? localDateAndTime(selectedDestination.startsAt, timezone)
+    : null;
+  const destinationEnd = selectedDestination
+    ? localDateAndTime(selectedDestination.endsAt, timezone)
+    : null;
+  const isCompatible = Boolean(
+    currentNode?.teamAId &&
+      currentNode?.teamBId &&
+      destinationStart &&
+      destinationEnd &&
+      [currentNode.teamAId, currentNode.teamBId].every((teamId) =>
+        workspace?.availability
+          .find((item) => item.teamId === teamId)
+          ?.slots.some(
+            (item) =>
+              item.date === destinationStart.date &&
+              item.startsAt.slice(0, 5) === destinationStart.time &&
+              item.endsAt.slice(0, 5) === destinationEnd.time,
+          ),
+      ),
+  );
+
 
   async function save() {
     if (!canModify || !selectedDestination || !workspace || saving) return;
@@ -213,8 +238,15 @@ export function CalendarFinalsAdminPanel({
           endsAt: end.time,
         },
       );
+      const publication = await supabase.rpc(
+        "admin_retry_tournament_final_match_publication",
+        { target_match_id: currentNode.actualMatchId },
+      );
+      if (publication.error) throw publication.error;
       setMessage(
-        "Créneau de phase finale prépositionné. Adversaires non confirmés.",
+        publication.data === true
+          ? "Partie programmée et publiée : les joueurs sont notifiés."
+          : "Créneau enregistré mais publication en attente : vérifiez l’alerte administrateur.",
       );
       await onUpdated();
     } catch (reason: unknown) {
@@ -276,9 +308,9 @@ export function CalendarFinalsAdminPanel({
       {open && (
         <div className="calendar-finals-admin">
           <p>
-            Préprogrammation du tableau final : les adversaires se préciseront
-            après validation des résultats. Cette action ne publie pas de
-            nouvelle rencontre et n'envoie aucune notification.
+            Sélectionnez une rencontre avec ses deux équipes connues.
+            Pilotoki vérifie leurs disponibilités avant de programmer et
+            publier la partie.
           </p>
           {!projection && (
             <label>
@@ -318,6 +350,9 @@ export function CalendarFinalsAdminPanel({
                       {seriesById.get(node.seriesId)?.name ?? "Série"} ·{" "}
                       {titles[node.round] ?? node.round} n°
                       {node.displayOrder + 1}
+                      {node.teamALabel && node.teamBLabel
+                        ? ` · ${node.teamALabel} contre ${node.teamBLabel}`
+                        : " · Adversaires en attente"}
                     </option>
                   ))}
                 </select>
@@ -354,11 +389,18 @@ export function CalendarFinalsAdminPanel({
                   {localDateAndTime(slot.startsAt, timezone).time}
                 </p>
               )}
+              {selectedDestination && currentNode && (
+                <p role="status" style={{ color: isCompatible ? "#167044" : "#b15b13" }}>
+                  {isCompatible
+                    ? "✓ Créneau compatible avec les deux équipes"
+                    : "⚠ Ce créneau n’est pas déclaré disponible par les deux équipes"}
+                </p>
+              )}
               <div className="reservation-slot-actions__list">
                 <button
                   type="button"
                   className="reservation-slot-actions__button"
-                  disabled={!canModify || !selectedDestination || saving}
+                  disabled={!canModify || !selectedDestination || !isCompatible || saving}
                   onClick={() => void save()}
                 >
                   {saving ? "Enregistrement…" : "Programmer ici"}
