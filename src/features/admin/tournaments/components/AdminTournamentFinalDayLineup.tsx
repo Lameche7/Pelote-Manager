@@ -66,6 +66,20 @@ export function AdminTournamentFinalDayLineup({
   }, [workspace]);
 
   const scheduled = drafts.filter((entry) => entry.startsAt && entry.endsAt);
+  // Send only changed finals: previously played or already-started untouched
+  // fixtures must not block changes to future finals on the same day.
+  const changed = scheduled.filter((entry) => {
+    const previous = workspace.nodes.find(
+      (node) => node.seriesId === entry.seriesId && node.round === "final",
+    );
+    return (
+      !previous ||
+      previous.resourceId !== entry.resourceId ||
+      previous.playDate !== workspace.tournament.finalsEndsOn ||
+      previous.startsAt?.slice(0, 5) !== entry.startsAt ||
+      previous.endsAt?.slice(0, 5) !== entry.endsAt
+    );
+  });
   const validation = useMemo(() => {
     for (const entry of drafts) {
       if (Boolean(entry.startsAt) !== Boolean(entry.endsAt)) {
@@ -147,14 +161,14 @@ export function AdminTournamentFinalDayLineup({
   };
 
   const save = async () => {
-    if (busy || validation || scheduled.length === 0) return;
+    if (busy || validation || changed.length === 0) return;
     setBusy(true);
     setError("");
     setMessage("");
     try {
       const count = await tournamentFinalStageAdminService.saveFinalDayLineup(
         tournamentId,
-        scheduled.map(({ seriesId, resourceId, startsAt, endsAt }) => ({
+        changed.map(({ seriesId, resourceId, startsAt, endsAt }) => ({
           seriesId,
           resourceId,
           startsAt,
@@ -302,7 +316,7 @@ export function AdminTournamentFinalDayLineup({
       {message && <p role="status">{message}</p>}
       <button
         type="button"
-        disabled={busy || Boolean(validation) || scheduled.length === 0}
+        disabled={busy || Boolean(validation) || changed.length === 0}
         onClick={() => void save()}
       >
         {busy ? "Enregistrement…" : "Enregistrer le programme des finales"}
