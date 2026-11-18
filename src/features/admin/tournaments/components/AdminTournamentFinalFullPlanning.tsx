@@ -531,7 +531,7 @@ export function AdminTournamentFinalFullPlanning({
       if (
         !quickCommon &&
         !window.confirm(
-          "Ce créneau n'est pas déclaré disponible par toutes les équipes concernées. Confirmer la préprogrammation manuelle ? Aucun joueur ne sera notifié à cette étape.",
+          "Ce créneau n'est pas déclaré disponible par toutes les équipes concernées. Confirmer la préprogrammation provisoire ? Elle ne sera publiée que si les deux équipes ont confirmé ce créneau.",
         )
       )
         return "Programmation annulée.";
@@ -548,10 +548,18 @@ export function AdminTournamentFinalFullPlanning({
         ],
         workspace.slots,
       );
+      const published = await tournamentFinalStageAdminService.publishReadyManualFinal(
+        tournamentId,
+        quickNode.seriesId,
+        quickNode.roundNumber,
+        quickNode.displayOrder,
+      );
       setQuickNodeId("");
       setQuickSlotId("");
       setQuickFocusDate(null);
-      return "Rencontre préprogrammée. La publication et les notifications restent séparées.";
+      return published
+        ? "Rencontre publiée dans le calendrier : les notifications habituelles ont été déclenchées."
+        : "Créneau préprogrammé, sans publication : disponibilités communes ou conditions de publication non réunies.";
     });
 
   const addFinalDaySlot = () =>
