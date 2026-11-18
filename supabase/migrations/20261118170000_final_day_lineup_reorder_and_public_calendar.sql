@@ -286,6 +286,51 @@ as $function$
     and node.source='manual'
   order by node.play_date,node.starts_at,series.display_order;
 $function$;
+-- Also protect manually scheduled finals at arbitrary times, such as 14:00.
+-- Retain the existing generated-finals reservation rules for all other slots.
+create or replace function public.is_tournament_finals_reserved_slot(
+  target_resource_id uuid,
+  target_starts_at timestamptz,
+  target_ends_at timestamptz
+)
+returns boolean
+language sql stable security definer set search_path=''
+as $function$
+  select exists (
+    select 1
+    from public.reservable_resources resource
+    join public.tournaments tournament on tournament.club_id=resource.club_id
+    cross join lateral public.tournament_generated_slots(tournament.id) generated
+    where resource.id=target_resource_id and resource.is_active
+      and tournament.status not in ('cancelled','completed','archived')
+      and tournament.finals_starts_on is not null
+      and tournament.finals_ends_on is not null
+      and generated.phase='finals'
+      and generated.play_date between tournament.finals_starts_on and tournament.finals_ends_on
+      and tstzrange(
+        (generated.play_date+generated.starts_at) at time zone
+          coalesce(tournament.timezone,resource.timezone,'Europe/Paris'),
+        (generated.play_date+generated.ends_at) at time zone
+          coalesce(tournament.timezone,resource.timezone,'Europe/Paris'),'[)'
+      ) && tstzrange(target_starts_at,target_ends_at,'[)')
+  ) or exists (
+    select 1
+    from public.reservable_resources resource
+    join public.tournaments tournament on tournament.club_id=resource.club_id
+    join public.tournament_final_planning_nodes node
+      on node.tournament_id=tournament.id and node.resource_id=resource.id
+        and node.round='final' and node.source='manual'
+    where resource.id=target_resource_id and resource.is_active
+      and tournament.status not in ('cancelled','completed','archived')
+      and node.play_date=tournament.finals_ends_on
+      and node.starts_at is not null and node.ends_at is not null
+      and tstzrange(
+        (node.play_date+node.starts_at) at time zone resource.timezone,
+        (node.play_date+node.ends_at) at time zone resource.timezone,'[)'
+      ) && tstzrange(target_starts_at,target_ends_at,'[)')
+  );
+$function$;
+
 revoke all on function public.list_public_tournament_final_day_program(uuid,date,date)
 from public,anon,authenticated;
 grant execute on function public.list_public_tournament_final_day_program(uuid,date,date)
