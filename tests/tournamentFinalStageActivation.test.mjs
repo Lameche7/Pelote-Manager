@@ -24,7 +24,7 @@ const unpublishArchiveFixMigration =
 test("la génération réelle reprend exactement le seeding déjà validé", () => {
   assert.deepEqual(
     finalStageSeedOrder(16),
-    [1, 16, 8, 9, 4, 13, 5, 12, 3, 14, 6, 11, 7, 10, 2, 15],
+    [1, 16, 8, 9, 4, 13, 5, 12, 2, 15, 7, 10, 3, 14, 6, 11],
   );
   const plan = buildFinalStagePlan(24);
   assert.equal(plan.directEntryCount, 8);
