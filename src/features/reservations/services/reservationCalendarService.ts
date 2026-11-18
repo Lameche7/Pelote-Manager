@@ -22,6 +22,15 @@ type RefereedIntervalRow = {
   source_type: "championship" | "tournament";
 };
 
+type FinalDayProgramRow = {
+  starts_at: string;
+  ends_at: string;
+  display_name: string;
+  display_color: string | null;
+  series_id: string;
+  published: boolean;
+};
+
 type FinalRoundRow = {
   starts_at: string;
   ends_at: string;
@@ -86,7 +95,7 @@ export const reservationCalendarService = {
 
     // Referee decorations are nonessential to availability: do not hide the
     // entire timetable if either supplementary RPC temporarily fails.
-    const [intervalResponse, nameResponse, finalRoundResponse] = await Promise.allSettled([
+    const [intervalResponse, nameResponse, finalRoundResponse, finalDayResponse] = await Promise.allSettled([
       supabase.rpc("list_refereed_calendar_intervals", {
         target_resource_id: resourceId,
         range_start: fromDate,
@@ -98,6 +107,11 @@ export const reservationCalendarService = {
         range_end: toDate,
       }),
       supabase.rpc("list_published_tournament_final_calendar_rounds", {
+        target_resource_id: resourceId,
+        range_start: fromDate,
+        range_end: toDate,
+      }),
+      supabase.rpc("list_public_tournament_final_day_program", {
         target_resource_id: resourceId,
         range_start: fromDate,
         range_end: toDate,
@@ -137,9 +151,45 @@ export const reservationCalendarService = {
       )?.referee_name ?? null,
     }));
 
-    // Only real, published tournament matches appear in the calendar.
-    // Unconfirmed future bracket positions must not masquerade as bookings.
-    return calendarSlots.sort((a, b) =>
+    // A reserved finals-day program is a locked organizer hold, not a
+    // published match. Published fixtures retain their actual occupation card.
+    const program: FinalDayProgramRow[] =
+      finalDayResponse.status === "fulfilled" && !finalDayResponse.value.error
+        ? ((finalDayResponse.value.data ?? []) as FinalDayProgramRow[])
+        : [];
+    const unpublished = program.filter((row) => !row.published);
+    const remaining = calendarSlots.filter((slot) => {
+      if (slot.status === "occupied") return true;
+      return !unpublished.some((row) =>
+        new Date(slot.startsAt).getTime() < new Date(row.ends_at).getTime() &&
+        new Date(slot.endsAt).getTime() > new Date(row.starts_at).getTime(),
+      );
+    });
+    for (const row of unpublished) {
+      // Never introduce a duplicate or a misleading booking if another real
+      // occupation overlaps (defense against stale program metadata).
+      if (calendarSlots.some((slot) =>
+        slot.status === "occupied" &&
+        new Date(slot.startsAt).getTime() < new Date(row.ends_at).getTime() &&
+        new Date(slot.endsAt).getTime() > new Date(row.starts_at).getTime(),
+      )) continue;
+      remaining.push({
+        resourceId,
+        startsAt: row.starts_at,
+        endsAt: row.ends_at,
+        status: "locked",
+        bookingOpensAt: null,
+        bookedByName: row.display_name,
+        occupationType: "tournament_final_day_program",
+        displayColor: row.display_color,
+        reservationAccess: null,
+        resultDisplay: null,
+        tournamentFinalRound: "final",
+        hasReferee: false,
+        refereeName: null,
+      });
+    }
+    return remaining.sort((a, b) =>
       new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()
     );
   },
