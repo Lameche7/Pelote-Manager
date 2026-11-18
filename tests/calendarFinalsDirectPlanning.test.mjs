@@ -58,7 +58,13 @@ test("calendar manual fallback lists only complete finals without an automatic p
   assert.match(admin, /!node\.playDate/);
   assert.match(admin, /!node\.startsAt/);
   assert.match(admin, /!node\.endsAt/);
-  assert.match(admin, /unplanned\.some\(\(node\) => nodeKey\(node\) === selectedNode\)/);
-  assert.match(admin, /Aucune rencontre complète ne reste à programmer manuellement/);
+  assert.match(
+    admin,
+    /unplanned\.some\(\(node\) => nodeKey\(node\) === selectedNode\)/,
+  );
+  assert.match(
+    admin,
+    /Aucune rencontre complète ne reste à programmer manuellement/,
+  );
   assert.match(admin, /Boolean\(projection\)/);
 });
