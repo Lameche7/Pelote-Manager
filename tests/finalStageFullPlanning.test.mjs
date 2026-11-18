@@ -847,3 +847,21 @@ test("un barrage peut se jouer après un huitième indépendant mais avant son p
   });
   assert.equal(dependentCorrectOrder.valid, true);
 });
+
+test("les cartes de rattrapage privilégient les parties à deux adversaires connus sans changer le moteur automatique", async () => {
+  const [admin, styles, service] = await Promise.all([
+    read("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx"),
+    read("../src/features/admin/tournaments/pages/AdminTournamentQualificationPage.css"),
+    read("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts"),
+  ]);
+  assert.match(admin, /!persistedByNode\.has\(node\.id\)/);
+  assert.match(admin, /row\?\.teamAId && row\?\.teamBId/);
+  assert.match(admin, /queuePriority\(left\) - queuePriority\(right\)/);
+  assert.match(admin, /disabled=\{busy \|\| !known\}/);
+  assert.match(admin, /Adversaires en attente/);
+  assert.match(admin, /Deux équipes connues/);
+  assert.match(admin, /final-stage-queue__card/);
+  assert.match(styles, /\.final-stage-queue__card/);
+  assert.match(styles, /var\(--series-color/);
+  assert.match(service, /saveFullPlanning/);
+});
