@@ -818,3 +818,14 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.qualification-advanced { padding: 1rem; }
+.qualification-advanced > summary {
+  cursor: pointer;
+  padding: .55rem;
+  font-weight: 750;
+  color: #315848;
+  font-size: .95rem;
+}
+.qualification-advanced > p { color: #63766a; }
+.qualification-advanced[open] > summary { border-bottom: 1px solid #dce5df; margin-bottom: 1rem; }
