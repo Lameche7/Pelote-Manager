@@ -21,7 +21,9 @@ test("the engine prefers early slots and guards quarters", () => {
   assert.ok(migration.includes("slot.play_date > regular_latest_date"));
   assert.ok(migration.includes("public.tournament_final_node_depends_on"));
   assert.ok(migration.includes("next_round_deadline"));
-  assert.ok(\n    migration.includes("latest_date := least(latest_date, next_round_deadline)"),\n  );
+  assert.ok(
+    migration.includes("latest_date := least(latest_date, next_round_deadline)"),
+  );
 });
 
 test("the change does not change other rounds' deadlines", () => {
