@@ -20,7 +20,7 @@ declare
   start_instant timestamptz;
   end_instant timestamptz;
   changes integer := 0;
-  affected_match_ids uuid[] := array[]::uuid[];
+  series_to_publish uuid;
   affected_series_ids uuid[] := array[]::uuid[];
 begin
   if auth.uid() is null or selected_club is null
@@ -225,9 +225,9 @@ begin
 
   -- Actual teams becoming known later will find this preserved manual slot;
   -- publication is delegated to the existing automatic engine.
-  foreach entry.series_id in array affected_series_ids loop
+  foreach series_to_publish in array affected_series_ids loop
     perform public.auto_progress_independent_tournament_final_branches(
-      target_tournament_id, entry.series_id
+      target_tournament_id, series_to_publish
     );
   end loop;
 
