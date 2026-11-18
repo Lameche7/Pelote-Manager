@@ -164,7 +164,7 @@ export function AdminBlockedFinalsAlerts() {
         </ul>
       )}
       {alerts.length > 0 && (
-        <Link to="/admin/tournois/qualifications">
+        <Link to={`/admin/tournois/qualifications?tournoi=${encodeURIComponent(alerts[0]?.tournamentId ?? "")}#planning-phases-finales`}>
           Ouvrir la planification des phases finales
         </Link>
       )}
