@@ -137,3 +137,26 @@
   content: "🏆";
   margin-right: 0.35rem;
 }
+
+
+.reservation-slot--locked.reservation-slot--final-day-program {
+  border-color: var(--tournament-series-color, #64748b);
+  background: color-mix(in srgb, var(--tournament-series-color, #64748b) 12%, #fff);
+  color: #0f172a;
+}
+
+.reservation-slot--final-day-program::before {
+  background: var(--tournament-series-color, #64748b);
+}
+
+.reservation-slot--final-day-program span {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+  color: #0f172a;
+}
+
+.reservation-slot--final-day-program small {
+  font-weight: 650;
+  white-space: normal;
+}
