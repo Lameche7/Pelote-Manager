@@ -14,7 +14,7 @@ const migrationPath =
 test("un tableau de 16 respecte le seeding pelote attendu", () => {
   assert.deepEqual(
     finalStageSeedOrder(16),
-    [1, 16, 8, 9, 4, 13, 5, 12, 3, 14, 6, 11, 7, 10, 2, 15],
+    [1, 16, 8, 9, 4, 13, 5, 12, 2, 15, 7, 10, 3, 14, 6, 11],
   );
 
   const plan = buildFinalStagePlan(16);
@@ -31,10 +31,10 @@ test("un tableau de 16 respecte le seeding pelote attendu", () => {
       [8, 9],
       [4, 13],
       [5, 12],
+      [2, 15],
+      [7, 10],
       [3, 14],
       [6, 11],
-      [7, 10],
-      [2, 15],
     ],
   );
 });
@@ -72,10 +72,10 @@ test("24 qualifies donnent 8 exempts et 8 barrages", () => {
     ["S8", "V9-24"],
     ["S4", "V13-20"],
     ["S5", "V12-21"],
+    ["S2", "V15-18"],
+    ["S7", "V10-23"],
     ["S3", "V14-19"],
     ["S6", "V11-22"],
-    ["S7", "V10-23"],
-    ["S2", "V15-18"],
   ]);
 });
 
