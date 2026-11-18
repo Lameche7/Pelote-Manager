@@ -48,7 +48,7 @@ test("admin mutations reuse protected existing final-stage RPCs", () => {
   assert.match(admin, /slotId: null/);
   assert.match(admin, /!node\.published/);
   assert.match(admin, /node\.resultStatus !== "validated"/);
-  assert.match(admin, /Cette action ne publie pas de/);
+  assert.match(admin, /Cette\s+action ne publie pas de/);
   assert.doesNotMatch(admin, /publishSeries|advanceSeries|publish\(/);
 });
 
@@ -67,5 +67,5 @@ test("calendar manual fallback lists only complete finals without an automatic p
     /Aucune rencontre complète ne reste à programmer manuellement/,
   );
   assert.match(admin, /Boolean\(projection\)/);
-  assert.match(admin, /Cette action ne publie pas de/);
+  assert.match(admin, /Cette\s+action ne publie pas de/);
 });
