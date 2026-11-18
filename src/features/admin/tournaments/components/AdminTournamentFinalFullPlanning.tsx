@@ -175,6 +175,12 @@ export function AdminTournamentFinalFullPlanning({
     };
   }, [tournamentId, refreshKey]);
 
+  useEffect(() => {
+    if (workspace && window.location.hash === "#planning-phases-finales") {
+      document.getElementById("planning-phases-finales")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [workspace]);
+
   const nodes = useMemo(
     () => (workspace ? buildNodes(workspace) : []),
     [workspace],
@@ -527,7 +533,7 @@ export function AdminTournamentFinalFullPlanning({
   if (!workspace) return null;
 
   return (
-    <section className="final-stage-full-planning">
+    <section className="final-stage-full-planning" id="planning-phases-finales">
       <header className="final-stage-full-planning__header">
         <div>
           <p>Organisation globale</p>
@@ -642,6 +648,8 @@ export function AdminTournamentFinalFullPlanning({
           : "Les créneaux de 21h30 restent autorisés pour le prochain calcul. Cette option ne concerne pas les modifications manuelles."}
       </p>
 
+      <details className="final-stage-full-planning__advanced">
+        <summary>Programmation avancée par tour (modifier les rencontres individuellement)</summary>
       <div className="final-stage-full-planning__stages">
         {stages.map((stage) => {
           const editableNodes = stage.nodes.filter((node) => {
@@ -656,7 +664,7 @@ export function AdminTournamentFinalFullPlanning({
             >
               <header>
                 <div>
-                  <p>Étape {stage.roundNumber + 1}</p>
+                  <p>Tour de compétition</p>
                   <h4>{roundLabel(stage.round)}</h4>
                 </div>
                 {editableNodes.length > 0 && (
@@ -955,6 +963,7 @@ export function AdminTournamentFinalFullPlanning({
           );
         })}
       </div>
+      </details>
     </section>
   );
 }
