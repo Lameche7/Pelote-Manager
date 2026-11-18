@@ -53,8 +53,14 @@ const timeText = (value: string) => value.slice(0, 5);
 
 export function AdminTournamentFinalWeeklyOverview({
   workspace,
+  onSelectFreeSlot,
+  selectedSlotId,
+  disabled = false,
 }: {
   workspace: TournamentFinalFullPlanningWorkspace;
+  onSelectFreeSlot?: (slot: PlanningSlot) => void;
+  selectedSlotId?: string | null;
+  disabled?: boolean;
 }) {
   const [weekIndex, setWeekIndex] = useState(0);
   const [printError, setPrintError] = useState("");
@@ -516,6 +522,16 @@ export function AdminTournamentFinalWeeklyOverview({
                               {entry.detail}
                               {entry.provisional ? " · Provisoire" : ""}
                             </small>
+                            {entry.kind === "free" && onSelectFreeSlot && (
+                              <button
+                                type="button"
+                                disabled={disabled || !workspace.slots.some((slot) => slot.id === entry.slot.id)}
+                                aria-pressed={selectedSlotId === entry.slot.id}
+                                onClick={() => onSelectFreeSlot(entry.slot)}
+                              >
+                                {selectedSlotId === entry.slot.id ? "Créneau sélectionné" : "Choisir ce créneau"}
+                              </button>
+                            )}
                           </div>
                         ))
                       )}
@@ -536,8 +552,8 @@ export function AdminTournamentFinalWeeklyOverview({
         « Libre » signifie qu'aucune affectation du tournoi ni réservation
         connue n'occupe le créneau configuré. Les heures sans créneau configuré
         sont indiquées par « — » ; les places provisoires restent à confirmer
-        avec les joueurs. Vue en lecture seule : aucune modification ni
-        notification.
+        avec les joueurs. Sélectionner un créneau prépare une affectation sans
+        publier la rencontre ni envoyer de notification.
       </p>
     </section>
   );
