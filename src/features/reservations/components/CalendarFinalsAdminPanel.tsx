@@ -164,9 +164,18 @@ export function CalendarFinalsAdminPanel({
     () => new Map(workspace?.series.map((series) => [series.id, series]) ?? []),
     [workspace],
   );
+  // Manual fallback only: the automatic engine already attempts scheduling
+  // when both opponents are known. Do not offer speculative bracket positions
+  // or matches that have already received any planned date/slot.
   const unplanned = (workspace?.nodes ?? []).filter(
     (node) =>
-      !node.resourceId && !node.published && node.resultStatus !== "validated",
+      Boolean(node.teamAId && node.teamBId) &&
+      !node.resourceId &&
+      !node.playDate &&
+      !node.startsAt &&
+      !node.endsAt &&
+      !node.published &&
+      node.resultStatus !== "validated",
   );
   const currentNode = workspace?.nodes.find(
     (node) => nodeKey(node) === selectedNode,
@@ -175,6 +184,9 @@ export function CalendarFinalsAdminPanel({
     currentNode &&
     !currentNode.published &&
     currentNode.resultStatus !== "validated" &&
+    (Boolean(projection) ||
+      (Boolean(currentNode.teamAId && currentNode.teamBId) &&
+        unplanned.some((node) => nodeKey(node) === selectedNode))) &&
     Boolean(tournamentId);
   const targets = calendarSlots
     .filter(
@@ -214,7 +226,7 @@ export function CalendarFinalsAdminPanel({
         },
       );
       setMessage(
-        "Créneau de phase finale prépositionné. Adversaires non confirmés.",
+        "Créneau de phase finale enregistré pour les deux adversaires connus.",
       );
       await onUpdated();
     } catch (reason: unknown) {
@@ -276,9 +288,10 @@ export function CalendarFinalsAdminPanel({
       {open && (
         <div className="calendar-finals-admin">
           <p>
-            Préprogrammation du tableau final : les adversaires se préciseront
-            après validation des résultats. Cette action ne publie pas de
-            nouvelle rencontre et n'envoie aucune notification.
+            Seules les rencontres dont les deux adversaires sont connus et qui
+            n'ont pas été programmées automatiquement sont proposées. Cette
+            action ne publie pas de nouvelle rencontre et n'envoie aucune
+            notification.
           </p>
           {!projection && (
             <label>
@@ -326,6 +339,12 @@ export function CalendarFinalsAdminPanel({
                   ))}
                 </select>
               </label>
+              {!projection && unplanned.length === 0 && (
+                <p role="status">
+                  Aucune rencontre complète ne reste à programmer manuellement
+                  pour ce tournoi.
+                </p>
+              )}
               {projection && (
                 <label>
                   Nouveau créneau
