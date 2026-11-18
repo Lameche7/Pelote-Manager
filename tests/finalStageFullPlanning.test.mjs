@@ -866,6 +866,7 @@ test("les cartes de rattrapage privilégient les parties à deux adversaires con
   assert.match(admin, /disabled=\{busy \|\| !known\}/);
   assert.match(admin, /Adversaires en attente/);
   assert.match(admin, /Deux équipes connues/);
+  assert.match(admin, /Le moteur attend les deux adversaires/);
   assert.match(admin, /final-stage-queue__card/);
   assert.match(styles, /\.final-stage-queue__card/);
   assert.match(styles, /var\(--series-color/);
