@@ -316,7 +316,8 @@ export function CalendarFinalsAdminPanel({
                   ).map((node) => (
                     <option key={nodeKey(node)} value={nodeKey(node)}>
                       {seriesById.get(node.seriesId)?.name ?? "Série"} ·{" "}
-                      {titles[node.round] ?? node.round} n°{node.displayOrder + 1}
+                      {titles[node.round] ?? node.round} n°
+                      {node.displayOrder + 1}
                       {node.teamALabel && node.teamBLabel
                         ? ` · ${node.teamALabel} — ${node.teamBLabel}`
                         : " · Adversaires à déterminer"}

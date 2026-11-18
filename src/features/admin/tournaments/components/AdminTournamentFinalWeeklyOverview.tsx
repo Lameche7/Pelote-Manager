@@ -84,7 +84,9 @@ export function AdminTournamentFinalWeeklyOverview({
     : 0;
   useEffect(() => {
     if (!focusDate) return;
-    const offset = Math.round((mondayOf(focusDate).getTime() - firstMonday.getTime()) / 604_800_000);
+    const offset = Math.round(
+      (mondayOf(focusDate).getTime() - firstMonday.getTime()) / 604_800_000,
+    );
     setWeekIndex(Math.max(0, Math.min(maxIndex, offset)));
   }, [focusDate, first, last, maxIndex]);
   const currentIndex = Math.min(weekIndex, maxIndex);
@@ -532,11 +534,18 @@ export function AdminTournamentFinalWeeklyOverview({
                             {entry.kind === "free" && onSelectFreeSlot && (
                               <button
                                 type="button"
-                                disabled={disabled || !workspace.slots.some((slot) => slot.id === entry.slot.id)}
+                                disabled={
+                                  disabled ||
+                                  !workspace.slots.some(
+                                    (slot) => slot.id === entry.slot.id,
+                                  )
+                                }
                                 aria-pressed={selectedSlotId === entry.slot.id}
                                 onClick={() => onSelectFreeSlot(entry.slot)}
                               >
-                                {selectedSlotId === entry.slot.id ? "Créneau sélectionné" : "Choisir ce créneau"}
+                                {selectedSlotId === entry.slot.id
+                                  ? "Créneau sélectionné"
+                                  : "Choisir ce créneau"}
                               </button>
                             )}
                           </div>

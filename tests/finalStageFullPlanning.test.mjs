@@ -465,10 +465,7 @@ test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux
   assert.match(admin, /quickRecommendations/);
   assert.match(admin, /finalRoundDateWindow/);
   assert.match(calendar, /focusDate/);
-  assert.match(
-    admin,
-    /<AdminTournamentFinalWeeklyOverview/,
-  );
+  assert.match(admin, /<AdminTournamentFinalWeeklyOverview/);
   assert.match(service, /admin_get_tournament_final_external_occupied_slots/);
   assert.match(service, /weeklyOccupiedSlotIds/);
   assert.match(migration, /public\.has_club_permission/);
