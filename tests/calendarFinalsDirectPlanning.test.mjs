@@ -51,3 +51,14 @@ test("admin mutations reuse protected existing final-stage RPCs", () => {
   assert.match(admin, /Cette action ne publie pas de/);
   assert.doesNotMatch(admin, /publishSeries|advanceSeries|publish\(/);
 });
+
+test("calendar manual fallback lists only complete finals without an automatic placement", () => {
+  assert.match(admin, /node\.teamAId && node\.teamBId/);
+  assert.match(admin, /!node\.resourceId/);
+  assert.match(admin, /!node\.playDate/);
+  assert.match(admin, /!node\.startsAt/);
+  assert.match(admin, /!node\.endsAt/);
+  assert.match(admin, /unplanned\.some\(\(node\) => nodeKey\(node\) === selectedNode\)/);
+  assert.match(admin, /Aucune rencontre complète ne reste à programmer manuellement/);
+  assert.match(admin, /Boolean\(projection\)/);
+});
