@@ -158,6 +158,11 @@ export function AdminBlockedFinalsAlerts() {
                     ? ` · ${item.playDate} à ${item.startsAt.slice(0, 5)}`
                     : ""}
                 </small>
+                <Link
+                  to={`/admin/tournois/qualifications?tournamentId=${encodeURIComponent(item.tournamentId)}&matchId=${encodeURIComponent(item.matchId)}`}
+                >
+                  Programmer cette rencontre
+                </Link>
               </div>
             </li>
           ))}
@@ -165,7 +170,7 @@ export function AdminBlockedFinalsAlerts() {
       )}
       {alerts.length > 0 && (
         <Link to="/admin/tournois/qualifications">
-          Ouvrir la planification des phases finales
+          Voir le planning des phases finales
         </Link>
       )}
     </aside>
