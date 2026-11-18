@@ -99,6 +99,7 @@ test("manual final publication uses the existing protected automatic engine", ()
   assert.match(admin, /Créneau enregistré, mais non publié/);
 });
 
+// Published finals are the sole source of the displayed knockout-stage badge.
 test("calendar cards display the published tournament final round, never projected brackets", () => {
   const service = file(
     "../src/features/reservations/services/reservationCalendarService.ts",
