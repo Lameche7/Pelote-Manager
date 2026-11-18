@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TournamentFinalFullPlanningWorkspace } from "../services/tournamentFinalStageAdminService";
 import type { PlanningSlot } from "@/features/tournaments/domain/planningEngine";
 import {
@@ -55,11 +55,13 @@ export function AdminTournamentFinalWeeklyOverview({
   workspace,
   onSelectFreeSlot,
   selectedSlotId,
+  focusDate,
   disabled = false,
 }: {
   workspace: TournamentFinalFullPlanningWorkspace;
   onSelectFreeSlot?: (slot: PlanningSlot) => void;
   selectedSlotId?: string | null;
+  focusDate?: string | null;
   disabled?: boolean;
 }) {
   const [weekIndex, setWeekIndex] = useState(0);
@@ -80,6 +82,11 @@ export function AdminTournamentFinalWeeklyOverview({
         ),
       )
     : 0;
+  useEffect(() => {
+    if (!focusDate) return;
+    const offset = Math.round((mondayOf(focusDate).getTime() - firstMonday.getTime()) / 604_800_000);
+    setWeekIndex(Math.max(0, Math.min(maxIndex, offset)));
+  }, [focusDate, first, last, maxIndex]);
   const currentIndex = Math.min(weekIndex, maxIndex);
   const monday = addDays(firstMonday, currentIndex * 7);
   const days = Array.from({ length: 7 }, (_, index) =>
