@@ -14,7 +14,7 @@ declare
   entry record;
   clash record;
   current_match public.tournament_matches;
-  current_plan public.tournament_match_planning;
+  current_node public.tournament_final_planning_nodes;
   current_event uuid;
   tz text;
   start_instant timestamptz;
@@ -180,6 +180,19 @@ begin
     select x.series_id,x.resource_id,x.starts_at,x.ends_at
     from jsonb_to_recordset(payload) as x(series_id uuid,resource_id uuid,starts_at time,ends_at time)
   loop
+    select * into current_node from public.tournament_final_planning_nodes n
+    where n.tournament_id=target_tournament_id and n.series_id=entry.series_id
+      and n.round='final';
+    -- A Save click with unchanged hours is not a reschedule; do not send
+    -- duplicate notifications or re-create its calendar occupation.
+    if current_node.resource_id=entry.resource_id
+      and current_node.play_date=chosen.finals_ends_on
+      and current_node.starts_at=entry.starts_at
+      and current_node.ends_at=entry.ends_at
+      and current_node.source='manual' then
+      continue;
+    end if;
+
     update public.tournament_final_planning_nodes n
     set resource_id=entry.resource_id,play_date=chosen.finals_ends_on,
         starts_at=entry.starts_at,ends_at=entry.ends_at,
