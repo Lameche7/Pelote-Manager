@@ -48,8 +48,8 @@ test("admin mutations reuse protected existing final-stage RPCs", () => {
   assert.match(admin, /slotId: null/);
   assert.match(admin, /!node\.published/);
   assert.match(admin, /node\.resultStatus !== "validated"/);
-  assert.match(admin, /Cette\s+action ne publie pas de/);
-  assert.doesNotMatch(admin, /publishSeries|advanceSeries|publish\(/);
+  assert.match(admin, /publishReadyManualFinal/);
+  assert.doesNotMatch(admin, /publishSeries|advanceSeries|\.publish\(/);
 });
 
 test("calendar manual fallback lists only complete finals without an automatic placement", () => {
@@ -67,5 +67,21 @@ test("calendar manual fallback lists only complete finals without an automatic p
     /Aucune rencontre complète ne reste à programmer manuellement/,
   );
   assert.match(admin, /Boolean\(projection\)/);
-  assert.match(admin, /Cette\s+action ne publie pas de/);
+  assert.match(admin, /publishReadyManualFinal/);
+});
+
+test("manual final publication uses the existing protected automatic engine", () => {
+  const service = file("../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts");
+  const quick = file("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx");
+  const migration = file("../supabase/migrations/20261118153000_publish_ready_manually_placed_finals.sql");
+  assert.match(admin, /publishReadyManualFinal/);
+  assert.match(quick, /publishReadyManualFinal/);
+  assert.match(service, /admin_publish_ready_manual_final/);
+  assert.match(migration, /has_club_permission/);
+  assert.match(migration, /team_a_id is null/);
+  assert.match(migration, /team_b_id is null/);
+  assert.match(migration, /tournament_team_availability_slots/);
+  assert.match(migration, /auto_progress_independent_tournament_final_branches/);
+  assert.match(migration, /revoke all on function public.admin_publish_ready_manual_final/);
+  assert.match(admin, /Créneau enregistré, mais non publié/);
 });
