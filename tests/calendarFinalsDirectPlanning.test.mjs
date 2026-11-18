@@ -100,9 +100,13 @@ test("manual final publication uses the existing protected automatic engine", ()
 });
 
 test("calendar cards display the published tournament final round, never projected brackets", () => {
-  const service = file("../src/features/reservations/services/reservationCalendarService.ts");
+  const service = file(
+    "../src/features/reservations/services/reservationCalendarService.ts",
+  );
   const domain = file("../src/features/reservations/domain/calendar.ts");
-  const migration = file("../supabase/migrations/20261118160000_public_tournament_final_calendar_round_labels.sql");
+  const migration = file(
+    "../supabase/migrations/20261118160000_public_tournament_final_calendar_round_labels.sql",
+  );
   assert.match(service, /list_published_tournament_final_calendar_rounds/);
   assert.match(service, /slot\.occupation_type === "match"/);
   assert.match(service, /tournamentFinalRound:/);
