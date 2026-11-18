@@ -131,6 +131,7 @@ export function AdminTournamentFinalFullPlanning({
   const [editingRound, setEditingRound] = useState<number | null>(null);
   const [quickNodeId, setQuickNodeId] = useState("");
   const [quickSlotId, setQuickSlotId] = useState("");
+  const [quickFocusDate, setQuickFocusDate] = useState<string | null>(null);
   const [quickQueueFilter, setQuickQueueFilter] = useState("all");
   const [finalDayStart, setFinalDayStart] = useState("");
   const [finalDayEnd, setFinalDayEnd] = useState("");
@@ -340,6 +341,50 @@ export function AdminTournamentFinalFullPlanning({
     : quickValidation && !quickValidation.valid
     ? quickValidation.diagnostics.find((diagnostic) => diagnostic.nodeId === quickNodeId)?.message ?? quickValidation.diagnostics[0]?.message
     : null;
+  const quickRecommendations = useMemo(() => {
+    if (!workspace || !quickNode || !quickAssignable) return [];
+    const occupied = new Set(workspace.weeklyOccupiedSlotIds.map((value) =>
+      value.split("|").map((part, index) => index >= 2 ? part.slice(0, 5) : part).join("|"),
+    ));
+    const assigned = new Set(workspace.nodes.filter((row) => rowNodeId(row) !== quickNode.id && row.resourceId && row.playDate && row.startsAt && row.endsAt).map((row) =>
+      `${row.resourceId}|${row.playDate}|${row.startsAt?.slice(0, 5)}|${row.endsAt?.slice(0, 5)}`,
+    ));
+    const suggestions = [] as Array<{ slot: PlanningSlot; common: boolean; normal: boolean }>;
+    const normalWindow = workspace.tournament.finalsStartsOn && workspace.tournament.finalsEndsOn
+      ? finalRoundDateWindow({ node: quickNode, nodes, finalsStartsOn: workspace.tournament.finalsStartsOn, finalsEndsOn: workspace.tournament.finalsEndsOn })
+      : null;
+    for (const slot of [...workspace.slots].sort((a, b) => slotSortKey(a).localeCompare(slotSortKey(b)))) {
+      const key = `${slot.resourceId}|${slot.date}|${slot.startsAt.slice(0, 5)}|${slot.endsAt.slice(0, 5)}`;
+      if (occupied.has(key) || assigned.has(key)) continue;
+      const assignments = [
+        ...persistedAssignments.filter((item) => item.nodeId !== quickNode.id),
+        { nodeId: quickNode.id, slotId: slot.id },
+      ];
+      const validation = validateFullFinalStagePlanning({
+        nodes,
+        slots: workspace.slots,
+        availability: workspace.availability,
+        assignments,
+        minimumRestMinutes: workspace.tournament.minimumRestMinutes,
+        respectAvailability: false,
+        finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
+        finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
+      });
+      if (!validation.valid) continue;
+      suggestions.push({
+        slot,
+        common: isFinalStageSlotCommonForNode({ node: quickNode, slot, availability: workspace.availability }),
+        normal: !normalWindow || (slot.date >= normalWindow.earliest && slot.date <= normalWindow.latest),
+      });
+    }
+    // Explicit preference order: jointly available within the normal round window.
+    return suggestions.sort((a, b) =>
+      Number(b.common && b.normal) - Number(a.common && a.normal) ||
+      Number(b.common) - Number(a.common) ||
+      Number(b.normal) - Number(a.normal) ||
+      slotSortKey(a.slot).localeCompare(slotSortKey(b.slot)),
+    ).slice(0, 6);
+  }, [workspace, quickNode, quickAssignable, nodes, persistedAssignments]);
   const plannedCount = persistedAssignments.length;
   const unplannedCount = Math.max(0, nodes.length - plannedCount);
 
@@ -380,6 +425,7 @@ export function AdminTournamentFinalFullPlanning({
       }], workspace.slots);
       setQuickNodeId("");
       setQuickSlotId("");
+      setQuickFocusDate(null);
       return "Rencontre préprogrammée. La publication et les notifications restent séparées.";
     });
 
@@ -664,7 +710,7 @@ export function AdminTournamentFinalFullPlanning({
               return (
                 <button type="button" key={node.id} disabled={busy}
                   aria-pressed={quickNodeId === node.id}
-                  onClick={() => { setQuickNodeId(node.id); setQuickSlotId(""); setError(""); }}>
+                  onClick={() => { setQuickNodeId(node.id); setQuickSlotId(""); setQuickFocusDate(null); setError(""); }}>
                   {series?.name ?? "Série"} · {roundLabel(node.round)} : {teams}
                   {unprogrammedDiagnostics.get(node.id) ? ` · ${unprogrammedDiagnostics.get(node.id)}` : ""}
                 </button>
@@ -674,7 +720,7 @@ export function AdminTournamentFinalFullPlanning({
         )}
         <label>
           Partie à programmer
-          <select value={quickNodeId} disabled={busy} onChange={(event) => { setQuickNodeId(event.target.value); setQuickSlotId(""); setError(""); }}>
+          <select value={quickNodeId} disabled={busy} onChange={(event) => { setQuickNodeId(event.target.value); setQuickSlotId(""); setQuickFocusDate(null); setError(""); }}>
             <option value="">Choisir une rencontre</option>
             {nodes.filter((node) => {
               const row = rowById.get(node.id);
@@ -693,6 +739,33 @@ export function AdminTournamentFinalFullPlanning({
             })}
           </select>
         </label>
+        {quickNode && (
+          <div className="final-stage-full-planning__recommendations">
+            <h5>Créneaux conseillés</h5>
+            {quickRecommendations.length === 0 ? (
+              <p role="status">Aucun créneau configuré sans conflit. Utilisez la programmation avancée ou ajustez les disponibilités.</p>
+            ) : (
+              <div className="final-stage-full-planning__series-grid">
+                {quickRecommendations.map(({ slot, common, normal }) => (
+                  <button
+                    key={slot.id}
+                    type="button"
+                    disabled={busy}
+                    aria-pressed={quickSlotId === slot.id}
+                    onClick={() => { setQuickSlotId(slot.id); setQuickFocusDate(slot.date); setError(""); }}
+                  >
+                    {slotLabel(slot)} · {common && normal
+                      ? "✓ Disponibilités communes"
+                      : common
+                        ? "⚠ Dérogation de période"
+                        : "⚠ Disponibilités à confirmer"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <small>Propositions non réservées : leur compatibilité est revérifiée lors de l'enregistrement.</small>
+          </div>
+        )}
         {quickSlot && <p role="status">Créneau retenu : {slotLabel(quickSlot)}</p>}
         {quickNode && quickSlot && (
           <p role="status">
@@ -711,6 +784,7 @@ export function AdminTournamentFinalFullPlanning({
       <AdminTournamentFinalWeeklyOverview
         workspace={workspace}
         selectedSlotId={quickSlotId}
+        focusDate={quickFocusDate}
         disabled={busy}
         onSelectFreeSlot={(slot) => { setQuickSlotId(slot.id); setError(""); }}
       />
