@@ -1076,7 +1076,10 @@ export function AdminTournamentFinalFullPlanning({
           <AdminTournamentFinalDayLineup
             tournamentId={tournamentId}
             workspace={workspace}
-            onChanged={async () => { await load(); await onPlanningChanged?.(); }}
+            onChanged={async () => {
+              await load();
+              await onPlanningChanged?.();
+            }}
           />
           <p>
             {finalDaySlotCount} créneau(x) disponible(s) à cette date. Les

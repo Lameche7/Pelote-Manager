@@ -138,10 +138,13 @@
   margin-right: 0.35rem;
 }
 
-
 .reservation-slot--locked.reservation-slot--final-day-program {
   border-color: var(--tournament-series-color, #64748b);
-  background: color-mix(in srgb, var(--tournament-series-color, #64748b) 12%, #fff);
+  background: color-mix(
+    in srgb,
+    var(--tournament-series-color, #64748b) 12%,
+    #fff
+  );
   color: #0f172a;
 }
 

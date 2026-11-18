@@ -124,11 +124,19 @@ test("calendar cards display the published tournament final round, never project
 });
 
 test("the final day running order is editable and updates the public calendar without fake bookings", () => {
-  const editor = file("../src/features/admin/tournaments/components/AdminTournamentFinalDayLineup.tsx");
-  const planning = file("../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx");
-  const service = file("../src/features/reservations/services/reservationCalendarService.ts");
+  const editor = file(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalDayLineup.tsx",
+  );
+  const planning = file(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+  );
+  const service = file(
+    "../src/features/reservations/services/reservationCalendarService.ts",
+  );
   const slot = file("../src/features/reservations/components/SlotCard.tsx");
-  const mutation = file("../supabase/migrations/20261118170000_final_day_lineup_reorder_and_public_calendar.sql");
+  const mutation = file(
+    "../supabase/migrations/20261118170000_final_day_lineup_reorder_and_public_calendar.sql",
+  );
   assert.match(planning, /AdminTournamentFinalDayLineup/);
   assert.match(editor, /Enregistrer le programme des finales/);
   assert.match(editor, /Monter/);

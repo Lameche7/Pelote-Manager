@@ -58,7 +58,8 @@ export function SlotCard({
   const slotTime = formatTime(slot.startsAt, timezone);
   const isChampionship = slot.reservationAccess === "championship";
   const isFinalsHold = slot.occupationType === "tournament_finals_hold";
-  const isFinalDayProgram = slot.occupationType === "tournament_final_day_program";
+  const isFinalDayProgram =
+    slot.occupationType === "tournament_final_day_program";
 
   if (slot.status === "occupied") {
     const bookedBy = slot.bookedByName ?? "Réservation";
@@ -132,12 +133,15 @@ export function SlotCard({
     const openingLabel = slot.bookingOpensAt
       ? formatBookingOpening(slot.bookingOpensAt, timezone)
       : "prochainement";
-    const previewStyle = isFinalDayProgram && slot.displayColor
-      ? ({
-          "--tournament-series-color": slot.displayColor,
-          "--tournament-series-contrast": getContrastTextColor(slot.displayColor),
-        } as CSSProperties)
-      : undefined;
+    const previewStyle =
+      isFinalDayProgram && slot.displayColor
+        ? ({
+            "--tournament-series-color": slot.displayColor,
+            "--tournament-series-contrast": getContrastTextColor(
+              slot.displayColor,
+            ),
+          } as CSSProperties)
+        : undefined;
     const LockedContainer = canInspectLocked ? "button" : "div";
     return (
       <LockedContainer
