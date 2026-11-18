@@ -173,8 +173,23 @@ begin
   where occ.id=er.calendar_occupation_id
     and m.tournament_id=target_tournament_id and m.phase='finals'
     and m.final_round='final'
-    and exists (select 1 from jsonb_to_recordset(payload) as p(series_id uuid)
-      where p.series_id=m.series_id);
+    and exists (
+      select 1
+      from jsonb_to_recordset(payload) as p(
+        series_id uuid, resource_id uuid, starts_at time, ends_at time
+      )
+      left join public.tournament_final_planning_nodes n
+        on n.tournament_id=target_tournament_id and n.series_id=p.series_id
+          and n.round='final'
+      where p.series_id=m.series_id
+        and (
+          n.source is distinct from 'manual'
+          or n.resource_id is distinct from p.resource_id
+          or n.play_date is distinct from chosen.finals_ends_on
+          or n.starts_at is distinct from p.starts_at
+          or n.ends_at is distinct from p.ends_at
+        )
+    );
 
   for entry in
     select x.series_id,x.resource_id,x.starts_at,x.ends_at
