@@ -223,7 +223,6 @@ export function TournamentFinalBracket({
                   {Array.from({ length: round.matchCount }, (_, index) => {
                     const match =
                       matches.find((item) => item.displayOrder === index) ??
-                      matches[index] ??
                       null;
                     return (
                       <FinalMatchCard
