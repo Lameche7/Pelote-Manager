@@ -70,6 +70,7 @@ test("calendar manual fallback lists only complete finals without an automatic p
   assert.match(admin, /publishReadyManualFinal/);
 });
 
+// Regression: keep manually chosen slots in the existing safe publication pipeline.
 test("manual final publication uses the existing protected automatic engine", () => {
   const service = file(
     "../src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
