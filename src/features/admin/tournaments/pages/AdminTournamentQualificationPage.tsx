@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { AdminFinalsCommandCenter } from "@/features/admin/tournaments/components/AdminFinalsCommandCenter";
 import { buildFinalStagePlan } from "@/features/tournaments/domain/finalStageEngine";
 import { tournamentFinalStageAdminService } from "@/features/admin/tournaments/services/tournamentFinalStageAdminService";
 import { AdminTournamentFinalStageControl } from "@/features/admin/tournaments/components/AdminTournamentFinalStageControl";
@@ -49,8 +51,12 @@ const sideLabel = (
 };
 
 export function AdminTournamentQualificationPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTournament = searchParams.get("tournamentId");
+  const requestedMatch = searchParams.get("matchId");
+  const [hasGeneratedStage, setHasGeneratedStage] = useState(false);
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(requestedTournament ?? "");
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [crossPoolsBySeries, setCrossPoolsBySeries] = useState<
@@ -74,7 +80,8 @@ export function AdminTournamentQualificationPage() {
             (item) =>
               !["completed", "archived", "cancelled"].includes(item.status),
           ) ?? items[0];
-        if (first) setSelectedId(first.id);
+        const requested = items.find((item) => item.id === requestedTournament);
+        if (requested || first) setSelectedId((requested ?? first)?.id ?? "");
       })
       .catch((loadError: unknown) =>
         setError(
@@ -87,8 +94,13 @@ export function AdminTournamentQualificationPage() {
   }, []);
 
   useEffect(() => {
+    if (requestedTournament) setSelectedId(requestedTournament);
+  }, [requestedTournament]);
+
+  useEffect(() => {
     if (!selectedId) {
       setDetail(null);
+      setHasGeneratedStage(false);
       setCounts({});
       setCrossPoolsBySeries({});
       setFinalsStartsOn("");
@@ -107,6 +119,7 @@ export function AdminTournamentQualificationPage() {
       .then(([loadedDetail, qualifiers, stage]) => {
         if (!active) return;
         setDetail(loadedDetail);
+        setHasGeneratedStage(stage.series.some((series) => series.generated));
         setCrossPoolsBySeries(
           Object.fromEntries(
             stage.series.map((series) => [series.seriesId, series.crossPools]),
@@ -245,9 +258,9 @@ export function AdminTournamentQualificationPage() {
           <p className="admin-page__eyebrow">Tournois</p>
           <h1>Qualifications & phase finale</h1>
           <p className="admin-page__lead">
-            Définissez le nombre de qualifiés par série. Pelote Manager déduit
-            automatiquement les exemptions, les barrages et le tableau principal
-            à partir du classement général toutes poules confondues.
+            Retrouvez toutes les rencontres et programmez directement celles
+            dont les adversaires sont connus. Le paramétrage sportif initial
+            reste accessible dans les options avancées.
           </p>
         </div>
       </header>
@@ -274,6 +287,7 @@ export function AdminTournamentQualificationPage() {
             disabled={loading || saving}
             onChange={(event) => {
               setSelectedId(event.target.value);
+              setSearchParams(event.target.value ? { tournamentId: event.target.value } : {});
               setMessage("");
             }}
           >
@@ -290,7 +304,17 @@ export function AdminTournamentQualificationPage() {
       {loading && <p role="status">Chargement…</p>}
 
       {!loading && detail && (
-        <div className="qualification-series-list">
+        <>
+          {hasGeneratedStage && selectedId && (
+            <AdminFinalsCommandCenter
+              tournamentId={selectedId}
+              focusMatchId={requestedMatch}
+            />
+          )}
+          <details className="admin-card qualification-advanced" open={!hasGeneratedStage ? true : undefined}>
+            <summary>Paramétrage initial du tournoi · Qualifications, croisements et anciens outils</summary>
+            <p>Ces réglages servent à préparer le tableau. Une fois la phase finale lancée, utilisez le planning vivant ci-dessus pour gérer les parties.</p>
+            <div className="qualification-series-list">
           <section
             className="admin-card qualification-series"
             aria-label="Dates de la phase finale"
@@ -497,7 +521,9 @@ export function AdminTournamentQualificationPage() {
               }
             />
           )}
-        </div>
+            </div>
+          </details>
+        </>
       )}
     </section>
   );
