@@ -16,12 +16,12 @@ test("only Lourdes 2026 eighth finals receive the December 1 deadline", () => {
   assert.ok(migration.includes("final_round = 'round_of_16'"));
 });
 
-test("the automatic engine prefers earlier slots and protects downstream rounds", () => {
+test("the engine prefers early slots and guards quarters", () => {
   assert.ok(migration.includes("regular_latest_date := latest_date"));
   assert.ok(migration.includes("slot.play_date > regular_latest_date"));
   assert.ok(migration.includes("public.tournament_final_node_depends_on"));
   assert.ok(migration.includes("next_round_deadline"));
-  assert.ok(migration.includes("latest_date := least(latest_date, next_round_deadline)"));
+  assert.ok(\n    migration.includes("latest_date := least(latest_date, next_round_deadline)"),\n  );
 });
 
 test("the change does not change other rounds' deadlines", () => {
