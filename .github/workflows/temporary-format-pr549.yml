@@ -1,0 +1,32 @@
+name: Temporary formatting PR 549
+on:
+  pull_request:
+    types: [synchronize]
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          ref: feature/finales-cartes-prioritaires-20261118
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format files changed for queue UI
+        run: |
+          npx prettier --write \
+            src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx \
+            src/features/admin/tournaments/pages/AdminTournamentQualificationPage.css \
+            tests/finalStageFullPlanning.test.mjs
+      - name: Commit formatted files and remove temporary workflow
+        run: |
+          git rm .github/workflows/temporary-format-pr549.yml
+          git add src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx src/features/admin/tournaments/pages/AdminTournamentQualificationPage.css tests/finalStageFullPlanning.test.mjs
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style: format finals queue UI with Prettier'
+          git push origin HEAD:feature/finales-cartes-prioritaires-20261118
