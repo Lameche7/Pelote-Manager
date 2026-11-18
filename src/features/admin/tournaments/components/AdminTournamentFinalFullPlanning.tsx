@@ -131,6 +131,7 @@ export function AdminTournamentFinalFullPlanning({
   const [editingRound, setEditingRound] = useState<number | null>(null);
   const [quickNodeId, setQuickNodeId] = useState("");
   const [quickSlotId, setQuickSlotId] = useState("");
+  const [quickQueueFilter, setQuickQueueFilter] = useState("all");
   const [finalDayStart, setFinalDayStart] = useState("");
   const [finalDayEnd, setFinalDayEnd] = useState("");
   const [exclude2130, setExclude2130] = useState(false);
@@ -295,6 +296,13 @@ export function AdminTournamentFinalFullPlanning({
     ? (workspace?.slots ?? []).filter((slot) => slot.date === officialFinalDate)
         .length
     : 0;
+  const quickQueue = nodes.filter((node) => {
+    const row = rowById.get(node.id);
+    return row && !persistedByNode.has(node.id) && !row.published && row.resultStatus !== "validated";
+  });
+  const visibleQuickQueue = quickQueue.filter((node) =>
+    quickQueueFilter === "all" || node.seriesId === quickQueueFilter,
+  );
   const quickNode = nodes.find((node) => node.id === quickNodeId);
   const quickSlot = workspace?.slots.find((slot) => slot.id === quickSlotId);
   const quickRow = quickNode ? rowById.get(quickNode.id) : null;
@@ -302,6 +310,13 @@ export function AdminTournamentFinalFullPlanning({
   const quickCommon = quickNode && quickSlot && workspace
     ? isFinalStageSlotCommonForNode({ node: quickNode, slot: quickSlot, availability: workspace.availability })
     : false;
+  const quickSlotKey = quickSlot
+    ? `${quickSlot.resourceId}|${quickSlot.date}|${quickSlot.startsAt.slice(0, 5)}|${quickSlot.endsAt.slice(0, 5)}`
+    : "";
+  const quickOccupied = Boolean(workspace && quickSlot && (
+    workspace.weeklyOccupiedSlotIds.some((value) => value.split("|").map((part, i) => i >= 2 ? part.slice(0, 5) : part).join("|") === quickSlotKey) ||
+    workspace.nodes.some((row) => rowNodeId(row) !== quickNodeId && row.resourceId === quickSlot.resourceId && row.playDate === quickSlot.date && row.startsAt?.slice(0, 5) === quickSlot.startsAt.slice(0, 5) && row.endsAt?.slice(0, 5) === quickSlot.endsAt.slice(0, 5))
+  ));
   const quickAssignments = quickNode && quickSlot
     ? [
         ...persistedAssignments.filter((assignment) => assignment.nodeId !== quickNode.id),
@@ -320,7 +335,9 @@ export function AdminTournamentFinalFullPlanning({
         finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
       })
     : null;
-  const quickError = quickValidation && !quickValidation.valid
+  const quickError = quickOccupied
+    ? "Ce créneau est déjà occupé par une réservation ou une autre rencontre."
+    : quickValidation && !quickValidation.valid
     ? quickValidation.diagnostics.find((diagnostic) => diagnostic.nodeId === quickNodeId)?.message ?? quickValidation.diagnostics[0]?.message
     : null;
   const plannedCount = persistedAssignments.length;
@@ -347,7 +364,7 @@ export function AdminTournamentFinalFullPlanning({
 
   const saveQuickAssignment = () =>
     run(async () => {
-      if (!workspace || !quickNode || !quickSlot || !quickAssignable || !quickValidation?.valid) {
+      if (!workspace || !quickNode || !quickSlot || !quickAssignable || quickOccupied || !quickValidation?.valid) {
         throw new Error("Sélectionnez une rencontre modifiable et un créneau compatible.");
       }
       // A slot without common availability is an explicit organizer override.
@@ -625,11 +642,39 @@ export function AdminTournamentFinalFullPlanning({
       )}
 
       <section className="final-stage-full-planning__quick" aria-label="Programmation rapide">
-        <h4>Programmer une rencontre</h4>
-        <p>Choisissez une partie, puis cliquez sur un créneau libre du planning ci-dessous.</p>
+        <h4>Rencontres à programmer ({quickQueue.length})</h4>
+        <p>Choisissez une partie en attente, puis un créneau libre dans le calendrier. Les rencontres déjà placées restent modifiables dans le sélecteur.</p>
+        <label>
+          Afficher les rencontres de
+          <select value={quickQueueFilter} onChange={(event) => setQuickQueueFilter(event.target.value)}>
+            <option value="all">Toutes les séries</option>
+            {workspace.series.map((series) => <option key={series.id} value={series.id}>{series.name}</option>)}
+          </select>
+        </label>
+        {visibleQuickQueue.length === 0 ? (
+          <p role="status">Aucune rencontre en attente pour ce filtre.</p>
+        ) : (
+          <div className="final-stage-full-planning__series-grid">
+            {visibleQuickQueue.map((node) => {
+              const series = workspace.series.find((item) => item.id === node.seriesId);
+              const row = rowById.get(node.id);
+              const teams = row?.teamALabel && row?.teamBLabel
+                ? `${row.teamALabel} — ${row.teamBLabel}`
+                : describeFinalStageOpponents({ node, nodes, seeds: series?.seeds ?? [], crossPools: series?.crossPools ?? false });
+              return (
+                <button type="button" key={node.id} disabled={busy}
+                  aria-pressed={quickNodeId === node.id}
+                  onClick={() => { setQuickNodeId(node.id); setQuickSlotId(""); setError(""); }}>
+                  {series?.name ?? "Série"} · {roundLabel(node.round)} : {teams}
+                  {unprogrammedDiagnostics.get(node.id) ? ` · ${unprogrammedDiagnostics.get(node.id)}` : ""}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <label>
           Partie à programmer
-          <select value={quickNodeId} disabled={busy} onChange={(event) => { setQuickNodeId(event.target.value); setError(""); }}>
+          <select value={quickNodeId} disabled={busy} onChange={(event) => { setQuickNodeId(event.target.value); setQuickSlotId(""); setError(""); }}>
             <option value="">Choisir une rencontre</option>
             {nodes.filter((node) => {
               const row = rowById.get(node.id);
@@ -658,7 +703,7 @@ export function AdminTournamentFinalFullPlanning({
                 : "⚠ Disponibilités non communes ou encore inconnues : validation exceptionnelle nécessaire."}
           </p>
         )}
-        <button type="button" disabled={busy || !quickAssignable || !quickSlot || !quickValidation?.valid} onClick={() => void saveQuickAssignment()}>
+        <button type="button" disabled={busy || !quickAssignable || !quickSlot || quickOccupied || !quickValidation?.valid} onClick={() => void saveQuickAssignment()}>
           {busy ? "Enregistrement…" : "Préprogrammer la rencontre ici"}
         </button>
       </section>
