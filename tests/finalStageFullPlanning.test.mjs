@@ -463,6 +463,8 @@ test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux
   assert.match(admin, /saveQuickAssignment/);
   assert.match(admin, /Créneaux conseillés/);
   assert.match(admin, /quickRecommendations/);
+  assert.match(admin, /weeklyOccupiedSlotIds/);
+  assert.match(admin, /minimumRestMinutes/);
   assert.match(admin, /finalRoundDateWindow/);
   assert.match(calendar, /focusDate/);
   assert.match(admin, /<AdminTournamentFinalWeeklyOverview/);
