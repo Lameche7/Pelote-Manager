@@ -179,7 +179,7 @@ export function AdminTournamentFinalWeeklyOverview({
           slot,
           kind: "match",
           title,
-          detail: `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.published ? " · Publié" : ""}`,
+          detail: `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.resultStatus === "validated" ? " · Jouée" : node.published ? " · Publiée" : " · Projetée"}`,
           seriesId: node.seriesId,
           provisional,
           color: series?.color,
