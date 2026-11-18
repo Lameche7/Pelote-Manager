@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { buildFinalStagePlan } from "@/features/tournaments/domain/finalStageEngine";
 import { tournamentFinalStageAdminService } from "@/features/admin/tournaments/services/tournamentFinalStageAdminService";
 import { AdminTournamentFinalStageControl } from "@/features/admin/tournaments/components/AdminTournamentFinalStageControl";
@@ -49,6 +50,8 @@ const sideLabel = (
 };
 
 export function AdminTournamentQualificationPage() {
+  const [searchParams] = useSearchParams();
+  const requestedTournamentId = searchParams.get("tournoi");
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
@@ -70,6 +73,7 @@ export function AdminTournamentQualificationPage() {
       .then((items) => {
         setTournaments(items);
         const first =
+          items.find((item) => item.id === requestedTournamentId) ??
           items.find(
             (item) =>
               !["completed", "archived", "cancelled"].includes(item.status),
@@ -84,7 +88,7 @@ export function AdminTournamentQualificationPage() {
         ),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [requestedTournamentId]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -291,6 +295,8 @@ export function AdminTournamentQualificationPage() {
 
       {!loading && detail && (
         <div className="qualification-series-list">
+          <details className="admin-card qualification-series">
+            <summary>Paramètres et tableaux théoriques de qualification (ouvrir pour modifier)</summary>
           <section
             className="admin-card qualification-series"
             aria-label="Dates de la phase finale"
@@ -485,6 +491,8 @@ export function AdminTournamentQualificationPage() {
               {saving ? "Enregistrement…" : "Enregistrer les qualifications"}
             </button>
           )}
+
+          </details>
 
           {selectedId && (
             <AdminTournamentFinalStageControl
