@@ -58,6 +58,7 @@ export function SlotCard({
   const slotTime = formatTime(slot.startsAt, timezone);
   const isChampionship = slot.reservationAccess === "championship";
   const isFinalsHold = slot.occupationType === "tournament_finals_hold";
+  const isFinalDayProgram = slot.occupationType === "tournament_final_day_program";
 
   if (slot.status === "occupied") {
     const bookedBy = slot.bookedByName ?? "Réservation";
@@ -131,22 +132,36 @@ export function SlotCard({
     const openingLabel = slot.bookingOpensAt
       ? formatBookingOpening(slot.bookingOpensAt, timezone)
       : "prochainement";
+    const previewStyle = isFinalDayProgram && slot.displayColor
+      ? ({
+          "--tournament-series-color": slot.displayColor,
+          "--tournament-series-contrast": getContrastTextColor(slot.displayColor),
+        } as CSSProperties)
+      : undefined;
     const LockedContainer = canInspectLocked ? "button" : "div";
     return (
       <LockedContainer
         {...(canInspectLocked
           ? { type: "button" as const, onClick: () => onInspect(slot) }
           : {})}
-        className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}${isFinalsHold ? " reservation-slot--finals-hold" : ""}`}
+        className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}${isFinalsHold ? " reservation-slot--finals-hold" : ""}${isFinalDayProgram ? " reservation-slot--tournament reservation-slot--final-day-program" : ""}`}
+        style={previewStyle}
         aria-label={
-          isFinalsHold
-            ? `${slotTime} : réservé aux phases finales du tournoi`
-            : `${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`
+          isFinalDayProgram
+            ? `${slotTime} : ${slot.bookedByName ?? "Finale du tournoi"}`
+            : isFinalsHold
+              ? `${slotTime} : réservé aux phases finales du tournoi`
+              : `${slotTime} : ${isChampionship ? "créneau championnat, " : ""}réservable à partir du ${openingLabel}`
         }
       >
         <strong>{slotTime}</strong>
         <span>
-          {isFinalsHold ? (
+          {isFinalDayProgram ? (
+            <>
+              <strong>Finale du tournoi</strong>
+              <small>{slot.bookedByName}</small>
+            </>
+          ) : isFinalsHold ? (
             "Réservé · Phases finales du tournoi"
           ) : (
             <>
