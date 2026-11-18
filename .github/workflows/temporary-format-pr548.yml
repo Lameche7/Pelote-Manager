@@ -15,7 +15,7 @@ jobs:
           ref: feature/finales-planning-simplifie-20261118
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
       - run: npm ci
       - name: Format the six changed files
