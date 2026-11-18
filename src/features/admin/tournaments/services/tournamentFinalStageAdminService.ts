@@ -625,6 +625,31 @@ export const tournamentFinalStageAdminService = {
     return Number(data ?? 0);
   },
 
+  async saveFinalDayLineup(
+    tournamentId: string,
+    finals: Array<{
+      seriesId: string;
+      resourceId: string;
+      startsAt: string;
+      endsAt: string;
+    }>,
+  ): Promise<number> {
+    const { data, error } = await supabase.rpc(
+      "admin_save_tournament_final_day_lineup",
+      {
+        target_tournament_id: tournamentId,
+        payload: finals.map((final) => ({
+          series_id: final.seriesId,
+          resource_id: final.resourceId,
+          starts_at: final.startsAt,
+          ends_at: final.endsAt,
+        })),
+      },
+    );
+    if (error) fail(error, "Impossible d'enregistrer l'ordre des finales.");
+    return Number(data ?? 0);
+  },
+
   async addFinalDaySlot(
     tournamentId: string,
     startsAt: string,
