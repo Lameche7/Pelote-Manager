@@ -792,6 +792,29 @@ export const tournamentFinalStageAdminService = {
     if (error) fail(error, "Impossible de programmer ce créneau exceptionnel.");
   },
 
+  async publishReadyManualFinal(
+    tournamentId: string,
+    seriesId: string,
+    roundNumber: number,
+    displayOrder: number,
+  ): Promise<boolean> {
+    const { data, error } = await supabase.rpc(
+      "admin_publish_ready_manual_final",
+      {
+        target_tournament_id: tournamentId,
+        target_series_id: seriesId,
+        target_round_number: roundNumber,
+        target_display_order: displayOrder,
+      },
+    );
+    if (error)
+      fail(
+        error,
+        "Le créneau est enregistré, mais la publication automatique a échoué.",
+      );
+    return data === true;
+  },
+
   async saveFullPlanning(
     tournamentId: string,
     updates: TournamentFinalFullPlanningUpdate[],

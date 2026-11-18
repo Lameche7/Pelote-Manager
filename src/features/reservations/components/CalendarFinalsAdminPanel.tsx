@@ -225,8 +225,17 @@ export function CalendarFinalsAdminPanel({
           endsAt: end.time,
         },
       );
+      const published =
+        await tournamentFinalStageAdminService.publishReadyManualFinal(
+          tournamentId,
+          currentNode.seriesId,
+          currentNode.roundNumber,
+          currentNode.displayOrder,
+        );
       setMessage(
-        "Créneau de phase finale enregistré pour les deux adversaires connus.",
+        published
+          ? "Partie publiée dans le calendrier. Les notifications habituelles ont été déclenchées."
+          : "Créneau enregistré, mais non publié : vérifiez les disponibilités communes ou les conflits avant de confirmer la rencontre.",
       );
       await onUpdated();
     } catch (reason: unknown) {
@@ -288,10 +297,11 @@ export function CalendarFinalsAdminPanel({
       {open && (
         <div className="calendar-finals-admin">
           <p>
-            Seules les rencontres dont les deux adversaires sont connus et qui
-            n'ont pas été programmées automatiquement sont proposées. Cette
-            action ne publie pas de nouvelle rencontre et n'envoie aucune
-            notification.
+            Seules les rencontres complètes encore sans créneau sont proposées.
+            Après validation, une partie compatible avec les disponibilités
+            communes est publiée dans le calendrier et les joueurs reçoivent les
+            notifications habituelles. Sinon, le créneau reste provisoire et
+            aucune notification n'est envoyée.
           </p>
           {!projection && (
             <label>
