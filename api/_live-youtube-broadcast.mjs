@@ -168,6 +168,7 @@ export function validateBroadcastInput(payload, now = Date.now()) {
     sourceId,
     scheduledStartTime: scheduled.toISOString(),
     madeForKids: payload.madeForKids,
+    autoStart: payload.autoStart === true,
   };
 }
 
@@ -249,8 +250,8 @@ export async function youtubeCreateBroadcast(
           selfDeclaredMadeForKids: input.madeForKids,
         },
         contentDetails: {
-          enableAutoStart: false,
-          enableAutoStop: false,
+          enableAutoStart: input.autoStart === true,
+          enableAutoStop: input.autoStart === true,
         },
       }),
       cache: "no-store",
