@@ -1,9 +1,6 @@
 // Server-only YouTube broadcast preparation. Do not expose OAuth or ingest secrets.
 import { createDecipheriv } from "node:crypto";
-import {
-  LiveAuthError,
-  required,
-} from "./_live-google-shared.mjs";
+import { LiveAuthError, required } from "./_live-google-shared.mjs";
 
 export function privilegedHeaders(env) {
   const key = required(env, "SUPABASE_SERVICE_ROLE_KEY");
@@ -39,19 +36,28 @@ export async function verifiedLiveClubAdmin(request, env, fetchImpl = fetch) {
     },
   );
   if (!settingsResponse.ok)
-    throw new LiveAuthError(403, "Gestion des directs non autorisée pour ce club.");
+    throw new LiveAuthError(
+      403,
+      "Gestion des directs non autorisée pour ce club.",
+    );
   const settings = await settingsResponse.json();
   if (!/^[0-9a-f-]{36}$/i.test(settings?.club_id ?? ""))
     throw new LiveAuthError(403, "Club actif invalide.");
   if (settings.connection_status !== "connected")
-    throw new LiveAuthError(409, "La chaîne Pilotoki n'est pas connectée à Google.");
+    throw new LiveAuthError(
+      409,
+      "La chaîne Pilotoki n'est pas connectée à Google.",
+    );
   return { clubId: settings.club_id, channelId: settings.youtube_channel_id };
 }
 
 export function decryptRefreshToken(env, record) {
   if (!record?.refresh_token_ciphertext || !record?.refresh_token_iv)
     throw new LiveAuthError(503, "Connexion Google absente.");
-  const key = Buffer.from(required(env, "YOUTUBE_TOKEN_ENCRYPTION_KEY"), "base64");
+  const key = Buffer.from(
+    required(env, "YOUTUBE_TOKEN_ENCRYPTION_KEY"),
+    "base64",
+  );
   if (key.length !== 32)
     throw new LiveAuthError(503, "Clé de chiffrement invalide.");
   try {
@@ -68,7 +74,10 @@ export function decryptRefreshToken(env, record) {
       decipher.final(),
     ]).toString("utf8");
   } catch {
-    throw new LiveAuthError(503, "Autorisation Google illisible. Reconnectez la chaîne.");
+    throw new LiveAuthError(
+      503,
+      "Autorisation Google illisible. Reconnectez la chaîne.",
+    );
   }
 }
 
@@ -81,23 +90,27 @@ export async function googleAccessToken(env, channelId, fetchImpl = fetch) {
       cache: "no-store",
     },
   );
-  if (!response.ok) throw new LiveAuthError(503, "Connexion Google indisponible.");
+  if (!response.ok)
+    throw new LiveAuthError(503, "Connexion Google indisponible.");
   const records = await response.json();
   const record = records?.[0];
   if (record?.channel_id !== channelId)
     throw new LiveAuthError(409, "La chaîne YouTube configurée a changé.");
   const refreshToken = decryptRefreshToken(env, record);
-  const tokensResponse = await fetchImpl("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: required(env, "YOUTUBE_OAUTH_CLIENT_ID"),
-      client_secret: required(env, "YOUTUBE_OAUTH_CLIENT_SECRET"),
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }).toString(),
-    cache: "no-store",
-  });
+  const tokensResponse = await fetchImpl(
+    "https://oauth2.googleapis.com/token",
+    {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: required(env, "YOUTUBE_OAUTH_CLIENT_ID"),
+        client_secret: required(env, "YOUTUBE_OAUTH_CLIENT_SECRET"),
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      }).toString(),
+      cache: "no-store",
+    },
+  );
   if (!tokensResponse.ok)
     throw new LiveAuthError(
       503,
@@ -114,11 +127,20 @@ export function validateBroadcastInput(payload, now = Date.now()) {
     throw new LiveAuthError(400, "Formulaire invalide.");
   const title = typeof payload.title === "string" ? payload.title.trim() : "";
   if (title.length < 5 || title.length > 100)
-    throw new LiveAuthError(400, "Le titre doit contenir entre 5 et 100 caractères.");
+    throw new LiveAuthError(
+      400,
+      "Le titre doit contenir entre 5 et 100 caractères.",
+    );
   if (payload.consentConfirmed !== true)
-    throw new LiveAuthError(400, "Confirmez les autorisations de captation et de diffusion.");
+    throw new LiveAuthError(
+      400,
+      "Confirmez les autorisations de captation et de diffusion.",
+    );
   if (typeof payload.madeForKids !== "boolean")
-    throw new LiveAuthError(400, "Précisez si le direct est destiné aux enfants.");
+    throw new LiveAuthError(
+      400,
+      "Précisez si le direct est destiné aux enfants.",
+    );
   const type = payload.sourceType;
   if (!["tournoi", "championnat", "other"].includes(type))
     throw new LiveAuthError(400, "Type de rencontre invalide.");
@@ -126,12 +148,20 @@ export function validateBroadcastInput(payload, now = Date.now()) {
   // A match association requires a separate authorization check against the club.
   // Until then, reject arbitrary source IDs rather than enabling cross-club references.
   if (sourceId !== null)
-    throw new LiveAuthError(400, "Le rattachement automatique à une rencontre sera disponible prochainement.");
+    throw new LiveAuthError(
+      400,
+      "Le rattachement automatique à une rencontre sera disponible prochainement.",
+    );
   const scheduled = new Date(payload.scheduledStartTime);
-  if (!Number.isFinite(scheduled.getTime()) ||
+  if (
+    !Number.isFinite(scheduled.getTime()) ||
     scheduled.getTime() < now + 60_000 ||
-    scheduled.getTime() > now + 90 * 24 * 60 * 60_000)
-    throw new LiveAuthError(400, "Choisissez une date future dans les 90 prochains jours.");
+    scheduled.getTime() > now + 90 * 24 * 60 * 60_000
+  )
+    throw new LiveAuthError(
+      400,
+      "Choisissez une date future dans les 90 prochains jours.",
+    );
   return {
     title,
     sourceType: type,
@@ -141,7 +171,11 @@ export function validateBroadcastInput(payload, now = Date.now()) {
   };
 }
 
-export async function youtubeCreateBroadcast(accessToken, input, fetchImpl = fetch) {
+export async function youtubeCreateBroadcast(
+  accessToken,
+  input,
+  fetchImpl = fetch,
+) {
   const response = await fetchImpl(
     "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status,contentDetails",
     {
@@ -175,11 +209,20 @@ export async function youtubeCreateBroadcast(accessToken, input, fetchImpl = fet
     );
   const result = await response.json();
   if (!/^[A-Za-z0-9_-]{11}$/.test(result?.id ?? ""))
-    throw new LiveAuthError(502, "YouTube n'a pas fourni d'identifiant de direct.");
+    throw new LiveAuthError(
+      502,
+      "YouTube n'a pas fourni d'identifiant de direct.",
+    );
   return result.id;
 }
 
-export async function storePreparedVideo(env, clubId, videoId, input, fetchImpl = fetch) {
+export async function storePreparedVideo(
+  env,
+  clubId,
+  videoId,
+  input,
+  fetchImpl = fetch,
+) {
   const url = required(env, "VITE_SUPABASE_URL");
   const response = await fetchImpl(`${url}/rest/v1/pilotoki_live_videos`, {
     method: "POST",
