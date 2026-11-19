@@ -26,7 +26,9 @@ const mapSettings = (raw: unknown): ClubLiveSettings => {
         : "admin_only",
     allowReplays: value.allow_replays !== false,
     connectionStatus:
-      value.connection_status === "connected" ? "connected" : "awaiting_google_authorization",
+      value.connection_status === "connected"
+        ? "connected"
+        : "awaiting_google_authorization",
     broadcastAvailable: false,
   };
 };
@@ -35,7 +37,8 @@ export const adminLiveSettingsService = {
   async connectGoogle(): Promise<void> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
-    if (!token) throw new Error("Reconnectez-vous à Pilotoki pour autoriser Google.");
+    if (!token)
+      throw new Error("Reconnectez-vous à Pilotoki pour autoriser Google.");
     const response = await fetch("/api/live-google-connect", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -45,8 +48,13 @@ export const adminLiveSettingsService = {
       authorizationUrl?: string;
       error?: string;
     };
-    if (!response.ok || !payload.authorizationUrl?.startsWith("https://accounts.google.com/")) {
-      throw new Error(payload.error ?? "Impossible de démarrer la connexion Google.");
+    if (
+      !response.ok ||
+      !payload.authorizationUrl?.startsWith("https://accounts.google.com/")
+    ) {
+      throw new Error(
+        payload.error ?? "Impossible de démarrer la connexion Google.",
+      );
     }
     window.location.assign(payload.authorizationUrl);
   },

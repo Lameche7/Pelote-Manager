@@ -61,7 +61,9 @@ test("Google authorization is server-only, club-scoped and launch stays disabled
   const start = read("../api/live-google-connect.mjs");
   const callback = read("../api/live-google-callback.mjs");
   const shared = read("../api/_live-google-shared.mjs");
-  const credentials = read("../supabase/migrations/20261119110000_pilotoki_live_google_oauth_storage.sql");
+  const credentials = read(
+    "../supabase/migrations/20261119110000_pilotoki_live_google_oauth_storage.sql",
+  );
   assert.match(start, /verifiedClubSettings/);
   assert.match(start, /access_type:"offline"/);
   assert.match(start, /stateCookie/);
@@ -72,7 +74,10 @@ test("Google authorization is server-only, club-scoped and launch stays disabled
   assert.match(shared, /aes-256-gcm/);
   assert.match(shared, /admin_get_club_live_settings/);
   assert.match(credentials, /enable row level security/);
-  assert.match(credentials, /revoke all on public.club_live_google_credentials/);
+  assert.match(
+    credentials,
+    /revoke all on public.club_live_google_credentials/,
+  );
   assert.match(credentials, /'broadcast_available',false/);
   assert.match(service, /connectGoogle/);
   assert.match(adminPage, /Connecter la chaîne avec Google/);
