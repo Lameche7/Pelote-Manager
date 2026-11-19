@@ -101,7 +101,10 @@
   gap: 0.6rem;
   align-items: center;
 }
-.admin-live-settings__prepare > h2 svg { width: 1.2rem; height: 1.2rem; }
+.admin-live-settings__prepare > h2 svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
 .admin-live-settings__prepare form {
   display: grid;
   gap: 1rem;
