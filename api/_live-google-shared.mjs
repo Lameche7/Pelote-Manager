@@ -168,7 +168,10 @@ export async function verifiedClubSettings(request, env, fetchImpl = fetch) {
     );
   }
   if (settings.can_connect_google !== true) {
-    throw new LiveAuthError(403, "Seule l’administration pilote peut connecter la chaîne commune.");
+    throw new LiveAuthError(
+      403,
+      "Seule l’administration pilote peut connecter la chaîne commune.",
+    );
   }
   return {
     userId: user.id,
