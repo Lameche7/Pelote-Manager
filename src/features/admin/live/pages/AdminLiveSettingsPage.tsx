@@ -122,6 +122,10 @@ export function AdminLiveSettingsPage() {
     if (preparing) return;
     setPrepareError("");
     setPrepared(null);
+    if (!consentConfirmed) {
+      setPrepareError("Confirmez les autorisations de captation et de diffusion.");
+      return;
+    }
     if (!broadcastStart || madeForKids === "") {
       setPrepareError("Complétez la date et la classification du public.");
       return;
