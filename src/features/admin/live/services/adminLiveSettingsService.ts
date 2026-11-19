@@ -52,7 +52,33 @@ export type PrepareBroadcastRequest = {
   consentConfirmed: true;
 };
 
+export type ClubBroadcastSummary = {
+  id: string;
+  title: string;
+  sourceType: "tournoi" | "championnat" | "other";
+  status: "scheduled" | "live" | "replay" | "hidden";
+  createdAt: string;
+  youtubeUrl: string;
+};
+
 export const adminLiveSettingsService = {
+  async listBroadcasts(): Promise<ClubBroadcastSummary[]> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-prepare", {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      videos?: ClubBroadcastSummary[];
+      error?: string;
+    };
+    if (!response.ok) throw new Error(result.error ?? "Directs indisponibles.");
+    return result.videos ?? [];
+  },
+
   async prepareBroadcast(payload: PrepareBroadcastRequest): Promise<PreparedBroadcast> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
