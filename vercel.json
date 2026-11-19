@@ -15,6 +15,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/live-google-configuration",
+      "destination": "/api/live-google-connect"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
