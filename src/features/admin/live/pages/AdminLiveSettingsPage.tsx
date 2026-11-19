@@ -501,11 +501,19 @@ export function AdminLiveSettingsPage() {
               <h3>Directs préparés pour ce club</h3>
               <p className="admin-live-settings__hint">
                 La liaison RTMPS crée la destination de diffusion sur YouTube,
-                sans transmettre la caméra. Cette opération sera possible
-                après l'activation des directs sur la chaîne.
+                sans transmettre la caméra. Cette opération sera possible après
+                l'activation des directs sur la chaîne.
               </p>
-              {linkError && <p role="alert" className="admin-live-settings__error">{linkError}</p>}
-              {linkMessage && <p role="status" className="admin-live-settings__success">{linkMessage}</p>}
+              {linkError && (
+                <p role="alert" className="admin-live-settings__error">
+                  {linkError}
+                </p>
+              )}
+              {linkMessage && (
+                <p role="status" className="admin-live-settings__success">
+                  {linkMessage}
+                </p>
+              )}
               <ul>
                 {broadcasts.map((video) => (
                   <li key={video.id}>
