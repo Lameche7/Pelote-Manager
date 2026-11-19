@@ -1,0 +1,38 @@
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    # Bind only localhost HTTP + RTSP. UDP 8189 must be reachable from phones.
+  controller:
+    image: node:22-bookworm
+    network_mode: host
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    environment:
+      PORT: "8787"
+      LIVE_BRIDGE_PUBLIC_ORIGIN: ${LIVE_BRIDGE_PUBLIC_ORIGIN}
+      LIVE_BRIDGE_SHARED_SECRET: ${LIVE_BRIDGE_SHARED_SECRET}
+      NODE_ENV: production
+    volumes:
+      - ./server.mjs:/app/server.mjs:ro
+    # ffmpeg must be available inside the controller image; use Dockerfile below.
+    build:
+      context: .
+      dockerfile: Dockerfile
+  caddy:
+    image: caddy:2
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      LIVE_BRIDGE_DOMAIN: ${LIVE_BRIDGE_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:
