@@ -58,7 +58,7 @@ test("Refresh token is decrypted only server-side and never returned to client",
   }), original);
   assert.throws(
     () => decryptRefreshToken(env, {
-      refresh_token_ciphertext: encrypted.ciphertext + "tampered",
+      refresh_token_ciphertext: (encrypted.ciphertext[0] === "A" ? "B" : "A") + encrypted.ciphertext.slice(1),
       refresh_token_iv: encrypted.iv,
     }),
     LiveAuthError,
