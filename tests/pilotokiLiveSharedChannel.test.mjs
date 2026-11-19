@@ -15,7 +15,10 @@ const network = read("../src/features/network/pages/NetworkVideosPage.tsx");
 
 test("Google credentials belong to one protected Pilotoki channel", () => {
   assert.match(migration, /create table public.pilotoki_live_youtube_channel/);
-  assert.match(migration, /create table public.pilotoki_live_google_credentials/);
+  assert.match(
+    migration,
+    /create table public.pilotoki_live_google_credentials/,
+  );
   assert.match(migration, /id boolean primary key default true check \(id\)/);
   assert.match(
     migration,
