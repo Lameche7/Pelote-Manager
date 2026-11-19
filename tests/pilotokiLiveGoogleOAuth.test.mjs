@@ -21,6 +21,7 @@ const claims = {
   exp: Date.now() + 60_000,
 };
 
+// This test uses only local mock secrets; it never contacts Google or Supabase.
 test("OAuth state is signed, expires and cannot be tampered with", () => {
   const state = sealState(env, claims);
   assert.deepEqual(verifyState(env, state), claims);
