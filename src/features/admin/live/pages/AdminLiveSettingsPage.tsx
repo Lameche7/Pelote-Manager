@@ -13,7 +13,6 @@ import {
 } from "@/features/admin/live/services/adminLiveSettingsService";
 import "./AdminLiveSettingsPage.css";
 
-
 export function AdminLiveSettingsPage() {
   const [settings, setSettings] = useState<ClubLiveSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,8 +120,8 @@ export function AdminLiveSettingsPage() {
         <p className="admin-page__eyebrow">Paramètres du club</p>
         <h1>Pilotoki Live</h1>
         <p className="admin-page__lead">
-          La chaîne YouTube Pilotoki est commune à tous les clubs. Réglez ici les préférences de diffusion de votre club.
-          Le lancement de directs depuis Pilotoki sera ajouté dans une étape
+          La chaîne YouTube Pilotoki est commune à tous les clubs. Réglez ici
+          les préférences de diffusion de votre club. Le lancement de directs depuis Pilotoki sera ajouté dans une étape
           distincte, après la connexion sécurisée à YouTube.
         </p>
       </header>
@@ -180,11 +179,15 @@ export function AdminLiveSettingsPage() {
               <Video aria-hidden="true" /> Chaîne YouTube Pilotoki
             </h2>
             <p className="admin-live-settings__hint">
-              Une seule chaîne YouTube pour tous les clubs. Seule l'administration centrale
-              peut gérer l'autorisation Google.
+              Une seule chaîne YouTube pour tous les clubs. Seule
+              l'administration centrale peut gérer l'autorisation Google.
             </p>
-            <p><strong>{settings.youtubeChannelLabel || "Pilotoki"}</strong></p>
-            <p>Identifiant YouTube : <code>{settings.youtubeChannelId}</code></p>
+            <p>
+              <strong>{settings.youtubeChannelLabel || "Pilotoki"}</strong>
+            </p>
+            <p>
+              Identifiant YouTube : <code>{settings.youtubeChannelId}</code>
+            </p>
             {Boolean(settings.youtubeChannelId) && (
               <a
                 href={`https://www.youtube.com/channel/${settings.youtubeChannelId}`}
@@ -205,7 +208,8 @@ export function AdminLiveSettingsPage() {
                 ? "Chaîne autorisée"
                 : "Autorisation nécessaire"}
             </p>
-            {settings.connectionStatus !== "connected" && settings.canConnectGoogle && (
+            {settings.connectionStatus !== "connected" &&
+              settings.canConnectGoogle && (
               <button
                 type="button"
                 disabled={
@@ -276,7 +280,9 @@ export function AdminLiveSettingsPage() {
           <article className="admin-card">
             <h2>Étapes restantes</h2>
             <ol>
-              <li>Validation des directs par YouTube Studio sur la chaîne Pilotoki.</li>
+              <li>
+                Validation des directs par YouTube Studio sur la chaîne Pilotoki.
+              </li>
               <li>Autorisation Google de la chaîne (bouton ci-dessus).</li>
               <li>Passerelle sécurisée entre la caméra mobile et YouTube.</li>
               <li>Tests de consentement, modération, direct et replay.</li>
