@@ -154,9 +154,6 @@ begin
           and (exists(select 1 from public.tournament_match_events published
                       where published.match_id=other.match_id)
                or public.tournament_final_plan_is_confirmed_manual(other.match_id))
-          and (exists(select 1 from public.tournament_match_events published
-                      where published.match_id=other.match_id)
-               or public.tournament_final_plan_is_confirmed_manual(other.match_id))
       )
       and not exists (
         select 1 from public.tournament_match_planning other
@@ -166,6 +163,9 @@ begin
             or entry.team_b_id in (other_match.team_a_id,other_match.team_b_id))
           and other.play_date=slot.play_date
           and other.starts_at<slot.ends_at and other.ends_at>slot.starts_at
+          and (exists(select 1 from public.tournament_match_events published
+                      where published.match_id=other.match_id)
+               or public.tournament_final_plan_is_confirmed_manual(other.match_id))
       )
       and not exists (
         select 1 from public.tournament_matches previous
