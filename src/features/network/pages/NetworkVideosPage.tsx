@@ -138,7 +138,7 @@ export function NetworkVideosPage() {
                 accessibles depuis les clubs du réseau.
               </p>
               <span className="network-videos__coming">Bientôt disponible</span>
-            </div>
+            </div>}
           </section>
         </div>
 
