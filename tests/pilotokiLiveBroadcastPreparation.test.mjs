@@ -12,6 +12,7 @@ import {
   validateBroadcastInput,
   verifiedLiveClubAdmin,
   youtubeCreateBroadcast,
+  youtubeBroadcastFailure,
 } from "../api/_live-youtube-broadcast.mjs";
 
 const clubId = "188029a8-3e6a-41cd-821f-01984a703552";
@@ -185,4 +186,44 @@ test("A missing or expired Google refresh token prevents YouTube calls", async (
     googleAccessToken(env, "UCAIME5j0y9DdiEQNyttO_jw", mockFetch),
     (error) => error instanceof LiveAuthError && error.status === 503,
   );
+});
+
+test("YouTube failures expose only safe allowlisted reasons", async () => {
+  const failure = await youtubeBroadcastFailure({
+    status: 403,
+    json: async () => ({
+      error: {
+        message: "secret-response-message-not-to-disclose",
+        errors: [{ reason: "liveStreamingNotEnabled" }],
+      },
+    }),
+  });
+  assert.equal(failure.status, 502);
+  assert.match(failure.message, /liveStreamingNotEnabled/);
+  assert.match(failure.message, /YouTube HTTP 403/);
+  assert.doesNotMatch(
+    failure.message,
+    /secret-response-message-not-to-disclose/,
+  );
+});
+
+test("Unknown or invalid YouTube errors stay generic and cannot inject messages", async () => {
+  const failure = await youtubeBroadcastFailure({
+    status: 401,
+    json: async () => ({
+      error: {
+        message: "unsafe access token",
+        errors: [{ reason: "Bearer opaque-token" }],
+      },
+    }),
+  });
+  assert.match(failure.message, /code : unknown/);
+  assert.doesNotMatch(failure.message, /opaque-token|unsafe access token/);
+  const nonJson = await youtubeBroadcastFailure({
+    status: 503,
+    json: async () => {
+      throw new Error("bad json");
+    },
+  });
+  assert.match(nonJson.message, /YouTube HTTP 503/);
 });
