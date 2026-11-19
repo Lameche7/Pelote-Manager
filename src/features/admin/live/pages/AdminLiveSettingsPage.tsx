@@ -31,6 +31,10 @@ export function AdminLiveSettingsPage() {
   const [madeForKids, setMadeForKids] = useState<"" | "yes" | "no">("");
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [prepared, setPrepared] = useState<PreparedBroadcast | null>(null);
+  const [linkingVideoId, setLinkingVideoId] = useState<string | null>(null);
+  const [linkedVideoIds, setLinkedVideoIds] = useState<string[]>([]);
+  const [linkMessage, setLinkMessage] = useState("");
+  const [linkError, setLinkError] = useState("");
   const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
   const [prepareError, setPrepareError] = useState("");
   const [error, setError] = useState("");
@@ -182,6 +186,26 @@ export function AdminLiveSettingsPage() {
       );
     } finally {
       setPreparing(false);
+    }
+  };
+
+  const linkIngest = async (videoId: string) => {
+    if (linkingVideoId) return;
+    setLinkingVideoId(videoId);
+    setLinkError("");
+    setLinkMessage("");
+    try {
+      const message = await adminLiveSettingsService.linkYoutubeIngest(videoId);
+      setLinkedVideoIds((ids) => [...new Set([...ids, videoId])]);
+      setLinkMessage(message);
+    } catch (reason: unknown) {
+      setLinkError(
+        reason instanceof Error
+          ? reason.message
+          : "Impossible de préparer le flux vidéo.",
+      );
+    } finally {
+      setLinkingVideoId(null);
     }
   };
 
@@ -475,6 +499,21 @@ export function AdminLiveSettingsPage() {
           {broadcasts.length > 0 && (
             <div className="admin-live-settings__broadcasts">
               <h3>Directs préparés pour ce club</h3>
+              <p className="admin-live-settings__hint">
+                La liaison RTMPS crée la destination de diffusion sur YouTube,
+                sans transmettre la caméra. Cette opération sera possible après
+                l'activation des directs sur la chaîne.
+              </p>
+              {linkError && (
+                <p role="alert" className="admin-live-settings__error">
+                  {linkError}
+                </p>
+              )}
+              {linkMessage && (
+                <p role="status" className="admin-live-settings__success">
+                  {linkMessage}
+                </p>
+              )}
               <ul>
                 {broadcasts.map((video) => (
                   <li key={video.id}>
@@ -494,6 +533,22 @@ export function AdminLiveSettingsPage() {
                             ? "Replay"
                             : "Masquée"}
                     </small>
+                    {video.status === "scheduled" && (
+                      <button
+                        type="button"
+                        disabled={
+                          linkingVideoId !== null ||
+                          linkedVideoIds.includes(video.id)
+                        }
+                        onClick={() => void linkIngest(video.id)}
+                      >
+                        {linkingVideoId === video.id
+                          ? "Liaison YouTube…"
+                          : linkedVideoIds.includes(video.id)
+                            ? "Flux YouTube lié"
+                            : "Lier le flux vidéo YouTube"}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

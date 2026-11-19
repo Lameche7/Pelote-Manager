@@ -62,6 +62,31 @@ export type ClubBroadcastSummary = {
 };
 
 export const adminLiveSettingsService = {
+  async linkYoutubeIngest(videoId: string): Promise<string> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ videoId }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      status?: string;
+      message?: string;
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(result.error ?? "Impossible de lier le flux YouTube.");
+    if (result.status !== "configured")
+      throw new Error("Réponse inattendue du serveur vidéo.");
+    return result.message ?? "Flux YouTube associé au direct.";
+  },
+
   async listBroadcasts(): Promise<ClubBroadcastSummary[]> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
