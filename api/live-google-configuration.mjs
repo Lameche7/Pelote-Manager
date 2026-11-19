@@ -17,7 +17,9 @@ export default function handler(request, response) {
     return response.status(405).json({ error: "Méthode non autorisée." });
   }
   const configured = REQUIRED_KEYS.every(
-    (key) => typeof process.env[key] === "string" && process.env[key].trim().length > 0,
+    (key) =>
+      typeof process.env[key] === "string" &&
+      process.env[key].trim().length > 0,
   );
   return response.status(200).json({ configured });
 }
