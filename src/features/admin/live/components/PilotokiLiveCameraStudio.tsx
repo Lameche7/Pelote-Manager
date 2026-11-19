@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, Mic, MicOff, RefreshCw, ShieldCheck } from "lucide-react";
+import {
+  Camera,
+  CameraOff,
+  Mic,
+  MicOff,
+  RefreshCw,
+  ShieldCheck,
+} from "lucide-react";
 import "./PilotokiLiveCameraStudio.css";
 
 type CameraFacing = "environment" | "user";
@@ -63,7 +70,9 @@ export function PilotokiLiveCameraStudio() {
       setOpening(true);
       setError("");
       if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-        setError("La caméra nécessite un navigateur compatible ouvert en HTTPS.");
+        setError(
+          "La caméra nécessite un navigateur compatible ouvert en HTTPS.",
+        );
         setOpening(false);
         return;
       }
@@ -119,7 +128,10 @@ export function PilotokiLiveCameraStudio() {
   };
 
   return (
-    <section className="pilotoki-camera-studio admin-card" aria-labelledby="pilotoki-camera-heading">
+    <section
+      className="pilotoki-camera-studio admin-card"
+      aria-labelledby="pilotoki-camera-heading"
+    >
       <div className="pilotoki-camera-studio__heading">
         <h2 id="pilotoki-camera-heading">
           <Camera aria-hidden="true" /> Studio caméra — aperçu local
@@ -151,10 +163,18 @@ export function PilotokiLiveCameraStudio() {
           </span>
         )}
       </div>
-      {error && <p className="pilotoki-camera-studio__error" role="alert">{error}</p>}
+      {error && (
+        <p className="pilotoki-camera-studio__error" role="alert">
+          {error}
+        </p>
+      )}
       <div className="pilotoki-camera-studio__controls">
         {!active ? (
-          <button type="button" onClick={() => void open(facing)} disabled={opening}>
+          <button
+            type="button"
+            onClick={() => void open(facing)}
+            disabled={opening}
+          >
             <Camera aria-hidden="true" />
             {opening ? "Ouverture de la caméra…" : "Tester ma caméra"}
           </button>
@@ -170,19 +190,27 @@ export function PilotokiLiveCameraStudio() {
               <RefreshCw aria-hidden="true" /> Changer de caméra
             </button>
             <button type="button" onClick={toggleMicrophone}>
-              {microphoneEnabled ? <Mic aria-hidden="true" /> : <MicOff aria-hidden="true" />}
+              {microphoneEnabled ? (
+                <Mic aria-hidden="true" />
+              ) : (
+                <MicOff aria-hidden="true" />
+              )}
               {microphoneEnabled ? "Couper le micro" : "Activer le micro"}
             </button>
-            <button type="button" onClick={stop} className="pilotoki-camera-studio__stop">
+            <button
+              type="button"
+              onClick={stop}
+              className="pilotoki-camera-studio__stop"
+            >
               <CameraOff aria-hidden="true" /> Arrêter la caméra
             </button>
           </>
         )}
       </div>
       <p className="pilotoki-camera-studio__hint">
-        Ce test local ne crée pas de direct et n'utilise aucune donnée mobile pour
-        envoyer de la vidéo. La diffusion réelle sera activée après installation
-        d'une passerelle vidéo sécurisée.
+        Ce test local ne crée pas de direct et n'utilise aucune donnée mobile
+        pour envoyer de la vidéo. La diffusion réelle sera activée après
+        installation d'une passerelle vidéo sécurisée.
       </p>
     </section>
   );
