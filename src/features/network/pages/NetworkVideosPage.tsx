@@ -9,7 +9,7 @@ import { NetworkHero } from "@/features/network/components/NetworkHero";
 import "./NetworkDirectoryPage.css";
 import "./NetworkVideosPage.css";
 
-const PCL_YOUTUBE_CHANNEL =
+const PILOTOKI_YOUTUBE_CHANNEL =
   "https://www.youtube.com/channel/UCAIME5j0y9DdiEQNyttO_jw";
 
 export function NetworkVideosPage() {
@@ -86,20 +86,18 @@ export function NetworkVideosPage() {
           aria-labelledby="video-club-heading"
         >
           <div>
-            <p className="network-directory__eyebrow">Premier club pilote</p>
-            <h2 id="video-club-heading">Pelotaris Club Lourdais</h2>
+            <p className="network-directory__eyebrow">Chaîne commune</p>
+            <h2 id="video-club-heading">Pilotoki sur YouTube</h2>
             <p>
-              Le PCL prépare les premières diffusions Pilotoki Live. La chaîne
-              YouTube du club est déjà créée, mais elle n'est pas encore
-              connectée aux directs de Pilotoki.
+              Une chaîne YouTube Pilotoki pour les directs et replays de tous les clubs. Chaque vidéo sera rattachée à son club d'origine et à sa compétition.
             </p>
           </div>
           <a
-            href={PCL_YOUTUBE_CHANNEL}
+            href={PILOTOKI_YOUTUBE_CHANNEL}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Découvrir la chaîne YouTube du PCL
+            Découvrir la chaîne YouTube Pilotoki
             <ExternalLink aria-hidden="true" />
           </a>
         </section>
