@@ -19,6 +19,7 @@ export function AdminLiveSettingsPage() {
   const [settings, setSettings] = useState<ClubLiveSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -44,6 +45,20 @@ export function AdminLiveSettingsPage() {
       active = false;
     };
   }, []);
+
+  const googleCallback = new URLSearchParams(window.location.search).get("live_google");
+
+  const connectGoogle = async () => {
+    if (connecting) return;
+    setConnecting(true);
+    setError("");
+    try {
+      await adminLiveSettingsService.connectGoogle();
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason.message : "Connexion Google impossible.");
+      setConnecting(false);
+    }
+  };
 
   const change = (patch: Partial<ClubLiveSettings>) => {
     setSettings((current) => (current ? { ...current, ...patch } : current));
@@ -99,14 +114,25 @@ export function AdminLiveSettingsPage() {
       <div className="admin-live-settings__notice" role="status">
         <RadioTower aria-hidden="true" />
         <div>
-          <strong>En préparation — aucun direct n'est activé</strong>
+          <strong>En préparation — la passerelle vidéo reste à connecter</strong>
           <p>
-            L'identifiant de la chaîne ne donne pas accès au compte YouTube.
-            L'autorisation Google et la passerelle vidéo restent à intégrer. Les
-            joueurs ne verront aucun bouton de diffusion pour le moment.
+            {settings?.connectionStatus === "connected"
+              ? "Chaîne YouTube autorisée pour ce club. Le lancement du direct depuis un téléphone sera activé après intégration de la passerelle vidéo."
+              : "La chaîne doit être autorisée via Google par son responsable. Aucun direct ne peut encore être lancé depuis Pilotoki."}
           </p>
         </div>
       </div>
+
+      {googleCallback === "connected" && (
+        <p role="status" className="admin-live-settings__success">
+          Autorisation Google enregistrée. La chaîne peut maintenant être reliée aux futures diffusions.
+        </p>
+      )}
+      {googleCallback === "error" && (
+        <p role="alert" className="admin-live-settings__error">
+          Connexion Google non terminée. Vérifiez le compte choisi et les autorisations Google.
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="admin-live-settings__error">
@@ -167,10 +193,26 @@ export function AdminLiveSettingsPage() {
               </a>
             )}
             <p className="admin-live-settings__hint">
-              Le lien public est enregistré, mais la chaîne n'est pas encore
-              autorisée à diffuser via Pilotoki. Aucun mot de passe ni clé
-              YouTube ne doit être saisi ici.
+              Le lien public n'autorise pas Pilotoki à gérer la chaîne.
+              La connexion Google doit être validée une fois par son responsable.
+              Aucun mot de passe ni clé YouTube ne doit être saisi ici.
             </p>
+            <p role="status">
+              <strong>Connexion Google :</strong>{" "}
+              {settings.connectionStatus === "connected"
+                ? "Chaîne autorisée"
+                : "Autorisation nécessaire"}
+            </p>
+            {settings.connectionStatus !== "connected" && (
+              <button type="button" disabled={connecting || saving || !youtubeIdPattern.test(settings.youtubeChannelId)}
+                onClick={() => void connectGoogle()}>
+                {connecting ? "Ouverture de Google…" : "Connecter la chaîne avec Google"}
+              </button>
+            )}
+            <small>
+              Enregistrez la chaîne ci-dessus avant la connexion. Utilisez le
+              compte Google qui gère réellement cette chaîne.
+            </small>
           </article>
 
           <article className="admin-card">
@@ -216,9 +258,7 @@ export function AdminLiveSettingsPage() {
             <h2>Étapes restantes</h2>
             <ol>
               <li>Validation des directs par YouTube Studio.</li>
-              <li>
-                Autorisation Google de la chaîne par le responsable du club.
-              </li>
+              <li>Autorisation Google de la chaîne (bouton ci-dessus).</li>
               <li>Passerelle sécurisée entre la caméra mobile et YouTube.</li>
               <li>Tests de consentement, modération, direct et replay.</li>
             </ol>
