@@ -172,6 +172,7 @@ export function AdminLiveSettingsPage() {
         scheduledStartTime: date.toISOString(),
         madeForKids: madeForKids === "yes",
         consentConfirmed: true,
+        autoStart: true,
       });
       setPrepared(created);
       setBroadcastTitle("");
