@@ -65,7 +65,7 @@ test("Google authorization is server-only, club-scoped and launch stays disabled
     "../supabase/migrations/20261119110000_pilotoki_live_google_oauth_storage.sql",
   );
   assert.match(start, /verifiedClubSettings/);
-  assert.match(start, /access_type:"offline"/);
+  assert.match(start, /access_type:\s*"offline"/);
   assert.match(start, /stateCookie/);
   assert.match(callback, /verifyState/);
   assert.ok(callback.includes("channels?part=id&mine=true"));
