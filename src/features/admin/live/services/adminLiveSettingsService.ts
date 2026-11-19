@@ -35,7 +35,47 @@ const mapSettings = (raw: unknown): ClubLiveSettings => {
   };
 };
 
+export type PreparedBroadcast = {
+  youtubeUrl: string;
+  title: string;
+  scheduledStartTime: string;
+  status: "scheduled";
+  broadcastAvailable: false;
+};
+
+export type PrepareBroadcastRequest = {
+  title: string;
+  sourceType: "tournoi" | "championnat" | "other";
+  sourceId: null;
+  scheduledStartTime: string;
+  madeForKids: boolean;
+  consentConfirmed: true;
+};
+
 export const adminLiveSettingsService = {
+  async prepareBroadcast(payload: PrepareBroadcastRequest): Promise<PreparedBroadcast> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-prepare", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as PreparedBroadcast & {
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(result.error ?? "Impossible de préparer le direct YouTube.");
+    if (!result.youtubeUrl?.startsWith("https://www.youtube.com/watch?v="))
+      throw new Error("Réponse YouTube invalide.");
+    return result;
+  },
+
   async connectGoogle(): Promise<void> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
