@@ -167,6 +167,9 @@ export async function verifiedClubSettings(request, env, fetchImpl = fetch) {
       "Configurez d'abord une chaîne YouTube valide dans Pilotoki Live.",
     );
   }
+  if (settings.can_connect_google !== true) {
+    throw new LiveAuthError(403, "Seule l’administration pilote peut connecter la chaîne commune.");
+  }
   return {
     userId: user.id,
     clubId: settings.club_id,
@@ -183,7 +186,7 @@ export async function storeCredentials(
   const url = required(env, "VITE_SUPABASE_URL");
   const serviceKey = required(env, "SUPABASE_SERVICE_ROLE_KEY");
   const response = await fetchImpl(
-    `${url}/rest/v1/club_live_google_credentials?on_conflict=club_id`,
+    `${url}/rest/v1/pilotoki_live_google_credentials?on_conflict=id`,
     {
       method: "POST",
       headers: {
@@ -196,7 +199,7 @@ export async function storeCredentials(
         Prefer: "resolution=merge-duplicates,return=minimal",
       },
       body: JSON.stringify({
-        club_id: claims.clubId,
+        id: true,
         channel_id: claims.channelId,
         refresh_token_ciphertext: credentials.ciphertext,
         refresh_token_iv: credentials.iv,
