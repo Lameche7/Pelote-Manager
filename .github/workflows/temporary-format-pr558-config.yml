@@ -1,0 +1,28 @@
+name: Temporary formatting PR 558 configuration
+on:
+  pull_request:
+    types: [synchronize]
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          ref: feature/pilotoki-live-google-oauth-20261119
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: |
+          npx prettier --write api/_live-google-shared.mjs api/live-google-configuration.mjs src/features/admin/live/pages/AdminLiveSettingsPage.tsx tests/pilotokiLiveAdminSettings.test.mjs
+      - name: Commit formatted files and remove temporary workflow
+        run: |
+          git rm .github/workflows/temporary-format-pr558-config.yml
+          git add api/_live-google-shared.mjs api/live-google-configuration.mjs src/features/admin/live/pages/AdminLiveSettingsPage.tsx tests/pilotokiLiveAdminSettings.test.mjs
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style: format OAuth readiness check'
+          git push origin HEAD:feature/pilotoki-live-google-oauth-20261119
