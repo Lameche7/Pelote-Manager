@@ -24,7 +24,10 @@ export default async function handler(request, response) {
     }
     // No side effect on YouTube before validating both the request and club permissions.
     const input = validateBroadcastInput(request.body);
-    const { clubId, channelId } = await verifiedLiveClubAdmin(request, process.env);
+    const { clubId, channelId } = await verifiedLiveClubAdmin(
+      request,
+      process.env,
+    );
     const accessToken = await googleAccessToken(process.env, channelId);
     const youtubeVideoId = await youtubeCreateBroadcast(accessToken, input);
     await storePreparedVideo(process.env, clubId, youtubeVideoId, input);
