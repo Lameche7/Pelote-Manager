@@ -90,3 +90,48 @@
   opacity: 0.55;
   cursor: wait;
 }
+
+.admin-live-settings__prepare {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.admin-live-settings__prepare > h2 {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.admin-live-settings__prepare > h2 svg { width: 1.2rem; height: 1.2rem; }
+.admin-live-settings__prepare form {
+  display: grid;
+  gap: 1rem;
+}
+.admin-live-settings__prepare form label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+.admin-live-settings__prepare input[type="text"],
+.admin-live-settings__prepare input[type="datetime-local"],
+.admin-live-settings__prepare select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 0.6rem;
+  padding: 0.7rem;
+  background: var(--surface-color, #fff);
+  color: inherit;
+}
+.admin-live-settings__prepare form > button {
+  justify-self: start;
+  background: #1f5d65;
+  border: 0;
+  border-radius: 0.6rem;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+}
+.admin-live-settings__prepare form > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
