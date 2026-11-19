@@ -3,8 +3,12 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
-const studio = read("../src/features/admin/live/components/PilotokiLiveCameraStudio.tsx");
-const admin = read("../src/features/admin/live/pages/AdminLiveSettingsPage.tsx");
+const studio = read(
+  "../src/features/admin/live/components/PilotokiLiveCameraStudio.tsx",
+);
+const admin = read(
+  "../src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+);
 
 test("Camera preview requires a deliberate browser camera permission", () => {
   assert.match(studio, /navigator\.mediaDevices\.getUserMedia/);
@@ -23,7 +27,10 @@ test("Preview does not transmit video, expose an RTMP key, or fake live streamin
 });
 
 test("Camera tracks always stop when user closes camera or navigates away", () => {
-  assert.match(studio, /getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/);
+  assert.match(
+    studio,
+    /getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/,
+  );
   assert.match(studio, /requestIdRef\.current \+= 1/);
   assert.match(studio, /useEffect\(\(\) => \{/);
   assert.match(studio, /onClick=\{stop\}/);
