@@ -81,4 +81,6 @@ test("Google authorization is server-only, club-scoped and launch stays disabled
   assert.match(credentials, /'broadcast_available',false/);
   assert.match(service, /connectGoogle/);
   assert.match(adminPage, /Connecter la chaîne avec Google/);
+  assert.match(adminPage, /!googleConfigured/);
+  assert.match(adminPage, /live-google-configuration/);
 });
