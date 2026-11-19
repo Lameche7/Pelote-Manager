@@ -13,16 +13,22 @@ async function callBridge(payload: Record<string, unknown>) {
   if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
   const response = await fetch("/api/live-bridge-session", {
     method: "POST",
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
     body: JSON.stringify(payload),
     cache: "no-store",
   });
   const answer = await response.json();
-  if (!response.ok) throw new Error(answer.error || "La passerelle vidéo est indisponible.");
+  if (!response.ok)
+    throw new Error(answer.error || "La passerelle vidéo est indisponible.");
   return answer;
 }
 
-export async function startLiveBridge(videoId: string): Promise<LiveBridgeSession> {
+export async function startLiveBridge(
+  videoId: string,
+): Promise<LiveBridgeSession> {
   return callBridge({ action: "start", videoId });
 }
 export async function stopLiveBridge(ticket: string): Promise<void> {
@@ -35,10 +41,12 @@ export async function publishWhip(
   whipUrl: string,
   bearer: string,
 ): Promise<{ stop: () => Promise<void> }> {
-  const connection = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+  const connection = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  });
   let sessionUrl: string | null = null;
   try {
-    stream.getTracks().forEach(track => connection.addTrack(track, stream));
+    stream.getTracks().forEach((track) => connection.addTrack(track, stream));
     const offer = await connection.createOffer();
     await connection.setLocalDescription(offer);
     await new Promise<void>((resolve, reject) => {
@@ -57,13 +65,19 @@ export async function publishWhip(
     });
     const response = await fetch(whipUrl, {
       method: "POST",
-      headers: { authorization: `Bearer ${bearer}`, "content-type": "application/sdp" },
+      headers: {
+        authorization: `Bearer ${bearer}`,
+        "content-type": "application/sdp",
+      },
       body: connection.localDescription?.sdp,
     });
     if (response.status !== 201)
-      throw new Error(`La passerelle a refusé le flux vidéo (HTTP ${response.status}).`);
+      throw new Error(
+        `La passerelle a refusé le flux vidéo (HTTP ${response.status}).`,
+      );
     const location = response.headers.get("location");
-    if (!location) throw new Error("La passerelle n'a pas renvoyé de session WHIP.");
+    if (!location)
+      throw new Error("La passerelle n'a pas renvoyé de session WHIP.");
     sessionUrl = new URL(location, whipUrl).href;
     if (new URL(sessionUrl).origin !== new URL(whipUrl).origin)
       throw new Error("Adresse de session WHIP inattendue.");
@@ -72,8 +86,14 @@ export async function publishWhip(
     return {
       stop: async () => {
         try {
-          if (sessionUrl) await fetch(sessionUrl, { method: "DELETE", headers: { authorization: `Bearer ${bearer}` } });
-        } finally { connection.close(); }
+          if (sessionUrl)
+            await fetch(sessionUrl, {
+              method: "DELETE",
+              headers: { authorization: `Bearer ${bearer}` },
+            });
+        } finally {
+          connection.close();
+        }
       },
     };
   } catch (error) {
