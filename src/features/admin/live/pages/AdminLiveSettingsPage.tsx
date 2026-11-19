@@ -11,6 +11,7 @@ import {
   type ClubLiveSettings,
   type LiveBroadcasterPolicy,
   type PreparedBroadcast,
+  type ClubBroadcastSummary,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 import "./AdminLiveSettingsPage.css";
 
@@ -27,6 +28,7 @@ export function AdminLiveSettingsPage() {
   const [madeForKids, setMadeForKids] = useState<"" | "yes" | "no">("");
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [prepared, setPrepared] = useState<PreparedBroadcast | null>(null);
+  const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
   const [prepareError, setPrepareError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -70,6 +72,22 @@ export function AdminLiveSettingsPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (settings?.connectionStatus !== "connected") return;
+    let active = true;
+    adminLiveSettingsService
+      .listBroadcasts()
+      .then((items) => {
+        if (active) setBroadcasts(items);
+      })
+      .catch(() => {
+        // The preparation form remains usable if listing is unavailable.
+      });
+    return () => {
+      active = false;
+    };
+  }, [settings?.clubId, settings?.connectionStatus]);
 
   const googleCallback = new URLSearchParams(window.location.search).get(
     "live_google",
@@ -147,6 +165,8 @@ export function AdminLiveSettingsPage() {
       });
       setPrepared(created);
       setBroadcastTitle("");
+      const items = await adminLiveSettingsService.listBroadcasts().catch(() => null);
+      if (items) setBroadcasts(items);
     } catch (reason: unknown) {
       setPrepareError(
         reason instanceof Error
@@ -443,6 +463,33 @@ export function AdminLiveSettingsPage() {
               {preparing ? "Création sur YouTube…" : "Préparer le direct sur YouTube"}
             </button>
           </form>
+          {broadcasts.length > 0 && (
+            <div className="admin-live-settings__broadcasts">
+              <h3>Directs préparés pour ce club</h3>
+              <ul>
+                {broadcasts.map((video) => (
+                  <li key={video.id}>
+                    <a
+                      href={video.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {video.title} <ExternalLink aria-hidden="true" />
+                    </a>
+                    <small>
+                      {video.status === "scheduled"
+                        ? "En préparation — vidéo non démarrée"
+                        : video.status === "live"
+                          ? "En direct"
+                          : video.status === "replay"
+                            ? "Replay"
+                            : "Masquée"}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
     </section>
