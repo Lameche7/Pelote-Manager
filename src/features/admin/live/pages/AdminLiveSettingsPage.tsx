@@ -23,7 +23,9 @@ export function AdminLiveSettingsPage() {
   const [googleConfigured, setGoogleConfigured] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [broadcastTitle, setBroadcastTitle] = useState("");
-  const [broadcastType, setBroadcastType] = useState<"tournoi" | "championnat" | "other">("tournoi");
+  const [broadcastType, setBroadcastType] = useState<
+    "tournoi" | "championnat" | "other"
+  >("tournoi");
   const [broadcastStart, setBroadcastStart] = useState("");
   const [madeForKids, setMadeForKids] = useState<"" | "yes" | "no">("");
   const [consentConfirmed, setConsentConfirmed] = useState(false);
@@ -141,7 +143,9 @@ export function AdminLiveSettingsPage() {
     setPrepareError("");
     setPrepared(null);
     if (!consentConfirmed) {
-      setPrepareError("Confirmez les autorisations de captation et de diffusion.");
+      setPrepareError(
+        "Confirmez les autorisations de captation et de diffusion.",
+      );
       return;
     }
     if (!broadcastStart || madeForKids === "") {
@@ -165,7 +169,9 @@ export function AdminLiveSettingsPage() {
       });
       setPrepared(created);
       setBroadcastTitle("");
-      const items = await adminLiveSettingsService.listBroadcasts().catch(() => null);
+      const items = await adminLiveSettingsService
+        .listBroadcasts()
+        .catch(() => null);
       if (items) setBroadcasts(items);
     } catch (reason: unknown) {
       setPrepareError(
@@ -460,7 +466,9 @@ export function AdminLiveSettingsPage() {
               type="submit"
               disabled={preparing || !consentConfirmed || madeForKids === ""}
             >
-              {preparing ? "Création sur YouTube…" : "Préparer le direct sur YouTube"}
+              {preparing
+                ? "Création sur YouTube…"
+                : "Préparer le direct sur YouTube"}
             </button>
           </form>
           {broadcasts.length > 0 && (
