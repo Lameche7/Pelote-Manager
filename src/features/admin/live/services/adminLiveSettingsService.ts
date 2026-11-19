@@ -79,7 +79,9 @@ export const adminLiveSettingsService = {
     return result.videos ?? [];
   },
 
-  async prepareBroadcast(payload: PrepareBroadcastRequest): Promise<PreparedBroadcast> {
+  async prepareBroadcast(
+    payload: PrepareBroadcastRequest,
+  ): Promise<PreparedBroadcast> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
     if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
@@ -96,7 +98,9 @@ export const adminLiveSettingsService = {
       error?: string;
     };
     if (!response.ok)
-      throw new Error(result.error ?? "Impossible de préparer le direct YouTube.");
+      throw new Error(
+        result.error ?? "Impossible de préparer le direct YouTube.",
+      );
     if (!result.youtubeUrl?.startsWith("https://www.youtube.com/watch?v="))
       throw new Error("Réponse YouTube invalide.");
     return result;
