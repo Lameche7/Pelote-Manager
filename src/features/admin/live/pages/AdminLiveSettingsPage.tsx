@@ -13,6 +13,7 @@ import {
   type PreparedBroadcast,
   type ClubBroadcastSummary,
 } from "@/features/admin/live/services/adminLiveSettingsService";
+import { PilotokiLiveCameraStudio } from "@/features/admin/live/components/PilotokiLiveCameraStudio";
 import "./AdminLiveSettingsPage.css";
 
 export function AdminLiveSettingsPage() {
@@ -499,6 +500,9 @@ export function AdminLiveSettingsPage() {
             </div>
           )}
         </section>
+      )}
+      {settings?.connectionStatus === "connected" && (
+        <PilotokiLiveCameraStudio />
       )}
     </section>
   );
