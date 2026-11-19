@@ -201,7 +201,10 @@ test("YouTube failures expose only safe allowlisted reasons", async () => {
   assert.equal(failure.status, 502);
   assert.match(failure.message, /liveStreamingNotEnabled/);
   assert.match(failure.message, /YouTube HTTP 403/);
-  assert.doesNotMatch(failure.message, /secret-response-message-not-to-disclose/);
+  assert.doesNotMatch(
+    failure.message,
+    /secret-response-message-not-to-disclose/,
+  );
 });
 
 test("Unknown or invalid YouTube errors stay generic and cannot inject messages", async () => {
@@ -218,7 +221,9 @@ test("Unknown or invalid YouTube errors stay generic and cannot inject messages"
   assert.doesNotMatch(failure.message, /opaque-token|unsafe access token/);
   const nonJson = await youtubeBroadcastFailure({
     status: 503,
-    json: async () => { throw new Error("bad json"); },
+    json: async () => {
+      throw new Error("bad json");
+    },
   });
   assert.match(nonJson.message, /YouTube HTTP 503/);
 });
