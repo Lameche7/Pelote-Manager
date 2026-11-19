@@ -35,7 +35,9 @@ export function NetworkVideosPage() {
     const load = async () => {
       const { data, error } = await supabase
         .from("pilotoki_live_videos")
-        .select("id,club_id,title,youtube_video_id,status,source_type,started_at")
+        .select(
+          "id,club_id,title,youtube_video_id,status,source_type,started_at",
+        )
         .in("status", ["live", "replay"])
         .order("created_at", { ascending: false });
       if (!active) return;
@@ -47,9 +49,7 @@ export function NetworkVideosPage() {
       const { data: clubs } = await supabase.from("clubs").select("id,name");
       if (active) {
         setClubNames(
-          Object.fromEntries(
-            (clubs ?? []).map((club) => [club.id, club.name]),
-          ),
+          Object.fromEntries((clubs ?? []).map((club) => [club.id, club.name])),
         );
       }
     };
@@ -150,13 +150,15 @@ export function NetworkVideosPage() {
             </div>
             {renderVideos("live") || (
               <div className="network-videos__empty">
-              <Video aria-hidden="true" />
-              <strong>Aucun direct disponible actuellement</strong>
-              <p>
-                Dès que les clubs pourront diffuser leurs rencontres depuis
-                Pilotoki, leurs directs apparaîtront ici.
-              </p>
-              <span className="network-videos__coming">Bientôt disponible</span>
+                <Video aria-hidden="true" />
+                <strong>Aucun direct disponible actuellement</strong>
+                <p>
+                  Dès que les clubs pourront diffuser leurs rencontres depuis
+                  Pilotoki, leurs directs apparaîtront ici.
+                </p>
+                <span className="network-videos__coming">
+                  Bientôt disponible
+                </span>
               </div>
             )}
           </section>
@@ -177,13 +179,15 @@ export function NetworkVideosPage() {
             </div>
             {renderVideos("replay") || (
               <div className="network-videos__empty">
-              <PlayCircle aria-hidden="true" />
-              <strong>Les premières vidéos arrivent bientôt</strong>
-              <p>
-                Retrouvez prochainement les rencontres enregistrées et
-                accessibles depuis les clubs du réseau.
-              </p>
-              <span className="network-videos__coming">Bientôt disponible</span>
+                <PlayCircle aria-hidden="true" />
+                <strong>Les premières vidéos arrivent bientôt</strong>
+                <p>
+                  Retrouvez prochainement les rencontres enregistrées et
+                  accessibles depuis les clubs du réseau.
+                </p>
+                <span className="network-videos__coming">
+                  Bientôt disponible
+                </span>
               </div>
             )}
           </section>
