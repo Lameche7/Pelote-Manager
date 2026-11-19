@@ -1,0 +1,27 @@
+name: Temporary formatting PR 558 tests
+on:
+  pull_request:
+    types: [synchronize]
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          ref: feature/pilotoki-live-google-oauth-20261119
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write tests/pilotokiLiveGoogleOAuth.test.mjs
+      - name: Commit formatting and remove temporary workflow
+        run: |
+          git rm .github/workflows/temporary-format-pr558-tests.yml
+          git add tests/pilotokiLiveGoogleOAuth.test.mjs
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style: format Google OAuth security test'
+          git push origin HEAD:feature/pilotoki-live-google-oauth-20261119
