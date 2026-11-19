@@ -121,8 +121,9 @@ export function AdminLiveSettingsPage() {
         <h1>Pilotoki Live</h1>
         <p className="admin-page__lead">
           La chaîne YouTube Pilotoki est commune à tous les clubs. Réglez ici
-          les préférences de diffusion de votre club. Le lancement de directs depuis Pilotoki sera ajouté dans une étape
-          distincte, après la connexion sécurisée à YouTube.
+          les préférences de diffusion de votre club. Le lancement de directs
+          depuis Pilotoki sera ajouté dans une étape distincte, après la
+          connexion sécurisée à YouTube.
         </p>
       </header>
 
@@ -210,21 +211,21 @@ export function AdminLiveSettingsPage() {
             </p>
             {settings.connectionStatus !== "connected" &&
               settings.canConnectGoogle && (
-              <button
-                type="button"
-                disabled={
-                  !googleConfigured ||
-                  connecting ||
-                  saving ||
-                  !settings.youtubeChannelId
-                }
-                onClick={() => void connectGoogle()}
-              >
-                {connecting
-                  ? "Ouverture de Google…"
-                  : "Connecter la chaîne avec Google"}
-              </button>
-            )}
+                <button
+                  type="button"
+                  disabled={
+                    !googleConfigured ||
+                    connecting ||
+                    saving ||
+                    !settings.youtubeChannelId
+                  }
+                  onClick={() => void connectGoogle()}
+                >
+                  {connecting
+                    ? "Ouverture de Google…"
+                    : "Connecter la chaîne avec Google"}
+                </button>
+              )}
             {!googleConfigured && (
               <p className="admin-live-settings__hint" role="status">
                 Connexion Google non configurée côté serveur. Le bouton sera
@@ -281,7 +282,8 @@ export function AdminLiveSettingsPage() {
             <h2>Étapes restantes</h2>
             <ol>
               <li>
-                Validation des directs par YouTube Studio sur la chaîne Pilotoki.
+                Validation des directs par YouTube Studio sur la chaîne
+                Pilotoki.
               </li>
               <li>Autorisation Google de la chaîne (bouton ci-dessus).</li>
               <li>Passerelle sécurisée entre la caméra mobile et YouTube.</li>
