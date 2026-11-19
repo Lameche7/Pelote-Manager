@@ -31,7 +31,10 @@ test("confirmed club events and explicitly reprogrammed matches still block coll
     2,
   );
   assert.match(migration, /published\.match_id=previous\.id/);
-  assert.match(migration, /slot\.play_date between earliest_date and latest_date/);
+  assert.match(
+    migration,
+    /slot\.play_date between earliest_date and latest_date/,
+  );
 });
 
 test("an unpublishable preview is cleared and can become an automatically scheduled fixture", () => {
@@ -39,5 +42,8 @@ test("an unpublishable preview is cleared and can become an automatically schedu
   assert.match(migration, /p\.source='manual'/);
   assert.match(migration, /source='generated',updated_at=now\(\)/);
   assert.match(migration, /and \(source is distinct from 'manual'/);
-  assert.match(migration, /revoke all on function public\.auto_assign_ready_tournament_final_slots/);
+  assert.match(
+    migration,
+    /revoke all on function public\.auto_assign_ready_tournament_final_slots/,
+  );
 });
