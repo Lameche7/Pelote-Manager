@@ -21,7 +21,10 @@ export default async function handler(request, response) {
   }
   try {
     const videoId = request.body?.videoId;
-    const { clubId, channelId } = await verifiedLiveClubAdmin(request, process.env);
+    const { clubId, channelId } = await verifiedLiveClubAdmin(
+      request,
+      process.env,
+    );
     const video = await getClubVideo(process.env, clubId, videoId);
     if (await existingIngest(process.env, video.id)) {
       return response.status(200).json({
