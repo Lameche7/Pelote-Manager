@@ -4,10 +4,18 @@ import test from "node:test";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const modal = read("../src/features/reservations/pages/ReservationsPage.tsx");
-const booking = read("../src/features/reservations/services/reservationBookingService.ts");
-const calendar = read("../src/features/reservations/services/reservationCalendarService.ts");
-const migration = read("../supabase/migrations/20261119213000_ordinary_reservation_team_labels.sql");
-const title = read("../src/features/reservations/domain/ordinaryReservationLiveTitle.ts");
+const booking = read(
+  "../src/features/reservations/services/reservationBookingService.ts",
+);
+const calendar = read(
+  "../src/features/reservations/services/reservationCalendarService.ts",
+);
+const migration = read(
+  "../supabase/migrations/20261119213000_ordinary_reservation_team_labels.sql",
+);
+const title = read(
+  "../src/features/reservations/domain/ordinaryReservationLiveTitle.ts",
+);
 
 test("optional names apply only to ordinary reservations and require both", () => {
   assert.match(modal, /!championshipContext && \(/);
@@ -15,13 +23,19 @@ test("optional names apply only to ordinary reservations and require both", () =
   assert.match(modal, /Équipe 2/);
   assert.match(modal, /incompleteTeams/);
   assert.match(modal, /identicalTeams/);
-  assert.match(modal, /reservationBookingService\.create\(resource\.id, slot\.startsAt, ordinaryTeams\)/);
+  assert.match(
+    modal,
+    /reservationBookingService\.create\(resource\.id, slot\.startsAt, ordinaryTeams\)/,
+  );
   assert.match(modal, /ordinaryTeams\?\.teamOne|ordinaryTeams\.teamOne/);
 });
 
 test("team names are persisted on paid and direct reservations", () => {
   assert.match(booking, /saveOrdinaryReservationTeams\(created\.id, teams\)/);
-  assert.match(booking, /saveOrdinaryReservationTeams\(payment\.reservation_id, teams\)/);
+  assert.match(
+    booking,
+    /saveOrdinaryReservationTeams\(payment\.reservation_id, teams\)/,
+  );
   assert.match(booking, /set_my_reservation_team_labels/);
 });
 
