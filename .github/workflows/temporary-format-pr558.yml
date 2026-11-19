@@ -1,0 +1,35 @@
+name: Temporary formatting PR 558
+on:
+  pull_request:
+    types: [synchronize]
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          ref: feature/pilotoki-live-google-oauth-20261119
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format changed files
+        run: |
+          npx prettier --write \
+            api/_live-google-shared.mjs \
+            api/live-google-connect.mjs \
+            api/live-google-callback.mjs \
+            src/features/admin/live/pages/AdminLiveSettingsPage.tsx \
+            src/features/admin/live/services/adminLiveSettingsService.ts \
+            tests/pilotokiLiveAdminSettings.test.mjs
+      - name: Commit formatting and remove workflow
+        run: |
+          git rm .github/workflows/temporary-format-pr558.yml
+          git add api/_live-google-shared.mjs api/live-google-connect.mjs api/live-google-callback.mjs src/features/admin/live/pages/AdminLiveSettingsPage.tsx src/features/admin/live/services/adminLiveSettingsService.ts tests/pilotokiLiveAdminSettings.test.mjs
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style: format Pilotoki Live Google OAuth'
+          git push origin HEAD:feature/pilotoki-live-google-oauth-20261119
