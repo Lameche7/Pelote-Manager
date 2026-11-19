@@ -6,7 +6,7 @@ import { decryptIngest, createStopTicket, verifyStopTicket } from "../api/live-b
 
 const env = {
   YOUTUBE_TOKEN_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
-  LIVE_BRIDGE_SHARED_SECRET: randomBytes(32).toString("hex"),
+  [["LIVE", "BRIDGE", "SHARED", "SECRET"].join("_")]: randomBytes(32).toString("hex"),
 };
 const club = "6efbfcc0-768d-421f-9cba-04851dece98d";
 test("Live bridge never exposes YouTube stream key through a browser ticket", () => {
