@@ -42,7 +42,11 @@ test("Google refresh tokens are encrypted without appearing in the stored record
 test("a requester cannot connect Google without a Pilotoki session", async () => {
   const request = { headers: {} };
   await assert.rejects(
-    verifiedClubSettings(request, { ...env, VITE_SUPABASE_URL: "https://example.supabase.co", VITE_SUPABASE_ANON_KEY: "test" }),
+    verifiedClubSettings(request, {
+      ...env,
+      VITE_SUPABASE_URL: "https://example.supabase.co",
+      VITE_SUPABASE_ANON_KEY: "test",
+    }),
     (error) => error instanceof LiveAuthError && error.status === 401,
   );
 });
