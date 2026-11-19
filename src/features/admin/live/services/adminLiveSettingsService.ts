@@ -10,6 +10,7 @@ export type ClubLiveSettings = {
   broadcasterPolicy: LiveBroadcasterPolicy;
   allowReplays: boolean;
   connectionStatus: "awaiting_google_authorization" | "connected";
+  canConnectGoogle: boolean;
   broadcastAvailable: false;
 };
 
@@ -29,6 +30,7 @@ const mapSettings = (raw: unknown): ClubLiveSettings => {
       value.connection_status === "connected"
         ? "connected"
         : "awaiting_google_authorization",
+    canConnectGoogle: value.can_connect_google === true,
     broadcastAvailable: false,
   };
 };
@@ -70,8 +72,6 @@ export const adminLiveSettingsService = {
       "admin_save_club_live_settings",
       {
         payload: {
-          youtube_channel_id: settings.youtubeChannelId,
-          youtube_channel_label: settings.youtubeChannelLabel,
           broadcaster_policy: settings.broadcasterPolicy,
           allow_replays: settings.allowReplays,
         },
