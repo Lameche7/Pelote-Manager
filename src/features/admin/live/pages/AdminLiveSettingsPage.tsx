@@ -14,6 +14,7 @@ import {
   type ClubBroadcastSummary,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 import { PilotokiLiveCameraStudio } from "@/features/admin/live/components/PilotokiLiveCameraStudio";
+import { PilotokiLiveTestStudio } from "@/features/admin/live/components/PilotokiLiveTestStudio";
 import "./AdminLiveSettingsPage.css";
 
 export function AdminLiveSettingsPage() {
@@ -557,7 +558,10 @@ export function AdminLiveSettingsPage() {
         </section>
       )}
       {settings?.connectionStatus === "connected" && (
-        <PilotokiLiveCameraStudio />
+        <>
+          <PilotokiLiveCameraStudio />
+          <PilotokiLiveTestStudio broadcasts={broadcasts} />
+        </>
       )}
     </section>
   );
