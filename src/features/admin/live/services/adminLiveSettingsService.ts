@@ -50,6 +50,7 @@ export type PrepareBroadcastRequest = {
   scheduledStartTime: string;
   madeForKids: boolean;
   consentConfirmed: true;
+  autoStart?: boolean;
 };
 
 export type ClubBroadcastSummary = {
