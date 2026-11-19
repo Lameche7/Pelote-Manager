@@ -10,12 +10,13 @@ const calendar = readFileSync(
   "utf8",
 );
 
-test("the calendar live teaser only appears for occupied tournament/championship matches to signed-in users", () => {
+test("the calendar live teaser appears for competition matches and ordinary booked matches with named teams", () => {
   assert.match(
     calendar,
-    /isAuthenticated && inspectedSlot.status === "occupied" && \(inspectedSlot.occupationType === "match" \|\| inspectedSlot.occupationType === "championship_match"\)/,
+    /isAuthenticated && inspectedSlot.status === "occupied" && \(inspectedSlot.occupationType === "match" \|\| inspectedSlot.occupationType === "championship_match" \|\| \(inspectedSlot.occupationType === "reservation" && Boolean\(inspectedSlot.ordinaryTeams\)\)\)/,
   );
   assert.match(calendar, /Diffuser cette partie/);
+  assert.match(calendar, /Boolean\(inspectedSlot.ordinaryTeams\)/);
   assert.match(calendar, /<Video aria-hidden="true" size=\{18\}/);
 });
 
