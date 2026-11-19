@@ -10,6 +10,7 @@ import {
   adminLiveSettingsService,
   type ClubLiveSettings,
   type LiveBroadcasterPolicy,
+  type PreparedBroadcast,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 import "./AdminLiveSettingsPage.css";
 
@@ -19,6 +20,14 @@ export function AdminLiveSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [googleConfigured, setGoogleConfigured] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastType, setBroadcastType] = useState<"tournoi" | "championnat" | "other">("tournoi");
+  const [broadcastStart, setBroadcastStart] = useState("");
+  const [madeForKids, setMadeForKids] = useState<"" | "yes" | "no">("");
+  const [consentConfirmed, setConsentConfirmed] = useState(false);
+  const [prepared, setPrepared] = useState<PreparedBroadcast | null>(null);
+  const [prepareError, setPrepareError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -105,6 +114,43 @@ export function AdminLiveSettingsPage() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const prepareBroadcast = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (preparing) return;
+    setPrepareError("");
+    setPrepared(null);
+    if (!broadcastStart || madeForKids === "") {
+      setPrepareError("Complétez la date et la classification du public.");
+      return;
+    }
+    const date = new Date(broadcastStart);
+    if (Number.isNaN(date.getTime())) {
+      setPrepareError("Date de diffusion invalide.");
+      return;
+    }
+    setPreparing(true);
+    try {
+      const created = await adminLiveSettingsService.prepareBroadcast({
+        title: broadcastTitle,
+        sourceType: broadcastType,
+        sourceId: null,
+        scheduledStartTime: date.toISOString(),
+        madeForKids: madeForKids === "yes",
+        consentConfirmed: true,
+      });
+      setPrepared(created);
+      setBroadcastTitle("");
+    } catch (reason: unknown) {
+      setPrepareError(
+        reason instanceof Error
+          ? reason.message
+          : "Impossible de préparer le direct YouTube.",
+      );
+    } finally {
+      setPreparing(false);
     }
   };
 
@@ -296,6 +342,104 @@ export function AdminLiveSettingsPage() {
             {saving ? "Enregistrement…" : "Enregistrer les préférences Live"}
           </button>
         </form>
+      )}
+      {settings?.connectionStatus === "connected" && (
+        <section className="admin-card admin-live-settings__prepare">
+          <h2>
+            <RadioTower aria-hidden="true" /> Préparer un direct YouTube
+          </h2>
+          <p className="admin-live-settings__hint">
+            Cette action crée une diffusion non répertoriée sur la chaîne
+            Pilotoki et l'associe à votre club. Elle ne démarre pas la vidéo :
+            la passerelle caméra reste à intégrer.
+          </p>
+          <form onSubmit={(event) => void prepareBroadcast(event)}>
+            <label>
+              Titre de la partie
+              <input
+                type="text"
+                minLength={5}
+                maxLength={100}
+                required
+                value={broadcastTitle}
+                onChange={(event) => setBroadcastTitle(event.target.value)}
+                placeholder="Finale 4e série — Équipe A / Équipe B"
+              />
+            </label>
+            <label>
+              Type de rencontre
+              <select
+                value={broadcastType}
+                onChange={(event) =>
+                  setBroadcastType(
+                    event.target.value as "tournoi" | "championnat" | "other",
+                  )
+                }
+              >
+                <option value="tournoi">Tournoi</option>
+                <option value="championnat">Championnat</option>
+                <option value="other">Partie libre / autre</option>
+              </select>
+            </label>
+            <label>
+              Date et heure prévues
+              <input
+                type="datetime-local"
+                required
+                value={broadcastStart}
+                onChange={(event) => setBroadcastStart(event.target.value)}
+              />
+            </label>
+            <label>
+              Ce contenu est-il spécifiquement destiné aux enfants ?
+              <select
+                value={madeForKids}
+                required
+                onChange={(event) =>
+                  setMadeForKids(event.target.value as "" | "yes" | "no")
+                }
+              >
+                <option value="">Choisir une réponse</option>
+                <option value="no">Non</option>
+                <option value="yes">Oui</option>
+              </select>
+            </label>
+            <label className="admin-live-settings__checkbox">
+              <input
+                type="checkbox"
+                checked={consentConfirmed}
+                onChange={(event) => setConsentConfirmed(event.target.checked)}
+                required
+              />
+              Je confirme disposer des autorisations nécessaires pour filmer et
+              diffuser les participants.
+            </label>
+            {prepareError && (
+              <p role="alert" className="admin-live-settings__error">
+                {prepareError}
+              </p>
+            )}
+            {prepared && (
+              <p role="status" className="admin-live-settings__success">
+                Direct préparé sur YouTube :{" "}
+                <a
+                  href={prepared.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {prepared.title} <ExternalLink aria-hidden="true" />
+                </a>
+                . La diffusion caméra n'est pas encore active.
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={preparing || !consentConfirmed || madeForKids === ""}
+            >
+              {preparing ? "Création sur YouTube…" : "Préparer le direct sur YouTube"}
+            </button>
+          </form>
+        </section>
       )}
     </section>
   );
