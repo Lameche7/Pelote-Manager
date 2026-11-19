@@ -49,10 +49,44 @@ test("admin Live RPCs enforce server-side permissions and refuse privileged fiel
 });
 
 test("Pilotoki Live does not expose a non-functional broadcasting action", () => {
-  assert.match(adminPage, /aucun direct n'est activé/);
-  assert.match(adminPage, /ne verront aucun bouton de diffusion/);
+  assert.match(adminPage, /la passerelle vidéo reste à connecter/);
+  assert.match(adminPage, /Aucun direct ne peut encore être lancé/);
   assert.match(adminPage, /Autorisation Google/);
   assert.match(router, /path: "parametres\/live"/);
   assert.match(navigation, /label: "Pilotoki Live"/);
   assert.match(router, /<AdminLiveSettingsPage/);
+});
+
+test("Google authorization is server-only, club-scoped and launch stays disabled", () => {
+  const start = read("../api/live-google-connect.mjs");
+  const callback = read("../api/live-google-callback.mjs");
+  const shared = read("../api/_live-google-shared.mjs");
+  const credentials = read(
+    "../supabase/migrations/20261119110000_pilotoki_live_google_oauth_storage.sql",
+  );
+  assert.match(start, /verifiedClubSettings/);
+  assert.match(start, /access_type:\s*"offline"/);
+  assert.match(start, /stateCookie/);
+  assert.match(callback, /verifyState/);
+  assert.ok(callback.includes("channels?part=id&mine=true"));
+  assert.match(callback, /channel\.id\s*===\s*claims\.channelId/);
+  assert.match(callback, /encryptRefreshToken/);
+  assert.match(shared, /aes-256-gcm/);
+  assert.match(shared, /admin_get_club_live_settings/);
+  assert.match(credentials, /enable row level security/);
+  assert.match(
+    credentials,
+    /revoke all on public.club_live_google_credentials/,
+  );
+  assert.match(credentials, /'broadcast_available',false/);
+  assert.match(service, /connectGoogle/);
+  assert.match(adminPage, /Connecter la chaîne avec Google/);
+  const readiness = read("../api/live-google-configuration.mjs");
+  assert.match(readiness, /YOUTUBE_OAUTH_CLIENT_ID/);
+  assert.match(readiness, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(readiness, /json\(\{ configured \}\)/);
+  assert.doesNotMatch(readiness, /JSON\.stringify\(process\.env\)/);
+
+  assert.match(adminPage, /!googleConfigured/);
+  assert.match(adminPage, /live-google-configuration/);
 });

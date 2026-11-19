@@ -9,7 +9,7 @@ export type ClubLiveSettings = {
   youtubeChannelLabel: string;
   broadcasterPolicy: LiveBroadcasterPolicy;
   allowReplays: boolean;
-  connectionStatus: "awaiting_google_authorization";
+  connectionStatus: "awaiting_google_authorization" | "connected";
   broadcastAvailable: false;
 };
 
@@ -25,12 +25,40 @@ const mapSettings = (raw: unknown): ClubLiveSettings => {
         ? value.broadcaster_policy
         : "admin_only",
     allowReplays: value.allow_replays !== false,
-    connectionStatus: "awaiting_google_authorization",
+    connectionStatus:
+      value.connection_status === "connected"
+        ? "connected"
+        : "awaiting_google_authorization",
     broadcastAvailable: false,
   };
 };
 
 export const adminLiveSettingsService = {
+  async connectGoogle(): Promise<void> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token)
+      throw new Error("Reconnectez-vous à Pilotoki pour autoriser Google.");
+    const response = await fetch("/api/live-google-connect", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as {
+      authorizationUrl?: string;
+      error?: string;
+    };
+    if (
+      !response.ok ||
+      !payload.authorizationUrl?.startsWith("https://accounts.google.com/")
+    ) {
+      throw new Error(
+        payload.error ?? "Impossible de démarrer la connexion Google.",
+      );
+    }
+    window.location.assign(payload.authorizationUrl);
+  },
+
   async get(): Promise<ClubLiveSettings> {
     const { data, error } = await supabase.rpc("admin_get_club_live_settings");
     if (error) throw error;
