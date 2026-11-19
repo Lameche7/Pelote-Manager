@@ -202,3 +202,33 @@ export async function storePreparedVideo(env, clubId, videoId, input, fetchImpl 
       "Le direct existe sur YouTube mais n'a pas pu être enregistré dans Pilotoki. Contactez l'administrateur avant de réessayer.",
     );
 }
+
+export async function listPreparedVideos(env, clubId, fetchImpl = fetch) {
+  if (!/^[0-9a-f-]{36}$/i.test(clubId))
+    throw new LiveAuthError(400, "Club invalide.");
+  const url = required(env, "VITE_SUPABASE_URL");
+  const params = new URLSearchParams({
+    club_id: `eq.${clubId}`,
+    select: "id,title,youtube_video_id,source_type,status,created_at",
+    order: "created_at.desc",
+    limit: "20",
+  });
+  const response = await fetchImpl(
+    `${url}/rest/v1/pilotoki_live_videos?${params}`,
+    {
+      headers: privilegedHeaders(env),
+      cache: "no-store",
+    },
+  );
+  if (!response.ok)
+    throw new LiveAuthError(502, "Impossible de charger les directs du club.");
+  const entries = await response.json();
+  return (Array.isArray(entries) ? entries : []).map((entry) => ({
+    id: entry.id,
+    title: entry.title,
+    status: entry.status,
+    sourceType: entry.source_type,
+    createdAt: entry.created_at,
+    youtubeUrl: `https://www.youtube.com/watch?v=${entry.youtube_video_id}`,
+  }));
+}
