@@ -66,6 +66,24 @@ export type ReservationPaymentConfig = {
   mode: "test" | "helloasso";
 };
 
+export type OrdinaryReservationTeams = {
+  teamOne: string;
+  teamTwo: string;
+};
+
+export async function saveOrdinaryReservationTeams(
+  reservationId: string,
+  teams?: OrdinaryReservationTeams | null,
+): Promise<void> {
+  if (!teams) return;
+  const { error } = await supabase.rpc("set_my_reservation_team_labels", {
+    target_reservation_id: reservationId,
+    requested_team_one: teams.teamOne,
+    requested_team_two: teams.teamTwo,
+  });
+  if (error) throw new Error("Réservation créée, mais les noms des équipes n'ont pas été enregistrés. Contactez le club avant de recommencer.");
+}
+
 export type ReservationPaymentPlayer = {
   profileId: string;
   displayName: string;
@@ -220,8 +238,8 @@ export const reservationBookingService = {
     }));
   },
 
-  async createDirect(resourceId: string, startsAt: string): Promise<void> {
-    const { error } = await supabase.rpc("create_reservation", {
+  async createDirect(resourceId: string, startsAt: string, teams?: OrdinaryReservationTeams | null): Promise<void> {
+    const { data, error } = await supabase.rpc("create_reservation", {
       target_resource_id: resourceId,
       target_starts_at: startsAt,
       guest_name: null,
@@ -229,12 +247,16 @@ export const reservationBookingService = {
       guest_phone: null,
     });
     if (error) throw error;
+    const created = data as { id?: string } | null;
+    if (teams && !created?.id) throw new Error("Réservation créée mais identifiant manquant pour les équipes.");
+    if (created?.id) await saveOrdinaryReservationTeams(created.id, teams);
   },
 
   async startPayment(
     resourceId: string,
     startsAt: string,
     mode: "test" | "helloasso",
+    teams?: OrdinaryReservationTeams | null,
   ): Promise<StartedPayment> {
     const { data, error } = await supabase.rpc("reserve_for_payment", {
       target_resource_id: resourceId,
@@ -251,6 +273,8 @@ export const reservationBookingService = {
         "La réservation en attente de paiement n’a pas été créée.",
       );
     }
+
+    await saveOrdinaryReservationTeams(payment.reservation_id, teams);
 
     if (mode === "test") {
       return {
@@ -295,6 +319,7 @@ export const reservationBookingService = {
     resourceId: string,
     startsAt: string,
     partnerProfileIds: string[],
+    teams?: OrdinaryReservationTeams | null,
   ): Promise<StartedPayment> {
     const { data, error } = await supabase.rpc("reserve_for_split_payment", {
       target_resource_id: resourceId,
@@ -308,6 +333,7 @@ export const reservationBookingService = {
       throw new Error("Le paiement partagé n’a pas pu être préparé.");
     }
 
+    await saveOrdinaryReservationTeams(payment.reservation_id, teams);
     const config = await this.getPaymentConfig(resourceId);
     return {
       reservationId: payment.reservation_id,
@@ -386,15 +412,15 @@ export const reservationBookingService = {
     if (error) throw error;
   },
 
-  async create(resourceId: string, startsAt: string): Promise<void> {
+  async create(resourceId: string, startsAt: string, teams?: OrdinaryReservationTeams | null): Promise<void> {
     const config = await this.getPaymentConfig(resourceId);
 
     if (!config.enabled) {
-      await this.createDirect(resourceId, startsAt);
+      await this.createDirect(resourceId, startsAt, teams);
       return;
     }
 
-    const payment = await this.startPayment(resourceId, startsAt, config.mode);
+    const payment = await this.startPayment(resourceId, startsAt, config.mode, teams);
 
     if (payment.mode === "helloasso" && payment.redirectUrl) {
       window.location.assign(payment.redirectUrl);

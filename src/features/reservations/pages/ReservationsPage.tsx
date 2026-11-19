@@ -26,6 +26,7 @@ import {
 import {
   reservationBookingService,
   type ReservationPaymentPlayer,
+  type OrdinaryReservationTeams,
 } from "@/features/reservations/services/reservationBookingService";
 import { reservationCalendarService } from "@/features/reservations/services/reservationCalendarService";
 import {
@@ -187,6 +188,17 @@ function BookingModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [teamOne, setTeamOne] = useState("");
+  const [teamTwo, setTeamTwo] = useState("");
+  const ordinaryTeams: OrdinaryReservationTeams | null =
+    teamOne.trim() && teamTwo.trim()
+      ? { teamOne: teamOne.trim(), teamTwo: teamTwo.trim() }
+      : null;
+  const incompleteTeams = Boolean(teamOne.trim()) !== Boolean(teamTwo.trim());
+  const identicalTeams =
+    ordinaryTeams !== null &&
+    ordinaryTeams.teamOne.toLocaleLowerCase("fr") ===
+      ordinaryTeams.teamTwo.toLocaleLowerCase("fr");
   const isFreeChampionshipMatch =
     championshipContext?.matchPaymentMode === "free";
 
@@ -237,6 +249,12 @@ function BookingModal({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+    if (!championshipContext && (incompleteTeams || identicalTeams)) {
+      setErrorMessage(incompleteTeams
+        ? "Renseignez les deux équipes, ou laissez les deux champs vides."
+        : "Les deux équipes doivent avoir des noms différents.");
+      return;
+    }
 
     if (championshipContext) {
       setIsSubmitting(true);
@@ -271,6 +289,7 @@ function BookingModal({
           resource.id,
           slot.startsAt,
           selectedPlayers.map((player) => player.profileId),
+          ordinaryTeams,
         );
         window.location.assign(
           `${ROUTES.reservationSharePayment}?paymentId=${encodeURIComponent(payment.paymentId)}`,
@@ -286,7 +305,7 @@ function BookingModal({
 
     setIsSubmitting(true);
     try {
-      await reservationBookingService.create(resource.id, slot.startsAt);
+      await reservationBookingService.create(resource.id, slot.startsAt, ordinaryTeams);
       setIsConfirmed(true);
       await onSuccess();
     } catch (error) {
@@ -332,6 +351,9 @@ function BookingModal({
               {formatTime(slot.startsAt, resource.timezone)}.
             </p>
             {championshipMatchLabel && <strong>{championshipMatchLabel}</strong>}
+            {!championshipContext && ordinaryTeams && (
+              <strong>{ordinaryTeams.teamOne} – {ordinaryTeams.teamTwo}</strong>
+            )}
             {championshipContext && (
               <PushActivationNudge context="championship" compact />
             )}
@@ -393,6 +415,41 @@ function BookingModal({
                   ? "Profil licencié actif : conditions licencié appliquées."
                   : "Compte non licencié : conditions public appliquées."}
               </p>
+            )}
+
+            {!championshipContext && (
+              <fieldset className="booking-modal__team-labels">
+                <legend>Partie amicale (facultatif)</legend>
+                <p>
+                  Indiquez les deux équipes si vous souhaitez les afficher sur
+                  le calendrier et préparer une éventuelle vidéo Pilotoki Live.
+                  Sinon, le nom du réservataire restera affiché comme avant.
+                </p>
+                <label>
+                  Équipe 1
+                  <input
+                    type="text"
+                    maxLength={80}
+                    value={teamOne}
+                    onChange={(event) => setTeamOne(event.target.value)}
+                    placeholder="Ex. Dupont / Martin"
+                    autoComplete="off"
+                  />
+                </label>
+                <label>
+                  Équipe 2
+                  <input
+                    type="text"
+                    maxLength={80}
+                    value={teamTwo}
+                    onChange={(event) => setTeamTwo(event.target.value)}
+                    placeholder="Ex. Durand / Bernard"
+                    autoComplete="off"
+                  />
+                </label>
+                {incompleteTeams && <small>Renseignez les deux équipes, ou aucune.</small>}
+                {identicalTeams && <small>Choisissez deux noms différents.</small>}
+              </fieldset>
             )}
 
             {!championshipContext && paymentEnabled && terms && (
@@ -481,6 +538,7 @@ function BookingModal({
                 type="submit"
                 disabled={
                   isSubmitting ||
+                  (!championshipContext && (incompleteTeams || identicalTeams)) ||
                   paymentEnabled === null ||
                   (!isFreeChampionshipMatch && !terms) ||
                   (!championshipContext &&

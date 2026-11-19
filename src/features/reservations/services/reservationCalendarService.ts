@@ -43,6 +43,13 @@ type RefereeNameRow = {
   referee_name: string | null;
 };
 
+type OrdinaryTeamRow = {
+  resource_id: string;
+  starts_at: string;
+  team_one: string;
+  team_two: string;
+};
+
 type SlotRow = {
   resource_id: string;
   starts_at: string;
@@ -93,6 +100,21 @@ export const reservationCalendarService = {
         getSupabaseErrorMessage(error, "Impossible de charger le calendrier."),
       );
 
+    // Optional participant labels are supplementary. An unavailable label RPC
+    // must never make the booking calendar disappear.
+    const teamResponse = await supabase.rpc("list_public_reservation_team_labels", {
+      target_resource_id: resourceId,
+      range_start: fromDate,
+      range_end: toDate,
+    });
+    const teamRows = teamResponse.error ? [] : ((teamResponse.data ?? []) as OrdinaryTeamRow[]);
+    const teamsByStart = new Map(
+      teamRows.map((row) => [
+        new Date(row.starts_at).getTime(),
+        { teamOne: row.team_one, teamTwo: row.team_two },
+      ]),
+    );
+
     // Referee decorations are nonessential to availability: do not hide the
     // entire timetable if either supplementary RPC temporarily fails.
     const [intervalResponse, nameResponse, finalRoundResponse, finalDayResponse] = await Promise.allSettled([
@@ -132,7 +154,15 @@ export const reservationCalendarService = {
       endsAt: slot.ends_at,
       status: slot.status,
       bookingOpensAt: slot.booking_opens_at,
-      bookedByName: slot.booked_by_name,
+      bookedByName:
+        slot.status === "occupied" && slot.occupation_type === "reservation"
+          ? (() => {
+              const teams = teamsByStart.get(new Date(slot.starts_at).getTime());
+              return teams
+                ? `${teams.teamOne} – ${teams.teamTwo}`
+                : slot.booked_by_name;
+            })()
+          : slot.booked_by_name,
       occupationType: slot.occupation_type,
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
