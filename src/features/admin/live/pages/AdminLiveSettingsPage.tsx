@@ -20,6 +20,7 @@ export function AdminLiveSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -40,6 +41,23 @@ export function AdminLiveSettingsPage() {
       })
       .finally(() => {
         if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/live-google-configuration", { cache: "no-store" })
+      .then(async (response) =>
+        response.ok ? response.json() : { configured: false },
+      )
+      .then((result: { configured?: boolean }) => {
+        if (active) setGoogleConfigured(result.configured === true);
+      })
+      .catch(() => {
+        if (active) setGoogleConfigured(false);
       });
     return () => {
       active = false;
@@ -217,6 +235,7 @@ export function AdminLiveSettingsPage() {
               <button
                 type="button"
                 disabled={
+                  !googleConfigured ||
                   connecting ||
                   saving ||
                   !youtubeIdPattern.test(settings.youtubeChannelId)
@@ -227,6 +246,12 @@ export function AdminLiveSettingsPage() {
                   ? "Ouverture de Google…"
                   : "Connecter la chaîne avec Google"}
               </button>
+            )}
+            {!googleConfigured && (
+              <p className="admin-live-settings__hint" role="status">
+                Connexion Google non configurée côté serveur. Le bouton sera
+                activé après l'ajout des identifiants Google OAuth dans Vercel.
+              </p>
             )}
             <small>
               Enregistrez la chaîne ci-dessus avant la connexion. Utilisez le
