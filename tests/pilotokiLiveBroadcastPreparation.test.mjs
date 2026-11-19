@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomBytes } from "node:crypto";
-import { encryptRefreshToken, LiveAuthError } from "../api/_live-google-shared.mjs";
+import {
+  encryptRefreshToken,
+  LiveAuthError,
+} from "../api/_live-google-shared.mjs";
 import {
   decryptRefreshToken,
   googleAccessToken,
@@ -44,7 +47,11 @@ test("YouTube broadcast inputs need valid title, time, explicit audience and con
     LiveAuthError,
   );
   assert.throws(
-    () => validateBroadcastInput({ ...valid, scheduledStartTime: new Date(now - 1000).toISOString() }, now),
+    () =>
+      validateBroadcastInput(
+        { ...valid, scheduledStartTime: new Date(now - 1000).toISOString() },
+        now,
+      ),
     LiveAuthError,
   );
 });
@@ -52,15 +59,21 @@ test("YouTube broadcast inputs need valid title, time, explicit audience and con
 test("Refresh token is decrypted only server-side and never returned to client", () => {
   const original = "test-only-refresh-token-1234567";
   const encrypted = encryptRefreshToken(env, original);
-  assert.equal(decryptRefreshToken(env, {
-    refresh_token_ciphertext: encrypted.ciphertext,
-    refresh_token_iv: encrypted.iv,
-  }), original);
-  assert.throws(
-    () => decryptRefreshToken(env, {
-      refresh_token_ciphertext: (encrypted.ciphertext[0] === "A" ? "B" : "A") + encrypted.ciphertext.slice(1),
+  assert.equal(
+    decryptRefreshToken(env, {
+      refresh_token_ciphertext: encrypted.ciphertext,
       refresh_token_iv: encrypted.iv,
     }),
+    original,
+  );
+  assert.throws(
+    () =>
+      decryptRefreshToken(env, {
+        refresh_token_ciphertext:
+          (encrypted.ciphertext[0] === "A" ? "B" : "A") +
+          encrypted.ciphertext.slice(1),
+        refresh_token_iv: encrypted.iv,
+      }),
     LiveAuthError,
   );
 });
@@ -76,16 +89,27 @@ test("Only the selected user's authorized club is accepted", async () => {
   const requested = [];
   const mockFetch = async (url, options) => {
     requested.push({ url, options });
-    if (url.endsWith("/auth/v1/user")) return { ok: true, json: async () => ({ id: "22222222-2222-4222-8222-222222222222" }) };
-    return { ok: true, json: async () => ({
-      club_id: clubId,
-      youtube_channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
-      connection_status: "connected",
-    }) };
+    if (url.endsWith("/auth/v1/user"))
+      return {
+        ok: true,
+        json: async () => ({ id: "22222222-2222-4222-8222-222222222222" }),
+      };
+    return {
+      ok: true,
+      json: async () => ({
+        club_id: clubId,
+        youtube_channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
+        connection_status: "connected",
+      }),
+    };
   };
-  const result = await verifiedLiveClubAdmin({
-    headers: { authorization: "Bearer test-user-token" },
-  }, env, mockFetch);
+  const result = await verifiedLiveClubAdmin(
+    {
+      headers: { authorization: "Bearer test-user-token" },
+    },
+    env,
+    mockFetch,
+  );
   assert.equal(result.clubId, clubId);
   assert.equal(requested.length, 2);
   assert.match(requested[1].url, /rpc\/admin_get_club_live_settings/);
@@ -97,11 +121,15 @@ test("A scheduled broadcast stays unlisted and does not auto-start video", async
     body = JSON.parse(options.body);
     return { ok: true, json: async () => ({ id: "abcdefghi12" }) };
   };
-  const id = await youtubeCreateBroadcast("test-access", {
-    title: "Finale Lourdes",
-    scheduledStartTime: "2026-12-01T19:00:00.000Z",
-    madeForKids: false,
-  }, fetchMock);
+  const id = await youtubeCreateBroadcast(
+    "test-access",
+    {
+      title: "Finale Lourdes",
+      scheduledStartTime: "2026-12-01T19:00:00.000Z",
+      madeForKids: false,
+    },
+    fetchMock,
+  );
   assert.equal(id, "abcdefghi12");
   assert.equal(body.status.privacyStatus, "unlisted");
   assert.equal(body.contentDetails.enableAutoStart, false);
@@ -114,19 +142,24 @@ test("Prepared videos are queried with an authenticated club-scoped filter", asy
     observed = { url, options };
     return {
       ok: true,
-      json: async () => [{
-        id: "22222222-2222-4222-8222-222222222222",
-        title: "Finale Lourdes",
-        youtube_video_id: "abcdefghi12",
-        status: "scheduled",
-        source_type: "tournoi",
-        created_at: "2026-11-19T12:00:00Z",
-      }],
+      json: async () => [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          title: "Finale Lourdes",
+          youtube_video_id: "abcdefghi12",
+          status: "scheduled",
+          source_type: "tournoi",
+          created_at: "2026-11-19T12:00:00Z",
+        },
+      ],
     };
   };
   const result = await listPreparedVideos(env, clubId, mockFetch);
   assert.equal(result.length, 1);
-  assert.equal(result[0].youtubeUrl, "https://www.youtube.com/watch?v=abcdefghi12");
+  assert.equal(
+    result[0].youtubeUrl,
+    "https://www.youtube.com/watch?v=abcdefghi12",
+  );
   assert.match(observed.url, /club_id=eq\./);
   assert.equal(observed.options.headers.apikey, "sb_secret_test-only");
   assert.equal(observed.options.headers.authorization, undefined);
@@ -136,11 +169,16 @@ test("A missing or expired Google refresh token prevents YouTube calls", async (
   const encrypted = encryptRefreshToken(env, "test-only-refresh-token-1234567");
   const mockFetch = async (url) => {
     if (url.includes("pilotoki_live_google_credentials"))
-      return { ok: true, json: async () => [{
-        channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
-        refresh_token_ciphertext: encrypted.ciphertext,
-        refresh_token_iv: encrypted.iv,
-      }] };
+      return {
+        ok: true,
+        json: async () => [
+          {
+            channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
+            refresh_token_ciphertext: encrypted.ciphertext,
+            refresh_token_iv: encrypted.iv,
+          },
+        ],
+      };
     return { ok: false };
   };
   await assert.rejects(
