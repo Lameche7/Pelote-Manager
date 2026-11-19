@@ -171,6 +171,63 @@ export function validateBroadcastInput(payload, now = Date.now()) {
   };
 }
 
+// Only return allowlisted YouTube error reasons. Never relay raw third-party
+// messages, tokens, request metadata, or arbitrary response fields.
+const YOUTUBE_BROADCAST_ERRORS = Object.freeze({
+  liveStreamingNotEnabled:
+    "La chaîne YouTube n'est pas activée pour la diffusion en direct. Vérifiez YouTube Studio.",
+  insufficientLivePermissions:
+    "Le compte Google n'a pas les droits nécessaires pour créer un direct sur cette chaîne.",
+  livePermissionBlocked:
+    "YouTube bloque actuellement la diffusion en direct sur cette chaîne.",
+  invalidScheduledStartTime:
+    "YouTube refuse la date prévue. Essayez une date ultérieure.",
+  invalidPrivacyStatus:
+    "YouTube refuse le paramètre de confidentialité du direct.",
+  invalidAutoStart:
+    "YouTube refuse le paramètre de démarrage automatique.",
+  invalidAutoStop:
+    "YouTube refuse le paramètre d'arrêt automatique.",
+  quotaExceeded:
+    "Le quota d'utilisation de l'API YouTube est épuisé.",
+  dailyLimitExceeded:
+    "La limite quotidienne de l'API YouTube est atteinte.",
+  rateLimitExceeded:
+    "Trop de demandes envoyées à YouTube. Réessayez plus tard.",
+  insufficientPermissions:
+    "Le compte Google n'a pas une autorisation suffisante pour cette opération.",
+  forbidden:
+    "YouTube interdit la création du direct avec les autorisations actuelles.",
+});
+
+export async function youtubeBroadcastFailure(response) {
+  let reason = "unknown";
+  try {
+    const payload = await response.json();
+    const value = payload?.error?.errors?.[0]?.reason;
+    if (
+      typeof value === "string" &&
+      Object.hasOwn(YOUTUBE_BROADCAST_ERRORS, value)
+    ) {
+      reason = value;
+    }
+  } catch {
+    // A non-JSON response is still represented by a safe status code.
+  }
+  const httpStatus =
+    Number.isInteger(response.status) && response.status >= 400 &&
+    response.status <= 599
+      ? response.status
+      : 502;
+  const detail =
+    YOUTUBE_BROADCAST_ERRORS[reason] ??
+    "YouTube a refusé la préparation. Consultez les réglages de diffusion de la chaîne.";
+  return new LiveAuthError(
+    502,
+    `${detail} (YouTube HTTP ${httpStatus}, code : ${reason}).`,
+  );
+}
+
 export async function youtubeCreateBroadcast(
   accessToken,
   input,
@@ -202,11 +259,7 @@ export async function youtubeCreateBroadcast(
       cache: "no-store",
     },
   );
-  if (!response.ok)
-    throw new LiveAuthError(
-      502,
-      "YouTube a refusé la préparation du direct. Vérifiez les droits et les quotas de la chaîne.",
-    );
+  if (!response.ok) throw await youtubeBroadcastFailure(response);
   const result = await response.json();
   if (!/^[A-Za-z0-9_-]{11}$/.test(result?.id ?? ""))
     throw new LiveAuthError(
