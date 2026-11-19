@@ -188,7 +188,10 @@ export async function storeCredentials(
       method: "POST",
       headers: {
         apikey: serviceKey,
-        authorization: `Bearer ${serviceKey}`,
+        // Modern sb_secret_* keys are opaque API keys, not bearer JWTs.
+        ...(serviceKey.startsWith("sb_secret_")
+          ? {}
+          : { authorization: `Bearer ${serviceKey}` }),
         "content-type": "application/json",
         Prefer: "resolution=merge-duplicates,return=minimal",
       },
