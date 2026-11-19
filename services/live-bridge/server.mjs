@@ -47,6 +47,7 @@ function closeSession(id) {
   if (!s) return;
   sessions.delete(id);
   clearTimeout(s.timer);
+  clearTimeout(s.retry);
   s.stopped = true;
   s.worker?.kill("SIGTERM");
 }
