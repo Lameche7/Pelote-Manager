@@ -184,14 +184,10 @@ const YOUTUBE_BROADCAST_ERRORS = Object.freeze({
     "YouTube refuse la date prévue. Essayez une date ultérieure.",
   invalidPrivacyStatus:
     "YouTube refuse le paramètre de confidentialité du direct.",
-  invalidAutoStart:
-    "YouTube refuse le paramètre de démarrage automatique.",
-  invalidAutoStop:
-    "YouTube refuse le paramètre d'arrêt automatique.",
-  quotaExceeded:
-    "Le quota d'utilisation de l'API YouTube est épuisé.",
-  dailyLimitExceeded:
-    "La limite quotidienne de l'API YouTube est atteinte.",
+  invalidAutoStart: "YouTube refuse le paramètre de démarrage automatique.",
+  invalidAutoStop: "YouTube refuse le paramètre d'arrêt automatique.",
+  quotaExceeded: "Le quota d'utilisation de l'API YouTube est épuisé.",
+  dailyLimitExceeded: "La limite quotidienne de l'API YouTube est atteinte.",
   rateLimitExceeded:
     "Trop de demandes envoyées à YouTube. Réessayez plus tard.",
   insufficientPermissions:
@@ -215,7 +211,8 @@ export async function youtubeBroadcastFailure(response) {
     // A non-JSON response is still represented by a safe status code.
   }
   const httpStatus =
-    Number.isInteger(response.status) && response.status >= 400 &&
+    Number.isInteger(response.status) &&
+    response.status >= 400 &&
     response.status <= 599
       ? response.status
       : 502;
