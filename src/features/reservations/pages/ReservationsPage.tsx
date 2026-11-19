@@ -1203,7 +1203,7 @@ export function ReservationsPage() {
             {inspectionError && <p role="alert">{inspectionError}</p>}
             {unprogramError && <p role="alert">{unprogramError}</p>}
             {competitionError && <p role="alert">{competitionError}</p>}
-            {isAuthenticated && inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match") && (
+            {isAuthenticated && inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match" || (inspectedSlot.occupationType === "reservation" && Boolean(inspectedSlot.ordinaryTeams))) && (
               <div className="reservation-slot-actions">
                 <button
                   className="reservation-slot-actions__button"
