@@ -88,7 +88,7 @@ export default async function handler(request, response) {
     if (!channels?.items?.some((channel) => channel.id === claims.channelId)) {
       throw new LiveAuthError(
         409,
-        "Le compte Google sélectionné ne possède pas la chaîne configurée pour ce club.",
+        "Le compte Google sélectionné ne possède pas la chaîne Pilotoki.",
       );
     }
     const encrypted = encryptRefreshToken(env, tokens.refresh_token);
