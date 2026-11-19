@@ -123,8 +123,10 @@ export function validateBroadcastInput(payload, now = Date.now()) {
   if (!["tournoi", "championnat", "other"].includes(type))
     throw new LiveAuthError(400, "Type de rencontre invalide.");
   const sourceId = payload.sourceId ?? null;
-  if (sourceId !== null && !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(sourceId))
-    throw new LiveAuthError(400, "Identifiant de rencontre invalide.");
+  // A match association requires a separate authorization check against the club.
+  // Until then, reject arbitrary source IDs rather than enabling cross-club references.
+  if (sourceId !== null)
+    throw new LiveAuthError(400, "Le rattachement automatique à une rencontre sera disponible prochainement.");
   const scheduled = new Date(payload.scheduledStartTime);
   if (!Number.isFinite(scheduled.getTime()) ||
     scheduled.getTime() < now + 60_000 ||
