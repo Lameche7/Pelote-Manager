@@ -66,7 +66,7 @@ test("Google authorization is server-only, club-scoped and launch stays disabled
   assert.match(start, /access_type:"offline"/);
   assert.match(start, /stateCookie/);
   assert.match(callback, /verifyState/);
-  assert.match(callback, /channels\\?part=id&mine=true/);
+  assert.ok(callback.includes("channels?part=id&mine=true"));
   assert.match(callback, /channel.id===claims.channelId/);
   assert.match(callback, /encryptRefreshToken/);
   assert.match(shared, /aes-256-gcm/);
