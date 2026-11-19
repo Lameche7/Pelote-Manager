@@ -7,6 +7,7 @@ export type CalendarSlot = {
   status: CalendarSlotStatus;
   bookingOpensAt: string | null;
   bookedByName: string | null;
+  ordinaryTeams?: { teamOne: string; teamTwo: string } | null;
   occupationType?: string | null;
   displayColor?: string | null;
   reservationAccess?: "standard" | "championship" | null;

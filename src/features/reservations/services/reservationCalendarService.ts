@@ -164,6 +164,9 @@ export const reservationCalendarService = {
             })()
           : slot.booked_by_name,
       occupationType: slot.occupation_type,
+      ordinaryTeams: slot.status === "occupied" && slot.occupation_type === "reservation"
+        ? teamsByStart.get(new Date(slot.starts_at).getTime()) ?? null
+        : null,
       displayColor: slot.display_color,
       reservationAccess: slot.reservation_access,
       resultDisplay: slot.result_display,
