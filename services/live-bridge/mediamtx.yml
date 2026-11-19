@@ -1,0 +1,17 @@
+logLevel: warn
+rtsp: yes
+rtspAddress: 127.0.0.1:8554
+rtmp: no
+hls: no
+srt: no
+webrtc: yes
+webrtcAddress: 127.0.0.1:8889
+webrtcLocalUDPAddress: :8189
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts: ["PUBLIC_IP_REPLACE_ME"]
+webrtcAllowOrigins: ["https://app.pelotemanager.fr"]
+authMethod: http
+authHTTPAddress: http://127.0.0.1:8787/auth
+paths:
+  all_others:
+    source: publisher
