@@ -27,7 +27,7 @@ test("the migration clears only unresolved, non-final slot allocations", () => {
   assert.ok(!migration.includes("delete from public.tournament_matches"));
 });
 
-test("the database rejects assignments for unknown semifinal or eighth opponents", () => {
+test("database guards against unqualified knockout placeholders", () => {
   for (const fragment of [
     "guard_unresolved_tournament_final_slot",
     "new.resource_id is null or new.round='final'",
@@ -40,7 +40,7 @@ test("the database rejects assignments for unknown semifinal or eighth opponents
   }
 });
 
-test("the automatic and manual calendars only place complete actual matches", () => {
+test("only actual matches with known teams are placed", () => {
   for (const fragment of [
     "const realMatchNodes = useMemo(",
     "row?.actualMatchId && row.teamAId && row.teamBId",
