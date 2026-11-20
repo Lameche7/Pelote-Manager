@@ -12,7 +12,6 @@ import {
   type MemberHomeBanner,
 } from "@/features/notifications/services/notificationService";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
-import { publicClubQuery } from "@/shared/config/domains";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
@@ -70,7 +69,6 @@ export function HomePage() {
   const octoberRoseVisible = showOctoberRose();
   const movemberVisible = showMovember();
   const publicClubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
-  const publicLink = (path: string) => `${path}${publicClubQuery(publicClubSlug)}`;
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
