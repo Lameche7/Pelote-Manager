@@ -96,7 +96,9 @@ export function NetworkVideosPage() {
                 aria-label={`Lire ${video.title} dans Pilotoki`}
               >
                 <PlayCircle aria-hidden="true" />
-                <span>Regarder {video.status === "live" ? "le direct" : "le replay"}</span>
+                <span>
+                  Regarder {video.status === "live" ? "le direct" : "le replay"}
+                </span>
               </button>
             )}
             <div className="network-videos__video-details">
@@ -118,9 +120,9 @@ export function NetworkVideosPage() {
 
   return (
     <main className="network-directory network-videos">
-      <header className="network-videos__header">
+      <div className="network-videos__header">
         <NetworkNavigation />
-      </header>
+      </div>
       <div className="network-videos__body">
         <h1 className="network-videos__title">Pilotoki Live</h1>
 
