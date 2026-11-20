@@ -6,6 +6,10 @@ const leaseService = readFileSync(
   "src/features/platform/services/platformAdminLeaseService.ts",
   "utf8",
 );
+const leaseEdge = readFileSync(
+  "supabase/functions/platform-business-admin-lease/index.ts",
+  "utf8",
+);
 const shell = readFileSync(
   "src/features/admin/components/AdminShell.tsx",
   "utf8",
@@ -148,4 +152,11 @@ test("un bail est limité au club choisi", () => {
   assert.match(leaseMigration, /set club_id = excluded\.club_id/);
   assert.ok(leaseService.includes("async issue(clubId: string)"));
   assert.ok(leaseService.includes("body: { clubId }"));
+});
+
+test("l'API des baux refuse les identifiants de club invalides", () => {
+  assert.ok(leaseEdge.includes('request.json()'));
+  assert.ok(leaseEdge.includes('Identifiant de club invalide'));
+  assert.ok(leaseEdge.includes('target_club_id: requestedClubId'));
+  assert.ok(leaseEdge.includes('PLATFORM_ADMIN_LEASES_ENABLED'));
 });
