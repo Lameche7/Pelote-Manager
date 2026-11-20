@@ -36,7 +36,8 @@ function bearer(value: string | null): string | null {
 
 /**
  * PLATFORM-only, verify_jwt=true. Never deploy before the business SQL
- * migration has been reviewed, backed up, and validated for the agreed\n * controlled production rollout. Keep the feature flag disabled until ready.
+ * migration has been reviewed, backed up, and validated for the agreed
+ * controlled production rollout. Keep the feature flag disabled until ready.
  * The caller cannot choose a user id, permissions, or lease duration.
  */
 Deno.serve(async (request: Request): Promise<Response> => {
@@ -51,6 +52,22 @@ Deno.serve(async (request: Request): Promise<Response> => {
     Deno.env.get("PLATFORM_ADMIN_LEASES_ENABLED") !== "true"
   ) {
     return reply(request, 503, { error: "Fonctionnalité non activée" });
+  }
+
+  let requestedClubId: string | null = null;
+  if (request.method === "POST") {
+    let payload: unknown;
+    try {
+      payload = await request.json();
+    } catch {
+      return reply(request, 400, { error: "Club requis" });
+    }
+    const id = (payload as { clubId?: unknown } | null)?.clubId;
+    if (typeof id !== "string" ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      return reply(request, 400, { error: "Identifiant de club invalide" });
+    }
+    requestedClubId = id;
   }
 
   const platformToken = bearer(request.headers.get("Authorization"));
@@ -115,7 +132,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
     const parameters =
       request.method === "DELETE"
         ? { target_business_user_id: businessUser.id }
-        : { target_business_user_id: businessUser.id, requested_seconds: 300 };
+        : { target_business_user_id: businessUser.id, target_club_id: requestedClubId, requested_seconds: 300 };
     const { data, error } = await business.rpc(operation, parameters);
     if (error) throw error;
 
