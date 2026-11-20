@@ -28,7 +28,10 @@ test("la sélection mémorisée est vérifiée par le catalogue serveur", () => 
   assert.match(source, /if \(!isVerifiedAdmin \|\| status !== "ready"\) return/);
   assert.match(source, /if \(!valid && selectedSlug\)/);
   // Even an empty, successfully loaded catalogue must invalidate stale choices.
-  assert.doesNotMatch(source, /if \(!isVerifiedAdmin \|\| !clubs\.length\) return/);
+  assert.doesNotMatch(
+    source,
+    /if \(!isVerifiedAdmin \|\| !clubs\.length\) return/,
+  );
 });
 
 test("une session absente ou un rôle révoqué efface la préférence", () => {
