@@ -176,8 +176,10 @@ export function AdminTournamentFinalWeeklyOverview({
             node.displayOrder,
           ),
         );
-        const title = bracketNode
-          ? describeFinalStageOpponents({
+        const title = provisional && node.round === "final"
+          ? `Finale ${series?.name ?? "Série"} · équipes à déterminer`
+          : bracketNode
+            ? describeFinalStageOpponents({
               node: bracketNode,
               nodes: bracketNodes,
               seeds: series?.seeds ?? [],
@@ -188,7 +190,9 @@ export function AdminTournamentFinalWeeklyOverview({
           slot,
           kind: "match",
           title,
-          detail: `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.resultStatus === "validated" ? " · Jouée" : node.published ? " · Publiée" : " · Projetée"}`,
+          detail: provisional && node.round === "final"
+            ? "Finale · horaire fixé, adversaires à déterminer"
+            : `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.resultStatus === "validated" ? " · Jouée" : node.published ? " · Publiée" : " · À confirmer"}`,
           seriesId: node.seriesId,
           provisional,
           color: series?.color,
@@ -382,7 +386,7 @@ export function AdminTournamentFinalWeeklyOverview({
     }
     const footer = document.createElement("footer");
     footer.textContent =
-      "Planning prévisionnel. Les rencontres provisoires restent à confirmer. Les créneaux non configurés ne sont pas considérés comme libres.";
+      "Planning dynamique. Les finales déjà fixées gardent leur horaire ; les positions théoriques ne réservent aucun terrain.";
     document.body.appendChild(footer);
     printWindow.focus();
     printWindow.print();
@@ -397,7 +401,7 @@ export function AdminTournamentFinalWeeklyOverview({
         <div>
           <p className="final-weekly-overview__eyebrow">Vue globale</p>
           <h4>Planning semaine par semaine</h4>
-          <p>Parties programmées, positions provisoires et créneaux libres.</p>
+          <p>Parties connues, finales fixées et créneaux libres.</p>
         </div>
         <div className="final-weekly-overview__navigation">
           <button
@@ -567,7 +571,7 @@ export function AdminTournamentFinalWeeklyOverview({
       <p className="final-weekly-overview__note">
         « Libre » signifie qu'aucune affectation du tournoi ni réservation
         connue n'occupe le créneau configuré. Les heures sans créneau configuré
-        sont indiquées par « — » ; les places provisoires restent à confirmer
+        sont indiquées par « — » ; les dates des finales fixées restent réservées
         avec les joueurs. Sélectionner un créneau prépare une affectation sans
         publier la rencontre ni envoyer de notification.
       </p>
