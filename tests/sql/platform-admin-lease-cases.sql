@@ -102,10 +102,7 @@ begin
     raise exception 'Lease for B unexpectedly granted access to A';
   exception when insufficient_privilege then null;
   end;
-  if (select c.notes from public.clubs c
-      where c.id = '00000000-0000-0000-0000-000000000001') is not null then
-    raise exception 'Scoped update modified another club';
-  end if;
+
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
     raise exception 'Active platform lease granted cross-club write access';
   end if;
@@ -116,6 +113,16 @@ begin
     raise exception 'Unknown permission was accepted';
   end if;
 end $check$;
+-- Check isolation directly as the test owner, not the restricted authenticated role.
+reset role;
+do $check$
+begin
+  if (select c.notes from public.clubs c
+      where c.id = '00000000-0000-0000-0000-000000000001') is not null then
+    raise exception 'Scoped update modified another club';
+  end if;
+end $check$;
+set local role authenticated;
 -- Another authenticated user must not inherit the lease.
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000002', true);
 do $check$
