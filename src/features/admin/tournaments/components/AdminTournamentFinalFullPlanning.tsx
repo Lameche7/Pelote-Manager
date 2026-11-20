@@ -205,6 +205,15 @@ export function AdminTournamentFinalFullPlanning({
       ),
     [workspace?.nodes],
   );
+  // Only a created fixture with two known teams belongs in the live scheduler.
+  const realMatchNodes = useMemo(
+    () =>
+      nodes.filter((node) => {
+        const row = rowById.get(node.id);
+        return Boolean(row?.actualMatchId && row.teamAId && row.teamBId);
+      }),
+    [nodes, rowById],
+  );
   const slotById = useMemo(
     () => new Map((workspace?.slots ?? []).map((slot) => [slot.id, slot])),
     [workspace?.slots],
@@ -256,7 +265,7 @@ export function AdminTournamentFinalFullPlanning({
     if (!workspace) return new Map<string, string>();
     const used = new Set(persistedAssignments.map((item) => item.slotId));
     const result = new Map<string, string>();
-    for (const node of nodes) {
+    for (const node of realMatchNodes) {
       if (persistedByNode.has(node.id)) continue;
       const availability = finalRoundAvailableSlots({
         node,
@@ -299,14 +308,14 @@ export function AdminTournamentFinalFullPlanning({
       }
     }
     return result;
-  }, [nodes, persistedAssignments, persistedByNode, workspace]);
+  }, [nodes, realMatchNodes, persistedAssignments, persistedByNode, workspace]);
 
   const officialFinalDate = workspace?.tournament.finalsEndsOn;
   const finalDaySlotCount = officialFinalDate
     ? (workspace?.slots ?? []).filter((slot) => slot.date === officialFinalDate)
         .length
     : 0;
-  const quickQueue = nodes.filter((node) => {
+  const quickQueue = realMatchNodes.filter((node) => {
     const row = rowById.get(node.id);
     return (
       row &&
@@ -492,8 +501,18 @@ export function AdminTournamentFinalFullPlanning({
       )
       .slice(0, 6);
   }, [workspace, quickNode, quickAssignable, nodes, persistedAssignments]);
-  const plannedCount = persistedAssignments.length;
-  const unplannedCount = Math.max(0, nodes.length - plannedCount);
+  const plannedCount = realMatchNodes.filter((node) =>
+    persistedByNode.has(node.id),
+  ).length;
+  const unplannedCount = realMatchNodes.filter((node) => {
+    const row = rowById.get(node.id);
+    return (
+      !persistedByNode.has(node.id) &&
+      !row?.published &&
+      row?.resultStatus !== "validated"
+    );
+  }).length;
+  const theoreticalPositionsCount = nodes.length - realMatchNodes.length;
 
   const run = async (action: () => Promise<string>) => {
     setBusy(true);
@@ -580,24 +599,58 @@ export function AdminTournamentFinalFullPlanning({
   const autoPlan = () =>
     run(async () => {
       if (!workspace) return "";
-      // Recalculate automatically generated placements, not just empty nodes.
-      // Keep manual, published and validated assignments untouched.
+      // Recalculate actual complete fixtures only. Never place future rounds
+      // whose qualified teams have not both been identified.
+      const realNodeIds = new Set(realMatchNodes.map((node) => node.id));
       const existing = assignmentsFromWorkspace(workspace).filter(
-        (assignment) => rowById.get(assignment.nodeId)?.source !== "generated",
+        (assignment) => {
+          const row = rowById.get(assignment.nodeId);
+          return Boolean(
+            realNodeIds.has(assignment.nodeId) &&
+            row &&
+            (row.published ||
+              row.resultStatus === "validated" ||
+              row.source !== "generated"),
+          );
+        },
       );
       const fixedNodeIds = workspace.nodes
         .filter(
           (row) =>
-            row.published ||
-            row.resultStatus === "validated" ||
-            row.source === "manual",
+            realNodeIds.has(rowNodeId(row)) &&
+            (row.published ||
+              row.resultStatus === "validated" ||
+              row.source === "manual"),
         )
         .map(rowNodeId);
+      const normalizedOccupied = new Set(
+        workspace.weeklyOccupiedSlotIds.map((value) =>
+          value
+            .split("|")
+            .map((part, index) => (index >= 2 ? part.slice(0, 5) : part))
+            .join("|"),
+        ),
+      );
+      const occupiedSlotIds = workspace.slots
+        .filter((slot) =>
+          normalizedOccupied.has(
+            `${slot.resourceId}|${slot.date}|${slot.startsAt.slice(0, 5)}|${slot.endsAt.slice(0, 5)}`,
+          ),
+        )
+        .map((slot) => slot.id);
+      // An official final-day reservation may have no finalist yet.
+      const reservedFinalSlots = persistedAssignments
+        .filter((assignment) => !realNodeIds.has(assignment.nodeId))
+        .map((assignment) => assignment.slotId);
       const proposal = generateFullFinalStagePlanning({
-        nodes,
+        nodes: realMatchNodes,
         slots: workspace.slots,
         excludeStartsAt2130: exclude2130,
-        nonCandidateSlotIds: workspace.exceptionalSlotIds,
+        nonCandidateSlotIds: [
+          ...workspace.exceptionalSlotIds,
+          ...occupiedSlotIds,
+          ...reservedFinalSlots,
+        ],
         availability: workspace.availability,
         existingAssignments: existing,
         fixedNodeIds,
@@ -610,6 +663,7 @@ export function AdminTournamentFinalFullPlanning({
       const updates: TournamentFinalFullPlanningUpdate[] = workspace.nodes
         .filter(
           (row) =>
+            realNodeIds.has(rowNodeId(row)) &&
             row.resultStatus !== "validated" &&
             !row.published &&
             !(
@@ -743,6 +797,7 @@ export function AdminTournamentFinalFullPlanning({
       const editableRows = workspace.nodes.filter(
         (row) =>
           row.roundNumber === editingRound &&
+          Boolean(row.actualMatchId && row.teamAId && row.teamBId) &&
           row.resultStatus !== "validated" &&
           !row.published &&
           !(
@@ -790,22 +845,24 @@ export function AdminTournamentFinalFullPlanning({
         </div>
         <div className="final-stage-full-planning__summary">
           <strong>
-            {plannedCount}/{nodes.length}
+            {plannedCount}/{realMatchNodes.length}
           </strong>
           <span>
-            {unplannedCount > 0 ? `${unplannedCount} à programmer` : "Complet"}
+            {unplannedCount > 0
+              ? `${unplannedCount} rencontre(s) à programmer`
+              : "Parties connues suivies"}
           </span>
         </div>
       </header>
 
       <p className="final-stage-full-planning__hint">
-        Toutes les séries et toutes les étapes partagent les mêmes créneaux
-        Finals. L’automatique place ce qu’il peut avec les disponibilités
-        déclarées et les échéances des tours. Une dérogation limitée est
-        recherchée seulement si aucune disponibilité commune n'existe en période
-        normale. Les parties impossibles restent « À programmer ». Un nouveau
-        calcul remplace les créneaux automatiques, sans modifier les créneaux
-        fixés manuellement ni les matchs publiés.
+        Ce planning dynamique affiche les rencontres réellement constituées, les
+        créneaux libres et les horaires de finales fixés par le club. Les tours
+        encore théoriques restent dans le tableau sportif, sans immobiliser de
+        créneaux. Après validation d’un résultat, Pilotoki tente automatiquement
+        de placer le prochain match avec les disponibilités communes. Les
+        parties impossibles restent « À programmer ». Un recalcul ne déplace ni
+        les parties publiées ni les horaires confirmés.
       </p>
 
       {error && (
@@ -852,8 +909,8 @@ export function AdminTournamentFinalFullPlanning({
           </strong>
           <span>
             {" "}
-            · {quickQueue.length - resolvedQueueCount} position(s) encore
-            théoriques
+            · {theoreticalPositionsCount} position(s) théorique(s) sans
+            réservation
           </span>
         </p>
         {visibleQuickQueue.length === 0 ? (
@@ -1131,7 +1188,7 @@ export function AdminTournamentFinalFullPlanning({
           Exclure les créneaux de 21h30 du calcul automatique
         </label>
         <button type="button" disabled={busy} onClick={() => void autoPlan()}>
-          {busy ? "Calcul…" : "Compléter automatiquement le planning"}
+          {busy ? "Calcul…" : "Recalculer les rencontres connues"}
         </button>
       </div>
       <p className="final-stage-full-planning__hint">
@@ -1149,7 +1206,11 @@ export function AdminTournamentFinalFullPlanning({
           {stages.map((stage) => {
             const editableNodes = stage.nodes.filter((node) => {
               const row = rowById.get(node.id);
-              return row?.resultStatus !== "validated" && !row?.published;
+              return (
+                Boolean(row?.actualMatchId && row.teamAId && row.teamBId) &&
+                row?.resultStatus !== "validated" &&
+                !row?.published
+              );
             });
             const isEditing = editingRound === stage.roundNumber;
             return (
@@ -1206,6 +1267,13 @@ export function AdminTournamentFinalFullPlanning({
                             const locked =
                               row?.published ||
                               row?.resultStatus === "validated";
+                            const canEdit = Boolean(
+                              isEditing &&
+                              !locked &&
+                              row?.actualMatchId &&
+                              row.teamAId &&
+                              row.teamBId,
+                            );
                             const common = slot
                               ? isFinalStageSlotCommonForNode({
                                   node,
@@ -1244,9 +1312,13 @@ export function AdminTournamentFinalFullPlanning({
                                           ? row?.needsManual
                                             ? "À vérifier manuellement"
                                             : !node.actualMatchId
-                                              ? "Créneau provisoire · adversaires à confirmer"
+                                              ? row?.round === "final"
+                                                ? "Finale · horaire fixé, équipes à déterminer"
+                                                : "Adversaires à déterminer"
                                               : "Planifié"
-                                          : "À programmer"}
+                                          : !row?.actualMatchId
+                                            ? "Adversaires à déterminer"
+                                            : "À programmer"}
                                   </span>
                                   {!slot &&
                                     row?.resultStatus !== "validated" && (
@@ -1273,7 +1345,7 @@ export function AdminTournamentFinalFullPlanning({
                                     )}
                                 </div>
 
-                                {isEditing && !locked ? (
+                                {canEdit ? (
                                   <div className="final-stage-full-planning__manual-choice">
                                     <select
                                       value={currentSlotId ?? ""}

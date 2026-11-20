@@ -189,7 +189,7 @@ test("l admin voit le planning complet et tous les créneaux en manuel", async (
   ]);
 
   assert.match(component, /Planning complet des phases finales/);
-  assert.match(component, /Compléter automatiquement le planning/);
+  assert.match(component, /Recalculer les rencontres connues/);
   assert.match(component, /Modifier manuellement/);
   assert.match(component, /À programmer/);
   assert.match(component, /sortedSlots\.map/);
@@ -431,7 +431,7 @@ test("les finales ont des horaires explicitement ajoutés par un administrateur"
   assert.match(migration, /has_club_permission/);
   assert.match(service, /async addFinalDaySlot/);
   assert.match(component, /Ajouter un créneau des finales/);
-  assert.match(component, /Créneau provisoire/);
+  assert.match(component, /Finale · horaire fixé, équipes à déterminer/);
 });
 
 test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux libres", async () => {
@@ -745,7 +745,9 @@ test("la saisie exceptionnelle autorise les dates hors créneaux avec contrôle 
   assert.match(component, /type="date"/);
   assert.match(component, /type="time"/);
   assert.match(component, /setExceptionalManualSlot/);
-  assert.match(component, /nonCandidateSlotIds: workspace.exceptionalSlotIds/);
+  assert.match(component, /nonCandidateSlotIds: \[/);
+  assert.match(component, /\.\.\.workspace\.exceptionalSlotIds/);
+  assert.match(component, /\.\.\.reservedFinalSlots/);
   assert.match(service, /exceptionalSlotIds/);
   assert.match(service, /admin_set_tournament_final_manual_datetime/);
   assert.match(migration, /has_club_permission/);
