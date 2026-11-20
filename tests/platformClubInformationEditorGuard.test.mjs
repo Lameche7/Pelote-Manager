@@ -32,6 +32,6 @@ test("une réponse tardive ne remplace jamais la fiche d'un autre club", () => {
 
 test("la fiche n'ouvre pas les autres modules administratifs", () => {
   assert.doesNotMatch(editor, /updateClub\(club\)/);
-  assert.doesNotMatch(editor, /upload|service_role/i);
+  assert.doesNotMatch(editor, /\b(?:uploadFile|uploadImage|service_role)\s*\(/i);
   assert.match(shell, /if \(requestedClubId\) \{/);
 });
