@@ -14,6 +14,7 @@ export function PlatformBusinessClubAccessPanel() {
   const [error, setError] = useState("");
   const mounted = useRef(true);
   const leaseRequest = useRef(0);
+  const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -50,12 +51,14 @@ export function PlatformBusinessClubAccessPanel() {
       active = false;
       mounted.current = false;
       leaseRequest.current += 1;
+      if (expiryTimer.current) clearTimeout(expiryTimer.current);
       void platformAdminLeaseService.revoke().catch(() => undefined);
     };
   }, []);
 
   const revoke = async () => {
     leaseRequest.current += 1;
+    if (expiryTimer.current) clearTimeout(expiryTimer.current);
     setAuthorizedClubId("");
     setBusy(true);
     try {
@@ -82,6 +85,16 @@ export function PlatformBusinessClubAccessPanel() {
         await platformAdminLeaseService.revoke().catch(() => undefined);
         return;
       }
+      const remaining = Date.parse(lease.expiresAt ?? "") - Date.now();
+      if (!Number.isFinite(remaining) || remaining <= 0) {
+        throw new Error("Autorisation expirée.");
+      }
+      if (expiryTimer.current) clearTimeout(expiryTimer.current);
+      expiryTimer.current = setTimeout(() => {
+        leaseRequest.current += 1;
+        setAuthorizedClubId("");
+        void platformAdminLeaseService.revoke().catch(() => undefined);
+      }, remaining);
       setAuthorizedClubId(clubId);
     } catch {
       if (mounted.current && requestId === leaseRequest.current) {
