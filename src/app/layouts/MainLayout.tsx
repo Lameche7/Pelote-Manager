@@ -31,9 +31,15 @@ type ClubLayoutStyle = CSSProperties & {
 export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const location = useLocation();
-  const [branding, setBranding] = useState(clubBrandingService.fallback);
+  const [branding, setBranding] = useState(() =>
+    new URLSearchParams(window.location.search).has("club")
+      ? clubBrandingService.unavailableFallback
+      : clubBrandingService.fallback,
+  );
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
+  const withClubPreview = (path: string) =>
+    clubSlug ? `${path}${path.includes("?") ? "&" : "?"}club=${encodeURIComponent(clubSlug)}` : path;
   const layoutStyle: ClubLayoutStyle = {
     "--club-primary": branding.primaryColor,
     "--club-secondary": branding.secondaryColor,
@@ -44,9 +50,15 @@ export function MainLayout() {
   useEffect(() => {
     let active = true;
     const reloadBranding = () => {
+      const safeFallback = clubSlug
+        ? clubBrandingService.unavailableFallback
+        : clubBrandingService.fallback;
+      setBranding(safeFallback);
       void clubBrandingService.getPublicBranding(clubSlug).then((value) => {
         if (active) setBranding(value);
-      }).catch(() => undefined);
+      }).catch(() => {
+        if (active) setBranding(safeFallback);
+      });
     };
     reloadBranding();
     window.addEventListener("club-branding-updated", reloadBranding);
@@ -59,15 +71,15 @@ export function MainLayout() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
-    document.title = `${APP_CONFIG.name} · ${CLUB_CONFIG.name}`;
+    document.title = `${APP_CONFIG.name} · ${branding.name}`;
     const description = document.querySelector<HTMLMetaElement>(
       'meta[name="description"]',
     );
     description?.setAttribute(
       "content",
-      `${APP_CONFIG.name}, l’espace de réservation de ${CLUB_CONFIG.name}.`,
+      `${APP_CONFIG.name}, l’espace de réservation de ${branding.name}.`,
     );
-  }, []);
+  }, [branding.name]);
 
   useEffect(() => {
     let active = true;
@@ -146,7 +158,7 @@ export function MainLayout() {
       <header className="app-header">
         <Link
           className="app-brand"
-          to={ROUTES.home}
+          to={withClubPreview(ROUTES.home)}
           aria-label={`${APP_CONFIG.name} - Accueil`}
         >
           <img
