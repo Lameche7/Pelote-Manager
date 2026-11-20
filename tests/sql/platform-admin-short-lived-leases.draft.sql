@@ -5,6 +5,7 @@ revoke all on schema pilotoki_private from public, anon, authenticated;
 
 create table if not exists pilotoki_private.platform_admin_leases (
   business_user_id uuid primary key references auth.users(id) on delete cascade,
+  club_id uuid not null references public.clubs(id) on delete cascade,
   expires_at timestamptz not null,
   created_at timestamptz not null default now(),
   revoked_at timestamptz,
@@ -17,19 +18,20 @@ create index if not exists platform_admin_leases_expiry_idx
   on pilotoki_private.platform_admin_leases(expires_at);
 
 -- Internal lookup; authenticated users cannot execute this directly.
-create or replace function pilotoki_private.has_active_platform_lease(user_id uuid)
+create or replace function pilotoki_private.has_active_platform_lease(user_id uuid, target_club_id uuid)
 returns boolean language sql stable security definer set search_path = ''
 as $$
-  select user_id is not null and exists (
+  select user_id is not null and target_club_id is not null and exists (
     select 1 from pilotoki_private.platform_admin_leases lease
     where lease.business_user_id = user_id
+      and lease.club_id = target_club_id
       and lease.revoked_at is null
       and lease.expires_at > now()
   );
 $$;
-revoke all on function pilotoki_private.has_active_platform_lease(uuid)
+revoke all on function pilotoki_private.has_active_platform_lease(uuid, uuid)
   from public, anon, authenticated;
-grant execute on function pilotoki_private.has_active_platform_lease(uuid)
+grant execute on function pilotoki_private.has_active_platform_lease(uuid, uuid)
   to service_role;
 
 -- Explicitly require service_role: this function is not a client API.
@@ -37,6 +39,7 @@ grant execute on function pilotoki_private.has_active_platform_lease(uuid)
 -- and the matching business JWT before invoking it.
 create or replace function public.issue_platform_admin_lease(
   target_business_user_id uuid,
+  target_club_id uuid,
   requested_seconds integer default 300
 ) returns timestamptz language plpgsql security definer set search_path = ''
 as $$
@@ -46,21 +49,21 @@ begin
   if auth.role() is distinct from 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
-  if target_business_user_id is null or requested_seconds not between 1 and 300 then
+  if target_business_user_id is null or target_club_id is null or requested_seconds not between 1 and 300 then
     raise exception 'Invalid lease request' using errcode = '22023';
   end if;
   issued_expiry := now() + make_interval(secs => requested_seconds);
   insert into pilotoki_private.platform_admin_leases
-    (business_user_id, created_at, expires_at, revoked_at)
-  values (target_business_user_id, now(), issued_expiry, null)
+    (business_user_id, club_id, created_at, expires_at, revoked_at)
+  values (target_business_user_id, target_club_id, now(), issued_expiry, null)
   on conflict (business_user_id) do update
-    set created_at = now(), expires_at = excluded.expires_at, revoked_at = null;
+    set club_id = excluded.club_id, created_at = now(), expires_at = excluded.expires_at, revoked_at = null;
   return issued_expiry;
 end;
 $$;
-revoke all on function public.issue_platform_admin_lease(uuid, integer)
+revoke all on function public.issue_platform_admin_lease(uuid, uuid, integer)
   from public, anon, authenticated;
-grant execute on function public.issue_platform_admin_lease(uuid, integer)
+grant execute on function public.issue_platform_admin_lease(uuid, uuid, integer)
   to service_role;
 
 create or replace function public.revoke_platform_admin_lease(
@@ -92,7 +95,7 @@ as $$
     and exists (select 1 from public.clubs c where c.id = target_club_id)
     and (
       public.has_club_permission(target_club_id, 'admin.dashboard.read')
-      or pilotoki_private.has_active_platform_lease(auth.uid())
+      or pilotoki_private.has_active_platform_lease(auth.uid(), target_club_id)
     );
 $$;
 revoke all on function public.can_read_scoped_club_dashboard(uuid)
@@ -112,7 +115,7 @@ declare
 begin
   if auth.uid() is null
      or target_club_id is null
-     or not pilotoki_private.has_active_platform_lease(auth.uid()) then
+     or not pilotoki_private.has_active_platform_lease(auth.uid(), target_club_id) then
     raise exception 'Club information update denied' using errcode = '42501';
   end if;
   if changes is null
@@ -168,7 +171,7 @@ declare
 begin
   if auth.uid() is null
      or target_club_id is null
-     or not pilotoki_private.has_active_platform_lease(auth.uid()) then
+     or not pilotoki_private.has_active_platform_lease(auth.uid(), target_club_id) then
     raise exception 'Club information access denied' using errcode = '42501';
   end if;
 
