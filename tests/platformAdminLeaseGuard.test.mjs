@@ -80,12 +80,12 @@ test("les RPC sensibles ne sont exécutables que par les rôles attendus", () =>
   ]) {
     assert.ok(
       leaseMigration.includes(
-        `revoke all on function public.${name}\\n  from public, anon, authenticated;`,
+        `revoke all on function public.${name}\n  from public, anon, authenticated;`,
       ),
     );
     assert.ok(
       leaseMigration.includes(
-        `grant execute on function public.${name}\\n  to service_role;`,
+        `grant execute on function public.${name}\n  to service_role;`,
       ),
     );
   }
@@ -95,12 +95,12 @@ test("les RPC sensibles ne sont exécutables que par les rôles attendus", () =>
   ]) {
     assert.ok(
       leaseMigration.includes(
-        `revoke all on function public.${name}\\n  from public, anon, authenticated;`,
+        `revoke all on function public.${name}\n  from public, anon, authenticated;`,
       ),
     );
     assert.ok(
       leaseMigration.includes(
-        `grant execute on function public.${name}\\n  to authenticated;`,
+        `grant execute on function public.${name}\n  to authenticated;`,
       ),
     );
   }
@@ -118,10 +118,10 @@ test("les opérations métier exigent un bail actif et un club explicite", () =>
     assert.match(body.split("$$;")[0], /target_club_id is null/);
     assert.match(
       body.split("$$;")[0],
-      /pilotoki_private\\.has_active_platform_lease\\(auth\\.uid\\(\\)\\)/,
+      /pilotoki_private\.has_active_platform_lease\(auth\.uid\(\)\)/,
     );
   }
-  assert.match(leaseMigration, /where c\\.id = target_club_id/);
-  assert.match(leaseMigration, /where field\\.key not in/);
+  assert.match(leaseMigration, /where c\.id = target_club_id/);
+  assert.match(leaseMigration, /where field\.key not in/);
   assert.doesNotMatch(leaseMigration, /service_role.*(?:browser|frontend)/i);
 });
