@@ -15,7 +15,8 @@ test("cross-club access is guarded", () => {
   assert.ok(shell.includes("if (visualClubSlug || requestedClubId) {"));
   assert.ok(shell.includes("Administration inter-clubs en préparation"));
   assert.ok(
-    shell.indexOf("if (visualClubSlug || requestedClubId) {") < shell.indexOf("<Outlet />"),
+    shell.indexOf("if (visualClubSlug || requestedClubId) {") <
+      shell.indexOf("<Outlet />"),
   );
   assert.ok(shell.includes('params.set("adminClubId", requestedClubId)'));
   assert.ok(shell.includes("adminLink(child.to)"));
