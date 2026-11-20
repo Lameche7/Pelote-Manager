@@ -15,10 +15,22 @@ export function PlatformBusinessClubAccessPanel() {
   const mounted = useRef(true);
   const leaseRequest = useRef(0);
   const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectedClubId = useRef("");
 
   useEffect(() => {
     let active = true;
     mounted.current = true;
+    const client = platformSupabase;
+    const authListener = client?.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        leaseRequest.current += 1;
+        if (expiryTimer.current) clearTimeout(expiryTimer.current);
+        setAuthorizedClubId("");
+        setClubId("");
+        setClubs([]);
+        setError("Session plateforme fermée. Reconnectez-vous.");
+      }
+    });
     const load = async () => {
       try {
         const client = platformSupabase;
@@ -49,6 +61,7 @@ export function PlatformBusinessClubAccessPanel() {
     void load();
     return () => {
       active = false;
+      authListener?.data.subscription.unsubscribe();
       mounted.current = false;
       leaseRequest.current += 1;
       if (expiryTimer.current) clearTimeout(expiryTimer.current);
@@ -73,6 +86,7 @@ export function PlatformBusinessClubAccessPanel() {
   const authorize = async () => {
     if (!clubs.some((club) => club.id === clubId)) return;
     const requestId = ++leaseRequest.current;
+    selectedClubId.current = clubId;
     setBusy(true);
     setAuthorizedClubId("");
     setError("");
@@ -81,7 +95,11 @@ export function PlatformBusinessClubAccessPanel() {
       // Every subsequent read/write is independently checked by business SQL.
       const lease = await platformAdminLeaseService.issue();
       if (!lease.enabled) throw new Error("Autorisation refusée.");
-      if (!mounted.current || requestId !== leaseRequest.current) {
+      if (
+        !mounted.current ||
+        requestId !== leaseRequest.current ||
+        selectedClubId.current !== clubId
+      ) {
         await platformAdminLeaseService.revoke().catch(() => undefined);
         return;
       }
@@ -126,7 +144,10 @@ export function PlatformBusinessClubAccessPanel() {
             <select
               value={clubId}
               disabled={busy || Boolean(authorizedClubId)}
-              onChange={(event) => setClubId(event.target.value)}
+              onChange={(event) => {
+                selectedClubId.current = event.target.value;
+                setClubId(event.target.value);
+              }}
             >
               <option value="">Choisir un club</option>
               {clubs.map((club) => (
