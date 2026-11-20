@@ -70,6 +70,8 @@ export function NetworkVideosPage() {
       ),
     [videos, clubFilter],
   );
+  const hasLive = visible.some((video) => video.status === "live");
+  const hasReplay = visible.some((video) => video.status === "replay");
   const renderVideos = (status: "live" | "replay") => {
     const entries = visible.filter((video) => video.status === status);
     return entries.length ? (
@@ -109,8 +111,8 @@ export function NetworkVideosPage() {
           <p className="network-directory__eyebrow">Pilotoki Live</p>
           <h2>Vivez les parties, même à distance.</h2>
           <p>
-            Les directs et les replays des clubs du réseau seront bientôt
-            disponibles ici, au même endroit que les tournois et les résultats.
+            Retrouvez les parties diffusées en direct et, lorsqu’aucune
+            rencontre n’est en cours, profitez des replays disponibles.
           </p>
         </section>
 
@@ -134,7 +136,7 @@ export function NetworkVideosPage() {
           <p role="status">Vidéothèque momentanément indisponible.</p>
         )}
         <div className="network-videos__sections">
-          <section
+          {(hasLive || !hasReplay) && <section
             className="network-videos__panel"
             id="directs"
             aria-labelledby="directs-heading"
@@ -161,7 +163,7 @@ export function NetworkVideosPage() {
                 </span>
               </div>
             )}
-          </section>
+          </section>}
 
           <section
             className="network-videos__panel"
