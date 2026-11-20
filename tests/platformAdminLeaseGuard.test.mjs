@@ -19,7 +19,7 @@ test("lease issuance requires both authenticated sessions", () => {
 test("lease expiry is checked before granting local access", () => {
   assert.ok(leaseService.includes("Date.parse(data.expiresAt)"));
   assert.ok(leaseService.includes("remainingMs <= 0"));
-  assert.ok(leaseService.includes("remainingMs > 15 * 60 * 1000"));
+  assert.ok(leaseService.includes("remainingMs > 5 * 60 * 1000"));
   assert.ok(leaseService.includes("Number.isFinite(expiresAt)"));
 });
 
@@ -51,7 +51,7 @@ test("lease preserves legacy club permissions", () => {
   assert.ok(leaseMigration.includes("public.can_read_scoped_club_dashboard"));
   assert.ok(
     leaseMigration.includes(
-      "pilotoki_private.has_active_platform_lease(auth.uid())",
+      "pilotoki_private.has_active_platform_lease(auth.uid(), target_club_id)",
     ),
   );
 });
@@ -75,7 +75,7 @@ test("scoped dashboards use read-only guard", () => {
 
 test("les RPC sensibles ne sont exécutables que par les rôles attendus", () => {
   for (const name of [
-    "issue_platform_admin_lease(uuid, integer)",
+    "issue_platform_admin_lease(uuid, uuid, integer)",
     "revoke_platform_admin_lease(uuid)",
   ]) {
     assert.ok(
@@ -140,4 +140,12 @@ test("les baux privés activent RLS sans politique ouverte", () => {
 test("les baux serveur ne dépassent jamais cinq minutes", () => {
   assert.ok(leaseMigration.includes("requested_seconds not between 1 and 300"));
   assert.ok(leaseMigration.includes("interval '5 minutes'"));
+});
+
+test("un bail est limité au club choisi", () => {
+  assert.match(leaseMigration, /club_id uuid not null references public\\.clubs\\(id\\)/);
+  assert.match(leaseMigration, /lease\\.club_id = target_club_id/);
+  assert.match(leaseMigration, /set club_id = excluded\\.club_id/);
+  assert.ok(leaseService.includes("async issue(clubId: string)"));
+  assert.ok(leaseService.includes("body: { clubId }"));
 });
