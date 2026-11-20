@@ -125,3 +125,14 @@ test("les opérations métier exigent un bail actif et un club explicite", () =>
   assert.match(leaseMigration, /where field\.key not in/);
   assert.doesNotMatch(leaseMigration, /service_role.*(?:browser|frontend)/i);
 });
+
+test("les baux privés activent RLS sans politique ouverte", () => {
+  assert.match(
+    leaseMigration,
+    /alter table pilotoki_private\.platform_admin_leases enable row level security;/,
+  );
+  assert.doesNotMatch(
+    leaseMigration,
+    /create policy\s+.*\s+on\s+pilotoki_private\.platform_admin_leases/i,
+  );
+});
