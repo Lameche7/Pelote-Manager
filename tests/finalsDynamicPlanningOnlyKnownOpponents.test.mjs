@@ -58,7 +58,7 @@ test("published matches and fixed final-day schedules remain protected", () => {
   for (const fragment of [
     "const reservedFinalSlots = persistedAssignments",
     "row.published ||",
-    "row.resultStatus === \"validated\"",
+    'row.resultStatus === "validated"',
     "...reservedFinalSlots,",
   ]) {
     assert.ok(planning.includes(fragment), fragment);
