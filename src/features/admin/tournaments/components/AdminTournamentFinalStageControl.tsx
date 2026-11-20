@@ -255,7 +255,7 @@ export function AdminTournamentFinalStageControl({
         );
       }
       await tournamentFinalStageAdminService.prepareFullPlanning(tournamentId);
-      return `Phase finale générée : ${count} première${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""} créée${count > 1 ? "s" : ""}. Préparez maintenant le planning complet de toutes les séries.`;
+      return `Phase finale générée : ${count} première${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""} créée${count > 1 ? "s" : ""}. Le planning dynamique placera les tours lorsque les deux adversaires seront connus.`;
     });
 
   const generateSeries = (series: TournamentFinalSeriesState) =>
@@ -265,7 +265,7 @@ export function AdminTournamentFinalStageControl({
         series.seriesId,
       );
       await tournamentFinalStageAdminService.prepareFullPlanning(tournamentId);
-      return `${series.seriesName} : ${count} rencontre(s) de phase finale créées. Planning à préparer avant publication.`;
+      return `${series.seriesName} : ${count} rencontre(s) de phase finale créées. Seules les rencontres avec deux adversaires connus peuvent être programmées.`;
     });
 
   const advanceSeries = (series: TournamentFinalSeriesState) =>
@@ -309,7 +309,7 @@ export function AdminTournamentFinalStageControl({
       if (count === 0) {
         return "Aucun nouveau tour à créer : vérifiez que tous les résultats du tour courant sont validés.";
       }
-      return `Tour suivant préparé : ${count} nouvelle${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""}. Les créneaux prévus dans le planning complet ont été repris lorsqu’ils sont compatibles.`;
+      return `Tour suivant préparé : ${count} nouvelle${count > 1 ? "s" : ""} partie${count > 1 ? "s" : ""}. Les rencontres connues sont proposées à la programmation.`;
     });
 
   if (loading) {
