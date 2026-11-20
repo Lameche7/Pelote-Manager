@@ -50,5 +50,8 @@ test("Switching releases previous tracks and retries only transient busy-camera 
   assert.match(studio, /TrackStartError/);
   assert.match(studio, /if \(!isBusy \|\| attempt === 2\) throw reason/);
   assert.match(studio, /requestId !== requestIdRef\.current/);
-  assert.match(studio, /stream\.getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/);
+  assert.match(
+    studio,
+    /stream\.getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/,
+  );
 });
