@@ -12,7 +12,6 @@ import {
   type MemberHomeBanner,
 } from "@/features/notifications/services/notificationService";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
-import { MARKETING_HOST } from "@/shared/config/domains";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./HomeAnnouncements.css";
 import "./PremiumHomePage.css";
@@ -201,14 +200,9 @@ export function HomePage() {
             <Link className="button button--secondary" to={ROUTES.login}>
               ♙ Accéder à mon compte
             </Link>
-            <a
-              className="button button--secondary"
-              href={`https://${MARKETING_HOST}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              ↗ Découvrir PILOTOKI
-            </a>
+            <Link className="button button--secondary" to="/reseau/videos">
+              ▶ Pilotoki Live · Directs & replays
+            </Link>
           </div>
         </div>
       </section>
