@@ -11,6 +11,8 @@ create table if not exists pilotoki_private.platform_admin_leases (
   constraint platform_admin_lease_expiry check (expires_at <= created_at + interval '15 minutes')
 );
 revoke all on pilotoki_private.platform_admin_leases from public, anon, authenticated;
+alter table pilotoki_private.platform_admin_leases enable row level security;
+-- No policies: only trusted service-role functions may access this table.
 create index if not exists platform_admin_leases_expiry_idx
   on pilotoki_private.platform_admin_leases(expires_at);
 
