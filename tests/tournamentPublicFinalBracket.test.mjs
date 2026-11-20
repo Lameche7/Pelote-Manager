@@ -61,7 +61,7 @@ test("un planning final global mène clairement à la publication des parties jo
   assert.match(admin, /some\(\(\{ match \}\) => !match\.planned\)/);
   assert.match(admin, /AdminTournamentFinalFullPlanning/);
   assert.match(admin, /Publier le tour et notifier les joueurs/);
-  assert.match(planner, /Compléter automatiquement le planning/);
+  assert.match(planner, /Recalculer les rencontres connues/);
   assert.match(planner, /Modifier manuellement/);
   assert.match(planner, /À programmer/);
   assert.match(planner, /saisir une date et une heure exceptionnelles/);
