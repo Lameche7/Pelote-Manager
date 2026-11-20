@@ -91,9 +91,8 @@ export function PlatformBusinessClubAccessPanel() {
     setAuthorizedClubId("");
     setError("");
     try {
-      // A lease is scoped to the verified business user, not the visual URL.
-      // Every subsequent read/write is independently checked by business SQL.
-      const lease = await platformAdminLeaseService.issue();
+      // The server binds this lease to the selected club UUID.
+      const lease = await platformAdminLeaseService.issue(clubId);
       if (!lease.enabled) throw new Error("Autorisation refusée.");
       if (
         !mounted.current ||
