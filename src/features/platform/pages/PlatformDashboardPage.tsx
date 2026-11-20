@@ -12,7 +12,6 @@ import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
 import { PlatformFirstAdminDryRunPanel } from "../components/PlatformFirstAdminDryRunPanel";
 import { PlatformLiveExecutionConfirmationPanel } from "../components/PlatformLiveExecutionConfirmationPanel";
 import { PlatformRegistrationRequestsPanel } from "../components/PlatformRegistrationRequestsPanel";
-import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 import {
   platformRegistryService,
   type PlatformClub,
@@ -74,9 +73,6 @@ export function PlatformDashboardPage() {
   const { email, logout } = usePlatformAuth();
   const [clubs, setClubs] = useState<PlatformClub[]>([]);
   const [selectedClubId, setSelectedClubId] = useState("");
-  const [identityStatus, setIdentityStatus] = useState<
-    "unchecked" | "checking" | "linked" | "unlinked"
-  >("unchecked");
   const selectedClub = clubs.find((club) => club.id === selectedClubId) ?? null;
   const [provisioningJobs, setProvisioningJobs] = useState<
     PlatformProvisioningJob[]
@@ -347,10 +343,7 @@ export function PlatformDashboardPage() {
           Club
           <select
             value={selectedClubId}
-            onChange={(event) => {
-              setSelectedClubId(event.target.value);
-              setIdentityStatus("unchecked");
-            }}
+            onChange={(event) => setSelectedClubId(event.target.value)}
           >
             <option value="">Sélectionner un club</option>
             {clubs.map((club) => (
@@ -360,38 +353,6 @@ export function PlatformDashboardPage() {
             ))}
           </select>
         </label>
-        {selectedClub && (
-          <div className="platform-form" aria-live="polite">
-            <p>La fiche du registre ne donne pas accès aux données métier.</p>
-            <button
-              type="button"
-              disabled={identityStatus === "checking"}
-              onClick={async () => {
-                setIdentityStatus("checking");
-                try {
-                  const proof = await verifyPlatformBusinessIdentity();
-                  setIdentityStatus(
-                    proof.linked && proof.businessUserId ? "linked" : "unlinked",
-                  );
-                } catch {
-                  setIdentityStatus("unlinked");
-                }
-              }}
-            >
-              {identityStatus === "checking"
-                ? "Vérification…"
-                : "Vérifier mes deux sessions"}
-            </button>
-            {identityStatus === "linked" && (
-              <p role="status">
-                Identités liées. Accès métier toujours verrouillé.
-              </p>
-            )}
-            {identityStatus === "unlinked" && (
-              <p role="alert">Identités non vérifiées. Accès métier refusé.</p>
-            )}
-          </div>
-        )}
         {selectedClub && (
           <div aria-live="polite">
             <p>
