@@ -94,9 +94,16 @@ begin
     )->>'notes') is distinct from 'Mise à jour testée' then
     raise exception 'Scoped club information update did not persist';
   end if;
-  if (public.platform_admin_get_club_information(
+  -- A lease scoped to B must not grant information access to A.
+  begin
+    perform public.platform_admin_get_club_information(
       '00000000-0000-0000-0000-000000000001'
-    )->>'notes') is not null then
+    );
+    raise exception 'Lease for B unexpectedly granted access to A';
+  exception when insufficient_privilege then null;
+  end;
+  if (select c.notes from public.clubs c
+      where c.id = '00000000-0000-0000-0000-000000000001') is not null then
     raise exception 'Scoped update modified another club';
   end if;
   if public.has_club_permission('00000000-0000-0000-0000-000000000002', 'settings.manage') then
