@@ -30,7 +30,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   begin
-    perform public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', 300);
+    perform public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 300);
     raise exception 'Authenticated user issued own lease';
   exception when insufficient_privilege then null;
   end;
@@ -38,7 +38,7 @@ end $check$;
 reset role;
 select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
-select public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', 300);
+select public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 300);
 reset role;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
@@ -145,9 +145,10 @@ begin
   begin
     perform public.issue_platform_admin_lease(
       '20000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
       901
     );
-    raise exception 'Lease longer than 15 minutes was accepted';
+    raise exception 'Lease longer than 5 minutes was accepted';
   exception when invalid_parameter_value then null;
   end;
 end $check$;
@@ -181,7 +182,7 @@ end $check$;
 reset role;
 select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
-select public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', 300);
+select public.issue_platform_admin_lease('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 300);
 select public.revoke_platform_admin_lease('20000000-0000-0000-0000-000000000001');
 reset role;
 select set_config('request.jwt.claim.role', 'authenticated', true);
