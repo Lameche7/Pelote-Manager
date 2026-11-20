@@ -70,6 +70,8 @@ export function NetworkVideosPage() {
       ),
     [videos, clubFilter],
   );
+  const hasLive = visible.some((video) => video.status === "live");
+  const hasReplay = visible.some((video) => video.status === "replay");
   const renderVideos = (status: "live" | "replay") => {
     const entries = visible.filter((video) => video.status === status);
     return entries.length ? (
@@ -109,8 +111,8 @@ export function NetworkVideosPage() {
           <p className="network-directory__eyebrow">Pilotoki Live</p>
           <h2>Vivez les parties, même à distance.</h2>
           <p>
-            Les directs et les replays des clubs du réseau seront bientôt
-            disponibles ici, au même endroit que les tournois et les résultats.
+            Retrouvez les parties diffusées en direct et, lorsqu’aucune
+            rencontre n’est en cours, profitez des replays disponibles.
           </p>
         </section>
 
@@ -134,34 +136,36 @@ export function NetworkVideosPage() {
           <p role="status">Vidéothèque momentanément indisponible.</p>
         )}
         <div className="network-videos__sections">
-          <section
-            className="network-videos__panel"
-            id="directs"
-            aria-labelledby="directs-heading"
-          >
-            <div className="network-videos__panel-heading">
-              <span className="network-videos__icon network-videos__icon--live">
-                <Radio aria-hidden="true" />
-              </span>
-              <div>
-                <p className="network-directory__eyebrow">Pilotoki Live</p>
-                <h2 id="directs-heading">En direct</h2>
-              </div>
-            </div>
-            {renderVideos("live") || (
-              <div className="network-videos__empty">
-                <Video aria-hidden="true" />
-                <strong>Aucun direct disponible actuellement</strong>
-                <p>
-                  Dès que les clubs pourront diffuser leurs rencontres depuis
-                  Pilotoki, leurs directs apparaîtront ici.
-                </p>
-                <span className="network-videos__coming">
-                  Bientôt disponible
+          {(hasLive || !hasReplay) && (
+            <section
+              className="network-videos__panel"
+              id="directs"
+              aria-labelledby="directs-heading"
+            >
+              <div className="network-videos__panel-heading">
+                <span className="network-videos__icon network-videos__icon--live">
+                  <Radio aria-hidden="true" />
                 </span>
+                <div>
+                  <p className="network-directory__eyebrow">Pilotoki Live</p>
+                  <h2 id="directs-heading">En direct</h2>
+                </div>
               </div>
-            )}
-          </section>
+              {renderVideos("live") || (
+                <div className="network-videos__empty">
+                  <Video aria-hidden="true" />
+                  <strong>Aucun direct disponible actuellement</strong>
+                  <p>
+                    Dès que les clubs pourront diffuser leurs rencontres depuis
+                    Pilotoki, leurs directs apparaîtront ici.
+                  </p>
+                  <span className="network-videos__coming">
+                    Bientôt disponible
+                  </span>
+                </div>
+              )}
+            </section>
+          )}
 
           <section
             className="network-videos__panel"
