@@ -13,7 +13,7 @@ const migration = readFileSync(
 test("an engine error sends a scoped admin notification", () => {
   const required = [
     "notify_tournament_final_engine_error",
-    "from public.tournament_final_auto_progress_errors error",
+    "from public.tournament_final_auto_progress_errors progress_error",
     "permission.permission_key='tournaments.manage'",
     "membership.club_id=target.club_id",
     "insert into public.communication_deliveries",
