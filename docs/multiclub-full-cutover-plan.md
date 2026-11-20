@@ -107,3 +107,9 @@ L'utilisateur confirme qu'une sauvegarde a déjà été réalisée et préfère 
 ### Situation de la sauvegarde
 
 La réalisation antérieure d'une sauvegarde est rapportée par l'utilisateur ; **son état de restauration n'a pas encore été vérifié dans cet audit**. Aucun changement de production n'est effectué par cette note.
+
+### Périmètre strict des baux (20/11/2026)
+
+Le bail de cinq minutes est maintenant associé à un couple `business_user_id` / `club_id` (une seule autorisation active par utilisateur, remplacée lors du choix d'un autre club). L'Edge Function reçoit uniquement l'UUID du club demandé, vérifie les deux sessions, puis demande au service métier de délivrer un bail pour ce club. Les RPC de lecture et modification exigent `has_active_platform_lease(auth.uid(), target_club_id)`. La sélection visuelle seule ne constitue jamais une permission. La révocation par utilisateur invalide le bail du club courant.
+
+**Tests indispensables avant activation :** ouvrir Morlaàs puis tenter la lecture et l'écriture sur Lourdes avec le même bail (refus attendu), changer de club (ancien bail remplacé), expirer ou révoquer le bail (refus sur les deux clubs), et vérifier qu'aucun module administratif historique n'hérite de cette permission.
