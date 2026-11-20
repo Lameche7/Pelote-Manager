@@ -174,20 +174,20 @@ export function MainLayout() {
             />
           )}
           <span className="app-brand__club">
-            <small>{CLUB_CONFIG.name}</small>
+            <small>{branding.name}</small>
           </span>
         </Link>
 
         <PlatformClubSwitcher />
         <nav className="app-navigation" aria-label="Navigation principale">
-          <NavLink className={navClassName} to={ROUTES.home}>
+          <NavLink className={navClassName} to={withClubPreview(ROUTES.home)}>
             Accueil
           </NavLink>
-          <NavLink className={navClassName} to={ROUTES.reservations}>
+          <NavLink className={navClassName} to={withClubPreview(ROUTES.reservations)}>
             Réservations
           </NavLink>
           {!isLoading && isAuthenticated && (
-            <NavLink className={navClassName} to={ROUTES.userSpace}>
+            <NavLink className={navClassName} to={withClubPreview(ROUTES.userSpace)}>
               Mon espace
               {unreadNotifications > 0 && (
                 <span
@@ -221,7 +221,7 @@ export function MainLayout() {
             ) : (
               <Link
                 className="button button--small button--primary"
-                to={ROUTES.login}
+                to={withClubPreview(ROUTES.login)}
               >
                 Connexion
               </Link>
@@ -237,9 +237,9 @@ export function MainLayout() {
         <div className="app-footer__brand">
           <ClubLogo compact />
           <div>
-            <strong>{CLUB_CONFIG.name}</strong>
+            <strong>{branding.name}</strong>
             <span>
-              {CLUB_CONFIG.foundedYear
+              {clubSlug ? "" : CLUB_CONFIG.foundedYear
                 ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
                 : CLUB_CONFIG.tagline}
             </span>
@@ -250,9 +250,9 @@ export function MainLayout() {
             © {new Date().getFullYear()} {APP_CONFIG.name}
           </small>
           <nav className="app-footer__legal" aria-label="Informations légales">
-            <Link to={ROUTES.legalNotice}>Mentions légales</Link>
-            <Link to={ROUTES.privacy}>Confidentialité</Link>
-            <Link to={ROUTES.terms}>Conditions d’utilisation</Link>
+            <Link to={withClubPreview(ROUTES.legalNotice)}>Mentions légales</Link>
+            <Link to={withClubPreview(ROUTES.privacy)}>Confidentialité</Link>
+            <Link to={withClubPreview(ROUTES.terms)}>Conditions d’utilisation</Link>
           </nav>
         </div>
       </footer>
