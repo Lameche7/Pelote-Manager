@@ -76,7 +76,7 @@ left join public.referee_slot_assignments ra
   on ra.club_id=slot.club_id and ra.resource_id=slot.resource_id
  and ra.starts_at=slot.starts_at and ra.ends_at=slot.ends_at
 left join public.profiles pr on pr.id=ra.referee_profile_id;
-$function$
+$function$;
 
 
 -- Restore the intended no-licence rule for club affiliates and add verified tournament participants.
