@@ -181,12 +181,12 @@ export function AdminTournamentFinalWeeklyOverview({
           ? `Finale ${series?.name ?? "Série"} · équipes à déterminer`
           : bracketNode
             ? describeFinalStageOpponents({
-              node: bracketNode,
-              nodes: bracketNodes,
-              seeds: series?.seeds ?? [],
-              crossPools: series?.crossPools ?? false,
-            })
-          : [node.teamALabel, node.teamBLabel].filter(Boolean).join(" — ");
+                node: bracketNode,
+                nodes: bracketNodes,
+                seeds: series?.seeds ?? [],
+                crossPools: series?.crossPools ?? false,
+              })
+            : [node.teamALabel, node.teamBLabel].filter(Boolean).join(" — ");
         result.push({
           slot,
           kind: "match",
@@ -572,9 +572,9 @@ export function AdminTournamentFinalWeeklyOverview({
       <p className="final-weekly-overview__note">
         « Libre » signifie qu'aucune affectation du tournoi ni réservation
         connue n'occupe le créneau configuré. Les heures sans créneau configuré
-        sont indiquées par « — » ; les dates des finales fixées restent réservées
-        avec les joueurs. Sélectionner un créneau prépare une affectation sans
-        publier la rencontre ni envoyer de notification.
+        sont indiquées par « — » ; les créneaux des finales fixés restent
+        réservés. Sélectionner un créneau prépare une affectation sans publier
+        la rencontre ni envoyer de notification.
       </p>
     </section>
   );
