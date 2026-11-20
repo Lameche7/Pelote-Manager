@@ -101,3 +101,5 @@ select coalesce((
  ) from eligibility e
 ), 'null'::jsonb);
 $function$;
+revoke all on function public.resolve_calendar_player_actions(uuid,timestamptz,timestamptz) from public,anon;
+grant execute on function public.resolve_calendar_player_actions(uuid,timestamptz,timestamptz) to authenticated;
