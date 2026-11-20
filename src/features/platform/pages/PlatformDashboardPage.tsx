@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
+import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 import { PlatformHelloAssoDiagnosticPanel } from "../components/PlatformHelloAssoDiagnosticPanel";
 import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
@@ -73,6 +74,9 @@ export function PlatformDashboardPage() {
   const { email, logout } = usePlatformAuth();
   const [clubs, setClubs] = useState<PlatformClub[]>([]);
   const [selectedClubId, setSelectedClubId] = useState("");
+  const [identityStatus, setIdentityStatus] = useState<
+    "unchecked" | "checking" | "linked" | "unlinked"
+  >("unchecked");
   const selectedClub = clubs.find((club) => club.id === selectedClubId) ?? null;
   const [provisioningJobs, setProvisioningJobs] = useState<
     PlatformProvisioningJob[]
@@ -343,7 +347,10 @@ export function PlatformDashboardPage() {
           Club
           <select
             value={selectedClubId}
-            onChange={(event) => setSelectedClubId(event.target.value)}
+            onChange={(event) => {
+              setSelectedClubId(event.target.value);
+              setIdentityStatus("unchecked");
+            }}
           >
             <option value="">Sélectionner un club</option>
             {clubs.map((club) => (
@@ -353,6 +360,44 @@ export function PlatformDashboardPage() {
             ))}
           </select>
         </label>
+        {selectedClub && (
+          <div className="platform-form" aria-live="polite">
+            <p>
+              Accès métier sécurisé : la fiche commerciale ne prouve pas
+              l'identifiant du club dans la base métier.
+            </p>
+            <button
+              type="button"
+              disabled={identityStatus === "checking"}
+              onClick={async () => {
+                setIdentityStatus("checking");
+                try {
+                  const proof = await verifyPlatformBusinessIdentity();
+                  setIdentityStatus(
+                    proof.linked && proof.businessUserId ? "linked" : "unlinked",
+                  );
+                } catch {
+                  setIdentityStatus("unlinked");
+                }
+              }}
+            >
+              {identityStatus === "checking"
+                ? "Vérification…"
+                : "Vérifier mes deux sessions"}
+            </button>
+            {identityStatus === "linked" && (
+              <p role="status">
+                Identités liées. L'administration métier reste verrouillée
+                jusqu'à validation du bail serveur et du rattachement du club.
+              </p>
+            )}
+            {identityStatus === "unlinked" && (
+              <p role="alert">
+                Identités non vérifiées : accès métier inter-clubs refusé.
+              </p>
+            )}
+          </div>
+        )}
         {selectedClub && (
           <div aria-live="polite">
             <p>
