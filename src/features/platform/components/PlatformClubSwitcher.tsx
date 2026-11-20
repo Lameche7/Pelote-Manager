@@ -19,6 +19,7 @@ export function PlatformClubSwitcher() {
         ""),
   );
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
+  const [catalogueLoaded, setCatalogueLoaded] = useState(false);
   const [error, setError] = useState("");
   const [identityLinked, setIdentityLinked] = useState(false);
   const [status, setStatus] = useState<
@@ -38,6 +39,7 @@ export function PlatformClubSwitcher() {
       setStatus("checking");
       setIsVerifiedAdmin(false);
       setClubs([]);
+      setCatalogueLoaded(false);
       setError("");
       setIdentityLinked(false);
       const { data: identity, error: identityError } =
@@ -86,6 +88,7 @@ export function PlatformClubSwitcher() {
             typeof club.slug === "string",
         ),
       );
+      setCatalogueLoaded(true);
     };
 
     void refresh();
@@ -111,7 +114,7 @@ export function PlatformClubSwitcher() {
 
   // A persisted preference is not an authorization: validate against server catalogue.
   useEffect(() => {
-    if (!isVerifiedAdmin || status !== "ready") return;
+    if (!isVerifiedAdmin || status !== "ready" || !catalogueLoaded) return;
     const valid = clubs.some((club) => club.slug === selectedSlug);
     if (!valid && selectedSlug) {
       window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
@@ -139,6 +142,7 @@ export function PlatformClubSwitcher() {
   }, [
     isVerifiedAdmin,
     status,
+    catalogueLoaded,
     clubs,
     selectedSlug,
     activeSlug,
