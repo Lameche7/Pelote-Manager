@@ -105,8 +105,7 @@ export function PilotokiLiveCameraStudio() {
               window.setTimeout(resolve, attempt * 350),
             );
           }
-          if (!mountedRef.current || requestId !== requestIdRef.current)
-            return;
+          if (!mountedRef.current || requestId !== requestIdRef.current) return;
           try {
             stream = await navigator.mediaDevices.getUserMedia(constraints);
             break;
