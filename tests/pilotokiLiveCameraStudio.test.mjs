@@ -41,3 +41,17 @@ test("Camera is available only in authenticated connected club admin UI", () => 
   assert.match(admin, /settings\?\.connectionStatus === "connected"/);
   assert.match(admin, /<PilotokiLiveCameraStudio \/>/);
 });
+
+test("Switching releases previous tracks and retries only transient busy-camera errors", () => {
+  assert.match(studio, /if \(openingRef\.current\) return/);
+  assert.match(studio, /stop\(\);\s+const requestId = requestIdRef\.current/);
+  assert.match(studio, /for \(let attempt = 0; attempt < 3; attempt \+= 1\)/);
+  assert.match(studio, /NotReadableError/);
+  assert.match(studio, /TrackStartError/);
+  assert.match(studio, /if \(!isBusy \|\| attempt === 2\) throw reason/);
+  assert.match(studio, /requestId !== requestIdRef\.current/);
+  assert.match(
+    studio,
+    /stream\.getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/,
+  );
+});
