@@ -29,11 +29,3 @@ test("Video page displays truthful empty states, not fictional broadcasts", () =
   assert.match(page, /UCAIME5j0y9DdiEQNyttO_jw/);
   assert.doesNotMatch(page, /youtube\.com\/embed/);
 });
-
-test("diagnostic: show formatter differences for videos page", async () => {
-  const prettier = await import("prettier");
-  const expected = await prettier.format(page, {
-    filepath: "src/features/network/pages/NetworkVideosPage.tsx",
-  });
-  console.log("PRETTIER_FULL", JSON.stringify(expected));
-});
