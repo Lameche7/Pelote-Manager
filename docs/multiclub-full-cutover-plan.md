@@ -87,3 +87,23 @@ Vérifications en lecture seule sur les projets Supabase connectés (aucune migr
 Le projet `PeloteManager-Test-PR41` existe mais est **INACTIVE**. La tentative de lecture de ses migrations a expiré sur une erreur de connexion ; il n'est donc pas possible de le considérer comme un banc d'essai opérationnel ni comme une copie à jour de la production. Aucune écriture n'y a été effectuée.
 
 La migration SQL provisoire des baux active désormais RLS sur la table privée, sans politique donnant accès aux utilisateurs. Avant d'appliquer le brouillon, disposer d'un PostgreSQL/Supabase éphémère accessible, charger le schéma compatible et exécuter des tests de rôle `anon`, `authenticated`, `service_role`, révocation, expiration et séparation Lourdes/Morlaàs. Ne pas détourner le projet de production pour simuler ces tests.
+
+
+## Livraison directe sur les projets existants — accord du 20 novembre 2026
+
+L'utilisateur confirme qu'une sauvegarde a déjà été réalisée et préfère tester sur la production, sans troisième projet Supabase. Cet accord **ne dispense pas** de vérifier que la sauvegarde est accessible et restaurable, ni de conserver une activation réversible. Les mentions antérieures exigeant exclusivement une base de test sont remplacées par ce plan de déploiement contrôlé ; les tests statiques et CI restent obligatoires.
+
+### Prévol et séquence
+
+1. Contrôler l'état et la date de la sauvegarde existante ainsi que la procédure de restauration ; ne jamais imprimer de secret dans les logs.
+2. Vérifier en lecture seule les signatures RPC et le schéma réel de `public.clubs` ; **contrôle du 20/11 : les 18 colonnes attendues par l'éditeur existent**.
+3. Revoir le SQL des baux privés et la liste exacte des droits ; préparer une migration versionnée et un script de révocation/retour arrière. Ne pas modifier `has_club_permission` ni `get_my_club_access`.
+4. Déployer d'abord les fonctions SQL métier avec **aucun bail actif**. Vérifier les privilèges et le refus de lecture/écriture sans bail.
+5. Déployer `platform-business-admin-lease` sur la plateforme avec `PLATFORM_ADMIN_LEASES_ENABLED` **désactivé** ; vérifier le refus d'émission.
+6. Déployer l'interface compatible, puis activer le drapeau seulement pour une courte fenêtre d'essai avec le Super Administrateur ; ne pas restaurer les permissions d'Antoine à cette étape.
+7. Tester sur Lourdes et Morlaàs : consultation ciblée, changement de sélection, modification anodine puis restauration de sa valeur, absence de droits sur les autres modules, déconnexion, révocation et expiration.
+8. En cas d'échec, désactiver immédiatement le drapeau d'émission, révoquer les baux existants côté serveur et revenir à la version applicative précédente si nécessaire. Désactiver le drapeau **ne révoque pas les baux déjà émis** : les RPC doivent continuer à appliquer expiration et révocation.
+
+### Situation de la sauvegarde
+
+La réalisation antérieure d'une sauvegarde est rapportée par l'utilisateur ; **son état de restauration n'a pas encore été vérifié dans cet audit**. Aucun changement de production n'est effectué par cette note.
