@@ -160,3 +160,8 @@ test("l'API des baux refuse les identifiants de club invalides", () => {
   assert.ok(leaseEdge.includes('target_club_id: requestedClubId'));
   assert.ok(leaseEdge.includes('PLATFORM_ADMIN_LEASES_ENABLED'));
 });
+
+test("un bail ne peut être créé pour un club inexistant", () => {
+  assert.match(leaseMigration, /not exists \\(select 1 from public\\.clubs where id = target_club_id\\)/);
+  assert.ok(leaseMigration.includes("raise exception 'Unknown club'"));
+});
