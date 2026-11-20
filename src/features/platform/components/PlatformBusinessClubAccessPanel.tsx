@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PlatformClubInformationEditor } from "@/features/admin/club/pages/PlatformClubInformationEditor";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
 import { platformAdminLeaseService } from "../services/platformAdminLeaseService";
@@ -12,9 +12,12 @@ export function PlatformBusinessClubAccessPanel() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const mounted = useRef(true);
+  const leaseRequest = useRef(0);
 
   useEffect(() => {
     let active = true;
+    mounted.current = true;
     const load = async () => {
       try {
         const client = platformSupabase;
@@ -45,11 +48,14 @@ export function PlatformBusinessClubAccessPanel() {
     void load();
     return () => {
       active = false;
+      mounted.current = false;
+      leaseRequest.current += 1;
       void platformAdminLeaseService.revoke().catch(() => undefined);
     };
   }, []);
 
   const revoke = async () => {
+    leaseRequest.current += 1;
     setAuthorizedClubId("");
     setBusy(true);
     try {
@@ -63,6 +69,7 @@ export function PlatformBusinessClubAccessPanel() {
 
   const authorize = async () => {
     if (!clubs.some((club) => club.id === clubId)) return;
+    const requestId = ++leaseRequest.current;
     setBusy(true);
     setAuthorizedClubId("");
     setError("");
@@ -71,11 +78,19 @@ export function PlatformBusinessClubAccessPanel() {
       // Every subsequent read/write is independently checked by business SQL.
       const lease = await platformAdminLeaseService.issue();
       if (!lease.enabled) throw new Error("Autorisation refusée.");
+      if (!mounted.current || requestId !== leaseRequest.current) {
+        await platformAdminLeaseService.revoke().catch(() => undefined);
+        return;
+      }
       setAuthorizedClubId(clubId);
     } catch {
-      setError("Accès métier refusé ou fonctionnalité non activée.");
+      if (mounted.current && requestId === leaseRequest.current) {
+        setError("Accès métier refusé ou fonctionnalité non activée.");
+      }
     } finally {
-      setBusy(false);
+      if (mounted.current && requestId === leaseRequest.current) {
+        setBusy(false);
+      }
     }
   };
 
