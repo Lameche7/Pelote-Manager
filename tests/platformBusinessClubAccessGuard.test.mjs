@@ -14,7 +14,7 @@ const dashboard = readFileSync(
 test("le tableau de bord raccorde la fiche métier isolée", () => {
   assert.match(dashboard, /<PlatformBusinessClubAccessPanel \/>/);
   assert.match(panel, /platform-business-clubs/);
-  assert.match(panel, /platformAdminLeaseService\.issue\(\)/);
+  assert.ok(panel.includes("platformAdminLeaseService.issue(clubId)"));
   assert.match(
     panel,
     /<PlatformClubInformationEditor clubId=\{authorizedClubId\}/,
