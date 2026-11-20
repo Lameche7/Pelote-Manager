@@ -14,7 +14,10 @@ test("released championship availability only includes regularly open club inter
   assert.match(migration, /where now\(\) < coalesce\(/);
   assert.match(migration, /public\.weekend_championship_release_at\(/);
   assert.match(migration, /public\.resource_opening_hours hours/);
-  assert.match(migration, /hours\.weekday = extract\(dow from period\.calendar_date\)/);
+  assert.match(
+    migration,
+    /hours\.weekday = extract\(dow from period\.calendar_date\)/,
+  );
   assert.match(migration, /hours\.is_open/);
   assert.match(migration, /hours\.opens_at <= slot_local::time/);
   assert.match(
