@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/infrastructure/supabase/client";
-import {
-  Clapperboard,
-  PlayCircle,
-  Radio,
-  Video,
-} from "lucide-react";
-import {
-  NetworkNavigation,
-} from "@/features/network/components/NetworkNavigation";
+import { Clapperboard, PlayCircle, Radio, Video } from "lucide-react";
+import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
 import "./NetworkDirectoryPage.css";
 import "./NetworkVideosPage.css";
 
