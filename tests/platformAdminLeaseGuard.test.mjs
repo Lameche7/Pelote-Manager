@@ -118,7 +118,7 @@ test("les opérations métier exigent un bail actif et un club explicite", () =>
     assert.match(body.split("$$;")[0], /target_club_id is null/);
     assert.match(
       body.split("$$;")[0],
-      /pilotoki_private\.has_active_platform_lease\(auth\.uid\(\)\)/,
+      /pilotoki_private\.has_active_platform_lease\(auth\.uid\(\), target_club_id\)/,
     );
   }
   assert.match(leaseMigration, /where c\.id = target_club_id/);
@@ -143,9 +143,9 @@ test("les baux serveur ne dépassent jamais cinq minutes", () => {
 });
 
 test("un bail est limité au club choisi", () => {
-  assert.match(leaseMigration, /club_id uuid not null references public\\.clubs\\(id\\)/);
-  assert.match(leaseMigration, /lease\\.club_id = target_club_id/);
-  assert.match(leaseMigration, /set club_id = excluded\\.club_id/);
+  assert.match(leaseMigration, /club_id uuid not null references public\.clubs\(id\)/);
+  assert.match(leaseMigration, /lease\.club_id = target_club_id/);
+  assert.match(leaseMigration, /set club_id = excluded\.club_id/);
   assert.ok(leaseService.includes("async issue(clubId: string)"));
   assert.ok(leaseService.includes("body: { clubId }"));
 });
