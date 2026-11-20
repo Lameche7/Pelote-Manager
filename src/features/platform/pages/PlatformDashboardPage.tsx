@@ -6,13 +6,13 @@ import {
   type FormEvent,
 } from "react";
 import { usePlatformAuth } from "../auth/usePlatformAuth";
-import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 import { PlatformHelloAssoDiagnosticPanel } from "../components/PlatformHelloAssoDiagnosticPanel";
 import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
 import { PlatformFirstAdminDryRunPanel } from "../components/PlatformFirstAdminDryRunPanel";
 import { PlatformLiveExecutionConfirmationPanel } from "../components/PlatformLiveExecutionConfirmationPanel";
 import { PlatformRegistrationRequestsPanel } from "../components/PlatformRegistrationRequestsPanel";
+import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 import {
   platformRegistryService,
   type PlatformClub,
@@ -363,8 +363,7 @@ export function PlatformDashboardPage() {
         {selectedClub && (
           <div className="platform-form" aria-live="polite">
             <p>
-              Accès métier sécurisé : la fiche commerciale ne prouve pas
-              l'identifiant du club dans la base métier.
+              La fiche du registre ne donne pas accès aux données métier.
             </p>
             <button
               type="button"
@@ -387,13 +386,12 @@ export function PlatformDashboardPage() {
             </button>
             {identityStatus === "linked" && (
               <p role="status">
-                Identités liées. L'administration métier reste verrouillée
-                jusqu'à validation du bail serveur et du rattachement du club.
+                Identités liées. Accès métier toujours verrouillé.
               </p>
             )}
             {identityStatus === "unlinked" && (
               <p role="alert">
-                Identités non vérifiées : accès métier inter-clubs refusé.
+                Identités non vérifiées. Accès métier refusé.
               </p>
             )}
           </div>
