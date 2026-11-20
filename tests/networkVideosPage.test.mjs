@@ -19,6 +19,8 @@ test("Pilotoki Network publishes a dedicated Videos page from its navigation", (
 test("Video page displays truthful empty states, not fictional broadcasts", () => {
   assert.match(page, /id="directs"/);
   assert.match(page, /id="replays"/);
+  assert.match(page, /hasLive \|\| !hasReplay/);
+  assert.match(page, /hasReplay = visible\.some/);
   assert.match(page, /Aucun direct disponible actuellement/);
   assert.match(page, /Les premières vidéos arrivent bientôt/);
   assert.match(page, /Bientôt disponible/);
