@@ -12,7 +12,7 @@ export type PlatformAdminLease = {
  * business authorization. This client never grants permissions itself.
  */
 export const platformAdminLeaseService = {
-  async issue(): Promise<PlatformAdminLease> {
+  async issue(clubId: string): Promise<PlatformAdminLease> {
     const platform = platformSupabase;
     if (!platform) throw new Error("Session plateforme indisponible.");
     const identity = await verifyPlatformBusinessIdentity();
@@ -37,6 +37,7 @@ export const platformAdminLeaseService = {
       "platform-business-admin-lease",
       {
         method: "POST",
+        body: { clubId },
         headers: {
           "X-Business-Authorization": `Bearer ${businessToken}`,
         },
@@ -50,7 +51,7 @@ export const platformAdminLeaseService = {
     if (
       !Number.isFinite(expiresAt) ||
       remainingMs <= 0 ||
-      remainingMs > 15 * 60 * 1000
+      remainingMs > 5 * 60 * 1000
     ) {
       throw new Error("Autorisation inter-clubs expirée ou invalide.");
     }
