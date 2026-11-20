@@ -36,8 +36,8 @@ test("public homepage only receives the safe branding projection", () => {
   assert.match(homePage, /--club-primary/);
   assert.match(homePage, /branding\.heroImageUrl/);
   assert.match(homePage, /branding\.logoUrl/);
-  assert.match(homePage, /MARKETING_HOST/);
-  assert.match(homePage, /Découvrir PILOTOKI/);
+  assert.match(homePage, /to="\/reseau\/videos"/);
+  assert.match(homePage, /Pilotoki Live · Directs & replays/);
   assert.match(brandingService, /brandingAssetUrl/);
   assert.match(brandingService, /\.vercel\.app/);
 });
