@@ -11,7 +11,10 @@ const sql = readFileSync(
 );
 
 test("le contrôle cible un club et une permission explicites", () => {
-  assert.match(sql, /create or replace function public\.can_administer_club\(/i);
+  assert.match(
+    sql,
+    /create or replace function public\.can_administer_club\(/i,
+  );
   assert.match(sql, /target_club_id uuid/i);
   assert.match(sql, /required_permission text/i);
   assert.match(sql, /auth\.uid\(\) is not null/i);
