@@ -22,8 +22,19 @@ const isEnabled = <T extends object>(item: T) =>
 
 export function AdminShell() {
   const location = useLocation();
-  const requestedClubId =
-    new URLSearchParams(location.search).get("adminClubId") ?? "";
+  const params = new URLSearchParams(location.search);
+  const requestedClubId = params.get("adminClubId") ?? "";
+  const visualClubSlug = params.get("club");
+  // Prevent all legacy implicit-club admin reads for a foreign context.
+  if (visualClubSlug || requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration inter-clubs en préparation</h1>
+        <p>Les données du club sélectionné restent protégées tant que
+          les autorisations métier ne sont pas déployées.</p>
+      </section>
+    );
+  }
   return (
     <AdminAccessProvider key={requestedClubId}>
       <AdminShellContent />
