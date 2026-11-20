@@ -181,16 +181,16 @@
 }
 @media (max-width: 760px) {
   .network-videos__header {
-  padding: 8px 12px;
-}
+    padding: 8px 12px;
+  }
   .network-videos__body {
-  padding: 18px 16px 32px;
-}
+    padding: 18px 16px 32px;
+  }
   .network-videos__filter {
-  flex-direction: column;
-  align-items: stretch;
-}
+    flex-direction: column;
+    align-items: stretch;
+  }
   .network-videos__youtube-link {
-  text-align: left;
-}
+    text-align: left;
+  }
 }
