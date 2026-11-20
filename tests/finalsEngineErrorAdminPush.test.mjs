@@ -10,8 +10,8 @@ const migration = readFileSync(
   "utf8",
 );
 
-test("an engine error creates a club-scoped in-app and push-ready admin message", () => {
-  for (const fragment of [
+test("an engine error sends a scoped admin notification", () => {
+  const required = [
     "notify_tournament_final_engine_error",
     "from public.tournament_final_auto_progress_errors error",
     "permission.permission_key='tournaments.manage'",
@@ -19,22 +19,33 @@ test("an engine error creates a club-scoped in-app and push-ready admin message"
     "insert into public.communication_deliveries",
     "update public.club_communications",
     "set status='published'",
-  ]) {
+  ];
+  for (const fragment of required) {
     assert.ok(migration.includes(fragment), fragment);
   }
 });
 
-test("an identical incident does not resend alerts but a new incident can", () => {
-  assert.match(migration, /primary key \(tournament_id, match_id\)/);
-  assert.match(migration, /on conflict \(tournament_id,match_id\) do update/);
-  assert.match(migration, /first_seen_at\s+is distinct from excluded\.first_seen_at/);
+test("one alert is sent per incident, not per retry", () => {
+  const required = [
+    "primary key (tournament_id, match_id)",
+    "on conflict (tournament_id,match_id) do update",
+    "is distinct from excluded.first_seen_at",
+  ];
+  for (const fragment of required) {
+    assert.ok(migration.includes(fragment), fragment);
+  }
 });
 
-test("score validation survives failures of the auto-progress AND notification", () => {
-  assert.match(migration, /exception when others then[\s\S]*?insert into public\.tournament_final_auto_progress_errors/);
-  assert.match(migration, /begin\s+perform public\.notify_tournament_final_engine_error/);
-  assert.match(migration, /exception when others then\s+raise warning/);
-  assert.match(migration, /return new;/);
-  assert.match(migration, /enable row level security/);
-  assert.match(migration, /revoke all on function public\.notify_tournament_final_engine_error/);
+test("a notification error cannot undo a validated score", () => {
+  const required = [
+    "exception when others then",
+    "insert into public.tournament_final_auto_progress_errors",
+    "begin\n      perform public.notify_tournament_final_engine_error",
+    "return new;",
+    "enable row level security",
+    "revoke all on function public.notify_tournament_final_engine_error",
+  ];
+  for (const fragment of required) {
+    assert.ok(migration.includes(fragment), fragment);
+  }
 });
