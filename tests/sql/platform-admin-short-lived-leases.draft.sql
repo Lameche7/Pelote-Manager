@@ -52,6 +52,9 @@ begin
   if target_business_user_id is null or target_club_id is null or requested_seconds not between 1 and 300 then
     raise exception 'Invalid lease request' using errcode = '22023';
   end if;
+  if not exists (select 1 from public.clubs where id = target_club_id) then
+    raise exception 'Unknown club' using errcode = '22023';
+  end if;
   issued_expiry := now() + make_interval(secs => requested_seconds);
   insert into pilotoki_private.platform_admin_leases
     (business_user_id, club_id, created_at, expires_at, revoked_at)
