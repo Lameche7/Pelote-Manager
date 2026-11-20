@@ -30,8 +30,11 @@ export function AdminShell() {
     return (
       <section className="simple-page" role="status">
         <h1>Administration inter-clubs en préparation</h1>
-        <p>Les données du club sélectionné restent protégées tant que
-          les autorisations métier ne sont pas déployées.</p>
+        <p>
+          Les données du club sélectionné restent protégées tant que les
+          autorisations métier ne sont pas déployées. Aucune donnée
+          administrative ne sera chargée.
+        </p>
       </section>
     );
   }
