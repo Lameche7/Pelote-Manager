@@ -383,7 +383,9 @@ export function PlatformDashboardPage() {
                 : "Vérifier mes deux sessions"}
             </button>
             {identityStatus === "linked" && (
-              <p role="status">Identités liées. Accès métier toujours verrouillé.</p>
+              <p role="status">
+                Identités liées. Accès métier toujours verrouillé.
+              </p>
             )}
             {identityStatus === "unlinked" && (
               <p role="alert">Identités non vérifiées. Accès métier refusé.</p>
