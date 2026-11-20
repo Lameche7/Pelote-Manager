@@ -168,7 +168,8 @@ export function AdminTournamentFinalWeeklyOverview({
       const node = slotAssignments.get(key);
       if (node) {
         const series = seriesById.get(node.seriesId);
-        const provisional = !node.actualMatchId;
+        const finalDayReserved = !node.actualMatchId && node.round === "final";
+        const provisional = !node.actualMatchId && !finalDayReserved;
         const bracketNode = bracketNodesById.get(
           finalStagePlanningNodeId(
             node.seriesId,
@@ -176,7 +177,7 @@ export function AdminTournamentFinalWeeklyOverview({
             node.displayOrder,
           ),
         );
-        const title = provisional && node.round === "final"
+        const title = finalDayReserved
           ? `Finale ${series?.name ?? "Série"} · équipes à déterminer`
           : bracketNode
             ? describeFinalStageOpponents({
@@ -190,7 +191,7 @@ export function AdminTournamentFinalWeeklyOverview({
           slot,
           kind: "match",
           title,
-          detail: provisional && node.round === "final"
+          detail: finalDayReserved
             ? "Finale · horaire fixé, adversaires à déterminer"
             : `${series?.name ?? "Série"} · ${node.round === "preliminary" ? "Barrage" : node.round === "round_of_16" ? "1/8" : node.round === "quarterfinal" ? "1/4" : node.round === "semifinal" ? "1/2" : node.round === "final" ? "Finale" : node.round}${node.resultStatus === "validated" ? " · Jouée" : node.published ? " · Publiée" : " · À confirmer"}`,
           seriesId: node.seriesId,
