@@ -34,3 +34,11 @@ test("une autorisation tardive est révoquée après fermeture", () => {
   assert.match(panel, /requestId !== leaseRequest\.current/);
   assert.match(panel, /platformAdminLeaseService\.revoke\(\)/);
 });
+
+test("la fiche se referme à l'expiration du bail serveur", () => {
+  assert.match(panel, /Date\.parse\(lease\.expiresAt/);
+  assert.match(panel, /remaining <= 0/);
+  assert.match(panel, /expiryTimer\.current = setTimeout/);
+  assert.match(panel, /setAuthorizedClubId\(""/);
+  assert.match(panel, /clearTimeout\(expiryTimer\.current\)/);
+});
