@@ -27,9 +27,11 @@ test("la sélection mémorisée est vérifiée par le catalogue serveur", () => 
   );
   assert.match(
     source,
-    /if \(!isVerifiedAdmin \|\| status !== "ready"\) return/,
+    /if \(!isVerifiedAdmin \|\| status !== "ready" \|\| !catalogueLoaded\) return/,
   );
   assert.match(source, /if \(!valid && selectedSlug\)/);
+  assert.match(source, /setCatalogueLoaded\(false\)/);
+  assert.match(source, /setCatalogueLoaded\(true\)/);
   // Even an empty, successfully loaded catalogue must invalidate stale choices.
   assert.doesNotMatch(source, /!clubs\.length\) return/);
 });
