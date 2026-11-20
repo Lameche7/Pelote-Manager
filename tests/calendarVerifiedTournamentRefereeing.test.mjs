@@ -27,7 +27,7 @@ test("calendar enables referee volunteering for a verified participant in the pr
 
 test("calendar keeps the existing club and championship constraints", () => {
   assert.match(sql, /join public\.championship_team_players/);
-  assert.match(sql, /join public\.club_memberships membership/);
+  assert.match(sql, /from public\.club_memberships membership/);
   assert.match(sql, /join public\.club_members member/);
   assert.match(sql, /m\.kind='championship'/);
   assert.match(sql, /'canVolunteerForRefereeing',e\.can_volunteer/);
