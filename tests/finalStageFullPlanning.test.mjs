@@ -431,7 +431,7 @@ test("les finales ont des horaires explicitement ajoutés par un administrateur"
   assert.match(migration, /has_club_permission/);
   assert.match(service, /async addFinalDaySlot/);
   assert.match(component, /Ajouter un créneau des finales/);
-  assert.match(component, /Créneau provisoire/);
+  assert.match(component, /Finale · horaire fixé, équipes à déterminer/);
 });
 
 test("la vue hebdomadaire expose les 7 jours, les parties et les vrais créneaux libres", async () => {
