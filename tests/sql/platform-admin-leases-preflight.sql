@@ -36,3 +36,20 @@ where n.nspname = 'pilotoki_private'
 -- select count(*) as active_leases
 -- from pilotoki_private.platform_admin_leases
 -- where revoked_at is null and expires_at > now();
+
+-- After migration: verify the lease is bound to one club and that no client
+-- role can read the private lease table. Empty results before rollout are normal.
+select
+  a.attname as column_name,
+  format_type(a.atttypid, a.atttypmod) as column_type,
+  a.attnotnull as required
+from pg_attribute a
+where a.attrelid = to_regclass('pilotoki_private.platform_admin_leases')
+  and a.attname in ('business_user_id', 'club_id', 'expires_at', 'revoked_at')
+  and a.attnum > 0 and not a.attisdropped
+order by a.attname;
+
+select
+  has_table_privilege('anon', to_regclass('pilotoki_private.platform_admin_leases'), 'SELECT') as anon_can_read,
+  has_table_privilege('authenticated', to_regclass('pilotoki_private.platform_admin_leases'), 'SELECT') as authenticated_can_read
+where to_regclass('pilotoki_private.platform_admin_leases') is not null;
