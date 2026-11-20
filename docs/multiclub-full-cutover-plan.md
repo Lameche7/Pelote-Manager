@@ -67,3 +67,16 @@ Ne pas déduire une permission du `club` de l'URL ou du stockage navigateur. Ne 
 - Ne pas modifier Supabase production pendant les tests ; une PR partageant la même base n'est PAS un environnement de données isolé.
 - Ne pas lancer de prévisualisation Vercel : les builds de PR sont volontairement bloqués pour économiser le quota.
 - Ne pas fusionner la PR #514 ni rétablir l'administration d'Antoine avant validation explicite de la séparation inter-clubs.
+
+
+## Audit réel des prérequis serveur — 20 novembre 2026
+
+Vérifications en lecture seule sur les projets Supabase connectés (aucune migration appliquée) :
+
+- Projet métier **PeloteManager** : aucune fonction `public.issue_platform_admin_lease`, `public.revoke_platform_admin_lease`, `public.platform_admin_get_club_information`, `public.platform_admin_update_club_information` ni `public.can_read_scoped_club_dashboard` présente dans `pg_proc`.
+- Projet **PeloteManager-Platform** : `platform-business-clubs` (version 3, JWT vérifié) et `platform-business-identity` (version 2, JWT vérifié) actives ; `platform-business-admin-lease` absente.
+- La CI du commit `e79376b` est entièrement verte (9 contrôles), mais elle n'atteste pas de la présence des fonctions sur les projets réels.
+
+**Conséquence :** l'éditeur interclubs raccordé au tableau de bord reste non opérationnel tant que ces prérequis serveur ne sont pas déployés et validés. Le refus est attendu et sécurisé.
+
+**Avant tout déploiement**, revoir la migration SQL de bail et ses tests sur une base éphémère, vérifier la révocation et les autorisations par club, contrôler le schéma de `clubs`, examiner les secrets de l'Edge Function sans les exposer, puis préparer une livraison coordonnée avec sauvegarde et retour arrière. Aucune activation de `PLATFORM_ADMIN_LEASES_ENABLED` ni changement de droits Antoine sans validation explicite.
