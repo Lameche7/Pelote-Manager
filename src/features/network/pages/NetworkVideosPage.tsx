@@ -209,7 +209,11 @@ export function NetworkVideosPage() {
 
         <p className="network-videos__youtube-link">
           Les vidéos sont hébergées sur YouTube ·{" "}
-          <a href={PILOTOKI_YOUTUBE_CHANNEL} target="_blank" rel="noopener noreferrer">
+          <a
+            href={PILOTOKI_YOUTUBE_CHANNEL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Voir la chaîne Pilotoki
           </a>
         </p>
