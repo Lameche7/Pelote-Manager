@@ -1267,6 +1267,13 @@ export function AdminTournamentFinalFullPlanning({
                             const locked =
                               row?.published ||
                               row?.resultStatus === "validated";
+                            const canEdit = Boolean(
+                              isEditing &&
+                                !locked &&
+                                row?.actualMatchId &&
+                                row.teamAId &&
+                                row.teamBId,
+                            );
                             const common = slot
                               ? isFinalStageSlotCommonForNode({
                                   node,
@@ -1305,7 +1312,9 @@ export function AdminTournamentFinalFullPlanning({
                                           ? row?.needsManual
                                             ? "À vérifier manuellement"
                                             : !node.actualMatchId
-                                              ? "Créneau provisoire · adversaires à confirmer"
+                                              ? row?.round === "final"
+                                                ? "Finale · horaire fixé, équipes à déterminer"
+                                                : "Adversaires à déterminer"
                                               : "Planifié"
                                           : !row?.actualMatchId
                                             ? "Adversaires à déterminer"
@@ -1336,7 +1345,7 @@ export function AdminTournamentFinalFullPlanning({
                                     )}
                                 </div>
 
-                                {isEditing && !locked && row?.actualMatchId && row.teamAId && row.teamBId ? (
+                                {canEdit ? (
                                   <div className="final-stage-full-planning__manual-choice">
                                     <select
                                       value={currentSlotId ?? ""}
