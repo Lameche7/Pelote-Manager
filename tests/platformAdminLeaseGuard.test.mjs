@@ -136,3 +136,8 @@ test("les baux privés activent RLS sans politique ouverte", () => {
     /create policy\s+.*\s+on\s+pilotoki_private\.platform_admin_leases/i,
   );
 });
+
+test("les baux serveur ne dépassent jamais cinq minutes", () => {
+  assert.ok(leaseMigration.includes("requested_seconds not between 1 and 300"));
+  assert.ok(leaseMigration.includes("interval '5 minutes'"));
+});
