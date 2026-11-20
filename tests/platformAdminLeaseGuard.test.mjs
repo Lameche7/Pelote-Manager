@@ -29,7 +29,7 @@ test("lease expiry is checked before granting local access", () => {
 });
 
 test("explicit club routes remain blocked without validated rollout", () => {
-  assert.ok(shell.includes("if (requestedClubId) {"));
+  assert.ok(shell.includes("if (visualClubSlug || requestedClubId) {"));
   assert.ok(!shell.includes("platformAdminLeaseService.issue("));
 });
 
@@ -168,7 +168,7 @@ test("un bail ne peut être créé pour un club inexistant", () => {
 });
 
 test("la fonction d'émission exige un JWT plateforme vérifié", () => {
-  assert.ok(supabaseConfig.includes("[functions.platform-business-admin-lease]\\nverify_jwt = true"));
+  assert.ok(/\[functions\.platform-business-admin-lease\]\s*verify_jwt = true/.test(supabaseConfig));
   assert.ok(leaseEdge.includes('platform.auth.getUser(platformToken)'));
   assert.ok(leaseEdge.includes('business.auth.getUser(businessToken)'));
 });
