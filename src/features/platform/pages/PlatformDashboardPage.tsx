@@ -362,9 +362,7 @@ export function PlatformDashboardPage() {
         </label>
         {selectedClub && (
           <div className="platform-form" aria-live="polite">
-            <p>
-              La fiche du registre ne donne pas accès aux données métier.
-            </p>
+            <p>La fiche du registre ne donne pas accès aux données métier.</p>
             <button
               type="button"
               disabled={identityStatus === "checking"}
@@ -385,14 +383,10 @@ export function PlatformDashboardPage() {
                 : "Vérifier mes deux sessions"}
             </button>
             {identityStatus === "linked" && (
-              <p role="status">
-                Identités liées. Accès métier toujours verrouillé.
-              </p>
+              <p role="status">Identités liées. Accès métier toujours verrouillé.</p>
             )}
             {identityStatus === "unlinked" && (
-              <p role="alert">
-                Identités non vérifiées. Accès métier refusé.
-              </p>
+              <p role="alert">Identités non vérifiées. Accès métier refusé.</p>
             )}
           </div>
         )}
