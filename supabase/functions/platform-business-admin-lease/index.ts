@@ -36,7 +36,7 @@ function bearer(value: string | null): string | null {
 
 /**
  * PLATFORM-only, verify_jwt=true. Never deploy before the business SQL
- * migration has been reviewed and tested in an isolated environment.
+ * migration has been reviewed, backed up, and validated for the agreed\n * controlled production rollout. Keep the feature flag disabled until ready.
  * The caller cannot choose a user id, permissions, or lease duration.
  */
 Deno.serve(async (request: Request): Promise<Response> => {
