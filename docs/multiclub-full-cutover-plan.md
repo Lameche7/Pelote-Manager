@@ -113,3 +113,22 @@ La réalisation antérieure d'une sauvegarde est rapportée par l'utilisateur ; 
 Le bail de cinq minutes est maintenant associé à un couple `business_user_id` / `club_id` (une seule autorisation active par utilisateur, remplacée lors du choix d'un autre club). L'Edge Function reçoit uniquement l'UUID du club demandé, vérifie les deux sessions, puis demande au service métier de délivrer un bail pour ce club. Les RPC de lecture et modification exigent `has_active_platform_lease(auth.uid(), target_club_id)`. La sélection visuelle seule ne constitue jamais une permission. La révocation par utilisateur invalide le bail du club courant.
 
 **Tests indispensables avant activation :** ouvrir Morlaàs puis tenter la lecture et l'écriture sur Lourdes avec le même bail (refus attendu), changer de club (ancien bail remplacé), expirer ou révoquer le bail (refus sur les deux clubs), et vérifier qu'aucun module administratif historique n'hérite de cette permission.
+
+
+## Prévol de production vérifié en lecture seule — 20 novembre 2026 (complément)
+
+- CI de la PR #576 au commit `190ac53f088b5d845260a8c3000af803043fc4f8` : **9 jobs réussis sur 9**. Cette réussite ne prouve pas que les RPC sont installées en production.
+- Projet métier `PeloteManager` actif : **2 clubs**, **18 colonnes** dans `public.clubs`, dont **15 colonnes attendues par l'éditeur**. Les fonctions historiques `has_club_permission` et `admin_current_club_id` sont présentes.
+- La table `pilotoki_private.platform_admin_leases` et les RPC `issue_platform_admin_lease`, `revoke_platform_admin_lease`, `platform_admin_get_club_information`, `platform_admin_update_club_information` sont **absentes**. Ne pas activer l'interface d'édition inter-clubs avant leur installation et leur contrôle.
+- Le workflow `.github/workflows/manual-production-backup.yml` est manuel ; il valide le déchiffrement et le catalogue `pg_restore --list`, **pas une restauration complète**. La présence et la récupération d'une sauvegarde récente restent à confirmer avant la migration. Ne jamais afficher ni demander les secrets de sauvegarde.
+- Les alertes de l'analyseur de sécurité Supabase concernent notamment des tables existantes avec RLS activée sans politique ; elles doivent être examinées séparément et ne justifient aucun élargissement de droits dans cette PR.
+
+### Points d'arrêt avant activation
+
+1. Confirmer la disponibilité de l'archive chiffrée, de sa somme SHA-256 et de sa phrase secrète conservée séparément ; documenter le périmètre couvert et la procédure de restauration.
+2. Faire relire la migration des baux et le plan de révocation ; vérifier les droits `anon`, `authenticated` et `service_role` avec les tests prévus.
+3. Installer les RPC de façon coordonnée avec la fonction Edge, **drapeau `PLATFORM_ADMIN_LEASES_ENABLED` désactivé**.
+4. Vérifier le refus sans bail, puis réaliser un essai limité avec un bail de cinq minutes sur un club explicite, sans restaurer prématurément les droits d'Antoine.
+5. En cas d'anomalie, désactiver l'émission, révoquer les baux existants et restaurer la version applicative précédente si nécessaire.
+
+**État :** prévol documentaire et requêtes de lecture seule uniquement ; aucune migration, aucun changement de rôle et aucun déploiement exécutés lors de ce contrôle.
