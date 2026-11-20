@@ -49,10 +49,14 @@ function AdminShellContent() {
   const requestedClubId = new URLSearchParams(location.search).get(
     "adminClubId",
   );
-  const adminLink = (path: string) =>
-    requestedClubId
-      ? `${path}?adminClubId=${encodeURIComponent(requestedClubId)}`
-      : path;
+  const visualClubSlug = new URLSearchParams(location.search).get("club");
+  const adminLink = (path: string) => {
+    const params = new URLSearchParams();
+    if (visualClubSlug) params.set("club", visualClubSlug);
+    if (requestedClubId) params.set("adminClubId", requestedClubId);
+    const query = params.toString();
+    return query ? `${path}?${query}` : path;
+  };
 
   useEffect(() => {
     setMobileNavigationOpen(false);
