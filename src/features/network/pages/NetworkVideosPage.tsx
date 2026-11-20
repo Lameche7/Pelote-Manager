@@ -6,7 +6,9 @@ import {
   Radio,
   Video,
 } from "lucide-react";
-import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
+import {
+  NetworkNavigation,
+} from "@/features/network/components/NetworkNavigation";
 import "./NetworkDirectoryPage.css";
 import "./NetworkVideosPage.css";
 
