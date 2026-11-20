@@ -22,7 +22,7 @@ export function PlatformBusinessClubAccessPanel() {
     mounted.current = true;
     const client = platformSupabase;
     const authListener = client?.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+      if (event === "SIGNED_OUT") {
         leaseRequest.current += 1;
         if (expiryTimer.current) clearTimeout(expiryTimer.current);
         setAuthorizedClubId("");
