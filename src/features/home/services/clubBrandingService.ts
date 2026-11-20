@@ -31,6 +31,17 @@ const fallback: ClubBranding = {
   neutralColor: "#6B7280",
 };
 
+const foreignFallback: ClubBranding = {
+  ...fallback,
+  name: "Club indisponible",
+  logoUrl: "",
+  heroImageUrl: "",
+  primaryColor: "#374151",
+  secondaryColor: "#4B5563",
+  accentColor: "#6B7280",
+  neutralColor: "#9CA3AF",
+};
+
 const value = (input: unknown, defaultValue: string) =>
   typeof input === "string" && input.trim() ? input.trim() : defaultValue;
 
@@ -57,6 +68,7 @@ function brandingAssetUrl(input: unknown, defaultValue: string) {
 
 export const clubBrandingService = {
   fallback,
+  unavailableFallback: foreignFallback,
   async getPublicBranding(clubSlug?: string | null): Promise<ClubBranding> {
     const request = clubSlug
       ? supabase.rpc("get_public_club_branding_for_slug", {
@@ -67,14 +79,18 @@ export const clubBrandingService = {
     if (error) throw error;
 
     const row = (data ?? {}) as ClubBrandingRow;
+    const defaults = clubSlug ? foreignFallback : fallback;
+    if (clubSlug && (!row.name || typeof row.name !== "string")) {
+      throw new Error("Identité visuelle du club sélectionné indisponible.");
+    }
     return {
-      name: value(row.name, fallback.name),
-      logoUrl: brandingAssetUrl(row.logo_url, fallback.logoUrl),
-      heroImageUrl: brandingAssetUrl(row.hero_image_url, fallback.heroImageUrl),
-      primaryColor: value(row.primary_color, fallback.primaryColor),
-      secondaryColor: value(row.secondary_color, fallback.secondaryColor),
-      accentColor: value(row.accent_color, fallback.accentColor),
-      neutralColor: value(row.neutral_color, fallback.neutralColor),
+      name: value(row.name, defaults.name),
+      logoUrl: brandingAssetUrl(row.logo_url, defaults.logoUrl),
+      heroImageUrl: brandingAssetUrl(row.hero_image_url, defaults.heroImageUrl),
+      primaryColor: value(row.primary_color, defaults.primaryColor),
+      secondaryColor: value(row.secondary_color, defaults.secondaryColor),
+      accentColor: value(row.accent_color, defaults.accentColor),
+      neutralColor: value(row.neutral_color, defaults.neutralColor),
     };
   },
 };
