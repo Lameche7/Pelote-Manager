@@ -23,6 +23,7 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
     setClub(null);
     setError("");
     setSuccess("");
+    setSaving(false);
     setLoading(true);
     clubAdminService
       .getClubForPlatformLease(clubId)
