@@ -32,6 +32,7 @@ export function PilotokiLiveCameraStudio() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const requestIdRef = useRef(0);
+  const openingRef = useRef(false);
   const mountedRef = useRef(true);
   const [active, setActive] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -42,6 +43,7 @@ export function PilotokiLiveCameraStudio() {
   const stop = useCallback(() => {
     // Invalidates any pending getUserMedia request before it can install a stream.
     requestIdRef.current += 1;
+    openingRef.current = false;
     const current = streamRef.current;
     streamRef.current = null;
     current?.getTracks().forEach((track) => track.stop());
@@ -57,6 +59,7 @@ export function PilotokiLiveCameraStudio() {
     return () => {
       mountedRef.current = false;
       requestIdRef.current += 1;
+      openingRef.current = false;
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
@@ -64,20 +67,24 @@ export function PilotokiLiveCameraStudio() {
 
   const open = useCallback(
     async (nextFacing: CameraFacing) => {
-      // Stop existing tracks when switching cameras; avoid multiple active captures.
+      // Mobile browsers may need time to release the old camera hardware.
+      // Prevent rapid double taps from starting two competing capture requests.
+      if (openingRef.current) return;
       stop();
       const requestId = requestIdRef.current;
+      openingRef.current = true;
       setOpening(true);
       setError("");
       if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
         setError(
           "La caméra nécessite un navigateur compatible ouvert en HTTPS.",
         );
+        openingRef.current = false;
         setOpening(false);
         return;
       }
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        const constraints: MediaStreamConstraints = {
           video: {
             facingMode: { ideal: nextFacing },
             width: { ideal: 1280 },
@@ -88,7 +95,27 @@ export function PilotokiLiveCameraStudio() {
             echoCancellation: true,
             noiseSuppression: true,
           },
-        });
+        };
+        let stream: MediaStream | null = null;
+        // Firefox/Android may report NotReadableError for a short interval
+        // after track.stop(): retry only that transient camera-busy error.
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          if (attempt > 0) {
+            await new Promise<void>((resolve) =>
+              window.setTimeout(resolve, attempt * 350),
+            );
+          }
+          if (!mountedRef.current || requestId !== requestIdRef.current) return;
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            break;
+          } catch (reason) {
+            const name = reason instanceof DOMException ? reason.name : "";
+            const isBusy = name === "NotReadableError" || name === "TrackStartError";
+            if (!isBusy || attempt === 2) throw reason;
+          }
+        }
+        if (!stream) return;
         if (!mountedRef.current || requestId !== requestIdRef.current) {
           stream.getTracks().forEach((track) => track.stop());
           return;
@@ -112,6 +139,7 @@ export function PilotokiLiveCameraStudio() {
         }
       } finally {
         if (mountedRef.current && requestId === requestIdRef.current) {
+          openingRef.current = false;
           setOpening(false);
         }
       }
