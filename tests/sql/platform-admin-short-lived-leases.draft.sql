@@ -8,7 +8,7 @@ create table if not exists pilotoki_private.platform_admin_leases (
   expires_at timestamptz not null,
   created_at timestamptz not null default now(),
   revoked_at timestamptz,
-  constraint platform_admin_lease_expiry check (expires_at <= created_at + interval '15 minutes')
+  constraint platform_admin_lease_expiry check (expires_at <= created_at + interval '5 minutes')
 );
 revoke all on pilotoki_private.platform_admin_leases from public, anon, authenticated;
 alter table pilotoki_private.platform_admin_leases enable row level security;
@@ -46,7 +46,7 @@ begin
   if auth.role() is distinct from 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
-  if target_business_user_id is null or requested_seconds not between 1 and 900 then
+  if target_business_user_id is null or requested_seconds not between 1 and 300 then
     raise exception 'Invalid lease request' using errcode = '22023';
   end if;
   issued_expiry := now() + make_interval(secs => requested_seconds);
