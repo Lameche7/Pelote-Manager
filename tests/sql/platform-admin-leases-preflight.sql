@@ -2,7 +2,7 @@
 -- No tokens, personal data or secret values are returned.
 select
   to_regclass('pilotoki_private.platform_admin_leases') is not null as lease_table_exists,
-  to_regprocedure('public.issue_platform_admin_lease(uuid,integer)') is not null as issue_rpc_exists,
+  to_regprocedure('public.issue_platform_admin_lease(uuid,uuid,integer)') is not null as issue_rpc_exists,
   to_regprocedure('public.revoke_platform_admin_lease(uuid)') is not null as revoke_rpc_exists,
   to_regprocedure('public.platform_admin_get_club_information(uuid)') is not null as read_rpc_exists,
   to_regprocedure('public.platform_admin_update_club_information(uuid,jsonb)') is not null as update_rpc_exists;
