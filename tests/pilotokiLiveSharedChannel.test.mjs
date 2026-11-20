@@ -43,5 +43,5 @@ test("Club-linked video registry exposes published items only", () => {
   );
   assert.match(migration, /youtube_video_id text unique/);
   assert.match(migration, /using\(status in \('live','replay'\)\)/);
-  assert.match(network, /Découvrir la chaîne YouTube Pilotoki/);
+  assert.match(network, /Voir la chaîne Pilotoki/);
 });
