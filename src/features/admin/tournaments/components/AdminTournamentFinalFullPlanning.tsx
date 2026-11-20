@@ -607,10 +607,10 @@ export function AdminTournamentFinalFullPlanning({
           const row = rowById.get(assignment.nodeId);
           return Boolean(
             realNodeIds.has(assignment.nodeId) &&
-              row &&
-              (row.published ||
-                row.resultStatus === "validated" ||
-                row.source !== "generated"),
+            row &&
+            (row.published ||
+              row.resultStatus === "validated" ||
+              row.source !== "generated"),
           );
         },
       );
@@ -856,13 +856,13 @@ export function AdminTournamentFinalFullPlanning({
       </header>
 
       <p className="final-stage-full-planning__hint">
-        Ce planning dynamique affiche les rencontres réellement constituées,
-        les créneaux libres et les horaires de finales fixés par le club.
-        Les tours encore théoriques restent dans le tableau sportif, sans
-        immobiliser de créneaux. Après validation d’un résultat, Pilotoki tente
-        automatiquement de placer le prochain match avec les disponibilités
-        communes. Les parties impossibles restent « À programmer ». Un
-        recalcul ne déplace ni les parties publiées ni les horaires confirmés.
+        Ce planning dynamique affiche les rencontres réellement constituées, les
+        créneaux libres et les horaires de finales fixés par le club. Les tours
+        encore théoriques restent dans le tableau sportif, sans immobiliser de
+        créneaux. Après validation d’un résultat, Pilotoki tente automatiquement
+        de placer le prochain match avec les disponibilités communes. Les
+        parties impossibles restent « À programmer ». Un recalcul ne déplace ni
+        les parties publiées ni les horaires confirmés.
       </p>
 
       {error && (
@@ -1269,10 +1269,10 @@ export function AdminTournamentFinalFullPlanning({
                               row?.resultStatus === "validated";
                             const canEdit = Boolean(
                               isEditing &&
-                                !locked &&
-                                row?.actualMatchId &&
-                                row.teamAId &&
-                                row.teamBId,
+                              !locked &&
+                              row?.actualMatchId &&
+                              row.teamAId &&
+                              row.teamBId,
                             );
                             const common = slot
                               ? isFinalStageSlotCommonForNode({
