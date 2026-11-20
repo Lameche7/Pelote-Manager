@@ -15,7 +15,10 @@ test("le tableau de bord raccorde la fiche métier isolée", () => {
   assert.match(dashboard, /<PlatformBusinessClubAccessPanel \/>/);
   assert.match(panel, /platform-business-clubs/);
   assert.match(panel, /platformAdminLeaseService\.issue\(\)/);
-  assert.match(panel, /<PlatformClubInformationEditor clubId=\{authorizedClubId\}/);
+  assert.match(
+    panel,
+    /<PlatformClubInformationEditor clubId=\{authorizedClubId\}/,
+  );
 });
 
 test("le choix visuel ne suffit pas pour ouvrir la fiche métier", () => {
