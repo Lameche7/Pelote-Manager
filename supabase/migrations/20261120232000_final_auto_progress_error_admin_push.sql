@@ -26,19 +26,19 @@ declare
   notified_match_id uuid;
   recipient_count integer;
 begin
-  select error.first_seen_at, tournament.club_id,
+  select progress_error.first_seen_at, tournament.club_id,
     tournament.name as tournament_name, series.name as series_name,
     match.team_a_id, match.team_b_id
   into target
-  from public.tournament_final_auto_progress_errors error
+  from public.tournament_final_auto_progress_errors progress_error
   join public.tournaments tournament
-    on tournament.id=error.tournament_id
+    on tournament.id=progress_error.tournament_id
   join public.tournament_series series
-    on series.id=error.series_id
+    on series.id=progress_error.series_id
   join public.tournament_matches match
-    on match.id=error.match_id
-  where error.tournament_id=target_tournament_id
-    and error.match_id=target_match_id
+    on match.id=progress_error.match_id
+  where progress_error.tournament_id=target_tournament_id
+    and progress_error.match_id=target_match_id
     and match.phase='finals';
   if not found then return; end if;
 
