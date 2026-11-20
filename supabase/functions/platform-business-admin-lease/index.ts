@@ -63,8 +63,12 @@ Deno.serve(async (request: Request): Promise<Response> => {
       return reply(request, 400, { error: "Club requis" });
     }
     const id = (payload as { clubId?: unknown } | null)?.clubId;
-    if (typeof id !== "string" ||
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    if (
+      typeof id !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      )
+    ) {
       return reply(request, 400, { error: "Identifiant de club invalide" });
     }
     requestedClubId = id;
@@ -132,7 +136,11 @@ Deno.serve(async (request: Request): Promise<Response> => {
     const parameters =
       request.method === "DELETE"
         ? { target_business_user_id: businessUser.id }
-        : { target_business_user_id: businessUser.id, target_club_id: requestedClubId, requested_seconds: 300 };
+        : {
+            target_business_user_id: businessUser.id,
+            target_club_id: requestedClubId,
+            requested_seconds: 300,
+          };
     const { data, error } = await business.rpc(operation, parameters);
     if (error) throw error;
 
