@@ -71,7 +71,7 @@ test("aucune requête explicite ne retombe sur le club historique", () => {
     assert.match(service, new RegExp("supabase\\.rpc\\([\\s\\S]*?" + name));
   }
   assert.match(shell, /if \(requestedClubId\) \{/);
-  assert.match(shell, /Aucune donnée administrative ne sera chargée/);
+  assert.match(shell, /Aucune donnée\s+administrative ne sera chargée/);
 });
 
 test("le libellé de statistiques ne suppose pas le trinquet de Lourdes", () => {
@@ -87,11 +87,11 @@ test("la navigation admin conserve le club visuel sans l’utiliser comme permis
 });
 
 test("un aperçu visuel étranger bloque les données administratives implicites", () => {
-  assert.match(shell, /if \(visualClubSlug && !requestedClubId\)/);
-  assert.match(shell, /Administration du club sélectionné indisponible/);
+  assert.match(shell, /if \(visualClubSlug \|\| requestedClubId\)/);
+  assert.match(shell, /Administration inter-clubs en préparation/);
   assert.match(shell, /if \(requestedClubId\) \{/);
   assert.ok(
-    shell.indexOf("if (requestedClubId) {") <
+    shell.indexOf("if (visualClubSlug || requestedClubId) {") <
       shell.indexOf("<AdminAccessProvider"),
     "Le blocage inter-clubs doit précéder le chargement des accès métier",
   );
