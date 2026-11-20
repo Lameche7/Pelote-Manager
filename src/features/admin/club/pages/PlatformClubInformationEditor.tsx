@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clubAdminService, type Club } from "../services/clubAdminService";
 
 /**
@@ -11,6 +11,8 @@ import { clubAdminService, type Club } from "../services/clubAdminService";
  */
 export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
   const [club, setClub] = useState<Club | null>(null);
+  const currentClubId = useRef(clubId);
+  currentClubId.current = clubId;
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -81,17 +83,20 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
           setSuccess("");
           try {
             await clubAdminService.updateClubForPlatformLease(club);
+            if (currentClubId.current !== clubId) return;
             const refreshed =
               await clubAdminService.getClubForPlatformLease(clubId);
+            if (currentClubId.current !== clubId) return;
             setClub(refreshed);
             setSuccess("Informations enregistrées.");
           } catch {
+            if (currentClubId.current !== clubId) return;
             setClub(null);
             setError(
               "Modification refusée ou autorisation expirée. Rechargez l’accès.",
             );
           } finally {
-            setSaving(false);
+            if (currentClubId.current === clubId) setSaving(false);
           }
         }}
       >
