@@ -35,16 +35,5 @@ test("diagnostic: show formatter differences for videos page", async () => {
   const expected = await prettier.format(page, {
     filepath: "src/features/network/pages/NetworkVideosPage.tsx",
   });
-  const originalLines = page.split("\n");
-  const expectedLines = expected.split("\n");
-  for (let i = 0; i < Math.max(originalLines.length, expectedLines.length); i += 1) {
-    if (originalLines[i] !== expectedLines[i]) {
-      console.log("PRETTIER_DIFF", JSON.stringify({
-        line: i + 1,
-        actual: originalLines.slice(Math.max(0, i - 3), i + 10),
-        expected: expectedLines.slice(Math.max(0, i - 3), i + 10),
-      }));
-      break;
-    }
-  }
+  console.log("PRETTIER_FULL", JSON.stringify(expected));
 });
