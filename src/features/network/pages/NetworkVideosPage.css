@@ -1,177 +1,103 @@
+.network-videos__header {
+  padding: 12px 20px;
+  background: #103a30;
+}
+.network-videos__header .network-directory__hero-header {
+  margin: 0 auto;
+  gap: 8px;
+}
+.network-videos__header .network-directory__brand {
+  padding: 4px 14px;
+  border-radius: 12px;
+}
+.network-videos__header .network-directory__brand img {
+  width: clamp(120px, 17vw, 165px);
+}
+.network-videos__header .network-directory__hero-nav {
+  padding: 4px;
+}
+.network-videos__header .network-directory__hero-nav a {
+  min-height: 36px;
+  padding: 6px 10px;
+}
 .network-videos__body {
   width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 40px 24px 70px;
+  padding: 22px 24px 44px;
 }
-
-.network-videos__intro {
-  margin-bottom: 30px;
+.network-videos__title {
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
+  margin: 0 0 18px;
 }
-
-.network-videos__intro h2 {
-  font-size: clamp(1.7rem, 3vw, 2.4rem);
-  line-height: 1.2;
-  margin: 8px 0 12px;
-}
-
-.network-videos__intro > p:last-child {
-  max-width: 720px;
-  line-height: 1.6;
-  color: #506e5f;
-}
-
 .network-videos__sections {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 18px;
 }
-
 .network-videos__panel {
   background: white;
   border: 1px solid #dce5df;
-  border-radius: 22px;
-  padding: clamp(20px, 3vw, 32px);
-  box-shadow: 0 10px 26px rgba(19, 65, 43, 0.06);
+  border-radius: 16px;
+  padding: clamp(16px, 2.4vw, 24px);
 }
-
 .network-videos__panel-heading {
   display: flex;
-  gap: 14px;
   align-items: center;
+  gap: 10px;
 }
-
 .network-videos__panel-heading h2 {
-  margin: 4px 0 0;
-  font-size: 1.6rem;
+  margin: 2px 0 0;
+  font-size: 1.3rem;
 }
-
 .network-videos__panel-heading .network-directory__eyebrow {
   margin: 0;
 }
-
 .network-videos__icon {
-  background: #e7f2ea;
-  color: #176548;
   display: grid;
   place-items: center;
-  height: 52px;
-  width: 52px;
-  border-radius: 15px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #e7f2ea;
+  color: #176548;
 }
-
 .network-videos__icon--live {
   background: #fff0ed;
   color: #b93d35;
 }
-
 .network-videos__icon svg {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
-
 .network-videos__empty {
-  min-height: 250px;
-  margin-top: 22px;
-  padding: 28px 18px;
+  margin-top: 16px;
+  padding: 20px 14px;
   background: #f5f8f5;
   border: 1px dashed #cbdccf;
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 10px;
+  gap: 8px;
 }
-
 .network-videos__empty > svg {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   color: #618672;
 }
-
 .network-videos__empty p {
   max-width: 340px;
   line-height: 1.5;
   margin: 0;
   color: #567063;
 }
-
 .network-videos__coming {
-  margin-top: 6px;
-  padding: 7px 12px;
-  border-radius: 20px;
   color: #245f45;
-  background: #e4f1e7;
-  font-weight: 700;
   font-size: 0.8rem;
+  font-weight: 700;
 }
-
-.network-videos__club {
-  margin-top: 26px;
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: center;
-  background: #173f34;
-  color: white;
-  border-radius: 21px;
-  padding: 28px;
-}
-
-.network-videos__club h2 {
-  margin: 5px 0 8px;
-}
-
-.network-videos__club p {
-  max-width: 650px;
-  color: #d8e8dd;
-  line-height: 1.5;
-}
-
-.network-videos__club a {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #f4d46e;
-  color: #18372f;
-  text-decoration: none;
-  font-weight: 750;
-  padding: 12px 15px;
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.network-videos__club a:focus-visible {
-  outline: 3px solid white;
-  outline-offset: 3px;
-}
-
-.network-videos__club a svg {
-  width: 17px;
-  height: 17px;
-}
-
-@media (max-width: 760px) {
-  .network-videos__body {
-    padding: 30px 16px 48px;
-  }
-
-  .network-videos__sections {
-    grid-template-columns: 1fr;
-  }
-
-  .network-videos__club {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .network-videos__club a {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
 .network-videos__filter {
   display: flex;
   align-items: center;
@@ -189,34 +115,82 @@
 }
 .network-videos__video-list {
   display: grid;
-  gap: 12px;
-  margin-top: 22px;
+  gap: 16px;
+  margin-top: 16px;
 }
 .network-videos__video-card {
   border: 1px solid #dce5df;
   border-radius: 12px;
-  padding: 16px;
+  overflow: hidden;
   background: #f5f8f5;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  text-decoration: none;
   color: #173f34;
 }
-.network-videos__video-card strong {
-  flex: 1 1 180px;
+.network-videos__play {
+  width: 100%;
+  min-height: 145px;
+  border: 0;
+  background: linear-gradient(135deg, #153f33, #226e50);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
 }
-.network-videos__video-card span {
+.network-videos__play svg {
+  width: 42px;
+  height: 42px;
+}
+.network-videos__play:focus-visible {
+  outline: 3px solid #efc75e;
+  outline-offset: -5px;
+}
+.network-videos__player {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  background: #000;
+}
+.network-videos__player iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.network-videos__video-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+}
+.network-videos__video-details span {
   color: #506e5f;
+  font-size: 0.9rem;
 }
-.network-videos__video-card svg {
-  width: 16px;
-  height: 16px;
+.network-videos__youtube-link {
+  margin: 22px 0 0;
+  color: #506e5f;
+  text-align: center;
+  font-size: 0.85rem;
+}
+.network-videos__youtube-link a {
+  color: #176548;
+  text-underline-offset: 3px;
 }
 @media (max-width: 760px) {
+  .network-videos__header {
+    padding: 8px 12px;
+  }
+  .network-videos__body {
+    padding: 18px 16px 32px;
+  }
   .network-videos__filter {
-    align-items: stretch;
     flex-direction: column;
+    align-items: stretch;
+  }
+  .network-videos__youtube-link {
+    text-align: left;
   }
 }

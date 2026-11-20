@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/infrastructure/supabase/client";
-import {
-  Clapperboard,
-  ExternalLink,
-  PlayCircle,
-  Radio,
-  Video,
-} from "lucide-react";
-import { NetworkHero } from "@/features/network/components/NetworkHero";
+import { Clapperboard, PlayCircle, Radio, Video } from "lucide-react";
+import { NetworkNavigation } from "@/features/network/components/NetworkNavigation";
 import "./NetworkDirectoryPage.css";
 import "./NetworkVideosPage.css";
 
@@ -29,6 +23,7 @@ export function NetworkVideosPage() {
   const [clubNames, setClubNames] = useState<Record<string, string>>({});
   const [clubFilter, setClubFilter] = useState("all");
   const [loadError, setLoadError] = useState(false);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -77,24 +72,42 @@ export function NetworkVideosPage() {
     return entries.length ? (
       <div className="network-videos__video-list">
         {entries.map((video) => (
-          <a
-            key={video.id}
-            className="network-videos__video-card"
-            href={`https://www.youtube.com/watch?v=${video.youtube_video_id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <strong>{video.title}</strong>
-            <span>
-              {clubNames[video.club_id] || "Club Pilotoki"} ·{" "}
-              {video.source_type === "tournoi"
-                ? "Tournoi"
-                : video.source_type === "championnat"
-                  ? "Championnat"
-                  : "Partie"}
-            </span>
-            <ExternalLink aria-hidden="true" />
-          </a>
+          <article key={video.id} className="network-videos__video-card">
+            {playingVideoId === video.id ? (
+              <div className="network-videos__player">
+                <iframe
+                  title={`Vidéo Pilotoki : ${video.title}`}
+                  src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.youtube_video_id)}?autoplay=1`}
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              </div>
+            ) : (
+              <button
+                className="network-videos__play"
+                type="button"
+                onClick={() => setPlayingVideoId(video.id)}
+                aria-label={`Lire ${video.title} dans Pilotoki`}
+              >
+                <PlayCircle aria-hidden="true" />
+                <span>
+                  Regarder {video.status === "live" ? "le direct" : "le replay"}
+                </span>
+              </button>
+            )}
+            <div className="network-videos__video-details">
+              <strong>{video.title}</strong>
+              <span>
+                {clubNames[video.club_id] || "Club Pilotoki"} ·{" "}
+                {video.source_type === "tournoi"
+                  ? "Tournoi"
+                  : video.source_type === "championnat"
+                    ? "Championnat"
+                    : "Partie"}
+              </span>
+            </div>
+          </article>
         ))}
       </div>
     ) : null;
@@ -102,19 +115,11 @@ export function NetworkVideosPage() {
 
   return (
     <main className="network-directory network-videos">
-      <NetworkHero variant="videos" />
+      <div className="network-videos__header">
+        <NetworkNavigation />
+      </div>
       <div className="network-videos__body">
-        <section
-          className="network-videos__intro"
-          aria-label="Présentation des vidéos"
-        >
-          <p className="network-directory__eyebrow">Pilotoki Live</p>
-          <h2>Vivez les parties, même à distance.</h2>
-          <p>
-            Retrouvez les parties diffusées en direct et, lorsqu’aucune
-            rencontre n’est en cours, profitez des replays disponibles.
-          </p>
-        </section>
+        <h1 className="network-videos__title">Pilotoki Live</h1>
 
         {clubIds.length > 1 && (
           <label className="network-videos__filter">
@@ -197,28 +202,16 @@ export function NetworkVideosPage() {
           </section>
         </div>
 
-        <section
-          className="network-videos__club"
-          aria-labelledby="video-club-heading"
-        >
-          <div>
-            <p className="network-directory__eyebrow">Chaîne commune</p>
-            <h2 id="video-club-heading">Pilotoki sur YouTube</h2>
-            <p>
-              Une chaîne YouTube Pilotoki pour les directs et replays de tous
-              les clubs. Chaque vidéo sera rattachée à son club d'origine et à
-              sa compétition.
-            </p>
-          </div>
+        <p className="network-videos__youtube-link">
+          Les vidéos sont hébergées sur YouTube ·{" "}
           <a
             href={PILOTOKI_YOUTUBE_CHANNEL}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Découvrir la chaîne YouTube Pilotoki
-            <ExternalLink aria-hidden="true" />
+            Voir la chaîne Pilotoki
           </a>
-        </section>
+        </p>
       </div>
       <footer className="network-directory__footer">
         Pilotoki · Clubs, tournois et vidéos

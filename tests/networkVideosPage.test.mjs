@@ -14,6 +14,8 @@ test("Pilotoki Network publishes a dedicated Videos page from its navigation", (
   assert.match(navigation, /to="\/reseau\/videos">Vidéos/);
   assert.match(router, /path: "\/reseau\/videos", element: <NetworkVideosPage/);
   assert.match(hero, /variant === "videos"/);
+  assert.match(page, /<NetworkNavigation \/>/);
+  assert.doesNotMatch(page, /<NetworkHero variant="videos"/);
 });
 
 test("Video page displays truthful empty states, not fictional broadcasts", () => {
