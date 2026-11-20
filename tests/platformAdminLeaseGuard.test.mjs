@@ -67,9 +67,13 @@ test("scoped dashboards use read-only guard", () => {
     "admin_dashboard_match_counts",
     "admin_monthly_match_report",
   ]) {
-    assert.ok(scopedDashboardSql.includes(`public.${name}(target_club_id uuid)`));
+    assert.ok(
+      scopedDashboardSql.includes(`public.${name}(target_club_id uuid)`),
+    );
   }
-  const guardCalls = scopedDashboardSql.match(/can_read_scoped_club_dashboard/g);
+  const guardCalls = scopedDashboardSql.match(
+    /can_read_scoped_club_dashboard/g,
+  );
   assert.ok((guardCalls?.length ?? 0) >= 3);
   assert.ok(
     !scopedDashboardSql.includes(
@@ -148,7 +152,10 @@ test("les baux serveur ne dépassent jamais cinq minutes", () => {
 });
 
 test("un bail est limité au club choisi", () => {
-  assert.match(leaseMigration, /club_id uuid not null references public\.clubs\(id\)/);
+  assert.match(
+    leaseMigration,
+    /club_id uuid not null references public\.clubs\(id\)/,
+  );
   assert.match(leaseMigration, /lease\.club_id = target_club_id/);
   assert.match(leaseMigration, /set club_id = excluded\.club_id/);
   assert.ok(leaseService.includes("async issue(clubId: string)"));
@@ -156,19 +163,27 @@ test("un bail est limité au club choisi", () => {
 });
 
 test("l'API des baux refuse les identifiants de club invalides", () => {
-  assert.ok(leaseEdge.includes('request.json()'));
-  assert.ok(leaseEdge.includes('Identifiant de club invalide'));
-  assert.ok(leaseEdge.includes('target_club_id: requestedClubId'));
-  assert.ok(leaseEdge.includes('PLATFORM_ADMIN_LEASES_ENABLED'));
+  assert.ok(leaseEdge.includes("request.json()"));
+  assert.ok(leaseEdge.includes("Identifiant de club invalide"));
+  assert.ok(leaseEdge.includes("target_club_id: requestedClubId"));
+  assert.ok(leaseEdge.includes("PLATFORM_ADMIN_LEASES_ENABLED"));
 });
 
 test("un bail ne peut être créé pour un club inexistant", () => {
-  assert.ok(leaseMigration.includes("if not exists (select 1 from public.clubs where id = target_club_id) then"));
+  assert.ok(
+    leaseMigration.includes(
+      "if not exists (select 1 from public.clubs where id = target_club_id) then",
+    ),
+  );
   assert.ok(leaseMigration.includes("raise exception 'Unknown club'"));
 });
 
 test("la fonction d'émission exige un JWT plateforme vérifié", () => {
-  assert.ok(/\[functions\.platform-business-admin-lease\]\s*verify_jwt = true/.test(supabaseConfig));
-  assert.ok(leaseEdge.includes('platform.auth.getUser(platformToken)'));
-  assert.ok(leaseEdge.includes('business.auth.getUser(businessToken)'));
+  assert.ok(
+    /\[functions\.platform-business-admin-lease\]\s*verify_jwt = true/.test(
+      supabaseConfig,
+    ),
+  );
+  assert.ok(leaseEdge.includes("platform.auth.getUser(platformToken)"));
+  assert.ok(leaseEdge.includes("business.auth.getUser(businessToken)"));
 });
