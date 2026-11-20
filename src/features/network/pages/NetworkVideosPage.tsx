@@ -163,7 +163,7 @@ export function NetworkVideosPage() {
                     Bientôt disponible
                   </span>
                 </div>
-            )}
+              )}
             </section>
           )}
 
