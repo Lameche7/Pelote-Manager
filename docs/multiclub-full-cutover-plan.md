@@ -80,3 +80,10 @@ Vérifications en lecture seule sur les projets Supabase connectés (aucune migr
 **Conséquence :** l'éditeur interclubs raccordé au tableau de bord reste non opérationnel tant que ces prérequis serveur ne sont pas déployés et validés. Le refus est attendu et sécurisé.
 
 **Avant tout déploiement**, revoir la migration SQL de bail et ses tests sur une base éphémère, vérifier la révocation et les autorisations par club, contrôler le schéma de `clubs`, examiner les secrets de l'Edge Function sans les exposer, puis préparer une livraison coordonnée avec sauvegarde et retour arrière. Aucune activation de `PLATFORM_ADMIN_LEASES_ENABLED` ni changement de droits Antoine sans validation explicite.
+
+
+### Disponibilité de l'environnement de test — vérification du 20 novembre 2026
+
+Le projet `PeloteManager-Test-PR41` existe mais est **INACTIVE**. La tentative de lecture de ses migrations a expiré sur une erreur de connexion ; il n'est donc pas possible de le considérer comme un banc d'essai opérationnel ni comme une copie à jour de la production. Aucune écriture n'y a été effectuée.
+
+La migration SQL provisoire des baux active désormais RLS sur la table privée, sans politique donnant accès aux utilisateurs. Avant d'appliquer le brouillon, disposer d'un PostgreSQL/Supabase éphémère accessible, charger le schéma compatible et exécuter des tests de rôle `anon`, `authenticated`, `service_role`, révocation, expiration et séparation Lourdes/Morlaàs. Ne pas détourner le projet de production pour simuler ces tests.
