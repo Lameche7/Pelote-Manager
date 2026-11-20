@@ -25,7 +25,10 @@ test("la sélection mémorisée est vérifiée par le catalogue serveur", () => 
     source,
     /clubs\.some\(\(club\) => club\.slug === selectedSlug\)/,
   );
-  assert.match(source, /if \(!isVerifiedAdmin \|\| status !== "ready"\) return/);
+  assert.match(
+    source,
+    /if \(!isVerifiedAdmin \|\| status !== "ready"\) return/,
+  );
   assert.match(source, /if \(!valid && selectedSlug\)/);
   // Even an empty, successfully loaded catalogue must invalidate stale choices.
   assert.doesNotMatch(source, /!clubs\.length\) return/);
