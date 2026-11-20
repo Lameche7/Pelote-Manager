@@ -10,6 +10,7 @@ const leaseEdge = readFileSync(
   "supabase/functions/platform-business-admin-lease/index.ts",
   "utf8",
 );
+const supabaseConfig = readFileSync("supabase/config.toml", "utf8");
 const shell = readFileSync(
   "src/features/admin/components/AdminShell.tsx",
   "utf8",
@@ -164,4 +165,10 @@ test("l'API des baux refuse les identifiants de club invalides", () => {
 test("un bail ne peut être créé pour un club inexistant", () => {
   assert.ok(leaseMigration.includes("if not exists (select 1 from public.clubs where id = target_club_id) then"));
   assert.ok(leaseMigration.includes("raise exception 'Unknown club'"));
+});
+
+test("la fonction d'émission exige un JWT plateforme vérifié", () => {
+  assert.ok(supabaseConfig.includes("[functions.platform-business-admin-lease]\\nverify_jwt = true"));
+  assert.ok(leaseEdge.includes('platform.auth.getUser(platformToken)'));
+  assert.ok(leaseEdge.includes('business.auth.getUser(businessToken)'));
 });
