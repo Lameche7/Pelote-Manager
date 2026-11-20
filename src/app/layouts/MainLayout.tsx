@@ -31,9 +31,16 @@ type ClubLayoutStyle = CSSProperties & {
 export function MainLayout() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const location = useLocation();
-  const [branding, setBranding] = useState(clubBrandingService.fallback);
+  const [branding, setBranding] = useState(() =>
+    new URLSearchParams(window.location.search).has("club")
+      ? clubBrandingService.unavailableFallback
+      : clubBrandingService.fallback,
+  );
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
+  // Presentation context only: authorization is checked by business RPCs.
+  const withClubPreview = (path: string) =>
+    clubSlug ? `${path}${path.includes("?") ? "&" : "?"}club=${encodeURIComponent(clubSlug)}` : path;
   const layoutStyle: ClubLayoutStyle = {
     "--club-primary": branding.primaryColor,
     "--club-secondary": branding.secondaryColor,
@@ -44,9 +51,17 @@ export function MainLayout() {
   useEffect(() => {
     let active = true;
     const reloadBranding = () => {
+      // Never display Lourdes branding as a foreign club while loading or
+      // after a failed foreign-club lookup.
+      const safeFallback = clubSlug
+        ? clubBrandingService.unavailableFallback
+        : clubBrandingService.fallback;
+      setBranding(safeFallback);
       void clubBrandingService.getPublicBranding(clubSlug).then((value) => {
         if (active) setBranding(value);
-      }).catch(() => undefined);
+      }).catch(() => {
+        if (active) setBranding(safeFallback);
+      });
     };
     reloadBranding();
     window.addEventListener("club-branding-updated", reloadBranding);
@@ -59,15 +74,15 @@ export function MainLayout() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
-    document.title = `${APP_CONFIG.name} · ${CLUB_CONFIG.name}`;
+    document.title = `${APP_CONFIG.name} · ${branding.name}`;
     const description = document.querySelector<HTMLMetaElement>(
       'meta[name="description"]',
     );
     description?.setAttribute(
       "content",
-      `${APP_CONFIG.name}, l’espace de réservation de ${CLUB_CONFIG.name}.`,
+      `${APP_CONFIG.name}, l’espace de réservation de ${branding.name}.`,
     );
-  }, []);
+  }, [branding.name]);
 
   useEffect(() => {
     let active = true;
@@ -146,7 +161,7 @@ export function MainLayout() {
       <header className="app-header">
         <Link
           className="app-brand"
-          to={ROUTES.home}
+          to={withClubPreview(ROUTES.home)}
           aria-label={`${APP_CONFIG.name} - Accueil`}
         >
           <img
@@ -162,20 +177,20 @@ export function MainLayout() {
             />
           )}
           <span className="app-brand__club">
-            <small>{CLUB_CONFIG.name}</small>
+            <small>{branding.name}</small>
           </span>
         </Link>
 
         <PlatformClubSwitcher />
         <nav className="app-navigation" aria-label="Navigation principale">
-          <NavLink className={navClassName} to={ROUTES.home}>
+          <NavLink className={navClassName} to={withClubPreview(ROUTES.home)}>
             Accueil
           </NavLink>
-          <NavLink className={navClassName} to={ROUTES.reservations}>
+          <NavLink className={navClassName} to={withClubPreview(ROUTES.reservations)}>
             Réservations
           </NavLink>
           {!isLoading && isAuthenticated && (
-            <NavLink className={navClassName} to={ROUTES.userSpace}>
+            <NavLink className={navClassName} to={withClubPreview(ROUTES.userSpace)}>
               Mon espace
               {unreadNotifications > 0 && (
                 <span
@@ -192,7 +207,7 @@ export function MainLayout() {
             canAccessAdminDashboard(adminAccess) && (
               <NavLink
                 className={navClassName}
-                to={`${ROUTES.admin}${new URLSearchParams(location.search).get("adminClubId") ? `?adminClubId=${encodeURIComponent(new URLSearchParams(location.search).get("adminClubId") ?? "")}` : ""}`}
+                to={withClubPreview(`${ROUTES.admin}${new URLSearchParams(location.search).get("adminClubId") ? `?adminClubId=${encodeURIComponent(new URLSearchParams(location.search).get("adminClubId") ?? "")}` : ""}`)}
               >
                 Administration
               </NavLink>
@@ -209,7 +224,7 @@ export function MainLayout() {
             ) : (
               <Link
                 className="button button--small button--primary"
-                to={ROUTES.login}
+                to={withClubPreview(ROUTES.login)}
               >
                 Connexion
               </Link>
@@ -223,13 +238,27 @@ export function MainLayout() {
 
       <footer className="app-footer">
         <div className="app-footer__brand">
-          <ClubLogo compact />
+          {clubSlug ? (
+            branding.logoUrl ? (
+              <span className="club-logo club-logo--compact">
+                <img
+                  src={branding.logoUrl}
+                  alt={`Logo de ${branding.name}`}
+                  style={{ display: "block", width: "100%", height: "auto" }}
+                />
+              </span>
+            ) : null
+          ) : (
+            <ClubLogo compact />
+          )}
           <div>
-            <strong>{CLUB_CONFIG.name}</strong>
+            <strong>{branding.name}</strong>
             <span>
-              {CLUB_CONFIG.foundedYear
-                ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
-                : CLUB_CONFIG.tagline}
+              {clubSlug
+                ? ""
+                : CLUB_CONFIG.foundedYear
+                  ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
+                  : CLUB_CONFIG.tagline}
             </span>
           </div>
         </div>
@@ -238,9 +267,9 @@ export function MainLayout() {
             © {new Date().getFullYear()} {APP_CONFIG.name}
           </small>
           <nav className="app-footer__legal" aria-label="Informations légales">
-            <Link to={ROUTES.legalNotice}>Mentions légales</Link>
-            <Link to={ROUTES.privacy}>Confidentialité</Link>
-            <Link to={ROUTES.terms}>Conditions d’utilisation</Link>
+            <Link to={withClubPreview(ROUTES.legalNotice)}>Mentions légales</Link>
+            <Link to={withClubPreview(ROUTES.privacy)}>Confidentialité</Link>
+            <Link to={withClubPreview(ROUTES.terms)}>Conditions d’utilisation</Link>
           </nav>
         </div>
       </footer>

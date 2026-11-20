@@ -72,3 +72,72 @@ test("scoped dashboards use read-only guard", () => {
     ),
   );
 });
+
+test("les RPC sensibles ne sont exécutables que par les rôles attendus", () => {
+  for (const name of [
+    "issue_platform_admin_lease(uuid, integer)",
+    "revoke_platform_admin_lease(uuid)",
+  ]) {
+    assert.ok(
+      leaseMigration.includes(
+        `revoke all on function public.${name}\n  from public, anon, authenticated;`,
+      ),
+    );
+    assert.ok(
+      leaseMigration.includes(
+        `grant execute on function public.${name}\n  to service_role;`,
+      ),
+    );
+  }
+  for (const name of [
+    "platform_admin_get_club_information(uuid)",
+    "platform_admin_update_club_information(uuid, jsonb)",
+  ]) {
+    assert.ok(
+      leaseMigration.includes(
+        `revoke all on function public.${name}\n  from public, anon, authenticated;`,
+      ),
+    );
+    assert.ok(
+      leaseMigration.includes(
+        `grant execute on function public.${name}\n  to authenticated;`,
+      ),
+    );
+  }
+});
+
+test("les opérations métier exigent un bail actif et un club explicite", () => {
+  for (const name of [
+    "platform_admin_update_club_information",
+    "platform_admin_get_club_information",
+  ]) {
+    const body = leaseMigration.split(
+      `create or replace function public.${name}(`,
+    )[1];
+    assert.ok(body);
+    assert.match(body.split("$$;")[0], /target_club_id is null/);
+    assert.match(
+      body.split("$$;")[0],
+      /pilotoki_private\.has_active_platform_lease\(auth\.uid\(\)\)/,
+    );
+  }
+  assert.match(leaseMigration, /where c\.id = target_club_id/);
+  assert.match(leaseMigration, /where field\.key not in/);
+  assert.doesNotMatch(leaseMigration, /service_role.*(?:browser|frontend)/i);
+});
+
+test("les baux privés activent RLS sans politique ouverte", () => {
+  assert.match(
+    leaseMigration,
+    /alter table pilotoki_private\.platform_admin_leases enable row level security;/,
+  );
+  assert.doesNotMatch(
+    leaseMigration,
+    /create policy\s+.*\s+on\s+pilotoki_private\.platform_admin_leases/i,
+  );
+});
+
+test("les baux serveur ne dépassent jamais cinq minutes", () => {
+  assert.ok(leaseMigration.includes("requested_seconds not between 1 and 300"));
+  assert.ok(leaseMigration.includes("interval '5 minutes'"));
+});

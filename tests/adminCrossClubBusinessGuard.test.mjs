@@ -17,7 +17,7 @@ test("cross-club access is guarded", () => {
   assert.ok(
     shell.indexOf("if (requestedClubId) {") < shell.indexOf("<Outlet />"),
   );
-  assert.ok(shell.includes("encodeURIComponent(requestedClubId)"));
+  assert.ok(shell.includes('params.set("adminClubId", requestedClubId)'));
   assert.ok(shell.includes("adminLink(child.to)"));
   assert.ok(shell.includes("adminLink(item.to)"));
   assert.ok(access.includes("accesses.length > 1"));
