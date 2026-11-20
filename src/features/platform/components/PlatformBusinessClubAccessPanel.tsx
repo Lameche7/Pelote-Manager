@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { PlatformClubInformationEditor } from "@/features/admin/club/pages/PlatformClubInformationEditor";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
 import { platformAdminLeaseService } from "../services/platformAdminLeaseService";
-import { PlatformClubInformationEditor } from "@/features/admin/club/pages/PlatformClubInformationEditor";
 
 type BusinessClub = { id: string; name: string; slug: string };
 
@@ -80,7 +80,10 @@ export function PlatformBusinessClubAccessPanel() {
   };
 
   return (
-    <section className="platform-card" aria-label="Accès sécurisé aux clubs métier">
+    <section
+      className="platform-card"
+      aria-label="Accès sécurisé aux clubs métier"
+    >
       <h2>Administration métier sécurisée</h2>
       <p>
         Sélection indépendante du registre commercial. Une autorisation
