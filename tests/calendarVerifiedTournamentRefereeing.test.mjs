@@ -19,7 +19,10 @@ test("calendar enables referee volunteering for a verified participant in the pr
   );
   assert.match(sql, /join resource r on r\.club_id=t\.club_id/);
   assert.match(sql, /t\.refereeing_enabled/);
-  assert.match(sql, /not exists\(\s*select 1 from public\.referee_slot_assignments/);
+  assert.match(
+    sql,
+    /not exists\(\s*select 1 from public\.referee_slot_assignments/,
+  );
 });
 
 test("calendar keeps the existing club and championship constraints", () => {
