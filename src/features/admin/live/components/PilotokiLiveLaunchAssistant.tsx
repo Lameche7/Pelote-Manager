@@ -19,15 +19,15 @@ export function PilotokiLiveLaunchAssistant({
   const [copied, setCopied] = useState(false);
   const validStream = streams.find(
     (stream) =>
-      stream.id === selectedStreamId &&
-      /^[0-9a-f-]{36}$/i.test(stream.id),
+      stream.id === selectedStreamId && /^[0-9a-f-]{36}$/i.test(stream.id),
   );
   const studioUrl = validStream
     ? `https://studio.upstream.so/stream/${validStream.id}/builder?tab=studio`
     : "https://studio.upstream.so/";
-  const validInvite = /^https:\/\/studio\.upstream\.so\/join\/[A-Za-z0-9_-]+\/?$/.test(
-    inviteUrl.trim(),
-  );
+  const validInvite =
+    /^https:\/\/studio\.upstream\.so\/join\/[A-Za-z0-9_-]+\/?$/.test(
+      inviteUrl.trim(),
+    );
   const copyInvite = async () => {
     if (!validInvite) return;
     try {
@@ -115,27 +115,20 @@ export function PilotokiLiveLaunchAssistant({
           {copied ? "Lien caméra copié" : "Copier le lien caméra"}
         </button>
         {validInvite && (
-          <a
-            href={inviteUrl.trim()}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href={inviteUrl.trim()} target="_blank" rel="noopener noreferrer">
             Ouvrir le lien caméra <ExternalLink aria-hidden="true" />
           </a>
         )}
       </div>
       <p className="admin-live-settings__hint">
         Ce lien d'invitation est privé et n'est pas enregistré dans Pilotoki.
-        Envoyez-le uniquement à la personne qui filme et utilisez Firefox
-        sur le Samsung si son navigateur habituel affiche une erreur.
+        Envoyez-le uniquement à la personne qui filme et utilisez Firefox sur le
+        Samsung si son navigateur habituel affiche une erreur.
       </p>
       <div className="admin-live-settings__launch-actions">
-        <a
-          href={studioUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Video aria-hidden="true" /> {validStream ? "Ouvrir cette régie Upstream" : "Ouvrir Upstream"}{" "}
+        <a href={studioUrl} target="_blank" rel="noopener noreferrer">
+          <Video aria-hidden="true" />{" "}
+          {validStream ? "Ouvrir cette régie Upstream" : "Ouvrir Upstream"}{" "}
           <ExternalLink aria-hidden="true" />
         </a>
         <a
