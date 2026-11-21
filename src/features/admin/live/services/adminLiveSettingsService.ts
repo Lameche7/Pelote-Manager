@@ -81,7 +81,10 @@ export const adminLiveSettingsService = {
     };
     if (!response.ok)
       throw new Error(result.error ?? "Connexion Upstream indisponible.");
-    return { configured: result.configured === true, connected: result.connected === true };
+    return {
+      configured: result.configured === true,
+      connected: result.connected === true,
+    };
   },
   async linkYoutubeIngest(videoId: string): Promise<string> {
     const { data: sessionData } = await supabase.auth.getSession();
