@@ -474,8 +474,9 @@ export function AdminLiveSettingsPage() {
           </p>
           {searchParams.get("liveClub") === settings.clubId && (
             <p className="admin-live-settings__hint" role="status">
-              Partie sélectionnée depuis le calendrier : vérifiez les informations,
-              les autorisations et la date avant de créer le direct.
+              Partie sélectionnée depuis le calendrier : vérifiez les
+              informations, les autorisations et la date avant de créer le
+              direct.
             </p>
           )}
           <form onSubmit={(event) => void prepareBroadcast(event)}>
