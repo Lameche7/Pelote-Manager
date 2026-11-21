@@ -36,7 +36,9 @@ export function AdminLiveSettingsPage() {
   const [prepared, setPrepared] = useState<PreparedBroadcast | null>(null);
   const [linkingVideoId, setLinkingVideoId] = useState<string | null>(null);
   const [linkedVideoIds, setLinkedVideoIds] = useState<string[]>([]);
-  const [selectedLaunchVideoId, setSelectedLaunchVideoId] = useState<string | null>(null);
+  const [selectedLaunchVideoId, setSelectedLaunchVideoId] = useState<
+    string | null
+  >(null);
   const [linkMessage, setLinkMessage] = useState("");
   const [linkError, setLinkError] = useState("");
   const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
