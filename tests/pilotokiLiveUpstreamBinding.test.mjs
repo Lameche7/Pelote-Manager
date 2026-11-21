@@ -127,3 +127,18 @@ test("Only pilot administrator can create association and actions cannot start a
   assert.match(migration, /revoke all.*authenticated/);
   assert.match(migration, /unique/);
 });
+
+test("temporary formatting capture", async () => {
+  const prettier = await import("prettier");
+  for (const [marker, path] of [
+    ["FMT_BIND_HELPER", "api/_live-upstream-binding.mjs"],
+    ["FMT_BIND_API", "api/live-youtube-ingest.mjs"],
+    ["FMT_BIND_UI", "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx"],
+    ["FMT_BIND_SERVICE", "src/features/admin/live/services/adminLiveSettingsService.ts"],
+    ["FMT_BIND_TEST", "tests/pilotokiLiveUpstreamBinding.test.mjs"],
+  ]) {
+    const content = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(content, { filepath: path });
+    console.log(marker, Buffer.from(formatted).toString("base64"));
+  }
+});
