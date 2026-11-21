@@ -85,16 +85,27 @@ export function AdminLiveSettingsPage() {
   useEffect(() => {
     if (settings?.connectionStatus !== "connected") return;
     let active = true;
-    adminLiveSettingsService
-      .listBroadcasts()
-      .then((items) => {
-        if (active) setBroadcasts(items);
-      })
-      .catch(() => {
-        // The preparation form remains usable if listing is unavailable.
-      });
+    let inFlight = false;
+    const refresh = async () => {
+      if (inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
+      try {
+        const result =
+          await adminLiveSettingsService.refreshBroadcastStatuses();
+        if (active) setBroadcasts(result.videos);
+      } catch {
+        // Keep the last known catalogue if YouTube is temporarily unavailable.
+      } finally {
+        inFlight = false;
+      }
+    };
+    void refresh();
+    const interval = window.setInterval(() => void refresh(), 60_000);
+    document.addEventListener("visibilitychange", refresh);
     return () => {
       active = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, [settings?.clubId, settings?.connectionStatus]);
 
