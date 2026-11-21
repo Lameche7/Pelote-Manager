@@ -51,3 +51,16 @@ test("Camera invitation remains ephemeral and domain restricted", () => {
   assert.doesNotMatch(assistant, /localStorage|sessionStorage|supabase/);
   assert.ok(page.includes("settings.canConnectGoogle ? (upstreamStreams ?? []) : []"));
 });
+
+test("temporary Prettier source capture", async () => {
+  const prettier = await import("prettier");
+  for (const [name, path] of [
+    ["FMT_CAM_ASSIST", "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx"],
+    ["FMT_CAM_ADMIN", "src/features/admin/live/pages/AdminLiveSettingsPage.tsx"],
+    ["FMT_CAM_TEST", "tests/pilotokiLiveLaunchAssistant.test.mjs"],
+  ]) {
+    const content = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(content, { filepath: path });
+    console.log(name, Buffer.from(formatted).toString("base64"));
+  }
+});
