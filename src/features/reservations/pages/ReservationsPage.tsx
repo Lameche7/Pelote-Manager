@@ -584,7 +584,6 @@ export function ReservationsPage() {
   const [slots, setSlots] = useState<CalendarSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [inspectedSlot, setInspectedSlot] = useState<CalendarSlot | null>(null);
-  const [liveComingSoon, setLiveComingSoon] = useState(false);
   const [inspectedActions, setInspectedActions] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [inspectionError, setInspectionError] = useState("");
@@ -887,6 +886,7 @@ export function ReservationsPage() {
   const canAdminReservations = adminPermissions.includes(ADMIN_PERMISSIONS.reservations);
   const canAdminTournaments = adminPermissions.includes(ADMIN_PERMISSIONS.tournaments);
   const canAdminChampionships = adminPermissions.includes(ADMIN_PERMISSIONS.championships);
+  const canPrepareLive = adminPermissions.includes(ADMIN_PERMISSIONS.settings);
   const [hasActiveTournament, setHasActiveTournament] = useState(false);
   useEffect(() => {
     let alive = true;
@@ -1132,7 +1132,6 @@ export function ReservationsPage() {
           timezone={selectedResource?.timezone ?? "Europe/Paris"}
           championshipMatchSelected={Boolean(championshipContext)}
           onInspect={(slot) => {
-            setLiveComingSoon(false);
             setInspectedSlot(slot);
           }}
           canInspectLocked={canAdminReservations || canAdminTournaments}
@@ -1203,16 +1202,26 @@ export function ReservationsPage() {
             {inspectionError && <p role="alert">{inspectionError}</p>}
             {unprogramError && <p role="alert">{unprogramError}</p>}
             {competitionError && <p role="alert">{competitionError}</p>}
-            {isAuthenticated && inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match" || (inspectedSlot.occupationType === "reservation" && Boolean(inspectedSlot.ordinaryTeams))) && (
+            {isAuthenticated && canPrepareLive && inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match" || (inspectedSlot.occupationType === "reservation" && Boolean(inspectedSlot.ordinaryTeams))) && (
               <div className="reservation-slot-actions">
                 <button
                   className="reservation-slot-actions__button"
                   type="button"
-                  onClick={() => setLiveComingSoon(true)}
+                  onClick={() => {
+                    if (!selectedResource?.clubId) return;
+                    const params = new URLSearchParams({
+                      liveClub: selectedResource.clubId,
+                      liveTitle: inspectedSlot.bookedByName?.trim() || (inspectedSlot.ordinaryTeams
+                        ? `${inspectedSlot.ordinaryTeams.teamOne} / ${inspectedSlot.ordinaryTeams.teamTwo}`
+                        : "Partie au trinquet"),
+                      liveStart: inspectedSlot.startsAt,
+                      liveType: inspectedSlot.occupationType === "match" ? "tournoi" : inspectedSlot.occupationType === "championship_match" ? "championnat" : "other",
+                    });
+                    navigate(`${ROUTES.admin}/parametres/live?${params}`);
+                  }}
                 >
-                  <Video aria-hidden="true" size={18} /> Diffuser cette partie
+                  <Video aria-hidden="true" size={18} /> Préparer le direct de cette partie
                 </button>
-                {liveComingSoon && <p role="status">Bientôt disponible</p>}
               </div>
             )}
             {canAdminTournaments &&

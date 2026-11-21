@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   ExternalLink,
   RadioTower,
@@ -17,6 +18,7 @@ import { PilotokiLiveCameraStudio } from "@/features/admin/live/components/Pilot
 import "./AdminLiveSettingsPage.css";
 
 export function AdminLiveSettingsPage() {
+  const [searchParams] = useSearchParams();
   const [settings, setSettings] = useState<ClubLiveSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -108,6 +110,32 @@ export function AdminLiveSettingsPage() {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [settings?.clubId, settings?.connectionStatus]);
+
+  useEffect(() => {
+    if (!settings?.clubId) return;
+    // Query parameters only propose defaults; the user must still explicitly consent
+    // and submit the regular authenticated YouTube preparation form.
+    if (searchParams.get("liveClub") !== settings.clubId) return;
+    const startsAt = searchParams.get("liveStart");
+    const title = searchParams.get("liveTitle")?.trim() || "";
+    const kind = searchParams.get("liveType");
+    if (!startsAt || !title || title.length > 100) return;
+    const start = new Date(startsAt);
+    if (!Number.isFinite(start.getTime())) return;
+    const date = [
+      start.getFullYear(),
+      String(start.getMonth() + 1).padStart(2, "0"),
+      String(start.getDate()).padStart(2, "0"),
+    ].join("-");
+    const time = [
+      String(start.getHours()).padStart(2, "0"),
+      String(start.getMinutes()).padStart(2, "0"),
+    ].join(":");
+    setBroadcastTitle(title.length < 5 ? `Partie ${title}` : title);
+    setBroadcastStart(`${date}T${time}`);
+    if (kind === "tournoi" || kind === "championnat" || kind === "other")
+      setBroadcastType(kind);
+  }, [searchParams, settings?.clubId]);
 
   const googleCallback = new URLSearchParams(window.location.search).get(
     "live_google",
@@ -444,6 +472,13 @@ export function AdminLiveSettingsPage() {
             Pilotoki et l'associe à votre club. Elle ne démarre pas la vidéo :
             la passerelle caméra reste à intégrer.
           </p>
+          {searchParams.get("liveClub") === settings.clubId && (
+            <p className="admin-live-settings__hint" role="status">
+              Partie sélectionnée depuis le calendrier : vérifiez les
+              informations, les autorisations et la date avant de créer le
+              direct.
+            </p>
+          )}
           <form onSubmit={(event) => void prepareBroadcast(event)}>
             <label>
               Titre de la partie

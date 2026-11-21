@@ -9,25 +9,44 @@ const calendar = readFileSync(
   ),
   "utf8",
 );
+const liveAdmin = readFileSync(
+  new URL(
+    "../src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
-test("the calendar live teaser appears for competition matches and ordinary booked matches with named teams", () => {
+test("Calendar proposes Pilotoki Live only for booked matches to a settings administrator", () => {
   assert.match(
     calendar,
-    /isAuthenticated && inspectedSlot.status === "occupied" && \(inspectedSlot.occupationType === "match" \|\| inspectedSlot.occupationType === "championship_match" \|\| \(inspectedSlot.occupationType === "reservation" && Boolean\(inspectedSlot.ordinaryTeams\)\)\)/,
+    /canPrepareLive = adminPermissions\.includes\(ADMIN_PERMISSIONS\.settings\)/,
   );
-  assert.match(calendar, /Diffuser cette partie/);
-  assert.match(calendar, /Boolean\(inspectedSlot.ordinaryTeams\)/);
-  assert.match(calendar, /<Video aria-hidden="true" size=\{18\}/);
+  assert.match(
+    calendar,
+    /isAuthenticated && canPrepareLive && inspectedSlot\.status === "occupied"/,
+  );
+  assert.match(calendar, /Boolean\(inspectedSlot\.ordinaryTeams\)/);
+  assert.match(calendar, /Préparer le direct de cette partie/);
+  assert.doesNotMatch(calendar, /setLiveComingSoon/);
 });
 
-test("clicking the camera does not start a video stream", () => {
-  assert.match(calendar, /onClick=\{\(\) => setLiveComingSoon\(true\)\}/);
+test("Calendar forwards club, title, schedule and competition type only", () => {
+  assert.match(calendar, /liveClub: selectedResource\.clubId/);
+  assert.match(calendar, /liveTitle: inspectedSlot\.bookedByName/);
+  assert.match(calendar, /liveStart: inspectedSlot\.startsAt/);
+  assert.match(calendar, /liveType: inspectedSlot\.occupationType/);
+  assert.ok(calendar.includes("navigate(`${ROUTES.admin}/parametres/live?"));
+});
+
+test("Admin validates the incoming club and never skips YouTube consent", () => {
   assert.match(
-    calendar,
-    /liveComingSoon && <p role="status">Bientôt disponible<\/p>/,
+    liveAdmin,
+    /searchParams\.get\("liveClub"\) !== settings\.clubId/,
   );
-  assert.match(
-    calendar,
-    /setLiveComingSoon\(false\);\s+setInspectedSlot\(slot\)/,
-  );
+  assert.match(liveAdmin, /setBroadcastTitle\(/);
+  assert.match(liveAdmin, /setBroadcastStart\(/);
+  assert.match(liveAdmin, /setBroadcastType\(kind\)/);
+  assert.match(liveAdmin, /if \(!consentConfirmed\)/);
+  assert.match(liveAdmin, /sourceId: null/);
 });
