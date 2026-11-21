@@ -234,11 +234,26 @@ test("YouTube status mapping only publishes real unlisted/public broadcasts", ()
   const broadcast = (lifeCycleStatus, privacyStatus = "unlisted") => ({
     status: { lifeCycleStatus, privacyStatus },
   });
-  assert.equal(publishedStatusFromYouTube(broadcast("ready"), "scheduled"), null);
-  assert.equal(publishedStatusFromYouTube(broadcast("testing"), "scheduled"), null);
-  assert.equal(publishedStatusFromYouTube(broadcast("live"), "scheduled"), "live");
-  assert.equal(publishedStatusFromYouTube(broadcast("complete"), "live"), "replay");
-  assert.equal(publishedStatusFromYouTube(broadcast("live", "private"), "scheduled"), null);
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("ready"), "scheduled"),
+    null,
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("testing"), "scheduled"),
+    null,
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("live"), "scheduled"),
+    "live",
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("complete"), "live"),
+    "replay",
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("live", "private"), "scheduled"),
+    null,
+  );
   assert.equal(publishedStatusFromYouTube(broadcast("live"), "hidden"), null);
 });
 
@@ -250,39 +265,51 @@ test("Club status refresh uses YouTube owner OAuth and updates only club-scoped 
     if (url.includes("pilotoki_live_videos?") && options.method !== "PATCH")
       return {
         ok: true,
-        json: async () => [{
-          id: "22222222-2222-4222-8222-222222222222",
-          youtube_video_id: "abcdefghi12",
-          status: "scheduled",
-          started_at: null,
-        }],
+        json: async () => [
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            youtube_video_id: "abcdefghi12",
+            status: "scheduled",
+            started_at: null,
+          },
+        ],
       };
     if (url.includes("pilotoki_live_google_credentials"))
       return {
         ok: true,
-        json: async () => [{
-          channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
-          refresh_token_ciphertext: encrypted.ciphertext,
-          refresh_token_iv: encrypted.iv,
-        }],
+        json: async () => [
+          {
+            channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
+            refresh_token_ciphertext: encrypted.ciphertext,
+            refresh_token_iv: encrypted.iv,
+          },
+        ],
       };
     if (url.includes("oauth2.googleapis.com/token"))
-      return { ok: true, json: async () => ({ access_token: "private-oauth-token" }) };
+      return {
+        ok: true,
+        json: async () => ({ access_token: "private-oauth-token" }),
+      };
     if (url.includes("youtube/v3/liveBroadcasts"))
       return {
         ok: true,
         json: async () => ({
-          items: [{
-            id: "abcdefghi12",
-            status: { lifeCycleStatus: "complete", privacyStatus: "unlisted" },
-          }],
+          items: [
+            {
+              id: "abcdefghi12",
+              status: { lifeCycleStatus: "complete", privacyStatus: "unlisted" },
+            },
+          ],
         }),
       };
     if (options.method === "PATCH") return { ok: true };
     throw new Error("Unexpected request");
   };
   const count = await synchronizeClubVideos(
-    env, clubId, "UCAIME5j0y9DdiEQNyttO_jw", fetchMock,
+    env,
+    clubId,
+    "UCAIME5j0y9DdiEQNyttO_jw",
+    fetchMock,
   );
   assert.equal(count, 1);
   const patch = calls.find((call) => call.options.method === "PATCH");
@@ -290,36 +317,4 @@ test("Club status refresh uses YouTube owner OAuth and updates only club-scoped 
   assert.equal(JSON.parse(patch.options.body).status, "replay");
   assert.equal(patch.options.headers.apikey, "sb_secret_test-only");
   assert.ok(!calls.some((call) => call.url.includes("test-user-token")));
-});
-
-test("temporary formatting diagnostic", async () => {
-  const prettier = await import("prettier");
-  for (const path of [
-    "api/_live-youtube-broadcast.mjs",
-    "tests/pilotokiLiveBroadcastPreparation.test.mjs",
-  ]) {
-    const { readFileSync } = await import("node:fs");
-    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-    const formatted = await prettier.format(source, { filepath: path });
-    console.log(path.startsWith("tests/") ? "FMT_FULL_TEST" : "FMT_FULL_API", Buffer.from(formatted).toString("base64"));
-    if (path.startsWith("tests/")) {
-      const initial = source.split("\n");
-      const final = formatted.split("\n");
-      for (let i = 0; i < Math.max(initial.length, final.length); i++) {
-        if (initial[i] !== final[i]) {
-          console.log("FMT_TEST_DIFF", JSON.stringify({ line: i, before: initial.slice(i, i + 20), after: final.slice(i, i + 20) }));
-          break;
-        }
-      }
-    } else {
-      const initial = source.split("\n");
-      const final = formatted.split("\n");
-      for (let i = 0; i < Math.max(initial.length, final.length); i++) {
-        if (initial[i] !== final[i]) {
-          console.log("FMT_API_DIFF", JSON.stringify({ line: i, before: initial.slice(i, i + 30), after: final.slice(i, i + 30) }));
-          break;
-        }
-      }
-    }
-  }
 });
