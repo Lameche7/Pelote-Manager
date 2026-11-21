@@ -42,8 +42,7 @@ export async function upstreamStreamInventory(env, fetchImpl = fetch) {
   } catch {
     return { configured: true, unavailable: true, streams: [] };
   }
-  if (!response.ok)
-    return { configured: true, unavailable: true, streams: [] };
+  if (!response.ok) return { configured: true, unavailable: true, streams: [] };
   let payload;
   try {
     payload = await response.json();
@@ -59,9 +58,16 @@ export async function upstreamStreamInventory(env, fetchImpl = fetch) {
     .slice(0, 50)
     .map((entry) => ({
       id: entry.id,
-      name: typeof entry.name === "string" ? entry.name.slice(0, 100) : "Sans titre",
-      status: typeof entry.status === "string" ? entry.status.slice(0, 30) : "unknown",
-      type: typeof entry.type === "string" ? entry.type.slice(0, 30) : "unknown",
+      name:
+        typeof entry.name === "string"
+          ? entry.name.slice(0, 100)
+          : "Sans titre",
+      status:
+        typeof entry.status === "string"
+          ? entry.status.slice(0, 30)
+          : "unknown",
+      type:
+        typeof entry.type === "string" ? entry.type.slice(0, 30) : "unknown",
     }));
   return { configured: true, streams };
 }
