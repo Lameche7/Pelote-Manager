@@ -81,6 +81,7 @@ export type UpstreamStreamInventory = {
 
 export type UpstreamVideoBinding = {
   streamId: string;
+  destinationConfigured?: boolean;
   alreadyLinked?: boolean;
 };
 
@@ -105,6 +106,39 @@ export const adminLiveSettingsService = {
     if (!response.ok)
       throw new Error(result.error ?? "Liaison Upstream indisponible.");
     return result.binding ?? null;
+  },
+
+  async prepareUpstreamDestination(videoId: string): Promise<{
+    configured: boolean;
+    alreadyConfigured: boolean;
+  }> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "prepare_upstream_destination",
+        videoId,
+        confirmed: true,
+      }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      configured?: boolean;
+      alreadyConfigured?: boolean;
+      error?: string;
+    };
+    if (!response.ok || result.configured !== true)
+      throw new Error(result.error ?? "Préparation Upstream impossible.");
+    return {
+      configured: true,
+      alreadyConfigured: result.alreadyConfigured === true,
+    };
   },
 
   async associateUpstreamStream(

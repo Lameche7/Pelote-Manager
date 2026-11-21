@@ -1,4 +1,5 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
+import { prepareUpstreamYoutubeDestination } from "./_live-upstream-destination.mjs";
 import {
   associateUpstreamStream,
   getUpstreamBinding,
@@ -70,6 +71,22 @@ export default async function handler(request, response) {
       request,
       process.env,
     );
+    if (request.body?.action === "prepare_upstream_destination") {
+      if (!canConnectGoogle)
+        throw new LiveAuthError(
+          403,
+          "Préparation réservée à l’administration pilote.",
+        );
+      if (request.body?.confirmed !== true)
+        throw new LiveAuthError(400, "Confirmation explicite nécessaire.");
+      const video = await getClubVideo(process.env, clubId, videoId);
+      const result = await prepareUpstreamYoutubeDestination(
+        process.env,
+        clubId,
+        video,
+      );
+      return response.status(200).json(result);
+    }
     if (request.body?.action === "associate_upstream") {
       if (!canConnectGoogle)
         throw new LiveAuthError(
