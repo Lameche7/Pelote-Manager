@@ -3,7 +3,10 @@ import { randomBytes } from "node:crypto";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { encryptIngestCredentials } from "../api/_live-youtube-ingest.mjs";
-import { decryptYoutubeIngest, prepareUpstreamYoutubeDestination } from "../api/_live-upstream-destination.mjs";
+import {
+  decryptYoutubeIngest,
+  prepareUpstreamYoutubeDestination,
+} from "../api/_live-upstream-destination.mjs";
 
 const video = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -25,7 +28,10 @@ const ingest = encryptIngestCredentials(env, {
   address: "rtmps://a.rtmps.youtube.com/live2",
   streamName: "abcd-efgh-ijkl",
 });
-const fakeIngest = { ingest_ciphertext: ingest.ciphertext, ingest_iv: ingest.iv };
+const fakeIngest = {
+  ingest_ciphertext: ingest.ciphertext,
+  ingest_iv: ingest.iv,
+};
 
 test("Decrypts known YouTube credentials strictly on the server", () => {
   assert.equal(
@@ -37,10 +43,11 @@ test("Decrypts known YouTube credentials strictly on the server", () => {
     streamName: "abcd-efgh",
   });
   assert.throws(
-    () => decryptYoutubeIngest(env, {
-      ingest_ciphertext: malicious.ciphertext,
-      ingest_iv: malicious.iv,
-    }),
+    () =>
+      decryptYoutubeIngest(env, {
+        ingest_ciphertext: malicious.ciphertext,
+        ingest_iv: malicious.iv,
+      }),
     /invalides/,
   );
 });
@@ -54,10 +61,12 @@ function fakeFetch(destinations = [], bindingDestination = null) {
         return { ok: true, json: async () => [{ video_id: video.id }] };
       return {
         ok: true,
-        json: async () => [{
-          upstream_stream_id: stream,
-          upstream_destination_id: bindingDestination,
-        }],
+        json: async () => [
+          {
+            upstream_stream_id: stream,
+            upstream_destination_id: bindingDestination,
+          },
+        ],
       };
     }
     if (url.includes("/rest/v1/pilotoki_live_ingest_credentials"))
@@ -82,7 +91,12 @@ function fakeFetch(destinations = [], bindingDestination = null) {
 
 test("Creates paused RTMPS destination with credentials only via protected server API", async () => {
   const { mock, calls } = fakeFetch();
-  const result = await prepareUpstreamYoutubeDestination(env, club, video, mock);
+  const result = await prepareUpstreamYoutubeDestination(
+    env,
+    club,
+    video,
+    mock,
+  );
   assert.deepEqual(result, { configured: true, alreadyConfigured: false });
   const post = calls.find((entry) => entry.options.method === "POST");
   const sent = JSON.parse(post.options.body);
@@ -98,7 +112,10 @@ test("Creates paused RTMPS destination with credentials only via protected serve
   });
   assert.doesNotMatch(saved.options.body, /abcd-efgh|write-secret/);
   assert.doesNotMatch(JSON.stringify(result), /abcd-efgh|write-secret/);
-  assert.equal(calls.filter((entry) => entry.options.method === "POST").length, 1);
+  assert.equal(
+    calls.filter((entry) => entry.options.method === "POST").length,
+    1,
+  );
 });
 
 test("Existing destination is idempotent and never overwritten", async () => {
@@ -110,7 +127,10 @@ test("Existing destination is idempotent and never overwritten", async () => {
     await prepareUpstreamYoutubeDestination(env, club, video, mock),
     { configured: true, alreadyConfigured: true },
   );
-  assert.equal(calls.filter((entry) => entry.options.method === "POST").length, 0);
+  assert.equal(
+    calls.filter((entry) => entry.options.method === "POST").length,
+    0,
+  );
 });
 
 test("Unexpected destination with same YouTube ID blocks a second creation", async () => {
@@ -121,45 +141,54 @@ test("Unexpected destination with same YouTube ID blocks a second creation", asy
     prepareUpstreamYoutubeDestination(env, club, video, mock),
     /existe déjà/,
   );
-  assert.equal(calls.filter((entry) => entry.options.method === "POST").length, 0);
+  assert.equal(
+    calls.filter((entry) => entry.options.method === "POST").length,
+    0,
+  );
 });
 
 test("Never modifies destinations on a running stream", async () => {
   const { mock, calls } = fakeFetch();
   const running = async (url, opts) => {
-    if (url.includes("studio.upstream.so/api/v1/streams/") && !url.endsWith("/destinations"))
-      return { ok: true, json: async () => ({ data: { id: stream, status: "active" } }) };
+    if (
+      url.includes("studio.upstream.so/api/v1/streams/") &&
+      !url.endsWith("/destinations")
+    )
+      return {
+        ok: true,
+        json: async () => ({ data: { id: stream, status: "active" } }),
+      };
     return mock(url, opts);
   };
   await assert.rejects(
     prepareUpstreamYoutubeDestination(env, club, video, running),
     /Arrêtez d'abord/,
   );
-  assert.equal(calls.filter((entry) => entry.options.method === "POST").length, 0);
+  assert.equal(
+    calls.filter((entry) => entry.options.method === "POST").length,
+    0,
+  );
 });
 
 test("Handler requires pilot admin and positive confirmation before any write", () => {
-  const api = readFileSync(new URL("../api/live-youtube-ingest.mjs", import.meta.url), "utf8");
-  assert.match(api, /request\.body\?\.action === "prepare_upstream_destination"/);
+  const api = readFileSync(
+    new URL("../api/live-youtube-ingest.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    api,
+    /request\.body\?\.action === "prepare_upstream_destination"/,
+  );
   assert.match(api, /if \(!canConnectGoogle\)/);
   assert.match(api, /request\.body\?\.confirmed !== true/);
-  const ui = readFileSync(new URL("../src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx", import.meta.url), "utf8");
+  const ui = readFileSync(
+    new URL(
+      "../src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
   assert.match(ui, /Préparer automatiquement la destination YouTube/);
   assert.match(ui, /confirmedPreparation/);
   assert.doesNotMatch(ui, /UPSTREAM_API_FULL_TOKEN|rtmps:\/\//);
-});
-
-test("temporary capture exact Prettier output", async () => {
-  const prettier = await import("prettier");
-  for (const [marker, path] of [
-    ["FMT_RTMPS_BINDING", "api/_live-upstream-binding.mjs"],
-    ["FMT_RTMPS_HELPER", "api/_live-upstream-destination.mjs"],
-    ["FMT_RTMPS_ROUTE", "api/live-youtube-ingest.mjs"],
-    ["FMT_RTMPS_UI", "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx"],
-    ["FMT_RTMPS_TEST", "tests/pilotokiLiveUpstreamDestination.test.mjs"],
-  ]) {
-    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-    const formatted = await prettier.format(source, { filepath: path });
-    console.log(marker, Buffer.from(formatted).toString("base64"));
-  }
 });
