@@ -163,17 +163,13 @@ export function PilotokiLiveLaunchAssistant({
                     setConfirmedDestination(event.target.checked)
                   }
                 />
-                J'ai vérifié dans Upstream que cette régie utilise
-                exclusivement la destination YouTube prévue pour{" "}
+                J'ai vérifié dans Upstream que cette régie utilise exclusivement
+                la destination YouTube prévue pour{" "}
                 <strong>{broadcast.title}</strong> et qu'elle est arrêtée.
               </label>
               <button
                 type="button"
-                disabled={
-                  !validStream ||
-                  !confirmedDestination ||
-                  bindingBusy
-                }
+                disabled={!validStream || !confirmedDestination || bindingBusy}
                 onClick={() => void saveBinding()}
               >
                 {bindingBusy
