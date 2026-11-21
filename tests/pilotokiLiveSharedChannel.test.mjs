@@ -45,3 +45,10 @@ test("Club-linked video registry exposes published items only", () => {
   assert.match(migration, /using\(status in \('live','replay'\)\)/);
   assert.match(network, /Voir la chaîne Pilotoki/);
 });
+
+test("Admin view refreshes authenticated YouTube states while active", () => {
+  assert.match(page, /setInterval\(\(\) => void refresh\(\), 60_000\)/);
+  assert.match(page, /refreshBroadcastStatuses\(\)/);
+  assert.match(page, /document\.visibilityState === "hidden"/);
+  assert.match(page, /window\.clearInterval\(interval\)/);
+});
