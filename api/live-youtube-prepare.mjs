@@ -8,6 +8,10 @@ import {
   youtubeCreateBroadcast,
 } from "./_live-youtube-broadcast.mjs";
 import { jsonError } from "./_live-google-shared.mjs";
+import {
+  authorizedCron,
+  reconcileDailyVideos,
+} from "./_live-youtube-daily-sync.mjs";
 
 export default async function handler(request, response) {
   response.setHeader("Cache-Control", "no-store");
@@ -17,6 +21,16 @@ export default async function handler(request, response) {
     return response.status(405).json({ error: "Méthode non autorisée." });
   }
   try {
+    // Vercel Cron reuses this existing GET function to stay within Hobby limits.
+    if (
+      request.method === "GET" &&
+      process.env.CRON_SECRET &&
+      request.headers.authorization === `Bearer ${process.env.CRON_SECRET}`
+    ) {
+      authorizedCron(request, process.env);
+      const result = await reconcileDailyVideos(process.env);
+      return response.status(200).json({ ok: true, ...result });
+    }
     // Club identity and permissions always come from the authenticated session.
     if (request.method === "GET") {
       const { clubId, channelId } = await verifiedLiveClubAdmin(
