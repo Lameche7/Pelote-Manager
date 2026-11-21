@@ -98,3 +98,18 @@ test("Only admin pilot with explicit approval can issue stream controls", () => 
   assert.match(ui, /Arrêter Upstream/);
   assert.doesNotMatch(ui, /UPSTREAM_API_FULL_TOKEN/);
 });
+
+test("temporary formatting collector", async () => {
+  const prettier = await import("prettier");
+  for (const [marker, path] of [
+    ["FMT_CONTROL_API", "api/_live-upstream-control.mjs"],
+    ["FMT_CONTROL_ROUTE", "api/live-youtube-ingest.mjs"],
+    ["FMT_CONTROL_UI", "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx"],
+    ["FMT_CONTROL_SERVICE", "src/features/admin/live/services/adminLiveSettingsService.ts"],
+    ["FMT_CONTROL_TEST", "tests/pilotokiLiveUpstreamControl.test.mjs"],
+  ]) {
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(source, { filepath: path });
+    console.log(marker, Buffer.from(formatted).toString("base64"));
+  }
+});
