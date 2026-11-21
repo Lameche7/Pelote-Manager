@@ -95,7 +95,9 @@ export type UpstreamControlStatus = {
 };
 
 export const adminLiveSettingsService = {
-  async getUpstreamControlStatus(videoId: string): Promise<UpstreamControlStatus> {
+  async getUpstreamControlStatus(
+    videoId: string,
+  ): Promise<UpstreamControlStatus> {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
@@ -103,13 +105,18 @@ export const adminLiveSettingsService = {
       `/api/live-youtube-ingest?upstream=control&videoId=${encodeURIComponent(videoId)}`,
       { headers: { authorization: `Bearer ${token}` }, cache: "no-store" },
     );
-    const dataResult = (await response.json()) as UpstreamControlStatus & { error?: string };
+    const dataResult = (await response.json()) as UpstreamControlStatus & {
+      error?: string;
+    };
     if (!response.ok)
       throw new Error(dataResult.error ?? "État Upstream indisponible.");
     return dataResult;
   },
 
-  async controlUpstream(videoId: string, command: "start" | "stop"): Promise<void> {
+  async controlUpstream(
+    videoId: string,
+    command: "start" | "stop",
+  ): Promise<void> {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
@@ -128,7 +135,8 @@ export const adminLiveSettingsService = {
       cache: "no-store",
     });
     const dataResult = (await response.json()) as { error?: string };
-    if (!response.ok) throw new Error(dataResult.error ?? "Commande Upstream impossible.");
+    if (!response.ok)
+      throw new Error(dataResult.error ?? "Commande Upstream impossible.");
   },
 
   async getUpstreamBinding(
