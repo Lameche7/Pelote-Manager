@@ -29,3 +29,10 @@ test("Video page displays truthful empty states, not fictional broadcasts", () =
   assert.match(page, /UCAIME5j0y9DdiEQNyttO_jw/);
   assert.doesNotMatch(page, /youtube\.com\/embed/);
 });
+
+test("Public catalogue refreshes while visible and on returning to the tab", () => {
+  assert.match(page, /setInterval\(\(\) => void load\(\), 30_000\)/);
+  assert.match(page, /document\.visibilityState === "hidden"/);
+  assert.match(page, /document\.addEventListener\("visibilitychange", load\)/);
+  assert.match(page, /window\.clearInterval\(interval\)/);
+});
