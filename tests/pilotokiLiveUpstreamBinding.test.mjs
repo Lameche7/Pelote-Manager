@@ -101,7 +101,7 @@ test("Association records only club, video and stream identifier", async () => {
     club_id: club,
     upstream_stream_id: stream,
   });
-  assert.doesNotMatch(JSON.stringify(write), /readonly-secret|Bearer/);
+  assert.doesNotMatch(write.opts.body, /secret|Bearer/);
 });
 
 test("Only pilot administrator can create association and actions cannot start a stream", () => {
