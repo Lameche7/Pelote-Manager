@@ -201,3 +201,32 @@
   cursor: wait;
   opacity: 0.6;
 }
+
+.admin-live-settings__studio-selector {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.admin-live-settings__studio-selector input,
+.admin-live-settings__studio-selector select {
+  min-width: 0;
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 0.55rem;
+  background: var(--surface-color, #fff);
+  color: inherit;
+}
+
+.admin-live-settings__launch-actions button {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.admin-live-settings__launch-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
