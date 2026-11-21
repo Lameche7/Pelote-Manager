@@ -32,3 +32,20 @@ test("Assisted workflow still requires deliberate YouTube live confirmation", ()
   assert.match(assistant, /page spectateur/);
   assert.match(assistant, /Upstream Live Studio/);
 });
+
+test("Pilot can explicitly choose the correct studio and no stream starts automatically", () => {
+  assert.match(assistant, /studio\.upstream\.so\/stream\/\$\{validStream\.id\}\/builder\?tab=studio/);
+  assert.match(assistant, /selectedStreamId/);
+  assert.match(assistant, /Choisir explicitement le bon flux/);
+  assert.match(assistant, /streams\.find\(/);
+  assert.doesNotMatch(assistant, /UPSTREAM_API_FULL_TOKEN|startUpstreamStream/);
+});
+
+test("Invite link is ephemeral, origin restricted and never stored server-side", () => {
+  assert.match(assistant, /useState\("")/);
+  assert.match(assistant, /studio\\\.upstream\\\.so\\\/join/);
+  assert.match(assistant, /navigator\.clipboard\.writeText/);
+  assert.match(assistant, /n'est pas enregistré dans Pilotoki/);
+  assert.doesNotMatch(assistant, /localStorage|sessionStorage|supabase|fetch\(/);
+  assert.match(page, /settings\.canConnectGoogle \? \(upstreamStreams \?\? \[\]\) : \[\]/);
+});
