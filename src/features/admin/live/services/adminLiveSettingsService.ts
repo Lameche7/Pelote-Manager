@@ -88,6 +88,14 @@ export const adminLiveSettingsService = {
   },
 
   async listBroadcasts(): Promise<ClubBroadcastSummary[]> {
+    const result = await this.refreshBroadcastStatuses();
+    return result.videos;
+  },
+
+  async refreshBroadcastStatuses(): Promise<{
+    videos: ClubBroadcastSummary[];
+    syncWarning: boolean;
+  }> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
     if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
@@ -98,10 +106,14 @@ export const adminLiveSettingsService = {
     });
     const result = (await response.json()) as {
       videos?: ClubBroadcastSummary[];
+      syncWarning?: boolean;
       error?: string;
     };
     if (!response.ok) throw new Error(result.error ?? "Directs indisponibles.");
-    return result.videos ?? [];
+    return {
+      videos: result.videos ?? [],
+      syncWarning: result.syncWarning === true,
+    };
   },
 
   async prepareBroadcast(

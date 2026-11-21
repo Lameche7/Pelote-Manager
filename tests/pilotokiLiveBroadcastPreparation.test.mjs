@@ -9,6 +9,8 @@ import {
   decryptRefreshToken,
   googleAccessToken,
   listPreparedVideos,
+  publishedStatusFromYouTube,
+  synchronizeClubVideos,
   validateBroadcastInput,
   verifiedLiveClubAdmin,
   youtubeCreateBroadcast,
@@ -226,4 +228,96 @@ test("Unknown or invalid YouTube errors stay generic and cannot inject messages"
     },
   });
   assert.match(nonJson.message, /YouTube HTTP 503/);
+});
+
+test("YouTube status mapping only publishes real unlisted/public broadcasts", () => {
+  const broadcast = (lifeCycleStatus, privacyStatus = "unlisted") => ({
+    status: { lifeCycleStatus, privacyStatus },
+  });
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("ready"), "scheduled"),
+    null,
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("testing"), "scheduled"),
+    null,
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("live"), "scheduled"),
+    "live",
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("complete"), "live"),
+    "replay",
+  );
+  assert.equal(
+    publishedStatusFromYouTube(broadcast("live", "private"), "scheduled"),
+    null,
+  );
+  assert.equal(publishedStatusFromYouTube(broadcast("live"), "hidden"), null);
+});
+
+test("Club status refresh uses YouTube owner OAuth and updates only club-scoped published rows", async () => {
+  const encrypted = encryptRefreshToken(env, "refresh-test-only");
+  const calls = [];
+  const fetchMock = async (url, options = {}) => {
+    calls.push({ url, options });
+    if (url.includes("pilotoki_live_videos?") && options.method !== "PATCH")
+      return {
+        ok: true,
+        json: async () => [
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            youtube_video_id: "abcdefghi12",
+            status: "scheduled",
+            started_at: null,
+          },
+        ],
+      };
+    if (url.includes("pilotoki_live_google_credentials"))
+      return {
+        ok: true,
+        json: async () => [
+          {
+            channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
+            refresh_token_ciphertext: encrypted.ciphertext,
+            refresh_token_iv: encrypted.iv,
+          },
+        ],
+      };
+    if (url.includes("oauth2.googleapis.com/token"))
+      return {
+        ok: true,
+        json: async () => ({ access_token: "private-oauth-token" }),
+      };
+    if (url.includes("youtube/v3/liveBroadcasts"))
+      return {
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: "abcdefghi12",
+              status: {
+                lifeCycleStatus: "complete",
+                privacyStatus: "unlisted",
+              },
+            },
+          ],
+        }),
+      };
+    if (options.method === "PATCH") return { ok: true };
+    throw new Error("Unexpected request");
+  };
+  const count = await synchronizeClubVideos(
+    env,
+    clubId,
+    "UCAIME5j0y9DdiEQNyttO_jw",
+    fetchMock,
+  );
+  assert.equal(count, 1);
+  const patch = calls.find((call) => call.options.method === "PATCH");
+  assert.match(patch.url, /club_id=eq\./);
+  assert.equal(JSON.parse(patch.options.body).status, "replay");
+  assert.equal(patch.options.headers.apikey, "sb_secret_test-only");
+  assert.ok(!calls.some((call) => call.url.includes("test-user-token")));
 });

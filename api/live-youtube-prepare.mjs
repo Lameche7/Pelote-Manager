@@ -2,6 +2,7 @@ import {
   googleAccessToken,
   listPreparedVideos,
   storePreparedVideo,
+  synchronizeClubVideos,
   validateBroadcastInput,
   verifiedLiveClubAdmin,
   youtubeCreateBroadcast,
@@ -18,9 +19,19 @@ export default async function handler(request, response) {
   try {
     // Club identity and permissions always come from the authenticated session.
     if (request.method === "GET") {
-      const { clubId } = await verifiedLiveClubAdmin(request, process.env);
+      const { clubId, channelId } = await verifiedLiveClubAdmin(
+        request,
+        process.env,
+      );
+      let syncWarning = false;
+      try {
+        await synchronizeClubVideos(process.env, clubId, channelId);
+      } catch {
+        // Listing remains available if YouTube temporarily refuses a status read.
+        syncWarning = true;
+      }
       const videos = await listPreparedVideos(process.env, clubId);
-      return response.status(200).json({ videos });
+      return response.status(200).json({ videos, syncWarning });
     }
     // No side effect on YouTube before validating both the request and club permissions.
     const input = validateBroadcastInput(request.body);

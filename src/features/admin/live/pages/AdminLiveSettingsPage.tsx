@@ -36,6 +36,8 @@ export function AdminLiveSettingsPage() {
   const [linkMessage, setLinkMessage] = useState("");
   const [linkError, setLinkError] = useState("");
   const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
+  const [refreshingStatuses, setRefreshingStatuses] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
   const [prepareError, setPrepareError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -186,6 +188,29 @@ export function AdminLiveSettingsPage() {
       );
     } finally {
       setPreparing(false);
+    }
+  };
+
+  const refreshYoutubeStatuses = async () => {
+    if (refreshingStatuses) return;
+    setRefreshingStatuses(true);
+    setStatusMessage("");
+    try {
+      const result = await adminLiveSettingsService.refreshBroadcastStatuses();
+      setBroadcasts(result.videos);
+      setStatusMessage(
+        result.syncWarning
+          ? "YouTube n'a pas pu être interrogé. Les derniers états enregistrés restent affichés."
+          : "Statuts YouTube actualisés. Les directs et replays publiés sont visibles sur Pilotoki.",
+      );
+    } catch (reason) {
+      setStatusMessage(
+        reason instanceof Error
+          ? reason.message
+          : "Impossible d'actualiser les directs.",
+      );
+    } finally {
+      setRefreshingStatuses(false);
     }
   };
 
@@ -499,6 +524,16 @@ export function AdminLiveSettingsPage() {
           {broadcasts.length > 0 && (
             <div className="admin-live-settings__broadcasts">
               <h3>Directs préparés pour ce club</h3>
+              <button
+                type="button"
+                disabled={refreshingStatuses}
+                onClick={() => void refreshYoutubeStatuses()}
+              >
+                {refreshingStatuses
+                  ? "Vérification YouTube…"
+                  : "Actualiser les directs et replays"}
+              </button>
+              {statusMessage && <p role="status">{statusMessage}</p>}
               <p className="admin-live-settings__hint">
                 La liaison RTMPS crée la destination de diffusion sur YouTube,
                 sans transmettre la caméra. Cette opération sera possible après
