@@ -25,7 +25,7 @@ test("Binding lookup is scoped to the authenticated club and video", async () =>
       json: async () => [{ upstream_stream_id: stream }],
     };
   });
-  assert.deepEqual(result, { streamId: stream });
+  assert.deepEqual(result, { streamId: stream, destinationConfigured: false });
   assert.match(requestUrl, new RegExp("club_id=eq\\." + club));
   assert.match(requestUrl, new RegExp("video_id=eq\\." + video));
 });
