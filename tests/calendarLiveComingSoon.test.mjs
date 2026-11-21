@@ -35,3 +35,18 @@ test("Admin validates the incoming club and never skips YouTube consent", () => 
   assert.match(liveAdmin, /if \(!consentConfirmed\)/);
   assert.match(liveAdmin, /sourceId: null/);
 });
+
+test("temporary exact Prettier formatting output", async () => {
+  const prettier = await import("prettier");
+  for (const path of [
+    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+    "tests/calendarLiveComingSoon.test.mjs",
+  ]) {
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(source, { filepath: path });
+    console.log(
+      path.endsWith("tsx") ? "LIVE_ADMIN_FORMAT_B64" : "LIVE_TEST_FORMAT_B64",
+      Buffer.from(formatted).toString("base64"),
+    );
+  }
+});
