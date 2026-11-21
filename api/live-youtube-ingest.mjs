@@ -1,5 +1,9 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
 import {
+  associateUpstreamStream,
+  getUpstreamBinding,
+} from "./_live-upstream-binding.mjs";
+import {
   upstreamConnectionStatus,
   upstreamStreamInventory,
 } from "./_live-upstream.mjs";
@@ -28,6 +32,12 @@ export default async function handler(request, response) {
     // or stream credentials to the browser.
     if (request.method === "GET") {
       const admin = await verifiedLiveClubAdmin(request, process.env);
+      if (request.query?.upstream === "binding") {
+        if (!admin.canConnectGoogle)
+          throw new LiveAuthError(403, "Liaison réservée à l’administration pilote.");
+        const video = await getClubVideo(process.env, admin.clubId, request.query?.videoId);
+        return response.status(200).json({ binding: await getUpstreamBinding(process.env, admin.clubId, video.id) });
+      }
       if (request.query?.upstream === "streams") {
         if (!admin.canConnectGoogle)
           throw new LiveAuthError(
@@ -43,10 +53,24 @@ export default async function handler(request, response) {
         .json(await upstreamConnectionStatus(process.env));
     }
     const videoId = request.body?.videoId;
-    const { clubId, channelId } = await verifiedLiveClubAdmin(
+    const { clubId, channelId, canConnectGoogle } = await verifiedLiveClubAdmin(
       request,
       process.env,
     );
+    if (request.body?.action === "associate_upstream") {
+      if (!canConnectGoogle)
+        throw new LiveAuthError(403, "Liaison réservée à l’administration pilote.");
+      if (request.body?.confirmed !== true)
+        throw new LiveAuthError(400, "Confirmation de la régie requise.");
+      const video = await getClubVideo(process.env, clubId, videoId);
+      const result = await associateUpstreamStream(
+        process.env,
+        clubId,
+        video.id,
+        request.body?.streamId,
+      );
+      return response.status(200).json({ binding: result });
+    }
     const video = await getClubVideo(process.env, clubId, videoId);
     if (await existingIngest(process.env, video.id)) {
       return response.status(200).json({
