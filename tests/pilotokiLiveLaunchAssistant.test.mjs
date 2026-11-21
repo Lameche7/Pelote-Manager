@@ -31,3 +31,21 @@ test("Assisted workflow still requires deliberate YouTube live confirmation", ()
   assert.match(assistant, /page spectateur/);
   assert.match(assistant, /Upstream Live Studio/);
 });
+
+test("temporary capture of exact Prettier formatting", async () => {
+  const prettier = await import("prettier");
+  for (const path of [
+    "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
+    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+    "tests/pilotokiLiveLaunchAssistant.test.mjs",
+  ]) {
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(source, { filepath: path });
+    const label = path.includes("components/")
+      ? "FMT_LIVE_ASSISTANT"
+      : path.endsWith("tsx")
+        ? "FMT_LIVE_ADMIN"
+        : "FMT_LIVE_TEST";
+    console.log(label, Buffer.from(formatted).toString("base64"));
+  }
+});
