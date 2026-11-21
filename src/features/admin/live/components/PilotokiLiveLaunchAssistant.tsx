@@ -4,6 +4,7 @@ import {
   adminLiveSettingsService,
   type ClubBroadcastSummary,
   type UpstreamStreamInfo,
+  type UpstreamControlStatus,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 
 type Props = {
@@ -27,6 +28,11 @@ export function PilotokiLiveLaunchAssistant({
   const [destinationReady, setDestinationReady] = useState(false);
   const [confirmedPreparation, setConfirmedPreparation] = useState(false);
   const [confirmedDestination, setConfirmedDestination] = useState(false);
+  const [controlStatus, setControlStatus] =
+    useState<UpstreamControlStatus | null>(null);
+  const [controlMessage, setControlMessage] = useState("");
+  const [controlBusy, setControlBusy] = useState(false);
+  const [confirmedControl, setConfirmedControl] = useState(false);
   useEffect(() => {
     if (!canAssociate || broadcast.status !== "scheduled") return;
     let active = true;
@@ -91,6 +97,59 @@ export function PilotokiLiveLaunchAssistant({
       );
     } finally {
       setBindingBusy(false);
+    }
+  };
+  const refreshControl = async () => {
+    if (!destinationReady || !canAssociate) return;
+    setControlMessage("");
+    try {
+      const next = await adminLiveSettingsService.getUpstreamControlStatus(
+        broadcast.id,
+      );
+      setControlStatus(next);
+    } catch (error) {
+      setControlMessage(
+        error instanceof Error
+          ? error.message
+          : "État de la régie indisponible.",
+      );
+    }
+  };
+  useEffect(() => {
+    if (!destinationReady || !canAssociate) return;
+    void refreshControl();
+  }, [destinationReady, canAssociate, broadcast.id]);
+  const issueControl = async (action: "start" | "stop") => {
+    if (
+      !confirmedControl ||
+      controlBusy ||
+      !controlStatus?.safe ||
+      (action === "start" ? !controlStatus.canStart : !controlStatus.canStop)
+    )
+      return;
+    setControlBusy(true);
+    setControlMessage("");
+    try {
+      await adminLiveSettingsService.controlUpstream(broadcast.id, action);
+      setControlMessage(
+        action === "start"
+          ? "Démarrage Upstream demandé. Confirmez séparément le direct dans YouTube Studio."
+          : "Arrêt Upstream demandé. Vérifiez aussi la fin du direct dans YouTube Studio.",
+      );
+    } catch (error) {
+      setControlMessage(
+        error instanceof Error ? error.message : "Commande indisponible.",
+      );
+    } finally {
+      setConfirmedControl(false);
+      setControlBusy(false);
+      try {
+        setControlStatus(
+          await adminLiveSettingsService.getUpstreamControlStatus(broadcast.id),
+        );
+      } catch {
+        setControlStatus(null);
+      }
     }
   };
   const validStream = streams.find(
@@ -248,6 +307,79 @@ export function PilotokiLiveLaunchAssistant({
                   </p>
                 </>
               )}
+            </div>
+          )}
+          {destinationReady && (
+            <div className="admin-live-settings__binding">
+              <h4>Pilotage du direct</h4>
+              {controlStatus ? (
+                <>
+                  <p>
+                    Régie Upstream :{" "}
+                    <strong>{controlStatus.streamStatus}</strong>. Destination
+                    du direct :{" "}
+                    <strong>{controlStatus.destinationStatus}</strong>.
+                  </p>
+                  {controlStatus.reason && (
+                    <p role="alert">{controlStatus.reason}</p>
+                  )}
+                  {controlStatus.safe && (
+                    <>
+                      <label className="admin-live-settings__checkbox">
+                        <input
+                          type="checkbox"
+                          checked={confirmedControl}
+                          onChange={(event) =>
+                            setConfirmedControl(event.target.checked)
+                          }
+                        />
+                        Je confirme piloter uniquement cette vidéo YouTube. J'ai
+                        vérifié la caméra et les autorisations de diffusion.
+                      </label>
+                      <div className="admin-live-settings__launch-actions">
+                        <button
+                          type="button"
+                          disabled={
+                            !confirmedControl ||
+                            controlBusy ||
+                            !controlStatus.canStart
+                          }
+                          onClick={() => void issueControl("start")}
+                        >
+                          Démarrer Upstream
+                        </button>
+                        <button
+                          type="button"
+                          disabled={
+                            !confirmedControl ||
+                            controlBusy ||
+                            !controlStatus.canStop
+                          }
+                          onClick={() => void issueControl("stop")}
+                        >
+                          Arrêter Upstream
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <p>État du pilotage non vérifié.</p>
+              )}
+              <button
+                type="button"
+                disabled={controlBusy}
+                onClick={() => void refreshControl()}
+              >
+                Actualiser l'état de la régie
+              </button>
+              {controlMessage && <p role="status">{controlMessage}</p>}
+              <p className="admin-live-settings__hint">
+                YouTube Studio exige encore de confirmer « Passer au direct ».
+                Un flux Upstream possédant une destination principale ou une
+                autre destination active est bloqué pour éviter toute diffusion
+                involontaire.
+              </p>
             </div>
           )}
           {bindingError && <p role="alert">{bindingError}</p>}
