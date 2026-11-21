@@ -1,5 +1,8 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
-import { upstreamConnectionStatus, upstreamStreamInventory } from "./_live-upstream.mjs";
+import {
+  upstreamConnectionStatus,
+  upstreamStreamInventory,
+} from "./_live-upstream.mjs";
 import {
   googleAccessToken,
   verifiedLiveClubAdmin,
@@ -27,8 +30,13 @@ export default async function handler(request, response) {
       const admin = await verifiedLiveClubAdmin(request, process.env);
       if (request.query?.upstream === "streams") {
         if (!admin.canConnectGoogle)
-          throw new LiveAuthError(403, "Inventaire réservé à l'administration pilote.");
-        return response.status(200).json(await upstreamStreamInventory(process.env));
+          throw new LiveAuthError(
+            403,
+            "Inventaire réservé à l'administration pilote.",
+          );
+        return response
+          .status(200)
+          .json(await upstreamStreamInventory(process.env));
       }
       return response
         .status(200)
