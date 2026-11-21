@@ -2,7 +2,7 @@
 import { createDecipheriv } from "node:crypto";
 import { LiveAuthError, required } from "./_live-google-shared.mjs";
 import { privilegedHeaders } from "./_live-youtube-broadcast.mjs";
-import { getUpstreamBinding, getOwnedUpstreamStream } from "./_live-upstream-binding.mjs";
+import { getOwnedUpstreamStream } from "./_live-upstream-binding.mjs";
 import { validateVideoId } from "./_live-youtube-ingest.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -43,7 +43,7 @@ export function decryptYoutubeIngest(env, record) {
       typeof credentials.streamName !== "string" ||
       !/^[A-Za-z0-9_-]{1,200}$/.test(credentials.streamName)
     ) throw new Error("ingest credentials");
-    return `${target.origin}${target.pathname.replace(/\/$/, "")}/${credentials.streamName}`;
+    return `${target.protocol}//${target.host}${target.pathname.replace(/\/$/, "")}/${credentials.streamName}`;
   } catch {
     throw new LiveAuthError(503, "Identifiants YouTube illisibles ou invalides.");
   }
