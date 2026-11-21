@@ -49,7 +49,9 @@ export function AdminLiveSettingsPage() {
   const [upstreamStatus, setUpstreamStatus] =
     useState<UpstreamConnectionStatus | null>(null);
   const [checkingUpstream, setCheckingUpstream] = useState(false);
-  const [upstreamStreams, setUpstreamStreams] = useState<UpstreamStreamInfo[] | null>(null);
+  const [upstreamStreams, setUpstreamStreams] = useState<
+    UpstreamStreamInfo[] | null
+  >(null);
   const [listingUpstream, setListingUpstream] = useState(false);
   const [upstreamListMessage, setUpstreamListMessage] = useState("");
   const [upstreamError, setUpstreamError] = useState("");
@@ -281,7 +283,9 @@ export function AdminLiveSettingsPage() {
         setUpstreamListMessage("Aucun flux trouvé sur ce compte Upstream.");
     } catch (reason) {
       setUpstreamListMessage(
-        reason instanceof Error ? reason.message : "Inventaire Upstream indisponible.",
+        reason instanceof Error
+          ? reason.message
+          : "Inventaire Upstream indisponible.",
       );
     } finally {
       setListingUpstream(false);
@@ -741,23 +745,28 @@ export function AdminLiveSettingsPage() {
                 disabled={listingUpstream}
                 onClick={() => void listUpstreamStreams()}
               >
-                {listingUpstream ? "Recherche…" : "Voir les flux de mon compte Upstream"}
+                {listingUpstream
+                  ? "Recherche…"
+                  : "Voir les flux de mon compte Upstream"}
               </button>
-              {upstreamListMessage && <p role="status">{upstreamListMessage}</p>}
+              {upstreamListMessage && (
+                <p role="status">{upstreamListMessage}</p>
+              )}
               {upstreamStreams && upstreamStreams.length > 0 && (
                 <ul>
                   {upstreamStreams.map((stream) => (
                     <li key={stream.id}>
-                      <strong>{stream.name}</strong> — {stream.status} ({stream.type})
+                      <strong>{stream.name}</strong> — {stream.status} (
+                      {stream.type})
                     </li>
                   ))}
                 </ul>
               )}
               <p className="admin-live-settings__hint">
                 Inventaire en lecture seule, réservé à l'administration pilote.
-                Les commandes de démarrage et d'arrêt resteront désactivées
-                tant qu'un flux n'est pas explicitement associé au bon club et
-                à sa diffusion YouTube.
+                Les commandes de démarrage et d'arrêt resteront désactivées tant
+                qu'un flux n'est pas explicitement associé au bon club et à sa
+                diffusion YouTube.
               </p>
             </>
           )}
