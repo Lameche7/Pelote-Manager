@@ -24,6 +24,8 @@ export function PilotokiLiveLaunchAssistant({
   const [bindingLoaded, setBindingLoaded] = useState(false);
   const [bindingError, setBindingError] = useState("");
   const [bindingBusy, setBindingBusy] = useState(false);
+  const [destinationReady, setDestinationReady] = useState(false);
+  const [confirmedPreparation, setConfirmedPreparation] = useState(false);
   const [confirmedDestination, setConfirmedDestination] = useState(false);
   useEffect(() => {
     if (!canAssociate || broadcast.status !== "scheduled") return;
@@ -34,6 +36,7 @@ export function PilotokiLiveLaunchAssistant({
       .then((binding) => {
         if (!active) return;
         setBoundStreamId(binding?.streamId ?? null);
+        setDestinationReady(binding?.destinationConfigured === true);
       })
       .catch((error: unknown) => {
         if (!active) return;
@@ -63,6 +66,23 @@ export function PilotokiLiveLaunchAssistant({
     } catch (error) {
       setBindingError(
         error instanceof Error ? error.message : "Association impossible.",
+      );
+    } finally {
+      setBindingBusy(false);
+    }
+  };
+  const prepareDestination = async () => {
+    if (!boundStreamId || !confirmedPreparation || bindingBusy || destinationReady)
+      return;
+    setBindingBusy(true);
+    setBindingError("");
+    try {
+      await adminLiveSettingsService.prepareUpstreamDestination(broadcast.id);
+      setDestinationReady(true);
+      setConfirmedPreparation(false);
+    } catch (reason: unknown) {
+      setBindingError(
+        reason instanceof Error ? reason.message : "Destination indisponible.",
       );
     } finally {
       setBindingBusy(false);
@@ -181,6 +201,49 @@ export function PilotokiLiveLaunchAssistant({
                 un autre direct. Cette action ne démarre pas Upstream.
               </p>
             </>
+          )}
+          {boundStreamId && bindingLoaded && (
+            <div className="admin-live-settings__binding">
+              {destinationReady ? (
+                <p role="status">
+                  Destination YouTube préparée dans Upstream, en pause.
+                  Vérifiez-la avant toute diffusion. Les autres destinations
+                  éventuelles ne sont pas modifiées.
+                </p>
+              ) : (
+                <>
+                  <p>
+                    Préparer automatiquement une nouvelle destination RTMPS
+                    pour <strong>{broadcast.title}</strong>, sans modifier
+                    les destinations existantes ni démarrer la diffusion.
+                  </p>
+                  <label className="admin-live-settings__checkbox">
+                    <input
+                      type="checkbox"
+                      checked={confirmedPreparation}
+                      onChange={(event) =>
+                        setConfirmedPreparation(event.target.checked)
+                      }
+                    />
+                    Je confirme vouloir créer une nouvelle destination
+                    YouTube désactivée pour cette vidéo.
+                  </label>
+                  <button
+                    type="button"
+                    disabled={!confirmedPreparation || bindingBusy}
+                    onClick={() => void prepareDestination()}
+                  >
+                    {bindingBusy
+                      ? "Préparation…"
+                      : "Préparer automatiquement la destination YouTube"}
+                  </button>
+                  <p className="admin-live-settings__hint">
+                    Le flux YouTube doit d'abord être préparé dans Pilotoki.
+                    Aucun bouton ici ne démarre la caméra ou le direct.
+                  </p>
+                </>
+              )}
+            </div>
           )}
           {bindingError && <p role="alert">{bindingError}</p>}
         </div>
