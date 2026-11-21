@@ -79,7 +79,63 @@ export type UpstreamStreamInventory = {
   streams: UpstreamStreamInfo[];
 };
 
+export type UpstreamVideoBinding = {
+  streamId: string;
+  alreadyLinked?: boolean;
+};
+
 export const adminLiveSettingsService = {
+  async getUpstreamBinding(videoId: string): Promise<UpstreamVideoBinding | null> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch(
+      `/api/live-youtube-ingest?upstream=binding&videoId=${encodeURIComponent(videoId)}`,
+      {
+        headers: { authorization: `Bearer ${token}` },
+        cache: "no-store",
+      },
+    );
+    const result = (await response.json()) as {
+      binding?: UpstreamVideoBinding | null;
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(result.error ?? "Liaison Upstream indisponible.");
+    return result.binding ?? null;
+  },
+
+  async associateUpstreamStream(
+    videoId: string,
+    streamId: string,
+  ): Promise<UpstreamVideoBinding> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "associate_upstream",
+        videoId,
+        streamId,
+        confirmed: true,
+      }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      binding?: UpstreamVideoBinding;
+      error?: string;
+    };
+    if (!response.ok || !result.binding)
+      throw new Error(result.error ?? "Association Upstream impossible.");
+    return result.binding;
+  },
+
+
   async listUpstreamStreams(): Promise<UpstreamStreamInventory> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
