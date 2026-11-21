@@ -36,7 +36,7 @@ test("Calendar forwards club, title, schedule and competition type only", () => 
   assert.match(calendar, /liveTitle: inspectedSlot\.bookedByName/);
   assert.match(calendar, /liveStart: inspectedSlot\.startsAt/);
   assert.match(calendar, /liveType: inspectedSlot\.occupationType/);
-  assert.match(calendar, /navigate\(`$\{ROUTES\.admin\}\/parametres\/live\?/);
+  assert.ok(calendar.includes("navigate(`${ROUTES.admin}/parametres/live?"));
 });
 
 test("Admin validates the incoming club and never skips YouTube consent", () => {
