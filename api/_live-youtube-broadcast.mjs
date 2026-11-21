@@ -347,7 +347,7 @@ export async function synchronizeClubVideos(
   const youtubeResponse = await fetchImpl(
     `https://www.googleapis.com/youtube/v3/liveBroadcasts?${youtubeParams}`,
     {
-      headers: { authorization: `*** },
+      headers: { authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     },
   );
