@@ -72,7 +72,12 @@ export function PilotokiLiveLaunchAssistant({
     }
   };
   const prepareDestination = async () => {
-    if (!boundStreamId || !confirmedPreparation || bindingBusy || destinationReady)
+    if (
+      !boundStreamId ||
+      !confirmedPreparation ||
+      bindingBusy ||
+      destinationReady
+    )
       return;
     setBindingBusy(true);
     setBindingError("");
@@ -213,9 +218,9 @@ export function PilotokiLiveLaunchAssistant({
               ) : (
                 <>
                   <p>
-                    Préparer automatiquement une nouvelle destination RTMPS
-                    pour <strong>{broadcast.title}</strong>, sans modifier
-                    les destinations existantes ni démarrer la diffusion.
+                    Préparer automatiquement une nouvelle destination RTMPS pour{" "}
+                    <strong>{broadcast.title}</strong>, sans modifier les
+                    destinations existantes ni démarrer la diffusion.
                   </p>
                   <label className="admin-live-settings__checkbox">
                     <input
@@ -225,8 +230,8 @@ export function PilotokiLiveLaunchAssistant({
                         setConfirmedPreparation(event.target.checked)
                       }
                     />
-                    Je confirme vouloir créer une nouvelle destination
-                    YouTube désactivée pour cette vidéo.
+                    Je confirme vouloir créer une nouvelle destination YouTube
+                    désactivée pour cette vidéo.
                   </label>
                   <button
                     type="button"
