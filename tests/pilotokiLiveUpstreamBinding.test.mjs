@@ -138,15 +138,3 @@ test("Only pilot administrator can create association and actions cannot start a
   assert.match(migration, /revoke all.*authenticated/);
   assert.match(migration, /unique/);
 });
-
-test("temporary exact API formatting diagnosis", async () => {
-  const prettier = await import("prettier");
-  const path = "api/live-youtube-ingest.mjs";
-  const original = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-  const formatted = await prettier.format(original, { filepath: path });
-  const originalLines = original.split("\n");
-  const formattedLines = formatted.split("\n");
-  const first = originalLines.findIndex((line, index) => line !== formattedLines[index]);
-  console.log("FMT_API_FIRST_DIFFERENCE", first);
-  console.log("FMT_API_B64", Buffer.from(formatted).toString("base64"));
-});
