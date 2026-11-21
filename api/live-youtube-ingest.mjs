@@ -1,4 +1,5 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
+import { upstreamConnectionStatus } from "./_live-upstream.mjs";
 import {
   googleAccessToken,
   verifiedLiveClubAdmin,
@@ -15,11 +16,19 @@ import {
 export default async function handler(request, response) {
   response.setHeader("Cache-Control", "no-store");
   response.setHeader("Vary", "Authorization");
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
+  if (request.method !== "POST" && request.method !== "GET") {
+    response.setHeader("Allow", "POST, GET");
     return response.status(405).json({ error: "Méthode non autorisée." });
   }
   try {
+    // Read-only upstream connection health. Never return provider metadata
+    // or stream credentials to the browser.
+    if (request.method === "GET") {
+      await verifiedLiveClubAdmin(request, process.env);
+      return response
+        .status(200)
+        .json(await upstreamConnectionStatus(process.env));
+    }
     const videoId = request.body?.videoId;
     const { clubId, channelId } = await verifiedLiveClubAdmin(
       request,

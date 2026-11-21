@@ -61,7 +61,31 @@ export type ClubBroadcastSummary = {
   youtubeUrl: string;
 };
 
+export type UpstreamConnectionStatus = {
+  configured: boolean;
+  connected: boolean;
+};
+
 export const adminLiveSettingsService = {
+  async checkUpstreamConnection(): Promise<UpstreamConnectionStatus> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    const result = (await response.json()) as UpstreamConnectionStatus & {
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(result.error ?? "Connexion Upstream indisponible.");
+    return {
+      configured: result.configured === true,
+      connected: result.connected === true,
+    };
+  },
   async linkYoutubeIngest(videoId: string): Promise<string> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
