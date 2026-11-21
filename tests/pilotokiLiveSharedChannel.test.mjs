@@ -47,7 +47,7 @@ test("Club-linked video registry exposes published items only", () => {
 });
 
 test("Admin view refreshes authenticated YouTube states while active", () => {
-  assert.match(page, /setInterval\(\(\) => void refresh\(\), 60_000\)/);
+  assert.match(page, /setInterval\(\(\) => void refresh\(\), 300_000\)/);
   assert.match(page, /refreshBroadcastStatuses\(\)/);
   assert.match(page, /document\.visibilityState === "hidden"/);
   assert.match(page, /window\.clearInterval\(interval\)/);
