@@ -34,7 +34,10 @@ test("Provider ownership and paused status must be confirmed read-only", async (
   const calls = [];
   const item = await getOwnedUpstreamStream(env, stream, async (url, opts) => {
     calls.push({ url, opts });
-    return { ok: true, json: async () => ({ data: { id: stream, status: "paused" } }) };
+    return {
+      ok: true,
+      json: async () => ({ data: { id: stream, status: "paused" } }),
+    };
   });
   assert.deepEqual(item, { id: stream, status: "paused" });
   assert.equal(calls[0].opts.headers.Authorization, "Bearer readonly-secret");
@@ -67,7 +70,9 @@ test("Binding never overwrites a different previously associated stream", async 
       if (opts?.method === "POST") mutation = true;
       return {
         ok: true,
-        json: async () => [{ upstream_stream_id: "33333333-3333-4333-8333-333333333333" }],
+        json: async () => [
+          { upstream_stream_id: "33333333-3333-4333-8333-333333333333" },
+        ],
       };
     }),
     /Une autre régie/,
@@ -110,11 +115,17 @@ test("Only pilot administrator can create association and actions cannot start a
     "utf8",
   );
   const ui = readFileSync(
-    new URL("../src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx", import.meta.url),
+    new URL(
+      "../src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   const migration = readFileSync(
-    new URL("../supabase/migrations/20261121180000_pilotoki_live_upstream_bindings.sql", import.meta.url),
+    new URL(
+      "../supabase/migrations/20261121180000_pilotoki_live_upstream_bindings.sql",
+      import.meta.url,
+    ),
     "utf8",
   );
   assert.match(api, /request\.body\?\.action === "associate_upstream"/);
@@ -126,19 +137,4 @@ test("Only pilot administrator can create association and actions cannot start a
   assert.match(migration, /enable row level security/);
   assert.match(migration, /revoke all.*authenticated/);
   assert.match(migration, /unique/);
-});
-
-test("temporary formatting capture", async () => {
-  const prettier = await import("prettier");
-  for (const [marker, path] of [
-    ["FMT_BIND_HELPER", "api/_live-upstream-binding.mjs"],
-    ["FMT_BIND_API", "api/live-youtube-ingest.mjs"],
-    ["FMT_BIND_UI", "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx"],
-    ["FMT_BIND_SERVICE", "src/features/admin/live/services/adminLiveSettingsService.ts"],
-    ["FMT_BIND_TEST", "tests/pilotokiLiveUpstreamBinding.test.mjs"],
-  ]) {
-    const content = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-    const formatted = await prettier.format(content, { filepath: path });
-    console.log(marker, Buffer.from(formatted).toString("base64"));
-  }
 });
