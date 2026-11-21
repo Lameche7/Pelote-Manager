@@ -6,16 +6,16 @@ export function privilegedHeaders(env) {
   const key = required(env, "SUPABASE_SERVICE_ROLE_KEY");
   return {
     apikey: key,
-    ...(key.startsWith("sb_secret_") ? {} : { authorization: `Bearer ${key}` }),
+    ...(key.startsWith("sb_secret_") ? {} : { authorization: `*** }),
   };
 }
 
 export async function verifiedLiveClubAdmin(request, env, fetchImpl = fetch) {
   const url = required(env, "VITE_SUPABASE_URL");
   const anonKey = required(env, "VITE_SUPABASE_ANON_KEY");
-  const bearer = request.headers.authorization?.match(/^Bearer (\S+)$/i)?.[1];
+  const bearer = request.headers.authorization?.match(/^***;
   if (!bearer) throw new LiveAuthError(401, "Connectez-vous à Pilotoki.");
-  const headers = { apikey: anonKey, authorization: `Bearer ${bearer}` };
+  const headers = { apikey: anonKey, authorization: `*** };
   const userResponse = await fetchImpl(`${url}/auth/v1/user`, {
     headers,
     cache: "no-store",
@@ -235,8 +235,7 @@ export async function youtubeCreateBroadcast(
     {
       method: "POST",
       headers: {
-        authorization: `Bearer ${accessToken}`,
-        "content-type": "application/json",
+        authorization: `***        "content-type": "application/json",
       },
       body: JSON.stringify({
         snippet: {
@@ -298,7 +297,6 @@ export async function storePreparedVideo(
     );
 }
 
-
 /** Map only YouTube-confirmed public/unlisted lifecycle states to the catalogue. */
 export function publishedStatusFromYouTube(item, currentStatus) {
   if (currentStatus === "hidden") return null;
@@ -330,7 +328,10 @@ export async function synchronizeClubVideos(
     { headers: privilegedHeaders(env), cache: "no-store" },
   );
   if (!storedResponse.ok)
-    throw new LiveAuthError(502, "Impossible de vérifier les directs enregistrés.");
+    throw new LiveAuthError(
+      502,
+      "Impossible de vérifier les directs enregistrés.",
+    );
   const stored = await storedResponse.json();
   if (!Array.isArray(stored) || !stored.length) return 0;
   const accessToken = await googleAccessToken(env, channelId, fetchImpl);
@@ -345,7 +346,7 @@ export async function synchronizeClubVideos(
   const youtubeResponse = await fetchImpl(
     `https://www.googleapis.com/youtube/v3/liveBroadcasts?${youtubeParams}`,
     {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: { authorization: `*** },
       cache: "no-store",
     },
   );
@@ -382,7 +383,10 @@ export async function synchronizeClubVideos(
       },
     );
     if (!updateResponse.ok)
-      throw new LiveAuthError(502, "Échec de la mise à jour du catalogue vidéo.");
+      throw new LiveAuthError(
+        502,
+        "Échec de la mise à jour du catalogue vidéo.",
+      );
     updated += 1;
   }
   return updated;
