@@ -148,3 +148,18 @@ test("Handler requires pilot admin and positive confirmation before any write", 
   assert.match(ui, /confirmedPreparation/);
   assert.doesNotMatch(ui, /UPSTREAM_API_FULL_TOKEN|rtmps:\/\//);
 });
+
+test("temporary capture exact Prettier output", async () => {
+  const prettier = await import("prettier");
+  for (const [marker, path] of [
+    ["FMT_RTMPS_BINDING", "api/_live-upstream-binding.mjs"],
+    ["FMT_RTMPS_HELPER", "api/_live-upstream-destination.mjs"],
+    ["FMT_RTMPS_ROUTE", "api/live-youtube-ingest.mjs"],
+    ["FMT_RTMPS_UI", "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx"],
+    ["FMT_RTMPS_TEST", "tests/pilotokiLiveUpstreamDestination.test.mjs"],
+  ]) {
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(source, { filepath: path });
+    console.log(marker, Buffer.from(formatted).toString("base64"));
+  }
+});
