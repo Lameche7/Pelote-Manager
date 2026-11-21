@@ -106,3 +106,18 @@ test("Inventory is restricted to the central pilot admin", () => {
   assert.match(endpoint, /await upstreamStreamInventory\(process\.env\)/);
   assert.match(endpoint, /verifiedLiveClubAdmin\(request, process\.env\)/);
 });
+
+test("temporary formatter diagnostics", async () => {
+  const prettier = await import("prettier");
+  for (const [marker, path] of [
+    ["FMT_INVENTORY_HELPER", "api/_live-upstream.mjs"],
+    ["FMT_INVENTORY_BROADCAST", "api/_live-youtube-broadcast.mjs"],
+    ["FMT_INVENTORY_INGEST", "api/live-youtube-ingest.mjs"],
+    ["FMT_INVENTORY_UI", "src/features/admin/live/pages/AdminLiveSettingsPage.tsx"],
+    ["FMT_INVENTORY_TEST", "tests/pilotokiLiveUpstreamConnection.test.mjs"],
+  ]) {
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(source, { filepath: path });
+    console.log(marker, Buffer.from(formatted).toString("base64"));
+  }
+});
