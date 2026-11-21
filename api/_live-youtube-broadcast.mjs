@@ -298,6 +298,96 @@ export async function storePreparedVideo(
     );
 }
 
+
+/** Map only YouTube-confirmed public/unlisted lifecycle states to the catalogue. */
+export function publishedStatusFromYouTube(item, currentStatus) {
+  if (currentStatus === "hidden") return null;
+  const lifecycle = item?.status?.lifeCycleStatus;
+  const privacy = item?.status?.privacyStatus;
+  if (privacy !== "public" && privacy !== "unlisted") return null;
+  if (lifecycle === "live") return "live";
+  if (lifecycle === "complete") return "replay";
+  return null;
+}
+
+/** Reconcile a club's published videos without giving the browser any YouTube credentials. */
+export async function synchronizeClubVideos(
+  env,
+  clubId,
+  channelId,
+  fetchImpl = fetch,
+) {
+  const url = required(env, "VITE_SUPABASE_URL");
+  const params = new URLSearchParams({
+    club_id: `eq.${clubId}`,
+    select: "id,youtube_video_id,status,started_at",
+    status: "in.(scheduled,live,replay)",
+    order: "created_at.desc",
+    limit: "50",
+  });
+  const storedResponse = await fetchImpl(
+    `${url}/rest/v1/pilotoki_live_videos?${params}`,
+    { headers: privilegedHeaders(env), cache: "no-store" },
+  );
+  if (!storedResponse.ok)
+    throw new LiveAuthError(502, "Impossible de vérifier les directs enregistrés.");
+  const stored = await storedResponse.json();
+  if (!Array.isArray(stored) || !stored.length) return 0;
+  const accessToken = await googleAccessToken(env, channelId, fetchImpl);
+  const ids = stored.map((item) => item.youtube_video_id);
+  if (ids.some((id) => !/^[A-Za-z0-9_-]{11}$/.test(id)))
+    throw new LiveAuthError(502, "Identifiant YouTube invalide.");
+  const youtubeParams = new URLSearchParams({
+    part: "status,snippet",
+    id: ids.join(","),
+    maxResults: "50",
+  });
+  const youtubeResponse = await fetchImpl(
+    `https://www.googleapis.com/youtube/v3/liveBroadcasts?${youtubeParams}`,
+    {
+      headers: { authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
+  if (!youtubeResponse.ok)
+    throw new LiveAuthError(502, "État des directs YouTube indisponible.");
+  const youtube = await youtubeResponse.json();
+  const byId = new Map(
+    (Array.isArray(youtube?.items) ? youtube.items : [])
+      .filter((item) => ids.includes(item.id))
+      .map((item) => [item.id, item]),
+  );
+  let updated = 0;
+  for (const item of stored) {
+    const youtubeItem = byId.get(item.youtube_video_id);
+    const status = publishedStatusFromYouTube(youtubeItem, item.status);
+    if (!status || status === item.status) continue;
+    // Never regress an archived replay back to "live" due to stale YouTube data.
+    if (item.status === "replay" && status !== "replay") continue;
+    const patch = { status };
+    if (status === "live" && !item.started_at)
+      patch.started_at =
+        youtubeItem?.snippet?.actualStartTime || new Date().toISOString();
+    const updateResponse = await fetchImpl(
+      `${url}/rest/v1/pilotoki_live_videos?id=eq.${item.id}&club_id=eq.${clubId}`,
+      {
+        method: "PATCH",
+        headers: {
+          ...privilegedHeaders(env),
+          "content-type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify(patch),
+        cache: "no-store",
+      },
+    );
+    if (!updateResponse.ok)
+      throw new LiveAuthError(502, "Échec de la mise à jour du catalogue vidéo.");
+    updated += 1;
+  }
+  return updated;
+}
+
 export async function listPreparedVideos(env, clubId, fetchImpl = fetch) {
   if (!/^[0-9a-f-]{36}$/i.test(clubId))
     throw new LiveAuthError(400, "Club invalide.");
