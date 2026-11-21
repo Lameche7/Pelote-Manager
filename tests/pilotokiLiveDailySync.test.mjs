@@ -8,7 +8,7 @@ import {
 import {
   authorizedCron,
   reconcileDailyVideos,
-} from "../api/live-youtube-daily-sync.mjs";
+} from "../api/_live-youtube-daily-sync.mjs";
 
 const clubId = "188029a8-3e6a-41cd-821f-01984a703552";
 const env = {
