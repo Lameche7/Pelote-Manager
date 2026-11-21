@@ -301,6 +301,7 @@ test("temporary formatting diagnostic", async () => {
     const { readFileSync } = await import("node:fs");
     const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
     const formatted = await prettier.format(source, { filepath: path });
+    console.log(path.startsWith("tests/") ? "FMT_FULL_TEST" : "FMT_FULL_API", JSON.stringify(formatted));
     if (path.startsWith("tests/")) {
       const initial = source.split("\n");
       const final = formatted.split("\n");
