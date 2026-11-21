@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomBytes } from "node:crypto";
-import { encryptRefreshToken, LiveAuthError } from "../api/_live-google-shared.mjs";
+import {
+  encryptRefreshToken,
+  LiveAuthError,
+} from "../api/_live-google-shared.mjs";
 import {
   authorizedCron,
   reconcileDailyVideos,
@@ -24,10 +27,7 @@ test("Cron requires a shared server-only secret", () => {
   );
   assert.throws(
     () =>
-      authorizedCron(
-        { headers: { authorization: "Bearer wrong-secret" } },
-        env,
-      ),
+      authorizedCron({ headers: { authorization: "Bearer wrong-secret" } }, env),
     LiveAuthError,
   );
   assert.doesNotThrow(() =>
@@ -62,11 +62,13 @@ test("Daily reconciliation updates completed videos without exposing credentials
     if (url.includes("pilotoki_live_google_credentials"))
       return {
         ok: true,
-        json: async () => [{
-          channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
-          refresh_token_ciphertext: encrypted.ciphertext,
-          refresh_token_iv: encrypted.iv,
-        }],
+        json: async () => [
+          {
+            channel_id: "UCAIME5j0y9DdiEQNyttO_jw",
+            refresh_token_ciphertext: encrypted.ciphertext,
+            refresh_token_iv: encrypted.iv,
+          },
+        ],
       };
     if (url.includes("oauth2.googleapis.com/token"))
       return { ok: true, json: async () => ({ access_token: "test-oauth" }) };
@@ -74,10 +76,12 @@ test("Daily reconciliation updates completed videos without exposing credentials
       return {
         ok: true,
         json: async () => ({
-          items: [{
-            id: "abcdefghi12",
-            status: { lifeCycleStatus: "complete", privacyStatus: "public" },
-          }],
+          items: [
+            {
+              id: "abcdefghi12",
+              status: { lifeCycleStatus: "complete", privacyStatus: "public" },
+            },
+          ],
         }),
       };
     if (options.method === "PATCH") return { ok: true };
@@ -86,12 +90,14 @@ test("Daily reconciliation updates completed videos without exposing credentials
         return { ok: true, json: async () => [{ club_id: clubId }] };
       return {
         ok: true,
-        json: async () => [{
-          id: "22222222-2222-4222-8222-222222222222",
-          youtube_video_id: "abcdefghi12",
-          status: "scheduled",
-          started_at: null,
-        }],
+        json: async () => [
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            youtube_video_id: "abcdefghi12",
+            status: "scheduled",
+            started_at: null,
+          },
+        ],
       };
     }
     throw new Error("Unexpected request");
@@ -101,5 +107,11 @@ test("Daily reconciliation updates completed videos without exposing credentials
   const patch = requests.find((request) => request.options.method === "PATCH");
   assert.equal(JSON.parse(patch.options.body).status, "replay");
   assert.match(patch.url, /club_id=eq\./);
-  assert.ok(requests.every(({ options }) => options.headers?.apikey === "sb_secret_test-only" || !options.headers?.apikey));
+  assert.ok(
+    requests.every(
+      ({ options }) =>
+        options.headers?.apikey === "sb_secret_test-only" ||
+        !options.headers?.apikey,
+    ),
+  );
 });
