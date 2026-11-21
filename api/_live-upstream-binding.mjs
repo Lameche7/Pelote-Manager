@@ -15,7 +15,7 @@ export async function getUpstreamBinding(
   const params = new URLSearchParams({
     video_id: `eq.${valid}`,
     club_id: `eq.${clubId}`,
-    select: "upstream_stream_id",
+    select: "upstream_stream_id,upstream_destination_id",
     limit: "1",
   });
   const response = await fetchImpl(
@@ -26,7 +26,7 @@ export async function getUpstreamBinding(
     throw new LiveAuthError(503, "Liaison caméra indisponible.");
   const rows = await response.json();
   return Array.isArray(rows) && rows.length
-    ? { streamId: rows[0].upstream_stream_id }
+    ? { streamId: rows[0].upstream_stream_id, destinationConfigured: Boolean(rows[0].upstream_destination_id) }
     : null;
 }
 
