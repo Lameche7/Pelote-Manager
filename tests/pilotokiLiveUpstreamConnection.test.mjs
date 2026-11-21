@@ -28,7 +28,11 @@ test("Upstream connectivity check passes secret only as server Bearer header", a
 test("Provider rejects an invalid key without revealing its response body", async () => {
   const result = await upstreamConnectionStatus(
     { UPSTREAM_API_TOKEN: "another-secret" },
-    async () => ({ ok: false, status: 401, text: () => "private-provider-error" }),
+    async () => ({
+      ok: false,
+      status: 401,
+      text: () => "private-provider-error",
+    }),
   );
   assert.deepEqual(result, { configured: true, connected: false });
 });
@@ -46,31 +50,14 @@ test("Existing YouTube ingest endpoint enforces admin authentication for Upstrea
 
 test("Admin UI offers explicit test and does not publish provider credentials", () => {
   const page = readFileSync(
-    new URL("../src/features/admin/live/pages/AdminLiveSettingsPage.tsx", import.meta.url),
+    new URL(
+      "../src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   assert.match(page, /Tester la connexion Upstream/);
   assert.match(page, /UPSTREAM_API_TOKEN/);
   assert.match(page, /checkUpstreamConnection\(\)/);
   assert.doesNotMatch(page, /startUpstreamStream|stopUpstreamStream/);
-});
-
-test("temporary exact Prettier output", async () => {
-  const prettier = await import("prettier");
-  for (const path of [
-    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
-    "src/features/admin/live/services/adminLiveSettingsService.ts",
-    "tests/pilotokiLiveUpstreamConnection.test.mjs",
-  ]) {
-    const content = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-    const formatted = await prettier.format(content, { filepath: path });
-    console.log(
-      path.includes("pages/")
-        ? "FMT_UPSTREAM_ADMIN"
-        : path.includes("services/")
-          ? "FMT_UPSTREAM_SERVICE"
-          : "FMT_UPSTREAM_TEST",
-      Buffer.from(formatted).toString("base64"),
-    );
-  }
 });
