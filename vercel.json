@@ -25,7 +25,7 @@
   ],
   "crons": [
     {
-      "path": "/api/live-youtube-daily-sync",
+      "path": "/api/live-youtube-prepare",
       "schedule": "0 5 * * *"
     }
   ]
