@@ -215,7 +215,14 @@ export async function prepareUpstreamYoutubeDestination(
             ? provider.errors
             : {},
         ).filter((field) =>
-          ["key", "name", "platform", "status", "url", "include_in_schedule"].includes(field),
+          [
+            "key",
+            "name",
+            "platform",
+            "status",
+            "url",
+            "include_in_schedule",
+          ].includes(field),
         );
         if (fields.length) issue = ` Champs concernés : ${fields.join(", ")}.`;
       } catch {
