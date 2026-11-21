@@ -297,7 +297,10 @@ test("Club status refresh uses YouTube owner OAuth and updates only club-scoped 
           items: [
             {
               id: "abcdefghi12",
-              status: { lifeCycleStatus: "complete", privacyStatus: "unlisted" },
+              status: {
+                lifeCycleStatus: "complete",
+                privacyStatus: "unlisted",
+              },
             },
           ],
         }),
@@ -317,13 +320,4 @@ test("Club status refresh uses YouTube owner OAuth and updates only club-scoped 
   assert.equal(JSON.parse(patch.options.body).status, "replay");
   assert.equal(patch.options.headers.apikey, "sb_secret_test-only");
   assert.ok(!calls.some((call) => call.url.includes("test-user-token")));
-});
-
-test("temporary Prettier formatting export", async () => {
-  const { readFileSync } = await import("node:fs");
-  const prettier = await import("prettier");
-  const path = "tests/pilotokiLiveBroadcastPreparation.test.mjs";
-  const original = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-  const formatted = await prettier.format(original, { filepath: path });
-  console.log("FORMATTED_TEST_B64", Buffer.from(formatted).toString("base64"));
 });
