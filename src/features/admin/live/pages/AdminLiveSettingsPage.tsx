@@ -100,7 +100,7 @@ export function AdminLiveSettingsPage() {
       }
     };
     void refresh();
-    const interval = window.setInterval(() => void refresh(), 60_000);
+    const interval = window.setInterval(() => void refresh(), 300_000);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       active = false;
