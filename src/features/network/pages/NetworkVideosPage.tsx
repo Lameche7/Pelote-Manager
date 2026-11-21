@@ -27,30 +27,42 @@ export function NetworkVideosPage() {
 
   useEffect(() => {
     let active = true;
+    let inFlight = false;
     const load = async () => {
-      const { data, error } = await supabase
-        .from("pilotoki_live_videos")
-        .select(
-          "id,club_id,title,youtube_video_id,status,source_type,started_at",
-        )
-        .in("status", ["live", "replay"])
-        .order("created_at", { ascending: false });
-      if (!active) return;
-      if (error) {
-        setLoadError(true);
-        return;
-      }
-      setVideos((data ?? []) as NetworkVideo[]);
-      const { data: clubs } = await supabase.from("clubs").select("id,name");
-      if (active) {
-        setClubNames(
-          Object.fromEntries((clubs ?? []).map((club) => [club.id, club.name])),
-        );
+      if (inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
+      try {
+        const { data, error } = await supabase
+          .from("pilotoki_live_videos")
+          .select(
+            "id,club_id,title,youtube_video_id,status,source_type,started_at",
+          )
+          .in("status", ["live", "replay"])
+          .order("created_at", { ascending: false });
+        if (!active) return;
+        if (error) {
+          setLoadError(true);
+          return;
+        }
+        setLoadError(false);
+        setVideos((data ?? []) as NetworkVideo[]);
+        const { data: clubs } = await supabase.from("clubs").select("id,name");
+        if (active) {
+          setClubNames(
+            Object.fromEntries((clubs ?? []).map((club) => [club.id, club.name])),
+          );
+        }
+      } finally {
+        inFlight = false;
       }
     };
     void load();
+    const interval = window.setInterval(() => void load(), 30_000);
+    document.addEventListener("visibilitychange", load);
     return () => {
       active = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", load);
     };
   }, []);
 
