@@ -302,8 +302,8 @@ test("temporary formatting diagnostic", async () => {
     const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
     const formatted = await prettier.format(source, { filepath: path });
     if (path.startsWith("tests/")) {
-      const initial = source.split("\\n");
-      const final = formatted.split("\\n");
+      const initial = source.split("\n");
+      const final = formatted.split("\n");
       for (let i = 0; i < Math.max(initial.length, final.length); i++) {
         if (initial[i] !== final[i]) {
           console.log("FMT_TEST_DIFF", JSON.stringify({ line: i, before: initial.slice(i, i + 20), after: final.slice(i, i + 20) }));
@@ -311,8 +311,8 @@ test("temporary formatting diagnostic", async () => {
         }
       }
     } else {
-      const initial = source.split("\\n");
-      const final = formatted.split("\\n");
+      const initial = source.split("\n");
+      const final = formatted.split("\n");
       for (let i = 0; i < Math.max(initial.length, final.length); i++) {
         if (initial[i] !== final[i]) {
           console.log("FMT_API_DIFF", JSON.stringify({ line: i, before: initial.slice(i, i + 30), after: final.slice(i, i + 30) }));
