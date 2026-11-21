@@ -24,8 +24,8 @@ export function PilotokiLiveLaunchAssistant({ broadcast }: Props) {
       </p>
       <ol>
         <li>
-          Ouvrir Upstream et vérifier que la caméra du téléphone est connectée
-          à la bonne diffusion.
+          Ouvrir Upstream et vérifier que la caméra du téléphone est connectée à
+          la bonne diffusion.
         </li>
         <li>
           Vérifier dans la régie YouTube que la destination sélectionnée dans
@@ -47,16 +47,22 @@ export function PilotokiLiveLaunchAssistant({ broadcast }: Props) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Video aria-hidden="true" /> Ouvrir Upstream <ExternalLink aria-hidden="true" />
+          <Video aria-hidden="true" /> Ouvrir Upstream{" "}
+          <ExternalLink aria-hidden="true" />
         </a>
         <a
           href="https://studio.youtube.com/"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <RadioTower aria-hidden="true" /> Régie YouTube <ExternalLink aria-hidden="true" />
+          <RadioTower aria-hidden="true" /> Régie YouTube{" "}
+          <ExternalLink aria-hidden="true" />
         </a>
-        <a href={broadcast.youtubeUrl} target="_blank" rel="noopener noreferrer">
+        <a
+          href={broadcast.youtubeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Voir la page spectateur <ExternalLink aria-hidden="true" />
         </a>
       </div>
