@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { upstreamConnectionStatus } from "../api/_live-upstream.mjs";
+import { upstreamConnectionStatus, upstreamStreamInventory } from "../api/_live-upstream.mjs";
 
 test("Absent Upstream token never calls the provider", async () => {
   const result = await upstreamConnectionStatus({}, () => {
@@ -60,4 +60,49 @@ test("Admin UI offers explicit test and does not publish provider credentials", 
   assert.match(page, /UPSTREAM_API_TOKEN/);
   assert.match(page, /checkUpstreamConnection\(\)/);
   assert.doesNotMatch(page, /startUpstreamStream|stopUpstreamStream/);
+});
+
+test("Stream inventory only returns minimal allowlisted status fields", async () => {
+  let checkedUrl = "";
+  const result = await upstreamStreamInventory(
+    { UPSTREAM_API_TOKEN: "read-only-test" },
+    async (url, options) => {
+      checkedUrl = url;
+      assert.equal(options.headers.Authorization, "Bearer read-only-test");
+      return {
+        ok: true,
+        json: async () => ({
+          data: [{
+            id: "11111111-1111-4111-8111-111111111111",
+            name: "Test Lourdes Trinquet",
+            status: "paused",
+            type: "live",
+            key: "SECRET-RMTP-KEY",
+            destinations: [{ key: "SECRET" }],
+          }],
+        }),
+      };
+    },
+  );
+  assert.match(checkedUrl, /\/api\/v1\/streams\?page=1&per_page=50$/);
+  assert.deepEqual(result, {
+    configured: true,
+    streams: [{
+      id: "11111111-1111-4111-8111-111111111111",
+      name: "Test Lourdes Trinquet",
+      status: "paused",
+      type: "live",
+    }],
+  });
+  assert.doesNotMatch(JSON.stringify(result), /SECRET/);
+});
+
+test("Inventory is restricted to the central pilot admin", () => {
+  const endpoint = readFileSync(
+    new URL("../api/live-youtube-ingest.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(endpoint, /if \(!admin\.canConnectGoogle\)/);
+  assert.match(endpoint, /await upstreamStreamInventory\(process\.env\)/);
+  assert.match(endpoint, /verifiedLiveClubAdmin\(request, process\.env\)/);
 });
