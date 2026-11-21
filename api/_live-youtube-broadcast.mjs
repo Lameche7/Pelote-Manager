@@ -48,7 +48,11 @@ export async function verifiedLiveClubAdmin(request, env, fetchImpl = fetch) {
       409,
       "La chaîne Pilotoki n'est pas connectée à Google.",
     );
-  return { clubId: settings.club_id, channelId: settings.youtube_channel_id, canConnectGoogle: settings.can_connect_google === true };
+  return {
+    clubId: settings.club_id,
+    channelId: settings.youtube_channel_id,
+    canConnectGoogle: settings.can_connect_google === true,
+  };
 }
 
 export function decryptRefreshToken(env, record) {
