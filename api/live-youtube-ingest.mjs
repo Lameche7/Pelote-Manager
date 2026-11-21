@@ -73,11 +73,18 @@ export default async function handler(request, response) {
     );
     if (request.body?.action === "prepare_upstream_destination") {
       if (!canConnectGoogle)
-        throw new LiveAuthError(403, "Préparation réservée à l’administration pilote.");
+        throw new LiveAuthError(
+          403,
+          "Préparation réservée à l’administration pilote.",
+        );
       if (request.body?.confirmed !== true)
         throw new LiveAuthError(400, "Confirmation explicite nécessaire.");
       const video = await getClubVideo(process.env, clubId, videoId);
-      const result = await prepareUpstreamYoutubeDestination(process.env, clubId, video);
+      const result = await prepareUpstreamYoutubeDestination(
+        process.env,
+        clubId,
+        video,
+      );
       return response.status(200).json(result);
     }
     if (request.body?.action === "associate_upstream") {
