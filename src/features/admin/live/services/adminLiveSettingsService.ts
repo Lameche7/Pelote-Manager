@@ -85,7 +85,9 @@ export type UpstreamVideoBinding = {
 };
 
 export const adminLiveSettingsService = {
-  async getUpstreamBinding(videoId: string): Promise<UpstreamVideoBinding | null> {
+  async getUpstreamBinding(
+    videoId: string,
+  ): Promise<UpstreamVideoBinding | null> {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
@@ -134,7 +136,6 @@ export const adminLiveSettingsService = {
       throw new Error(result.error ?? "Association Upstream impossible.");
     return result.binding;
   },
-
 
   async listUpstreamStreams(): Promise<UpstreamStreamInventory> {
     const { data: sessionData } = await supabase.auth.getSession();
