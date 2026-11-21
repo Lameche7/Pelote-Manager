@@ -45,7 +45,8 @@ export function AdminLiveSettingsPage() {
   const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
   const [refreshingStatuses, setRefreshingStatuses] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
-  const [upstreamStatus, setUpstreamStatus] = useState<UpstreamConnectionStatus | null>(null);
+  const [upstreamStatus, setUpstreamStatus] =
+    useState<UpstreamConnectionStatus | null>(null);
   const [checkingUpstream, setCheckingUpstream] = useState(false);
   const [upstreamError, setUpstreamError] = useState("");
   const [prepareError, setPrepareError] = useState("");
@@ -266,10 +267,14 @@ export function AdminLiveSettingsPage() {
     setCheckingUpstream(true);
     setUpstreamError("");
     try {
-      setUpstreamStatus(await adminLiveSettingsService.checkUpstreamConnection());
+      setUpstreamStatus(
+        await adminLiveSettingsService.checkUpstreamConnection(),
+      );
     } catch (reason) {
       setUpstreamError(
-        reason instanceof Error ? reason.message : "Connexion Upstream indisponible.",
+        reason instanceof Error
+          ? reason.message
+          : "Connexion Upstream indisponible.",
       );
     } finally {
       setCheckingUpstream(false);
@@ -680,16 +685,18 @@ export function AdminLiveSettingsPage() {
         <section className="admin-card admin-live-settings__upstream">
           <h2>Connexion Upstream</h2>
           <p className="admin-live-settings__hint">
-            Vérifiez ici que Pilotoki peut contacter votre compte Upstream.
-            La clé API est conservée uniquement sur le serveur Vercel et
-            aucune commande de démarrage ou d'arrêt n'est envoyée.
+            Vérifiez ici que Pilotoki peut contacter votre compte Upstream. La
+            clé API est conservée uniquement sur le serveur Vercel et aucune
+            commande de démarrage ou d'arrêt n'est envoyée.
           </p>
           <button
             type="button"
             disabled={checkingUpstream}
             onClick={() => void checkUpstream()}
           >
-            {checkingUpstream ? "Vérification…" : "Tester la connexion Upstream"}
+            {checkingUpstream
+              ? "Vérification…"
+              : "Tester la connexion Upstream"}
           </button>
           {upstreamStatus && (
             <p role="status">
@@ -703,8 +710,8 @@ export function AdminLiveSettingsPage() {
           {upstreamError && <p role="alert">{upstreamError}</p>}
           <p className="admin-live-settings__hint">
             Pour connecter le compte : créez une clé API dédiée en lecture seule
-            dans Upstream → Profile → API Keys, puis ajoutez-la aux variables
-            de production Vercel sous le nom UPSTREAM_API_TOKEN. Ne saisissez
+            dans Upstream → Profile → API Keys, puis ajoutez-la aux variables de
+            production Vercel sous le nom UPSTREAM_API_TOKEN. Ne saisissez
             jamais cette clé dans Pilotoki ni dans une conversation.
           </p>
         </section>
