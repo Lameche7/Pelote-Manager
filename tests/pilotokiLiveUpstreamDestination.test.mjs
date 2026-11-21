@@ -201,7 +201,10 @@ test("Rejected destination reports sanitized HTTP code and field, not provider b
       return {
         ok: false,
         status: 422,
-        json: async () => ({ errors: { key: [providerError] }, message: providerError }),
+        json: async () => ({
+          errors: { key: [providerError] },
+          message: providerError,
+        }),
       };
     return mock(url, options);
   };
@@ -226,16 +229,4 @@ test("Upstream API forbidden status is distinguishable without exposing secret",
     prepareUpstreamYoutubeDestination(env, club, video, failing),
     /HTTP 403 : Droits de la clé Upstream insuffisants/,
   );
-});
-
-test("temporary format capture", async () => {
-  const prettier = await import("prettier");
-  for (const [marker, file] of [
-    ["FMT_DEST_ERR", "api/_live-upstream-destination.mjs"],
-    ["FMT_DEST_TEST", "tests/pilotokiLiveUpstreamDestination.test.mjs"],
-  ]) {
-    const source = readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
-    const formatted = await prettier.format(source, { filepath: file });
-    console.log(marker, Buffer.from(formatted).toString("base64"));
-  }
 });
