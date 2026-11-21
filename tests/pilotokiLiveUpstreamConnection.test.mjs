@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { upstreamConnectionStatus, upstreamStreamInventory } from "../api/_live-upstream.mjs";
+import {
+  upstreamConnectionStatus,
+  upstreamStreamInventory,
+} from "../api/_live-upstream.mjs";
 
 test("Absent Upstream token never calls the provider", async () => {
   const result = await upstreamConnectionStatus({}, () => {
@@ -72,14 +75,16 @@ test("Stream inventory only returns minimal allowlisted status fields", async ()
       return {
         ok: true,
         json: async () => ({
-          data: [{
-            id: "11111111-1111-4111-8111-111111111111",
-            name: "Test Lourdes Trinquet",
-            status: "paused",
-            type: "live",
-            key: "SECRET-RMTP-KEY",
-            destinations: [{ key: "SECRET" }],
-          }],
+          data: [
+            {
+              id: "11111111-1111-4111-8111-111111111111",
+              name: "Test Lourdes Trinquet",
+              status: "paused",
+              type: "live",
+              key: "SECRET-RMTP-KEY",
+              destinations: [{ key: "SECRET" }],
+            },
+          ],
         }),
       };
     },
@@ -87,12 +92,14 @@ test("Stream inventory only returns minimal allowlisted status fields", async ()
   assert.match(checkedUrl, /\/api\/v1\/streams\?page=1&per_page=50$/);
   assert.deepEqual(result, {
     configured: true,
-    streams: [{
-      id: "11111111-1111-4111-8111-111111111111",
-      name: "Test Lourdes Trinquet",
-      status: "paused",
-      type: "live",
-    }],
+    streams: [
+      {
+        id: "11111111-1111-4111-8111-111111111111",
+        name: "Test Lourdes Trinquet",
+        status: "paused",
+        type: "live",
+      },
+    ],
   });
   assert.doesNotMatch(JSON.stringify(result), /SECRET/);
 });
@@ -105,19 +112,4 @@ test("Inventory is restricted to the central pilot admin", () => {
   assert.match(endpoint, /if \(!admin\.canConnectGoogle\)/);
   assert.match(endpoint, /await upstreamStreamInventory\(process\.env\)/);
   assert.match(endpoint, /verifiedLiveClubAdmin\(request, process\.env\)/);
-});
-
-test("temporary formatter diagnostics", async () => {
-  const prettier = await import("prettier");
-  for (const [marker, path] of [
-    ["FMT_INVENTORY_HELPER", "api/_live-upstream.mjs"],
-    ["FMT_INVENTORY_BROADCAST", "api/_live-youtube-broadcast.mjs"],
-    ["FMT_INVENTORY_INGEST", "api/live-youtube-ingest.mjs"],
-    ["FMT_INVENTORY_UI", "src/features/admin/live/pages/AdminLiveSettingsPage.tsx"],
-    ["FMT_INVENTORY_TEST", "tests/pilotokiLiveUpstreamConnection.test.mjs"],
-  ]) {
-    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-    const formatted = await prettier.format(source, { filepath: path });
-    console.log(marker, Buffer.from(formatted).toString("base64"));
-  }
 });
