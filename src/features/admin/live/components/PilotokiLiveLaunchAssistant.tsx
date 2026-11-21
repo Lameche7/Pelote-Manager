@@ -172,8 +172,7 @@ export function PilotokiLiveLaunchAssistant({
                 disabled={
                   !validStream ||
                   !confirmedDestination ||
-                  bindingBusy ||
-                  bindingError !== ""
+                  bindingBusy
                 }
                 onClick={() => void saveBinding()}
               >
