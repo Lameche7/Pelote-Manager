@@ -291,3 +291,34 @@ test("Club status refresh uses YouTube owner OAuth and updates only club-scoped 
   assert.equal(patch.options.headers.apikey, "sb_secret_test-only");
   assert.ok(!calls.some((call) => call.url.includes("test-user-token")));
 });
+
+test("temporary formatting diagnostic", async () => {
+  const prettier = await import("prettier");
+  for (const path of [
+    "api/_live-youtube-broadcast.mjs",
+    "tests/pilotokiLiveBroadcastPreparation.test.mjs",
+  ]) {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(source, { filepath: path });
+    if (path.startsWith("tests/")) {
+      const initial = source.split("\\n");
+      const final = formatted.split("\\n");
+      for (let i = 0; i < Math.max(initial.length, final.length); i++) {
+        if (initial[i] !== final[i]) {
+          console.log("FMT_TEST_DIFF", JSON.stringify({ line: i, before: initial.slice(i, i + 20), after: final.slice(i, i + 20) }));
+          break;
+        }
+      }
+    } else {
+      const initial = source.split("\\n");
+      const final = formatted.split("\\n");
+      for (let i = 0; i < Math.max(initial.length, final.length); i++) {
+        if (initial[i] !== final[i]) {
+          console.log("FMT_API_DIFF", JSON.stringify({ line: i, before: initial.slice(i, i + 30), after: final.slice(i, i + 30) }));
+          break;
+        }
+      }
+    }
+  }
+});
