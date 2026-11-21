@@ -48,6 +48,6 @@ test("Camera invitation remains ephemeral and domain restricted", () => {
   assert.ok(assistant.includes("navigator.clipboard.writeText"));
   assert.ok(assistant.includes("n'est pas enregistré dans Pilotoki"));
   assert.doesNotMatch(assistant, /localStorage|sessionStorage|supabase/);
-  assert.match(page, /streams=\{settings\.canConnectGoogle/);
+  assert.match(page, /streams=\{\s*settings\.canConnectGoogle/);
   assert.match(page, /upstreamStreams \?\? \[\]/);
 });
