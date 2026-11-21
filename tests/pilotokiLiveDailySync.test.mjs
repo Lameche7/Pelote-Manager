@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import {
   encryptRefreshToken,
   LiveAuthError,
@@ -117,4 +118,17 @@ test("Daily reconciliation updates completed videos without exposing credentials
         !options.headers?.apikey,
     ),
   );
+});
+
+test("Cron routes through an existing deployed API function", () => {
+  const configuration = JSON.parse(
+    readFileSync(new URL("../vercel.json", import.meta.url), "utf8"),
+  );
+  const prepare = readFileSync(
+    new URL("../api/live-youtube-prepare.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.equal(configuration.crons[0].path, "/api/live-youtube-prepare");
+  assert.match(prepare, /authorizedCron\(request, process\.env\)/);
+  assert.match(prepare, /reconcileDailyVideos\(process\.env\)/);
 });
