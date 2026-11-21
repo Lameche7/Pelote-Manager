@@ -26,7 +26,10 @@ export async function getUpstreamBinding(
     throw new LiveAuthError(503, "Liaison caméra indisponible.");
   const rows = await response.json();
   return Array.isArray(rows) && rows.length
-    ? { streamId: rows[0].upstream_stream_id, destinationConfigured: Boolean(rows[0].upstream_destination_id) }
+    ? {
+        streamId: rows[0].upstream_stream_id,
+        destinationConfigured: Boolean(rows[0].upstream_destination_id),
+      }
     : null;
 }
 
