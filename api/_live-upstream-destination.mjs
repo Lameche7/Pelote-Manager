@@ -203,8 +203,48 @@ export async function prepareUpstreamYoutubeDestination(
       "Réponse Upstream incertaine : contrôlez les destinations avant de réessayer.",
     );
   }
-  if (created.status !== 201)
-    throw new LiveAuthError(502, "Upstream a refusé la destination RTMPS.");
+  if (created.status !== 201) {
+    // Do not forward the provider response body: it could contain an RTMP
+    // secret, a request echo, or user-controlled text.
+    let issue = "";
+    if (created.status === 400 || created.status === 422) {
+      try {
+        const provider = await created.json();
+        const fields = Object.keys(
+          provider?.errors && typeof provider.errors === "object"
+            ? provider.errors
+            : {},
+        ).filter((field) =>
+          [
+            "key",
+            "name",
+            "platform",
+            "status",
+            "url",
+            "include_in_schedule",
+          ].includes(field),
+        );
+        if (fields.length) issue = ` Champs concernés : ${fields.join(", ")}.`;
+      } catch {
+        // An unreadable provider response is intentionally not exposed.
+      }
+    }
+    const known = {
+      400: "Paramètres refusés",
+      401: "Clé API Upstream non reconnue",
+      402: "Limite du forfait Upstream",
+      403: "Droits de la clé Upstream insuffisants",
+      404: "Régie Upstream introuvable",
+      409: "Conflit de destination ou de quota",
+      422: "Données de destination invalides",
+      429: "Trop de requêtes Upstream",
+    };
+    const reason = known[created.status] ?? "Refus Upstream";
+    throw new LiveAuthError(
+      502,
+      `Création de destination refusée par Upstream (HTTP ${created.status} : ${reason}).${issue}`,
+    );
+  }
   const payload = await created.json();
   const destinationId = payload?.data?.id;
   if (!UUID.test(destinationId ?? ""))

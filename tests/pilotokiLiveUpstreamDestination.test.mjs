@@ -192,3 +192,41 @@ test("Handler requires pilot admin and positive confirmation before any write", 
   assert.match(ui, /confirmedPreparation/);
   assert.doesNotMatch(ui, /UPSTREAM_API_FULL_TOKEN|rtmps:\/\//);
 });
+
+test("Rejected destination reports sanitized HTTP code and field, not provider body", async () => {
+  const { mock } = fakeFetch();
+  const providerError = "rtmps://a.rtmps.youtube.com/live2/SECRET";
+  const failing = async (url, options) => {
+    if (url.endsWith("/destinations") && options?.method === "POST")
+      return {
+        ok: false,
+        status: 422,
+        json: async () => ({
+          errors: { key: [providerError] },
+          message: providerError,
+        }),
+      };
+    return mock(url, options);
+  };
+  await assert.rejects(
+    prepareUpstreamYoutubeDestination(env, club, video, failing),
+    (error) => {
+      assert.match(error.message, /HTTP 422/);
+      assert.match(error.message, /Champs concernés : key/);
+      assert.doesNotMatch(error.message, /SECRET|rtmps:\/\//);
+      return true;
+    },
+  );
+});
+
+test("Upstream API forbidden status is distinguishable without exposing secret", async () => {
+  const { mock } = fakeFetch();
+  const failing = async (url, options) =>
+    url.endsWith("/destinations") && options?.method === "POST"
+      ? { ok: false, status: 403 }
+      : mock(url, options);
+  await assert.rejects(
+    prepareUpstreamYoutubeDestination(env, club, video, failing),
+    /HTTP 403 : Droits de la clé Upstream insuffisants/,
+  );
+});
