@@ -54,3 +54,23 @@ test("Admin UI offers explicit test and does not publish provider credentials", 
   assert.match(page, /checkUpstreamConnection\(\)/);
   assert.doesNotMatch(page, /startUpstreamStream|stopUpstreamStream/);
 });
+
+test("temporary exact Prettier output", async () => {
+  const prettier = await import("prettier");
+  for (const path of [
+    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+    "src/features/admin/live/services/adminLiveSettingsService.ts",
+    "tests/pilotokiLiveUpstreamConnection.test.mjs",
+  ]) {
+    const content = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    const formatted = await prettier.format(content, { filepath: path });
+    console.log(
+      path.includes("pages/")
+        ? "FMT_UPSTREAM_ADMIN"
+        : path.includes("services/")
+          ? "FMT_UPSTREAM_SERVICE"
+          : "FMT_UPSTREAM_TEST",
+      Buffer.from(formatted).toString("base64"),
+    );
+  }
+});
