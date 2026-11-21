@@ -14,6 +14,7 @@ import {
   type PreparedBroadcast,
   type ClubBroadcastSummary,
   type UpstreamConnectionStatus,
+  type UpstreamStreamInfo,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 import { PilotokiLiveCameraStudio } from "@/features/admin/live/components/PilotokiLiveCameraStudio";
 import { PilotokiLiveLaunchAssistant } from "@/features/admin/live/components/PilotokiLiveLaunchAssistant";
@@ -48,6 +49,11 @@ export function AdminLiveSettingsPage() {
   const [upstreamStatus, setUpstreamStatus] =
     useState<UpstreamConnectionStatus | null>(null);
   const [checkingUpstream, setCheckingUpstream] = useState(false);
+  const [upstreamStreams, setUpstreamStreams] = useState<
+    UpstreamStreamInfo[] | null
+  >(null);
+  const [listingUpstream, setListingUpstream] = useState(false);
+  const [upstreamListMessage, setUpstreamListMessage] = useState("");
   const [upstreamError, setUpstreamError] = useState("");
   const [prepareError, setPrepareError] = useState("");
   const [error, setError] = useState("");
@@ -259,6 +265,30 @@ export function AdminLiveSettingsPage() {
       );
     } finally {
       setRefreshingStatuses(false);
+    }
+  };
+
+  const listUpstreamStreams = async () => {
+    if (listingUpstream) return;
+    setListingUpstream(true);
+    setUpstreamListMessage("");
+    try {
+      const inventory = await adminLiveSettingsService.listUpstreamStreams();
+      setUpstreamStreams(inventory.streams);
+      if (!inventory.configured)
+        setUpstreamListMessage("Clé Upstream en lecture seule absente.");
+      else if (inventory.unavailable)
+        setUpstreamListMessage("Impossible de lire les flux Upstream.");
+      else if (!inventory.streams.length)
+        setUpstreamListMessage("Aucun flux trouvé sur ce compte Upstream.");
+    } catch (reason) {
+      setUpstreamListMessage(
+        reason instanceof Error
+          ? reason.message
+          : "Inventaire Upstream indisponible.",
+      );
+    } finally {
+      setListingUpstream(false);
     }
   };
 
@@ -708,6 +738,39 @@ export function AdminLiveSettingsPage() {
             </p>
           )}
           {upstreamError && <p role="alert">{upstreamError}</p>}
+          {settings.canConnectGoogle && (
+            <>
+              <button
+                type="button"
+                disabled={listingUpstream}
+                onClick={() => void listUpstreamStreams()}
+              >
+                {listingUpstream
+                  ? "Recherche…"
+                  : "Voir les flux de mon compte Upstream"}
+              </button>
+              {upstreamListMessage && (
+                <p role="status">{upstreamListMessage}</p>
+              )}
+              {upstreamStreams && upstreamStreams.length > 0 && (
+                <ul>
+                  {upstreamStreams.map((stream) => (
+                    <li key={stream.id}>
+                      <strong>{stream.name}</strong> — {stream.status} (
+                      {stream.type})
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="admin-live-settings__hint">
+                Inventaire en lecture seule, réservé à l'administration pilote.
+                Les commandes de démarrage et d'arrêt resteront désactivées tant
+                qu'un flux n'est pas explicitement associé au bon club et à sa
+                diffusion YouTube.
+              </p>
+            </>
+          )}
+
           <p className="admin-live-settings__hint">
             Pour connecter le compte : créez une clé API dédiée en lecture seule
             dans Upstream → Profile → API Keys, puis ajoutez-la aux variables de

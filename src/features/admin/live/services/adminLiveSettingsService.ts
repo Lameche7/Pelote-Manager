@@ -66,7 +66,37 @@ export type UpstreamConnectionStatus = {
   connected: boolean;
 };
 
+export type UpstreamStreamInfo = {
+  id: string;
+  name: string;
+  status: string;
+  type: string;
+};
+
+export type UpstreamStreamInventory = {
+  configured: boolean;
+  unavailable?: boolean;
+  streams: UpstreamStreamInfo[];
+};
+
 export const adminLiveSettingsService = {
+  async listUpstreamStreams(): Promise<UpstreamStreamInventory> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest?upstream=streams", {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    const result = (await response.json()) as UpstreamStreamInventory & {
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(result.error ?? "Inventaire Upstream indisponible.");
+    return result;
+  },
+
   async checkUpstreamConnection(): Promise<UpstreamConnectionStatus> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
