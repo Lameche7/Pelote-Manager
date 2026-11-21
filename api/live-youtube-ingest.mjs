@@ -1,5 +1,9 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
-import { inspectUpstreamControl, controlUpstreamStream, publicControlStatus } from "./_live-upstream-control.mjs";
+import {
+  inspectUpstreamControl,
+  controlUpstreamStream,
+  publicControlStatus,
+} from "./_live-upstream-control.mjs";
 import { prepareUpstreamYoutubeDestination } from "./_live-upstream-destination.mjs";
 import {
   associateUpstreamStream,
@@ -36,8 +40,15 @@ export default async function handler(request, response) {
       const admin = await verifiedLiveClubAdmin(request, process.env);
       if (request.query?.upstream === "control") {
         if (!admin.canConnectGoogle)
-          throw new LiveAuthError(403, "Pilotage réservé à l'administration pilote.");
-        const status = await inspectUpstreamControl(process.env, admin.clubId, request.query?.videoId);
+          throw new LiveAuthError(
+            403,
+            "Pilotage réservé à l'administration pilote.",
+          );
+        const status = await inspectUpstreamControl(
+          process.env,
+          admin.clubId,
+          request.query?.videoId,
+        );
         return response.status(200).json(publicControlStatus(status));
       }
       if (request.query?.upstream === "binding") {
@@ -80,11 +91,17 @@ export default async function handler(request, response) {
     );
     if (request.body?.action === "control_upstream") {
       if (!canConnectGoogle)
-        throw new LiveAuthError(403, "Pilotage réservé à l'administration pilote.");
+        throw new LiveAuthError(
+          403,
+          "Pilotage réservé à l'administration pilote.",
+        );
       if (request.body?.confirmed !== true)
         throw new LiveAuthError(400, "Confirmation explicite nécessaire.");
       const result = await controlUpstreamStream(
-        process.env, clubId, videoId, request.body?.command,
+        process.env,
+        clubId,
+        videoId,
+        request.body?.command,
       );
       return response.status(200).json(result);
     }
