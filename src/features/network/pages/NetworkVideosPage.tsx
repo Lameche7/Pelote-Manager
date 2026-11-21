@@ -49,7 +49,9 @@ export function NetworkVideosPage() {
         const { data: clubs } = await supabase.from("clubs").select("id,name");
         if (active) {
           setClubNames(
-            Object.fromEntries((clubs ?? []).map((club) => [club.id, club.name])),
+            Object.fromEntries(
+              (clubs ?? []).map((club) => [club.id, club.name]),
+            ),
           );
         }
       } finally {
