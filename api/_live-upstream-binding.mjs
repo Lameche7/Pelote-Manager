@@ -2,9 +2,15 @@ import { LiveAuthError, required } from "./_live-google-shared.mjs";
 import { privilegedHeaders } from "./_live-youtube-broadcast.mjs";
 import { validateVideoId } from "./_live-youtube-ingest.mjs";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export async function getUpstreamBinding(env, clubId, videoId, fetchImpl = fetch) {
+export async function getUpstreamBinding(
+  env,
+  clubId,
+  videoId,
+  fetchImpl = fetch,
+) {
   const valid = validateVideoId(videoId);
   const params = new URLSearchParams({
     video_id: `eq.${valid}`,
@@ -52,7 +58,10 @@ export async function getOwnedUpstreamStream(env, streamId, fetchImpl = fetch) {
     throw new LiveAuthError(409, "Identité du flux Upstream incohérente.");
   const state = typeof item.status === "string" ? item.status : "unknown";
   if (state !== "paused")
-    throw new LiveAuthError(409, "Arrêtez d'abord ce flux dans Upstream avant de l'associer.");
+    throw new LiveAuthError(
+      409,
+      "Arrêtez d'abord ce flux dans Upstream avant de l'associer.",
+    );
   return { id: streamId, status: state };
 }
 
