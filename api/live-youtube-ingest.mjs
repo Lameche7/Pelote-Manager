@@ -43,15 +43,9 @@ export default async function handler(request, response) {
           admin.clubId,
           request.query?.videoId,
         );
-        return response
-          .status(200)
-          .json({
-            binding: await getUpstreamBinding(
-              process.env,
-              admin.clubId,
-              video.id,
-            ),
-          });
+        return response.status(200).json({
+          binding: await getUpstreamBinding(process.env, admin.clubId, video.id),
+        });
       }
       if (request.query?.upstream === "streams") {
         if (!admin.canConnectGoogle)
