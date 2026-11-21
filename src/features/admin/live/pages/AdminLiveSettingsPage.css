@@ -182,3 +182,22 @@
   width: 1rem;
   height: 1rem;
 }
+
+.admin-live-settings__upstream {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.admin-live-settings__upstream > button {
+  justify-self: start;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.admin-live-settings__upstream > button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
