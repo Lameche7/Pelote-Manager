@@ -27,7 +27,10 @@ test("Cron requires a shared server-only secret", () => {
   );
   assert.throws(
     () =>
-      authorizedCron({ headers: { authorization: "Bearer wrong-secret" } }, env),
+      authorizedCron(
+        { headers: { authorization: "Bearer wrong-secret" } },
+        env,
+      ),
     LiveAuthError,
   );
   assert.doesNotThrow(() =>
@@ -114,13 +117,4 @@ test("Daily reconciliation updates completed videos without exposing credentials
         !options.headers?.apikey,
     ),
   );
-});
-
-test("temporary formatter capture", async () => {
-  const prettier = await import("prettier");
-  const { readFileSync } = await import("node:fs");
-  const path = "tests/pilotokiLiveDailySync.test.mjs";
-  const source = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-  const formatted = await prettier.format(source, { filepath: path });
-  console.log("LIVE_FORMAT_B64", Buffer.from(formatted).toString("base64"));
 });
