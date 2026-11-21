@@ -6,16 +6,16 @@ export function privilegedHeaders(env) {
   const key = required(env, "SUPABASE_SERVICE_ROLE_KEY");
   return {
     apikey: key,
-    ...(key.startsWith("sb_secret_") ? {} : { authorization: `*** }),
+    ...(key.startsWith("sb_secret_") ? {} : { authorization: `Bearer ${key}` }),
   };
 }
 
 export async function verifiedLiveClubAdmin(request, env, fetchImpl = fetch) {
   const url = required(env, "VITE_SUPABASE_URL");
   const anonKey = required(env, "VITE_SUPABASE_ANON_KEY");
-  const bearer = request.headers.authorization?.match(/^***;
+  const bearer = request.headers.authorization?.match(/^Bearer (\S+)$/i)?.[1];
   if (!bearer) throw new LiveAuthError(401, "Connectez-vous à Pilotoki.");
-  const headers = { apikey: anonKey, authorization: `*** };
+  const headers = { apikey: anonKey, authorization: `Bearer ${bearer}` };
   const userResponse = await fetchImpl(`${url}/auth/v1/user`, {
     headers,
     cache: "no-store",
@@ -235,7 +235,8 @@ export async function youtubeCreateBroadcast(
     {
       method: "POST",
       headers: {
-        authorization: `***        "content-type": "application/json",
+        authorization: `Bearer ${accessToken}`,
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         snippet: {
