@@ -13,6 +13,7 @@ import {
   type LiveBroadcasterPolicy,
   type PreparedBroadcast,
   type ClubBroadcastSummary,
+  type UpstreamConnectionStatus,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 import { PilotokiLiveCameraStudio } from "@/features/admin/live/components/PilotokiLiveCameraStudio";
 import { PilotokiLiveLaunchAssistant } from "@/features/admin/live/components/PilotokiLiveLaunchAssistant";
@@ -44,6 +45,9 @@ export function AdminLiveSettingsPage() {
   const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
   const [refreshingStatuses, setRefreshingStatuses] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [upstreamStatus, setUpstreamStatus] = useState<UpstreamConnectionStatus | null>(null);
+  const [checkingUpstream, setCheckingUpstream] = useState(false);
+  const [upstreamError, setUpstreamError] = useState("");
   const [prepareError, setPrepareError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -254,6 +258,21 @@ export function AdminLiveSettingsPage() {
       );
     } finally {
       setRefreshingStatuses(false);
+    }
+  };
+
+  const checkUpstream = async () => {
+    if (checkingUpstream) return;
+    setCheckingUpstream(true);
+    setUpstreamError("");
+    try {
+      setUpstreamStatus(await adminLiveSettingsService.checkUpstreamConnection());
+    } catch (reason) {
+      setUpstreamError(
+        reason instanceof Error ? reason.message : "Connexion Upstream indisponible.",
+      );
+    } finally {
+      setCheckingUpstream(false);
     }
   };
 
@@ -655,6 +674,39 @@ export function AdminLiveSettingsPage() {
               </ul>
             </div>
           )}
+        </section>
+      )}
+      {settings?.connectionStatus === "connected" && (
+        <section className="admin-card admin-live-settings__upstream">
+          <h2>Connexion Upstream</h2>
+          <p className="admin-live-settings__hint">
+            Vérifiez ici que Pilotoki peut contacter votre compte Upstream.
+            La clé API est conservée uniquement sur le serveur Vercel et
+            aucune commande de démarrage ou d'arrêt n'est envoyée.
+          </p>
+          <button
+            type="button"
+            disabled={checkingUpstream}
+            onClick={() => void checkUpstream()}
+          >
+            {checkingUpstream ? "Vérification…" : "Tester la connexion Upstream"}
+          </button>
+          {upstreamStatus && (
+            <p role="status">
+              {!upstreamStatus.configured
+                ? "Clé API non configurée sur Vercel (UPSTREAM_API_TOKEN)."
+                : upstreamStatus.connected
+                  ? "Connexion Upstream validée."
+                  : "Clé configurée, mais Upstream ne répond pas ou refuse l'accès."}
+            </p>
+          )}
+          {upstreamError && <p role="alert">{upstreamError}</p>}
+          <p className="admin-live-settings__hint">
+            Pour connecter le compte : créez une clé API dédiée en lecture seule
+            dans Upstream → Profile → API Keys, puis ajoutez-la aux variables
+            de production Vercel sous le nom UPSTREAM_API_TOKEN. Ne saisissez
+            jamais cette clé dans Pilotoki ni dans une conversation.
+          </p>
         </section>
       )}
       {settings?.connectionStatus === "connected" && (
