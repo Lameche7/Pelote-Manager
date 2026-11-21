@@ -679,7 +679,10 @@ export function AdminLiveSettingsPage() {
                         setSelectedLaunchVideoId((current) =>
                           current === video.id ? null : video.id,
                         );
-                        if (settings.canConnectGoogle && upstreamStreams === null)
+                        if (
+                          settings.canConnectGoogle &&
+                          upstreamStreams === null
+                        )
                           void listUpstreamStreams();
                       }}
                     >
@@ -690,7 +693,11 @@ export function AdminLiveSettingsPage() {
                     {selectedLaunchVideoId === video.id && (
                       <PilotokiLiveLaunchAssistant
                         broadcast={video}
-                        streams={settings.canConnectGoogle ? (upstreamStreams ?? []) : []}
+                        streams={
+                          settings.canConnectGoogle
+                            ? (upstreamStreams ?? [])
+                            : []
+                        }
                       />
                     )}
                     {video.status === "scheduled" && (
