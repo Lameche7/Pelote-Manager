@@ -15,6 +15,7 @@ import {
   type ClubBroadcastSummary,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 import { PilotokiLiveCameraStudio } from "@/features/admin/live/components/PilotokiLiveCameraStudio";
+import { PilotokiLiveLaunchAssistant } from "@/features/admin/live/components/PilotokiLiveLaunchAssistant";
 import "./AdminLiveSettingsPage.css";
 
 export function AdminLiveSettingsPage() {
@@ -35,6 +36,7 @@ export function AdminLiveSettingsPage() {
   const [prepared, setPrepared] = useState<PreparedBroadcast | null>(null);
   const [linkingVideoId, setLinkingVideoId] = useState<string | null>(null);
   const [linkedVideoIds, setLinkedVideoIds] = useState<string[]>([]);
+  const [selectedLaunchVideoId, setSelectedLaunchVideoId] = useState<string | null>(null);
   const [linkMessage, setLinkMessage] = useState("");
   const [linkError, setLinkError] = useState("");
   const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
@@ -614,6 +616,22 @@ export function AdminLiveSettingsPage() {
                             ? "Replay"
                             : "Masquée"}
                     </small>
+                    <button
+                      type="button"
+                      aria-expanded={selectedLaunchVideoId === video.id}
+                      onClick={() =>
+                        setSelectedLaunchVideoId((current) =>
+                          current === video.id ? null : video.id,
+                        )
+                      }
+                    >
+                      {selectedLaunchVideoId === video.id
+                        ? "Fermer la régie"
+                        : "Ouvrir la régie de diffusion"}
+                    </button>
+                    {selectedLaunchVideoId === video.id && (
+                      <PilotokiLiveLaunchAssistant broadcast={video} />
+                    )}
                     {video.status === "scheduled" && (
                       <button
                         type="button"
