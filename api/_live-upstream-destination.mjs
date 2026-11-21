@@ -5,15 +5,22 @@ import { privilegedHeaders } from "./_live-youtube-broadcast.mjs";
 import { getOwnedUpstreamStream } from "./_live-upstream-binding.mjs";
 import { validateVideoId } from "./_live-youtube-ingest.mjs";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const UPSTREAM = "https://studio.upstream.so/api/v1/streams";
 
 export function decryptYoutubeIngest(env, record) {
-  if (typeof record?.ingest_ciphertext !== "string" || typeof record?.ingest_iv !== "string")
+  if (
+    typeof record?.ingest_ciphertext !== "string" ||
+    typeof record?.ingest_iv !== "string"
+  )
     throw new LiveAuthError(409, "Le flux YouTube n'est pas encore préparé.");
   try {
-    const key = Buffer.from(required(env, "YOUTUBE_TOKEN_ENCRYPTION_KEY"), "base64");
+    const key = Buffer.from(
+      required(env, "YOUTUBE_TOKEN_ENCRYPTION_KEY"),
+      "base64",
+    );
     if (key.length !== 32) throw new Error("key size");
     const bytes = Buffer.from(record.ingest_ciphertext, "base64");
     if (bytes.length < 17) throw new Error("ciphertext");
@@ -34,7 +41,9 @@ export function decryptYoutubeIngest(env, record) {
     const target = new URL(credentials.address);
     if (
       target.protocol !== "rtmps:" ||
-      !["a.rtmps.youtube.com", "b.rtmps.youtube.com"].includes(target.hostname) ||
+      !["a.rtmps.youtube.com", "b.rtmps.youtube.com"].includes(
+        target.hostname,
+      ) ||
       target.username ||
       target.password ||
       target.search ||
@@ -42,10 +51,14 @@ export function decryptYoutubeIngest(env, record) {
       !/^\/live2\/?$/.test(target.pathname) ||
       typeof credentials.streamName !== "string" ||
       !/^[A-Za-z0-9_-]{1,200}$/.test(credentials.streamName)
-    ) throw new Error("ingest credentials");
+    )
+      throw new Error("ingest credentials");
     return `${target.protocol}//${target.host}${target.pathname.replace(/\/$/, "")}/${credentials.streamName}`;
   } catch {
-    throw new LiveAuthError(503, "Identifiants YouTube illisibles ou invalides.");
+    throw new LiveAuthError(
+      503,
+      "Identifiants YouTube illisibles ou invalides.",
+    );
   }
 }
 
@@ -61,7 +74,11 @@ export async function loadYoutubeIngest(env, videoId, fetchImpl = fetch) {
   );
   if (!response.ok) throw new LiveAuthError(503, "Flux YouTube indisponible.");
   const rows = await response.json();
-  if (!rows?.[0]) throw new LiveAuthError(409, "Préparez d'abord le flux YouTube de ce direct.");
+  if (!rows?.[0])
+    throw new LiveAuthError(
+      409,
+      "Préparez d'abord le flux YouTube de ce direct.",
+    );
   return rows[0];
 }
 
@@ -70,14 +87,21 @@ async function listDestinations(env, streamId, fetchImpl) {
   try {
     response = await fetchImpl(`${UPSTREAM}/${streamId}/destinations`, {
       method: "GET",
-      headers: { Accept: "application/json", Authorization: `Bearer ${required(env, "UPSTREAM_API_TOKEN")}` },
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${required(env, "UPSTREAM_API_TOKEN")}`,
+      },
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
   } catch {
-    throw new LiveAuthError(503, "Lecture des destinations Upstream indisponible.");
+    throw new LiveAuthError(
+      503,
+      "Lecture des destinations Upstream indisponible.",
+    );
   }
-  if (!response.ok) throw new LiveAuthError(503, "Destinations Upstream indisponibles.");
+  if (!response.ok)
+    throw new LiveAuthError(503, "Destinations Upstream indisponibles.");
   const value = await response.json();
   if (!Array.isArray(value?.data))
     throw new LiveAuthError(503, "Réponse Upstream invalide.");
@@ -90,8 +114,14 @@ export async function prepareUpstreamYoutubeDestination(
   video,
   fetchImpl = fetch,
 ) {
-  if (video.status !== "scheduled" || !YOUTUBE_ID.test(video.youtube_video_id ?? ""))
-    throw new LiveAuthError(409, "Seul un direct YouTube programmé peut être préparé.");
+  if (
+    video.status !== "scheduled" ||
+    !YOUTUBE_ID.test(video.youtube_video_id ?? "")
+  )
+    throw new LiveAuthError(
+      409,
+      "Seul un direct YouTube programmé peut être préparé.",
+    );
 
   const params = new URLSearchParams({
     video_id: `eq.${validateVideoId(video.id)}`,
@@ -104,18 +134,31 @@ export async function prepareUpstreamYoutubeDestination(
     headers: privilegedHeaders(env),
     cache: "no-store",
   });
-  if (!boundResponse.ok) throw new LiveAuthError(503, "Association Upstream indisponible.");
+  if (!boundResponse.ok)
+    throw new LiveAuthError(503, "Association Upstream indisponible.");
   const bindings = await boundResponse.json();
   const binding = bindings?.[0];
   if (!UUID.test(binding?.upstream_stream_id ?? ""))
-    throw new LiveAuthError(409, "Associez d'abord une régie Upstream à ce direct.");
+    throw new LiveAuthError(
+      409,
+      "Associez d'abord une régie Upstream à ce direct.",
+    );
   const streamId = binding.upstream_stream_id;
   await getOwnedUpstreamStream(env, streamId, fetchImpl);
   const destinations = await listDestinations(env, streamId, fetchImpl);
   if (binding.upstream_destination_id) {
-    const dest = destinations.find((d) => d.id === binding.upstream_destination_id);
-    if (!dest || dest.url !== video.youtube_video_id || dest.status !== "paused")
-      throw new LiveAuthError(409, "La destination enregistrée a été modifiée. Contrôle manuel requis.");
+    const dest = destinations.find(
+      (d) => d.id === binding.upstream_destination_id,
+    );
+    if (
+      !dest ||
+      dest.url !== video.youtube_video_id ||
+      dest.status !== "paused"
+    )
+      throw new LiveAuthError(
+        409,
+        "La destination enregistrée a été modifiée. Contrôle manuel requis.",
+      );
     return { configured: true, alreadyConfigured: true };
   }
   if (destinations.some((d) => d.url === video.youtube_video_id))
@@ -124,7 +167,10 @@ export async function prepareUpstreamYoutubeDestination(
       "Une destination pour cette vidéo existe déjà dans Upstream. Vérifiez-la avant de réessayer.",
     );
   if (destinations.length >= 10)
-    throw new LiveAuthError(409, "Limite de dix destinations Upstream atteinte.");
+    throw new LiveAuthError(
+      409,
+      "Limite de dix destinations Upstream atteinte.",
+    );
 
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
   const key = decryptYoutubeIngest(env, ingest);
@@ -152,14 +198,20 @@ export async function prepareUpstreamYoutubeDestination(
       signal: AbortSignal.timeout(8000),
     });
   } catch {
-    throw new LiveAuthError(503, "Réponse Upstream incertaine : contrôlez les destinations avant de réessayer.");
+    throw new LiveAuthError(
+      503,
+      "Réponse Upstream incertaine : contrôlez les destinations avant de réessayer.",
+    );
   }
   if (created.status !== 201)
     throw new LiveAuthError(502, "Upstream a refusé la destination RTMPS.");
   const payload = await created.json();
   const destinationId = payload?.data?.id;
   if (!UUID.test(destinationId ?? ""))
-    throw new LiveAuthError(502, "Destination créée mais réponse Upstream invalide : vérification manuelle requise.");
+    throw new LiveAuthError(
+      502,
+      "Destination créée mais réponse Upstream invalide : vérification manuelle requise.",
+    );
 
   const saveParams = new URLSearchParams({
     video_id: `eq.${video.id}`,
@@ -179,9 +231,15 @@ export async function prepareUpstreamYoutubeDestination(
     cache: "no-store",
   });
   if (!saved.ok)
-    throw new LiveAuthError(503, "Destination créée en pause, mais sauvegarde incomplète : contactez l'administration.");
+    throw new LiveAuthError(
+      503,
+      "Destination créée en pause, mais sauvegarde incomplète : contactez l'administration.",
+    );
   const savedRows = await saved.json();
   if (!Array.isArray(savedRows) || savedRows.length !== 1)
-    throw new LiveAuthError(409, "Destination créée en pause ; association concurrente détectée. Contrôle manuel nécessaire.");
+    throw new LiveAuthError(
+      409,
+      "Destination créée en pause ; association concurrente détectée. Contrôle manuel nécessaire.",
+    );
   return { configured: true, alreadyConfigured: false };
 }
