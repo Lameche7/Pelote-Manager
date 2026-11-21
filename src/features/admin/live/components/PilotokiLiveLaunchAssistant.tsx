@@ -1,22 +1,73 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink, RadioTower, Video } from "lucide-react";
-import type {
-  ClubBroadcastSummary,
-  UpstreamStreamInfo,
+import {
+  adminLiveSettingsService,
+  type ClubBroadcastSummary,
+  type UpstreamStreamInfo,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 
 type Props = {
   broadcast: ClubBroadcastSummary;
   streams?: UpstreamStreamInfo[];
+  canAssociate?: boolean;
 };
 
 export function PilotokiLiveLaunchAssistant({
   broadcast,
   streams = [],
+  canAssociate = false,
 }: Props) {
   const [selectedStreamId, setSelectedStreamId] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [boundStreamId, setBoundStreamId] = useState<string | null>(null);
+  const [bindingLoaded, setBindingLoaded] = useState(false);
+  const [bindingError, setBindingError] = useState("");
+  const [bindingBusy, setBindingBusy] = useState(false);
+  const [confirmedDestination, setConfirmedDestination] = useState(false);
+  useEffect(() => {
+    if (!canAssociate || broadcast.status !== "scheduled") return;
+    let active = true;
+    setBindingLoaded(false);
+    adminLiveSettingsService
+      .getUpstreamBinding(broadcast.id)
+      .then((binding) => {
+        if (!active) return;
+        setBoundStreamId(binding?.streamId ?? null);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setBindingError(
+          error instanceof Error ? error.message : "Liaison indisponible.",
+        );
+      })
+      .finally(() => {
+        if (active) setBindingLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [broadcast.id, broadcast.status, canAssociate]);
+  const saveBinding = async () => {
+    if (!validStream || !confirmedDestination || bindingBusy || boundStreamId)
+      return;
+    setBindingError("");
+    setBindingBusy(true);
+    try {
+      const binding = await adminLiveSettingsService.associateUpstreamStream(
+        broadcast.id,
+        validStream.id,
+      );
+      setBoundStreamId(binding.streamId);
+      setConfirmedDestination(false);
+    } catch (error) {
+      setBindingError(
+        error instanceof Error ? error.message : "Association impossible.",
+      );
+    } finally {
+      setBindingBusy(false);
+    }
+  };
   const validStream = streams.find(
     (stream) =>
       stream.id === selectedStreamId && /^[0-9a-f-]{36}$/i.test(stream.id),
@@ -88,9 +139,55 @@ export function PilotokiLiveLaunchAssistant({
           </select>
         </label>
       )}
+      {canAssociate && broadcast.status === "scheduled" && (
+        <div className="admin-live-settings__binding">
+          <h4>Liaison permanente du direct</h4>
+          {!bindingLoaded ? (
+            <p>Vérification de l'association existante…</p>
+          ) : boundStreamId ? (
+            <p role="status">
+              Flux Upstream associé :{" "}
+              <strong>
+                {streams.find((stream) => stream.id === boundStreamId)?.name ??
+                  boundStreamId}
+              </strong>
+              . Cette liaison n'envoie pas encore de vidéo à YouTube.
+            </p>
+          ) : (
+            <>
+              <label className="admin-live-settings__checkbox">
+                <input
+                  type="checkbox"
+                  checked={confirmedDestination}
+                  onChange={(event) =>
+                    setConfirmedDestination(event.target.checked)
+                  }
+                />
+                J'ai vérifié dans Upstream que cette régie utilise exclusivement
+                la destination YouTube prévue pour{" "}
+                <strong>{broadcast.title}</strong> et qu'elle est arrêtée.
+              </label>
+              <button
+                type="button"
+                disabled={!validStream || !confirmedDestination || bindingBusy}
+                onClick={() => void saveBinding()}
+              >
+                {bindingBusy
+                  ? "Association…"
+                  : "Associer ce flux Upstream à cette vidéo"}
+              </button>
+              <p className="admin-live-settings__hint">
+                Le choix est permanent : aucune réaffectation automatique vers
+                un autre direct. Cette action ne démarre pas Upstream.
+              </p>
+            </>
+          )}
+          {bindingError && <p role="alert">{bindingError}</p>}
+        </div>
+      )}
       <p className="admin-live-settings__hint">
-        Le choix du flux n'est pas enregistré : vérifiez les destinations
-        YouTube dans Upstream avant toute mise en direct.
+        Vérifiez les destinations YouTube dans Upstream avant toute mise en
+        direct. Seule la liaison explicitement confirmée est enregistrée.
       </p>
       <label className="admin-live-settings__studio-selector">
         Lien invité caméra (copié depuis Upstream → Guests)

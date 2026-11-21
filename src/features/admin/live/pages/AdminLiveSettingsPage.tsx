@@ -693,6 +693,7 @@ export function AdminLiveSettingsPage() {
                     {selectedLaunchVideoId === video.id && (
                       <PilotokiLiveLaunchAssistant
                         broadcast={video}
+                        canAssociate={settings.canConnectGoogle}
                         streams={
                           settings.canConnectGoogle
                             ? (upstreamStreams ?? [])
