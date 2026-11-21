@@ -675,18 +675,30 @@ export function AdminLiveSettingsPage() {
                     <button
                       type="button"
                       aria-expanded={selectedLaunchVideoId === video.id}
-                      onClick={() =>
+                      onClick={() => {
                         setSelectedLaunchVideoId((current) =>
                           current === video.id ? null : video.id,
+                        );
+                        if (
+                          settings.canConnectGoogle &&
+                          upstreamStreams === null
                         )
-                      }
+                          void listUpstreamStreams();
+                      }}
                     >
                       {selectedLaunchVideoId === video.id
                         ? "Fermer la régie"
                         : "Ouvrir la régie de diffusion"}
                     </button>
                     {selectedLaunchVideoId === video.id && (
-                      <PilotokiLiveLaunchAssistant broadcast={video} />
+                      <PilotokiLiveLaunchAssistant
+                        broadcast={video}
+                        streams={
+                          settings.canConnectGoogle
+                            ? (upstreamStreams ?? [])
+                            : []
+                        }
+                      />
                     )}
                     {video.status === "scheduled" && (
                       <button

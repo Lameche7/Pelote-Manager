@@ -1,11 +1,42 @@
+import { useState } from "react";
 import { ExternalLink, RadioTower, Video } from "lucide-react";
-import type { ClubBroadcastSummary } from "@/features/admin/live/services/adminLiveSettingsService";
+import type {
+  ClubBroadcastSummary,
+  UpstreamStreamInfo,
+} from "@/features/admin/live/services/adminLiveSettingsService";
 
 type Props = {
   broadcast: ClubBroadcastSummary;
+  streams?: UpstreamStreamInfo[];
 };
 
-export function PilotokiLiveLaunchAssistant({ broadcast }: Props) {
+export function PilotokiLiveLaunchAssistant({
+  broadcast,
+  streams = [],
+}: Props) {
+  const [selectedStreamId, setSelectedStreamId] = useState("");
+  const [inviteUrl, setInviteUrl] = useState("");
+  const [copied, setCopied] = useState(false);
+  const validStream = streams.find(
+    (stream) =>
+      stream.id === selectedStreamId && /^[0-9a-f-]{36}$/i.test(stream.id),
+  );
+  const studioUrl = validStream
+    ? `https://studio.upstream.so/stream/${validStream.id}/builder?tab=studio`
+    : "https://studio.upstream.so/";
+  const validInvite =
+    /^https:\/\/studio\.upstream\.so\/join\/[A-Za-z0-9_-]+\/?$/.test(
+      inviteUrl.trim(),
+    );
+  const copyInvite = async () => {
+    if (!validInvite) return;
+    try {
+      await navigator.clipboard.writeText(inviteUrl.trim());
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
   return (
     <section
       className="admin-card admin-live-settings__launch-assistant"
@@ -41,13 +72,63 @@ export function PilotokiLiveLaunchAssistant({ broadcast }: Props) {
           diffusion dans YouTube puis dans Upstream.
         </li>
       </ol>
+      {streams.length > 0 && (
+        <label className="admin-live-settings__studio-selector">
+          Flux Upstream à utiliser pour cette partie
+          <select
+            value={selectedStreamId}
+            onChange={(event) => setSelectedStreamId(event.target.value)}
+          >
+            <option value="">Choisir explicitement le bon flux</option>
+            {streams.map((stream) => (
+              <option value={stream.id} key={stream.id}>
+                {stream.name} — {stream.status}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      <p className="admin-live-settings__hint">
+        Le choix du flux n'est pas enregistré : vérifiez les destinations
+        YouTube dans Upstream avant toute mise en direct.
+      </p>
+      <label className="admin-live-settings__studio-selector">
+        Lien invité caméra (copié depuis Upstream → Guests)
+        <input
+          type="url"
+          autoComplete="off"
+          spellCheck={false}
+          value={inviteUrl}
+          onChange={(event) => {
+            setInviteUrl(event.target.value);
+            setCopied(false);
+          }}
+          placeholder="https://studio.upstream.so/join/…"
+        />
+      </label>
       <div className="admin-live-settings__launch-actions">
-        <a
-          href="https://studio.upstream.so/"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          disabled={!validInvite}
+          onClick={() => void copyInvite()}
         >
-          <Video aria-hidden="true" /> Ouvrir Upstream{" "}
+          {copied ? "Lien caméra copié" : "Copier le lien caméra"}
+        </button>
+        {validInvite && (
+          <a href={inviteUrl.trim()} target="_blank" rel="noopener noreferrer">
+            Ouvrir le lien caméra <ExternalLink aria-hidden="true" />
+          </a>
+        )}
+      </div>
+      <p className="admin-live-settings__hint">
+        Ce lien d'invitation est privé et n'est pas enregistré dans Pilotoki.
+        Envoyez-le uniquement à la personne qui filme et utilisez Firefox sur le
+        Samsung si son navigateur habituel affiche une erreur.
+      </p>
+      <div className="admin-live-settings__launch-actions">
+        <a href={studioUrl} target="_blank" rel="noopener noreferrer">
+          <Video aria-hidden="true" />{" "}
+          {validStream ? "Ouvrir cette régie Upstream" : "Ouvrir Upstream"}{" "}
           <ExternalLink aria-hidden="true" />
         </a>
         <a
