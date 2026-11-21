@@ -3,7 +3,7 @@ import {
   privilegedHeaders,
   synchronizeClubVideos,
 } from "./_live-youtube-broadcast.mjs";
-import { LiveAuthError, jsonError, required } from "./_live-google-shared.mjs";
+import { LiveAuthError, required } from "./_live-google-shared.mjs";
 
 export function authorizedCron(request, env) {
   const expected = required(env, "CRON_SECRET");
@@ -54,19 +54,4 @@ export async function reconcileDailyVideos(env, fetchImpl = fetch) {
     updated += await synchronizeClubVideos(env, clubId, channel, fetchImpl);
   }
   return { clubs: clubs.length, updated };
-}
-
-export default async function handler(request, response) {
-  response.setHeader("Cache-Control", "no-store");
-  if (request.method !== "GET") {
-    response.setHeader("Allow", "GET");
-    return response.status(405).json({ error: "Méthode non autorisée." });
-  }
-  try {
-    authorizedCron(request, process.env);
-    const result = await reconcileDailyVideos(process.env);
-    return response.status(200).json({ ok: true, ...result });
-  } catch (error) {
-    return jsonError(response, error);
-  }
 }
