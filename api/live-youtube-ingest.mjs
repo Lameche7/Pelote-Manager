@@ -34,9 +34,24 @@ export default async function handler(request, response) {
       const admin = await verifiedLiveClubAdmin(request, process.env);
       if (request.query?.upstream === "binding") {
         if (!admin.canConnectGoogle)
-          throw new LiveAuthError(403, "Liaison réservée à l’administration pilote.");
-        const video = await getClubVideo(process.env, admin.clubId, request.query?.videoId);
-        return response.status(200).json({ binding: await getUpstreamBinding(process.env, admin.clubId, video.id) });
+          throw new LiveAuthError(
+            403,
+            "Liaison réservée à l’administration pilote.",
+          );
+        const video = await getClubVideo(
+          process.env,
+          admin.clubId,
+          request.query?.videoId,
+        );
+        return response
+          .status(200)
+          .json({
+            binding: await getUpstreamBinding(
+              process.env,
+              admin.clubId,
+              video.id,
+            ),
+          });
       }
       if (request.query?.upstream === "streams") {
         if (!admin.canConnectGoogle)
@@ -59,7 +74,10 @@ export default async function handler(request, response) {
     );
     if (request.body?.action === "associate_upstream") {
       if (!canConnectGoogle)
-        throw new LiveAuthError(403, "Liaison réservée à l’administration pilote.");
+        throw new LiveAuthError(
+          403,
+          "Liaison réservée à l’administration pilote.",
+        );
       if (request.body?.confirmed !== true)
         throw new LiveAuthError(400, "Confirmation de la régie requise.");
       const video = await getClubVideo(process.env, clubId, videoId);
