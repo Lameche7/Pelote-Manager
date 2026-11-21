@@ -90,7 +90,8 @@ export function AdminLiveSettingsPage() {
       if (inFlight || document.visibilityState === "hidden") return;
       inFlight = true;
       try {
-        const result = await adminLiveSettingsService.refreshBroadcastStatuses();
+        const result =
+          await adminLiveSettingsService.refreshBroadcastStatuses();
         if (active) setBroadcasts(result.videos);
       } catch {
         // Keep the last known catalogue if YouTube is temporarily unavailable.
