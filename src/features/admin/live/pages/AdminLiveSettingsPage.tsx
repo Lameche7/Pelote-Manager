@@ -315,8 +315,12 @@ export function AdminLiveSettingsPage() {
                 await adminLiveSettingsService.linkYoutubeIngest(match.id);
                 setLinkedVideoIds((ids) => [...new Set([...ids, match.id])]);
                 try {
-                  await adminLiveSettingsService.reuseUpstreamForVideo(match.id);
-                  setLinkMessage("Régie précédente réaffectée à cette partie, sans démarrer le direct.");
+                  await adminLiveSettingsService.reuseUpstreamForVideo(
+                    match.id,
+                  );
+                  setLinkMessage(
+                    "Régie précédente réaffectée à cette partie, sans démarrer le direct.",
+                  );
                 } catch (reuseError) {
                   setLinkMessage(
                     reuseError instanceof Error
