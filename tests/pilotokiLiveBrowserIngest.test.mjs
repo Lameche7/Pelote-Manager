@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
-import { handleWhip } from "../api/live-browser-ingest.mjs";
+import { handleWhip } from "../api/_live-browser-ingest.mjs";
 
 const clubId = "188029a8-3e6a-41cd-821f-01984a703552";
 const videoId = "22222222-2222-4222-8222-222222222222";
@@ -141,4 +141,23 @@ test("The mobile page never calls YouTube directly or claims WebRTC equals publi
   assert.match(text, /getUserMedia/);
   assert.match(text, /Connecter ma caméra/);
   assert.doesNotMatch(text, /liveBroadcasts\/transition/);
+});
+
+test("Mobile WHIP signalling uses an existing Vercel function", () => {
+  const endpoint = readFileSync(
+    new URL("../api/live-youtube-ingest.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(endpoint, /handleWhip/);
+  assert.match(endpoint, /whip_offer/);
+  assert.match(endpoint, /whip_close/);
+  const mobile = readFileSync(
+    new URL(
+      "../src/features/admin/live/pages/PilotokiLiveMobilePublisherPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(mobile, /\/api\/live-youtube-ingest/);
+  assert.doesNotMatch(mobile, /\/api\/live-browser-ingest/);
 });

@@ -14,13 +14,17 @@ async function authenticatedWhip(
   const { data } = await supabase.auth.getSession();
   if (!data.session?.access_token)
     throw new Error("Connectez-vous à Pilotoki pour utiliser la caméra.");
-  const response = await fetch("/api/live-browser-ingest", {
-    method,
+  const response = await fetch("/api/live-youtube-ingest", {
+    method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${data.session.access_token}`,
     },
-    body: JSON.stringify({ videoId, ...payload }),
+    body: JSON.stringify({
+      action: method === "DELETE" ? "whip_close" : "whip_offer",
+      videoId,
+      ...payload,
+    }),
     cache: "no-store",
   });
   const result = (await response.json()) as {

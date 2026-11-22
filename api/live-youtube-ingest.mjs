@@ -1,4 +1,5 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
+import { handleWhip } from "./_live-browser-ingest.mjs";
 import {
   inspectUpstreamControl,
   loadControlBinding,
@@ -44,6 +45,21 @@ export default async function handler(request, response) {
     return response.status(405).json({ error: "Méthode non autorisée." });
   }
   try {
+    // Reuse this existing API function for WebRTC signalling, preserving the
+    // Vercel Hobby 12-functions limit. The helper revalidates credentials.
+    if (
+      request.method === "POST" &&
+      ["whip_offer", "whip_close"].includes(request.body?.action)
+    ) {
+      return handleWhip(
+        {
+          ...request,
+          method: request.body.action === "whip_close" ? "DELETE" : "POST",
+        },
+        response,
+        process.env,
+      );
+    }
     // Read-only upstream connection health. Never return provider metadata
     // or stream credentials to the browser.
     if (request.method === "GET") {

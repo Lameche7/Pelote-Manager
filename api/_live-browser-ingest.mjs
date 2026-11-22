@@ -149,5 +149,3 @@ export async function handleWhip(request, response, env, fetchImpl = fetch) {
     return jsonError(response, error);
   }
 }
-export default (request, response) =>
-  handleWhip(request, response, process.env);
