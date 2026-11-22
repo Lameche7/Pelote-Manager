@@ -136,10 +136,18 @@ export async function startLivekitEgress(
     throw new LiveAuthError(403, "Diffuseur LiveKit invalide.");
   const room = livekitRoom(clubId, video.id);
   const current = await activeEgress(env, room, fetchImpl);
-  if (current.length > 0)
+  // A previous StartEgress may have succeeded despite an unrecognized
+  // response. Reuse the one active room egress; never launch a duplicate.
+  if (current.length === 1)
+    return {
+      started: true,
+      active: [1, "EGRESS_ACTIVE"].includes(current[0].status),
+      alreadyStarted: true,
+    };
+  if (current.length > 1)
     throw new LiveAuthError(
       409,
-      "Une retransmission LiveKit existe déjà pour cette partie.",
+      "Plusieurs retransmissions LiveKit existent : vérification manuelle nécessaire.",
     );
 
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
