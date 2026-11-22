@@ -11,7 +11,10 @@ async function youtubeRead(accessToken, resource, params, fetchImpl) {
     signal: AbortSignal.timeout(12000),
   });
   if (!response.ok)
-    throw new LiveAuthError(502, "Vérification du direct YouTube indisponible.");
+    throw new LiveAuthError(
+      502,
+      "Vérification du direct YouTube indisponible.",
+    );
   const payload = await response.json();
   if (!Array.isArray(payload?.items) || payload.items.length !== 1)
     throw new LiveAuthError(409, "Identité du direct YouTube non vérifiable.");
@@ -36,7 +39,10 @@ export async function publishVerifiedYoutubeLive(
     }),
     fetchImpl,
   );
-  if (broadcast.id !== videoId || broadcast.contentDetails?.boundStreamId !== streamId)
+  if (
+    broadcast.id !== videoId ||
+    broadcast.contentDetails?.boundStreamId !== streamId
+  )
     throw new LiveAuthError(
       409,
       "Le direct YouTube n'est pas lié au flux vidéo attendu.",
