@@ -8,6 +8,7 @@ import {
 import { usePlatformAuth } from "../auth/usePlatformAuth";
 import { PlatformHelloAssoDiagnosticPanel } from "../components/PlatformHelloAssoDiagnosticPanel";
 import { PlatformBudgetForecastPanel } from "../components/PlatformBudgetForecastPanel";
+import { PlatformBusinessClubAccessPanel } from "../components/PlatformBusinessClubAccessPanel";
 import { PlatformCostPlanList } from "../components/PlatformCostPlanList";
 import { PlatformFirstAdminDryRunPanel } from "../components/PlatformFirstAdminDryRunPanel";
 import { PlatformLiveExecutionConfirmationPanel } from "../components/PlatformLiveExecutionConfirmationPanel";
@@ -368,6 +369,8 @@ export function PlatformDashboardPage() {
           </div>
         )}
       </section>
+
+      <PlatformBusinessClubAccessPanel />
 
       <PlatformRegistrationRequestsPanel onClubRegistered={loadPlatform} />
 
