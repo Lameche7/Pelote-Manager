@@ -9,8 +9,8 @@ const VIDEO_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0
 const MAX_OFFER = 120_000;
 const SESSION_AGE_MS = 2 * 60 * 60 * 1000;
 const WHIP_ENDPOINT = "LIVE_WHIP_INGEST_URL";
-const WHIP_SECRET = "LIVE_WHIP_API_TOKEN";
-const SESSION_SECRET = "LIVE_WHIP_SESSION_SECRET";
+const INGEST_AUTH_ENV_NAME = "LIVE_WHIP_API_TOKEN";
+const SESSION_SIGN_ENV_NAME = "LIVE_WHIP_SESSION_SIGN_ENV_NAME";
 
 function configuredEndpoint(env) {
   const raw = required(env, WHIP_ENDPOINT);
@@ -27,7 +27,7 @@ function configuredEndpoint(env) {
 
 function seal(env, claims) {
   const content = Buffer.from(JSON.stringify(claims)).toString("base64url");
-  const tag = createHmac("sha256", required(env, SESSION_SECRET))
+  const tag = createHmac("sha256", required(env, SESSION_SIGN_ENV_NAME))
     .update(content)
     .digest("base64url");
   return `${content}.${tag}`;
@@ -39,7 +39,7 @@ function unseal(env, token) {
   const [body, signature, extra] = token.split(".");
   if (!body || !signature || extra)
     throw new LiveAuthError(400, "Session caméra invalide.");
-  const expected = createHmac("sha256", required(env, SESSION_SECRET))
+  const expected = createHmac("sha256", required(env, SESSION_SIGN_ENV_NAME))
     .update(body)
     .digest();
   const actual = Buffer.from(signature, "base64url");
@@ -80,7 +80,7 @@ export async function handleWhip(request, response, env, fetchImpl = fetch) {
       request.method === "DELETE",
     );
     const endpoint = configuredEndpoint(env);
-    const apiToken = required(env, WHIP_SECRET);
+    const apiToken = required(env, INGEST_AUTH_ENV_NAME);
     const headers = { Authorization: `Bearer ${apiToken}` };
     if (request.method === "POST") {
       const offer = request.body?.offer;
