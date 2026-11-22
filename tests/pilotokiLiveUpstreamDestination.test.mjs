@@ -127,7 +127,10 @@ test("Configures a paused primary without starting", async () => {
     upstream_destination_id: stream,
   });
   assert.doesNotMatch(saved.options.body, /abcd-efgh|write-secret/);
-  assert.equal(calls.some((call) => call.options.method === "POST"), false);
+  assert.equal(
+    calls.some((call) => call.options.method === "POST"),
+    false,
+  );
 });
 
 test("Primary binding is idempotent", async () => {
@@ -140,7 +143,10 @@ test("Primary binding is idempotent", async () => {
     await prepareUpstreamYoutubeDestination(env, club, video, mock),
     { configured: true, alreadyConfigured: true },
   );
-  assert.equal(calls.some((call) => call.options.method === "PATCH"), false);
+  assert.equal(
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
+  );
 });
 
 test("Existing primary or secondary is never overwritten", async () => {
@@ -153,7 +159,10 @@ test("Existing primary or secondary is never overwritten", async () => {
       prepareUpstreamYoutubeDestination(env, club, video, mock),
       /régie possède déjà une destination/,
     );
-    assert.equal(calls.some((call) => call.options.method === "PATCH"), false);
+    assert.equal(
+      calls.some((call) => call.options.method === "PATCH"),
+      false,
+    );
   }
 });
 
@@ -175,7 +184,10 @@ test("An active stream is never changed", async () => {
     prepareUpstreamYoutubeDestination(env, club, video, mock),
     /Arrêtez d'abord/,
   );
-  assert.equal(calls.some((call) => call.options.method === "PATCH"), false);
+  assert.equal(
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
+  );
 });
 
 test("Provider failure does not leak the stream key", async () => {
@@ -201,17 +213,4 @@ test("Handler requires pilot admin and confirmation", () => {
   );
   assert.match(api, /if \(!canConnectGoogle\)/);
   assert.match(api, /request\.body\?\.confirmed !== true/);
-});
-
-// Temporary, test-only formatter probe; remove before merge.
-test("temporary format probe", async () => {
-  const prettier = await import("prettier");
-  const file = new URL(import.meta.url).pathname;
-  const original = readFileSync(file, "utf8");
-  const config = await prettier.resolveConfig(file);
-  const formatted = await prettier.format(original, {
-    ...config,
-    filepath: file,
-  });
-  console.log("PILOTOKI_FORMAT_START" + Buffer.from(formatted).toString("base64") + "PILOTOKI_FORMAT_END");
 });
