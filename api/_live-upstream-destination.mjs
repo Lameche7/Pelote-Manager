@@ -260,27 +260,45 @@ export async function prepareUpstreamYoutubeDestination(
           else if (/limit|maximum|too long/i.test(providerMessage))
             category = "limit";
           const details = Object.values(errors ?? {})
-            .flatMap((value) => Array.isArray(value) ? value : [value])
+            .flatMap((value) => (Array.isArray(value) ? value : [value]))
             .filter((value) => typeof value === "string")
-            .join(" ").slice(0, 4096);
+            .join(" ")
+            .slice(0, 4096);
           const summary = `${providerMessage} ${details}`;
           const matches = [
-            ["account_restriction", /subscription|plan|upgrade|premium|entitle|not allowed|not enabled|permission|multistream.*available/i],
+            [
+              "account_restriction",
+              /subscription|plan|upgrade|premium|entitle|not allowed|not enabled|permission|multistream.*available/i,
+            ],
             ["limit", /quota|maximum|too many|limit|destinations.*10/i],
             ["duplicate", /already exists|already in use|duplicate|taken/i],
-            ["invalid_stream", /stream.*invalid|stream.*not found|stream.*inactive/i],
+            [
+              "invalid_stream",
+              /stream.*invalid|stream.*not found|stream.*inactive/i,
+            ],
             ["invalid_key", /key.*invalid|invalid.*key|stream key/i],
             ["invalid_url", /url.*invalid|invalid.*url/i],
             ["invalid_platform", /platform.*invalid|invalid.*platform/i],
             ["invalid_status", /status.*invalid|invalid.*status/i],
           ];
-          const issueCategory = matches.find(([, pattern]) => pattern.test(summary))?.[0] ?? "other";
+          const issueCategory =
+            matches.find(([, pattern]) => pattern.test(summary))?.[0] ??
+            "other";
           const errorFields = Object.keys(errors ?? {});
           const knownProviderFields = [
-            "stream_id", "destination", "destinations", "stream_key",
-            "stream", "multistream", "multistreaming", "account", "base",
+            "stream_id",
+            "destination",
+            "destinations",
+            "stream_key",
+            "stream",
+            "multistream",
+            "multistreaming",
+            "account",
+            "base",
           ];
-          const errorLabel = knownProviderFields.find((name) => errorFields.includes(name)) ?? "other";
+          const errorLabel =
+            knownProviderFields.find((name) => errorFields.includes(name)) ??
+            "other";
           console.warn("pilotoki_live_upstream_422_detail", {
             issueCategory,
             errorLabel,
