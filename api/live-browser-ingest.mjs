@@ -72,7 +72,13 @@ export async function handleWhip(request, response, env, fetchImpl = fetch) {
     const videoId = request.body?.videoId;
     if (!VIDEO_ID.test(videoId ?? ""))
       throw new LiveAuthError(400, "Identifiant vidéo invalide.");
-    const video = await getClubVideo(env, admin.clubId, videoId, fetchImpl);
+    const video = await getClubVideo(
+      env,
+      admin.clubId,
+      videoId,
+      fetchImpl,
+      request.method === "DELETE",
+    );
     const endpoint = configuredEndpoint(env);
     const apiToken = required(env, WHIP_SECRET);
     const headers = { Authorization: `Bearer ${apiToken}` };
