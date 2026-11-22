@@ -820,6 +820,14 @@ export function AdminLiveSettingsPage() {
                         ? "Fermer la régie"
                         : "Ouvrir la régie de diffusion"}
                     </button>
+                    {video.status === "scheduled" && (
+                      <a
+                        href={`/live/camera?videoId=${encodeURIComponent(video.id)}`}
+                        rel="noopener noreferrer"
+                      >
+                        Tester l'envoi caméra mobile (passerelle WebRTC requise)
+                      </a>
+                    )}
                     {selectedLaunchVideoId === video.id && (
                       <PilotokiLiveLaunchAssistant
                         broadcast={video}
