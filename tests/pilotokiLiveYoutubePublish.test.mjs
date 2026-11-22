@@ -1,11 +1,14 @@
-import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { publishVerifiedYoutubeLive } from "../api/_live-youtube-publish.mjs";
 
 const id = "AbCdEfGh123";
 const streamId = "YTstream123";
-function mock({ streamStatus = "active", boundStreamId = streamId, lifecycle = "ready" } = {}) {
+function mock({
+  streamStatus = "active",
+  boundStreamId = streamId,
+  lifecycle = "ready",
+} = {}) {
   const requests = [];
   const fetchMock = async (url, options = {}) => {
     requests.push({ url, options });
@@ -54,7 +57,9 @@ test("Publishes only a broadcast bound to an active YouTube stream", async () =>
     fetchMock,
   );
   assert.deepEqual(result, { status: "liveStarting", alreadyLive: false });
-  const writes = requests.filter((request) => request.options.method === "POST");
+  const writes = requests.filter(
+    (request) => request.options.method === "POST",
+  );
   assert.equal(writes.length, 1);
   assert.match(writes[0].url, /broadcastStatus=live/);
   assert.doesNotMatch(JSON.stringify(result), /private-access-token/);
@@ -66,7 +71,10 @@ test("Blocks publication if YouTube has not received the camera", async () => {
     publishVerifiedYoutubeLive("token", id, streamId, fetchMock),
     /n'a pas encore reçu le signal/,
   );
-  assert.equal(requests.some((r) => r.options.method === "POST"), false);
+  assert.equal(
+    requests.some((r) => r.options.method === "POST"),
+    false,
+  );
 });
 
 test("Blocks publication if YouTube broadcast is bound to another stream", async () => {
@@ -77,7 +85,10 @@ test("Blocks publication if YouTube broadcast is bound to another stream", async
     publishVerifiedYoutubeLive("token", id, streamId, fetchMock),
     /n'est pas lié/,
   );
-  assert.equal(requests.some((r) => r.options.method === "POST"), false);
+  assert.equal(
+    requests.some((r) => r.options.method === "POST"),
+    false,
+  );
 });
 
 test("Already live is idempotent, with no new transition", async () => {
@@ -86,25 +97,8 @@ test("Already live is idempotent, with no new transition", async () => {
     await publishVerifiedYoutubeLive("token", id, streamId, fetchMock),
     { status: "live", alreadyLive: true },
   );
-  assert.equal(requests.some((r) => r.options.method === "POST"), false);
-});
-
-test("temporary formatter diagnostic - remove before merge", async () => {
-  const prettier = await import("prettier");
-  const paths = [
-    "api/_live-youtube-publish.mjs",
-    "api/live-youtube-ingest.mjs",
-    "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
-    "tests/pilotokiLiveYoutubePublish.test.mjs",
-  ];
-  for (const path of paths) {
-    const root = new URL("../" + path, import.meta.url);
-    const original = readFileSync(root, "utf8");
-    const config = await prettier.resolveConfig(root.pathname);
-    const formatted = await prettier.format(original, {
-      ...config,
-      filepath: root.pathname,
-    });
-    console.log("FORMAT_START:" + path + ":" + Buffer.from(formatted).toString("base64") + ":FORMAT_END");
-  }
+  assert.equal(
+    requests.some((r) => r.options.method === "POST"),
+    false,
+  );
 });
