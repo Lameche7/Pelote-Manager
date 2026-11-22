@@ -107,8 +107,7 @@ test("Configures a paused primary without starting", async () => {
     { configured: true, alreadyConfigured: false },
   );
   const providerPatch = calls.find(
-    (call) =>
-      call.url.endsWith(stream) && call.options.method === "PATCH",
+    (call) => call.url.endsWith(stream) && call.options.method === "PATCH",
   );
   assert.deepEqual(JSON.parse(providerPatch.options.body), {
     platform: "youtube",
