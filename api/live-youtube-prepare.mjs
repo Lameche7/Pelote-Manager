@@ -1,5 +1,6 @@
 import {
   googleAccessToken,
+  privilegedHeaders,
   listPreparedVideos,
   storePreparedVideo,
   synchronizeClubVideos,
@@ -73,14 +74,7 @@ export default async function handler(request, response) {
       const existingResponse = await fetch(
         `${process.env.VITE_SUPABASE_URL}/rest/v1/pilotoki_live_videos?${lookup}`,
         {
-          headers: {
-            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-            ...(process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith("sb_secret_")
-              ? {}
-              : {
-                  authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-                }),
-          },
+          headers: privilegedHeaders(process.env),
           cache: "no-store",
         },
       );
