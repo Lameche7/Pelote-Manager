@@ -38,11 +38,13 @@ test("YouTube completion only affects the exact bound live broadcast", async () 
       return {
         ok: true,
         json: async () => ({
-          items: [{
-            id: "OldVideo123",
-            contentDetails: { boundStreamId: "YTStreamId1" },
-            status: { lifeCycleStatus: "live" },
-          }],
+          items: [
+            {
+              id: "OldVideo123",
+              contentDetails: { boundStreamId: "YTStreamId1" },
+              status: { lifeCycleStatus: "live" },
+            },
+          ],
         }),
       };
     if (url.includes("/transition?"))
@@ -64,7 +66,10 @@ test("YouTube completion only affects the exact bound live broadcast", async () 
     ),
     { status: "complete", alreadyComplete: false },
   );
-  assert.equal(calls.filter((call) => call.options.method === "POST").length, 1);
+  assert.equal(
+    calls.filter((call) => call.options.method === "POST").length,
+    1,
+  );
   assert.match(calls.at(-1).url, /broadcastStatus=complete/);
 });
 
@@ -75,11 +80,13 @@ test("Incorrect YouTube stream cannot be completed", async () => {
     return {
       ok: true,
       json: async () => ({
-        items: [{
-          id: "OldVideo123",
-          contentDetails: { boundStreamId: "AnotherStream" },
-          status: { lifeCycleStatus: "live" },
-        }],
+        items: [
+          {
+            id: "OldVideo123",
+            contentDetails: { boundStreamId: "AnotherStream" },
+            status: { lifeCycleStatus: "live" },
+          },
+        ],
       }),
     };
   };
@@ -87,10 +94,16 @@ test("Incorrect YouTube stream cannot be completed", async () => {
     completeVerifiedYoutubeLive("token", "OldVideo123", "YTStreamId1", mock),
     /ne correspond pas/,
   );
-  assert.equal(requests.some((call) => call.options.method === "POST"), false);
+  assert.equal(
+    requests.some((call) => call.options.method === "POST"),
+    false,
+  );
 });
 
-function reuseFetch({ upstreamStatus = "paused", youtubeComplete = true } = {}) {
+function reuseFetch({
+  upstreamStatus = "paused",
+  youtubeComplete = true,
+} = {}) {
   const calls = [];
   const state = {
     id: upstreamId,
@@ -108,41 +121,49 @@ function reuseFetch({ upstreamStatus = "paused", youtubeComplete = true } = {}) 
         };
       return {
         ok: true,
-        json: async () => [{
-          video_id: oldVideoId,
-          upstream_stream_id: upstreamId,
-          upstream_destination_id: upstreamId,
-        }],
+        json: async () => [
+          {
+            video_id: oldVideoId,
+            upstream_stream_id: upstreamId,
+            upstream_destination_id: upstreamId,
+          },
+        ],
       };
     }
     if (url.includes("pilotoki_live_videos"))
       return {
         ok: true,
-        json: async () => [{
-          id: oldVideoId,
-          youtube_video_id: "OldVideo123",
-        }],
+        json: async () => [
+          {
+            id: oldVideoId,
+            youtube_video_id: "OldVideo123",
+          },
+        ],
       };
     if (url.includes("/liveBroadcasts?"))
       return {
         ok: true,
         json: async () => ({
-          items: [{
-            id: "OldVideo123",
-            status: {
-              lifeCycleStatus: youtubeComplete ? "complete" : "live",
+          items: [
+            {
+              id: "OldVideo123",
+              status: {
+                lifeCycleStatus: youtubeComplete ? "complete" : "live",
+              },
             },
-          }],
+          ],
         }),
       };
     if (url.includes("/pilotoki_live_ingest_credentials"))
       return {
         ok: true,
-        json: async () => [{
-          youtube_stream_id: "YTstream",
-          ingest_ciphertext: encrypted.ciphertext,
-          ingest_iv: encrypted.iv,
-        }],
+        json: async () => [
+          {
+            youtube_stream_id: "YTstream",
+            ingest_ciphertext: encrypted.ciphertext,
+            ingest_iv: encrypted.iv,
+          },
+        ],
       };
     if (url.endsWith("/destinations"))
       return { ok: true, json: async () => ({ data: [] }) };
@@ -165,8 +186,7 @@ test("Reuses only an idle studio after archive, without starting live", async ()
     { configured: true, reused: true },
   );
   const upstreamPatch = calls.find(
-    (call) =>
-      call.url.endsWith(upstreamId) && call.options.method === "PATCH",
+    (call) => call.url.endsWith(upstreamId) && call.options.method === "PATCH",
   );
   assert.deepEqual(JSON.parse(upstreamPatch.options.body), {
     platform: "youtube",
@@ -194,7 +214,10 @@ test("Refuses re-use when old YouTube broadcast has not ended", async () => {
     reuseIdleUpstreamForVideo(env, clubId, video, "youtube-token", mock),
     /Terminez d'abord/,
   );
-  assert.equal(calls.some((call) => call.options.method === "PATCH"), false);
+  assert.equal(
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
+  );
 });
 
 test("Refuses re-use when studio is running", async () => {
@@ -203,7 +226,10 @@ test("Refuses re-use when studio is running", async () => {
     reuseIdleUpstreamForVideo(env, clubId, video, "youtube-token", mock),
     /Arrêtez d'abord/,
   );
-  assert.equal(calls.some((call) => call.options.method === "PATCH"), false);
+  assert.equal(
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
+  );
 });
 
 test("Only an explicit authorized Pilotoki admin can rotate or complete", () => {
@@ -225,30 +251,4 @@ test("Only an explicit authorized Pilotoki admin can rotate or complete", () => 
   );
   assert.match(ui, /Terminer ce direct et conserver le replay/);
   assert.match(ui, /Réutiliser la régie après la partie précédente/);
-});
-
-test("temporary formatter diagnostic - remove before merge", async () => {
-  const prettier = await import("prettier");
-  for (const path of [
-    "api/_live-upstream-reuse.mjs",
-    "api/live-youtube-ingest.mjs",
-    "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
-    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
-    "src/features/admin/live/services/adminLiveSettingsService.ts",
-    "tests/pilotokiLiveFinishReuse.test.mjs",
-  ]) {
-    const root = new URL("../" + path, import.meta.url);
-    const config = await prettier.resolveConfig(root.pathname);
-    const formatted = await prettier.format(readFileSync(root, "utf8"), {
-      ...config,
-      filepath: root.pathname,
-    });
-    console.log(
-      "FORMAT_START:" +
-        path +
-        ":" +
-        Buffer.from(formatted).toString("base64") +
-        ":FORMAT_END",
-    );
-  }
 });
