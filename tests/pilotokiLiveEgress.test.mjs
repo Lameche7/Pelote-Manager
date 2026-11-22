@@ -207,10 +207,3 @@ test("LiveKit and YouTube actions remain restricted to a confirmed administrator
 });
 
 
-test("temporary exact prettier output for LiveKit source", async () => {
-  const prettier = await import("prettier");
-  const filePath = new URL("../api/_live-livekit-egress.mjs", import.meta.url);
-  const original = readFileSync(filePath, "utf8");
-  const formatted = await prettier.format(original, { filepath: filePath.pathname });
-  console.log("EXACT_PRETTIER_BASE64:" + Buffer.from(formatted).toString("base64"));
-});
