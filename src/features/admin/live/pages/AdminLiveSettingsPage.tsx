@@ -182,8 +182,7 @@ export function AdminLiveSettingsPage() {
         }
         setCalendarMatchId(match.matchId);
         if (match.kind === "tournament") setBroadcastType("tournoi");
-        else if (match.kind === "championship")
-          setBroadcastType("championnat");
+        else if (match.kind === "championship") setBroadcastType("championnat");
       });
     return () => {
       active = false;
@@ -269,7 +268,9 @@ export function AdminLiveSettingsPage() {
     setPreparing(true);
     try {
       if (searchParams.get("liveResource") && !calendarMatchId)
-        throw new Error("Impossible de vérifier cette partie dans le calendrier.");
+        throw new Error(
+          "Impossible de vérifier cette partie dans le calendrier.",
+        );
       // A match may already be underway when its broadcast is prepared.
       // YouTube requires a future scheduled timestamp even for an immediate live.
       const youtubeStart =
@@ -280,8 +281,10 @@ export function AdminLiveSettingsPage() {
         title: broadcastTitle,
         sourceType: broadcastType,
         sourceId: null,
-        ...(calendarMatchId && searchParams.get("liveResource") &&
-        searchParams.get("liveEnd") && searchParams.get("liveStart")
+        ...(calendarMatchId &&
+        searchParams.get("liveResource") &&
+        searchParams.get("liveEnd") &&
+        searchParams.get("liveStart")
           ? {
               calendarSlot: {
                 resourceId: searchParams.get("liveResource")!,
@@ -302,7 +305,9 @@ export function AdminLiveSettingsPage() {
       if (items) {
         setBroadcasts(items);
         if (calendarMatchId) {
-          const match = items.find((video) => video.sourceId === calendarMatchId);
+          const match = items.find(
+            (video) => video.sourceId === calendarMatchId,
+          );
           if (match) {
             setSelectedLaunchVideoId(match.id);
             if (settings?.canConnectGoogle) {
@@ -630,9 +635,7 @@ export function AdminLiveSettingsPage() {
               cette partie et ne sera pas créé en double.
             </p>
           )}
-          {calendarMatchError && (
-            <p role="alert">{calendarMatchError}</p>
-          )}
+          {calendarMatchError && <p role="alert">{calendarMatchError}</p>}
           {calendarMatchId &&
             broadcasts.some((video) => video.sourceId === calendarMatchId) && (
               <p role="status">
@@ -725,9 +728,12 @@ export function AdminLiveSettingsPage() {
                 preparing ||
                 !consentConfirmed ||
                 madeForKids === "" ||
-                (Boolean(searchParams.get("liveResource")) && !calendarMatchId) ||
+                (Boolean(searchParams.get("liveResource")) &&
+                  !calendarMatchId) ||
                 (Boolean(calendarMatchId) &&
-                  broadcasts.some((video) => video.sourceId === calendarMatchId))
+                  broadcasts.some(
+                    (video) => video.sourceId === calendarMatchId,
+                  ))
               }
             >
               {preparing
