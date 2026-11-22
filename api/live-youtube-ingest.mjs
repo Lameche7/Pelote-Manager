@@ -1,5 +1,6 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
 import { handleWhip } from "./_live-browser-ingest.mjs";
+import { authorizeLivekitPublisher } from "./_live-livekit.mjs";
 import {
   inspectUpstreamControl,
   loadControlBinding,
@@ -45,6 +46,14 @@ export default async function handler(request, response) {
     return response.status(405).json({ error: "Méthode non autorisée." });
   }
   try {
+    if (
+      request.method === "POST" &&
+      request.body?.action === "livekit_publisher_token"
+    ) {
+      return response.status(200).json(
+        await authorizeLivekitPublisher(request, process.env),
+      );
+    }
     // Reuse this existing API function for WebRTC signalling, preserving the
     // Vercel Hobby 12-functions limit. The helper revalidates credentials.
     if (
