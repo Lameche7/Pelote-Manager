@@ -139,6 +139,41 @@ export const adminLiveSettingsService = {
       throw new Error(dataResult.error ?? "Commande Upstream impossible.");
   },
 
+  async publishYoutubeLive(videoId: string): Promise<{
+    status: "live" | "liveStarting";
+    alreadyLive: boolean;
+  }> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "publish_youtube",
+        videoId,
+        confirmed: true,
+      }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      status?: string;
+      alreadyLive?: boolean;
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(result.error ?? "Lancement YouTube impossible.");
+    if (result.status !== "live" && result.status !== "liveStarting")
+      throw new Error("YouTube n'a pas confirmé le lancement.");
+    return {
+      status: result.status,
+      alreadyLive: result.alreadyLive === true,
+    };
+  },
+
   async getUpstreamBinding(
     videoId: string,
   ): Promise<UpstreamVideoBinding | null> {
