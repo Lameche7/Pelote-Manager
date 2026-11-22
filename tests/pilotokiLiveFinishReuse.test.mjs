@@ -223,7 +223,9 @@ test("A second match starts as soon as YouTube ends, even with stale replay cata
     { configured: true, reused: true },
   );
   const catalogue = calls.find(
-    (call) => call.url.includes("pilotoki_live_videos") && call.options.method === "PATCH",
+    (call) =>
+      call.url.includes("pilotoki_live_videos") &&
+      call.options.method === "PATCH",
   );
   assert.ok(catalogue);
   assert.deepEqual(JSON.parse(catalogue.options.body), { status: "replay" });
@@ -234,12 +236,18 @@ test("A second match starts as soon as YouTube ends, even with stale replay cata
 });
 
 test("YouTube still live cannot be retargeted even when Pilotoki says replay", async () => {
-  const { mock, calls } = reuseFetch({ youtubeComplete: false, oldStatus: "replay" });
+  const { mock, calls } = reuseFetch({
+    youtubeComplete: false,
+    oldStatus: "replay",
+  });
   await assert.rejects(
     reuseIdleUpstreamForVideo(env, clubId, video, "youtube-token", mock),
     /Terminez d'abord/,
   );
-  assert.equal(calls.some((call) => call.options.method === "PATCH"), false);
+  assert.equal(
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
+  );
 });
 
 test("Refuses re-use when old YouTube broadcast has not ended", async () => {
@@ -285,16 +293,4 @@ test("Only an explicit authorized Pilotoki admin can rotate or complete", () => 
   );
   assert.match(ui, /Terminer ce direct et conserver le replay/);
   assert.match(ui, /Réutiliser la régie après la partie précédente/);
-});
-
-test("temporary formatter probe", async () => {
-  const prettier = await import("prettier");
-  const path = "tests/pilotokiLiveFinishReuse.test.mjs";
-  const file = new URL("../" + path, import.meta.url);
-  const config = await prettier.resolveConfig(file.pathname);
-  const formatted = await prettier.format(readFileSync(file, "utf8"), {
-    ...config,
-    filepath: file.pathname,
-  });
-  console.log("FORMAT_START:" + Buffer.from(formatted).toString("base64") + ":FORMAT_END");
 });
