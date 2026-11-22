@@ -25,8 +25,10 @@ async function inspect(env, path, fetchImpl) {
 }
 
 /**
- * Reuse the ONE existing, stopped club studio after the old broadcast
- * has been archived. A partial provider write always fails closed.
+ * Reuse the ONE existing, stopped club studio after YouTube confirms
+ * that the previous broadcast is complete. Replay transcoding/catalogue
+ * synchronization must never block the next match.
+ * A partial provider write always fails closed.
  */
 export async function reuseIdleUpstreamForVideo(
   env,
@@ -70,8 +72,7 @@ export async function reuseIdleUpstreamForVideo(
     `${base}/rest/v1/pilotoki_live_videos?${new URLSearchParams({
       id: `eq.${previous.video_id}`,
       club_id: `eq.${clubId}`,
-      status: "eq.replay",
-      select: "id,youtube_video_id",
+      select: "id,youtube_video_id,status",
       limit: "1",
     })}`,
     { headers: privilegedHeaders(env), cache: "no-store" },
@@ -82,8 +83,10 @@ export async function reuseIdleUpstreamForVideo(
   if (!oldVideo)
     throw new LiveAuthError(
       409,
-      "La vidéo précédente n'est pas encore archivée en replay.",
+      "La vidéo précédente est introuvable. Vérifiez la régie.",
     );
+  // The authoritative end-of-broadcast signal is YouTube lifeCycleStatus,
+  // not the delayed Pilotoki replay label or YouTube replay processing.
   await assertYoutubeBroadcastComplete(
     accessToken,
     oldVideo.youtube_video_id,
@@ -106,6 +109,34 @@ export async function reuseIdleUpstreamForVideo(
       409,
       "La régie a changé ou contient une autre destination. Contrôle manuel nécessaire.",
     );
+
+  // Reconcile the old entry immediately after confirming the actual YouTube
+  // completion. The replay may still be processing; that does not prevent
+  // retargeting this stopped studio to the next match.
+  if (oldVideo.status !== "replay") {
+    const catalogue = await fetchImpl(
+      `${base}/rest/v1/pilotoki_live_videos?${new URLSearchParams({
+        id: `eq.${oldVideo.id}`,
+        club_id: `eq.${clubId}`,
+        status: `eq.${oldVideo.status}`,
+      })}`,
+      {
+        method: "PATCH",
+        headers: {
+          ...privilegedHeaders(env),
+          "content-type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({ status: "replay" }),
+        cache: "no-store",
+      },
+    );
+    if (!catalogue.ok || (await catalogue.json())?.[0]?.status !== "replay")
+      throw new LiveAuthError(
+        503,
+        "YouTube a terminé le direct, mais Pilotoki n'a pas pu mettre à jour son catalogue.",
+      );
+  }
 
   const ingest = await loadYoutubeIngest(env, newVideo.id, fetchImpl);
   const ingestUrl = decryptYoutubeIngest(env, ingest);

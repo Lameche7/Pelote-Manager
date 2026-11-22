@@ -103,6 +103,7 @@ test("Incorrect YouTube stream cannot be completed", async () => {
 function reuseFetch({
   upstreamStatus = "paused",
   youtubeComplete = true,
+  oldStatus = "replay",
 } = {}) {
   const calls = [];
   const state = {
@@ -130,16 +131,23 @@ function reuseFetch({
         ],
       };
     }
-    if (url.includes("pilotoki_live_videos"))
+    if (url.includes("pilotoki_live_videos")) {
+      if (options.method === "PATCH")
+        return {
+          ok: true,
+          json: async () => [{ status: "replay" }],
+        };
       return {
         ok: true,
         json: async () => [
           {
             id: oldVideoId,
             youtube_video_id: "OldVideo123",
+            status: oldStatus,
           },
         ],
       };
+    }
     if (url.includes("/liveBroadcasts?"))
       return {
         ok: true,
@@ -206,6 +214,40 @@ test("Reuses only an idle studio after archive, without starting live", async ()
     video_id: newVideoId,
   });
   assert.doesNotMatch(save.options.body, /new-youtube-key|youtube-token/);
+});
+
+test("A second match starts as soon as YouTube ends, even with stale replay catalogue", async () => {
+  const { mock, calls } = reuseFetch({ oldStatus: "live" });
+  assert.deepEqual(
+    await reuseIdleUpstreamForVideo(env, clubId, video, "youtube-token", mock),
+    { configured: true, reused: true },
+  );
+  const catalogue = calls.find(
+    (call) =>
+      call.url.includes("pilotoki_live_videos") &&
+      call.options.method === "PATCH",
+  );
+  assert.ok(catalogue);
+  assert.deepEqual(JSON.parse(catalogue.options.body), { status: "replay" });
+  const newDestination = calls.find(
+    (call) => call.url.endsWith(upstreamId) && call.options.method === "PATCH",
+  );
+  assert.ok(newDestination);
+});
+
+test("YouTube still live cannot be retargeted even when Pilotoki says replay", async () => {
+  const { mock, calls } = reuseFetch({
+    youtubeComplete: false,
+    oldStatus: "replay",
+  });
+  await assert.rejects(
+    reuseIdleUpstreamForVideo(env, clubId, video, "youtube-token", mock),
+    /Terminez d'abord/,
+  );
+  assert.equal(
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
+  );
 });
 
 test("Refuses re-use when old YouTube broadcast has not ended", async () => {
