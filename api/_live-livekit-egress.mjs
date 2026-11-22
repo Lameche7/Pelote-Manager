@@ -110,15 +110,14 @@ function streamHealth(item) {
   const streams = item.stream_results ?? item.streamResults ?? [];
   if (!Array.isArray(streams) || streams.length === 0)
     return { streamState: "pending", retries: 0 };
-  const failed = streams.some((stream) =>
-    [2, "FAILED"].includes(stream.status),
-  );
-  const active = streams.some((stream) =>
-    [0, "ACTIVE"].includes(stream.status),
-  );
+  const failed = streams.some((stream) => [2, "FAILED"].includes(stream.status));
+  const active = streams.some((stream) => [0, "ACTIVE"].includes(stream.status));
   return {
     streamState: failed ? "failed" : active ? "active" : "pending",
-    retries: Math.max(0, ...streams.map((stream) => Number(stream.retries) || 0)),
+    retries: Math.max(
+      0,
+      ...streams.map((stream) => Number(stream.retries) || 0),
+    ),
   };
 }
 
@@ -129,9 +128,18 @@ export async function livekitEgressDiagnostics(
   videoId,
   fetchImpl = fetch,
 ) {
-  const active = await activeEgress(env, livekitRoom(clubId, videoId), fetchImpl);
+  const active = await activeEgress(
+    env,
+    livekitRoom(clubId, videoId),
+    fetchImpl,
+  );
   if (!active.length)
-    return { active: false, egressState: "inactive", streamState: "unknown", retries: 0 };
+    return {
+      active: false,
+      egressState: "inactive",
+      streamState: "unknown",
+      retries: 0,
+    };
   const egress = active[0];
   const health = streamHealth(egress);
   return {
