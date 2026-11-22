@@ -13,7 +13,7 @@ export function validateVideoId(value) {
   return value;
 }
 
-export async function getClubVideo(env, clubId, videoId, fetchImpl = fetch) {
+export async function getClubVideo(env, clubId, videoId, fetchImpl = fetch, allowLive = false) {
   const url = required(env, "VITE_SUPABASE_URL");
   const params = new URLSearchParams({
     id: `eq.${validateVideoId(videoId)}`,
@@ -29,7 +29,7 @@ export async function getClubVideo(env, clubId, videoId, fetchImpl = fetch) {
     throw new LiveAuthError(503, "Impossible de retrouver la partie.");
   const data = await response.json();
   const video = data?.[0];
-  if (!video || video.status !== "scheduled")
+  if (!video || (video.status !== "scheduled" && !(allowLive && video.status === "live")))
     throw new LiveAuthError(404, "Direct préparé introuvable pour ce club.");
   return video;
 }
