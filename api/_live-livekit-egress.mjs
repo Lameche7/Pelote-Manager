@@ -1,7 +1,7 @@
 // LiveKit Cloud Egress -> the EXACT YouTube stream bound to a Pilotoki video.
 // API keys and RTMPS secrets must never reach the browser.
 import { createHmac, randomUUID } from "node:crypto";
-import { LiveAuthError, required } from "./_live-google-shared.mjs";
+import { LiveAuthError } from "./_live-google-shared.mjs";
 import { livekitConfig } from "./_live-livekit.mjs";
 import { loadYoutubeIngest, decryptYoutubeIngest } from "./_live-upstream-destination.mjs";
 import { getClubVideo } from "./_live-youtube-ingest.mjs";
@@ -75,9 +75,10 @@ export function livekitRoom(clubId, videoId) {
 
 async function activeEgress(env, room, fetchImpl) {
   const result = await twirp(env, "ListEgress", { roomName: room }, fetchImpl);
-  if (!Array.isArray(result.items))
+  const items = result.items ?? [];
+  if (!Array.isArray(items))
     throw new LiveAuthError(502, "Liste des directs LiveKit invalide.");
-  return result.items.filter(
+  return items.filter(
     (item) =>
       item.roomName === room &&
       typeof item.egressId === "string" &&
