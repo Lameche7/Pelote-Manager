@@ -145,6 +145,58 @@ export const adminLiveSettingsService = {
       throw new Error(dataResult.error ?? "Commande Upstream impossible.");
   },
 
+  async finishYoutubeLive(videoId: string): Promise<void> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "finish_youtube",
+        videoId,
+        confirmed: true,
+      }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      completed?: boolean;
+      error?: string;
+    };
+    if (!response.ok || result.completed !== true)
+      throw new Error(result.error ?? "Fin du direct non confirmée.");
+  },
+
+  async reuseUpstreamForVideo(videoId: string): Promise<void> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "reuse_upstream",
+        videoId,
+        confirmed: true,
+      }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      configured?: boolean;
+      error?: string;
+    };
+    if (!response.ok || result.configured !== true)
+      throw new Error(
+        result.error ?? "La régie précédente ne peut pas encore être réutilisée.",
+      );
+  },
+
   async publishYoutubeLive(videoId: string): Promise<{
     status: "live" | "liveStarting";
     alreadyLive: boolean;
