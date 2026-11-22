@@ -105,28 +105,31 @@ async function activeEgress(env, room, fetchImpl) {
   );
 }
 
-// Do not expose stream URLs, provider error strings, or ingestion keys to clients.
+// Do not expose RTMP URLs or provider errors to client diagnostics.
 function streamHealth(item) {
   const streams = item.stream_results ?? item.streamResults ?? [];
   if (!Array.isArray(streams) || streams.length === 0)
     return { streamState: "pending", retries: 0 };
-  const failed = streams.some((stream) => [2, "FAILED"].includes(stream.status));
-  const active = streams.some((stream) => [0, "ACTIVE"].includes(stream.status));
+  const statuses = streams.map((stream) => stream.status);
+  const failed = statuses.includes(2) || statuses.includes("FAILED");
+  const live = statuses.includes(0) || statuses.includes("ACTIVE");
+  const retries = streams.map((stream) => Number(stream.retries) || 0);
   return {
-    streamState: failed ? "failed" : active ? "active" : "pending",
-    retries: Math.max(0, ...streams.map((stream) => Number(stream.retries) || 0)),
+    streamState: failed ? "failed" : live ? "active" : "pending",
+    retries: Math.max(0, ...retries),
   };
 }
 
-/** Read-only, sanitized diagnostics for the bound room's current RTMP output. */
+/** Read-only, sanitized diagnostics for the selected room's RTMP output. */
 export async function livekitEgressDiagnostics(
   env,
   clubId,
   videoId,
   fetchImpl = fetch,
 ) {
-  const active = await activeEgress(env, livekitRoom(clubId, videoId), fetchImpl);
-  if (!active.length)
+  const room = livekitRoom(clubId, videoId);
+  const active = await activeEgress(env, room, fetchImpl);
+  if (active.length === 0)
     return {
       active: false,
       egressState: "inactive",
@@ -134,15 +137,15 @@ export async function livekitEgressDiagnostics(
       retries: 0,
     };
   const egress = active[0];
-  const health = streamHealth(egress);
+  let egressState = "active";
+  if ([0, "EGRESS_STARTING"].includes(egress.status))
+    egressState = "starting";
+  if ([2, "EGRESS_ENDING"].includes(egress.status))
+    egressState = "ending";
   return {
     active: true,
-    egressState: [0, "EGRESS_STARTING"].includes(egress.status)
-      ? "starting"
-      : [2, "EGRESS_ENDING"].includes(egress.status)
-        ? "ending"
-        : "active",
-    ...health,
+    egressState,
+    ...streamHealth(egress),
   };
 }
 
