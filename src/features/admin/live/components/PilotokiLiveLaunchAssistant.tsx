@@ -270,16 +270,14 @@ export function PilotokiLiveLaunchAssistant({
             <div className="admin-live-settings__binding">
               {destinationReady ? (
                 <p role="status">
-                  Destination YouTube préparée dans Upstream, en pause.
-                  Vérifiez-la avant toute diffusion. Les autres destinations
-                  éventuelles ne sont pas modifiées.
+                  Destination YouTube principale préparée dans Upstream, en pause.
+                  Vérifiez-la avant toute diffusion. Aucune destination secondaire n’a été modifiée.
                 </p>
               ) : (
                 <>
                   <p>
-                    Préparer automatiquement une nouvelle destination RTMPS pour{" "}
-                    <strong>{broadcast.title}</strong>, sans modifier les
-                    destinations existantes ni démarrer la diffusion.
+                    Configurer la destination YouTube principale pour{" "}
+                    <strong>{broadcast.title}</strong>, uniquement sur une régie dédiée vide et arrêtée, sans démarrer la diffusion.
                   </p>
                   <label className="admin-live-settings__checkbox">
                     <input
@@ -289,8 +287,9 @@ export function PilotokiLiveLaunchAssistant({
                         setConfirmedPreparation(event.target.checked)
                       }
                     />
-                    Je confirme vouloir créer une nouvelle destination YouTube
-                    désactivée pour cette vidéo.
+                    Je confirme utiliser une régie Upstream dédiée, sans destination
+                    principale ni secondaire existante. Pilotoki pourra y définir
+                    la destination YouTube principale, sans démarrer le direct.
                   </label>
                   <button
                     type="button"
@@ -376,9 +375,9 @@ export function PilotokiLiveLaunchAssistant({
               {controlMessage && <p role="status">{controlMessage}</p>}
               <p className="admin-live-settings__hint">
                 YouTube Studio exige encore de confirmer « Passer au direct ».
-                Un flux Upstream possédant une destination principale ou une
-                autre destination active est bloqué pour éviter toute diffusion
-                involontaire.
+                Seule une destination principale correspondant à cette vidéo
+                YouTube, sans aucune destination secondaire, peut être pilotée
+                automatiquement. Les autres configurations sont bloquées.
               </p>
             </div>
           )}
