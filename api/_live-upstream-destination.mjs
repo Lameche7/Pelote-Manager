@@ -173,7 +173,10 @@ export async function prepareUpstreamYoutubeDestination(
     );
 
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
-  const key = decryptYoutubeIngest(env, ingest);
+  const ingestUrl = decryptYoutubeIngest(env, ingest);
+  // Upstream expects the stream key alone for its native YouTube destination.
+  // A full rtmps:// URL is valid only for platform=custom.
+  const key = ingestUrl.substring(ingestUrl.lastIndexOf("/") + 1);
   // Never modify existing destinations. A new destination stays PAUSED until
   // another explicit, separately authorized action enables it.
   const name = `Pilotoki - ${video.title}`.slice(0, 100);
@@ -188,7 +191,7 @@ export async function prepareUpstreamYoutubeDestination(
       },
       body: JSON.stringify({
         name,
-        platform: "custom",
+        platform: "youtube",
         key,
         status: "paused",
         include_in_schedule: false,
