@@ -98,13 +98,13 @@ test("LiveKit Egress sends only the authorized room and YouTube RTMPS output", a
   assert.doesNotMatch(JSON.stringify(result), /mock-secret-youtube-key/);
 });
 
-test("Existing active Egress blocks a second stream without accessing YouTube credentials", async () => {
+test("Existing active Egress is reused without a second stream or YouTube credentials", async () => {
   const { mock, calls } = mockedMedia({
     existing: [{ room_name: room, egress_id: "egress-test", status: 1 }],
   });
-  await assert.rejects(
-    startLivekitEgress(env, club, video, identity, mock),
-    /déjà/,
+  assert.deepEqual(
+    await startLivekitEgress(env, club, video, identity, mock),
+    { started: true, active: true, alreadyStarted: true },
   );
   assert.equal(
     calls.some((call) => call.url.endsWith("/StartEgress")),
