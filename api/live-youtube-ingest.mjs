@@ -4,7 +4,10 @@ import {
   controlUpstreamStream,
   publicControlStatus,
 } from "./_live-upstream-control.mjs";
-import { prepareUpstreamYoutubeDestination, loadYoutubeIngest } from "./_live-upstream-destination.mjs";
+import {
+  prepareUpstreamYoutubeDestination,
+  loadYoutubeIngest,
+} from "./_live-upstream-destination.mjs";
 import { publishVerifiedYoutubeLive } from "./_live-youtube-publish.mjs";
 import {
   associateUpstreamStream,
@@ -93,11 +96,21 @@ export default async function handler(request, response) {
     );
     if (request.body?.action === "publish_youtube") {
       if (!canConnectGoogle)
-        throw new LiveAuthError(403, "Diffusion réservée à l'administration pilote.");
+        throw new LiveAuthError(
+          403,
+          "Diffusion réservée à l'administration pilote.",
+        );
       if (request.body?.confirmed !== true)
-        throw new LiveAuthError(400, "Confirmez le lancement public du direct.");
+        throw new LiveAuthError(
+          400,
+          "Confirmez le lancement public du direct.",
+        );
       const video = await getClubVideo(process.env, clubId, videoId);
-      const status = await inspectUpstreamControl(process.env, clubId, video.id);
+      const status = await inspectUpstreamControl(
+        process.env,
+        clubId,
+        video.id,
+      );
       if (!status.safe || status.streamStatus !== "active")
         throw new LiveAuthError(
           409,
