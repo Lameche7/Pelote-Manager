@@ -102,10 +102,11 @@ test("Existing active Egress is reused without a second stream or YouTube creden
   const { mock, calls } = mockedMedia({
     existing: [{ room_name: room, egress_id: "egress-test", status: 1 }],
   });
-  assert.deepEqual(
-    await startLivekitEgress(env, club, video, identity, mock),
-    { started: true, active: true, alreadyStarted: true },
-  );
+  assert.deepEqual(await startLivekitEgress(env, club, video, identity, mock), {
+    started: true,
+    active: true,
+    alreadyStarted: true,
+  });
   assert.equal(
     calls.some((call) => call.url.endsWith("/StartEgress")),
     false,
