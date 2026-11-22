@@ -157,10 +157,16 @@ export async function prepareUpstreamYoutubeDestination(
     signal: AbortSignal.timeout(12000),
   });
   if (!primaryResponse.ok)
-    throw new LiveAuthError(503, "Destination principale Upstream non vérifiable.");
+    throw new LiveAuthError(
+      503,
+      "Destination principale Upstream non vérifiable.",
+    );
   const primary = (await primaryResponse.json())?.data;
   if (primary?.id !== streamId)
-    throw new LiveAuthError(503, "Identité de la régie Upstream non vérifiable.");
+    throw new LiveAuthError(
+      503,
+      "Identité de la régie Upstream non vérifiable.",
+    );
   // The stream UUID is an explicit sentinel for a verified PRIMARY output.
   // Secondary destination UUIDs from older mappings are never rewritten.
   if (binding.upstream_destination_id) {
