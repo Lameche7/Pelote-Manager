@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { updatePassword } from "@/infrastructure/auth/authService";
 import { ROUTES } from "@/shared/config";
+import { publicClubQuery } from "@/shared/config/domains";
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const clubQuery = publicClubQuery(
+    new URLSearchParams(location.search).get("club"),
+  );
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +25,10 @@ export function ResetPasswordPage() {
     setIsSubmitting(true);
     try {
       await updatePassword(password);
-      navigate(ROUTES.login, { replace: true, state: { passwordReset: true } });
+      navigate(`${ROUTES.login}${clubQuery}`, {
+        replace: true,
+        state: { passwordReset: true },
+      });
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -63,7 +71,7 @@ export function ResetPasswordPage() {
         {error && <p role="alert">{error}</p>}
       </form>
       <p>
-        <Link to={ROUTES.login}>Retour à la connexion</Link>
+        <Link to={`${ROUTES.login}${clubQuery}`}>Retour à la connexion</Link>
       </p>
     </section>
   );
