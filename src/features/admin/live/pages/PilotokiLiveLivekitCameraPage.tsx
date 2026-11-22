@@ -15,7 +15,7 @@ async function fetchPublisherAccess(videoId: string): Promise<{
 }> {
   const { data } = await supabase.auth.getSession();
   const accessToken = data.session?.access_token;
-  if (!accessToken) throw new Error("Connectez-vous ÃÂ  Pilotoki.");
+  if (!accessToken) throw new Error("Connectez-vous à Pilotoki.");
   const response = await fetch("/api/live-youtube-ingest", {
     method: "POST",
     headers: {
@@ -88,7 +88,7 @@ export function PilotokiLiveLivekitCameraPage() {
     let stream: MediaStream | null = null;
     try {
       if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)
-        throw new Error("CamÃÂ©ra indisponible. Ouvrez Pilotoki en HTTPS.");
+        throw new Error("Caméra indisponible. Ouvrez Pilotoki en HTTPS.");
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: "environment" },
@@ -112,7 +112,7 @@ export function PilotokiLiveLivekitCameraPage() {
       stream?.getTracks().forEach((track) => track.stop());
       if (activeRef.current)
         setError(
-          reason instanceof Error ? reason.message : "CamÃÂ©ra indisponible.",
+          reason instanceof Error ? reason.message : "Caméra indisponible.",
         );
     } finally {
       if (activeRef.current) setBusy(false);
@@ -132,14 +132,14 @@ export function PilotokiLiveLivekitCameraPage() {
       roomRef.current = room;
       room.on(RoomEvent.Disconnected, () => {
         if (activeRef.current && roomRef.current === room) {
-          setError("Connexion LiveKit interrompue. VÃÂ©rifiez votre rÃÂ©seau.");
+          setError("Connexion LiveKit interrompue. Vérifiez votre réseau.");
           setState("preview");
         }
       });
       await room.connect(access.url, access.token);
       const tracks = streamRef.current.getTracks();
       if (tracks.length < 2)
-        throw new Error("La camÃÂ©ra et le microphone sont nÃÂ©cessaires.");
+        throw new Error("La caméra et le microphone sont nécessaires.");
       for (const track of tracks)
         await room.localParticipant.publishTrack(track);
       if (activeRef.current) setState("publishing");
@@ -151,7 +151,7 @@ export function PilotokiLiveLivekitCameraPage() {
         setError(
           reason instanceof Error
             ? reason.message
-            : "Impossible d'envoyer la vidÃÂ©o ÃÂ  LiveKit.",
+            : "Impossible d'envoyer la vidéo à LiveKit.",
         );
       }
     } finally {
@@ -169,14 +169,14 @@ export function PilotokiLiveLivekitCameraPage() {
 
   return (
     <main className="admin-page" style={{ maxWidth: 700, margin: "0 auto" }}>
-      <h1>CamÃÂ©ra mobile Pilotoki Live</h1>
+      <h1>Caméra mobile Pilotoki Live</h1>
       <p>
-        Votre tÃÂ©lÃÂ©phone peut envoyer sa camÃÂ©ra et son micro ÃÂ  LiveKit. Cet
-        ÃÂ©cran ne dÃÂ©marre pas encore le direct public sur YouTube.
+        Votre téléphone peut envoyer sa caméra et son micro à LiveKit. Cet
+        écran ne démarre pas encore le direct public sur YouTube.
       </p>
       {!VIDEO_ID.test(videoId) ? (
         <p role="alert">
-          SÃÂ©lectionnez d'abord un direct prÃÂ©parÃÂ© dans Pilotoki Live.
+          Sélectionnez d'abord un direct préparé dans Pilotoki Live.
         </p>
       ) : (
         <>
@@ -185,17 +185,17 @@ export function PilotokiLiveLivekitCameraPage() {
             autoPlay
             playsInline
             muted
-            aria-label="AperÃÂ§u de la camÃÂ©ra sur le tÃÂ©lÃÂ©phone"
+            aria-label="Aperçu de la caméra sur le téléphone"
             style={{ width: "100%", background: "#111", borderRadius: 12 }}
           />
           <p role="status">
             {state === "idle"
-              ? "CamÃÂ©ra arrÃÂªtÃÂ©e"
+              ? "Caméra arrêtée"
               : state === "preview"
-                ? "AperÃÂ§u local Ã¢ÂÂ aucune image transmise"
+                ? "Aperçu local — aucune image transmise"
                 : state === "connecting"
-                  ? "Connexion sÃÂ©curisÃÂ©e et envoi vers LiveKitÃ¢ÂÂ¦"
-                  : "CamÃÂ©ra et micro publiÃÂ©s dans LiveKit Ã¢ÂÂ pas encore en direct sur YouTube"}
+                  ? "Connexion sécurisée et envoi vers LiveKit…"
+                  : "Caméra et micro publiés dans LiveKit — pas encore en direct sur YouTube"}
           </p>
           {error && <p role="alert">{error}</p>}
           {state === "idle" && (
@@ -204,7 +204,7 @@ export function PilotokiLiveLivekitCameraPage() {
               onClick={() => void openCamera()}
               disabled={busy}
             >
-              Ouvrir ma camÃÂ©ra
+              Ouvrir ma caméra
             </button>
           )}
           {state === "preview" && (
@@ -223,19 +223,19 @@ export function PilotokiLiveLivekitCameraPage() {
                 disabled={busy || !consent}
                 onClick={() => void connect()}
               >
-                Connecter la camÃÂ©ra ÃÂ  LiveKit
+                Connecter la caméra à LiveKit
               </button>
             </>
           )}
           {state !== "idle" && (
             <button type="button" disabled={busy} onClick={() => void stop()}>
-              ArrÃÂªter et dÃÂ©connecter la camÃÂ©ra
+              Arrêter et déconnecter la caméra
             </button>
           )}
         </>
       )}
       <p>
-        <Link to="/admin/parametres/live">Retour ÃÂ  Pilotoki Live</Link>
+        <Link to="/admin/parametres/live">Retour à Pilotoki Live</Link>
       </p>
     </main>
   );
