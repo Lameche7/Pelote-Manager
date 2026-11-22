@@ -11,12 +11,14 @@ type Props = {
   broadcast: ClubBroadcastSummary;
   streams?: UpstreamStreamInfo[];
   canAssociate?: boolean;
+  onFinished?: () => void;
 };
 
 export function PilotokiLiveLaunchAssistant({
   broadcast,
   streams = [],
   canAssociate = false,
+  onFinished,
 }: Props) {
   const [selectedStreamId, setSelectedStreamId] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
@@ -36,10 +38,11 @@ export function PilotokiLiveLaunchAssistant({
   const [confirmedPublication, setConfirmedPublication] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [launchBusy, setLaunchBusy] = useState(false);
+  const [finishing, setFinishing] = useState(false);
   const [awaitingYoutubePublication, setAwaitingYoutubePublication] =
     useState(false);
   useEffect(() => {
-    if (!canAssociate || broadcast.status !== "scheduled") return;
+    if (!canAssociate || !["scheduled", "live"].includes(broadcast.status)) return;
     let active = true;
     setBindingLoaded(false);
     adminLiveSettingsService
@@ -285,6 +288,55 @@ export function PilotokiLiveLaunchAssistant({
     }, 10000);
     return () => window.clearInterval(interval);
   }, [awaitingYoutubePublication, broadcast.id]);
+  const finishLive = async () => {
+    if (
+      !confirmedControl ||
+      finishing ||
+      !controlStatus?.safe ||
+      broadcast.status !== "live"
+    )
+      return;
+    setFinishing(true);
+    setControlMessage("Fin de la vidéo YouTube et arrêt de la régie…");
+    try {
+      await adminLiveSettingsService.finishYoutubeLive(broadcast.id);
+      setConfirmedControl(false);
+      setControlMessage(
+        "Le direct est terminé et sera conservé comme replay dans Pilotoki Vidéos.",
+      );
+      onFinished?.();
+    } catch (error) {
+      setControlMessage(
+        error instanceof Error
+          ? error.message
+          : "La fin du direct n'est pas confirmée.",
+      );
+    } finally {
+      setFinishing(false);
+    }
+  };
+  const reuseStudio = async () => {
+    if (!confirmedDestination || bindingBusy || boundStreamId) return;
+    setBindingBusy(true);
+    setBindingError("");
+    try {
+      await adminLiveSettingsService.reuseUpstreamForVideo(broadcast.id);
+      const binding = await adminLiveSettingsService.getUpstreamBinding(
+        broadcast.id,
+      );
+      setBoundStreamId(binding?.streamId ?? null);
+      setDestinationReady(binding?.destinationConfigured === true);
+      setConfirmedDestination(false);
+    } catch (error) {
+      setBindingError(
+        error instanceof Error
+          ? error.message
+          : "La régie précédente n'est pas réutilisable.",
+      );
+    } finally {
+      setBindingBusy(false);
+    }
+  };
   const validStream = streams.find(
     (stream) =>
       stream.id === selectedStreamId && /^[0-9a-f-]{36}$/i.test(stream.id),
@@ -356,7 +408,7 @@ export function PilotokiLiveLaunchAssistant({
           </select>
         </label>
       )}
-      {canAssociate && broadcast.status === "scheduled" && (
+      {canAssociate && ["scheduled", "live"].includes(broadcast.status) && (
         <div className="admin-live-settings__binding">
           <h4>Liaison permanente du direct</h4>
           {!bindingLoaded ? (
@@ -393,9 +445,19 @@ export function PilotokiLiveLaunchAssistant({
                   ? "Association…"
                   : "Associer ce flux Upstream à cette vidéo"}
               </button>
+              <button
+                type="button"
+                disabled={!confirmedDestination || bindingBusy}
+                onClick={() => void reuseStudio()}
+              >
+                {bindingBusy
+                  ? "Vérification de la régie…"
+                  : "Réutiliser la régie après la partie précédente"}
+              </button>
               <p className="admin-live-settings__hint">
-                Le choix est permanent : aucune réaffectation automatique vers
-                un autre direct. Cette action ne démarre pas Upstream.
+                Pilotoki ne réaffecte la régie que si la partie précédente est
+                archivée sur YouTube, que la régie est arrêtée et qu'aucune autre
+                destination n'est présente.
               </p>
             </>
           )}
@@ -501,6 +563,17 @@ export function PilotokiLiveLaunchAssistant({
                             Ouvrir Pilotoki Vidéos
                           </a>
                         </>
+                      )}
+                      {broadcast.status === "live" && (
+                        <button
+                          type="button"
+                          disabled={!confirmedControl || finishing || controlBusy}
+                          onClick={() => void finishLive()}
+                        >
+                          {finishing
+                            ? "Fin de diffusion…"
+                            : "Terminer ce direct et conserver le replay"}
+                        </button>
                       )}
                       {controlStatus.canStart && (
                         <button
