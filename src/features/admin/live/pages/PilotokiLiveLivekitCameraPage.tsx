@@ -171,8 +171,8 @@ export function PilotokiLiveLivekitCameraPage() {
     <main className="admin-page" style={{ maxWidth: 700, margin: "0 auto" }}>
       <h1>Caméra mobile Pilotoki Live</h1>
       <p>
-        Votre téléphone peut envoyer sa caméra et son micro à LiveKit. Cet
-        écran ne démarre pas encore le direct public sur YouTube.
+        Votre téléphone peut envoyer sa caméra et son micro à LiveKit. Cet écran
+        ne démarre pas encore le direct public sur YouTube.
       </p>
       {!VIDEO_ID.test(videoId) ? (
         <p role="alert">
