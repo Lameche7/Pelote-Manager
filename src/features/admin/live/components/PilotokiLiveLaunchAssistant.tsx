@@ -35,6 +35,8 @@ export function PilotokiLiveLaunchAssistant({
   const [confirmedControl, setConfirmedControl] = useState(false);
   const [confirmedPublication, setConfirmedPublication] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [launchBusy, setLaunchBusy] = useState(false);
+  const [awaitingYoutubePublication, setAwaitingYoutubePublication] = useState(false);
   useEffect(() => {
     if (!canAssociate || broadcast.status !== "scheduled") return;
     let active = true;
@@ -135,7 +137,7 @@ export function PilotokiLiveLaunchAssistant({
       await adminLiveSettingsService.controlUpstream(broadcast.id, action);
       setControlMessage(
         action === "start"
-          ? "Démarrage Upstream demandé. Confirmez séparément le direct dans YouTube Studio."
+          ? "Démarrage Upstream demandé. La diffusion YouTube reste à lancer depuis Pilotoki."
           : "Arrêt Upstream demandé. Vérifiez aussi la fin du direct dans YouTube Studio.",
       );
     } catch (error) {
@@ -185,6 +187,101 @@ export function PilotokiLiveLaunchAssistant({
       void refreshControl();
     }
   };
+  const launchPartie = async () => {
+    if (
+      !confirmedControl ||
+      launchBusy ||
+      publishing ||
+      controlBusy ||
+      !controlStatus?.safe ||
+      !controlStatus.canStart
+    )
+      return;
+    setLaunchBusy(true);
+    setControlMessage("Démarrage Upstream et attente de la vidéo YouTube…");
+    try {
+      await adminLiveSettingsService.controlUpstream(broadcast.id, "start");
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const status =
+          await adminLiveSettingsService.getUpstreamControlStatus(broadcast.id);
+        setControlStatus(status);
+        if (!status.safe)
+          throw new Error(
+            status.reason ?? "La régie a changé : vérification nécessaire.",
+          );
+        if (status.streamStatus === "active") {
+          try {
+            const published = await adminLiveSettingsService.publishYoutubeLive(
+              broadcast.id,
+            );
+            setControlMessage(
+              published.status === "live"
+                ? "Le direct est lancé sur YouTube. Publication dans Pilotoki Vidéos en cours."
+                : "YouTube démarre la diffusion. Pilotoki Vidéos se met à jour dès sa confirmation.",
+            );
+            setAwaitingYoutubePublication(true);
+            return;
+          } catch (error) {
+            // YouTube can need several seconds after Upstream reports active.
+            if (
+              !(error instanceof Error) ||
+              !error.message.includes("n'a pas encore reçu le signal")
+            )
+              throw error;
+          }
+        }
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 3000));
+      }
+      setControlMessage(
+        "Upstream a été démarré, mais le signal YouTube n'est pas encore confirmé. Vérifiez la caméra et l'état du flux avant de relancer.",
+      );
+    } catch (error) {
+      setControlMessage(
+        error instanceof Error
+          ? error.message
+          : "Lancement incomplet. Vérifiez la régie avant toute nouvelle tentative.",
+      );
+    } finally {
+      setConfirmedControl(false);
+      setLaunchBusy(false);
+      try {
+        setControlStatus(
+          await adminLiveSettingsService.getUpstreamControlStatus(broadcast.id),
+        );
+      } catch {
+        setControlStatus(null);
+      }
+    }
+  };
+  useEffect(() => {
+    if (!awaitingYoutubePublication) return;
+    let attempts = 0;
+    let checking = false;
+    const interval = window.setInterval(async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const result = await adminLiveSettingsService.refreshBroadcastStatuses();
+        if (
+          result.videos.some(
+            (video) => video.id === broadcast.id && video.status === "live",
+          )
+        ) {
+          setAwaitingYoutubePublication(false);
+          setControlMessage(
+            "Le direct est confirmé sur YouTube et visible dans Pilotoki Vidéos.",
+          );
+        }
+      } catch {
+        // YouTube sync can fail temporarily; retain a bounded retry window.
+      } finally {
+        checking = false;
+        attempts += 1;
+        if (attempts >= 18) setAwaitingYoutubePublication(false);
+      }
+    }, 10000);
+    return () => window.clearInterval(interval);
+  }, [awaitingYoutubePublication, broadcast.id]);
   const validStream = streams.find(
     (stream) =>
       stream.id === selectedStreamId && /^[0-9a-f-]{36}$/i.test(stream.id),
@@ -402,6 +499,28 @@ export function PilotokiLiveLaunchAssistant({
                           </a>
                         </>
                       )}
+                      {controlStatus.canStart && (
+                        <button
+                          type="button"
+                          disabled={
+                            !confirmedControl ||
+                            launchBusy ||
+                            publishing ||
+                            controlBusy
+                          }
+                          onClick={() => void launchPartie()}
+                        >
+                          {launchBusy
+                            ? "Démarrage de la diffusion…"
+                            : "Diffuser cette partie"}
+                        </button>
+                      )}
+                      {awaitingYoutubePublication && (
+                        <p role="status">
+                          YouTube confirme le lancement. Le direct apparaîtra
+                          automatiquement dans Pilotoki Vidéos.
+                        </p>
+                      )}
                       <div className="admin-live-settings__launch-actions">
                         <button
                           type="button"
@@ -441,8 +560,8 @@ export function PilotokiLiveLaunchAssistant({
               </button>
               {controlMessage && <p role="status">{controlMessage}</p>}
               <p className="admin-live-settings__hint">
-                YouTube Studio exige encore de confirmer « Passer au direct ».
-                Seule une destination principale correspondant à cette vidéo
+                Pilotoki peut maintenant déclencher le direct YouTube sans passer
+                par YouTube Studio. Seule une destination principale correspondant à cette vidéo
                 YouTube, sans aucune destination secondaire, peut être pilotée
                 automatiquement. Les autres configurations sont bloquées.
               </p>
