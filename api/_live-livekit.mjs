@@ -82,7 +82,7 @@ export async function authorizeLivekitPublisher(
     request.body?.videoId,
     fetchImpl,
   );
-  const bearer = request.headers.authorization?.match(/^Bearer (\\S+)$/i)?.[1];
+  const bearer = request.headers.authorization?.match(/^Bearer (\S+)$/i)?.[1];
   const base = required(env, "VITE_SUPABASE_URL");
   const anon = required(env, "VITE_SUPABASE_ANON_KEY");
   const userResponse = await fetchImpl(`${base}/auth/v1/user`, {

@@ -825,7 +825,7 @@ export function AdminLiveSettingsPage() {
                         href={`/live/camera?videoId=${encodeURIComponent(video.id)}`}
                         rel="noopener noreferrer"
                       >
-                        Tester l'envoi caméra mobile (passerelle WebRTC requise)
+                        Connecter ma caméra mobile à LiveKit
                       </a>
                     )}
                     {selectedLaunchVideoId === video.id && (
