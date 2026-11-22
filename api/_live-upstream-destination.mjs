@@ -249,8 +249,32 @@ export async function prepareUpstreamYoutubeDestination(
           issue = ` Champs concernés : ${[...fields].join(", ")}.`;
         else if (created.status === 422)
           issue = " Détail du champ non communiqué par Upstream.";
+        if (created.status === 422) {
+          const errors = provider?.errors;
+          let category = "unclassified";
+          if (/required/i.test(providerMessage)) category = "required";
+          else if (/invalid|format|valid/i.test(providerMessage))
+            category = "invalid";
+          else if (/taken|exists|duplicate/i.test(providerMessage))
+            category = "duplicate";
+          else if (/limit|maximum|too long/i.test(providerMessage))
+            category = "limit";
+          // Safe diagnostic: never log provider text, values, stream key,
+          // identifiers, authorization headers, or full request payloads.
+          console.warn("pilotoki_live_upstream_destination_422", {
+            fields: [...fields],
+            hasErrorsObject: Boolean(errors && typeof errors === "object"),
+            errorFieldCount: Object.keys(errors ?? {}).length,
+            hasMessage: Boolean(providerMessage),
+            category,
+          });
+        }
       } catch {
         // An unreadable provider response is intentionally not exposed.
+        if (created.status === 422)
+          console.warn("pilotoki_live_upstream_destination_422", {
+            response: "unreadable_json",
+          });
       }
     }
     const known = {
