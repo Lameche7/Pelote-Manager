@@ -54,8 +54,7 @@ export default async function handler(request, response) {
       return handleWhip(
         {
           ...request,
-          method:
-            request.body.action === "whip_close" ? "DELETE" : "POST",
+          method: request.body.action === "whip_close" ? "DELETE" : "POST",
         },
         response,
         process.env,
