@@ -60,15 +60,15 @@ function mockedMedia({ existing = [], startStatus = 1 } = {}) {
       return {
         ok: true,
         json: async () => ({
-          roomName: room,
-          egressId: "egress-test",
+          room_name: room,
+          egress_id: "egress-test",
           status: startStatus,
         }),
       };
     if (String(url).endsWith("/twirp/livekit.Egress/StopEgress"))
       return {
         ok: true,
-        json: async () => ({ egressId: "egress-test", status: 3 }),
+        json: async () => ({ egress_id: "egress-test", status: 3 }),
       };
     if (String(url).includes("/pilotoki_live_videos?"))
       return { ok: true, json: async () => [video] };
@@ -84,9 +84,9 @@ test("LiveKit Egress sends only the authorized room and YouTube RTMPS output", a
   const start = calls.find((call) => call.url.endsWith("/StartEgress"));
   assert.ok(start);
   const body = JSON.parse(start.options.body);
-  assert.equal(body.roomName, room);
-  assert.equal(body.media.participantVideo.identity, identity);
-  assert.equal(body.media.audio.routes[0].participantIdentity, identity);
+  assert.equal(body.room_name, room);
+  assert.equal(body.media.participant_video.identity, identity);
+  assert.equal(body.media.audio.routes[0].participant_identity, identity);
   assert.deepEqual(body.outputs[0].stream.urls, [
     "rtmps://a.rtmps.youtube.com/live2/mock-secret-youtube-key",
   ]);
@@ -100,7 +100,7 @@ test("LiveKit Egress sends only the authorized room and YouTube RTMPS output", a
 
 test("Existing active Egress blocks a second stream without accessing YouTube credentials", async () => {
   const { mock, calls } = mockedMedia({
-    existing: [{ roomName: room, egressId: "egress-test", status: 1 }],
+    existing: [{ room_name: room, egress_id: "egress-test", status: 1 }],
   });
   await assert.rejects(
     startLivekitEgress(env, club, video, identity, mock),
@@ -117,8 +117,8 @@ test("LiveKit status supports protobuf empty lists and filters to one club room"
     existing: [
       { roomName: room, egressId: "egress-test", status: 1 },
       {
-        roomName: "pilotoki-other-club-other-video",
-        egressId: "other",
+        room_name: "pilotoki-other-club-other-video",
+        egress_id: "other",
         status: 1,
       },
     ],
@@ -143,7 +143,7 @@ test("Abort only stops the egress associated with verified video and room", asyn
   const stopped = await abortLivekitEgress(env, club, video.id, mock);
   assert.deepEqual(stopped, { stopped: true });
   const stop = calls.find((call) => call.url.endsWith("/StopEgress"));
-  assert.deepEqual(JSON.parse(stop.options.body), { egressId: "egress-test" });
+  assert.deepEqual(JSON.parse(stop.options.body), { egress_id: "egress-test" });
 });
 
 test("LiveKit and YouTube actions remain restricted to a confirmed administrator", () => {
