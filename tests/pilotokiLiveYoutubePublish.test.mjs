@@ -125,14 +125,16 @@ test("Accepts YouTube auto-start racing with the transition", async () => {
       return {
         ok: true,
         json: async () => ({
-          items: [{
-            id,
-            contentDetails: { boundStreamId: streamId },
-            status: {
-              privacyStatus: "unlisted",
-              lifeCycleStatus: readCount === 1 ? "ready" : "live",
+          items: [
+            {
+              id,
+              contentDetails: { boundStreamId: streamId },
+              status: {
+                privacyStatus: "unlisted",
+                lifeCycleStatus: readCount === 1 ? "ready" : "live",
+              },
             },
-          }],
+          ],
         }),
       };
     }
@@ -152,5 +154,8 @@ test("Accepts YouTube auto-start racing with the transition", async () => {
     { status: "live", alreadyLive: true },
   );
   assert.equal(readCount, 2);
-  assert.equal(requests.filter((request) => request.options.method === "POST").length, 1);
+  assert.equal(
+    requests.filter((request) => request.options.method === "POST").length,
+    1,
+  );
 });
