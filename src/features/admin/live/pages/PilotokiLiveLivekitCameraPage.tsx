@@ -62,6 +62,11 @@ export function PilotokiLiveLivekitCameraPage() {
   const [busy, setBusy] = useState(false);
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
+  const [egressState, setEgressState] = useState<
+    "idle" | "feeding" | "live" | "done"
+  >("idle");
+  const [egressBusy, setEgressBusy] = useState(false);
+  const [broadcastMessage, setBroadcastMessage] = useState("");
 
   const release = () => {
     const room = roomRef.current;
@@ -159,6 +164,133 @@ export function PilotokiLiveLivekitCameraPage() {
     }
   };
 
+  const controlLivekit = async (
+    action:
+      | "livekit_egress_start"
+      | "livekit_youtube_publish"
+      | "livekit_youtube_finish"
+      | "livekit_egress_abort",
+  ) => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ action, videoId, confirmed: true }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      started?: boolean;
+      completed?: boolean;
+      status?: string;
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(result.error ?? "Pilotage du direct indisponible.");
+    return result;
+  };
+
+  const goLive = async () => {
+    if (egressBusy || state !== "publishing") return;
+    setEgressBusy(true);
+    setError("");
+    setBroadcastMessage("");
+    try {
+      if (egressState === "idle") {
+        const started = await controlLivekit("livekit_egress_start");
+        if (!started.started)
+          throw new Error("LiveKit n'a pas confirmé la retransmission.");
+        setEgressState("feeding");
+      }
+      setBroadcastMessage(
+        "LiveKit transmet à YouTube. Attente de la confirmation du signal…",
+      );
+      let last: unknown;
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        if (attempt > 0)
+          await new Promise<void>((resolve) =>
+            window.setTimeout(resolve, 3500),
+          );
+        try {
+          const published = await controlLivekit("livekit_youtube_publish");
+          if (
+            published.status !== "live" &&
+            published.status !== "liveStarting"
+          )
+            throw new Error("Statut YouTube non confirmé.");
+          setEgressState("live");
+          setBroadcastMessage("DIRECT YOUTUBE EN COURS");
+          return;
+        } catch (reason) {
+          last = reason;
+          const message = reason instanceof Error ? reason.message : "";
+          if (
+            !message.includes("n'a pas encore reçu") &&
+            !message.includes("sortie LiveKit n'est pas encore active")
+          )
+            break;
+        }
+      }
+      throw last ?? new Error("YouTube n'a pas confirmé le direct.");
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Démarrage du direct incertain.",
+      );
+    } finally {
+      setEgressBusy(false);
+    }
+  };
+
+  const finishLive = async () => {
+    if (egressBusy || egressState !== "live") return;
+    setEgressBusy(true);
+    setError("");
+    try {
+      const result = await controlLivekit("livekit_youtube_finish");
+      if (!result.completed)
+        throw new Error("Fin du direct YouTube non confirmée.");
+      setEgressState("done");
+      setBroadcastMessage(
+        "Direct terminé. Le replay sera disponible sur YouTube.",
+      );
+      release();
+      setState("idle");
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Fin du direct non confirmée. Réessayez.",
+      );
+    } finally {
+      setEgressBusy(false);
+    }
+  };
+
+  const abortLivekit = async () => {
+    if (egressBusy || egressState !== "feeding") return;
+    setEgressBusy(true);
+    setError("");
+    try {
+      await controlLivekit("livekit_egress_abort");
+      setEgressState("idle");
+      setBroadcastMessage("Envoi LiveKit arrêté. YouTube n'a pas été publié.");
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Arrêt de la sortie LiveKit non confirmé.",
+      );
+    } finally {
+      setEgressBusy(false);
+    }
+  };
+
   const stop = async () => {
     if (busy) return;
     setBusy(true);
@@ -172,7 +304,8 @@ export function PilotokiLiveLivekitCameraPage() {
       <h1>Caméra mobile Pilotoki Live</h1>
       <p>
         Votre téléphone peut envoyer sa caméra et son micro à LiveKit. Cet écran
-        ne démarre pas encore le direct public sur YouTube.
+        peut maintenant lancer un direct YouTube après validation de la
+        connexion.
       </p>
       {!VIDEO_ID.test(videoId) ? (
         <p role="alert">
@@ -227,11 +360,49 @@ export function PilotokiLiveLivekitCameraPage() {
               </button>
             </>
           )}
-          {state !== "idle" && (
-            <button type="button" disabled={busy} onClick={() => void stop()}>
-              Arrêter et déconnecter la caméra
+          {state === "publishing" &&
+            (egressState === "idle" || egressState === "feeding") && (
+              <button
+                type="button"
+                disabled={egressBusy}
+                onClick={() => void goLive()}
+              >
+                {egressBusy
+                  ? "Lancement en cours…"
+                  : egressState === "feeding"
+                    ? "Réessayer de lancer le direct YouTube"
+                    : "Diffuser cette partie sur YouTube"}
+              </button>
+            )}
+          {egressState === "feeding" && (
+            <button
+              type="button"
+              disabled={egressBusy}
+              onClick={() => void abortLivekit()}
+            >
+              Annuler l'envoi vers YouTube
             </button>
           )}
+          {egressState === "live" && (
+            <button
+              type="button"
+              disabled={egressBusy}
+              onClick={() => void finishLive()}
+            >
+              Terminer le direct et préparer le replay
+            </button>
+          )}
+          {broadcastMessage && <p role="status">{broadcastMessage}</p>}
+          {state !== "idle" &&
+            (egressState === "idle" || egressState === "done") && (
+              <button
+                type="button"
+                disabled={busy || egressBusy}
+                onClick={() => void stop()}
+              >
+                Arrêter et déconnecter la caméra
+              </button>
+            )}
         </>
       )}
       <p>
