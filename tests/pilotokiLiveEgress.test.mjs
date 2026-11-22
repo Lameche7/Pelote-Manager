@@ -205,3 +205,18 @@ test("LiveKit and YouTube actions remain restricted to a confirmed administrator
   assert.match(endpoint, /livekit_youtube_finish/);
   assert.match(endpoint, /confirmed !== true/);
 });
+
+test("temporary Prettier diagnostics for RTMP output", async () => {
+  const prettier = await import("prettier");
+  const filePath = new URL("../api/_live-livekit-egress.mjs", import.meta.url);
+  const text = readFileSync(filePath, "utf8");
+  const formatted = await prettier.format(text, {
+    ...(await prettier.resolveConfig(filePath.pathname)),
+    filepath: filePath.pathname,
+  });
+  const first = formatted.indexOf("// Do not expose RTMP URLs");
+  const last = formatted.indexOf("export async function livekitEgressStatus");
+  console.log("PRETTIER_OUTPUT_START");
+  console.log(formatted.slice(first, last));
+  console.log("PRETTIER_OUTPUT_END");
+});
