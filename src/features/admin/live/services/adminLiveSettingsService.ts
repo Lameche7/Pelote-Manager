@@ -47,6 +47,11 @@ export type PrepareBroadcastRequest = {
   title: string;
   sourceType: "tournoi" | "championnat" | "other";
   sourceId: null;
+  calendarSlot?: {
+    resourceId: string;
+    startsAt: string;
+    endsAt: string;
+  };
   scheduledStartTime: string;
   madeForKids: boolean;
   consentConfirmed: true;
@@ -56,6 +61,7 @@ export type ClubBroadcastSummary = {
   id: string;
   title: string;
   sourceType: "tournoi" | "championnat" | "other";
+  sourceId: string | null;
   status: "scheduled" | "live" | "replay" | "hidden";
   createdAt: string;
   youtubeUrl: string;
