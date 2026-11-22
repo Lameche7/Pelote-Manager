@@ -106,46 +106,63 @@ export async function inspectUpstreamControl(
   ]);
   if (stream?.id !== binding.streamId || !Array.isArray(destinations))
     throw new LiveAuthError(503, "Identité Upstream non vérifiable.");
-  const target = destinations.find(
-    (item) => item?.id === binding.destinationId,
-  );
+  const primary = binding.destinationId === binding.streamId;
+  const target = primary
+    ? null
+    : destinations.find((item) => item?.id === binding.destinationId);
   const otherActive = destinations.some(
-    (item) => item.id !== binding.destinationId && item.status !== "paused",
+    (item) =>
+      (primary || item.id !== binding.destinationId) &&
+      item.status !== "paused",
   );
   let reason = null;
-  // The existing "Test Lourdes Trinquet" stream still has a primary YouTube
-  // destination. Starting it could broadcast to the WRONG YouTube event.
-  // Do not guess how primary destinations are muted. Require platform=none.
-  if (stream.platform !== "none")
+  if (primary) {
+    // The primary stream key is write-only. The public YouTube ID must still
+    // match the bound event, and no secondary output may be configured.
+    if (stream.platform !== "youtube" || stream.url !== binding.youtubeId)
+      reason =
+        "La destination principale ne correspond plus à cette vidéo YouTube.";
+    else if (destinations.length !== 0)
+      reason =
+        "Cette régie a d'autres destinations : pilotage bloqué pour éviter une diffusion involontaire.";
+  } else if (stream.platform !== "none")
     reason =
-      "Cette régie possède encore une destination principale. Pour éviter de diffuser vers un ancien direct, utilisez une régie dédiée sans destination principale.";
+      "Cette régie possède une destination principale non pilotée par Pilotoki.";
   else if (
     !target ||
     target.url !== binding.youtubeId ||
     target.platform !== "youtube"
   )
-    reason = "La destination YouTube liée à ce direct n'est plus vérifiable.";
+    reason = "La destination secondaire YouTube n'est plus vérifiable.";
   else if (otherActive)
-    reason =
-      "Une autre destination est activée. Désactivez-la dans Upstream avant le pilotage Pilotoki.";
-  else if (!["paused", "active", "booting"].includes(stream.status))
+    reason = "Une autre destination est activée. Pilotage bloqué.";
+  if (!reason && !["paused", "active", "booting"].includes(stream.status))
     reason = "L'état actuel de la régie n'autorise pas ce pilotage.";
   const safe = !reason;
+  const destinationStatus = primary
+    ? stream.status === "paused"
+      ? "paused"
+      : stream.status === "active" || stream.status === "booting"
+        ? "active"
+        : "unknown"
+    : target?.status === "active"
+      ? "active"
+      : target?.status === "paused"
+        ? "paused"
+        : "unknown";
   return {
     safe,
     reason,
     streamStatus: typeof stream.status === "string" ? stream.status : "unknown",
-    destinationStatus:
-      target?.status === "active"
-        ? "active"
-        : target?.status === "paused"
-          ? "paused"
-          : "unknown",
-    canStart: safe && stream.status === "paused" && target.status === "paused",
+    destinationStatus,
+    canStart:
+      safe &&
+      stream.status === "paused" &&
+      (primary || target?.status === "paused"),
     canStop:
       safe &&
       ["active", "booting"].includes(stream.status) &&
-      target.status === "active",
+      (primary || target?.status === "active"),
     // Server-only for command usage. Never serialize this internal binding to browser.
     _binding: binding,
   };
@@ -195,30 +212,33 @@ export async function controlUpstreamStream(
       status.reason || "État du direct incompatible avec la commande demandée.",
     );
   const { streamId, destinationId } = status._binding;
+  const primary = destinationId === streamId;
   if (action === "start") {
-    // Activating only the bound destination; primary must be platform=none
-    // and every other destination paused.
-    await command(
-      env,
-      `${streamId}/destinations/${destinationId}`,
-      "PATCH",
-      { status: "active" },
-      fetchImpl,
-    );
+    if (!primary) {
+      await command(
+        env,
+        `${streamId}/destinations/${destinationId}`,
+        "PATCH",
+        { status: "active" },
+        fetchImpl,
+      );
+    }
     try {
       await command(env, `${streamId}/start`, "POST", null, fetchImpl);
     } catch {
-      // Best-effort compensation; if this fails, operator must inspect Upstream.
-      try {
-        await command(
-          env,
-          `${streamId}/destinations/${destinationId}`,
-          "PATCH",
-          { status: "paused" },
-          fetchImpl,
-        );
-      } catch {
-        // Do not hide the original uncertainty.
+      // Do not touch the primary configuration; only compensate the secondary.
+      if (!primary) {
+        try {
+          await command(
+            env,
+            `${streamId}/destinations/${destinationId}`,
+            "PATCH",
+            { status: "paused" },
+            fetchImpl,
+          );
+        } catch {
+          // A manual verification is required when compensation fails.
+        }
       }
       throw new LiveAuthError(
         503,
@@ -227,13 +247,14 @@ export async function controlUpstreamStream(
     }
   } else {
     await command(env, `${streamId}/stop`, "POST", null, fetchImpl);
-    await command(
-      env,
-      `${streamId}/destinations/${destinationId}`,
-      "PATCH",
-      { status: "paused" },
-      fetchImpl,
-    );
+    if (!primary)
+      await command(
+        env,
+        `${streamId}/destinations/${destinationId}`,
+        "PATCH",
+        { status: "paused" },
+        fetchImpl,
+      );
   }
   return { action, requested: true };
 }

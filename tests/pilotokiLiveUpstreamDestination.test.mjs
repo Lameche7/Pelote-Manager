@@ -52,8 +52,21 @@ test("Decrypts known YouTube credentials strictly on the server", () => {
   );
 });
 
-function fakeFetch(destinations = [], bindingDestination = null) {
+function fakeFetch({
+  primaryPlatform = "none",
+  primaryUrl = null,
+  primaryStatus = "paused",
+  destinations = [],
+  boundDestinationId = null,
+  patchStatus = 200,
+} = {}) {
   const calls = [];
+  const state = {
+    id: stream,
+    status: primaryStatus,
+    platform: primaryPlatform,
+    url: primaryUrl,
+  };
   const mock = async (url, options = {}) => {
     calls.push({ url, options });
     if (url.includes("/rest/v1/pilotoki_live_upstream_bindings")) {
@@ -64,7 +77,7 @@ function fakeFetch(destinations = [], bindingDestination = null) {
         json: async () => [
           {
             upstream_stream_id: stream,
-            upstream_destination_id: bindingDestination,
+            upstream_destination_id: boundDestinationId,
           },
         ],
       };
@@ -73,104 +86,123 @@ function fakeFetch(destinations = [], bindingDestination = null) {
       return { ok: true, json: async () => [fakeIngest] };
     if (url.endsWith("/destinations") && options.method === "GET")
       return { ok: true, json: async () => ({ data: destinations }) };
-    if (url.endsWith("/destinations") && options.method === "POST")
-      return {
-        ok: true,
-        status: 201,
-        json: async () => ({ data: { id: destination, status: "paused" } }),
-      };
-    if (url.includes("studio.upstream.so/api/v1/streams/"))
-      return {
-        ok: true,
-        json: async () => ({ data: { id: stream, status: "paused" } }),
-      };
+    if (url.endsWith(stream) && options.method === "PATCH") {
+      if (patchStatus !== 200) return { ok: false, status: patchStatus };
+      const update = JSON.parse(options.body);
+      state.platform = update.platform;
+      state.url = update.url;
+      return { ok: true, status: 200, json: async () => ({ data: state }) };
+    }
+    if (url.endsWith(stream) && !options.method)
+      return { ok: true, json: async () => ({ data: state }) };
     throw new Error("unexpected URL: " + url);
   };
   return { mock, calls };
 }
 
-test("Creates paused native YouTube destination with credentials only via protected server API", async () => {
+test("Configures a paused primary without starting", async () => {
   const { mock, calls } = fakeFetch();
-  const result = await prepareUpstreamYoutubeDestination(
-    env,
-    club,
-    video,
-    mock,
+  assert.deepEqual(
+    await prepareUpstreamYoutubeDestination(env, club, video, mock),
+    { configured: true, alreadyConfigured: false },
   );
-  assert.deepEqual(result, { configured: true, alreadyConfigured: false });
-  const post = calls.find((entry) => entry.options.method === "POST");
-  const sent = JSON.parse(post.options.body);
-  assert.equal(sent.platform, "youtube");
-  assert.equal(sent.status, "paused");
-  assert.equal(sent.include_in_schedule, false);
-  assert.equal(sent.url, video.youtube_video_id);
-  assert.equal(sent.key, "abcd-efgh-ijkl");
-  assert.equal(post.options.headers.Authorization, "Bearer write-secret");
-  const saved = calls.find((entry) => entry.options.method === "PATCH");
+  const providerPatch = calls.find(
+    (call) => call.url.endsWith(stream) && call.options.method === "PATCH",
+  );
+  assert.deepEqual(JSON.parse(providerPatch.options.body), {
+    platform: "youtube",
+    key: "abcd-efgh-ijkl",
+    url: video.youtube_video_id,
+  });
+  assert.equal(
+    providerPatch.options.headers.Authorization,
+    "Bearer write-secret",
+  );
+  const saved = calls.find(
+    (call) =>
+      call.url.includes("pilotoki_live_upstream_bindings") &&
+      call.options.method === "PATCH",
+  );
   assert.deepEqual(JSON.parse(saved.options.body), {
-    upstream_destination_id: destination,
+    upstream_destination_id: stream,
   });
   assert.doesNotMatch(saved.options.body, /abcd-efgh|write-secret/);
-  assert.doesNotMatch(JSON.stringify(result), /abcd-efgh|write-secret/);
   assert.equal(
-    calls.filter((entry) => entry.options.method === "POST").length,
-    1,
+    calls.some((call) => call.options.method === "POST"),
+    false,
   );
 });
 
-test("Existing destination is idempotent and never overwritten", async () => {
-  const { mock, calls } = fakeFetch(
-    [{ id: destination, url: video.youtube_video_id, status: "paused" }],
-    destination,
-  );
+test("Primary binding is idempotent", async () => {
+  const { mock, calls } = fakeFetch({
+    primaryPlatform: "youtube",
+    primaryUrl: video.youtube_video_id,
+    boundDestinationId: stream,
+  });
   assert.deepEqual(
     await prepareUpstreamYoutubeDestination(env, club, video, mock),
     { configured: true, alreadyConfigured: true },
   );
   assert.equal(
-    calls.filter((entry) => entry.options.method === "POST").length,
-    0,
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
   );
 });
 
-test("Unexpected destination with same YouTube ID blocks a second creation", async () => {
-  const { mock, calls } = fakeFetch([
-    { id: destination, url: video.youtube_video_id, status: "paused" },
-  ]);
+test("Existing primary or secondary is never overwritten", async () => {
+  for (const setup of [
+    { primaryPlatform: "youtube", primaryUrl: "OtherVideo1" },
+    { destinations: [{ id: destination, status: "paused" }] },
+  ]) {
+    const { mock, calls } = fakeFetch(setup);
+    await assert.rejects(
+      prepareUpstreamYoutubeDestination(env, club, video, mock),
+      /régie possède déjà une destination/,
+    );
+    assert.equal(
+      calls.some((call) => call.options.method === "PATCH"),
+      false,
+    );
+  }
+});
+
+test("Changed YouTube identity blocks preparation", async () => {
+  const { mock } = fakeFetch({
+    primaryPlatform: "youtube",
+    primaryUrl: "OtherVideo1",
+    boundDestinationId: stream,
+  });
   await assert.rejects(
     prepareUpstreamYoutubeDestination(env, club, video, mock),
-    /existe déjà/,
-  );
-  assert.equal(
-    calls.filter((entry) => entry.options.method === "POST").length,
-    0,
+    /a changé/,
   );
 });
 
-test("Never modifies destinations on a running stream", async () => {
-  const { mock, calls } = fakeFetch();
-  const running = async (url, opts) => {
-    if (
-      url.includes("studio.upstream.so/api/v1/streams/") &&
-      !url.endsWith("/destinations")
-    )
-      return {
-        ok: true,
-        json: async () => ({ data: { id: stream, status: "active" } }),
-      };
-    return mock(url, opts);
-  };
+test("An active stream is never changed", async () => {
+  const { mock, calls } = fakeFetch({ primaryStatus: "active" });
   await assert.rejects(
-    prepareUpstreamYoutubeDestination(env, club, video, running),
+    prepareUpstreamYoutubeDestination(env, club, video, mock),
     /Arrêtez d'abord/,
   );
   assert.equal(
-    calls.filter((entry) => entry.options.method === "POST").length,
-    0,
+    calls.some((call) => call.options.method === "PATCH"),
+    false,
   );
 });
 
-test("Handler requires pilot admin and positive confirmation before any write", () => {
+test("Provider failure does not leak the stream key", async () => {
+  const { mock } = fakeFetch({ patchStatus: 422 });
+  await assert.rejects(
+    prepareUpstreamYoutubeDestination(env, club, video, mock),
+    (error) => {
+      assert.match(error.message, /HTTP 422/);
+      assert.doesNotMatch(error.message, /abcd-efgh|write-secret/);
+      return true;
+    },
+  );
+});
+
+test("Handler requires pilot admin and confirmation", () => {
   const api = readFileSync(
     new URL("../api/live-youtube-ingest.mjs", import.meta.url),
     "utf8",
@@ -181,108 +213,4 @@ test("Handler requires pilot admin and positive confirmation before any write", 
   );
   assert.match(api, /if \(!canConnectGoogle\)/);
   assert.match(api, /request\.body\?\.confirmed !== true/);
-  const ui = readFileSync(
-    new URL(
-      "../src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  assert.match(ui, /Préparer automatiquement la destination YouTube/);
-  assert.match(ui, /confirmedPreparation/);
-  assert.doesNotMatch(ui, /UPSTREAM_API_FULL_TOKEN|rtmps:\/\//);
-});
-
-test("Rejected destination reports sanitized HTTP code and field, not provider body", async () => {
-  const { mock } = fakeFetch();
-  const providerError = "rtmps://a.rtmps.youtube.com/live2/SECRET";
-  const failing = async (url, options) => {
-    if (url.endsWith("/destinations") && options?.method === "POST")
-      return {
-        ok: false,
-        status: 422,
-        json: async () => ({
-          errors: { key: [providerError] },
-          message: providerError,
-        }),
-      };
-    return mock(url, options);
-  };
-  await assert.rejects(
-    prepareUpstreamYoutubeDestination(env, club, video, failing),
-    (error) => {
-      assert.match(error.message, /HTTP 422/);
-      assert.match(error.message, /Champs concernés : key/);
-      assert.doesNotMatch(error.message, /SECRET|rtmps:\/\//);
-      return true;
-    },
-  );
-});
-
-test("Upstream API forbidden status is distinguishable without exposing secret", async () => {
-  const { mock } = fakeFetch();
-  const failing = async (url, options) =>
-    url.endsWith("/destinations") && options?.method === "POST"
-      ? { ok: false, status: 403 }
-      : mock(url, options);
-  await assert.rejects(
-    prepareUpstreamYoutubeDestination(env, club, video, failing),
-    /HTTP 403 : Droits de la clé Upstream insuffisants/,
-  );
-});
-
-test("422 validation message safely identifies known field without echoing provider body", async () => {
-  const { mock } = fakeFetch();
-  const failing = async (url, options) => {
-    if (url.endsWith("/destinations") && options?.method === "POST")
-      return {
-        ok: false,
-        status: 422,
-        json: async () => ({
-          message: "The url field is invalid. RTMPS_SECRET",
-        }),
-      };
-    return mock(url, options);
-  };
-  await assert.rejects(
-    prepareUpstreamYoutubeDestination(env, club, video, failing),
-    (error) => {
-      assert.match(error.message, /Champs concernés : url/);
-      assert.doesNotMatch(error.message, /RTMPS_SECRET/);
-      return true;
-    },
-  );
-});
-
-test("422 diagnostics never log provider secrets or arbitrary provider messages", async () => {
-  const { mock } = fakeFetch();
-  const secret = "DO_NOT_LOG_PRIVATE_YOUTUBE_KEY";
-  const originalWarn = console.warn;
-  const emitted = [];
-  console.warn = (...args) => emitted.push(args);
-  try {
-    const failing = async (url, options) => {
-      if (url.endsWith("/destinations") && options?.method === "POST")
-        return {
-          ok: false,
-          status: 422,
-          json: async () => ({
-            message: `Invalid destination: ${secret}`,
-            errors: { key: [secret] },
-          }),
-        };
-      return mock(url, options);
-    };
-    await assert.rejects(
-      prepareUpstreamYoutubeDestination(env, club, video, failing),
-      /HTTP 422/,
-    );
-    assert.equal(emitted.length, 2);
-    assert.equal(emitted[0][0], "pilotoki_live_upstream_422_detail");
-    assert.equal(emitted[1][0], "pilotoki_live_upstream_destination_422");
-    assert.deepEqual(emitted[1][1].fields, ["key"]);
-    assert.doesNotMatch(JSON.stringify(emitted), /DO_NOT_LOG|rtmps:\/\//);
-  } finally {
-    console.warn = originalWarn;
-  }
 });

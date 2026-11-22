@@ -146,7 +146,42 @@ export async function prepareUpstreamYoutubeDestination(
   const streamId = binding.upstream_stream_id;
   await getOwnedUpstreamStream(env, streamId, fetchImpl);
   const destinations = await listDestinations(env, streamId, fetchImpl);
+  // The /destinations endpoint only accepts SECONDARY outputs. The primary
+  // destination must be configured directly on a dedicated Upstream stream.
+  const primaryResponse = await fetchImpl(`${UPSTREAM}/${streamId}`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${required(env, "UPSTREAM_API_TOKEN")}`,
+    },
+    cache: "no-store",
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!primaryResponse.ok)
+    throw new LiveAuthError(
+      503,
+      "Destination principale Upstream non vérifiable.",
+    );
+  const primary = (await primaryResponse.json())?.data;
+  if (primary?.id !== streamId)
+    throw new LiveAuthError(
+      503,
+      "Identité de la régie Upstream non vérifiable.",
+    );
+  // The stream UUID is an explicit sentinel for a verified PRIMARY output.
+  // Secondary destination UUIDs from older mappings are never rewritten.
   if (binding.upstream_destination_id) {
+    if (binding.upstream_destination_id === streamId) {
+      if (
+        primary.platform !== "youtube" ||
+        primary.url !== video.youtube_video_id ||
+        destinations.length !== 0
+      )
+        throw new LiveAuthError(
+          409,
+          "La destination principale YouTube a changé : vérification manuelle nécessaire.",
+        );
+      return { configured: true, alreadyConfigured: true };
+    }
     const dest = destinations.find(
       (d) => d.id === binding.upstream_destination_id,
     );
@@ -157,19 +192,16 @@ export async function prepareUpstreamYoutubeDestination(
     )
       throw new LiveAuthError(
         409,
-        "La destination enregistrée a été modifiée. Contrôle manuel requis.",
+        "La destination secondaire enregistrée a été modifiée. Contrôle manuel requis.",
       );
     return { configured: true, alreadyConfigured: true };
   }
-  if (destinations.some((d) => d.url === video.youtube_video_id))
+  // Never replace an existing primary, not even if it claims the same video:
+  // its secret key is write-only and cannot be verified by a GET request.
+  if (primary.platform !== "none" || destinations.length > 0)
     throw new LiveAuthError(
       409,
-      "Une destination pour cette vidéo existe déjà dans Upstream. Vérifiez-la avant de réessayer.",
-    );
-  if (destinations.length >= 10)
-    throw new LiveAuthError(
-      409,
-      "Limite de dix destinations Upstream atteinte.",
+      "Cette régie possède déjà une destination. Utilisez une régie dédiée sans destination principale ni secondaire, pour ne pas écraser un autre direct.",
     );
 
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
@@ -177,175 +209,62 @@ export async function prepareUpstreamYoutubeDestination(
   // Upstream expects the stream key alone for its native YouTube destination.
   // A full rtmps:// URL is valid only for platform=custom.
   const key = ingestUrl.substring(ingestUrl.lastIndexOf("/") + 1);
-  // Never modify existing destinations. A new destination stays PAUSED until
-  // another explicit, separately authorized action enables it.
-  const name = `Pilotoki - ${video.title}`.slice(0, 100);
+  // Updating a PAUSED, empty primary does not start broadcasting.
+  // The operator must explicitly start Upstream and YouTube afterwards.
   let created;
   try {
-    created = await fetchImpl(`${UPSTREAM}/${streamId}/destinations`, {
-      method: "POST",
+    created = await fetchImpl(`${UPSTREAM}/${streamId}`, {
+      method: "PATCH",
       headers: {
         Authorization: `Bearer ${required(env, "UPSTREAM_API_FULL_TOKEN")}`,
         "content-type": "application/json",
         Accept: "application/json",
       },
       body: JSON.stringify({
-        name,
         platform: "youtube",
         key,
-        status: "paused",
-        include_in_schedule: false,
         url: video.youtube_video_id,
       }),
       cache: "no-store",
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(12000),
     });
   } catch {
     throw new LiveAuthError(
       503,
-      "Réponse Upstream incertaine : contrôlez les destinations avant de réessayer.",
+      "Réponse incertaine après configuration de la destination principale : contrôlez Upstream avant de réessayer.",
     );
   }
-  if (created.status !== 201) {
-    // Do not forward the provider response body: it could contain an RTMP
-    // secret, a request echo, or user-controlled text.
-    let issue = "";
-    if (created.status === 400 || created.status === 422) {
-      try {
-        const provider = await created.json();
-        // Never expose provider-supplied text: it may echo an RTMP secret.
-        // Only report known schema field names, including Laravel-style nested
-        // validation envelopes, plus predefined validation categories.
-        const allowedFields = [
-          "key",
-          "name",
-          "platform",
-          "status",
-          "url",
-          "include_in_schedule",
-        ];
-        const fields = new Set();
-        const inspect = (value, depth = 0) => {
-          if (!value || depth > 3 || typeof value !== "object") return;
-          for (const [field, nested] of Object.entries(value)) {
-            if (allowedFields.includes(field)) fields.add(field);
-            if (field === "errors" || field === "data" || field === "details")
-              inspect(nested, depth + 1);
-          }
-        };
-        inspect(provider);
-        const providerMessage =
-          typeof provider?.message === "string" ? provider.message : "";
-        for (const field of allowedFields) {
-          // Match only the field-identification pattern, never quote messages.
-          if (
-            new RegExp(`\\b(?:the\\s+)?${field}\\s+field\\b`, "i").test(
-              providerMessage,
-            )
-          )
-            fields.add(field);
-        }
-        if (fields.size)
-          issue = ` Champs concernés : ${[...fields].join(", ")}.`;
-        else if (created.status === 422)
-          issue = " Détail du champ non communiqué par Upstream.";
-        if (created.status === 422) {
-          const errors = provider?.errors;
-          let category = "unclassified";
-          if (/required/i.test(providerMessage)) category = "required";
-          else if (/invalid|format|valid/i.test(providerMessage))
-            category = "invalid";
-          else if (/taken|exists|duplicate/i.test(providerMessage))
-            category = "duplicate";
-          else if (/limit|maximum|too long/i.test(providerMessage))
-            category = "limit";
-          const details = Object.values(errors ?? {})
-            .flatMap((value) => (Array.isArray(value) ? value : [value]))
-            .filter((value) => typeof value === "string")
-            .join(" ")
-            .slice(0, 4096);
-          const summary = `${providerMessage} ${details}`;
-          const matches = [
-            [
-              "account_restriction",
-              /subscription|plan|upgrade|premium|entitle|not allowed|not enabled|permission|multistream.*available/i,
-            ],
-            ["limit", /quota|maximum|too many|limit|destinations.*10/i],
-            ["duplicate", /already exists|already in use|duplicate|taken/i],
-            [
-              "invalid_stream",
-              /stream.*invalid|stream.*not found|stream.*inactive/i,
-            ],
-            ["invalid_key", /key.*invalid|invalid.*key|stream key/i],
-            ["invalid_url", /url.*invalid|invalid.*url/i],
-            ["invalid_platform", /platform.*invalid|invalid.*platform/i],
-            ["invalid_status", /status.*invalid|invalid.*status/i],
-          ];
-          const issueCategory =
-            matches.find(([, pattern]) => pattern.test(summary))?.[0] ??
-            "other";
-          const errorFields = Object.keys(errors ?? {});
-          const knownProviderFields = [
-            "stream_id",
-            "destination",
-            "destinations",
-            "stream_key",
-            "stream",
-            "multistream",
-            "multistreaming",
-            "account",
-            "base",
-          ];
-          const errorLabel =
-            knownProviderFields.find((name) => errorFields.includes(name)) ??
-            "other";
-          console.warn("pilotoki_live_upstream_422_detail", {
-            issueCategory,
-            errorLabel,
-            detailCount: details.length > 0 ? 1 : 0,
-          });
-          // Safe diagnostic: never log provider text, values, stream key,
-          // identifiers, authorization headers, or full request payloads.
-          console.warn("pilotoki_live_upstream_destination_422", {
-            fields: [...fields],
-            hasErrorsObject: Boolean(errors && typeof errors === "object"),
-            errorFieldCount: Object.keys(errors ?? {}).length,
-            hasMessage: Boolean(providerMessage),
-            category,
-          });
-        }
-      } catch {
-        // An unreadable provider response is intentionally not exposed.
-        if (created.status === 422)
-          console.warn("pilotoki_live_upstream_destination_422", {
-            response: "unreadable_json",
-          });
-      }
-    }
-    const known = {
-      400: "Paramètres refusés",
-      401: "Clé API Upstream non reconnue",
-      402: "Limite du forfait Upstream",
-      403: "Droits de la clé Upstream insuffisants",
-      404: "Régie Upstream introuvable",
-      409: "Conflit de destination ou de quota",
-      422: "Données de destination invalides",
-      429: "Trop de requêtes Upstream",
-    };
-    const reason = known[created.status] ?? "Refus Upstream";
+  if (!created.ok)
     throw new LiveAuthError(
       502,
-      `Création de destination refusée par Upstream (HTTP ${created.status} : ${reason}).${issue}`,
+      `Configuration de la destination principale refusée par Upstream (HTTP ${created.status}).`,
     );
-  }
-  const payload = await created.json();
-  const destinationId = payload?.data?.id;
-  if (!UUID.test(destinationId ?? ""))
+  // Verify the public ID after writing the (write-only) stream key.
+  const verifyResponse = await fetchImpl(`${UPSTREAM}/${streamId}`, {
+    headers: {
+      Authorization: `Bearer ${required(env, "UPSTREAM_API_TOKEN")}`,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!verifyResponse.ok)
     throw new LiveAuthError(
-      502,
-      "Destination créée mais réponse Upstream invalide : vérification manuelle requise.",
+      503,
+      "Destination principale modifiée, mais vérification impossible. Contrôle manuel nécessaire.",
     );
-
+  const updated = (await verifyResponse.json())?.data;
+  if (
+    updated?.id !== streamId ||
+    updated.platform !== "youtube" ||
+    updated.url !== video.youtube_video_id ||
+    updated.status !== "paused"
+  )
+    throw new LiveAuthError(
+      409,
+      "Destination principale modifiée, mais non vérifiable. Contrôle manuel nécessaire avant tout direct.",
+    );
+  const destinationId = streamId;
   const saveParams = new URLSearchParams({
     video_id: `eq.${video.id}`,
     club_id: `eq.${clubId}`,
