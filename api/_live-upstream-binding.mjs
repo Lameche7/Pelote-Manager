@@ -38,22 +38,30 @@ export async function getOwnedUpstreamStream(env, streamId, fetchImpl = fetch) {
     throw new LiveAuthError(400, "Flux Upstream invalide.");
   const token = required(env, "UPSTREAM_API_TOKEN");
   let response;
-  try {
-    response = await fetchImpl(
-      `https://studio.upstream.so/api/v1/streams/${streamId}`,
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
+  // Retry only a read-only network inspection; never replay mutations.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      response = await fetchImpl(
+        `https://studio.upstream.so/api/v1/streams/${streamId}`,
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          signal: AbortSignal.timeout(12000),
+          cache: "no-store",
         },
-        signal: AbortSignal.timeout(8000),
-        cache: "no-store",
-      },
-    );
-  } catch {
-    throw new LiveAuthError(503, "Vérification Upstream indisponible.");
+      );
+      break;
+    } catch {
+      if (attempt === 1)
+        throw new LiveAuthError(
+          503,
+          "Connexion Upstream impossible après deux tentatives (réseau ou délai dépassé).",
+        );
+    }
   }
-  if (!response.ok)
+  if (!response?.ok)
     throw new LiveAuthError(409, "Ce flux Upstream n'est pas accessible.");
   const json = await response.json();
   const item = json?.data;

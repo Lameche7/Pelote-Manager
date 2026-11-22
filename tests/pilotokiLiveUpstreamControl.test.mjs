@@ -58,7 +58,7 @@ function mock({
             {
               id: destinationId,
               url: youtubeId,
-              platform: "custom",
+              platform: "youtube",
               status: targetStatus,
             },
             ...other,

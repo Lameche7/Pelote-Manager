@@ -122,7 +122,7 @@ export async function inspectUpstreamControl(
   else if (
     !target ||
     target.url !== binding.youtubeId ||
-    target.platform !== "custom"
+    target.platform !== "youtube"
   )
     reason = "La destination YouTube liée à ce direct n'est plus vérifiable.";
   else if (otherActive)
