@@ -1,7 +1,8 @@
 import { LiveAuthError, required } from "./_live-google-shared.mjs";
 import { privilegedHeaders } from "./_live-youtube-broadcast.mjs";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** The displayed slot and match ID must be resolved with the caller's session. */
 export async function resolveVerifiedCalendarMatch(
