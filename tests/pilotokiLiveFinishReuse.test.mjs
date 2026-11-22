@@ -20,7 +20,7 @@ const video = {
 };
 const env = {
   VITE_SUPABASE_URL: "https://example.supabase.co",
-  SUPABASE_SERVICE_ROLE_KEY: "secret-service-role",
+  SUPABASE_SERVICE_ROLE_KEY: "service-secret",
   UPSTREAM_API_TOKEN: "read-only",
   UPSTREAM_API_FULL_TOKEN: "write-only",
   YOUTUBE_TOKEN_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
