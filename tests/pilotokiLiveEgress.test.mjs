@@ -115,7 +115,7 @@ test("Existing active Egress blocks a second stream without accessing YouTube cr
 test("LiveKit status supports protobuf empty lists and filters to one club room", async () => {
   const { mock } = mockedMedia({
     existing: [
-      { roomName: room, egressId: "egress-test", status: 1 },
+      { room_name: room, egress_id: "egress-test", status: 1 },
       {
         room_name: "pilotoki-other-club-other-video",
         egress_id: "other",
@@ -138,7 +138,7 @@ test("LiveKit status supports protobuf empty lists and filters to one club room"
 
 test("Abort only stops the egress associated with verified video and room", async () => {
   const { mock, calls } = mockedMedia({
-    existing: [{ roomName: room, egressId: "egress-test", status: 1 }],
+    existing: [{ room_name: room, egress_id: "egress-test", status: 1 }],
   });
   const stopped = await abortLivekitEgress(env, club, video.id, mock);
   assert.deepEqual(stopped, { stopped: true });
