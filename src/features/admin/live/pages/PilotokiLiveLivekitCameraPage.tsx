@@ -68,7 +68,6 @@ export function PilotokiLiveLivekitCameraPage() {
   const [egressBusy, setEgressBusy] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState("");
 
-
   const release = () => {
     const room = roomRef.current;
     roomRef.current = null;
@@ -218,7 +217,10 @@ export function PilotokiLiveLivekitCameraPage() {
           );
         try {
           const published = await controlLivekit("livekit_youtube_publish");
-          if (published.status !== "live" && published.status !== "liveStarting")
+          if (
+            published.status !== "live" &&
+            published.status !== "liveStarting"
+          )
             throw new Error("Statut YouTube non confirmé.");
           setEgressState("live");
           setBroadcastMessage("DIRECT YOUTUBE EN COURS");
@@ -229,13 +231,16 @@ export function PilotokiLiveLivekitCameraPage() {
           if (
             !message.includes("n'a pas encore reçu") &&
             !message.includes("sortie LiveKit n'est pas encore active")
-          ) break;
+          )
+            break;
         }
       }
       throw last ?? new Error("YouTube n'a pas confirmé le direct.");
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Démarrage du direct incertain.",
+        reason instanceof Error
+          ? reason.message
+          : "Démarrage du direct incertain.",
       );
     } finally {
       setEgressBusy(false);
@@ -251,7 +256,9 @@ export function PilotokiLiveLivekitCameraPage() {
       if (!result.completed)
         throw new Error("Fin du direct YouTube non confirmée.");
       setEgressState("done");
-      setBroadcastMessage("Direct terminé. Le replay sera disponible sur YouTube.");
+      setBroadcastMessage(
+        "Direct terminé. Le replay sera disponible sur YouTube.",
+      );
       release();
       setState("idle");
     } catch (reason) {
@@ -297,7 +304,8 @@ export function PilotokiLiveLivekitCameraPage() {
       <h1>Caméra mobile Pilotoki Live</h1>
       <p>
         Votre téléphone peut envoyer sa caméra et son micro à LiveKit. Cet écran
-        peut maintenant lancer un direct YouTube après validation de la connexion.
+        peut maintenant lancer un direct YouTube après validation de la
+        connexion.
       </p>
       {!VIDEO_ID.test(videoId) ? (
         <p role="alert">
@@ -387,10 +395,14 @@ export function PilotokiLiveLivekitCameraPage() {
           {broadcastMessage && <p role="status">{broadcastMessage}</p>}
           {state !== "idle" &&
             (egressState === "idle" || egressState === "done") && (
-            <button type="button" disabled={busy || egressBusy} onClick={() => void stop()}>
-              Arrêter et déconnecter la caméra
-            </button>
-          )}
+              <button
+                type="button"
+                disabled={busy || egressBusy}
+                onClick={() => void stop()}
+              >
+                Arrêter et déconnecter la caméra
+              </button>
+            )}
         </>
       )}
       <p>
