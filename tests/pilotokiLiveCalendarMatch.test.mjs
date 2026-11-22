@@ -27,14 +27,12 @@ function mockFetch({ resourceClubValid = true, match = null } = {}) {
     if (url.includes("/reservable_resources?"))
       return {
         ok: true,
-        json: async () =>
-          resourceClubValid ? [{ id: resourceId }] : [],
+        json: async () => (resourceClubValid ? [{ id: resourceId }] : []),
       };
     if (url.endsWith("/rpc/resolve_calendar_competition"))
       return {
         ok: true,
-        json: async () =>
-          match ?? { kind: "tournament", matchId },
+        json: async () => match ?? { kind: "tournament", matchId },
       };
     throw new Error("Unexpected request");
   };
@@ -90,29 +88,4 @@ test("User cannot spoof a match ID directly from the browser", () => {
   assert.match(calendar, /params\.set\("liveResource"/);
   assert.match(calendar, /params\.set\("liveEnd"/);
   assert.match(calendar, /Diffuser cette partie/);
-});
-
-test("temporary formatter diagnostic - remove before merge", async () => {
-  const prettier = await import("prettier");
-  for (const path of [
-    "api/_live-calendar-match.mjs",
-    "api/live-youtube-prepare.mjs",
-    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
-    "tests/pilotokiLiveCalendarMatch.test.mjs",
-  ]) {
-    const root = new URL("../" + path, import.meta.url);
-    const original = readFileSync(root, "utf8");
-    const config = await prettier.resolveConfig(root.pathname);
-    const formatted = await prettier.format(original, {
-      ...config,
-      filepath: root.pathname,
-    });
-    console.log(
-      "FORMAT_START:" +
-        path +
-        ":" +
-        Buffer.from(formatted).toString("base64") +
-        ":FORMAT_END",
-    );
-  }
 });
