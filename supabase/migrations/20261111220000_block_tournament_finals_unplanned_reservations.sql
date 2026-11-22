@@ -15,8 +15,8 @@ as $$
       and generated.phase = 'finals'
       and generated.play_date between tournament.finals_starts_on and tournament.finals_ends_on
       and tstzrange(
-        generated.play_date + generated.starts_at at time zone coalesce(tournament.timezone, resource.timezone, 'Europe/Paris'),
-        generated.play_date + generated.ends_at at time zone coalesce(tournament.timezone, resource.timezone, 'Europe/Paris'), '[)'
+        (generated.play_date + generated.starts_at) at time zone coalesce(tournament.timezone, resource.timezone, 'Europe/Paris'),
+        (generated.play_date + generated.ends_at) at time zone coalesce(tournament.timezone, resource.timezone, 'Europe/Paris'), '[)'
       ) && tstzrange(target_starts_at, target_ends_at, '[)')
   );
 $$;
@@ -163,7 +163,7 @@ AS $function$
     limit 1
   ) as tournament_slot on true
   order by slot.starts_at;
-$function$
+$function$;
 
 create or replace function public.assert_not_tournament_finals_slot(target_resource_id uuid,target_starts_at timestamptz)
 returns void language plpgsql stable security definer set search_path = ''
@@ -192,7 +192,7 @@ begin
     'public.reserve_for_split_payment(uuid,timestamptz,uuid[])'
   ] loop
     original := pg_get_functiondef(sig::regprocedure);
-    patched := regexp_replace(original, E'\\nbegin\\n', E'\\nbegin\\n  perform public.assert_not_tournament_finals_slot(target_resource_id,target_starts_at);\\n', 1, 1);
+    patched := replace(original, chr(10)||'begin'||chr(10), chr(10)||'begin'||chr(10)||'  perform public.assert_not_tournament_finals_slot(target_resource_id,target_starts_at);'||chr(10));
     if patched=original then raise exception 'Cannot patch %',sig; end if;
     execute patched;
   end loop;
