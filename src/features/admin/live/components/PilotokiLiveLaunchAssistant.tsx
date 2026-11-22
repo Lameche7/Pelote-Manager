@@ -270,14 +270,16 @@ export function PilotokiLiveLaunchAssistant({
             <div className="admin-live-settings__binding">
               {destinationReady ? (
                 <p role="status">
-                  Destination YouTube principale préparée dans Upstream, en pause.
-                  Vérifiez-la avant toute diffusion. Aucune destination secondaire n’a été modifiée.
+                  Destination YouTube principale préparée dans Upstream, en
+                  pause. Vérifiez-la avant toute diffusion. Aucune destination
+                  secondaire n’a été modifiée.
                 </p>
               ) : (
                 <>
                   <p>
                     Configurer la destination YouTube principale pour{" "}
-                    <strong>{broadcast.title}</strong>, uniquement sur une régie dédiée vide et arrêtée, sans démarrer la diffusion.
+                    <strong>{broadcast.title}</strong>, uniquement sur une régie
+                    dédiée vide et arrêtée, sans démarrer la diffusion.
                   </p>
                   <label className="admin-live-settings__checkbox">
                     <input
@@ -287,9 +289,10 @@ export function PilotokiLiveLaunchAssistant({
                         setConfirmedPreparation(event.target.checked)
                       }
                     />
-                    Je confirme utiliser une régie Upstream dédiée, sans destination
-                    principale ni secondaire existante. Pilotoki pourra y définir
-                    la destination YouTube principale, sans démarrer le direct.
+                    Je confirme utiliser une régie Upstream dédiée, sans
+                    destination principale ni secondaire existante. Pilotoki
+                    pourra y définir la destination YouTube principale, sans
+                    démarrer le direct.
                   </label>
                   <button
                     type="button"
