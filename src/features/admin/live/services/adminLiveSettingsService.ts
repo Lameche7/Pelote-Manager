@@ -193,7 +193,8 @@ export const adminLiveSettingsService = {
     };
     if (!response.ok || result.configured !== true)
       throw new Error(
-        result.error ?? "La régie précédente ne peut pas encore être réutilisée.",
+        result.error ??
+          "La régie précédente ne peut pas encore être réutilisée.",
       );
   },
 
