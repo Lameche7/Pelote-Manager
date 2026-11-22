@@ -27,13 +27,16 @@ test("le serveur exige deux identités et un rôle plateforme", () => {
 test("l'émission est désactivée par défaut", () => {
   assert.match(endpoint, /PLATFORM_ADMIN_LEASES_ENABLED/);
   assert.match(endpoint, /requested_seconds: 300/);
-  assert.doesNotMatch(endpoint, /request\.json\(/);
+  assert.match(endpoint, /request\.json\(/);
+  assert.match(endpoint, /request\.method === "POST"/);
+  assert.match(endpoint, /requestedClubId = id/);
+  assert.match(endpoint, /target_club_id: requestedClubId/);
 });
 
 test("les autorisations expirent et sont révocables", () => {
   assert.match(migration, /expires_at > now\(\)/);
   assert.match(migration, /revoked_at is null/);
-  assert.match(migration, /interval '15 minutes'/);
+  assert.match(migration, /interval '5 minutes'/);
   assert.match(migration, /revoke_platform_admin_lease/);
 });
 
