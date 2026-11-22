@@ -175,7 +175,9 @@ export function PilotokiLiveLaunchAssistant({
       );
     } catch (error) {
       setControlMessage(
-        error instanceof Error ? error.message : "Lancement YouTube impossible.",
+        error instanceof Error
+          ? error.message
+          : "Lancement YouTube impossible.",
       );
     } finally {
       setConfirmedPublication(false);
@@ -379,8 +381,8 @@ export function PilotokiLiveLaunchAssistant({
                                 setConfirmedPublication(event.target.checked)
                               }
                             />
-                            Je confirme la diffusion publique de cette partie
-                            et les autorisations d'image et de son.
+                            Je confirme la diffusion publique de cette partie et
+                            les autorisations d'image et de son.
                           </label>
                           <button
                             type="button"
@@ -391,7 +393,11 @@ export function PilotokiLiveLaunchAssistant({
                               ? "Lancement YouTube…"
                               : "Passer au direct YouTube depuis Pilotoki"}
                           </button>
-                          <a href="/reseau/videos" target="_blank" rel="noopener noreferrer">
+                          <a
+                            href="/reseau/videos"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             Ouvrir Pilotoki Vidéos
                           </a>
                         </>
