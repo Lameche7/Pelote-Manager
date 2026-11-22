@@ -579,61 +579,61 @@ export function PilotokiLiveLaunchAssistant({
                       </a>
                       <details>
                         <summary>Options avancées de diffusion</summary>
-                      {controlStatus.streamStatus === "active" && (
-                        <>
-                          <label className="admin-live-settings__checkbox">
-                            <input
-                              type="checkbox"
-                              checked={confirmedPublication}
-                              onChange={(event) =>
-                                setConfirmedPublication(event.target.checked)
-                              }
-                            />
-                            Je confirme la diffusion publique de cette partie et
-                            les autorisations d'image et de son.
-                          </label>
+                        {controlStatus.streamStatus === "active" && (
+                          <>
+                            <label className="admin-live-settings__checkbox">
+                              <input
+                                type="checkbox"
+                                checked={confirmedPublication}
+                                onChange={(event) =>
+                                  setConfirmedPublication(event.target.checked)
+                                }
+                              />
+                              Je confirme la diffusion publique de cette partie
+                              et les autorisations d'image et de son.
+                            </label>
+                            <button
+                              type="button"
+                              disabled={!confirmedPublication || publishing}
+                              onClick={() => void publishYoutube()}
+                            >
+                              {publishing
+                                ? "Lancement YouTube…"
+                                : "Passer au direct YouTube depuis Pilotoki"}
+                            </button>
+                            <a
+                              href="/reseau/videos"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Ouvrir Pilotoki Vidéos
+                            </a>
+                          </>
+                        )}
+                        <div className="admin-live-settings__launch-actions">
                           <button
                             type="button"
-                            disabled={!confirmedPublication || publishing}
-                            onClick={() => void publishYoutube()}
+                            disabled={
+                              !confirmedControl ||
+                              controlBusy ||
+                              !controlStatus.canStart
+                            }
+                            onClick={() => void issueControl("start")}
                           >
-                            {publishing
-                              ? "Lancement YouTube…"
-                              : "Passer au direct YouTube depuis Pilotoki"}
+                            Démarrer Upstream
                           </button>
-                          <a
-                            href="/reseau/videos"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            disabled={
+                              !confirmedControl ||
+                              controlBusy ||
+                              !controlStatus.canStop
+                            }
+                            onClick={() => void issueControl("stop")}
                           >
-                            Ouvrir Pilotoki Vidéos
-                          </a>
-                        </>
-                      )}
-                      <div className="admin-live-settings__launch-actions">
-                        <button
-                          type="button"
-                          disabled={
-                            !confirmedControl ||
-                            controlBusy ||
-                            !controlStatus.canStart
-                          }
-                          onClick={() => void issueControl("start")}
-                        >
-                          Démarrer Upstream
-                        </button>
-                        <button
-                          type="button"
-                          disabled={
-                            !confirmedControl ||
-                            controlBusy ||
-                            !controlStatus.canStop
-                          }
-                          onClick={() => void issueControl("stop")}
-                        >
-                          Arrêter Upstream
-                        </button>
-                      </div>
+                            Arrêter Upstream
+                          </button>
+                        </div>
                       </details>
                     </>
                   )}
