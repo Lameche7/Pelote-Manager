@@ -3,7 +3,10 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { LiveAuthError } from "./_live-google-shared.mjs";
 import { livekitConfig } from "./_live-livekit.mjs";
-import { loadYoutubeIngest, decryptYoutubeIngest } from "./_live-upstream-destination.mjs";
+import {
+  loadYoutubeIngest,
+  decryptYoutubeIngest,
+} from "./_live-upstream-destination.mjs";
 import { getClubVideo } from "./_live-youtube-ingest.mjs";
 import {
   googleAccessToken,
@@ -32,7 +35,14 @@ function signingToken(key, secret, now = Date.now()) {
   return `${signed}.${createHmac("sha256", secret).update(signed).digest("base64url")}`;
 }
 
-const ACTIVE = new Set([0, 1, 2, "EGRESS_STARTING", "EGRESS_ACTIVE", "EGRESS_ENDING"]);
+const ACTIVE = new Set([
+  0,
+  1,
+  2,
+  "EGRESS_STARTING",
+  "EGRESS_ACTIVE",
+  "EGRESS_ENDING",
+]);
 
 async function twirp(env, method, body, fetchImpl = fetch) {
   const { apiKey, apiSecret, url } = livekitConfig(env);
