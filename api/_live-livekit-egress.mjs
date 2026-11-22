@@ -35,6 +35,15 @@ function signingToken(key, secret, now = Date.now()) {
   return `${signed}.${createHmac("sha256", secret).update(signed).digest("base64url")}`;
 }
 
+// Twirp JSON responds with protobuf field names in snake_case. Accept
+// camelCase too for compatibility with JS SDK-style test doubles.
+function egressId(item) {
+  return item?.egress_id ?? item?.egressId;
+}
+function egressRoom(item) {
+  return item?.room_name ?? item?.roomName;
+}
+
 const ACTIVE = new Set([
   0,
   1,
@@ -84,14 +93,14 @@ export function livekitRoom(clubId, videoId) {
 }
 
 async function activeEgress(env, room, fetchImpl) {
-  const result = await twirp(env, "ListEgress", { roomName: room }, fetchImpl);
+  const result = await twirp(env, "ListEgress", { room_name: room }, fetchImpl);
   const items = result.items ?? [];
   if (!Array.isArray(items))
     throw new LiveAuthError(502, "Liste des directs LiveKit invalide.");
   return items.filter(
     (item) =>
-      item.roomName === room &&
-      typeof item.egressId === "string" &&
+      egressRoom(item) === room &&
+      typeof egressId(item) === "string" &&
       ACTIVE.has(item.status),
   );
 }
@@ -127,10 +136,18 @@ export async function startLivekitEgress(
     throw new LiveAuthError(403, "Diffuseur LiveKit invalide.");
   const room = livekitRoom(clubId, video.id);
   const current = await activeEgress(env, room, fetchImpl);
-  if (current.length > 0)
+  // A previous StartEgress may have succeeded despite an unrecognized
+  // response. Reuse the one active room egress; never launch a duplicate.
+  if (current.length === 1)
+    return {
+      started: true,
+      active: [1, "EGRESS_ACTIVE"].includes(current[0].status),
+      alreadyStarted: true,
+    };
+  if (current.length > 1)
     throw new LiveAuthError(
       409,
-      "Une retransmission LiveKit existe déjà pour cette partie.",
+      "Plusieurs retransmissions LiveKit existent : vérification manuelle nécessaire.",
     );
 
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
@@ -139,13 +156,13 @@ export async function startLivekitEgress(
     env,
     "StartEgress",
     {
-      roomName: room,
+      room_name: room,
       media: {
-        participantVideo: { identity: publisherIdentity },
+        participant_video: { identity: publisherIdentity },
         audio: {
           routes: [
             {
-              participantIdentity: publisherIdentity,
+              participant_identity: publisherIdentity,
               channel: "AUDIO_CHANNEL_BOTH",
             },
           ],
@@ -156,9 +173,9 @@ export async function startLivekitEgress(
     fetchImpl,
   );
   if (
-    result.roomName !== room ||
-    typeof result.egressId !== "string" ||
-    !result.egressId
+    egressRoom(result) !== room ||
+    typeof egressId(result) !== "string" ||
+    !egressId(result)
   )
     throw new LiveAuthError(
       503,
@@ -207,10 +224,10 @@ async function stopRoomEgress(env, room, fetchImpl) {
     const stopped = await twirp(
       env,
       "StopEgress",
-      { egressId: item.egressId },
+      { egress_id: egressId(item) },
       fetchImpl,
     );
-    if (stopped.egressId !== item.egressId)
+    if (egressId(stopped) !== egressId(item))
       throw new LiveAuthError(
         503,
         "LiveKit n'a pas confirmé la fin de l'envoi.",
