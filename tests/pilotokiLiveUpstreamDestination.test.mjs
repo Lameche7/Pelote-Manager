@@ -89,7 +89,7 @@ function fakeFetch(destinations = [], bindingDestination = null) {
   return { mock, calls };
 }
 
-test("Creates paused RTMPS destination with credentials only via protected server API", async () => {
+test("Creates paused native YouTube destination with credentials only via protected server API", async () => {
   const { mock, calls } = fakeFetch();
   const result = await prepareUpstreamYoutubeDestination(
     env,
@@ -100,11 +100,11 @@ test("Creates paused RTMPS destination with credentials only via protected serve
   assert.deepEqual(result, { configured: true, alreadyConfigured: false });
   const post = calls.find((entry) => entry.options.method === "POST");
   const sent = JSON.parse(post.options.body);
-  assert.equal(sent.platform, "custom");
+  assert.equal(sent.platform, "youtube");
   assert.equal(sent.status, "paused");
   assert.equal(sent.include_in_schedule, false);
   assert.equal(sent.url, video.youtube_video_id);
-  assert.equal(sent.key, "rtmps://a.rtmps.youtube.com/live2/abcd-efgh-ijkl");
+  assert.equal(sent.key, "abcd-efgh-ijkl");
   assert.equal(post.options.headers.Authorization, "Bearer write-secret");
   const saved = calls.find((entry) => entry.options.method === "PATCH");
   assert.deepEqual(JSON.parse(saved.options.body), {
