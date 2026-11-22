@@ -36,7 +36,8 @@ export function PilotokiLiveLaunchAssistant({
   const [confirmedPublication, setConfirmedPublication] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [launchBusy, setLaunchBusy] = useState(false);
-  const [awaitingYoutubePublication, setAwaitingYoutubePublication] = useState(false);
+  const [awaitingYoutubePublication, setAwaitingYoutubePublication] =
+    useState(false);
   useEffect(() => {
     if (!canAssociate || broadcast.status !== "scheduled") return;
     let active = true;
@@ -202,8 +203,9 @@ export function PilotokiLiveLaunchAssistant({
     try {
       await adminLiveSettingsService.controlUpstream(broadcast.id, "start");
       for (let attempt = 0; attempt < 12; attempt += 1) {
-        const status =
-          await adminLiveSettingsService.getUpstreamControlStatus(broadcast.id);
+        const status = await adminLiveSettingsService.getUpstreamControlStatus(
+          broadcast.id,
+        );
         setControlStatus(status);
         if (!status.safe)
           throw new Error(
@@ -261,7 +263,8 @@ export function PilotokiLiveLaunchAssistant({
       if (checking) return;
       checking = true;
       try {
-        const result = await adminLiveSettingsService.refreshBroadcastStatuses();
+        const result =
+          await adminLiveSettingsService.refreshBroadcastStatuses();
         if (
           result.videos.some(
             (video) => video.id === broadcast.id && video.status === "live",
@@ -560,10 +563,11 @@ export function PilotokiLiveLaunchAssistant({
               </button>
               {controlMessage && <p role="status">{controlMessage}</p>}
               <p className="admin-live-settings__hint">
-                Pilotoki peut maintenant déclencher le direct YouTube sans passer
-                par YouTube Studio. Seule une destination principale correspondant à cette vidéo
-                YouTube, sans aucune destination secondaire, peut être pilotée
-                automatiquement. Les autres configurations sont bloquées.
+                Pilotoki peut maintenant déclencher le direct YouTube sans
+                passer par YouTube Studio. Seule une destination principale
+                correspondant à cette vidéo YouTube, sans aucune destination
+                secondaire, peut être pilotée automatiquement. Les autres
+                configurations sont bloquées.
               </p>
             </div>
           )}
