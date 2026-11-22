@@ -97,11 +97,6 @@ export async function authorizeLivekitPublisher(
   const { apiKey, apiSecret, url } = livekitConfig(env);
   const room = `pilotoki-${admin.clubId}-${video.id}`;
   const identity = `pilotoki-camera-${user.id}`;
-  const token = signLivekitPublisherToken(
-    apiKey,
-    apiSecret,
-    room,
-    identity,
-  );
+  const token = signLivekitPublisherToken(apiKey, apiSecret, room, identity);
   return { url, token, room, videoId: video.id, expiresIn: 600 };
 }
