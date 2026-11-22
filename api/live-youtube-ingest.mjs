@@ -111,14 +111,13 @@ export default async function handler(request, response) {
     }
     if (request.body?.action === "finish_youtube") {
       if (!canConnectGoogle)
-        throw new LiveAuthError(403, "Arrêt réservé à l'administration pilote.");
+        throw new LiveAuthError(
+          403,
+          "Arrêt réservé à l'administration pilote.",
+        );
       if (request.body?.confirmed !== true)
         throw new LiveAuthError(400, "Confirmez la fin du direct.");
-      const status = await inspectUpstreamControl(
-        process.env,
-        clubId,
-        videoId,
-      );
+      const status = await inspectUpstreamControl(process.env, clubId, videoId);
       if (!status.safe)
         throw new LiveAuthError(409, status.reason || "Régie non vérifiable.");
       const binding = await loadControlBinding(process.env, clubId, videoId);
