@@ -79,7 +79,10 @@ export default async function handler(request, response) {
         },
       );
       if (!existingResponse.ok)
-        throw new LiveAuthError(503, "Vérification des directs existants indisponible.");
+        throw new LiveAuthError(
+          503,
+          "Vérification des directs existants indisponible.",
+        );
       if ((await existingResponse.json())?.length)
         throw new LiveAuthError(
           409,
