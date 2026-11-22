@@ -42,7 +42,8 @@ export function PilotokiLiveLaunchAssistant({
   const [awaitingYoutubePublication, setAwaitingYoutubePublication] =
     useState(false);
   useEffect(() => {
-    if (!canAssociate || !["scheduled", "live"].includes(broadcast.status)) return;
+    if (!canAssociate || !["scheduled", "live"].includes(broadcast.status))
+      return;
     let active = true;
     setBindingLoaded(false);
     adminLiveSettingsService
@@ -456,8 +457,8 @@ export function PilotokiLiveLaunchAssistant({
               </button>
               <p className="admin-live-settings__hint">
                 Pilotoki ne réaffecte la régie que si la partie précédente est
-                archivée sur YouTube, que la régie est arrêtée et qu'aucune autre
-                destination n'est présente.
+                archivée sur YouTube, que la régie est arrêtée et qu'aucune
+                autre destination n'est présente.
               </p>
             </>
           )}
@@ -567,7 +568,9 @@ export function PilotokiLiveLaunchAssistant({
                       {broadcast.status === "live" && (
                         <button
                           type="button"
-                          disabled={!confirmedControl || finishing || controlBusy}
+                          disabled={
+                            !confirmedControl || finishing || controlBusy
+                          }
                           onClick={() => void finishLive()}
                         >
                           {finishing
