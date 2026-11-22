@@ -205,5 +205,3 @@ test("LiveKit and YouTube actions remain restricted to a confirmed administrator
   assert.match(endpoint, /livekit_youtube_finish/);
   assert.match(endpoint, /confirmed !== true/);
 });
-
-
