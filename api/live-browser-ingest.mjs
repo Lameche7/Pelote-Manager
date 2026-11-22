@@ -5,7 +5,8 @@ import { jsonError, LiveAuthError, required } from "./_live-google-shared.mjs";
 import { verifiedLiveClubAdmin } from "./_live-youtube-broadcast.mjs";
 import { getClubVideo } from "./_live-youtube-ingest.mjs";
 
-const VIDEO_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const VIDEO_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_OFFER = 120_000;
 const SESSION_AGE_MS = 2 * 60 * 60 * 1000;
 const WHIP_ENDPOINT = "LIVE_WHIP_INGEST_URL";
@@ -21,7 +22,8 @@ function configuredEndpoint(env) {
     url.password ||
     url.hash ||
     url.search
-  ) throw new LiveAuthError(503, "Passerelle vidéo non configurée.");
+  )
+    throw new LiveAuthError(503, "Passerelle vidéo non configurée.");
   return url;
 }
 
@@ -43,17 +45,19 @@ function unseal(env, token) {
     .update(body)
     .digest();
   const actual = Buffer.from(signature, "base64url");
-  if (
-    actual.length !== expected.length ||
-    !timingSafeEqual(expected, actual)
-  ) throw new LiveAuthError(403, "Session caméra invalide.");
+  if (actual.length !== expected.length || !timingSafeEqual(expected, actual))
+    throw new LiveAuthError(403, "Session caméra invalide.");
   let claims;
   try {
     claims = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
   } catch {
     throw new LiveAuthError(400, "Session caméra invalide.");
   }
-  if (!claims || claims.exp < Date.now() || claims.exp > Date.now() + SESSION_AGE_MS)
+  if (
+    !claims ||
+    claims.exp < Date.now() ||
+    claims.exp > Date.now() + SESSION_AGE_MS
+  )
     throw new LiveAuthError(403, "Session caméra expirée.");
   return claims;
 }
@@ -89,7 +93,8 @@ export async function handleWhip(request, response, env, fetchImpl = fetch) {
         offer.length < 20 ||
         offer.length > MAX_OFFER ||
         !offer.startsWith("v=0")
-      ) throw new LiveAuthError(400, "Offre WebRTC invalide.");
+      )
+        throw new LiveAuthError(400, "Offre WebRTC invalide.");
       // Strictly authenticate and validate before invoking the media service.
       const ingest = await fetchImpl(endpoint, {
         method: "POST",
@@ -106,11 +111,8 @@ export async function handleWhip(request, response, env, fetchImpl = fetch) {
         throw new LiveAuthError(502, "Passerelle vidéo indisponible.");
       const answer = await ingest.text();
       const location = ingest.headers.get("location");
-      if (
-        answer.length > MAX_OFFER ||
-        !answer.startsWith("v=0") ||
-        !location
-      ) throw new LiveAuthError(502, "Réponse WebRTC invalide.");
+      if (answer.length > MAX_OFFER || !answer.startsWith("v=0") || !location)
+        throw new LiveAuthError(502, "Réponse WebRTC invalide.");
       const resource = new URL(location, endpoint);
       if (
         resource.protocol !== "https:" ||
@@ -118,7 +120,8 @@ export async function handleWhip(request, response, env, fetchImpl = fetch) {
         resource.username ||
         resource.password ||
         resource.hash
-      ) throw new LiveAuthError(502, "Session de la passerelle invalide.");
+      )
+        throw new LiveAuthError(502, "Session de la passerelle invalide.");
       const session = seal(env, {
         resource: resource.href,
         clubId: admin.clubId,
