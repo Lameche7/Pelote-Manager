@@ -68,3 +68,21 @@ test("One confirmed action starts Upstream and publishes after verifying YouTube
   assert.match(assistant, /refreshBroadcastStatuses\(/);
   assert.match(assistant, /video\.status === "live"/);
 });
+
+test("temporary formatter diagnostic - remove before merge", async () => {
+  const prettier = await import("prettier");
+  const paths = [
+    "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
+    "tests/pilotokiLiveLaunchAssistant.test.mjs",
+  ];
+  for (const path of paths) {
+    const root = new URL("../" + path, import.meta.url);
+    const original = readFileSync(root, "utf8");
+    const config = await prettier.resolveConfig(root.pathname);
+    const formatted = await prettier.format(original, {
+      ...config,
+      filepath: root.pathname,
+    });
+    console.log("FORMAT_START:" + path + ":" + Buffer.from(formatted).toString("base64") + ":FORMAT_END");
+  }
+});
