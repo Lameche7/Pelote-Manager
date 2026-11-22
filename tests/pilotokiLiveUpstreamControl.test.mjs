@@ -182,3 +182,93 @@ test("Only admin pilot with explicit approval can issue stream controls", () => 
   assert.match(ui, /Arrêter Upstream/);
   assert.doesNotMatch(ui, /UPSTREAM_API_FULL_TOKEN/);
 });
+
+test("A dedicated verified primary can start without modifying secondary outputs", async () => {
+  const { fetchMock, calls } = mock();
+  const primary = async (url, options = {}) => {
+    if (url.includes("pilotoki_live_upstream_bindings?"))
+      return {
+        ok: true,
+        json: async () => [
+          {
+            upstream_stream_id: streamId,
+            upstream_destination_id: streamId,
+          },
+        ],
+      };
+    if (url.endsWith("/destinations"))
+      return { ok: true, json: async () => ({ data: [] }) };
+    if (url.endsWith(streamId))
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            id: streamId,
+            platform: "youtube",
+            url: youtubeId,
+            status: "paused",
+          },
+        }),
+      };
+    return fetchMock(url, options);
+  };
+  const status = await inspectUpstreamControl(env, club, videoId, primary);
+  assert.equal(status.safe, true);
+  assert.equal(status.canStart, true);
+  await controlUpstreamStream(env, club, videoId, "start", primary);
+  const commands = calls.filter((call) =>
+    ["POST", "PATCH"].includes(call.options.method),
+  );
+  assert.equal(commands.length, 1);
+  assert.match(commands[0].url, /\/start$/);
+});
+
+test("A primary output with a different video or secondary output cannot start", async () => {
+  for (const mismatch of ["video", "secondary"]) {
+    const { fetchMock, calls } = mock();
+    const guarded = async (url, options = {}) => {
+      if (url.includes("pilotoki_live_upstream_bindings?"))
+        return {
+          ok: true,
+          json: async () => [
+            {
+              upstream_stream_id: streamId,
+              upstream_destination_id: streamId,
+            },
+          ],
+        };
+      if (url.endsWith("/destinations"))
+        return {
+          ok: true,
+          json: async () => ({
+            data:
+              mismatch === "secondary"
+                ? [{ id: destinationId, status: "paused" }]
+                : [],
+          }),
+        };
+      if (url.endsWith(streamId))
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: streamId,
+              platform: "youtube",
+              url: mismatch === "video" ? "OtherVideo1" : youtubeId,
+              status: "paused",
+            },
+          }),
+        };
+      return fetchMock(url, options);
+    };
+    const status = await inspectUpstreamControl(env, club, videoId, guarded);
+    assert.equal(status.safe, false);
+    await assert.rejects(
+      controlUpstreamStream(env, club, videoId, "start", guarded),
+    );
+    assert.equal(
+      calls.some((call) => ["POST", "PATCH"].includes(call.options.method)),
+      false,
+    );
+  }
+});
