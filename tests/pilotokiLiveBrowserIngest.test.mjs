@@ -152,25 +152,12 @@ test("Mobile WHIP signalling uses an existing Vercel function", () => {
   assert.match(endpoint, /whip_offer/);
   assert.match(endpoint, /whip_close/);
   const mobile = readFileSync(
-    new URL("../src/features/admin/live/pages/PilotokiLiveMobilePublisherPage.tsx", import.meta.url),
+    new URL(
+      "../src/features/admin/live/pages/PilotokiLiveMobilePublisherPage.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   assert.match(mobile, /\/api\/live-youtube-ingest/);
   assert.doesNotMatch(mobile, /\/api\/live-browser-ingest/);
-});
-
-test("temporary formatter diagnostic - remove before merge", async () => {
-  const prettier = await import("prettier");
-  for (const path of [
-    "api/live-youtube-ingest.mjs",
-    "tests/pilotokiLiveBrowserIngest.test.mjs",
-  ]) {
-    const root = new URL("../" + path, import.meta.url);
-    const config = await prettier.resolveConfig(root.pathname);
-    const formatted = await prettier.format(readFileSync(root, "utf8"), {
-      ...config,
-      filepath: root.pathname,
-    });
-    console.log("FORMAT_START:" + path + ":" + Buffer.from(formatted).toString("base64") + ":FORMAT_END");
-  }
 });
