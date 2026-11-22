@@ -253,7 +253,9 @@ export async function youtubeCreateBroadcast(
           selfDeclaredMadeForKids: input.madeForKids,
         },
         contentDetails: {
-          enableAutoStart: false,
+          // Egress starts only after the operator clicks Diffuser in Pilotoki.
+          // Automatically publish the bound YouTube event when RTMPS arrives.
+          enableAutoStart: true,
           enableAutoStop: false,
         },
       }),
