@@ -314,6 +314,16 @@ export function AdminLiveSettingsPage() {
               try {
                 await adminLiveSettingsService.linkYoutubeIngest(match.id);
                 setLinkedVideoIds((ids) => [...new Set([...ids, match.id])]);
+                try {
+                  await adminLiveSettingsService.reuseUpstreamForVideo(match.id);
+                  setLinkMessage("Régie précédente réaffectée à cette partie, sans démarrer le direct.");
+                } catch (reuseError) {
+                  setLinkMessage(
+                    reuseError instanceof Error
+                      ? `Réaffectation automatique impossible : ${reuseError.message}`
+                      : "Sélectionnez une régie compatible pour ce direct.",
+                  );
+                }
               } catch (reason) {
                 setLinkError(
                   reason instanceof Error
