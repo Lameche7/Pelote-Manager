@@ -1,6 +1,7 @@
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
 import {
   inspectUpstreamControl,
+  loadControlBinding,
   controlUpstreamStream,
   publicControlStatus,
 } from "./_live-upstream-control.mjs";
@@ -8,7 +9,11 @@ import {
   prepareUpstreamYoutubeDestination,
   loadYoutubeIngest,
 } from "./_live-upstream-destination.mjs";
-import { publishVerifiedYoutubeLive } from "./_live-youtube-publish.mjs";
+import {
+  publishVerifiedYoutubeLive,
+  completeVerifiedYoutubeLive,
+} from "./_live-youtube-publish.mjs";
+import { reuseIdleUpstreamForVideo } from "./_live-upstream-reuse.mjs";
 import {
   associateUpstreamStream,
   getUpstreamBinding,
@@ -62,16 +67,11 @@ export default async function handler(request, response) {
             403,
             "Liaison réservée à l’administration pilote.",
           );
-        const video = await getClubVideo(
-          process.env,
-          admin.clubId,
-          request.query?.videoId,
-        );
         return response.status(200).json({
           binding: await getUpstreamBinding(
             process.env,
             admin.clubId,
-            video.id,
+            request.query?.videoId,
           ),
         });
       }
@@ -94,6 +94,46 @@ export default async function handler(request, response) {
       request,
       process.env,
     );
+    if (request.body?.action === "reuse_upstream") {
+      if (!canConnectGoogle)
+        throw new LiveAuthError(403, "Régie réservée au club pilote.");
+      if (request.body?.confirmed !== true)
+        throw new LiveAuthError(400, "Confirmation de la régie requise.");
+      const video = await getClubVideo(process.env, clubId, videoId);
+      const token = await googleAccessToken(process.env, channelId);
+      const result = await reuseIdleUpstreamForVideo(
+        process.env,
+        clubId,
+        video,
+        token,
+      );
+      return response.status(200).json(result);
+    }
+    if (request.body?.action === "finish_youtube") {
+      if (!canConnectGoogle)
+        throw new LiveAuthError(403, "Arrêt réservé à l'administration pilote.");
+      if (request.body?.confirmed !== true)
+        throw new LiveAuthError(400, "Confirmez la fin du direct.");
+      const status = await inspectUpstreamControl(
+        process.env,
+        clubId,
+        videoId,
+      );
+      if (!status.safe)
+        throw new LiveAuthError(409, status.reason || "Régie non vérifiable.");
+      const binding = await loadControlBinding(process.env, clubId, videoId);
+      const ingest = await loadYoutubeIngest(process.env, videoId);
+      const token = await googleAccessToken(process.env, channelId);
+      await completeVerifiedYoutubeLive(
+        token,
+        binding.youtubeId,
+        ingest.youtube_stream_id,
+      );
+      if (status.canStop)
+        await controlUpstreamStream(process.env, clubId, videoId, "stop");
+      await synchronizeClubVideos(process.env, clubId, channelId);
+      return response.status(200).json({ completed: true });
+    }
     if (request.body?.action === "publish_youtube") {
       if (!canConnectGoogle)
         throw new LiveAuthError(
