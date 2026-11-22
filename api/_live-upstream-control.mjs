@@ -120,11 +120,14 @@ export async function inspectUpstreamControl(
     // The primary stream key is write-only. The public YouTube ID must still
     // match the bound event, and no secondary output may be configured.
     if (stream.platform !== "youtube" || stream.url !== binding.youtubeId)
-      reason = "La destination principale ne correspond plus à cette vidéo YouTube.";
+      reason =
+        "La destination principale ne correspond plus à cette vidéo YouTube.";
     else if (destinations.length !== 0)
-      reason = "Cette régie a d'autres destinations : pilotage bloqué pour éviter une diffusion involontaire.";
+      reason =
+        "Cette régie a d'autres destinations : pilotage bloqué pour éviter une diffusion involontaire.";
   } else if (stream.platform !== "none")
-    reason = "Cette régie possède une destination principale non pilotée par Pilotoki.";
+    reason =
+      "Cette régie possède une destination principale non pilotée par Pilotoki.";
   else if (
     !target ||
     target.url !== binding.youtubeId ||
