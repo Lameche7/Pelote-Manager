@@ -230,3 +230,26 @@ test("Upstream API forbidden status is distinguishable without exposing secret",
     /HTTP 403 : Droits de la clé Upstream insuffisants/,
   );
 });
+
+test("422 validation message safely identifies known field without echoing provider body", async () => {
+  const { mock } = fakeFetch();
+  const failing = async (url, options) => {
+    if (url.endsWith("/destinations") && options?.method === "POST")
+      return {
+        ok: false,
+        status: 422,
+        json: async () => ({
+          message: "The url field is invalid. RTMPS_SECRET",
+        }),
+      };
+    return mock(url, options);
+  };
+  await assert.rejects(
+    prepareUpstreamYoutubeDestination(env, club, video, failing),
+    (error) => {
+      assert.match(error.message, /Champs concernés : url/);
+      assert.doesNotMatch(error.message, /RTMPS_SECRET/);
+      return true;
+    },
+  );
+});

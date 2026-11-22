@@ -213,21 +213,42 @@ export async function prepareUpstreamYoutubeDestination(
     if (created.status === 400 || created.status === 422) {
       try {
         const provider = await created.json();
-        const fields = Object.keys(
-          provider?.errors && typeof provider.errors === "object"
-            ? provider.errors
-            : {},
-        ).filter((field) =>
-          [
-            "key",
-            "name",
-            "platform",
-            "status",
-            "url",
-            "include_in_schedule",
-          ].includes(field),
-        );
-        if (fields.length) issue = ` Champs concernés : ${fields.join(", ")}.`;
+        // Never expose provider-supplied text: it may echo an RTMP secret.
+        // Only report known schema field names, including Laravel-style nested
+        // validation envelopes, plus predefined validation categories.
+        const allowedFields = [
+          "key",
+          "name",
+          "platform",
+          "status",
+          "url",
+          "include_in_schedule",
+        ];
+        const fields = new Set();
+        const inspect = (value, depth = 0) => {
+          if (!value || depth > 3 || typeof value !== "object") return;
+          for (const [field, nested] of Object.entries(value)) {
+            if (allowedFields.includes(field)) fields.add(field);
+            if (field === "errors" || field === "data" || field === "details")
+              inspect(nested, depth + 1);
+          }
+        };
+        inspect(provider);
+        const providerMessage =
+          typeof provider?.message === "string" ? provider.message : "";
+        for (const field of allowedFields) {
+          // Match only the field-identification pattern, never quote messages.
+          if (
+            new RegExp(`\\b(?:the\\s+)?${field}\\s+field\\b`, "i").test(
+              providerMessage,
+            )
+          )
+            fields.add(field);
+        }
+        if (fields.size)
+          issue = ` Champs concernés : ${[...fields].join(", ")}.`;
+        else if (created.status === 422)
+          issue = " Détail du champ non communiqué par Upstream.";
       } catch {
         // An unreadable provider response is intentionally not exposed.
       }
