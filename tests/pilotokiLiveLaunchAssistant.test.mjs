@@ -51,3 +51,20 @@ test("Camera invitation remains ephemeral and domain restricted", () => {
   assert.match(page, /streams=\{\s*settings\.canConnectGoogle/);
   assert.match(page, /upstreamStreams \?\? \[\]/);
 });
+
+test("One confirmed action starts Upstream and publishes after verifying YouTube ingest", () => {
+  assert.match(assistant, /Diffuser cette partie/);
+  assert.match(assistant, /const launchPartie = async/);
+  assert.match(assistant, /!confirmedControl/);
+  assert.match(assistant, /controlStatus\.canStart/);
+  assert.match(
+    assistant,
+    /controlUpstream\(broadcast\.id, "start"\)/,
+  );
+  assert.match(assistant, /getUpstreamControlStatus\(broadcast\.id\)/);
+  assert.match(assistant, /status\.streamStatus === "active"/);
+  assert.match(assistant, /publishYoutubeLive\(/);
+  assert.match(assistant, /setAwaitingYoutubePublication\(true\)/);
+  assert.match(assistant, /refreshBroadcastStatuses\(/);
+  assert.match(assistant, /video\.status === "live"/);
+});
