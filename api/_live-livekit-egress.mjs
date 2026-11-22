@@ -74,17 +74,17 @@ async function twirp(env, method, body, fetchImpl = fetch) {
   } catch {
     throw new LiveAuthError(
       503,
-      "Connexion LiveKit incertaine. Vérifiez l'état avant de réessayer.",
+      "Connexion LiveKit incertaine. VÃ©rifiez l'Ã©tat avant de rÃ©essayer.",
     );
   }
   if (!response.ok)
     throw new LiveAuthError(
       502,
-      `LiveKit a refusé ${method}. Vérifiez votre quota de transcodage et la caméra.`,
+      `LiveKit a refusÃ© ${method}. VÃ©rifiez votre quota de transcodage et la camÃ©ra.`,
     );
   const result = await response.json();
   if (!result || typeof result !== "object")
-    throw new LiveAuthError(502, "Réponse LiveKit invalide.");
+    throw new LiveAuthError(502, "RÃ©ponse LiveKit invalide.");
   return result;
 }
 
@@ -138,10 +138,8 @@ export async function livekitEgressDiagnostics(
     };
   const egress = active[0];
   let egressState = "active";
-  if ([0, "EGRESS_STARTING"].includes(egress.status))
-    egressState = "starting";
-  if ([2, "EGRESS_ENDING"].includes(egress.status))
-    egressState = "ending";
+  if ([0, "EGRESS_STARTING"].includes(egress.status)) egressState = "starting";
+  if ([2, "EGRESS_ENDING"].includes(egress.status)) egressState = "ending";
   return {
     active: true,
     egressState,
@@ -175,7 +173,7 @@ export async function startLivekitEgress(
   fetchImpl = fetch,
 ) {
   if (video.status !== "scheduled")
-    throw new LiveAuthError(409, "Ce direct YouTube n'est plus programmé.");
+    throw new LiveAuthError(409, "Ce direct YouTube n'est plus programmÃ©.");
   if (!/^pilotoki-camera-[0-9a-f-]{36}$/i.test(publisherIdentity))
     throw new LiveAuthError(403, "Diffuseur LiveKit invalide.");
   const room = livekitRoom(clubId, video.id);
@@ -191,7 +189,7 @@ export async function startLivekitEgress(
   if (current.length > 1)
     throw new LiveAuthError(
       409,
-      "Plusieurs retransmissions LiveKit existent : vérification manuelle nécessaire.",
+      "Plusieurs retransmissions LiveKit existent : vÃ©rification manuelle nÃ©cessaire.",
     );
 
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
@@ -223,7 +221,7 @@ export async function startLivekitEgress(
   )
     throw new LiveAuthError(
       503,
-      "LiveKit a peut-être démarré. Contrôlez l'état avant de réessayer.",
+      "LiveKit a peut-Ãªtre dÃ©marrÃ©. ContrÃ´lez l'Ã©tat avant de rÃ©essayer.",
     );
   return { started: true, active: ACTIVE.has(result.status) };
 }
@@ -244,12 +242,12 @@ export async function publishLivekitYoutube(
   if (!active.some((e) => [1, "EGRESS_ACTIVE"].includes(e.status)))
     throw new LiveAuthError(
       409,
-      "La sortie LiveKit n'est pas encore active. Vérifiez l'envoi caméra.",
+      "La sortie LiveKit n'est pas encore active. VÃ©rifiez l'envoi camÃ©ra.",
     );
   if (active.some((e) => streamHealth(e).streamState === "failed"))
     throw new LiveAuthError(
       409,
-      "La destination RTMP LiveKit est en échec. Arrêtez l'envoi et vérifiez le flux YouTube.",
+      "La destination RTMP LiveKit est en Ã©chec. ArrÃªtez l'envoi et vÃ©rifiez le flux YouTube.",
     );
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
   const accessToken = await googleAccessToken(env, channelId, fetchImpl);
@@ -279,7 +277,7 @@ async function stopRoomEgress(env, room, fetchImpl) {
     if (egressId(stopped) !== egressId(item))
       throw new LiveAuthError(
         503,
-        "LiveKit n'a pas confirmé la fin de l'envoi.",
+        "LiveKit n'a pas confirmÃ© la fin de l'envoi.",
       );
   }
   return { stopped: true };
