@@ -39,7 +39,7 @@ import { AdminPermanentSlotsPage } from "@/features/admin/reservations/pages/Adm
 import { AdminReservationsManagementPage } from "@/features/admin/reservations/pages/AdminReservationsManagementPage";
 import { AdminTvSettingsPage } from "@/features/admin/settings/pages/AdminTvSettingsPage";
 import { AdminLiveSettingsPage } from "@/features/admin/live/pages/AdminLiveSettingsPage";
-import { PilotokiLiveMobilePublisherPage } from "@/features/admin/live/pages/PilotokiLiveMobilePublisherPage";
+import { PilotokiLiveLivekitCameraPage } from "@/features/admin/live/pages/PilotokiLiveLivekitCameraPage";
 import { AdminStatisticsPage } from "@/features/admin/statistics/pages/AdminStatisticsPage";
 import { AdminTournamentAccountsPage } from "@/features/admin/tournaments/pages/AdminTournamentAccountsPage";
 import { AdminTournamentImportPage } from "@/features/admin/tournaments/pages/AdminTournamentImportPage";
@@ -145,7 +145,7 @@ export const routes = [
         path: "/live/camera",
         element: (
           <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
-            <PilotokiLiveMobilePublisherPage />
+            <PilotokiLiveLivekitCameraPage />
           </ProtectedRoute>
         ),
       },
