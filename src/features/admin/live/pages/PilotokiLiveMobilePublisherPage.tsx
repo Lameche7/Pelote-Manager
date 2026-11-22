@@ -3,7 +3,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/infrastructure/supabase/client";
 
 type PublishingState = "idle" | "capturing" | "connecting" | "connected";
-const VIDEO_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const VIDEO_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 async function authenticatedWhip(
   videoId: string,
@@ -125,9 +126,9 @@ export function PilotokiLiveMobilePublisherPage() {
     try {
       const pc = new RTCPeerConnection();
       peer.current = pc;
-      media.current.getTracks().forEach((track) =>
-        pc.addTrack(track, media.current!),
-      );
+      media.current
+        .getTracks()
+        .forEach((track) => pc.addTrack(track, media.current!));
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       await waitForIceGathering(pc);
@@ -148,7 +149,9 @@ export function PilotokiLiveMobilePublisherPage() {
       peer.current = null;
       setState("capturing");
       setError(
-        reason instanceof Error ? reason.message : "Connexion vidéo impossible.",
+        reason instanceof Error
+          ? reason.message
+          : "Connexion vidéo impossible.",
       );
     } finally {
       setBusy(false);
@@ -162,11 +165,7 @@ export function PilotokiLiveMobilePublisherPage() {
     session.current = null;
     try {
       if (activeSession)
-        await authenticatedWhip(
-          videoId,
-          { session: activeSession },
-          "DELETE",
-        );
+        await authenticatedWhip(videoId, { session: activeSession }, "DELETE");
     } catch {
       setError(
         "La passerelle n'a pas confirmé la fermeture. Vérifiez la diffusion.",
@@ -186,7 +185,9 @@ export function PilotokiLiveMobilePublisherPage() {
         distincte et nécessite une passerelle vidéo opérationnelle.
       </p>
       {!VIDEO_ID.test(videoId) ? (
-        <p role="alert">Ouvrez cette page depuis une vidéo Pilotoki préparée.</p>
+        <p role="alert">
+          Ouvrez cette page depuis une vidéo Pilotoki préparée.
+        </p>
       ) : (
         <>
           <video
@@ -208,7 +209,11 @@ export function PilotokiLiveMobilePublisherPage() {
           </p>
           {error && <p role="alert">{error}</p>}
           {state === "idle" && (
-            <button disabled={busy} type="button" onClick={() => void openCamera()}>
+            <button
+              disabled={busy}
+              type="button"
+              onClick={() => void openCamera()}
+            >
               Ouvrir ma caméra
             </button>
           )}
@@ -232,7 +237,11 @@ export function PilotokiLiveMobilePublisherPage() {
             </>
           )}
           {state !== "idle" && (
-            <button type="button" disabled={busy} onClick={() => void disconnect()}>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void disconnect()}
+            >
               Arrêter la caméra
             </button>
           )}
