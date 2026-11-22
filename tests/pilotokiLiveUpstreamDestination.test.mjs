@@ -100,7 +100,7 @@ function fakeFetch({
   return { mock, calls };
 }
 
-test("Configures a dedicated paused stream primary, without multistream or starting", async () => {
+test("Configures a paused primary without starting", async () => {
   const { mock, calls } = fakeFetch();
   assert.deepEqual(
     await prepareUpstreamYoutubeDestination(env, club, video, mock),
@@ -131,7 +131,7 @@ test("Configures a dedicated paused stream primary, without multistream or start
   assert.equal(calls.some((call) => call.options.method === "POST"), false);
 });
 
-test("Verified primary binding is idempotent and never rewrites a key", async () => {
+test("Primary binding is idempotent", async () => {
   const { mock, calls } = fakeFetch({
     primaryPlatform: "youtube",
     primaryUrl: video.youtube_video_id,
@@ -158,7 +158,7 @@ test("Existing primary or secondary is never overwritten", async () => {
   }
 });
 
-test("Changing primary YouTube identity after binding blocks preparation", async () => {
+test("Changed YouTube identity blocks preparation", async () => {
   const { mock } = fakeFetch({
     primaryPlatform: "youtube",
     primaryUrl: "OtherVideo1",
@@ -179,7 +179,7 @@ test("An active stream is never changed", async () => {
   assert.equal(calls.some((call) => call.options.method === "PATCH"), false);
 });
 
-test("Provider PATCH failure is reported without leaking stream keys", async () => {
+test("Provider failure does not leak the stream key", async () => {
   const { mock } = fakeFetch({ patchStatus: 422 });
   await assert.rejects(
     prepareUpstreamYoutubeDestination(env, club, video, mock),
@@ -196,7 +196,10 @@ test("Handler requires pilot admin and confirmation", () => {
     new URL("../api/live-youtube-ingest.mjs", import.meta.url),
     "utf8",
   );
-  assert.match(api, /request\.body\?\.action === "prepare_upstream_destination"/);
+  assert.match(
+    api,
+    /request\.body\?\.action === "prepare_upstream_destination"/,
+  );
   assert.match(api, /if \(!canConnectGoogle\)/);
   assert.match(api, /request\.body\?\.confirmed !== true/);
 });
