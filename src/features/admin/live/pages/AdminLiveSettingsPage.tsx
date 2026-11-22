@@ -270,6 +270,12 @@ export function AdminLiveSettingsPage() {
     try {
       if (searchParams.get("liveResource") && !calendarMatchId)
         throw new Error("Impossible de vérifier cette partie dans le calendrier.");
+      // A match may already be underway when its broadcast is prepared.
+      // YouTube requires a future scheduled timestamp even for an immediate live.
+      const youtubeStart =
+        calendarMatchId && date.getTime() < Date.now() + 120_000
+          ? new Date(Date.now() + 180_000)
+          : date;
       const created = await adminLiveSettingsService.prepareBroadcast({
         title: broadcastTitle,
         sourceType: broadcastType,
@@ -284,7 +290,7 @@ export function AdminLiveSettingsPage() {
               },
             }
           : {}),
-        scheduledStartTime: date.toISOString(),
+        scheduledStartTime: youtubeStart.toISOString(),
         madeForKids: madeForKids === "yes",
         consentConfirmed: true,
       });
