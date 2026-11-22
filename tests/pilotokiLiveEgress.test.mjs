@@ -140,17 +140,21 @@ test("LiveKit status supports protobuf empty lists and filters to one club room"
 
 test("RTMP diagnostic checks stream results without exposing credentials", async () => {
   const { mock } = mockedMedia({
-    existing: [{
-      room_name: room,
-      egress_id: "egress-test",
-      status: 1,
-      stream_results: [{
-        status: 2,
-        url: "rtmps://youtube.example/live/secret-do-not-return",
-        error: "secret-do-not-return",
-        retries: 3,
-      }],
-    }],
+    existing: [
+      {
+        room_name: room,
+        egress_id: "egress-test",
+        status: 1,
+        stream_results: [
+          {
+            status: 2,
+            url: "rtmps://youtube.example/live/secret-do-not-return",
+            error: "secret-do-not-return",
+            retries: 3,
+          },
+        ],
+      },
+    ],
   });
   const diagnostic = await livekitEgressDiagnostics(env, club, video.id, mock);
   assert.deepEqual(diagnostic, {
@@ -164,12 +168,14 @@ test("RTMP diagnostic checks stream results without exposing credentials", async
 
 test("An active egress with an active stream reports its true RTMP state", async () => {
   const { mock } = mockedMedia({
-    existing: [{
-      room_name: room,
-      egress_id: "egress-test",
-      status: "EGRESS_ACTIVE",
-      stream_results: [{ status: 0, retries: 0 }],
-    }],
+    existing: [
+      {
+        room_name: room,
+        egress_id: "egress-test",
+        status: "EGRESS_ACTIVE",
+        stream_results: [{ status: 0, retries: 0 }],
+      },
+    ],
   });
   assert.equal(
     (await livekitEgressDiagnostics(env, club, video.id, mock)).streamState,
