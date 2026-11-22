@@ -340,7 +340,8 @@ export function PilotokiLiveLaunchAssistant({
   };
   const validStream = streams.find(
     (stream) =>
-      stream.id === selectedStreamId && /^[0-9a-f-]{36}$/i.test(stream.id),
+      stream.id === (boundStreamId || selectedStreamId) &&
+      /^[0-9a-f-]{36}$/i.test(stream.id),
   );
   const studioUrl = validStream
     ? `https://studio.upstream.so/stream/${validStream.id}/builder?tab=studio`
@@ -385,12 +386,12 @@ export function PilotokiLiveLaunchAssistant({
           utiliser une autre clé de flux créée pour un autre direct.
         </li>
         <li>
-          Attendre que YouTube affiche l'aperçu vidéo, puis déclencher
-          volontairement « Passer au direct » dans YouTube Studio.
+          Utiliser « Diffuser cette partie » dans Pilotoki : le lancement est
+          confirmé uniquement quand YouTube reçoit le signal vidéo.
         </li>
         <li>
-          Contrôler le résultat sur la page spectateur. À la fin, arrêter la
-          diffusion dans YouTube puis dans Upstream.
+          Contrôler le résultat sur la page spectateur Pilotoki Vidéos. À la
+          fin, utiliser « Terminer ce direct » dans Pilotoki.
         </li>
       </ol>
       {streams.length > 0 && (
@@ -433,9 +434,9 @@ export function PilotokiLiveLaunchAssistant({
                     setConfirmedDestination(event.target.checked)
                   }
                 />
-                J'ai vérifié dans Upstream que cette régie utilise exclusivement
-                la destination YouTube prévue pour{" "}
-                <strong>{broadcast.title}</strong> et qu'elle est arrêtée.
+                Je confirme utiliser une régie arrêtée dédiée à ce club.
+                Pilotoki ne la réaffectera que si le direct précédent est
+                terminé et archivé sur YouTube.
               </label>
               <button
                 type="button"
@@ -534,37 +535,6 @@ export function PilotokiLiveLaunchAssistant({
                         Je confirme piloter uniquement cette vidéo YouTube. J'ai
                         vérifié la caméra et les autorisations de diffusion.
                       </label>
-                      {controlStatus.streamStatus === "active" && (
-                        <>
-                          <label className="admin-live-settings__checkbox">
-                            <input
-                              type="checkbox"
-                              checked={confirmedPublication}
-                              onChange={(event) =>
-                                setConfirmedPublication(event.target.checked)
-                              }
-                            />
-                            Je confirme la diffusion publique de cette partie et
-                            les autorisations d'image et de son.
-                          </label>
-                          <button
-                            type="button"
-                            disabled={!confirmedPublication || publishing}
-                            onClick={() => void publishYoutube()}
-                          >
-                            {publishing
-                              ? "Lancement YouTube…"
-                              : "Passer au direct YouTube depuis Pilotoki"}
-                          </button>
-                          <a
-                            href="/reseau/videos"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Ouvrir Pilotoki Vidéos
-                          </a>
-                        </>
-                      )}
                       {broadcast.status === "live" && (
                         <button
                           type="button"
@@ -600,6 +570,46 @@ export function PilotokiLiveLaunchAssistant({
                           automatiquement dans Pilotoki Vidéos.
                         </p>
                       )}
+                      <a
+                        href="/reseau/videos"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Regarder dans Pilotoki Vidéos
+                      </a>
+                      <details>
+                        <summary>Options avancées de diffusion</summary>
+                      {controlStatus.streamStatus === "active" && (
+                        <>
+                          <label className="admin-live-settings__checkbox">
+                            <input
+                              type="checkbox"
+                              checked={confirmedPublication}
+                              onChange={(event) =>
+                                setConfirmedPublication(event.target.checked)
+                              }
+                            />
+                            Je confirme la diffusion publique de cette partie et
+                            les autorisations d'image et de son.
+                          </label>
+                          <button
+                            type="button"
+                            disabled={!confirmedPublication || publishing}
+                            onClick={() => void publishYoutube()}
+                          >
+                            {publishing
+                              ? "Lancement YouTube…"
+                              : "Passer au direct YouTube depuis Pilotoki"}
+                          </button>
+                          <a
+                            href="/reseau/videos"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Ouvrir Pilotoki Vidéos
+                          </a>
+                        </>
+                      )}
                       <div className="admin-live-settings__launch-actions">
                         <button
                           type="button"
@@ -624,6 +634,7 @@ export function PilotokiLiveLaunchAssistant({
                           Arrêter Upstream
                         </button>
                       </div>
+                      </details>
                     </>
                   )}
                 </>
