@@ -52,16 +52,3 @@ test("LiveKit token API is guarded by club admin and video membership checks", (
   assert.match(endpoint, /livekit_publisher_token/);
   assert.doesNotMatch(service, /UPSTREAM_API_TOKEN/);
 });
-
-test("temporary formatter diagnostic - remove before merge", async () => {
-  const prettier = await import("prettier");
-  for (const path of ["api/_live-livekit.mjs", "api/live-youtube-ingest.mjs"]) {
-    const root = new URL("../" + path, import.meta.url);
-    const config = await prettier.resolveConfig(root.pathname);
-    const formatted = await prettier.format(readFileSync(root, "utf8"), {
-      ...config,
-      filepath: root.pathname,
-    });
-    console.log("FORMAT_START:" + path + ":" + Buffer.from(formatted).toString("base64") + ":FORMAT_END");
-  }
-});
