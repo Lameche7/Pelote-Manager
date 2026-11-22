@@ -198,5 +198,5 @@ test("Handler requires pilot admin and confirmation", () => {
   );
   assert.match(api, /request\.body\?\.action === "prepare_upstream_destination"/);
   assert.match(api, /if \(!canConnectGoogle\)/);
-  assert.match(api, /request\\.body\\?\\.confirmed !== true/);
+  assert.match(api, /request\.body\?\.confirmed !== true/);
 });
