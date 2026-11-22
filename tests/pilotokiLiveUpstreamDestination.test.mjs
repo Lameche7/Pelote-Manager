@@ -253,3 +253,35 @@ test("422 validation message safely identifies known field without echoing provi
     },
   );
 });
+
+test("422 diagnostics never log provider secrets or arbitrary provider messages", async () => {
+  const { mock } = fakeFetch();
+  const secret = "DO_NOT_LOG_PRIVATE_YOUTUBE_KEY";
+  const originalWarn = console.warn;
+  const emitted = [];
+  console.warn = (...args) => emitted.push(args);
+  try {
+    const failing = async (url, options) => {
+      if (url.endsWith("/destinations") && options?.method === "POST")
+        return {
+          ok: false,
+          status: 422,
+          json: async () => ({
+            message: `Invalid destination: ${secret}`,
+            errors: { key: [secret] },
+          }),
+        };
+      return mock(url, options);
+    };
+    await assert.rejects(
+      prepareUpstreamYoutubeDestination(env, club, video, failing),
+      /HTTP 422/,
+    );
+    assert.equal(emitted.length, 1);
+    assert.equal(emitted[0][0], "pilotoki_live_upstream_destination_422");
+    assert.deepEqual(emitted[0][1].fields, ["key"]);
+    assert.doesNotMatch(JSON.stringify(emitted), /DO_NOT_LOG|rtmps:\/\//);
+  } finally {
+    console.warn = originalWarn;
+  }
+});
