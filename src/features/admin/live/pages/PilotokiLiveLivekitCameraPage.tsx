@@ -194,6 +194,39 @@ export function PilotokiLiveLivekitCameraPage() {
     return result;
   };
 
+  const diagnoseOutput = async (): Promise<string> => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) return "";
+      const response = await fetch("/api/live-youtube-ingest", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ action: "livekit_egress_diagnostics", videoId }),
+        cache: "no-store",
+      });
+      if (!response.ok) return "";
+      const result = (await response.json()) as {
+        active?: boolean;
+        egressState?: string;
+        streamState?: string;
+        retries?: number;
+      };
+      if (!result.active)
+        return " La sortie LiveKit n'est plus active. Ne relancez pas sans vérifier l'état du direct.";
+      if (result.streamState === "failed")
+        return " La destination RTMP LiveKit est en échec. Annulez l'envoi avant de réessayer.";
+      if (result.streamState === "active")
+        return " LiveKit indique une destination RTMP active, mais YouTube n'a pas validé le direct. Vérifiez le flux et l'état dans YouTube Studio.";
+      return " LiveKit n'a pas encore confirmé de destination RTMP active. Vérifiez l'état de l'Egress.";
+    } catch {
+      return "";
+    }
+  };
+
   const goLive = async () => {
     if (egressBusy || state !== "publishing") return;
     setEgressBusy(true);
@@ -207,7 +240,7 @@ export function PilotokiLiveLivekitCameraPage() {
         setEgressState("feeding");
       }
       setBroadcastMessage(
-        "LiveKit transmet à YouTube. Attente de la confirmation du signal…",
+        "Sortie LiveKit démarrée. Vérification du signal reçu par YouTube…",
       );
       let last: unknown;
       for (let attempt = 0; attempt < 12; attempt += 1) {
@@ -237,13 +270,15 @@ export function PilotokiLiveLivekitCameraPage() {
       }
       throw last ?? new Error("YouTube n'a pas confirmé le direct.");
     } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Démarrage du direct incertain.",
-      );
+      const diagnosis = await diagnoseOutput();
+      if (activeRef.current)
+        setError(
+          (reason instanceof Error
+            ? reason.message
+            : "Démarrage du direct incertain.") + diagnosis,
+        );
     } finally {
-      setEgressBusy(false);
+      if (activeRef.current) setEgressBusy(false);
     }
   };
 

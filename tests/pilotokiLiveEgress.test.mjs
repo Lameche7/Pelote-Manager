@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import {
   livekitRoom,
   livekitEgressStatus,
+  livekitEgressDiagnostics,
   startLivekitEgress,
   abortLivekitEgress,
 } from "../api/_live-livekit-egress.mjs";
@@ -135,6 +136,51 @@ test("LiveKit status supports protobuf empty lists and filters to one club room"
     starting: false,
     count: 0,
   });
+});
+
+test("RTMP diagnostic checks stream results without exposing credentials", async () => {
+  const { mock } = mockedMedia({
+    existing: [
+      {
+        room_name: room,
+        egress_id: "egress-test",
+        status: 1,
+        stream_results: [
+          {
+            status: 2,
+            url: "rtmps://youtube.example/live/secret-do-not-return",
+            error: "secret-do-not-return",
+            retries: 3,
+          },
+        ],
+      },
+    ],
+  });
+  const diagnostic = await livekitEgressDiagnostics(env, club, video.id, mock);
+  assert.deepEqual(diagnostic, {
+    active: true,
+    egressState: "active",
+    streamState: "failed",
+    retries: 3,
+  });
+  assert.doesNotMatch(JSON.stringify(diagnostic), /secret-do-not-return/);
+});
+
+test("An active egress with an active stream reports its true RTMP state", async () => {
+  const { mock } = mockedMedia({
+    existing: [
+      {
+        room_name: room,
+        egress_id: "egress-test",
+        status: "EGRESS_ACTIVE",
+        stream_results: [{ status: 0, retries: 0 }],
+      },
+    ],
+  });
+  assert.equal(
+    (await livekitEgressDiagnostics(env, club, video.id, mock)).streamState,
+    "active",
+  );
 });
 
 test("Abort only stops the egress associated with verified video and room", async () => {

@@ -4,6 +4,7 @@ import { authorizeLivekitPublisher } from "./_live-livekit.mjs";
 import {
   startLivekitEgress,
   livekitEgressStatus,
+  livekitEgressDiagnostics,
   publishLivekitYoutube,
   finishLivekitYoutube,
   abortLivekitEgress,
@@ -66,6 +67,7 @@ export default async function handler(request, response) {
       [
         "livekit_egress_start",
         "livekit_egress_status",
+        "livekit_egress_diagnostics",
         "livekit_youtube_publish",
         "livekit_youtube_finish",
         "livekit_egress_abort",
@@ -81,10 +83,18 @@ export default async function handler(request, response) {
       const action = request.body.action;
       const videoId = request.body?.videoId;
       if (
-        action !== "livekit_egress_status" &&
+        !["livekit_egress_status", "livekit_egress_diagnostics"].includes(
+          action,
+        ) &&
         request.body?.confirmed !== true
       )
         throw new LiveAuthError(400, "Confirmation explicite requise.");
+      if (action === "livekit_egress_diagnostics") {
+        await getClubVideo(process.env, clubId, videoId, fetch, true);
+        return response
+          .status(200)
+          .json(await livekitEgressDiagnostics(process.env, clubId, videoId));
+      }
       if (action === "livekit_egress_status") {
         await getClubVideo(process.env, clubId, videoId, fetch, true);
         return response
