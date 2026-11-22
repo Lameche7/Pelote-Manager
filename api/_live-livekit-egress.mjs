@@ -105,6 +105,46 @@ async function activeEgress(env, room, fetchImpl) {
   );
 }
 
+// Do not expose stream URLs, provider error strings, or ingestion keys to clients.
+function streamHealth(item) {
+  const streams = item.stream_results ?? item.streamResults ?? [];
+  if (!Array.isArray(streams) || streams.length === 0)
+    return { streamState: "pending", retries: 0 };
+  const failed = streams.some((stream) =>
+    [2, "FAILED"].includes(stream.status),
+  );
+  const active = streams.some((stream) =>
+    [0, "ACTIVE"].includes(stream.status),
+  );
+  return {
+    streamState: failed ? "failed" : active ? "active" : "pending",
+    retries: Math.max(0, ...streams.map((stream) => Number(stream.retries) || 0)),
+  };
+}
+
+/** Read-only, sanitized diagnostics for the bound room's current RTMP output. */
+export async function livekitEgressDiagnostics(
+  env,
+  clubId,
+  videoId,
+  fetchImpl = fetch,
+) {
+  const active = await activeEgress(env, livekitRoom(clubId, videoId), fetchImpl);
+  if (!active.length)
+    return { active: false, egressState: "inactive", streamState: "unknown", retries: 0 };
+  const egress = active[0];
+  const health = streamHealth(egress);
+  return {
+    active: true,
+    egressState: [0, "EGRESS_STARTING"].includes(egress.status)
+      ? "starting"
+      : [2, "EGRESS_ENDING"].includes(egress.status)
+        ? "ending"
+        : "active",
+    ...health,
+  };
+}
+
 export async function livekitEgressStatus(
   env,
   clubId,
@@ -201,6 +241,11 @@ export async function publishLivekitYoutube(
     throw new LiveAuthError(
       409,
       "La sortie LiveKit n'est pas encore active. Vérifiez l'envoi caméra.",
+    );
+  if (active.some((e) => streamHealth(e).streamState === "failed"))
+    throw new LiveAuthError(
+      409,
+      "La destination RTMP LiveKit est en échec. Arrêtez l'envoi et vérifiez le flux YouTube.",
     );
   const ingest = await loadYoutubeIngest(env, video.id, fetchImpl);
   const accessToken = await googleAccessToken(env, channelId, fetchImpl);
