@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { publishVerifiedYoutubeLive } from "../api/_live-youtube-publish.mjs";
@@ -86,4 +87,24 @@ test("Already live is idempotent, with no new transition", async () => {
     { status: "live", alreadyLive: true },
   );
   assert.equal(requests.some((r) => r.options.method === "POST"), false);
+});
+
+test("temporary formatter diagnostic - remove before merge", async () => {
+  const prettier = await import("prettier");
+  const paths = [
+    "api/_live-youtube-publish.mjs",
+    "api/live-youtube-ingest.mjs",
+    "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
+    "tests/pilotokiLiveYoutubePublish.test.mjs",
+  ];
+  for (const path of paths) {
+    const root = new URL("../" + path, import.meta.url);
+    const original = readFileSync(root, "utf8");
+    const config = await prettier.resolveConfig(root.pathname);
+    const formatted = await prettier.format(original, {
+      ...config,
+      filepath: root.pathname,
+    });
+    console.log("FORMAT_START:" + path + ":" + Buffer.from(formatted).toString("base64") + ":FORMAT_END");
+  }
 });
