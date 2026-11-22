@@ -83,7 +83,9 @@ export default async function handler(request, response) {
       const action = request.body.action;
       const videoId = request.body?.videoId;
       if (
-        !["livekit_egress_status", "livekit_egress_diagnostics"].includes(action) &&
+        !["livekit_egress_status", "livekit_egress_diagnostics"].includes(
+          action,
+        ) &&
         request.body?.confirmed !== true
       )
         throw new LiveAuthError(400, "Confirmation explicite requise.");
