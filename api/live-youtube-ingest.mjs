@@ -50,9 +50,9 @@ export default async function handler(request, response) {
       request.method === "POST" &&
       request.body?.action === "livekit_publisher_token"
     ) {
-      return response.status(200).json(
-        await authorizeLivekitPublisher(request, process.env),
-      );
+      return response
+        .status(200)
+        .json(await authorizeLivekitPublisher(request, process.env));
     }
     // Reuse this existing API function for WebRTC signalling, preserving the
     // Vercel Hobby 12-functions limit. The helper revalidates credentials.
