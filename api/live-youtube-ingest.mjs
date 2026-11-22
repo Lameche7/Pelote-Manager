@@ -4,7 +4,11 @@ import {
   controlUpstreamStream,
   publicControlStatus,
 } from "./_live-upstream-control.mjs";
-import { prepareUpstreamYoutubeDestination } from "./_live-upstream-destination.mjs";
+import {
+  prepareUpstreamYoutubeDestination,
+  loadYoutubeIngest,
+} from "./_live-upstream-destination.mjs";
+import { publishVerifiedYoutubeLive } from "./_live-youtube-publish.mjs";
 import {
   associateUpstreamStream,
   getUpstreamBinding,
@@ -16,6 +20,7 @@ import {
 import {
   googleAccessToken,
   verifiedLiveClubAdmin,
+  synchronizeClubVideos,
 } from "./_live-youtube-broadcast.mjs";
 import {
   existingIngest,
@@ -89,6 +94,43 @@ export default async function handler(request, response) {
       request,
       process.env,
     );
+    if (request.body?.action === "publish_youtube") {
+      if (!canConnectGoogle)
+        throw new LiveAuthError(
+          403,
+          "Diffusion réservée à l'administration pilote.",
+        );
+      if (request.body?.confirmed !== true)
+        throw new LiveAuthError(
+          400,
+          "Confirmez le lancement public du direct.",
+        );
+      const video = await getClubVideo(process.env, clubId, videoId);
+      const status = await inspectUpstreamControl(
+        process.env,
+        clubId,
+        video.id,
+      );
+      if (!status.safe || status.streamStatus !== "active")
+        throw new LiveAuthError(
+          409,
+          "Démarrez d'abord la régie liée à cette vidéo dans Pilotoki.",
+        );
+      const ingest = await loadYoutubeIngest(process.env, video.id);
+      const accessToken = await googleAccessToken(process.env, channelId);
+      const result = await publishVerifiedYoutubeLive(
+        accessToken,
+        video.youtube_video_id,
+        ingest.youtube_stream_id,
+      );
+      try {
+        await synchronizeClubVideos(process.env, clubId, channelId);
+      } catch {
+        // The YouTube transition succeeded, but the public catalogue may need
+        // its next scheduled reconciliation. Never retry a publication blindly.
+      }
+      return response.status(200).json(result);
+    }
     if (request.body?.action === "control_upstream") {
       if (!canConnectGoogle)
         throw new LiveAuthError(
