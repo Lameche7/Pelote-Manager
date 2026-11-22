@@ -89,11 +89,7 @@ export async function reuseIdleUpstreamForVideo(
     oldVideo.youtube_video_id,
     fetchImpl,
   );
-  await getOwnedUpstreamStream(
-    env,
-    previous.upstream_stream_id,
-    fetchImpl,
-  );
+  await getOwnedUpstreamStream(env, previous.upstream_stream_id, fetchImpl);
   const [stream, destinations] = await Promise.all([
     inspect(env, previous.upstream_stream_id, fetchImpl),
     inspect(env, `${previous.upstream_stream_id}/destinations`, fetchImpl),
@@ -116,24 +112,21 @@ export async function reuseIdleUpstreamForVideo(
   const key = ingestUrl.substring(ingestUrl.lastIndexOf("/") + 1);
   let updated;
   try {
-    updated = await fetchImpl(
-      `${STREAMS}/${previous.upstream_stream_id}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${required(env, "UPSTREAM_API_FULL_TOKEN")}`,
-          Accept: "application/json",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          platform: "youtube",
-          key,
-          url: newVideo.youtube_video_id,
-        }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(12000),
+    updated = await fetchImpl(`${STREAMS}/${previous.upstream_stream_id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${required(env, "UPSTREAM_API_FULL_TOKEN")}`,
+        Accept: "application/json",
+        "content-type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        platform: "youtube",
+        key,
+        url: newVideo.youtube_video_id,
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(12000),
+    });
   } catch {
     throw new LiveAuthError(
       503,
