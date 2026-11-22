@@ -819,6 +819,7 @@ export function AdminLiveSettingsPage() {
                     {selectedLaunchVideoId === video.id && (
                       <PilotokiLiveLaunchAssistant
                         broadcast={video}
+                        onFinished={() => void refreshYoutubeStatuses()}
                         canAssociate={settings.canConnectGoogle}
                         streams={
                           settings.canConnectGoogle
