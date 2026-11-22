@@ -49,8 +49,8 @@ export async function publishVerifiedYoutubeLive(
     );
   if (!["public", "unlisted"].includes(broadcast.status?.privacyStatus))
     throw new LiveAuthError(409, "Cette vidéo YouTube n'est pas publiable.");
-  if (broadcast.status?.lifeCycleStatus === "live")
-    return { status: "live", alreadyLive: true };
+  if (["live", "liveStarting"].includes(broadcast.status?.lifeCycleStatus))
+    return { status: broadcast.status.lifeCycleStatus, alreadyLive: true };
   if (!["ready", "testing"].includes(broadcast.status?.lifeCycleStatus))
     throw new LiveAuthError(
       409,
@@ -81,11 +81,26 @@ export async function publishVerifiedYoutubeLive(
       signal: AbortSignal.timeout(15000),
     },
   );
-  if (!transitioned.ok)
+  if (!transitioned.ok) {
+    // YouTube auto-start may win the race against our explicit transition.
+    // Never report failure until the exact bound broadcast is checked again.
+    const latest = await youtubeRead(
+      accessToken,
+      "liveBroadcasts",
+      new URLSearchParams({ part: "status,contentDetails", id: videoId }),
+      fetchImpl,
+    );
+    if (
+      latest.id === videoId &&
+      latest.contentDetails?.boundStreamId === streamId &&
+      ["live", "liveStarting"].includes(latest.status?.lifeCycleStatus)
+    )
+      return { status: latest.status.lifeCycleStatus, alreadyLive: true };
     throw new LiveAuthError(
       502,
       "YouTube n'a pas confirmé le lancement. Vérifiez son état avant de réessayer.",
     );
+  }
   const result = await transitioned.json();
   if (
     result?.id !== videoId ||

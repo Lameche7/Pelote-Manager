@@ -102,3 +102,60 @@ test("Already live is idempotent, with no new transition", async () => {
     false,
   );
 });
+
+test("Accepts an automatically starting broadcast without a transition request", async () => {
+  const { requests, fetchMock } = mock({ lifecycle: "liveStarting" });
+  assert.deepEqual(
+    await publishVerifiedYoutubeLive("token", id, streamId, fetchMock),
+    { status: "liveStarting", alreadyLive: true },
+  );
+  assert.equal(
+    requests.some((request) => request.options.method === "POST"),
+    false,
+  );
+});
+
+test("Accepts YouTube auto-start racing with the transition", async () => {
+  let readCount = 0;
+  const requests = [];
+  const fetchMock = async (url, options = {}) => {
+    requests.push({ url, options });
+    if (url.includes("/liveBroadcasts?")) {
+      readCount += 1;
+      return {
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id,
+              contentDetails: { boundStreamId: streamId },
+              status: {
+                privacyStatus: "unlisted",
+                lifeCycleStatus: readCount === 1 ? "ready" : "live",
+              },
+            },
+          ],
+        }),
+      };
+    }
+    if (url.includes("/liveStreams?"))
+      return {
+        ok: true,
+        json: async () => ({
+          items: [{ id: streamId, status: { streamStatus: "active" } }],
+        }),
+      };
+    if (url.includes("/liveBroadcasts/transition?"))
+      return { ok: false, status: 403 };
+    throw new Error("Unexpected YouTube request");
+  };
+  assert.deepEqual(
+    await publishVerifiedYoutubeLive("token", id, streamId, fetchMock),
+    { status: "live", alreadyLive: true },
+  );
+  assert.equal(readCount, 2);
+  assert.equal(
+    requests.filter((request) => request.options.method === "POST").length,
+    1,
+  );
+});

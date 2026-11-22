@@ -118,7 +118,7 @@ test("Only the selected user's authorized club is accepted", async () => {
   assert.match(requested[1].url, /rpc\/admin_get_club_live_settings/);
 });
 
-test("A scheduled broadcast stays unlisted and does not auto-start video", async () => {
+test("A scheduled broadcast stays unlisted and auto-starts when Pilotoki starts sending video", async () => {
   let body;
   const fetchMock = async (_url, options) => {
     body = JSON.parse(options.body);
@@ -135,7 +135,7 @@ test("A scheduled broadcast stays unlisted and does not auto-start video", async
   );
   assert.equal(id, "abcdefghi12");
   assert.equal(body.status.privacyStatus, "unlisted");
-  assert.equal(body.contentDetails.enableAutoStart, false);
+  assert.equal(body.contentDetails.enableAutoStart, true);
   assert.equal(body.contentDetails.enableAutoStop, false);
 });
 
