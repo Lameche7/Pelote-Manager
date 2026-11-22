@@ -141,15 +141,19 @@ test("Only pilot administrator can create association and actions cannot start a
 
 test("Read-only upstream verification retries once on network failure", async () => {
   let calls = 0;
-  const result = await getOwnedUpstreamStream(env, stream, async (_url, opts) => {
-    calls++;
-    assert.equal(opts.method, undefined);
-    if (calls === 1) throw new Error("temporary connection failure");
-    return {
-      ok: true,
-      json: async () => ({ data: { id: stream, status: "paused" } }),
-    };
-  });
+  const result = await getOwnedUpstreamStream(
+    env,
+    stream,
+    async (_url, opts) => {
+      calls++;
+      assert.equal(opts.method, undefined);
+      if (calls === 1) throw new Error("temporary connection failure");
+      return {
+        ok: true,
+        json: async () => ({ data: { id: stream, status: "paused" } }),
+      };
+    },
+  );
   assert.equal(calls, 2);
   assert.equal(result.status, "paused");
 });
