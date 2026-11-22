@@ -286,3 +286,15 @@ test("Only an explicit authorized Pilotoki admin can rotate or complete", () => 
   assert.match(ui, /Terminer ce direct et conserver le replay/);
   assert.match(ui, /Réutiliser la régie après la partie précédente/);
 });
+
+test("temporary formatter probe", async () => {
+  const prettier = await import("prettier");
+  const path = "tests/pilotokiLiveFinishReuse.test.mjs";
+  const file = new URL("../" + path, import.meta.url);
+  const config = await prettier.resolveConfig(file.pathname);
+  const formatted = await prettier.format(readFileSync(file, "utf8"), {
+    ...config,
+    filepath: file.pathname,
+  });
+  console.log("FORMAT_START:" + Buffer.from(formatted).toString("base64") + ":FORMAT_END");
+});
