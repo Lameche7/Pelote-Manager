@@ -226,3 +226,29 @@ test("Only an explicit authorized Pilotoki admin can rotate or complete", () => 
   assert.match(ui, /Terminer ce direct et conserver le replay/);
   assert.match(ui, /Réutiliser la régie après la partie précédente/);
 });
+
+test("temporary formatter diagnostic - remove before merge", async () => {
+  const prettier = await import("prettier");
+  for (const path of [
+    "api/_live-upstream-reuse.mjs",
+    "api/live-youtube-ingest.mjs",
+    "src/features/admin/live/components/PilotokiLiveLaunchAssistant.tsx",
+    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+    "src/features/admin/live/services/adminLiveSettingsService.ts",
+    "tests/pilotokiLiveFinishReuse.test.mjs",
+  ]) {
+    const root = new URL("../" + path, import.meta.url);
+    const config = await prettier.resolveConfig(root.pathname);
+    const formatted = await prettier.format(readFileSync(root, "utf8"), {
+      ...config,
+      filepath: root.pathname,
+    });
+    console.log(
+      "FORMAT_START:" +
+        path +
+        ":" +
+        Buffer.from(formatted).toString("base64") +
+        ":FORMAT_END",
+    );
+  }
+});
