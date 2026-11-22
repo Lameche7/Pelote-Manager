@@ -4,7 +4,7 @@ import { verifiedLiveClubAdmin } from "./_live-youtube-broadcast.mjs";
 import { getClubVideo } from "./_live-youtube-ingest.mjs";
 
 // The API secret never leaves the Vercel server.
-function livekitConfig(env) {
+export function livekitConfig(env) {
   const apiKey = required(env, "LIVEKIT_API_KEY");
   const apiSecret = required(env, "LIVEKIT_API_SECRET");
   const rawUrl = required(env, "LIVEKIT_URL");
@@ -98,5 +98,5 @@ export async function authorizeLivekitPublisher(
   const room = `pilotoki-${admin.clubId}-${video.id}`;
   const identity = `pilotoki-camera-${user.id}`;
   const token = signLivekitPublisherToken(apiKey, apiSecret, room, identity);
-  return { url, token, room, videoId: video.id, expiresIn: 600 };
+  return { url, token, room, identity, videoId: video.id, expiresIn: 600 };
 }
