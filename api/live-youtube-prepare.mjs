@@ -1,5 +1,6 @@
 import {
   googleAccessToken,
+  privilegedHeaders,
   listPreparedVideos,
   storePreparedVideo,
   synchronizeClubVideos,
@@ -7,7 +8,8 @@ import {
   verifiedLiveClubAdmin,
   youtubeCreateBroadcast,
 } from "./_live-youtube-broadcast.mjs";
-import { jsonError } from "./_live-google-shared.mjs";
+import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
+import { resolveVerifiedCalendarMatch } from "./_live-calendar-match.mjs";
 import {
   authorizedCron,
   reconcileDailyVideos,
@@ -53,6 +55,40 @@ export default async function handler(request, response) {
       request,
       process.env,
     );
+    if (request.body?.calendarSlot) {
+      const match = await resolveVerifiedCalendarMatch(
+        process.env,
+        request,
+        clubId,
+        request.body.calendarSlot,
+      );
+      if (input.sourceType !== match.sourceType)
+        throw new LiveAuthError(409, "Type de rencontre incohérent.");
+      input.sourceId = match.sourceId;
+      const lookup = new URLSearchParams({
+        club_id: `eq.${clubId}`,
+        source_id: `eq.${match.sourceId}`,
+        select: "id",
+        limit: "1",
+      });
+      const existingResponse = await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/pilotoki_live_videos?${lookup}`,
+        {
+          headers: privilegedHeaders(process.env),
+          cache: "no-store",
+        },
+      );
+      if (!existingResponse.ok)
+        throw new LiveAuthError(
+          503,
+          "Vérification des directs existants indisponible.",
+        );
+      if ((await existingResponse.json())?.length)
+        throw new LiveAuthError(
+          409,
+          "Une vidéo existe déjà pour cette partie. Ouvrez sa régie depuis Pilotoki.",
+        );
+    }
     const accessToken = await googleAccessToken(process.env, channelId);
     const youtubeVideoId = await youtubeCreateBroadcast(accessToken, input);
     await storePreparedVideo(process.env, clubId, youtubeVideoId, input);

@@ -403,7 +403,7 @@ export async function listPreparedVideos(env, clubId, fetchImpl = fetch) {
   const url = required(env, "VITE_SUPABASE_URL");
   const params = new URLSearchParams({
     club_id: `eq.${clubId}`,
-    select: "id,title,youtube_video_id,source_type,status,created_at",
+    select: "id,title,youtube_video_id,source_type,source_id,status,created_at",
     order: "created_at.desc",
     limit: "20",
   });
@@ -422,6 +422,7 @@ export async function listPreparedVideos(env, clubId, fetchImpl = fetch) {
     title: entry.title,
     status: entry.status,
     sourceType: entry.source_type,
+    sourceId: entry.source_id,
     createdAt: entry.created_at,
     youtubeUrl: `https://www.youtube.com/watch?v=${entry.youtube_video_id}`,
   }));

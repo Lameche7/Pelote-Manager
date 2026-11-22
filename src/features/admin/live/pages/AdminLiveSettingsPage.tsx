@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/infrastructure/supabase/client";
 import {
   ExternalLink,
   RadioTower,
@@ -36,6 +37,8 @@ export function AdminLiveSettingsPage() {
   const [madeForKids, setMadeForKids] = useState<"" | "yes" | "no">("");
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [prepared, setPrepared] = useState<PreparedBroadcast | null>(null);
+  const [calendarMatchId, setCalendarMatchId] = useState<string | null>(null);
+  const [calendarMatchError, setCalendarMatchError] = useState("");
   const [linkingVideoId, setLinkingVideoId] = useState<string | null>(null);
   const [linkedVideoIds, setLinkedVideoIds] = useState<string[]>([]);
   const [selectedLaunchVideoId, setSelectedLaunchVideoId] = useState<
@@ -152,6 +155,50 @@ export function AdminLiveSettingsPage() {
       setBroadcastType(kind);
   }, [searchParams, settings?.clubId]);
 
+  useEffect(() => {
+    if (!settings?.clubId || searchParams.get("liveClub") !== settings.clubId)
+      return;
+    const resourceId = searchParams.get("liveResource");
+    const startsAt = searchParams.get("liveStart");
+    const endsAt = searchParams.get("liveEnd");
+    if (!resourceId || !startsAt || !endsAt) return;
+    let active = true;
+    setCalendarMatchId(null);
+    setCalendarMatchError("");
+    void supabase
+      .rpc("resolve_calendar_competition", {
+        target_resource_id: resourceId,
+        target_starts_at: startsAt,
+        target_ends_at: endsAt,
+      })
+      .then(({ data, error }) => {
+        if (!active) return;
+        const match = data as { matchId?: string; kind?: string } | null;
+        if (error || !match?.matchId) {
+          setCalendarMatchError(
+            "La rencontre a changé ou n'est plus identifiable dans le calendrier.",
+          );
+          return;
+        }
+        setCalendarMatchId(match.matchId);
+        if (match.kind === "tournament") setBroadcastType("tournoi");
+        else if (match.kind === "championship") setBroadcastType("championnat");
+      });
+    return () => {
+      active = false;
+    };
+  }, [searchParams, settings?.clubId]);
+
+  useEffect(() => {
+    if (!calendarMatchId || !settings?.canConnectGoogle) return;
+    const existing = broadcasts.find(
+      (video) => video.sourceId === calendarMatchId,
+    );
+    if (!existing) return;
+    setSelectedLaunchVideoId(existing.id);
+    if (upstreamStreams === null) void listUpstreamStreams();
+  }, [calendarMatchId, broadcasts, settings?.canConnectGoogle]);
+
   const googleCallback = new URLSearchParams(window.location.search).get(
     "live_google",
   );
@@ -220,11 +267,33 @@ export function AdminLiveSettingsPage() {
     }
     setPreparing(true);
     try {
+      if (searchParams.get("liveResource") && !calendarMatchId)
+        throw new Error(
+          "Impossible de vérifier cette partie dans le calendrier.",
+        );
+      // A match may already be underway when its broadcast is prepared.
+      // YouTube requires a future scheduled timestamp even for an immediate live.
+      const youtubeStart =
+        calendarMatchId && date.getTime() < Date.now() + 120_000
+          ? new Date(Date.now() + 180_000)
+          : date;
       const created = await adminLiveSettingsService.prepareBroadcast({
         title: broadcastTitle,
         sourceType: broadcastType,
         sourceId: null,
-        scheduledStartTime: date.toISOString(),
+        ...(calendarMatchId &&
+        searchParams.get("liveResource") &&
+        searchParams.get("liveEnd") &&
+        searchParams.get("liveStart")
+          ? {
+              calendarSlot: {
+                resourceId: searchParams.get("liveResource")!,
+                startsAt: searchParams.get("liveStart")!,
+                endsAt: searchParams.get("liveEnd")!,
+              },
+            }
+          : {}),
+        scheduledStartTime: youtubeStart.toISOString(),
         madeForKids: madeForKids === "yes",
         consentConfirmed: true,
       });
@@ -233,7 +302,30 @@ export function AdminLiveSettingsPage() {
       const items = await adminLiveSettingsService
         .listBroadcasts()
         .catch(() => null);
-      if (items) setBroadcasts(items);
+      if (items) {
+        setBroadcasts(items);
+        if (calendarMatchId) {
+          const match = items.find(
+            (video) => video.sourceId === calendarMatchId,
+          );
+          if (match) {
+            setSelectedLaunchVideoId(match.id);
+            if (settings?.canConnectGoogle) {
+              try {
+                await adminLiveSettingsService.linkYoutubeIngest(match.id);
+                setLinkedVideoIds((ids) => [...new Set([...ids, match.id])]);
+              } catch (reason) {
+                setLinkError(
+                  reason instanceof Error
+                    ? reason.message
+                    : "La liaison YouTube nécessite une vérification.",
+                );
+              }
+              if (upstreamStreams === null) void listUpstreamStreams();
+            }
+          }
+        }
+      }
     } catch (reason: unknown) {
       setPrepareError(
         reason instanceof Error
@@ -537,6 +629,20 @@ export function AdminLiveSettingsPage() {
               direct.
             </p>
           )}
+          {calendarMatchId && (
+            <p role="status">
+              Rencontre reconnue depuis le calendrier. Le direct sera lié à
+              cette partie et ne sera pas créé en double.
+            </p>
+          )}
+          {calendarMatchError && <p role="alert">{calendarMatchError}</p>}
+          {calendarMatchId &&
+            broadcasts.some((video) => video.sourceId === calendarMatchId) && (
+              <p role="status">
+                Le direct de cette partie existe déjà. Sa régie est ouverte
+                ci-dessous : utilisez « Diffuser cette partie ».
+              </p>
+            )}
           <form onSubmit={(event) => void prepareBroadcast(event)}>
             <label>
               Titre de la partie
@@ -618,7 +724,17 @@ export function AdminLiveSettingsPage() {
             )}
             <button
               type="submit"
-              disabled={preparing || !consentConfirmed || madeForKids === ""}
+              disabled={
+                preparing ||
+                !consentConfirmed ||
+                madeForKids === "" ||
+                (Boolean(searchParams.get("liveResource")) &&
+                  !calendarMatchId) ||
+                (Boolean(calendarMatchId) &&
+                  broadcasts.some(
+                    (video) => video.sourceId === calendarMatchId,
+                  ))
+              }
             >
               {preparing
                 ? "Création sur YouTube…"

@@ -1217,10 +1217,21 @@ export function ReservationsPage() {
                       liveStart: inspectedSlot.startsAt,
                       liveType: inspectedSlot.occupationType === "match" ? "tournoi" : inspectedSlot.occupationType === "championship_match" ? "championnat" : "other",
                     });
+                    if (
+                      inspectedSlot.occupationType === "match" ||
+                      inspectedSlot.occupationType === "championship_match"
+                    ) {
+                      params.set("liveResource", inspectedSlot.resourceId);
+                      params.set("liveEnd", inspectedSlot.endsAt);
+                    }
                     navigate(`${ROUTES.admin}/parametres/live?${params}`);
                   }}
                 >
-                  <Video aria-hidden="true" size={18} /> Préparer le direct de cette partie
+                  <Video aria-hidden="true" size={18} />{" "}
+                  {inspectedSlot.occupationType === "match" ||
+                  inspectedSlot.occupationType === "championship_match"
+                    ? "Diffuser cette partie"
+                    : "Préparer le direct de cette partie"}
                 </button>
               </div>
             )}
