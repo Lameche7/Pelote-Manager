@@ -114,10 +114,7 @@ function streamHealth(item) {
   const active = streams.some((stream) => [0, "ACTIVE"].includes(stream.status));
   return {
     streamState: failed ? "failed" : active ? "active" : "pending",
-    retries: Math.max(
-      0,
-      ...streams.map((stream) => Number(stream.retries) || 0),
-    ),
+    retries: Math.max(0, ...streams.map((stream) => Number(stream.retries) || 0)),
   };
 }
 
@@ -128,11 +125,7 @@ export async function livekitEgressDiagnostics(
   videoId,
   fetchImpl = fetch,
 ) {
-  const active = await activeEgress(
-    env,
-    livekitRoom(clubId, videoId),
-    fetchImpl,
-  );
+  const active = await activeEgress(env, livekitRoom(clubId, videoId), fetchImpl);
   if (!active.length)
     return {
       active: false,
