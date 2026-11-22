@@ -129,10 +129,11 @@ test("LiveKit status supports protobuf empty lists and filters to one club room"
     count: 1,
   });
   const noEgress = async () => ({ ok: true, json: async () => ({}) });
-  assert.deepEqual(
-    await livekitEgressStatus(env, club, video.id, noEgress),
-    { active: false, starting: false, count: 0 },
-  );
+  assert.deepEqual(await livekitEgressStatus(env, club, video.id, noEgress), {
+    active: false,
+    starting: false,
+    count: 0,
+  });
 });
 
 test("Abort only stops the egress associated with verified video and room", async () => {
