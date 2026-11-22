@@ -80,47 +80,54 @@ export default async function handler(request, response) {
         );
       const action = request.body.action;
       const videoId = request.body?.videoId;
-      if (action !== "livekit_egress_status" && request.body?.confirmed !== true)
+      if (
+        action !== "livekit_egress_status" &&
+        request.body?.confirmed !== true
+      )
         throw new LiveAuthError(400, "Confirmation explicite requise.");
       if (action === "livekit_egress_status") {
         await getClubVideo(process.env, clubId, videoId, fetch, true);
-        return response.status(200).json(
-          await livekitEgressStatus(process.env, clubId, videoId),
-        );
+        return response
+          .status(200)
+          .json(await livekitEgressStatus(process.env, clubId, videoId));
       }
       if (action === "livekit_egress_start") {
-        const authorized = await authorizeLivekitPublisher(request, process.env);
-        const video = await getClubVideo(process.env, clubId, videoId);
-        return response.status(200).json(
-          await startLivekitEgress(
-            process.env,
-            clubId,
-            video,
-            authorized.identity,
-          ),
+        const authorized = await authorizeLivekitPublisher(
+          request,
+          process.env,
         );
+        const video = await getClubVideo(process.env, clubId, videoId);
+        return response
+          .status(200)
+          .json(
+            await startLivekitEgress(
+              process.env,
+              clubId,
+              video,
+              authorized.identity,
+            ),
+          );
       }
       if (action === "livekit_youtube_publish")
-        return response.status(200).json(
-          await publishLivekitYoutube(
-            process.env,
-            clubId,
-            channelId,
-            videoId,
-          ),
-        );
+        return response
+          .status(200)
+          .json(
+            await publishLivekitYoutube(
+              process.env,
+              clubId,
+              channelId,
+              videoId,
+            ),
+          );
       if (action === "livekit_youtube_finish")
-        return response.status(200).json(
-          await finishLivekitYoutube(
-            process.env,
-            clubId,
-            channelId,
-            videoId,
-          ),
-        );
-      return response.status(200).json(
-        await abortLivekitEgress(process.env, clubId, videoId),
-      );
+        return response
+          .status(200)
+          .json(
+            await finishLivekitYoutube(process.env, clubId, channelId, videoId),
+          );
+      return response
+        .status(200)
+        .json(await abortLivekitEgress(process.env, clubId, videoId));
     }
     // Reuse this existing API function for WebRTC signalling, preserving the
     // Vercel Hobby 12-functions limit. The helper revalidates credentials.
