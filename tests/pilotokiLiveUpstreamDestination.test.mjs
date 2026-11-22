@@ -196,7 +196,7 @@ test("Handler requires pilot admin and confirmation", () => {
     new URL("../api/live-youtube-ingest.mjs", import.meta.url),
     "utf8",
   );
-  assert.match(api, /request\\.body\\?\\.action === "prepare_upstream_destination"/);
-  assert.match(api, /if \\(!canConnectGoogle\\)/);
+  assert.match(api, /request\.body\?\.action === "prepare_upstream_destination"/);
+  assert.match(api, /if \(!canConnectGoogle\)/);
   assert.match(api, /request\\.body\\?\\.confirmed !== true/);
 });
