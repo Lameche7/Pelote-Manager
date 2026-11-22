@@ -217,7 +217,11 @@ export async function prepareUpstreamYoutubeDestination(
         // Only report known schema field names, including Laravel-style nested
         // validation envelopes, plus predefined validation categories.
         const allowedFields = [
-          "key", "name", "platform", "status", "url",
+          "key",
+          "name",
+          "platform",
+          "status",
+          "url",
           "include_in_schedule",
         ];
         const fields = new Set();
@@ -230,11 +234,15 @@ export async function prepareUpstreamYoutubeDestination(
           }
         };
         inspect(provider);
-        const providerMessage = typeof provider?.message === "string"
-          ? provider.message : "";
+        const providerMessage =
+          typeof provider?.message === "string" ? provider.message : "";
         for (const field of allowedFields) {
           // Match only the field-identification pattern, never quote messages.
-          if (new RegExp(`\\b(?:the\\s+)?${field}\\s+field\\b`, "i").test(providerMessage))
+          if (
+            new RegExp(`\\b(?:the\\s+)?${field}\\s+field\\b`, "i").test(
+              providerMessage,
+            )
+          )
             fields.add(field);
         }
         if (fields.size)
