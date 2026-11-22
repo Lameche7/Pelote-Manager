@@ -33,6 +33,8 @@ export function PilotokiLiveLaunchAssistant({
   const [controlMessage, setControlMessage] = useState("");
   const [controlBusy, setControlBusy] = useState(false);
   const [confirmedControl, setConfirmedControl] = useState(false);
+  const [confirmedPublication, setConfirmedPublication] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   useEffect(() => {
     if (!canAssociate || broadcast.status !== "scheduled") return;
     let active = true;
@@ -150,6 +152,35 @@ export function PilotokiLiveLaunchAssistant({
       } catch {
         setControlStatus(null);
       }
+    }
+  };
+  const publishYoutube = async () => {
+    if (
+      !confirmedPublication ||
+      publishing ||
+      controlStatus?.safe !== true ||
+      controlStatus.streamStatus !== "active"
+    )
+      return;
+    setPublishing(true);
+    setControlMessage("");
+    try {
+      const result = await adminLiveSettingsService.publishYoutubeLive(
+        broadcast.id,
+      );
+      setControlMessage(
+        result.status === "live"
+          ? "Le direct est lancé sur YouTube. Retrouvez-le dans Pilotoki Vidéos."
+          : "YouTube démarre la diffusion. L'affichage dans Pilotoki Vidéos peut prendre quelques instants.",
+      );
+    } catch (error) {
+      setControlMessage(
+        error instanceof Error ? error.message : "Lancement YouTube impossible.",
+      );
+    } finally {
+      setConfirmedPublication(false);
+      setPublishing(false);
+      void refreshControl();
     }
   };
   const validStream = streams.find(
@@ -338,6 +369,33 @@ export function PilotokiLiveLaunchAssistant({
                         Je confirme piloter uniquement cette vidéo YouTube. J'ai
                         vérifié la caméra et les autorisations de diffusion.
                       </label>
+                      {controlStatus.streamStatus === "active" && (
+                        <>
+                          <label className="admin-live-settings__checkbox">
+                            <input
+                              type="checkbox"
+                              checked={confirmedPublication}
+                              onChange={(event) =>
+                                setConfirmedPublication(event.target.checked)
+                              }
+                            />
+                            Je confirme la diffusion publique de cette partie
+                            et les autorisations d'image et de son.
+                          </label>
+                          <button
+                            type="button"
+                            disabled={!confirmedPublication || publishing}
+                            onClick={() => void publishYoutube()}
+                          >
+                            {publishing
+                              ? "Lancement YouTube…"
+                              : "Passer au direct YouTube depuis Pilotoki"}
+                          </button>
+                          <a href="/reseau/videos" target="_blank" rel="noopener noreferrer">
+                            Ouvrir Pilotoki Vidéos
+                          </a>
+                        </>
+                      )}
                       <div className="admin-live-settings__launch-actions">
                         <button
                           type="button"
