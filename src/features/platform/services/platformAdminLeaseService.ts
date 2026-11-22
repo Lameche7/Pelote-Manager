@@ -1,5 +1,6 @@
 import { supabase } from "@/infrastructure/supabase/client";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
+import { verifyPlatformBusinessIdentity } from "./platformBusinessIdentityService";
 
 export type PlatformAdminLease = {
   enabled: boolean;
@@ -11,9 +12,18 @@ export type PlatformAdminLease = {
  * business authorization. This client never grants permissions itself.
  */
 export const platformAdminLeaseService = {
-  async issue(): Promise<PlatformAdminLease> {
+  async issue(clubId: string): Promise<PlatformAdminLease> {
     const platform = platformSupabase;
     if (!platform) throw new Error("Session plateforme indisponible.");
+    const identity = await verifyPlatformBusinessIdentity();
+    if (!identity.linked || !identity.businessUserId) {
+      throw new Error("Identités plateforme et métier non vérifiées.");
+    }
+    const { data: allowed, error: roleError } =
+      await platform.rpc("platform_is_admin");
+    if (roleError || allowed !== true) {
+      throw new Error("Super-administrateur requis.");
+    }
     const [platformSession, businessSession] = await Promise.all([
       platform.auth.getSession(),
       supabase.auth.getSession(),
@@ -27,6 +37,7 @@ export const platformAdminLeaseService = {
       "platform-business-admin-lease",
       {
         method: "POST",
+        body: { clubId },
         headers: {
           "X-Business-Authorization": `Bearer ${businessToken}`,
         },
@@ -40,7 +51,7 @@ export const platformAdminLeaseService = {
     if (
       !Number.isFinite(expiresAt) ||
       remainingMs <= 0 ||
-      remainingMs > 15 * 60 * 1000
+      remainingMs > 5 * 60 * 1000
     ) {
       throw new Error("Autorisation inter-clubs expirée ou invalide.");
     }
