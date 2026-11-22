@@ -202,3 +202,16 @@ test("Handler requires pilot admin and confirmation", () => {
   assert.match(api, /if \(!canConnectGoogle\)/);
   assert.match(api, /request\.body\?\.confirmed !== true/);
 });
+
+// Temporary, test-only formatter probe; remove before merge.
+test("temporary format probe", async () => {
+  const prettier = await import("prettier");
+  const file = new URL(import.meta.url).pathname;
+  const original = readFileSync(file, "utf8");
+  const config = await prettier.resolveConfig(file);
+  const formatted = await prettier.format(original, {
+    ...config,
+    filepath: file,
+  });
+  console.log("PILOTOKI_FORMAT_START" + Buffer.from(formatted).toString("base64") + "PILOTOKI_FORMAT_END");
+});
