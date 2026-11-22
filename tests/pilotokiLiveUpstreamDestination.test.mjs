@@ -277,9 +277,10 @@ test("422 diagnostics never log provider secrets or arbitrary provider messages"
       prepareUpstreamYoutubeDestination(env, club, video, failing),
       /HTTP 422/,
     );
-    assert.equal(emitted.length, 1);
-    assert.equal(emitted[0][0], "pilotoki_live_upstream_destination_422");
-    assert.deepEqual(emitted[0][1].fields, ["key"]);
+    assert.equal(emitted.length, 2);
+    assert.equal(emitted[0][0], "pilotoki_live_upstream_422_detail");
+    assert.equal(emitted[1][0], "pilotoki_live_upstream_destination_422");
+    assert.deepEqual(emitted[1][1].fields, ["key"]);
     assert.doesNotMatch(JSON.stringify(emitted), /DO_NOT_LOG|rtmps:\/\//);
   } finally {
     console.warn = originalWarn;
