@@ -100,3 +100,81 @@ export async function publishVerifiedYoutubeLive(
     alreadyLive: false,
   };
 }
+
+/** Explicitly end a matching broadcast; never complete a different video. */
+export async function completeVerifiedYoutubeLive(
+  accessToken,
+  videoId,
+  streamId,
+  fetchImpl = fetch,
+) {
+  if (!YOUTUBE_ID.test(videoId) || !STREAM_ID.test(streamId))
+    throw new LiveAuthError(400, "Identifiants YouTube invalides.");
+  const broadcast = await youtubeRead(
+    accessToken,
+    "liveBroadcasts",
+    new URLSearchParams({ part: "status,contentDetails", id: videoId }),
+    fetchImpl,
+  );
+  if (
+    broadcast.id !== videoId ||
+    broadcast.contentDetails?.boundStreamId !== streamId
+  )
+    throw new LiveAuthError(
+      409,
+      "Le direct YouTube ne correspond pas au flux Pilotoki.",
+    );
+  if (broadcast.status?.lifeCycleStatus === "complete")
+    return { status: "complete", alreadyComplete: true };
+  if (broadcast.status?.lifeCycleStatus !== "live")
+    throw new LiveAuthError(
+      409,
+      "YouTube ne confirme pas un direct en cours. Vérifiez son état.",
+    );
+  const response = await fetchImpl(
+    `${YOUTUBE}/liveBroadcasts/transition?${new URLSearchParams({
+      broadcastStatus: "complete",
+      id: videoId,
+      part: "status",
+    })}`,
+    {
+      method: "POST",
+      headers: { authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
+    },
+  );
+  if (!response.ok)
+    throw new LiveAuthError(
+      503,
+      "La fin du direct YouTube n'est pas confirmée. Vérifiez avant de réessayer.",
+    );
+  const result = await response.json();
+  if (result?.id !== videoId || result.status?.lifeCycleStatus !== "complete")
+    throw new LiveAuthError(
+      503,
+      "État YouTube incertain après la demande de fin de direct.",
+    );
+  return { status: "complete", alreadyComplete: false };
+}
+
+/** Check that YouTube really archived a previous broadcast before rotating. */
+export async function assertYoutubeBroadcastComplete(
+  accessToken,
+  videoId,
+  fetchImpl = fetch,
+) {
+  if (!YOUTUBE_ID.test(videoId))
+    throw new LiveAuthError(400, "Ancien direct invalide.");
+  const item = await youtubeRead(
+    accessToken,
+    "liveBroadcasts",
+    new URLSearchParams({ part: "status", id: videoId }),
+    fetchImpl,
+  );
+  if (item.id !== videoId || item.status?.lifeCycleStatus !== "complete")
+    throw new LiveAuthError(
+      409,
+      "Terminez d'abord la précédente vidéo sur YouTube avant de réutiliser cette régie.",
+    );
+}
