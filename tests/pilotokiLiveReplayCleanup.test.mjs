@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { encryptRefreshToken, LiveAuthError } from "../api/_live-google-shared.mjs";
 import { synchronizeClubVideos } from "../api/_live-youtube-broadcast.mjs";
 
@@ -84,4 +85,23 @@ test("A scheduled event with a missing YouTube link stays repairable", async () 
     0,
   );
   assert.ok(!fixture.calls.some((c) => c.options.method === "PATCH"));
+});
+
+test("TEMP: canonical prettier contents", async () => {
+  const prettier = await import("prettier");
+  for (const name of [
+    "api/_live-calendar-match.mjs",
+    "api/_live-youtube-broadcast.mjs",
+    "api/live-youtube-prepare.mjs",
+    "src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx",
+    "tests/calendarLiveComingSoon.test.mjs",
+    "tests/pilotokiLiveCalendarMatch.test.mjs",
+    "tests/pilotokiLiveRecover.test.mjs",
+    "tests/pilotokiLiveReplayCleanup.test.mjs",
+  ]) {
+    const filePath = new URL(`../${name}`, import.meta.url);
+    const original = readFileSync(filePath, "utf8");
+    const formatted = await prettier.format(original, { filepath: filePath.pathname });
+    console.log("LIVE626FMT_BEGIN:" + name + ":" + Buffer.from(formatted).toString("base64") + ":LIVE626FMT_END");
+  }
 });
