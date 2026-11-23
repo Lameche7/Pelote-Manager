@@ -6,7 +6,8 @@ import {
   type ClubBroadcastSummary,
 } from "@/features/admin/live/services/adminLiveSettingsService";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function PilotokiLiveMatchLaunchPage() {
   const [params] = useSearchParams();
@@ -80,7 +81,9 @@ export function PilotokiLiveMatchLaunchPage() {
       } catch (reason) {
         if (active)
           setError(
-            reason instanceof Error ? reason.message : "Préparation impossible.",
+            reason instanceof Error
+              ? reason.message
+              : "Préparation impossible.",
           );
       } finally {
         if (active) setLoading(false);
@@ -127,8 +130,7 @@ export function PilotokiLiveMatchLaunchPage() {
           video.status === "scheduled" &&
           (matchId
             ? video.sourceId === matchId
-            : video.title === title.trim() &&
-              video.sourceType === sourceType),
+            : video.title === title.trim() && video.sourceType === sourceType),
       );
       if (!prepared)
         throw new Error(
@@ -150,8 +152,8 @@ export function PilotokiLiveMatchLaunchPage() {
       <h1>Diffuser la partie</h1>
       <p>{title.trim()}</p>
       <p>
-        La diffusion se lance depuis votre téléphone, sans accès aux
-        paramètres d'administration du club.
+        La diffusion se lance depuis votre téléphone, sans accès aux paramètres
+        d'administration du club.
       </p>
       {loading ? (
         <p role="status">Vérification de la partie et des droits…</p>
@@ -185,7 +187,9 @@ export function PilotokiLiveMatchLaunchPage() {
           </label>
           <button
             type="button"
-            disabled={preparing || !consent || (!broadcast && madeForKids === "")}
+            disabled={
+              preparing || !consent || (!broadcast && madeForKids === "")
+            }
             onClick={() => void start()}
           >
             {preparing ? "Préparation YouTube…" : "Diffuser la partie"}
