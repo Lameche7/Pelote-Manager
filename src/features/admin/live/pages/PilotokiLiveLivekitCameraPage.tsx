@@ -54,12 +54,15 @@ async function fetchPublisherAccess(videoId: string): Promise<{
 export function PilotokiLiveLivekitCameraPage() {
   const [searchParams] = useSearchParams();
   const videoId = searchParams.get("videoId") ?? "";
+  const autoLaunch = searchParams.get("launch") === "1";
+  const autoLaunchRequested = useRef(false);
   const previewRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const roomRef = useRef<Room | null>(null);
   const activeRef = useRef(true);
   const [state, setState] = useState<CameraState>("idle");
-  const [consent, setConsent] = useState(false);
+  // The explicit administration « Diffuser » action also confirms launch intent.
+  const [consent, setConsent] = useState(autoLaunch);
   const [error, setError] = useState("");
   const [egressState, setEgressState] = useState<
     "idle" | "feeding" | "live" | "done"
@@ -298,6 +301,13 @@ export function PilotokiLiveLivekitCameraPage() {
     }
   };
 
+  useEffect(() => {
+    if (!autoLaunch || autoLaunchRequested.current || !VIDEO_ID.test(videoId))
+      return;
+    autoLaunchRequested.current = true;
+    void startOneClick();
+  }, [autoLaunch, videoId]);
+
   const finishLive = async () => {
     if (egressBusy || egressState !== "live") return;
     setEgressBusy(true);
@@ -329,6 +339,8 @@ export function PilotokiLiveLivekitCameraPage() {
     setError("");
     try {
       await controlLivekit("livekit_egress_abort");
+      release();
+      setState("idle");
       setEgressState("idle");
       setBroadcastMessage("Envoi LiveKit arrêté. YouTube n'a pas été publié.");
     } catch (reason) {
@@ -362,7 +374,7 @@ export function PilotokiLiveLivekitCameraPage() {
             aria-label="Aperçu caméra du téléphone"
             style={{ width: "100%", background: "#111", borderRadius: 12 }}
           />
-          {egressState === "idle" && (
+          {egressState === "idle" && !autoLaunch && (
             <label>
               <input
                 type="checkbox"
