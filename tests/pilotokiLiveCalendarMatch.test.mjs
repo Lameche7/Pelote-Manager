@@ -122,3 +122,24 @@ test("Calendar broadcaster opens a standalone non-admin launch with scoped match
   assert.match(launch, /\/live\/camera\?videoId=/);
   assert.match(permissions, /label: "Pilotoki Live"[\s\S]*permission: ADMIN_PERMISSIONS\.settings/);
 });
+
+test("TEMP exact Prettier outputs for calendar live launch", async () => {
+  const prettier = await import("prettier");
+  for (const name of [
+    "src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx",
+    "tests/pilotokiLiveCalendarMatch.test.mjs",
+  ]) {
+    const filePath = new URL(`../${name}`, import.meta.url);
+    const original = readFileSync(filePath, "utf8");
+    const formatted = await prettier.format(original, {
+      filepath: filePath.pathname,
+    });
+    console.log(
+      "LIVE_FORMAT_START:" +
+        name +
+        ":" +
+        Buffer.from(formatted).toString("base64") +
+        ":LIVE_FORMAT_END",
+    );
+  }
+});
