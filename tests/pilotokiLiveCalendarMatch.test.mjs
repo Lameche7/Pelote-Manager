@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
-import { resolveVerifiedCalendarMatch } from "../api/_live-calendar-match.mjs";
+import { resolveVerifiedCalendarMatch, resolveVerifiedLiveSlot, ordinaryCalendarLiveSourceId } from "../api/_live-calendar-match.mjs";
 
 const clubId = "188029a8-3e6a-41cd-821f-01984a703552";
 const resourceId = "33333333-3333-4333-8333-333333333333";
@@ -133,5 +133,68 @@ test("Calendar broadcaster opens a standalone non-admin launch with scoped match
   assert.match(
     permissions,
     /label: "Pilotoki Live"[\s\S]*permission: ADMIN_PERMISSIONS\.settings/,
+  );
+});
+
+
+test("Ordinary reservations and available slots have a stable authorized video identity", async () => {
+  for (const status of ["occupied", "available"]) {
+    const calls = [];
+    const verified = async (url, options = {}) => {
+      calls.push({ url: String(url), options });
+      if (String(url).includes("/reservable_resources?"))
+        return { ok: true, json: async () => [{ id: resourceId }] };
+      if (String(url).endsWith("/rpc/list_available_slots_v4"))
+        return { ok: true, json: async () => [{
+          resource_id: resourceId, starts_at: slot.startsAt,
+          ends_at: slot.endsAt, status,
+          occupation_type: status === "occupied" ? "reservation" : null,
+        }] };
+      throw new Error("Unexpected request");
+    };
+    const result = await resolveVerifiedLiveSlot(
+      env, request, clubId, slot, "other", verified,
+    );
+    assert.equal(result.sourceType, "other");
+    assert.equal(result.sourceId, ordinaryCalendarLiveSourceId(
+      clubId, resourceId, slot.startsAt, slot.endsAt,
+    ));
+    assert.match(result.sourceId, /^[0-9a-f-]{36}$/);
+    assert.equal(calls[1].options.headers.authorization, "Bearer authenticated-user");
+  }
+});
+
+test("A different club, closed slot or fake time cannot be streamed", async () => {
+  const badResource = async (url) => {
+    if (String(url).includes("/reservable_resources?"))
+      return { ok: true, json: async () => [] };
+    throw new Error("Unexpected request");
+  };
+  await assert.rejects(
+    resolveVerifiedLiveSlot(env, request, clubId, slot, "other", badResource),
+    /n'appartient pas/,
+  );
+  const closed = async (url) => {
+    if (String(url).includes("/reservable_resources?"))
+      return { ok: true, json: async () => [{ id: resourceId }] };
+    return { ok: true, json: async () => [{
+      resource_id: resourceId, starts_at: slot.startsAt,
+      ends_at: slot.endsAt, status: "locked", occupation_type: null,
+    }] };
+  };
+  await assert.rejects(
+    resolveVerifiedLiveSlot(env, request, clubId, slot, "other", closed),
+    /n'est plus disponible/,
+  );
+  await assert.rejects(
+    resolveVerifiedLiveSlot(
+      env, request, clubId, { ...slot, startsAt: "2026-12-13T14:00:00+01:00" },
+      "other", closed,
+    ),
+    /n'est plus disponible/,
+  );
+  assert.notEqual(
+    ordinaryCalendarLiveSourceId(clubId, resourceId, slot.startsAt, slot.endsAt),
+    ordinaryCalendarLiveSourceId(clubId, resourceId, "2026-12-13T14:00:00+01:00", slot.endsAt),
   );
 });
