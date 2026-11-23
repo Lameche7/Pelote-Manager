@@ -48,6 +48,7 @@ export function AdminLiveSettingsPage() {
   const [linkError, setLinkError] = useState("");
   const [broadcasts, setBroadcasts] = useState<ClubBroadcastSummary[]>([]);
   const [refreshingStatuses, setRefreshingStatuses] = useState(false);
+  const [finishingLiveId, setFinishingLiveId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [upstreamStatus, setUpstreamStatus] =
     useState<UpstreamConnectionStatus | null>(null);
@@ -371,6 +372,41 @@ export function AdminLiveSettingsPage() {
       );
     } finally {
       setRefreshingStatuses(false);
+    }
+  };
+
+  const finishActiveLive = async (video: ClubBroadcastSummary) => {
+    if (
+      finishingLiveId !== null ||
+      video.status !== "live" ||
+      !settings?.canConnectGoogle
+    )
+      return;
+    if (
+      !window.confirm(
+        `Terminer définitivement le direct YouTube « ${video.title} » ? Cette opération prépare son replay et ne peut pas être annulée.`,
+      )
+    )
+      return;
+    setFinishingLiveId(video.id);
+    setStatusMessage("");
+    try {
+      await adminLiveSettingsService.finishLivekitYoutube(video.id);
+      const result = await adminLiveSettingsService.refreshBroadcastStatuses();
+      setBroadcasts(result.videos);
+      setStatusMessage(
+        result.syncWarning
+          ? "YouTube a confirmé la clôture. La synchronisation du catalogue est momentanément indisponible."
+          : "Direct YouTube terminé. La vidéothèque a été actualisée.",
+      );
+    } catch (reason) {
+      setStatusMessage(
+        reason instanceof Error
+          ? reason.message
+          : "Impossible de confirmer la fin du direct YouTube.",
+      );
+    } finally {
+      setFinishingLiveId(null);
     }
   };
 
@@ -820,6 +856,17 @@ export function AdminLiveSettingsPage() {
                         ? "Fermer la régie"
                         : "Ouvrir la régie de diffusion"}
                     </button>
+                    {video.status === "live" && settings.canConnectGoogle && (
+                      <button
+                        type="button"
+                        disabled={finishingLiveId !== null}
+                        onClick={() => void finishActiveLive(video)}
+                      >
+                        {finishingLiveId === video.id
+                          ? "Clôture YouTube…"
+                          : "Terminer le direct YouTube"}
+                      </button>
+                    )}
                     {video.status === "scheduled" && (
                       <a
                         href={`/live/camera?videoId=${encodeURIComponent(video.id)}`}
