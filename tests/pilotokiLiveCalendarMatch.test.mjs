@@ -130,7 +130,7 @@ test("Calendar broadcaster opens a standalone non-admin launch with scoped match
   // A prepared video no longer needs the hidden children setting.
   assert.match(
     launch,
-    /preparing \|\| !consent \|\| \(!broadcast && madeForKids === ""\)/,
+    /\(\(!broadcast \|\| recoveryRequired\) && madeForKids === ""\)/,
   );
   assert.match(launch, /madeForKids: madeForKids === "yes"/);
   assert.match(launch, /\/live\/camera\?videoId=/);

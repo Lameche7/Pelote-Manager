@@ -10,6 +10,7 @@ import {
 } from "./_live-youtube-broadcast.mjs";
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
 import { resolveVerifiedCalendarMatch } from "./_live-calendar-match.mjs";
+import { recoverMissingYoutubeBroadcast } from "./_live-youtube-recover.mjs";
 import {
   authorizedCron,
   reconcileDailyVideos,
@@ -48,6 +49,19 @@ export default async function handler(request, response) {
       }
       const videos = await listPreparedVideos(process.env, clubId);
       return response.status(200).json({ videos, syncWarning });
+    }
+    if (request.body?.action === "recover_missing") {
+      const { clubId, channelId } = await verifiedLiveClubAdmin(
+        request,
+        process.env,
+      );
+      const result = await recoverMissingYoutubeBroadcast(
+        process.env,
+        request,
+        clubId,
+        channelId,
+      );
+      return response.status(200).json(result);
     }
     // No side effect on YouTube before validating both the request and club permissions.
     const input = validateBroadcastInput(request.body);

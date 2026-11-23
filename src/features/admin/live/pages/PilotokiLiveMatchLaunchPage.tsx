@@ -26,6 +26,7 @@ export function PilotokiLiveMatchLaunchPage() {
   const [matchId, setMatchId] = useState<string | null>(null);
   const [madeForKids, setMadeForKids] = useState<"yes" | "no" | "">("");
   const [consent, setConsent] = useState(false);
+  const [recoveryRequired, setRecoveryRequired] = useState(false);
   const hasCalendarMatch =
     UUID.test(resourceId) &&
     Number.isFinite(Date.parse(startsAt)) &&
@@ -100,11 +101,52 @@ export function PilotokiLiveMatchLaunchPage() {
   };
 
   const start = async () => {
-    if (preparing || !consent || (!broadcast && madeForKids === "")) return;
+    if (
+      preparing ||
+      !consent ||
+      ((!broadcast || recoveryRequired) && madeForKids === "")
+    )
+      return;
     setPreparing(true);
     setError("");
     try {
       if (broadcast) {
+        // Validate the exact event and repair only if YouTube confirms deletion.
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+        if (!hasCalendarMatch)
+          throw new Error("La réparation nécessite une partie identifiée.");
+        const response = await fetch("/api/live-youtube-prepare", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "recover_missing",
+            videoId: broadcast.id,
+            calendarSlot: { resourceId, startsAt, endsAt },
+            consentConfirmed: consent,
+            ...(madeForKids !== ""
+              ? { madeForKids: madeForKids === "yes" }
+              : {}),
+          }),
+          cache: "no-store",
+        });
+        const result = (await response.json()) as {
+          error?: string;
+          requiresClassification?: boolean;
+          videoId?: string;
+        };
+        if (!response.ok)
+          throw new Error(result.error ?? "Vérification YouTube indisponible.");
+        if (result.requiresClassification) {
+          setRecoveryRequired(true);
+          return;
+        }
+        if (result.videoId !== broadcast.id)
+          throw new Error("Identité du direct incohérente après vérification.");
         launch(broadcast.id);
         return;
       }
@@ -159,10 +201,17 @@ export function PilotokiLiveMatchLaunchPage() {
         <p role="status">Vérification de la partie et des droits…</p>
       ) : (
         <>
+          {recoveryRequired && (
+            <p role="status">
+              La précédente vidéo a été supprimée sur YouTube. Pilotoki peut
+              recréer son direct sans perdre la partie. Choisissez la
+              classification du public ci-dessous.
+            </p>
+          )}
           {!broadcast && !error && (
             <p>Cette partie n'a pas encore de direct YouTube préparé.</p>
           )}
-          {!broadcast && (
+          {(!broadcast || recoveryRequired) && (
             <label>
               Ce direct est-il destiné spécifiquement aux enfants ?
               <select
@@ -188,7 +237,9 @@ export function PilotokiLiveMatchLaunchPage() {
           <button
             type="button"
             disabled={
-              preparing || !consent || (!broadcast && madeForKids === "")
+              preparing ||
+              !consent ||
+              ((!broadcast || recoveryRequired) && madeForKids === "")
             }
             onClick={() => void start()}
           >
