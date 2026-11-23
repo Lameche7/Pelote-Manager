@@ -62,6 +62,10 @@ test("Mobile publisher tags raw tracks so participant egress captures camera", (
     "utf8",
   );
   assert.match(source, /source: Track\.Source\.Camera/);
+  assert.match(source, /width: \{ ideal: 1920 \}/);
+  assert.match(source, /height: \{ ideal: 1080 \}/);
+  assert.match(source, /maxBitrate: 4_500_000/);
+  assert.match(source, /maxFramerate: 30/);
   assert.match(source, /source: Track\.Source\.Microphone/);
   assert.match(source, /getTrackPublication\(\s*Track\.Source\.Camera/);
   assert.match(source, /videoTrack\.readyState !== "live"/);
