@@ -101,7 +101,12 @@ export function PilotokiLiveMatchLaunchPage() {
   };
 
   const start = async () => {
-    if (preparing || !consent || ((!broadcast || recoveryRequired) && madeForKids === "")) return;
+    if (
+      preparing ||
+      !consent ||
+      ((!broadcast || recoveryRequired) && madeForKids === "")
+    )
+      return;
     setPreparing(true);
     setError("");
     try {
@@ -232,7 +237,9 @@ export function PilotokiLiveMatchLaunchPage() {
           <button
             type="button"
             disabled={
-              preparing || !consent || ((!broadcast || recoveryRequired) && madeForKids === "")
+              preparing ||
+              !consent ||
+              ((!broadcast || recoveryRequired) && madeForKids === "")
             }
             onClick={() => void start()}
           >
