@@ -45,10 +45,10 @@ function fixture({ youtubeItems = [], matchCorrect = true, active = false } = {}
       return response([{ id: resourceId }]);
     if (value.includes("/rpc/resolve_calendar_competition"))
       return response({ kind: "tournament", matchId });
-    if (value.includes("/youtube/v3/liveBroadcasts?") || value.includes("/www.googleapis.com/youtube/v3/liveBroadcasts?"))
-      return response({ items: youtubeItems });
     if (value.includes("www.googleapis.com/youtube/v3/liveBroadcasts?") && method === "POST")
       return response({ id: newYoutubeId });
+    if (value.includes("www.googleapis.com/youtube/v3/liveBroadcasts?"))
+      return response({ items: youtubeItems });
     if (value.includes("/pilotoki_live_ingest_credentials?"))
       return response(null);
     if (value.includes("/pilotoki_live_videos?") && method === "PATCH")
