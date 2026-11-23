@@ -26,7 +26,10 @@ test("Calendar proposes live on free or occupied real slots to authorized admini
     calendar,
     /isAuthenticated && canPrepareLive && \["occupied", "available"\]\.includes\(inspectedSlot\.status\)/,
   );
-  assert.match(calendar, /params\.set\("liveResource", inspectedSlot\.resourceId\)/);
+  assert.match(
+    calendar,
+    /params\.set\("liveResource", inspectedSlot\.resourceId\)/,
+  );
   assert.match(calendar, /Diffuser cette partie/);
   assert.doesNotMatch(calendar, /setLiveComingSoon/);
 });
