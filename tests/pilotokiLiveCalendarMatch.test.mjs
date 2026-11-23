@@ -127,6 +127,8 @@ test("Calendar broadcaster opens a standalone non-admin launch with scoped match
   assert.match(launch, /video\.sourceId === resolvedMatchId/);
   assert.match(launch, /settings\.clubId !== clubId/);
   assert.match(launch, /consentConfirmed: true/);
+  // A prepared broadcast already has its YouTube children setting; the hidden select must not block the click.
+  assert.match(launch, /preparing \|\| !consent \|\| \(!broadcast && madeForKids === ""\)/);
   assert.match(launch, /madeForKids: madeForKids === "yes"/);
   assert.match(launch, /\/live\/camera\?videoId=/);
   assert.match(
