@@ -188,13 +188,13 @@ test("A different club, closed slot or fake time cannot be streamed", async () =
   );
   await assert.rejects(
     resolveVerifiedLiveSlot(
-      env, request, clubId, { ...slot, startsAt: "2026-12-13T14:00:00+01:00" },
+      env, request, clubId, { ...slot, startsAt: "2026-12-12T14:30:00+01:00" },
       "other", closed,
     ),
     /n'est plus disponible/,
   );
   assert.notEqual(
     ordinaryCalendarLiveSourceId(clubId, resourceId, slot.startsAt, slot.endsAt),
-    ordinaryCalendarLiveSourceId(clubId, resourceId, "2026-12-13T14:00:00+01:00", slot.endsAt),
+    ordinaryCalendarLiveSourceId(clubId, resourceId, "2026-12-12T14:30:00+01:00", slot.endsAt),
   );
 });
