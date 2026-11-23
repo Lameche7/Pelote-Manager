@@ -97,6 +97,7 @@ select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
 select public.issue_platform_admin_lease(
   '20000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000002',
   300
 );
 reset role;
@@ -128,6 +129,7 @@ select set_config('request.jwt.claim.role', 'service_role', true);
 set local role service_role;
 select public.issue_platform_admin_lease(
   '20000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000002',
   300
 );
 select public.revoke_platform_admin_lease(
