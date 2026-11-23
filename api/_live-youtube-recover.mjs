@@ -30,7 +30,10 @@ export async function recoverMissingYoutubeBroadcast(
   const video = await getClubVideo(env, clubId, videoId, fetchImpl);
   const calendarSlot = request.body?.calendarSlot;
   if (!calendarSlot)
-    throw new LiveAuthError(400, "La rencontre doit être vérifiée depuis le calendrier.");
+    throw new LiveAuthError(
+      400,
+      "La rencontre doit être vérifiée depuis le calendrier.",
+    );
   const match = await resolveVerifiedCalendarMatch(
     env,
     request,
@@ -55,7 +58,10 @@ export async function recoverMissingYoutubeBroadcast(
   if (!check.ok)
     throw new LiveAuthError(503, "Vérification de la partie indisponible.");
   if ((await check.json())?.length !== 1)
-    throw new LiveAuthError(403, "Cette diffusion n'est pas liée à la partie sélectionnée.");
+    throw new LiveAuthError(
+      403,
+      "Cette diffusion n'est pas liée à la partie sélectionnée.",
+    );
 
   const token = await getAccessToken(env, channelId, fetchImpl);
   const youtubeResponse = await fetchImpl(
@@ -77,19 +83,35 @@ export async function recoverMissingYoutubeBroadcast(
       "Réponse YouTube invalide : aucun remplacement effectué.",
     );
   if (youtube.items.length > 0) {
-    if (youtube.items.length !== 1 || youtube.items[0]?.id !== video.youtube_video_id)
-      throw new LiveAuthError(409, "Identité YouTube incohérente : aucun remplacement effectué.");
+    if (
+      youtube.items.length !== 1 ||
+      youtube.items[0]?.id !== video.youtube_video_id
+    )
+      throw new LiveAuthError(
+        409,
+        "Identité YouTube incohérente : aucun remplacement effectué.",
+      );
     const lifecycle = youtube.items[0]?.status?.lifeCycleStatus;
     if (lifecycle === "complete" || lifecycle === "revoked")
-      throw new LiveAuthError(409, "Ce direct YouTube est terminé. Préparez une nouvelle diffusion.");
-    return { recovered: false, videoId: video.id, youtubeUrl: `https://www.youtube.com/watch?v=${video.youtube_video_id}` };
+      throw new LiveAuthError(
+        409,
+        "Ce direct YouTube est terminé. Préparez une nouvelle diffusion.",
+      );
+    return {
+      recovered: false,
+      videoId: video.id,
+      youtubeUrl: `https://www.youtube.com/watch?v=${video.youtube_video_id}`,
+    };
   }
 
   // An absent YouTube event requires explicit adult/children classification.
   if (typeof request.body?.madeForKids !== "boolean")
     return { requiresClassification: true, videoId: video.id };
   if (request.body?.consentConfirmed !== true)
-    throw new LiveAuthError(400, "Confirmez les autorisations de captation et de diffusion.");
+    throw new LiveAuthError(
+      400,
+      "Confirmez les autorisations de captation et de diffusion.",
+    );
 
   const status = await egressStatus(env, clubId, video.id, fetchImpl);
   if (status.active)
