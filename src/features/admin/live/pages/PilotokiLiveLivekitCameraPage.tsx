@@ -146,8 +146,14 @@ export function PilotokiLiveLivekitCameraPage() {
       const audioTrack = streamRef.current.getAudioTracks()[0];
       if (!videoTrack || !audioTrack)
         throw new Error("La caméra et le microphone sont nécessaires.");
-      if (videoTrack.readyState !== "live" || !videoTrack.enabled || videoTrack.muted)
-        throw new Error("La caméra n'envoie pas d'image. Vérifiez les autorisations du téléphone.");
+      if (
+        videoTrack.readyState !== "live" ||
+        !videoTrack.enabled ||
+        videoTrack.muted
+      )
+        throw new Error(
+          "La caméra n'envoie pas d'image. Vérifiez les autorisations du téléphone.",
+        );
       if (audioTrack.readyState !== "live")
         throw new Error("Le microphone n'est plus actif.");
       // LiveKit's participant_video egress selector only captures CAMERA sources.
