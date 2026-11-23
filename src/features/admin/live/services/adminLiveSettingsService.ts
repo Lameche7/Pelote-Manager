@@ -167,7 +167,9 @@ export const adminLiveSettingsService = {
       error?: string;
     };
     if (!response.ok || result.completed !== true)
-      throw new Error(result.error ?? "YouTube n'a pas confirmé la fin du direct.");
+      throw new Error(
+        result.error ?? "YouTube n'a pas confirmé la fin du direct.",
+      );
   },
 
   async finishYoutubeLive(videoId: string): Promise<void> {
