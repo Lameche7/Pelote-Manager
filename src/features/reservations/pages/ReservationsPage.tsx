@@ -1224,7 +1224,7 @@ export function ReservationsPage() {
                       params.set("liveResource", inspectedSlot.resourceId);
                       params.set("liveEnd", inspectedSlot.endsAt);
                     }
-                    navigate(`${ROUTES.admin}/parametres/live?${params}`);
+                    navigate(`/live/launch?${params}`);
                   }}
                 >
                   <Video aria-hidden="true" size={18} />{" "}
