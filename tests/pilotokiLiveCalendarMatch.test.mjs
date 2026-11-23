@@ -92,7 +92,10 @@ test("User cannot spoof a match ID directly from the browser", () => {
 
 test("Calendar broadcaster opens a standalone non-admin launch with scoped match verification", () => {
   const calendar = readFileSync(
-    new URL("../src/features/reservations/pages/ReservationsPage.tsx", import.meta.url),
+    new URL(
+      "../src/features/reservations/pages/ReservationsPage.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   const router = readFileSync(
@@ -107,11 +110,17 @@ test("Calendar broadcaster opens a standalone non-admin launch with scoped match
     "utf8",
   );
   const permissions = readFileSync(
-    new URL("../src/features/admin/config/adminPermissions.ts", import.meta.url),
+    new URL(
+      "../src/features/admin/config/adminPermissions.ts",
+      import.meta.url,
+    ),
     "utf8",
   );
   assert.match(calendar, /navigate\(\`\/live\/launch\?\$\{params\}\`\)/);
-  assert.doesNotMatch(calendar, /navigate\(\`\$\{ROUTES\.admin\}\/parametres\/live/);
+  assert.doesNotMatch(
+    calendar,
+    /navigate\(\`\$\{ROUTES\.admin\}\/parametres\/live/,
+  );
   assert.match(router, /path: "\/live\/launch"/);
   assert.match(router, /<PilotokiLiveMatchLaunchPage/);
   assert.match(launch, /resolve_calendar_competition/);
@@ -120,26 +129,8 @@ test("Calendar broadcaster opens a standalone non-admin launch with scoped match
   assert.match(launch, /consentConfirmed: true/);
   assert.match(launch, /madeForKids: madeForKids === "yes"/);
   assert.match(launch, /\/live\/camera\?videoId=/);
-  assert.match(permissions, /label: "Pilotoki Live"[\s\S]*permission: ADMIN_PERMISSIONS\.settings/);
-});
-
-test("TEMP exact Prettier outputs for calendar live launch", async () => {
-  const prettier = await import("prettier");
-  for (const name of [
-    "src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx",
-    "tests/pilotokiLiveCalendarMatch.test.mjs",
-  ]) {
-    const filePath = new URL(`../${name}`, import.meta.url);
-    const original = readFileSync(filePath, "utf8");
-    const formatted = await prettier.format(original, {
-      filepath: filePath.pathname,
-    });
-    console.log(
-      "LIVE_FORMAT_START:" +
-        name +
-        ":" +
-        Buffer.from(formatted).toString("base64") +
-        ":LIVE_FORMAT_END",
-    );
-  }
+  assert.match(
+    permissions,
+    /label: "Pilotoki Live"[\s\S]*permission: ADMIN_PERMISSIONS\.settings/,
+  );
 });
