@@ -70,7 +70,11 @@ export function PilotokiLiveMatchLaunchPage() {
           sourceType?: string;
           error?: string;
         };
-        if (!verify.ok || !UUID.test(resolved.sourceId ?? "") || resolved.sourceType !== sourceType)
+        if (
+          !verify.ok ||
+          !UUID.test(resolved.sourceId ?? "") ||
+          resolved.sourceType !== sourceType
+        )
           throw new Error(resolved.error ?? "Créneau non vérifiable.");
         const resolvedMatchId = resolved.sourceId!;
         const videos = await adminLiveSettingsService.listBroadcasts();
@@ -206,7 +210,8 @@ export function PilotokiLiveMatchLaunchPage() {
               onChange={(event) => setMadeForKids(event.target.checked)}
             />
             Cette diffusion est conçue spécifiquement pour les enfants
-            (désactivé par défaut pour les rencontres sportives destinées à tous).
+            (désactivé par défaut pour les rencontres sportives destinées à
+            tous).
           </label>
           <label>
             <input
