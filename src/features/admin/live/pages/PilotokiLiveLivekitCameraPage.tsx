@@ -97,8 +97,8 @@ export function PilotokiLiveLivekitCameraPage() {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
           frameRate: { ideal: 30 },
         },
         audio: { echoCancellation: true, noiseSuppression: true },
@@ -161,6 +161,7 @@ export function PilotokiLiveLivekitCameraPage() {
       await room.localParticipant.publishTrack(videoTrack, {
         source: Track.Source.Camera,
         simulcast: false,
+        videoEncoding: { maxBitrate: 4_500_000, maxFramerate: 30 },
       });
       await room.localParticipant.publishTrack(audioTrack, {
         source: Track.Source.Microphone,
