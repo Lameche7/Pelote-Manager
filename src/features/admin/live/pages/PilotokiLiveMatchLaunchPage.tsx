@@ -24,14 +24,12 @@ export function PilotokiLiveMatchLaunchPage() {
   const [error, setError] = useState("");
   const [broadcast, setBroadcast] = useState<ClubBroadcastSummary | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
-  const [madeForKids, setMadeForKids] = useState<"yes" | "no" | "">("");
+  const [madeForKids, setMadeForKids] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [recoveryRequired, setRecoveryRequired] = useState(false);
-  const hasCalendarMatch =
+  const hasCalendarSlot =
     UUID.test(resourceId) &&
     Number.isFinite(Date.parse(startsAt)) &&
-    Number.isFinite(Date.parse(endsAt)) &&
-    (sourceType === "tournoi" || sourceType === "championnat");
+    Number.isFinite(Date.parse(endsAt));
 
   useEffect(() => {
     let active = true;
@@ -49,25 +47,32 @@ export function PilotokiLiveMatchLaunchPage() {
           throw new Error(
             "La diffusion n'est pas autorisée pour ce club. Vérifiez vos droits.",
           );
-        let resolvedMatchId: string | null = null;
-        if (hasCalendarMatch) {
-          const { data, error: matchError } = await supabase.rpc(
-            "resolve_calendar_competition",
-            {
-              target_resource_id: resourceId,
-              target_starts_at: startsAt,
-              target_ends_at: endsAt,
-            },
-          );
-          const match = data as { matchId?: string; kind?: string } | null;
-          const expectedKind =
-            sourceType === "tournoi" ? "tournament" : "championship";
-          if (matchError || !match?.matchId || match.kind !== expectedKind)
-            throw new Error(
-              "Cette rencontre n'est plus identifiable dans le calendrier.",
-            );
-          resolvedMatchId = match.matchId;
-        }
+        if (!hasCalendarSlot)
+          throw new Error("Ce créneau ne peut pas être vérifié.");
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+        if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+        const verify = await fetch("/api/live-youtube-prepare", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "resolve_slot",
+            sourceType,
+            calendarSlot: { resourceId, startsAt, endsAt },
+          }),
+          cache: "no-store",
+        });
+        const resolved = (await verify.json()) as {
+          sourceId?: string;
+          sourceType?: string;
+          error?: string;
+        };
+        if (!verify.ok || !UUID.test(resolved.sourceId ?? "") || resolved.sourceType !== sourceType)
+          throw new Error(resolved.error ?? "Créneau non vérifiable.");
+        const resolvedMatchId = resolved.sourceId!;
         const videos = await adminLiveSettingsService.listBroadcasts();
         if (active) {
           setMatchId(resolvedMatchId);
@@ -94,19 +99,14 @@ export function PilotokiLiveMatchLaunchPage() {
     return () => {
       active = false;
     };
-  }, [clubId, resourceId, startsAt, endsAt, sourceType, hasCalendarMatch]);
+  }, [clubId, resourceId, startsAt, endsAt, sourceType, hasCalendarSlot]);
 
   const launch = (videoId: string) => {
     navigate(`/live/camera?videoId=${encodeURIComponent(videoId)}&launch=1`);
   };
 
   const start = async () => {
-    if (
-      preparing ||
-      !consent ||
-      ((!broadcast || recoveryRequired) && madeForKids === "")
-    )
-      return;
+    if (preparing || !consent) return;
     setPreparing(true);
     setError("");
     try {
@@ -115,7 +115,7 @@ export function PilotokiLiveMatchLaunchPage() {
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token;
         if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
-        if (!hasCalendarMatch)
+        if (!hasCalendarSlot)
           throw new Error("La réparation nécessite une partie identifiée.");
         const response = await fetch("/api/live-youtube-prepare", {
           method: "POST",
@@ -128,9 +128,8 @@ export function PilotokiLiveMatchLaunchPage() {
             videoId: broadcast.id,
             calendarSlot: { resourceId, startsAt, endsAt },
             consentConfirmed: consent,
-            ...(madeForKids !== ""
-              ? { madeForKids: madeForKids === "yes" }
-              : {}),
+            sourceType,
+            madeForKids,
           }),
           cache: "no-store",
         });
@@ -141,10 +140,8 @@ export function PilotokiLiveMatchLaunchPage() {
         };
         if (!response.ok)
           throw new Error(result.error ?? "Vérification YouTube indisponible.");
-        if (result.requiresClassification) {
-          setRecoveryRequired(true);
-          return;
-        }
+        if (result.requiresClassification)
+          throw new Error("La classification du direct doit être confirmée.");
         if (result.videoId !== broadcast.id)
           throw new Error("Identité du direct incohérente après vérification.");
         launch(broadcast.id);
@@ -159,11 +156,9 @@ export function PilotokiLiveMatchLaunchPage() {
         title: title.trim(),
         sourceType: sourceType as "tournoi" | "championnat" | "other",
         sourceId: null,
-        ...(hasCalendarMatch
-          ? { calendarSlot: { resourceId, startsAt, endsAt } }
-          : {}),
+        calendarSlot: { resourceId, startsAt, endsAt },
         scheduledStartTime,
-        madeForKids: madeForKids === "yes",
+        madeForKids,
         consentConfirmed: true,
       });
       const videos = await adminLiveSettingsService.listBroadcasts();
@@ -201,31 +196,18 @@ export function PilotokiLiveMatchLaunchPage() {
         <p role="status">Vérification de la partie et des droits…</p>
       ) : (
         <>
-          {recoveryRequired && (
-            <p role="status">
-              La précédente vidéo a été supprimée sur YouTube. Pilotoki peut
-              recréer son direct sans perdre la partie. Choisissez la
-              classification du public ci-dessous.
-            </p>
-          )}
           {!broadcast && !error && (
             <p>Cette partie n'a pas encore de direct YouTube préparé.</p>
           )}
-          {(!broadcast || recoveryRequired) && (
-            <label>
-              Ce direct est-il destiné spécifiquement aux enfants ?
-              <select
-                value={madeForKids}
-                onChange={(event) =>
-                  setMadeForKids(event.target.value as "yes" | "no" | "")
-                }
-              >
-                <option value="">Choisir</option>
-                <option value="no">Non</option>
-                <option value="yes">Oui</option>
-              </select>
-            </label>
-          )}
+          <label>
+            <input
+              type="checkbox"
+              checked={madeForKids}
+              onChange={(event) => setMadeForKids(event.target.checked)}
+            />
+            Cette diffusion est conçue spécifiquement pour les enfants
+            (désactivé par défaut pour les rencontres sportives destinées à tous).
+          </label>
           <label>
             <input
               type="checkbox"
@@ -236,11 +218,7 @@ export function PilotokiLiveMatchLaunchPage() {
           </label>
           <button
             type="button"
-            disabled={
-              preparing ||
-              !consent ||
-              ((!broadcast || recoveryRequired) && madeForKids === "")
-            }
+            disabled={preparing || !consent}
             onClick={() => void start()}
           >
             {preparing ? "Préparation YouTube…" : "Diffuser la partie"}
