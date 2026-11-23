@@ -75,7 +75,7 @@ test("User cannot spoof a match ID directly from the browser", () => {
     new URL("../api/live-youtube-prepare.mjs", import.meta.url),
     "utf8",
   );
-  assert.match(prepare, /resolveVerifiedCalendarMatch/);
+  assert.match(prepare, /resolveVerifiedLiveSlot/);
   assert.match(prepare, /input\.sourceId = match\.sourceId/);
   assert.match(prepare, /Une vidéo existe déjà pour cette partie/);
   const calendar = readFileSync(
@@ -123,16 +123,12 @@ test("Calendar broadcaster opens a standalone non-admin launch with scoped match
   );
   assert.match(router, /path: "\/live\/launch"/);
   assert.match(router, /<PilotokiLiveMatchLaunchPage/);
-  assert.match(launch, /resolve_calendar_competition/);
+  assert.match(launch, /action: "resolve_slot"/);
   assert.match(launch, /video\.sourceId === resolvedMatchId/);
   assert.match(launch, /settings\.clubId !== clubId/);
   assert.match(launch, /consentConfirmed: true/);
-  // A prepared video no longer needs the hidden children setting.
-  assert.match(
-    launch,
-    /\(\(!broadcast \|\| recoveryRequired\) && madeForKids === ""\)/,
-  );
-  assert.match(launch, /madeForKids: madeForKids === "yes"/);
+  assert.match(launch, /const \[madeForKids, setMadeForKids\] = useState\(false\)/);
+  assert.match(launch, /madeForKids,/);
   assert.match(launch, /\/live\/camera\?videoId=/);
   assert.match(
     permissions,
