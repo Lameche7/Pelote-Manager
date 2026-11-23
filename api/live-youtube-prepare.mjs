@@ -66,7 +66,10 @@ export default async function handler(request, response) {
     if (request.body?.action === "resolve_slot") {
       const { clubId } = await verifiedLiveClubAdmin(request, process.env);
       const selection = await resolveVerifiedLiveSlot(
-        process.env, request, clubId, request.body?.calendarSlot,
+        process.env,
+        request,
+        clubId,
+        request.body?.calendarSlot,
         request.body?.sourceType,
       );
       return response.status(200).json(selection);
