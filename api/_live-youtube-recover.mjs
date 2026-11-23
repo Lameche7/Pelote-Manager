@@ -7,7 +7,7 @@ import {
   youtubeCreateBroadcast,
 } from "./_live-youtube-broadcast.mjs";
 import { getClubVideo } from "./_live-youtube-ingest.mjs";
-import { resolveVerifiedCalendarMatch } from "./_live-calendar-match.mjs";
+import { resolveVerifiedLiveSlot } from "./_live-calendar-match.mjs";
 import { livekitEgressStatus } from "./_live-livekit-egress.mjs";
 
 const YOUTUBE_API = "https://www.googleapis.com/youtube/v3/liveBroadcasts";
@@ -34,11 +34,12 @@ export async function recoverMissingYoutubeBroadcast(
       400,
       "La rencontre doit être vérifiée depuis le calendrier.",
     );
-  const match = await resolveVerifiedCalendarMatch(
+  const match = await resolveVerifiedLiveSlot(
     env,
     request,
     clubId,
     calendarSlot,
+    request.body?.sourceType,
     fetchImpl,
   );
   const base = required(env, "VITE_SUPABASE_URL");

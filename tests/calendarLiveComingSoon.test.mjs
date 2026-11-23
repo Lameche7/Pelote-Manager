@@ -17,17 +17,20 @@ const liveAdmin = readFileSync(
   "utf8",
 );
 
-test("Calendar proposes Pilotoki Live only for booked matches to a settings administrator", () => {
+test("Calendar proposes live on free or occupied real slots to authorized administrators", () => {
   assert.match(
     calendar,
     /canPrepareLive = adminPermissions\.includes\(ADMIN_PERMISSIONS\.settings\)/,
   );
   assert.match(
     calendar,
-    /isAuthenticated && canPrepareLive && inspectedSlot\.status === "occupied"/,
+    /isAuthenticated && canPrepareLive && \["occupied", "available"\]\.includes\(inspectedSlot\.status\)/,
   );
-  assert.match(calendar, /Boolean\(inspectedSlot\.ordinaryTeams\)/);
-  assert.match(calendar, /Préparer le direct de cette partie/);
+  assert.match(
+    calendar,
+    /params\.set\("liveResource", inspectedSlot\.resourceId\)/,
+  );
+  assert.match(calendar, /Diffuser cette partie/);
   assert.doesNotMatch(calendar, /setLiveComingSoon/);
 });
 

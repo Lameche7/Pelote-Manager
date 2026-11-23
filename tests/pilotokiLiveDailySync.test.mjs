@@ -50,7 +50,7 @@ test("Daily reconciliation avoids YouTube entirely when no unfinished videos exi
   });
   assert.deepEqual(result, { clubs: 0, updated: 0 });
   assert.equal(calls.length, 1);
-  assert.match(calls[0], /status=in.%28scheduled%2Clive%29/);
+  assert.match(calls[0], /status=in.%28scheduled%2Clive%2Creplay%29/);
 });
 
 test("Daily reconciliation updates completed videos without exposing credentials", async () => {

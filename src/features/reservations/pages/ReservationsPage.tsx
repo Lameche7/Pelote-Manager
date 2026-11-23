@@ -1202,7 +1202,7 @@ export function ReservationsPage() {
             {inspectionError && <p role="alert">{inspectionError}</p>}
             {unprogramError && <p role="alert">{unprogramError}</p>}
             {competitionError && <p role="alert">{competitionError}</p>}
-            {isAuthenticated && canPrepareLive && inspectedSlot.status === "occupied" && (inspectedSlot.occupationType === "match" || inspectedSlot.occupationType === "championship_match" || (inspectedSlot.occupationType === "reservation" && Boolean(inspectedSlot.ordinaryTeams))) && (
+            {isAuthenticated && canPrepareLive && ["occupied", "available"].includes(inspectedSlot.status) && (
               <div className="reservation-slot-actions">
                 <button
                   className="reservation-slot-actions__button"
@@ -1217,21 +1217,13 @@ export function ReservationsPage() {
                       liveStart: inspectedSlot.startsAt,
                       liveType: inspectedSlot.occupationType === "match" ? "tournoi" : inspectedSlot.occupationType === "championship_match" ? "championnat" : "other",
                     });
-                    if (
-                      inspectedSlot.occupationType === "match" ||
-                      inspectedSlot.occupationType === "championship_match"
-                    ) {
-                      params.set("liveResource", inspectedSlot.resourceId);
-                      params.set("liveEnd", inspectedSlot.endsAt);
-                    }
+                    params.set("liveResource", inspectedSlot.resourceId);
+                    params.set("liveEnd", inspectedSlot.endsAt);
                     navigate(`/live/launch?${params}`);
                   }}
                 >
                   <Video aria-hidden="true" size={18} />{" "}
-                  {inspectedSlot.occupationType === "match" ||
-                  inspectedSlot.occupationType === "championship_match"
-                    ? "Diffuser cette partie"
-                    : "Préparer le direct de cette partie"}
+                  Diffuser cette partie
                 </button>
               </div>
             )}

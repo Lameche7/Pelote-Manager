@@ -21,7 +21,13 @@ const env = {
 };
 const request = (extra = {}) => ({
   headers: { authorization: "Bearer user-token" },
-  body: { videoId, calendarSlot: slot, consentConfirmed: true, ...extra },
+  body: {
+    videoId,
+    calendarSlot: slot,
+    sourceType: "tournoi",
+    consentConfirmed: true,
+    ...extra,
+  },
 });
 function response(body, ok = true) {
   return { ok, json: async () => body };
@@ -151,7 +157,10 @@ test("Calendar launch handles stale YouTube identity before camera access", () =
     "utf8",
   );
   assert.match(source, /action: "recover_missing"/);
-  assert.match(source, /setRecoveryRequired\(true\)/);
+  assert.match(source, /madeForKids,/);
   assert.match(source, /result\.videoId !== broadcast\.id/);
-  assert.match(source, /\(!broadcast \|\| recoveryRequired\)/);
+  assert.match(
+    source,
+    /const \[madeForKids, setMadeForKids\] = useState\(false\)/,
+  );
 });
