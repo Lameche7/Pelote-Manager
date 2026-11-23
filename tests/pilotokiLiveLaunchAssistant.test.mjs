@@ -11,7 +11,7 @@ const page = load("../src/features/admin/live/pages/AdminLiveSettingsPage.tsx");
 test("Broadcast controls open the matching video context instead of starting a stream", () => {
   assert.match(page, /selectedLaunchVideoId === video\.id/);
   assert.match(page, /broadcast=\{video\}/);
-  assert.match(page, /Options avancées \\(ancienne régie\\)/);
+  assert.ok(page.includes("Options avancées (ancienne régie)"));
   assert.match(page, /Masquer les options avancées/);
   assert.match(page, /Diffuser la partie/);
 });
