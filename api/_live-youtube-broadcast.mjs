@@ -364,24 +364,60 @@ export async function synchronizeClubVideos(
   if (!youtubeResponse.ok)
     throw new LiveAuthError(502, "État des directs YouTube indisponible.");
   const youtube = await youtubeResponse.json();
+  if (!Array.isArray(youtube?.items))
+    throw new LiveAuthError(502, "Inventaire YouTube invalide.");
   const byId = new Map(
-    (Array.isArray(youtube?.items) ? youtube.items : [])
+    youtube.items
       .filter((item) => ids.includes(item.id))
       .map((item) => [item.id, item]),
   );
+  // Missing broadcasts may be ordinary archived videos, so confirm deletion
+  // against the video resource before hiding anything.
+  const missing = stored.filter(
+    (item) =>
+      ["live", "replay"].includes(item.status) &&
+      !byId.has(item.youtube_video_id),
+  );
+  const confirmedMissing = new Set();
+  if (missing.length) {
+    const videosResponse = await fetchImpl(
+      `https://www.googleapis.com/youtube/v3/videos?${new URLSearchParams({
+        part: "status",
+        id: [...new Set(missing.map((item) => item.youtube_video_id))].join(","),
+        maxResults: "50",
+      })}`,
+      {
+        headers: { authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      },
+    );
+    if (!videosResponse.ok)
+      throw new LiveAuthError(502, "Vérification des replays YouTube indisponible.");
+    const videos = await videosResponse.json();
+    if (!Array.isArray(videos?.items))
+      throw new LiveAuthError(502, "Inventaire des replays YouTube invalide.");
+    const found = new Set(videos.items.map((item) => item.id));
+    for (const item of missing) {
+      if (!found.has(item.youtube_video_id))
+        confirmedMissing.add(item.youtube_video_id);
+    }
+  }
   let updated = 0;
   for (const item of stored) {
     const youtubeItem = byId.get(item.youtube_video_id);
-    const status = publishedStatusFromYouTube(youtubeItem, item.status);
+    const removed = confirmedMissing.has(item.youtube_video_id);
+    const status = removed
+      ? "hidden"
+      : publishedStatusFromYouTube(youtubeItem, item.status);
     if (!status || status === item.status) continue;
-    // Never regress an archived replay back to "live" due to stale YouTube data.
-    if (item.status === "replay" && status !== "replay") continue;
+    // Never regress an archived replay to an active feed.
+    if (item.status === "replay" && !["replay", "hidden"].includes(status)) continue;
     const patch = { status };
     if (status === "live" && !item.started_at)
       patch.started_at =
         youtubeItem?.snippet?.actualStartTime || new Date().toISOString();
     const updateResponse = await fetchImpl(
-      `${url}/rest/v1/pilotoki_live_videos?id=eq.${item.id}&club_id=eq.${clubId}`,
+      `${url}/rest/v1/pilotoki_live_videos?id=eq.${item.id}&club_id=eq.${clubId}&status=eq.${item.status}&youtube_video_id=eq.${item.youtube_video_id}`,
       {
         method: "PATCH",
         headers: {
