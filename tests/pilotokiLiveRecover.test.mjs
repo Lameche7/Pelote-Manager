@@ -26,7 +26,11 @@ const request = (extra = {}) => ({
 function response(body, ok = true) {
   return { ok, json: async () => body };
 }
-function fixture({ youtubeItems = [], matchCorrect = true, active = false } = {}) {
+function fixture({
+  youtubeItems = [],
+  matchCorrect = true,
+  active = false,
+} = {}) {
   const calls = [];
   const fetchMock = async (url, options = {}) => {
     const value = String(url);
@@ -35,17 +39,25 @@ function fixture({ youtubeItems = [], matchCorrect = true, active = false } = {}
     if (value.includes("/rest/v1/pilotoki_live_videos?") && method === "GET") {
       const params = new URL(value).searchParams;
       if (params.get("select") === "id,club_id,youtube_video_id,title,status")
-        return response([{
-          id: videoId, club_id: clubId, youtube_video_id: oldYoutubeId,
-          title: "Partie de championnat", status: "scheduled",
-        }]);
+        return response([
+          {
+            id: videoId,
+            club_id: clubId,
+            youtube_video_id: oldYoutubeId,
+            title: "Partie de championnat",
+            status: "scheduled",
+          },
+        ]);
       return response(matchCorrect ? [{ id: videoId }] : []);
     }
     if (value.includes("/reservable_resources?"))
       return response([{ id: resourceId }]);
     if (value.includes("/rpc/resolve_calendar_competition"))
       return response({ kind: "tournament", matchId });
-    if (value.includes("www.googleapis.com/youtube/v3/liveBroadcasts?") && method === "POST")
+    if (
+      value.includes("www.googleapis.com/youtube/v3/liveBroadcasts?") &&
+      method === "POST"
+    )
       return response({ id: newYoutubeId });
     if (value.includes("www.googleapis.com/youtube/v3/liveBroadcasts?"))
       return response({ items: youtubeItems });
@@ -57,8 +69,13 @@ function fixture({ youtubeItems = [], matchCorrect = true, active = false } = {}
   };
   const run = (extra = {}) =>
     recoverMissingYoutubeBroadcast(
-      env, request(extra), clubId, "UC123", fetchMock,
-      async () => ({ active }), async () => "google-token",
+      env,
+      request(extra),
+      clubId,
+      "UC123",
+      fetchMock,
+      async () => ({ active }),
+      async () => "google-token",
     );
   return { run, calls };
 }
@@ -72,8 +89,13 @@ test("Existing verified YouTube event is preserved without any mutation", async 
     videoId,
     youtubeUrl: "https://www.youtube.com/watch?v=" + oldYoutubeId,
   });
-  assert.ok(f.calls.every((call) => !["DELETE", "PATCH", "POST"].includes(call.method)
-    || call.url.includes("/rpc/resolve_calendar_competition")));
+  assert.ok(
+    f.calls.every(
+      (call) =>
+        !["DELETE", "PATCH", "POST"].includes(call.method) ||
+        call.url.includes("/rpc/resolve_calendar_competition"),
+    ),
+  );
 });
 
 test("Deleted event first requests explicit children classification", async () => {
@@ -92,15 +114,23 @@ test("Repair preserves internal ID and match and rotates old RTMPS credentials",
   assert.equal(result.videoId, videoId);
   assert.ok(result.youtubeUrl.endsWith(newYoutubeId));
   const deletion = f.calls.find((c) => c.method === "DELETE");
-  const creation = f.calls.find((c) => c.method === "POST" && c.url.includes("googleapis.com"));
+  const creation = f.calls.find(
+    (c) => c.method === "POST" && c.url.includes("googleapis.com"),
+  );
   const patch = f.calls.find((c) => c.method === "PATCH");
   assert.ok(deletion && creation && patch);
   assert.ok(f.calls.indexOf(deletion) < f.calls.indexOf(creation));
   assert.ok(f.calls.indexOf(creation) < f.calls.indexOf(patch));
   assert.equal(JSON.parse(patch.body).youtube_video_id, newYoutubeId);
   assert.equal(JSON.parse(patch.body).source_id, undefined);
-  assert.equal(new URL(patch.url).searchParams.get("source_id"), "eq." + matchId);
-  assert.equal(new URL(patch.url).searchParams.get("youtube_video_id"), "eq." + oldYoutubeId);
+  assert.equal(
+    new URL(patch.url).searchParams.get("source_id"),
+    "eq." + matchId,
+  );
+  assert.equal(
+    new URL(patch.url).searchParams.get("youtube_video_id"),
+    "eq." + oldYoutubeId,
+  );
 });
 
 test("Wrong match or active egress prevents replacement", async () => {
@@ -114,25 +144,14 @@ test("Wrong match or active egress prevents replacement", async () => {
 
 test("Calendar launch handles stale YouTube identity before camera access", () => {
   const source = readFileSync(
-    new URL("../src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx", import.meta.url),
+    new URL(
+      "../src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   assert.match(source, /action: "recover_missing"/);
   assert.match(source, /setRecoveryRequired\(true\)/);
   assert.match(source, /result\.videoId !== broadcast\.id/);
   assert.match(source, /\(!broadcast \|\| recoveryRequired\)/);
-});
-
-test("TEMP: emit canonical Prettier files for automated formatting", async () => {
-  const prettier = await import("prettier");
-  for (const name of [
-    "api/_live-youtube-recover.mjs",
-    "src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx",
-    "tests/pilotokiLiveRecover.test.mjs",
-  ]) {
-    const filePath = new URL(`../${name}`, import.meta.url);
-    const original = readFileSync(filePath, "utf8");
-    const formatted = await prettier.format(original, { filepath: filePath.pathname });
-    console.log("LIVE_RECOVER_FORMAT_BEGIN:" + name + ":" + Buffer.from(formatted).toString("base64") + ":LIVE_RECOVER_FORMAT_END");
-  }
 });
