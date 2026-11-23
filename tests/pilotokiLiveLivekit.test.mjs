@@ -67,3 +67,32 @@ test("Mobile publisher tags raw tracks so participant egress captures camera", (
   assert.match(source, /videoTrack\.readyState !== "live"/);
   assert.doesNotMatch(source, /publishTrack\(track\)/);
 });
+
+test("Club admin can finish a LiveKit broadcast after closing the phone session", () => {
+  const page = readFileSync(
+    new URL(
+      "../src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const service = readFileSync(
+    new URL(
+      "../src/features/admin/live/services/adminLiveSettingsService.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const endpoint = readFileSync(
+    new URL("../api/live-youtube-ingest.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(page, /Terminer le direct YouTube/);
+  assert.match(page, /video\.status === "live" && settings\.canConnectGoogle/);
+  assert.match(page, /window\.confirm/);
+  assert.match(page, /finishLivekitYoutube\(video\.id\)/);
+  assert.match(service, /action: "livekit_youtube_finish"/);
+  assert.match(service, /confirmed: true/);
+  assert.match(endpoint, /verifiedLiveClubAdmin/);
+  assert.match(endpoint, /livekit_youtube_finish/);
+});

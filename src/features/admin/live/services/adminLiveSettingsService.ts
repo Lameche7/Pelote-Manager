@@ -145,6 +145,33 @@ export const adminLiveSettingsService = {
       throw new Error(dataResult.error ?? "Commande Upstream impossible.");
   },
 
+  async finishLivekitYoutube(videoId: string): Promise<void> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "livekit_youtube_finish",
+        videoId,
+        confirmed: true,
+      }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      completed?: boolean;
+      error?: string;
+    };
+    if (!response.ok || result.completed !== true)
+      throw new Error(
+        result.error ?? "YouTube n'a pas confirmé la fin du direct.",
+      );
+  },
+
   async finishYoutubeLive(videoId: string): Promise<void> {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
