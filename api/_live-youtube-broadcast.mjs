@@ -383,7 +383,9 @@ export async function synchronizeClubVideos(
     const videosResponse = await fetchImpl(
       `https://www.googleapis.com/youtube/v3/videos?${new URLSearchParams({
         part: "status",
-        id: [...new Set(missing.map((item) => item.youtube_video_id))].join(","),
+        id: [...new Set(missing.map((item) => item.youtube_video_id))].join(
+          ",",
+        ),
         maxResults: "50",
       })}`,
       {
@@ -392,7 +394,10 @@ export async function synchronizeClubVideos(
       },
     );
     if (!videosResponse.ok)
-      throw new LiveAuthError(502, "Vérification des replays YouTube indisponible.");
+      throw new LiveAuthError(
+        502,
+        "Vérification des replays YouTube indisponible.",
+      );
     const videos = await videosResponse.json();
     if (!Array.isArray(videos?.items))
       throw new LiveAuthError(502, "Inventaire des replays YouTube invalide.");
@@ -411,7 +416,8 @@ export async function synchronizeClubVideos(
       : publishedStatusFromYouTube(youtubeItem, item.status);
     if (!status || status === item.status) continue;
     // Never regress an archived replay to an active feed.
-    if (item.status === "replay" && !["replay", "hidden"].includes(status)) continue;
+    if (item.status === "replay" && !["replay", "hidden"].includes(status))
+      continue;
     const patch = { status };
     if (status === "live" && !item.started_at)
       patch.started_at =
