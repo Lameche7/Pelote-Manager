@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { HomeTournaments } from "@/features/home/components/HomeTournaments";
 import { formatPublicEventPeriod } from "@/features/home/domain/publicEventPresentation";
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
@@ -65,18 +65,16 @@ const showOctoberRose = () => {
 
 export function HomePage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const location = useLocation();
   const octoberRoseVisible = showOctoberRose();
   const movemberVisible = showMovember();
-  const publicClubSlug =
-    typeof window === "undefined"
-      ? null
-      : new URLSearchParams(window.location.search).get("club")?.trim() || null;
+  const publicClubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
   const [banners, setBanners] = useState<MemberHomeBanner[]>([]);
-  const [branding, setBranding] = useState(clubBrandingService.fallback);
-  const venueLabel = [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
+  const [branding, setBranding] = useState(publicClubSlug ? clubBrandingService.unavailableFallback : clubBrandingService.fallback);
+  const venueLabel = publicClubSlug ? "" : [CLUB_CONFIG.venueName, CLUB_CONFIG.location]
     .filter(Boolean)
     .join(" · ");
   const heroStyle: ClubHeroStyle = {
@@ -90,13 +88,15 @@ export function HomePage() {
   useEffect(() => {
     let active = true;
     const loadBranding = () => {
+      const safeFallback = publicClubSlug ? clubBrandingService.unavailableFallback : clubBrandingService.fallback;
+      setBranding(safeFallback);
       const brandingRequest =
         clubBrandingService.getPublicBranding(publicClubSlug);
       brandingRequest
         .then((value) => {
           if (active) setBranding(value);
         })
-        .catch(() => undefined);
+        .catch(() => { if (active) setBranding(safeFallback); });
     };
     loadBranding();
     window.addEventListener("club-branding-updated", loadBranding);
