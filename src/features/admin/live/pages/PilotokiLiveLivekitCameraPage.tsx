@@ -99,7 +99,7 @@ export function PilotokiLiveLivekitCameraPage() {
           facingMode: { ideal: "environment" },
           width: { ideal: 1920 },
           height: { ideal: 1080 },
-          frameRate: { ideal: 30 },
+          frameRate: { ideal: 60 },
         },
         audio: { echoCancellation: true, noiseSuppression: true },
       });
@@ -161,7 +161,7 @@ export function PilotokiLiveLivekitCameraPage() {
       await room.localParticipant.publishTrack(videoTrack, {
         source: Track.Source.Camera,
         simulcast: false,
-        videoEncoding: { maxBitrate: 4_500_000, maxFramerate: 30 },
+        videoEncoding: { maxBitrate: 6_000_000, maxFramerate: 60 },
       });
       await room.localParticipant.publishTrack(audioTrack, {
         source: Track.Source.Microphone,
