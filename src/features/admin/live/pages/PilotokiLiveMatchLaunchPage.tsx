@@ -100,7 +100,7 @@ export function PilotokiLiveMatchLaunchPage() {
   };
 
   const start = async () => {
-    if (preparing || !consent || madeForKids === "") return;
+    if (preparing || !consent || (!broadcast && madeForKids === "")) return;
     setPreparing(true);
     setError("");
     try {
