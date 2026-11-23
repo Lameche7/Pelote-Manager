@@ -24,6 +24,7 @@ export async function recoverMissingYoutubeBroadcast(
   channelId,
   fetchImpl = fetch,
   egressStatus = livekitEgressStatus,
+  getAccessToken = googleAccessToken,
 ) {
   const videoId = request.body?.videoId;
   const video = await getClubVideo(env, clubId, videoId, fetchImpl);
@@ -56,7 +57,7 @@ export async function recoverMissingYoutubeBroadcast(
   if ((await check.json())?.length !== 1)
     throw new LiveAuthError(403, "Cette diffusion n'est pas liée à la partie sélectionnée.");
 
-  const token = await googleAccessToken(env, channelId, fetchImpl);
+  const token = await getAccessToken(env, channelId, fetchImpl);
   const youtubeResponse = await fetchImpl(
     `${YOUTUBE_API}?${new URLSearchParams({
       part: "status",
