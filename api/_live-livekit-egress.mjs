@@ -200,8 +200,8 @@ export async function startLivekitEgress(
     {
       room_name: room,
       // LiveKit StartEgress defaults to H264_720P_30 (preset 0).
-      // Explicitly select 1080p/30 output to preserve Full HD camera detail.
-      preset: 2,
+      // Test H264_1080P_60 for faster ball movement (6 Mbps).
+      preset: 3,
       media: {
         participant_video: { identity: publisherIdentity },
         audio: {
