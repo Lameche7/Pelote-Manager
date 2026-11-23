@@ -118,7 +118,7 @@ test("Only the selected user's authorized club is accepted", async () => {
   assert.match(requested[1].url, /rpc\/admin_get_club_live_settings/);
 });
 
-test("A scheduled broadcast stays unlisted and auto-starts when Pilotoki starts sending video", async () => {
+test("New YouTube broadcasts auto-start and allow embedded playback in Pilotoki", async () => {
   let body;
   const fetchMock = async (_url, options) => {
     body = JSON.parse(options.body);
@@ -137,6 +137,7 @@ test("A scheduled broadcast stays unlisted and auto-starts when Pilotoki starts 
   assert.equal(body.status.privacyStatus, "unlisted");
   assert.equal(body.contentDetails.enableAutoStart, true);
   assert.equal(body.contentDetails.enableAutoStop, false);
+  assert.equal(body.contentDetails.enableEmbed, true);
 });
 
 test("Prepared videos are queried with an authenticated club-scoped filter", async () => {
@@ -207,6 +208,22 @@ test("YouTube failures expose only safe allowlisted reasons", async () => {
     failure.message,
     /secret-response-message-not-to-disclose/,
   );
+});
+
+test("A YouTube embed restriction returns a safe and actionable error", async () => {
+  const failure = await youtubeBroadcastFailure({
+    status: 400,
+    json: async () => ({
+      error: {
+        message: "sensitive-google-message",
+        errors: [{ reason: "invalidEmbedSetting" }],
+      },
+    }),
+  });
+  assert.equal(failure.status, 502);
+  assert.match(failure.message, /lecture intégrée/);
+  assert.match(failure.message, /invalidEmbedSetting/);
+  assert.doesNotMatch(failure.message, /sensitive-google-message/);
 });
 
 test("Unknown or invalid YouTube errors stay generic and cannot inject messages", async () => {
