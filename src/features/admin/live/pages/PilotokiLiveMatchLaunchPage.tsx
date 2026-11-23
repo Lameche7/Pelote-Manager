@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/infrastructure/supabase/client";
 import {
   adminLiveSettingsService,
   type ClubBroadcastSummary,
@@ -21,6 +22,7 @@ export function PilotokiLiveMatchLaunchPage() {
   const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState("");
   const [broadcast, setBroadcast] = useState<ClubBroadcastSummary | null>(null);
+  const [matchId, setMatchId] = useState<string | null>(null);
   const [madeForKids, setMadeForKids] = useState<"yes" | "no" | "">("");
   const [consent, setConsent] = useState(false);
   const hasCalendarMatch =
@@ -45,15 +47,33 @@ export function PilotokiLiveMatchLaunchPage() {
           throw new Error(
             "La diffusion n'est pas autorisée pour ce club. Vérifiez vos droits.",
           );
+        let resolvedMatchId: string | null = null;
+        if (hasCalendarMatch) {
+          const { data, error: matchError } = await supabase.rpc(
+            "resolve_calendar_competition",
+            {
+              target_resource_id: resourceId,
+              target_starts_at: startsAt,
+              target_ends_at: endsAt,
+            },
+          );
+          const match = data as { matchId?: string; kind?: string } | null;
+          const expectedKind =
+            sourceType === "tournoi" ? "tournament" : "championship";
+          if (matchError || !match?.matchId || match.kind !== expectedKind)
+            throw new Error(
+              "Cette rencontre n'est plus identifiable dans le calendrier.",
+            );
+          resolvedMatchId = match.matchId;
+        }
         const videos = await adminLiveSettingsService.listBroadcasts();
-        // Match identity is resolved and validated by the preparation API,
-        // never inferred from arbitrary URL-supplied team names or IDs.
         if (active) {
+          setMatchId(resolvedMatchId);
           const existing = videos.find(
             (video) =>
+              resolvedMatchId &&
               video.status === "scheduled" &&
-              video.title === title.trim() &&
-              video.sourceType === sourceType,
+              video.sourceId === resolvedMatchId,
           );
           if (existing) setBroadcast(existing);
         }
@@ -70,7 +90,7 @@ export function PilotokiLiveMatchLaunchPage() {
     return () => {
       active = false;
     };
-  }, [clubId, startsAt, sourceType, title]);
+  }, [clubId, resourceId, startsAt, endsAt, sourceType, hasCalendarMatch]);
 
   const launch = (videoId: string) => {
     navigate(`/live/camera?videoId=${encodeURIComponent(videoId)}&launch=1`);
@@ -105,8 +125,10 @@ export function PilotokiLiveMatchLaunchPage() {
       const prepared = videos.find(
         (video) =>
           video.status === "scheduled" &&
-          video.title === title.trim() &&
-          video.sourceType === sourceType,
+          (matchId
+            ? video.sourceId === matchId
+            : video.title === title.trim() &&
+              video.sourceType === sourceType),
       );
       if (!prepared)
         throw new Error(
