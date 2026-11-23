@@ -40,6 +40,7 @@ import { AdminReservationsManagementPage } from "@/features/admin/reservations/p
 import { AdminTvSettingsPage } from "@/features/admin/settings/pages/AdminTvSettingsPage";
 import { AdminLiveSettingsPage } from "@/features/admin/live/pages/AdminLiveSettingsPage";
 import { PilotokiLiveLivekitCameraPage } from "@/features/admin/live/pages/PilotokiLiveLivekitCameraPage";
+import { PilotokiLiveMatchLaunchPage } from "@/features/admin/live/pages/PilotokiLiveMatchLaunchPage";
 import { AdminStatisticsPage } from "@/features/admin/statistics/pages/AdminStatisticsPage";
 import { AdminTournamentAccountsPage } from "@/features/admin/tournaments/pages/AdminTournamentAccountsPage";
 import { AdminTournamentImportPage } from "@/features/admin/tournaments/pages/AdminTournamentImportPage";
@@ -141,6 +142,14 @@ export const routes = [
       { path: ROUTES.privacy, element: <PrivacyPage /> },
       { path: ROUTES.terms, element: <TermsPage /> },
       { path: ROUTES.reservations, element: <ReservationsPage /> },
+      {
+        path: "/live/launch",
+        element: (
+          <ProtectedRoute allowedRoles={allAuthenticatedRoles}>
+            <PilotokiLiveMatchLaunchPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "/live/camera",
         element: (

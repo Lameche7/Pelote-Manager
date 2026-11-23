@@ -89,3 +89,48 @@ test("User cannot spoof a match ID directly from the browser", () => {
   assert.match(calendar, /params\.set\("liveEnd"/);
   assert.match(calendar, /Diffuser cette partie/);
 });
+
+test("Calendar broadcaster opens a standalone non-admin launch with scoped match verification", () => {
+  const calendar = readFileSync(
+    new URL(
+      "../src/features/reservations/pages/ReservationsPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const router = readFileSync(
+    new URL("../src/app/router.tsx", import.meta.url),
+    "utf8",
+  );
+  const launch = readFileSync(
+    new URL(
+      "../src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const permissions = readFileSync(
+    new URL(
+      "../src/features/admin/config/adminPermissions.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(calendar, /navigate\(\`\/live\/launch\?\$\{params\}\`\)/);
+  assert.doesNotMatch(
+    calendar,
+    /navigate\(\`\$\{ROUTES\.admin\}\/parametres\/live/,
+  );
+  assert.match(router, /path: "\/live\/launch"/);
+  assert.match(router, /<PilotokiLiveMatchLaunchPage/);
+  assert.match(launch, /resolve_calendar_competition/);
+  assert.match(launch, /video\.sourceId === resolvedMatchId/);
+  assert.match(launch, /settings\.clubId !== clubId/);
+  assert.match(launch, /consentConfirmed: true/);
+  assert.match(launch, /madeForKids: madeForKids === "yes"/);
+  assert.match(launch, /\/live\/camera\?videoId=/);
+  assert.match(
+    permissions,
+    /label: "Pilotoki Live"[\s\S]*permission: ADMIN_PERMISSIONS\.settings/,
+  );
+});
