@@ -22,7 +22,7 @@ export async function reconcileDailyVideos(env, fetchImpl = fetch) {
   // Discover clubs server-side; never accept a club ID supplied by the caller.
   const params = new URLSearchParams({
     select: "club_id",
-    status: "in.(scheduled,live)",
+    status: "in.(scheduled,live,replay)",
     limit: "1000",
   });
   const response = await fetchImpl(
