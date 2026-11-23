@@ -837,7 +837,7 @@ export function AdminLiveSettingsPage() {
                     </small>
                     {video.status === "scheduled" && (
                       <a
-                        href={`/live/camera?videoId=${encodeURIComponent(video.id)}`}
+                        href={`/live/camera?videoId=${encodeURIComponent(video.id)}&launch=1`}
                         rel="noopener noreferrer"
                       >
                         Diffuser la partie
