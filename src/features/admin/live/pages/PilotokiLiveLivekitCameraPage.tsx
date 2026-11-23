@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Room, RoomEvent } from "livekit-client";
+import { Room, RoomEvent, Track } from "livekit-client";
 import { supabase } from "@/infrastructure/supabase/client";
 
 const VIDEO_ID =
@@ -142,11 +142,37 @@ export function PilotokiLiveLivekitCameraPage() {
         }
       });
       await room.connect(access.url, access.token);
-      const tracks = streamRef.current.getTracks();
-      if (tracks.length < 2)
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      const audioTrack = streamRef.current.getAudioTracks()[0];
+      if (!videoTrack || !audioTrack)
         throw new Error("La caméra et le microphone sont nécessaires.");
-      for (const track of tracks)
-        await room.localParticipant.publishTrack(track);
+      if (
+        videoTrack.readyState !== "live" ||
+        !videoTrack.enabled ||
+        videoTrack.muted
+      )
+        throw new Error(
+          "La caméra n'envoie pas d'image. Vérifiez les autorisations du téléphone.",
+        );
+      if (audioTrack.readyState !== "live")
+        throw new Error("Le microphone n'est plus actif.");
+      // LiveKit's participant_video egress selector only captures CAMERA sources.
+      // Raw MediaStreamTracks otherwise default to an unknown publication source.
+      await room.localParticipant.publishTrack(videoTrack, {
+        source: Track.Source.Camera,
+        simulcast: false,
+      });
+      await room.localParticipant.publishTrack(audioTrack, {
+        source: Track.Source.Microphone,
+      });
+      const videoPublication = room.localParticipant.getTrackPublication(
+        Track.Source.Camera,
+      );
+      const audioPublication = room.localParticipant.getTrackPublication(
+        Track.Source.Microphone,
+      );
+      if (!videoPublication || !audioPublication)
+        throw new Error("LiveKit n'a pas confirmé les pistes caméra et micro.");
       if (activeRef.current) setState("publishing");
     } catch (reason) {
       if (room) await room.disconnect().catch(() => undefined);

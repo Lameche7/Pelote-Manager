@@ -52,3 +52,18 @@ test("LiveKit token API is guarded by club admin and video membership checks", (
   assert.match(endpoint, /livekit_publisher_token/);
   assert.doesNotMatch(service, /UPSTREAM_API_TOKEN/);
 });
+
+test("Mobile publisher tags raw tracks so participant egress captures camera", () => {
+  const source = readFileSync(
+    new URL(
+      "../src/features/admin/live/pages/PilotokiLiveLivekitCameraPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(source, /source: Track\.Source\.Camera/);
+  assert.match(source, /source: Track\.Source\.Microphone/);
+  assert.match(source, /getTrackPublication\(\s*Track\.Source\.Camera/);
+  assert.match(source, /videoTrack\.readyState !== "live"/);
+  assert.doesNotMatch(source, /publishTrack\(track\)/);
+});
