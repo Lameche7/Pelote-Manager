@@ -122,3 +122,17 @@ test("Calendar launch handles stale YouTube identity before camera access", () =
   assert.match(source, /result\.videoId !== broadcast\.id/);
   assert.match(source, /\(!broadcast \|\| recoveryRequired\)/);
 });
+
+test("TEMP: emit canonical Prettier files for automated formatting", async () => {
+  const prettier = await import("prettier");
+  for (const name of [
+    "api/_live-youtube-recover.mjs",
+    "src/features/admin/live/pages/PilotokiLiveMatchLaunchPage.tsx",
+    "tests/pilotokiLiveRecover.test.mjs",
+  ]) {
+    const filePath = new URL(`../${name}`, import.meta.url);
+    const original = readFileSync(filePath, "utf8");
+    const formatted = await prettier.format(original, { filepath: filePath.pathname });
+    console.log("LIVE_RECOVER_FORMAT_BEGIN:" + name + ":" + Buffer.from(formatted).toString("base64") + ":LIVE_RECOVER_FORMAT_END");
+  }
+});
