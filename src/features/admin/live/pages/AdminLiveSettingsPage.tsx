@@ -486,8 +486,8 @@ export function AdminLiveSettingsPage() {
         <h1>Pilotoki Live</h1>
         <p className="admin-page__lead">
           Préparez une partie, puis sélectionnez « Diffuser la partie ».
-          Pilotoki connecte le téléphone et lance automatiquement YouTube
-          sans passer par une régie extérieure.
+          Pilotoki connecte le téléphone et lance automatiquement YouTube sans
+          passer par une régie extérieure.
         </p>
       </header>
 
