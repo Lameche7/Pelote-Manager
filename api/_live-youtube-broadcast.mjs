@@ -190,6 +190,8 @@ const YOUTUBE_BROADCAST_ERRORS = Object.freeze({
     "YouTube refuse le paramètre de confidentialité du direct.",
   invalidAutoStart: "YouTube refuse le paramètre de démarrage automatique.",
   invalidAutoStop: "YouTube refuse le paramètre d'arrêt automatique.",
+  invalidEmbedSetting:
+    "YouTube refuse la lecture intégrée des directs sur cette chaîne. Vérifiez les autorisations d’intégration dans YouTube Studio.",
   quotaExceeded: "Le quota d'utilisation de l'API YouTube est épuisé.",
   dailyLimitExceeded: "La limite quotidienne de l'API YouTube est atteinte.",
   rateLimitExceeded:
@@ -257,6 +259,8 @@ export async function youtubeCreateBroadcast(
           // Automatically publish the bound YouTube event when RTMPS arrives.
           enableAutoStart: true,
           enableAutoStop: false,
+          // Allow the live player and its replay on pelotemanager.fr/videos.
+          enableEmbed: true,
         },
       }),
       cache: "no-store",
