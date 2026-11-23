@@ -134,3 +134,16 @@ test("Pilotoki mobile launches camera, YouTube ingest, Egress and publishing fro
   assert.match(admin, /Diffuser la partie/);
 });
 
+test("TEMP: exact Prettier formatted files for automated correction", async () => {
+  const prettier = await import("prettier");
+  for (const name of [
+    "src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+    "src/features/admin/live/pages/PilotokiLiveLivekitCameraPage.tsx",
+    "tests/pilotokiLiveLivekit.test.mjs",
+  ]) {
+    const filePath = new URL(`../${name}`, import.meta.url);
+    const original = readFileSync(filePath, "utf8");
+    const formatted = await prettier.format(original, { filepath: filePath.pathname });
+    console.log("PRETTIER_B64_BEGIN:" + name + ":" + Buffer.from(formatted, "utf8").toString("base64") + ":PRETTIER_B64_END");
+  }
+});
