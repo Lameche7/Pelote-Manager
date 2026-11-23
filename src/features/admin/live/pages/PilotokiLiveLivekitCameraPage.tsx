@@ -363,7 +363,9 @@ export function PilotokiLiveLivekitCameraPage() {
         connexion.
       </p>
       {!VIDEO_ID.test(videoId) ? (
-        <p role="alert">Sélectionnez d'abord une partie préparée dans Pilotoki Live.</p>
+        <p role="alert">
+          Sélectionnez d'abord une partie préparée dans Pilotoki Live.
+        </p>
       ) : (
         <>
           <video
@@ -381,7 +383,8 @@ export function PilotokiLiveLivekitCameraPage() {
                 checked={consent}
                 onChange={(event) => setConsent(event.target.checked)}
               />
-              Je confirme disposer des autorisations de captation et de diffusion.
+              Je confirme disposer des autorisations de captation et de
+              diffusion.
             </label>
           )}
           {(egressState === "idle" || egressState === "feeding") && (
