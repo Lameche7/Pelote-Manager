@@ -48,9 +48,9 @@ test("admin Live RPCs enforce server-side permissions and refuse privileged fiel
   assert.match(service, /admin_save_club_live_settings/);
 });
 
-test("Pilotoki Live does not expose a non-functional broadcasting action", () => {
-  assert.match(adminPage, /la passerelle vidéo reste à connecter/);
-  assert.match(adminPage, /Aucun direct ne peut encore être lancé/);
+test("Pilotoki Live exposes the working mobile broadcast and preserves Google consent", () => {
+  assert.match(adminPage, /Diffuser la partie/);
+  assert.match(adminPage, /Diffusion mobile Pilotoki Live via LiveKit/);
   assert.match(adminPage, /Autorisation Google/);
   assert.match(router, /path: "parametres\/live"/);
   assert.match(navigation, /label: "Pilotoki Live"/);

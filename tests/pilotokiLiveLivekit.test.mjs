@@ -101,3 +101,35 @@ test("Club admin can finish a LiveKit broadcast after closing the phone session"
   assert.match(endpoint, /verifiedLiveClubAdmin/);
   assert.match(endpoint, /livekit_youtube_finish/);
 });
+
+test("Pilotoki mobile launches camera, YouTube ingest, Egress and publishing from one button", () => {
+  const source = readFileSync(
+    new URL(
+      "../src/features/admin/live/pages/PilotokiLiveLivekitCameraPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const admin = readFileSync(
+    new URL(
+      "../src/features/admin/live/pages/AdminLiveSettingsPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const start = source.indexOf("const startOneClick = async");
+  const finish = source.indexOf("const finishLive = async");
+  assert.ok(start > 0 && finish > start);
+  const flow = source.slice(start, finish);
+  assert.match(flow, /await prepareYoutubeIngest\(\)/);
+  assert.match(flow, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(flow, /await room\.connect/);
+  assert.match(flow, /Track\.Source\.Camera/);
+  assert.match(flow, /Track\.Source\.Microphone/);
+  assert.match(flow, /livekit_egress_start/);
+  assert.match(flow, /livekit_youtube_publish/);
+  assert.match(source, /onClick=\{\(\) => void startOneClick\(\)\}/);
+  assert.match(source, /Diffuser la partie/);
+  assert.match(admin, /Options avancées \(ancienne régie\)/);
+  assert.match(admin, /Diffuser la partie/);
+});

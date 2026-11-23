@@ -485,23 +485,20 @@ export function AdminLiveSettingsPage() {
         <p className="admin-page__eyebrow">Paramètres du club</p>
         <h1>Pilotoki Live</h1>
         <p className="admin-page__lead">
-          La chaîne YouTube Pilotoki est commune à tous les clubs. Réglez ici
-          les préférences de diffusion de votre club. Le lancement de directs
-          depuis Pilotoki sera ajouté dans une étape distincte, après la
-          connexion sécurisée à YouTube.
+          Préparez une partie, puis sélectionnez « Diffuser la partie ».
+          Pilotoki connecte le téléphone et lance automatiquement YouTube sans
+          passer par une régie extérieure.
         </p>
       </header>
 
       <div className="admin-live-settings__notice" role="status">
         <RadioTower aria-hidden="true" />
         <div>
-          <strong>
-            En préparation — la passerelle vidéo reste à connecter
-          </strong>
+          <strong>Diffusion mobile Pilotoki Live via LiveKit</strong>
           <p>
             {settings?.connectionStatus === "connected"
-              ? "Chaîne YouTube Pilotoki autorisée pour le réseau. Le lancement du direct depuis un téléphone sera activé après intégration de la passerelle vidéo."
-              : "La chaîne commune doit être autorisée une seule fois par son responsable. Aucun direct ne peut encore être lancé depuis Pilotoki."}
+              ? "Directs depuis un téléphone : caméra, micro et flux YouTube sont préparés depuis le même bouton."
+              : "La chaîne YouTube commune doit d'abord être autorisée par son responsable."}
           </p>
         </div>
       </div>
@@ -838,6 +835,14 @@ export function AdminLiveSettingsPage() {
                             ? "Replay"
                             : "Masquée"}
                     </small>
+                    {video.status === "scheduled" && (
+                      <a
+                        href={`/live/camera?videoId=${encodeURIComponent(video.id)}&launch=1`}
+                        rel="noopener noreferrer"
+                      >
+                        Diffuser la partie
+                      </a>
+                    )}
                     <button
                       type="button"
                       aria-expanded={selectedLaunchVideoId === video.id}
@@ -853,8 +858,8 @@ export function AdminLiveSettingsPage() {
                       }}
                     >
                       {selectedLaunchVideoId === video.id
-                        ? "Fermer la régie"
-                        : "Ouvrir la régie de diffusion"}
+                        ? "Masquer les options avancées"
+                        : "Options avancées (ancienne régie)"}
                     </button>
                     {video.status === "live" && settings.canConnectGoogle && (
                       <button
@@ -866,14 +871,6 @@ export function AdminLiveSettingsPage() {
                           ? "Clôture YouTube…"
                           : "Terminer le direct YouTube"}
                       </button>
-                    )}
-                    {video.status === "scheduled" && (
-                      <a
-                        href={`/live/camera?videoId=${encodeURIComponent(video.id)}`}
-                        rel="noopener noreferrer"
-                      >
-                        Connecter ma caméra mobile à LiveKit
-                      </a>
                     )}
                     {selectedLaunchVideoId === video.id && (
                       <PilotokiLiveLaunchAssistant
@@ -887,22 +884,23 @@ export function AdminLiveSettingsPage() {
                         }
                       />
                     )}
-                    {video.status === "scheduled" && (
-                      <button
-                        type="button"
-                        disabled={
-                          linkingVideoId !== null ||
-                          linkedVideoIds.includes(video.id)
-                        }
-                        onClick={() => void linkIngest(video.id)}
-                      >
-                        {linkingVideoId === video.id
-                          ? "Liaison YouTube…"
-                          : linkedVideoIds.includes(video.id)
-                            ? "Flux YouTube lié"
-                            : "Lier le flux vidéo YouTube"}
-                      </button>
-                    )}
+                    {video.status === "scheduled" &&
+                      selectedLaunchVideoId === video.id && (
+                        <button
+                          type="button"
+                          disabled={
+                            linkingVideoId !== null ||
+                            linkedVideoIds.includes(video.id)
+                          }
+                          onClick={() => void linkIngest(video.id)}
+                        >
+                          {linkingVideoId === video.id
+                            ? "Liaison YouTube…"
+                            : linkedVideoIds.includes(video.id)
+                              ? "Flux YouTube lié"
+                              : "Lier manuellement le flux YouTube"}
+                        </button>
+                      )}
                   </li>
                 ))}
               </ul>

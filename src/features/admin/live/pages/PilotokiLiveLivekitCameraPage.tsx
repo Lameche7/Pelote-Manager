@@ -6,7 +6,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 const VIDEO_ID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-type CameraState = "idle" | "preview" | "connecting" | "publishing";
+type CameraState = "idle" | "connecting" | "publishing";
 
 async function fetchPublisherAccess(videoId: string): Promise<{
   url: string;
@@ -54,13 +54,15 @@ async function fetchPublisherAccess(videoId: string): Promise<{
 export function PilotokiLiveLivekitCameraPage() {
   const [searchParams] = useSearchParams();
   const videoId = searchParams.get("videoId") ?? "";
+  const autoLaunch = searchParams.get("launch") === "1";
+  const autoLaunchRequested = useRef(false);
   const previewRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const roomRef = useRef<Room | null>(null);
   const activeRef = useRef(true);
   const [state, setState] = useState<CameraState>("idle");
-  const [busy, setBusy] = useState(false);
-  const [consent, setConsent] = useState(false);
+  // The explicit administration « Diffuser » action also confirms launch intent.
+  const [consent, setConsent] = useState(autoLaunch);
   const [error, setError] = useState("");
   const [egressState, setEgressState] = useState<
     "idle" | "feeding" | "live" | "done"
@@ -86,109 +88,25 @@ export function PilotokiLiveLivekitCameraPage() {
     };
   }, []);
 
-  const openCamera = async () => {
-    if (busy || !VIDEO_ID.test(videoId) || state !== "idle") return;
-    setBusy(true);
-    setError("");
-    let stream: MediaStream | null = null;
-    try {
-      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)
-        throw new Error("Caméra indisponible. Ouvrez Pilotoki en HTTPS.");
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          frameRate: { ideal: 60 },
-        },
-        audio: { echoCancellation: true, noiseSuppression: true },
-      });
-      if (!activeRef.current) {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
-      streamRef.current = stream;
-      if (previewRef.current) {
-        previewRef.current.srcObject = stream;
-        await previewRef.current.play().catch(() => undefined);
-      }
-      setState("preview");
-    } catch (reason) {
-      stream?.getTracks().forEach((track) => track.stop());
-      if (activeRef.current)
-        setError(
-          reason instanceof Error ? reason.message : "Caméra indisponible.",
-        );
-    } finally {
-      if (activeRef.current) setBusy(false);
-    }
-  };
-
-  const connect = async () => {
-    if (busy || !consent || state !== "preview" || !streamRef.current) return;
-    setBusy(true);
-    setState("connecting");
-    setError("");
-    let room: Room | null = null;
-    try {
-      const access = await fetchPublisherAccess(videoId);
-      if (!activeRef.current || !streamRef.current) return;
-      room = new Room({ adaptiveStream: false, dynacast: false });
-      roomRef.current = room;
-      room.on(RoomEvent.Disconnected, () => {
-        if (activeRef.current && roomRef.current === room) {
-          setError("Connexion LiveKit interrompue. Vérifiez votre réseau.");
-          setState("preview");
-        }
-      });
-      await room.connect(access.url, access.token);
-      const videoTrack = streamRef.current.getVideoTracks()[0];
-      const audioTrack = streamRef.current.getAudioTracks()[0];
-      if (!videoTrack || !audioTrack)
-        throw new Error("La caméra et le microphone sont nécessaires.");
-      if (
-        videoTrack.readyState !== "live" ||
-        !videoTrack.enabled ||
-        videoTrack.muted
-      )
-        throw new Error(
-          "La caméra n'envoie pas d'image. Vérifiez les autorisations du téléphone.",
-        );
-      if (audioTrack.readyState !== "live")
-        throw new Error("Le microphone n'est plus actif.");
-      // LiveKit's participant_video egress selector only captures CAMERA sources.
-      // Raw MediaStreamTracks otherwise default to an unknown publication source.
-      await room.localParticipant.publishTrack(videoTrack, {
-        source: Track.Source.Camera,
-        simulcast: false,
-        videoEncoding: { maxBitrate: 6_000_000, maxFramerate: 60 },
-      });
-      await room.localParticipant.publishTrack(audioTrack, {
-        source: Track.Source.Microphone,
-      });
-      const videoPublication = room.localParticipant.getTrackPublication(
-        Track.Source.Camera,
-      );
-      const audioPublication = room.localParticipant.getTrackPublication(
-        Track.Source.Microphone,
-      );
-      if (!videoPublication || !audioPublication)
-        throw new Error("LiveKit n'a pas confirmé les pistes caméra et micro.");
-      if (activeRef.current) setState("publishing");
-    } catch (reason) {
-      if (room) await room.disconnect().catch(() => undefined);
-      if (roomRef.current === room) roomRef.current = null;
-      if (activeRef.current) {
-        setState("preview");
-        setError(
-          reason instanceof Error
-            ? reason.message
-            : "Impossible d'envoyer la vidéo à LiveKit.",
-        );
-      }
-    } finally {
-      if (activeRef.current) setBusy(false);
-    }
+  const prepareYoutubeIngest = async () => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Reconnectez-vous à Pilotoki.");
+    const response = await fetch("/api/live-youtube-ingest", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ videoId }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as {
+      status?: string;
+      error?: string;
+    };
+    if (!response.ok || result.status !== "configured")
+      throw new Error(result.error ?? "Préparation YouTube indisponible.");
   };
 
   const controlLivekit = async (
@@ -254,27 +172,96 @@ export function PilotokiLiveLivekitCameraPage() {
     }
   };
 
-  const goLive = async () => {
-    if (egressBusy || state !== "publishing") return;
+  const startOneClick = async () => {
+    if (
+      egressBusy ||
+      !consent ||
+      !VIDEO_ID.test(videoId) ||
+      egressState === "live" ||
+      egressState === "done"
+    )
+      return;
     setEgressBusy(true);
     setError("");
     setBroadcastMessage("");
+    let egressStarted = egressState === "feeding";
     try {
-      if (egressState === "idle") {
+      if (!egressStarted) {
+        setState("connecting");
+        setBroadcastMessage("Préparation sécurisée de YouTube…");
+        // Idempotent: existing stream is reused, no key is sent to the phone.
+        await prepareYoutubeIngest();
+        if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)
+          throw new Error("Caméra indisponible. Ouvrez Pilotoki en HTTPS.");
+        setBroadcastMessage("Connexion de la caméra et du microphone…");
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 60 },
+          },
+          audio: { echoCancellation: true, noiseSuppression: true },
+        });
+        if (!activeRef.current) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (previewRef.current) {
+          previewRef.current.srcObject = stream;
+          await previewRef.current.play().catch(() => undefined);
+        }
+        const access = await fetchPublisherAccess(videoId);
+        if (!activeRef.current) return;
+        const room = new Room({ adaptiveStream: false, dynacast: false });
+        roomRef.current = room;
+        room.on(RoomEvent.Disconnected, () => {
+          if (activeRef.current && roomRef.current === room) {
+            setError("Connexion LiveKit interrompue. Vérifiez votre réseau.");
+          }
+        });
+        await room.connect(access.url, access.token);
+        const videoTrack = stream.getVideoTracks()[0];
+        const audioTrack = stream.getAudioTracks()[0];
+        if (!videoTrack || !audioTrack)
+          throw new Error("Caméra et microphone nécessaires.");
+        if (
+          videoTrack.readyState !== "live" ||
+          !videoTrack.enabled ||
+          videoTrack.muted
+        )
+          throw new Error("La caméra n'envoie pas d'image.");
+        if (audioTrack.readyState !== "live")
+          throw new Error("Le microphone n'est plus actif.");
+        await room.localParticipant.publishTrack(videoTrack, {
+          source: Track.Source.Camera,
+          simulcast: false,
+          videoEncoding: { maxBitrate: 6_000_000, maxFramerate: 60 },
+        });
+        await room.localParticipant.publishTrack(audioTrack, {
+          source: Track.Source.Microphone,
+        });
+        if (
+          !room.localParticipant.getTrackPublication(Track.Source.Camera) ||
+          !room.localParticipant.getTrackPublication(Track.Source.Microphone)
+        )
+          throw new Error("LiveKit n'a pas confirmé la caméra et le micro.");
+        setState("publishing");
+        setBroadcastMessage("Caméra connectée. Envoi vers YouTube…");
         const started = await controlLivekit("livekit_egress_start");
         if (!started.started)
           throw new Error("LiveKit n'a pas confirmé la retransmission.");
+        egressStarted = true;
         setEgressState("feeding");
       }
-      setBroadcastMessage(
-        "Sortie LiveKit démarrée. Vérification du signal reçu par YouTube…",
-      );
       let last: unknown;
       for (let attempt = 0; attempt < 12; attempt += 1) {
         if (attempt > 0)
           await new Promise<void>((resolve) =>
             window.setTimeout(resolve, 3500),
           );
+        if (!activeRef.current) return;
         try {
           const published = await controlLivekit("livekit_youtube_publish");
           if (
@@ -297,17 +284,29 @@ export function PilotokiLiveLivekitCameraPage() {
       }
       throw last ?? new Error("YouTube n'a pas confirmé le direct.");
     } catch (reason) {
-      const diagnosis = await diagnoseOutput();
+      const diagnosis = egressStarted ? await diagnoseOutput() : "";
+      if (!egressStarted) {
+        release();
+        if (activeRef.current) setState("idle");
+      }
       if (activeRef.current)
         setError(
           (reason instanceof Error
             ? reason.message
-            : "Démarrage du direct incertain.") + diagnosis,
+            : "Lancement incomplet. Vérifiez le direct avant de réessayer.") +
+            diagnosis,
         );
     } finally {
       if (activeRef.current) setEgressBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (!autoLaunch || autoLaunchRequested.current || !VIDEO_ID.test(videoId))
+      return;
+    autoLaunchRequested.current = true;
+    void startOneClick();
+  }, [autoLaunch, videoId]);
 
   const finishLive = async () => {
     if (egressBusy || egressState !== "live") return;
@@ -340,6 +339,8 @@ export function PilotokiLiveLivekitCameraPage() {
     setError("");
     try {
       await controlLivekit("livekit_egress_abort");
+      release();
+      setState("idle");
       setEgressState("idle");
       setBroadcastMessage("Envoi LiveKit arrêté. YouTube n'a pas été publié.");
     } catch (reason) {
@@ -353,14 +354,6 @@ export function PilotokiLiveLivekitCameraPage() {
     }
   };
 
-  const stop = async () => {
-    if (busy) return;
-    setBusy(true);
-    release();
-    setState("idle");
-    setBusy(false);
-  };
-
   return (
     <main className="admin-page" style={{ maxWidth: 700, margin: "0 auto" }}>
       <h1>Caméra mobile Pilotoki Live</h1>
@@ -371,7 +364,7 @@ export function PilotokiLiveLivekitCameraPage() {
       </p>
       {!VIDEO_ID.test(videoId) ? (
         <p role="alert">
-          Sélectionnez d'abord un direct préparé dans Pilotoki Live.
+          Sélectionnez d'abord une partie préparée dans Pilotoki Live.
         </p>
       ) : (
         <>
@@ -380,62 +373,33 @@ export function PilotokiLiveLivekitCameraPage() {
             autoPlay
             playsInline
             muted
-            aria-label="Aperçu de la caméra sur le téléphone"
+            aria-label="Aperçu caméra du téléphone"
             style={{ width: "100%", background: "#111", borderRadius: 12 }}
           />
-          <p role="status">
-            {state === "idle"
-              ? "Caméra arrêtée"
-              : state === "preview"
-                ? "Aperçu local — aucune image transmise"
-                : state === "connecting"
-                  ? "Connexion sécurisée et envoi vers LiveKit…"
-                  : "Caméra et micro publiés dans LiveKit — pas encore en direct sur YouTube"}
-          </p>
-          {error && <p role="alert">{error}</p>}
-          {state === "idle" && (
+          {egressState === "idle" && !autoLaunch && (
+            <label>
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(event) => setConsent(event.target.checked)}
+              />
+              Je confirme disposer des autorisations de captation et de
+              diffusion.
+            </label>
+          )}
+          {(egressState === "idle" || egressState === "feeding") && (
             <button
               type="button"
-              onClick={() => void openCamera()}
-              disabled={busy}
+              disabled={egressBusy || (egressState === "idle" && !consent)}
+              onClick={() => void startOneClick()}
             >
-              Ouvrir ma caméra
+              {egressBusy
+                ? "Lancement en cours…"
+                : egressState === "feeding"
+                  ? "Réessayer la confirmation YouTube"
+                  : "Diffuser la partie"}
             </button>
           )}
-          {state === "preview" && (
-            <>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(event) => setConsent(event.target.checked)}
-                />
-                Je confirme disposer des autorisations de captation et de
-                diffusion des participants.
-              </label>
-              <button
-                type="button"
-                disabled={busy || !consent}
-                onClick={() => void connect()}
-              >
-                Connecter la caméra à LiveKit
-              </button>
-            </>
-          )}
-          {state === "publishing" &&
-            (egressState === "idle" || egressState === "feeding") && (
-              <button
-                type="button"
-                disabled={egressBusy}
-                onClick={() => void goLive()}
-              >
-                {egressBusy
-                  ? "Lancement en cours…"
-                  : egressState === "feeding"
-                    ? "Réessayer de lancer le direct YouTube"
-                    : "Diffuser cette partie sur YouTube"}
-              </button>
-            )}
           {egressState === "feeding" && (
             <button
               type="button"
@@ -455,16 +419,10 @@ export function PilotokiLiveLivekitCameraPage() {
             </button>
           )}
           {broadcastMessage && <p role="status">{broadcastMessage}</p>}
-          {state !== "idle" &&
-            (egressState === "idle" || egressState === "done") && (
-              <button
-                type="button"
-                disabled={busy || egressBusy}
-                onClick={() => void stop()}
-              >
-                Arrêter et déconnecter la caméra
-              </button>
-            )}
+          {state === "connecting" && !broadcastMessage && (
+            <p role="status">Connexion sécurisée en cours…</p>
+          )}
+          {error && <p role="alert">{error}</p>}
         </>
       )}
       <p>
