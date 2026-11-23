@@ -259,8 +259,8 @@ export async function youtubeCreateBroadcast(
           // Automatically publish the bound YouTube event when RTMPS arrives.
           enableAutoStart: true,
           enableAutoStop: false,
-          // Allow the live player and its replay on pelotemanager.fr/videos.
-          enableEmbed: true,
+          // YouTube may reject enableEmbed=true for this channel.
+          // Leave embed eligibility to YouTube; do not block broadcast creation.
         },
       }),
       cache: "no-store",

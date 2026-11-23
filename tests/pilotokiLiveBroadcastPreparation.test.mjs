@@ -118,7 +118,7 @@ test("Only the selected user's authorized club is accepted", async () => {
   assert.match(requested[1].url, /rpc\/admin_get_club_live_settings/);
 });
 
-test("New YouTube broadcasts auto-start and allow embedded playback in Pilotoki", async () => {
+test("New YouTube broadcasts auto-start without forcing channel-restricted embedding", async () => {
   let body;
   const fetchMock = async (_url, options) => {
     body = JSON.parse(options.body);
@@ -137,7 +137,7 @@ test("New YouTube broadcasts auto-start and allow embedded playback in Pilotoki"
   assert.equal(body.status.privacyStatus, "unlisted");
   assert.equal(body.contentDetails.enableAutoStart, true);
   assert.equal(body.contentDetails.enableAutoStop, false);
-  assert.equal(body.contentDetails.enableEmbed, true);
+  assert.equal("enableEmbed" in body.contentDetails, false);
 });
 
 test("Prepared videos are queried with an authenticated club-scoped filter", async () => {
