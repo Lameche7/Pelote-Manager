@@ -55,7 +55,10 @@ test("LiveKit token API is guarded by club admin and video membership checks", (
 
 test("Mobile publisher tags raw tracks so participant egress captures camera", () => {
   const source = readFileSync(
-    new URL("../src/features/admin/live/pages/PilotokiLiveLivekitCameraPage.tsx", import.meta.url),
+    new URL(
+      "../src/features/admin/live/pages/PilotokiLiveLivekitCameraPage.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   assert.match(source, /source: Track\.Source\.Camera/);
