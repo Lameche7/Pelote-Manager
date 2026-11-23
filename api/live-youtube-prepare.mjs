@@ -9,7 +9,7 @@ import {
   youtubeCreateBroadcast,
 } from "./_live-youtube-broadcast.mjs";
 import { jsonError, LiveAuthError } from "./_live-google-shared.mjs";
-import { resolveVerifiedCalendarMatch } from "./_live-calendar-match.mjs";
+import { resolveVerifiedLiveSlot } from "./_live-calendar-match.mjs";
 import { recoverMissingYoutubeBroadcast } from "./_live-youtube-recover.mjs";
 import {
   authorizedCron,
@@ -63,6 +63,14 @@ export default async function handler(request, response) {
       );
       return response.status(200).json(result);
     }
+    if (request.body?.action === "resolve_slot") {
+      const { clubId } = await verifiedLiveClubAdmin(request, process.env);
+      const selection = await resolveVerifiedLiveSlot(
+        process.env, request, clubId, request.body?.calendarSlot,
+        request.body?.sourceType,
+      );
+      return response.status(200).json(selection);
+    }
     // No side effect on YouTube before validating both the request and club permissions.
     const input = validateBroadcastInput(request.body);
     const { clubId, channelId } = await verifiedLiveClubAdmin(
@@ -70,11 +78,12 @@ export default async function handler(request, response) {
       process.env,
     );
     if (request.body?.calendarSlot) {
-      const match = await resolveVerifiedCalendarMatch(
+      const match = await resolveVerifiedLiveSlot(
         process.env,
         request,
         clubId,
         request.body.calendarSlot,
+        input.sourceType,
       );
       if (input.sourceType !== match.sourceType)
         throw new LiveAuthError(409, "Type de rencontre incohérent.");
