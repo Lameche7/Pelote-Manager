@@ -86,7 +86,7 @@ test("LiveKit Egress sends only the authorized room and YouTube RTMPS output", a
   assert.ok(start);
   const body = JSON.parse(start.options.body);
   assert.equal(body.room_name, room);
-  assert.equal(body.preset, 2); // H264_1080P_30
+  assert.equal(body.preset, 3); // H264_1080P_60
   assert.equal(body.media.participant_video.identity, identity);
   assert.equal(body.media.audio.routes[0].participant_identity, identity);
   assert.deepEqual(body.outputs[0].stream.urls, [
