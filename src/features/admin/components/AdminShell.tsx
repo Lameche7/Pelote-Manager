@@ -12,7 +12,11 @@ import {
 } from "@/features/admin/access/AdminAccessProvider";
 import { ROUTES } from "@/shared/config";
 import { supabase } from "@/infrastructure/supabase/client";
-import { FULL_CLUB_MODULES, parseClubModules, type ClubModules } from "@/features/admin/config/clubModules";
+import {
+  FULL_CLUB_MODULES,
+  parseClubModules,
+  type ClubModules,
+} from "@/features/admin/config/clubModules";
 import { isAdminRouteEnabled } from "@/features/admin/config/clubModuleNavigation";
 import "./AdminShell.css";
 import "./AdminMobileExperience.css";
@@ -49,7 +53,7 @@ export function AdminShell() {
 }
 
 function AdminShellContent() {
-  const { access, error, hasPermission, isLoading } = useAdminAccess();
+  const { access, error, isLoading } = useAdminAccess();
   const location = useLocation();
   const requestedClubId = new URLSearchParams(location.search).get("adminClubId");
 
@@ -87,10 +91,22 @@ function AdminShellContent() {
     );
   }
 
-  return <ClubAdminNavigation key={access.clubId} clubId={access.clubId} clubName={access.clubName} />;
+  return (
+    <ClubAdminNavigation
+      key={access.clubId}
+      clubId={access.clubId}
+      clubName={access.clubName}
+    />
+  );
 }
 
-function ClubAdminNavigation({ clubId, clubName }: { clubId: string; clubName: string }) {
+function ClubAdminNavigation({
+  clubId,
+  clubName,
+}: {
+  clubId: string;
+  clubName: string;
+}) {
   const { hasPermission } = useAdminAccess();
   const location = useLocation();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
@@ -100,33 +116,46 @@ function ClubAdminNavigation({ clubId, clubName }: { clubId: string; clubName: s
     let active = true;
     void (async () => {
       try {
-        const { data, error } = await supabase.rpc("admin_get_club_modules", { target_club_id: clubId });
+        const { data, error } = await supabase.rpc("admin_get_club_modules", {
+          target_club_id: clubId,
+        });
         if (error) throw error;
-        const profile = data === null ? FULL_CLUB_MODULES : parseClubModules(data);
+        const profile =
+          data === null ? FULL_CLUB_MODULES : parseClubModules(data);
         if (!profile) throw new Error("Invalid module profile");
         if (active) setModules(profile);
       } catch {
         if (active) setFailed(true);
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [clubId]);
-  useEffect(() => { setMobileNavigationOpen(false); }, [location.pathname]);
-  if (failed) return <p role="alert">Configuration des fonctionnalités indisponible.</p>;
-  if (!modules) return <p role="status">Chargement des fonctionnalités du club…</p>;
+  useEffect(() => {
+    setMobileNavigationOpen(false);
+  }, [location.pathname]);
+  if (failed)
+    return <p role="alert">Configuration des fonctionnalités indisponible.</p>;
+  if (!modules)
+    return <p role="status">Chargement des fonctionnalités du club…</p>;
   const routeEnabled = (path: string) => isAdminRouteEnabled(path, modules);
   const visibleLinks: Array<{ label: string; to: string }> = [];
   adminNavigation.forEach((item) => {
     if (!isEnabled(item)) return;
     if ("children" in item) {
       item.children.forEach((child) => {
-        if (isEnabled(child) && hasPermission(child.permission) && routeEnabled(child.to)) {
+        if (
+          isEnabled(child) &&
+          hasPermission(child.permission) &&
+          routeEnabled(child.to)
+        ) {
           visibleLinks.push({ label: child.label, to: child.to });
         }
       });
       return;
     }
-    if ((hasPermission(item.permission) && routeEnabled(item.to))) {
+    if (hasPermission(item.permission) && routeEnabled(item.to)) {
       visibleLinks.push({ label: item.label, to: item.to });
     }
   });
@@ -184,9 +213,11 @@ function ClubAdminNavigation({ clubId, clubName }: { clubId: string; clubName: s
                 ("children" in item
                   ? item.children.some(
                       (child) =>
-                        isEnabled(child) && hasPermission(child.permission) && routeEnabled(child.to),
+                        isEnabled(child) &&
+                        hasPermission(child.permission) &&
+                        routeEnabled(child.to),
                     )
-                  : (hasPermission(item.permission) && routeEnabled(item.to))),
+                  : hasPermission(item.permission) && routeEnabled(item.to)),
             )
             .map((item) =>
               "children" in item ? (
@@ -195,7 +226,9 @@ function ClubAdminNavigation({ clubId, clubName }: { clubId: string; clubName: s
                   {item.children
                     .filter(
                       (child) =>
-                        isEnabled(child) && hasPermission(child.permission) && routeEnabled(child.to),
+                        isEnabled(child) &&
+                        hasPermission(child.permission) &&
+                        routeEnabled(child.to),
                     )
                     .map((child) => (
                       <NavLink
@@ -226,7 +259,11 @@ function ClubAdminNavigation({ clubId, clubName }: { clubId: string; clubName: s
         {modules.tournaments && hasPermission(ADMIN_PERMISSIONS.tournaments) && (
           <AdminBlockedFinalsAlerts />
         )}
-        {routeEnabled(location.pathname) ? <Outlet /> : <p role="alert">Cette fonctionnalité n’est pas activée pour ce club.</p>}
+        {routeEnabled(location.pathname) ? (
+          <Outlet />
+        ) : (
+          <p role="alert">Cette fonctionnalité n’est pas activée pour ce club.</p>
+        )}
       </main>
     </div>
   );
