@@ -398,6 +398,23 @@ export function AdminTournamentFinalFullPlanning({
           { nodeId: quickNode.id, slotId: quickSlot.id },
         ]
       : persistedAssignments;
+  const quickNormalWindow =
+    workspace?.tournament.finalsStartsOn &&
+    workspace.tournament.finalsEndsOn &&
+    quickNode
+      ? finalRoundDateWindow({
+          node: quickNode,
+          nodes,
+          finalsStartsOn: workspace.tournament.finalsStartsOn,
+          finalsEndsOn: workspace.tournament.finalsEndsOn,
+        })
+      : null;
+  const quickOutsideRoundWindow = Boolean(
+    quickNormalWindow &&
+      quickSlot &&
+      (quickSlot.date < quickNormalWindow.earliest ||
+        quickSlot.date > quickNormalWindow.latest),
+  );
   const quickValidation =
     workspace && quickNode && quickSlot
       ? validateFullFinalStagePlanning({
@@ -407,6 +424,7 @@ export function AdminTournamentFinalFullPlanning({
           assignments: quickAssignments,
           minimumRestMinutes: workspace.tournament.minimumRestMinutes,
           respectAvailability: false,
+          allowManualRoundDateOverride: true,
           finalsStartsOn: workspace.tournament.finalsStartsOn ?? undefined,
           finalsEndsOn: workspace.tournament.finalsEndsOn ?? undefined,
         })
@@ -547,6 +565,13 @@ export function AdminTournamentFinalFullPlanning({
           "Sélectionnez une rencontre modifiable et un créneau compatible.",
         );
       }
+      if (
+        quickOutsideRoundWindow &&
+        !window.confirm(
+          "Ce créneau est en dehors de la période prévue pour ce tour. Vous pouvez le préprogrammer exceptionnellement, sous réserve de respecter le calendrier des tours suivants. Confirmer cette dérogation administrateur ?",
+        )
+      )
+        return "Programmation annulée.";
       // A slot without common availability is an explicit organizer override.
       if (
         !quickCommon &&
@@ -1080,6 +1105,12 @@ export function AdminTournamentFinalFullPlanning({
         )}
         {quickSlot && (
           <p role="status">Créneau retenu : {slotLabel(quickSlot)}</p>
+        )}
+        {quickOutsideRoundWindow && !quickError && (
+          <p role="status">
+            ⚠ Ce créneau dépasse la période habituelle de ce tour. Vous pouvez
+            confirmer une dérogation de programmation manuelle.
+          </p>
         )}
         {quickNode && quickSlot && (
           <p role="status">
