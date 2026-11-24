@@ -78,8 +78,7 @@ function ClubModulesEditor({ clubId }: { clubId: string }) {
     <section className="platform-card" aria-label="Fonctionnalités du club">
       <h3>Fonctionnalités du club</h3>
       <p>
-        Préparation des modules : les restrictions métier ne sont pas encore
-        actives.
+        Préparation des modules : les restrictions métier ne sont pas encore actives.
       </p>
       {profile && (
         <>
@@ -113,11 +112,7 @@ function ClubModulesEditor({ clubId }: { clubId: string }) {
               {labels[index]}
             </label>
           ))}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void save()}
-          >
+          <button type="button" disabled={busy} onClick={() => void save()}>
             Enregistrer les fonctionnalités
           </button>
         </>
