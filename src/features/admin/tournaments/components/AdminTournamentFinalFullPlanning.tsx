@@ -349,6 +349,13 @@ export function AdminTournamentFinalFullPlanning({
         left.displayOrder - right.displayOrder,
     );
   const resolvedQueueCount = quickQueue.filter(hasResolvedOpponents).length;
+  const manualUnpublishedMatches = (workspace?.nodes ?? []).filter(
+    (row) =>
+      row.source === "manual" &&
+      Boolean(row.actualMatchId && row.teamAId && row.teamBId && row.playDate && row.startsAt) &&
+      !row.published &&
+      row.resultStatus !== "validated",
+  );
   const quickNode = nodes.find((node) => node.id === quickNodeId);
   const quickSlot = workspace?.slots.find((slot) => slot.id === quickSlotId);
   const quickRow = quickNode ? rowById.get(quickNode.id) : null;
@@ -1135,6 +1142,56 @@ export function AdminTournamentFinalFullPlanning({
           {busy ? "Enregistrement…" : "Préprogrammer la rencontre ici"}
         </button>
       </section>
+
+      {manualUnpublishedMatches.length > 0 && (
+        <section className="final-stage-full-planning__recommendations">
+          <h4>Rencontres manuelles à publier</h4>
+          <p>
+            Les rencontres ci-dessous sont préprogrammées mais non publiées.
+            Vous pouvez décider de les officialiser et notifier les joueurs,
+            même sans disponibilités communes déclarées.
+          </p>
+          <div className="final-stage-full-planning__series-grid">
+            {manualUnpublishedMatches.map((row) => (
+              <div key={row.actualMatchId}>
+                <strong>
+                  {row.teamALabel ?? "Équipe A"} — {row.teamBLabel ?? "Équipe B"}
+                </strong>
+                <p>
+                  {row.playDate ? formatDate(row.playDate) : ""} ·{" "}
+                  {row.startsAt?.slice(0, 5)}
+                </p>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void run(async () => {
+                      if (
+                        !window.confirm(
+                          "Publier officiellement cette rencontre et notifier les joueurs malgré les disponibilités non communes ? Cette décision confirme l'horaire retenu par l'organisation.",
+                        )
+                      )
+                        return "Publication annulée.";
+                      const result =
+                        await tournamentFinalStageAdminService.forcePublishManualFinal(
+                          tournamentId,
+                          row.seriesId,
+                          row.roundNumber,
+                          row.displayOrder,
+                        );
+                      return result.published
+                        ? `Rencontre publiée. ${result.recipientCount} destinataire(s) de notification enregistré(s). Vérifiez la livraison push séparément.`
+                        : "Publication non confirmée.";
+                    })
+                  }
+                >
+                  Publier et notifier les joueurs
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <AdminTournamentFinalWeeklyOverview
         workspace={workspace}
