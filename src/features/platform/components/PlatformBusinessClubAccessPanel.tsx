@@ -1,3 +1,4 @@
+import { PlatformClubModulesEditor } from "./PlatformClubModulesEditor";
 import { useEffect, useRef, useState } from "react";
 import { PlatformClubInformationEditor } from "@/features/admin/club/pages/PlatformClubInformationEditor";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
@@ -171,7 +172,10 @@ export function PlatformBusinessClubAccessPanel() {
           )}
           {error && <p role="alert">{error}</p>}
           {authorizedClubId && (
-            <PlatformClubInformationEditor clubId={authorizedClubId} />
+            <>
+              <PlatformClubInformationEditor clubId={authorizedClubId} />
+              <PlatformClubModulesEditor key={authorizedClubId} clubId={authorizedClubId} />
+            </>
           )}
         </>
       )}
