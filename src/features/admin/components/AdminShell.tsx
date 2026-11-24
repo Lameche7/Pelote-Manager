@@ -109,6 +109,15 @@ function ClubAdminNavigation({
 }) {
   const { hasPermission } = useAdminAccess();
   const location = useLocation();
+  const requestedClubId = new URLSearchParams(location.search).get("adminClubId");
+  const visualClubSlug = new URLSearchParams(location.search).get("club");
+  const adminLink = (path: string) => {
+    const params = new URLSearchParams();
+    if (visualClubSlug) params.set("club", visualClubSlug);
+    if (requestedClubId) params.set("adminClubId", requestedClubId);
+    const query = params.toString();
+    return query ? `${path}?${query}` : path;
+  };
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [modules, setModules] = useState<ClubModules | null>(null);
   const [failed, setFailed] = useState(false);
@@ -120,8 +129,7 @@ function ClubAdminNavigation({
           target_club_id: clubId,
         });
         if (error) throw error;
-        const profile =
-          data === null ? FULL_CLUB_MODULES : parseClubModules(data);
+        const profile = data === null ? FULL_CLUB_MODULES : parseClubModules(data);
         if (!profile) throw new Error("Invalid module profile");
         if (active) setModules(profile);
       } catch {
@@ -136,7 +144,9 @@ function ClubAdminNavigation({
     setMobileNavigationOpen(false);
   }, [location.pathname]);
   if (failed)
-    return <p role="alert">Configuration des fonctionnalités indisponible.</p>;
+    return (
+      <p role="alert">Configuration des fonctionnalités indisponible.</p>
+    );
   if (!modules)
     return <p role="status">Chargement des fonctionnalités du club…</p>;
   const routeEnabled = (path: string) => isAdminRouteEnabled(path, modules);
@@ -234,7 +244,7 @@ function ClubAdminNavigation({
                       <NavLink
                         key={child.to}
                         className={linkClass}
-                        to={child.to}
+                        to={adminLink(child.to)}
                         onClick={() => setMobileNavigationOpen(false)}
                       >
                         {child.label}
@@ -245,7 +255,7 @@ function ClubAdminNavigation({
                 <NavLink
                   key={item.to}
                   className={linkClass}
-                  to={item.to}
+                  to={adminLink(item.to)}
                   end={item.to === "/admin"}
                   onClick={() => setMobileNavigationOpen(false)}
                 >
@@ -256,9 +266,10 @@ function ClubAdminNavigation({
         </nav>
       </aside>
       <main className="admin-shell__content">
-        {modules.tournaments && hasPermission(ADMIN_PERMISSIONS.tournaments) && (
-          <AdminBlockedFinalsAlerts />
-        )}
+        {modules.tournaments &&
+          hasPermission(ADMIN_PERMISSIONS.tournaments) && (
+            <AdminBlockedFinalsAlerts />
+          )}
         {routeEnabled(location.pathname) ? (
           <Outlet />
         ) : (
