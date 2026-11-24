@@ -23,6 +23,11 @@ const labels = [
 ];
 
 export function PlatformClubModulesEditor({ clubId }: { clubId: string }) {
+  return <ClubModulesEditor key={clubId} clubId={clubId} />;
+}
+
+// Remount on club changes so a pending read or write cannot reuse another club’s profile.
+function ClubModulesEditor({ clubId }: { clubId: string }) {
   const [profile, setProfile] = useState<ClubModules | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
