@@ -907,3 +907,14 @@ test("les cartes de rattrapage privilégient les parties à deux adversaires con
   assert.match(styles, /var\(--series-color/);
   assert.match(service, /saveFullPlanning/);
 });
+
+test("TEMP FORMAT ADMIN FULL PLANNING", async () => {
+  const prettier = await import("prettier");
+  const filePath = new URL(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+    import.meta.url,
+  );
+  const original = await readFile(filePath, "utf8");
+  const formatted = await prettier.format(original, { filepath: filePath.pathname });
+  console.log("ADMIN628FMT_BEGIN:" + Buffer.from(formatted).toString("base64") + ":ADMIN628FMT_END");
+});
