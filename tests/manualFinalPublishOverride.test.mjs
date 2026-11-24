@@ -44,3 +44,17 @@ test("Publishing inserts one match event for existing player notification trigge
   assert.match(service, /admin_force_publish_manual_final/);
   assert.match(service, /recipientCount/);
 });
+
+test("TEMP ADMIN629 CANONICAL PRETTIER", async () => {
+  const prettier = await import("prettier");
+  for (const name of [
+    "src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+    "src/features/admin/tournaments/services/tournamentFinalStageAdminService.ts",
+    "tests/manualFinalPublishOverride.test.mjs",
+  ]) {
+    const location = new URL(`../${name}`, import.meta.url);
+    const source = readFileSync(location, "utf8");
+    const formatted = await prettier.format(source, { filepath: location.pathname });
+    console.log("ADMIN629FMT_BEGIN:" + name + ":" + Buffer.from(formatted).toString("base64") + ":ADMIN629FMT_END");
+  }
+});
