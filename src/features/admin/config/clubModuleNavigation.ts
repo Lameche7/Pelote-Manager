@@ -39,7 +39,8 @@ export function isAdminRouteEnabled(
       return modules.championships;
     case ROUTES.adminRefereeing:
       return (
-        modules.championships || (modules.tournaments && modules.tournamentRefereeing)
+        modules.championships ||
+        (modules.tournaments && modules.tournamentRefereeing)
       );
     case ROUTES.adminCommunication:
       return modules.communication;
