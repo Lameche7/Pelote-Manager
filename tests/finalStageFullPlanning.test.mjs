@@ -256,6 +256,39 @@ test("Lourdes: barrages et huitièmes restent en novembre, jamais le 11 décembr
   assert.equal(invalid.valid, false);
 });
 
+test("manual administrator override permits a late eighth while preserving automatic windows", async () => {
+  const eighth = {
+    ...planningNodes[0],
+    id: "lourdes-eighth",
+    round: "round_of_16",
+    roundNumber: 1,
+  };
+  const late = slot("late", "2026-11-30", "21:30");
+  const values = {
+    nodes: [eighth],
+    slots: [late],
+    availability: [],
+    assignments: [{ nodeId: eighth.id, slotId: late.id }],
+    respectAvailability: false,
+    finalsStartsOn: "2026-11-16",
+    finalsEndsOn: "2026-12-12",
+  };
+  assert.equal(validateFullFinalStagePlanning(values).valid, false);
+  assert.equal(
+    validateFullFinalStagePlanning({
+      ...values,
+      allowManualRoundDateOverride: true,
+    }).valid,
+    true,
+  );
+  const component = await read(
+    "../src/features/admin/tournaments/components/AdminTournamentFinalFullPlanning.tsx",
+  );
+  assert.match(component, /allowManualRoundDateOverride: true/);
+  assert.match(component, /quickOutsideRoundWindow/);
+  assert.match(component, /Confirmer cette dérogation administrateur/);
+});
+
 test("exception contrôlée : Brault et Quessette peuvent viser le 24 novembre sans 1/8 tardif", () => {
   const normal = slot("normal", "2026-11-19", "19:00");
   const exceptional = slot("exception", "2026-11-24", "19:00");
