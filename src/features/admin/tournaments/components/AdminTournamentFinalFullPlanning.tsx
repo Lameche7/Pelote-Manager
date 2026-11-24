@@ -352,7 +352,13 @@ export function AdminTournamentFinalFullPlanning({
   const manualUnpublishedMatches = (workspace?.nodes ?? []).filter(
     (row) =>
       row.source === "manual" &&
-      Boolean(row.actualMatchId && row.teamAId && row.teamBId && row.playDate && row.startsAt) &&
+      Boolean(
+        row.actualMatchId &&
+        row.teamAId &&
+        row.teamBId &&
+        row.playDate &&
+        row.startsAt,
+      ) &&
       !row.published &&
       row.resultStatus !== "validated",
   );
@@ -1155,7 +1161,8 @@ export function AdminTournamentFinalFullPlanning({
             {manualUnpublishedMatches.map((row) => (
               <div key={row.actualMatchId}>
                 <strong>
-                  {row.teamALabel ?? "Équipe A"} — {row.teamBLabel ?? "Équipe B"}
+                  {row.teamALabel ?? "Équipe A"} —{" "}
+                  {row.teamBLabel ?? "Équipe B"}
                 </strong>
                 <p>
                   {row.playDate ? formatDate(row.playDate) : ""} ·{" "}
