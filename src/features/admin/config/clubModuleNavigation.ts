@@ -2,8 +2,11 @@ import { ROUTES } from "@/shared/config";
 import type { ClubModules } from "./clubModules";
 
 // Module gates complement, never replace, existing user permissions.
-export function isAdminRouteEnabled(path: string, modules: ClubModules): boolean {
-  switch (path) {
+export function isAdminRouteEnabled(
+  path: string,
+  modules: ClubModules,
+): boolean {
+  switch (path.replace(/\/+$/, "").toLowerCase()) {
     case ROUTES.adminReservations:
     case ROUTES.adminSlotExchange:
     case ROUTES.adminPermanentSlots:
@@ -35,7 +38,9 @@ export function isAdminRouteEnabled(path: string, modules: ClubModules): boolean
     case ROUTES.adminChampionshipResults:
       return modules.championships;
     case ROUTES.adminRefereeing:
-      return modules.championships || (modules.tournaments && modules.tournamentRefereeing);
+      return (
+        modules.championships || (modules.tournaments && modules.tournamentRefereeing)
+      );
     case ROUTES.adminCommunication:
       return modules.communication;
     case ROUTES.adminPayments:
