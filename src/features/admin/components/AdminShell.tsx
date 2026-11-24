@@ -11,6 +11,9 @@ import {
   useAdminAccess,
 } from "@/features/admin/access/AdminAccessProvider";
 import { ROUTES } from "@/shared/config";
+import { supabase } from "@/infrastructure/supabase/client";
+import { FULL_CLUB_MODULES, parseClubModules, type ClubModules } from "@/features/admin/config/clubModules";
+import { isAdminRouteEnabled } from "@/features/admin/config/clubModuleNavigation";
 import "./AdminShell.css";
 import "./AdminMobileExperience.css";
 
@@ -48,22 +51,7 @@ export function AdminShell() {
 function AdminShellContent() {
   const { access, error, hasPermission, isLoading } = useAdminAccess();
   const location = useLocation();
-  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
-  const requestedClubId = new URLSearchParams(location.search).get(
-    "adminClubId",
-  );
-  const visualClubSlug = new URLSearchParams(location.search).get("club");
-  const adminLink = (path: string) => {
-    const params = new URLSearchParams();
-    if (visualClubSlug) params.set("club", visualClubSlug);
-    if (requestedClubId) params.set("adminClubId", requestedClubId);
-    const query = params.toString();
-    return query ? `${path}?${query}` : path;
-  };
-
-  useEffect(() => {
-    setMobileNavigationOpen(false);
-  }, [location.pathname]);
+  const requestedClubId = new URLSearchParams(location.search).get("adminClubId");
 
   if (isLoading) return <p role="status">Chargement du Back Office…</p>;
   if (error)
@@ -99,18 +87,46 @@ function AdminShellContent() {
     );
   }
 
+  return <ClubAdminNavigation key={access.clubId} clubId={access.clubId} clubName={access.clubName} />;
+}
+
+function ClubAdminNavigation({ clubId, clubName }: { clubId: string; clubName: string }) {
+  const { hasPermission } = useAdminAccess();
+  const location = useLocation();
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [modules, setModules] = useState<ClubModules | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc("admin_get_club_modules", { target_club_id: clubId });
+        if (error) throw error;
+        const profile = data === null ? FULL_CLUB_MODULES : parseClubModules(data);
+        if (!profile) throw new Error("Invalid module profile");
+        if (active) setModules(profile);
+      } catch {
+        if (active) setFailed(true);
+      }
+    })();
+    return () => { active = false; };
+  }, [clubId]);
+  useEffect(() => { setMobileNavigationOpen(false); }, [location.pathname]);
+  if (failed) return <p role="alert">Configuration des fonctionnalités indisponible.</p>;
+  if (!modules) return <p role="status">Chargement des fonctionnalités du club…</p>;
+  const routeEnabled = (path: string) => isAdminRouteEnabled(path, modules);
   const visibleLinks: Array<{ label: string; to: string }> = [];
   adminNavigation.forEach((item) => {
     if (!isEnabled(item)) return;
     if ("children" in item) {
       item.children.forEach((child) => {
-        if (isEnabled(child) && hasPermission(child.permission)) {
+        if (isEnabled(child) && hasPermission(child.permission) && routeEnabled(child.to)) {
           visibleLinks.push({ label: child.label, to: child.to });
         }
       });
       return;
     }
-    if (hasPermission(item.permission)) {
+    if ((hasPermission(item.permission) && routeEnabled(item.to))) {
       visibleLinks.push({ label: item.label, to: item.to });
     }
   });
@@ -158,7 +174,7 @@ function AdminShellContent() {
         <header>
           <span>Back Office</span>
           <strong>Administration</strong>
-          <small>{access.clubName}</small>
+          <small>{clubName}</small>
         </header>
         <nav aria-label="Navigation de l’administration">
           {adminNavigation
@@ -168,9 +184,9 @@ function AdminShellContent() {
                 ("children" in item
                   ? item.children.some(
                       (child) =>
-                        isEnabled(child) && hasPermission(child.permission),
+                        isEnabled(child) && hasPermission(child.permission) && routeEnabled(child.to),
                     )
-                  : hasPermission(item.permission)),
+                  : (hasPermission(item.permission) && routeEnabled(item.to))),
             )
             .map((item) =>
               "children" in item ? (
@@ -179,13 +195,13 @@ function AdminShellContent() {
                   {item.children
                     .filter(
                       (child) =>
-                        isEnabled(child) && hasPermission(child.permission),
+                        isEnabled(child) && hasPermission(child.permission) && routeEnabled(child.to),
                     )
                     .map((child) => (
                       <NavLink
                         key={child.to}
                         className={linkClass}
-                        to={adminLink(child.to)}
+                        to={child.to}
                         onClick={() => setMobileNavigationOpen(false)}
                       >
                         {child.label}
@@ -196,7 +212,7 @@ function AdminShellContent() {
                 <NavLink
                   key={item.to}
                   className={linkClass}
-                  to={adminLink(item.to)}
+                  to={item.to}
                   end={item.to === "/admin"}
                   onClick={() => setMobileNavigationOpen(false)}
                 >
@@ -207,10 +223,10 @@ function AdminShellContent() {
         </nav>
       </aside>
       <main className="admin-shell__content">
-        {hasPermission(ADMIN_PERMISSIONS.tournaments) && (
+        {modules.tournaments && hasPermission(ADMIN_PERMISSIONS.tournaments) && (
           <AdminBlockedFinalsAlerts />
         )}
-        <Outlet />
+        {routeEnabled(location.pathname) ? <Outlet /> : <p role="alert">Cette fonctionnalité n’est pas activée pour ce club.</p>}
       </main>
     </div>
   );
