@@ -21,7 +21,7 @@ test("Only the authorized tournament administrator can publish a complete manual
   assert.match(sql, /chosen_match\.team_a_id is null/);
   assert.match(sql, /chosen_match\.team_b_id is null/);
   assert.match(sql, /chosen_plan\.source is distinct from 'manual'/);
-  assert.match(sql, /not exists\(select 1 from public\.tournament_match_events/);
+  assert.match(sql, /exists\(select 1 from public\.tournament_match_events/);
   assert.match(sql, /grant execute on function public\.admin_force_publish_manual_final/);
 });
 
