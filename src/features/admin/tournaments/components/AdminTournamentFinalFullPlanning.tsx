@@ -411,9 +411,9 @@ export function AdminTournamentFinalFullPlanning({
       : null;
   const quickOutsideRoundWindow = Boolean(
     quickNormalWindow &&
-      quickSlot &&
-      (quickSlot.date < quickNormalWindow.earliest ||
-        quickSlot.date > quickNormalWindow.latest),
+    quickSlot &&
+    (quickSlot.date < quickNormalWindow.earliest ||
+      quickSlot.date > quickNormalWindow.latest),
   );
   const quickValidation =
     workspace && quickNode && quickSlot
