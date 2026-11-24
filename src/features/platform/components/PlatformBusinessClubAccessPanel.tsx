@@ -174,7 +174,10 @@ export function PlatformBusinessClubAccessPanel() {
           {authorizedClubId && (
             <>
               <PlatformClubInformationEditor clubId={authorizedClubId} />
-              <PlatformClubModulesEditor key={authorizedClubId} clubId={authorizedClubId} />
+              <PlatformClubModulesEditor
+                key={authorizedClubId}
+                clubId={authorizedClubId}
+              />
             </>
           )}
         </>
