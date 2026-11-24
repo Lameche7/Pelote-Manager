@@ -43,14 +43,17 @@ function ClubModulesEditor({ clubId }: { clubId: string }) {
           { target_club_id: clubId },
         );
         if (error) throw error;
-        const parsed = data === null ? { ...FULL_CLUB_MODULES } : parseClubModules(data);
+        const parsed =
+          data === null ? { ...FULL_CLUB_MODULES } : parseClubModules(data);
         if (!parsed) throw new Error("Invalid profile");
         if (active) setProfile(parsed);
       } catch {
         if (active) setMessage("Configuration inaccessible.");
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [clubId]);
 
   const save = async () => {
@@ -74,23 +77,47 @@ function ClubModulesEditor({ clubId }: { clubId: string }) {
   return (
     <section className="platform-card" aria-label="Fonctionnalités du club">
       <h3>Fonctionnalités du club</h3>
-      <p>Préparation des modules : les restrictions métier ne sont pas encore actives.</p>
+      <p>
+        Préparation des modules : les restrictions métier ne sont pas encore
+        actives.
+      </p>
       {profile && (
         <>
-          <button type="button" disabled={busy} onClick={() => setProfile({ ...FULL_CLUB_MODULES })}>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setProfile({ ...FULL_CLUB_MODULES })}
+          >
             Club complet
           </button>
-          <button type="button" disabled={busy} onClick={() => setProfile({ ...TOURNAMENT_CLUB_MODULES })}>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setProfile({ ...TOURNAMENT_CLUB_MODULES })}
+          >
             Club organisateur de tournois
           </button>
           {CLUB_MODULES.map((key, index) => (
-            <label key={key} style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-              <input type="checkbox" checked={profile[key]} disabled={busy}
-                onChange={(event) => setProfile({ ...profile, [key]: event.target.checked })} />
+            <label
+              key={key}
+              style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
+            >
+              <input
+                type="checkbox"
+                checked={profile[key]}
+                disabled={busy}
+                onChange={(event) =>
+                  setProfile({ ...profile, [key]: event.target.checked })
+                }
+              />
               {labels[index]}
             </label>
           ))}
-          <button type="button" disabled={busy} onClick={() => void save()}>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void save()}
+          >
             Enregistrer les fonctionnalités
           </button>
         </>
