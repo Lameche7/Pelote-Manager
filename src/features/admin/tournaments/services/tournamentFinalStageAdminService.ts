@@ -840,6 +840,34 @@ export const tournamentFinalStageAdminService = {
     return data === true;
   },
 
+  async forcePublishManualFinal(
+    tournamentId: string,
+    seriesId: string,
+    roundNumber: number,
+    displayOrder: number,
+  ): Promise<{ published: boolean; alreadyPublished: boolean; recipientCount: number }> {
+    const { data, error } = await supabase.rpc(
+      "admin_force_publish_manual_final",
+      {
+        target_tournament_id: tournamentId,
+        target_series_id: seriesId,
+        target_round_number: roundNumber,
+        target_display_order: displayOrder,
+      },
+    );
+    if (error) fail(error, "Publication exceptionnelle impossible.");
+    const result = data as {
+      published?: boolean;
+      alreadyPublished?: boolean;
+      recipientCount?: number;
+    } | null;
+    return {
+      published: result?.published === true,
+      alreadyPublished: result?.alreadyPublished === true,
+      recipientCount: Number(result?.recipientCount ?? 0),
+    };
+  },
+
   async saveFullPlanning(
     tournamentId: string,
     updates: TournamentFinalFullPlanningUpdate[],
