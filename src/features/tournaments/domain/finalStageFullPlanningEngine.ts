@@ -275,6 +275,7 @@ export const validateFullFinalStagePlanning = ({
   assignments,
   minimumRestMinutes = 0,
   respectAvailability = false,
+  allowManualRoundDateOverride = false,
   finalsStartsOn,
   finalsEndsOn,
 }: {
@@ -284,6 +285,7 @@ export const validateFullFinalStagePlanning = ({
   assignments: FinalStagePlanningAssignment[];
   minimumRestMinutes?: number;
   respectAvailability?: boolean;
+  allowManualRoundDateOverride?: boolean;
   finalsStartsOn?: string;
   finalsEndsOn?: string;
 }): FinalStagePlanningValidation => {
@@ -342,6 +344,7 @@ export const validateFullFinalStagePlanning = ({
     if (
       normalWindow &&
       !withinNormal &&
+      !allowManualRoundDateOverride &&
       !(withinException && !respectAvailability)
     ) {
       diagnostics.push({
