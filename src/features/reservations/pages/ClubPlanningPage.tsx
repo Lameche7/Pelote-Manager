@@ -97,11 +97,13 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
       .then((groups) => {
         if (!active) return;
         setSlots(
-          groups.flat().sort(
-            (a, b) =>
-              Date.parse(a.startsAt) - Date.parse(b.startsAt) ||
-              a.resourceId.localeCompare(b.resourceId),
-          ),
+          groups
+            .flat()
+            .sort(
+              (a, b) =>
+                Date.parse(a.startsAt) - Date.parse(b.startsAt) ||
+                a.resourceId.localeCompare(b.resourceId),
+            ),
         );
       })
       .catch(() => {
@@ -203,7 +205,9 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
               timezones.get(inspected.resourceId) ?? "Europe/Paris",
             )}
           </p>
-          {inspected.resultDisplay && <p>Résultat : {inspected.resultDisplay}</p>}
+          {inspected.resultDisplay && (
+            <p>Résultat : {inspected.resultDisplay}</p>
+          )}
           {inspected.refereeName && <p>Arbitre : {inspected.refereeName}</p>}
           <PlanningMatchActions
             key={`${inspected.resourceId}-${inspected.startsAt}-${inspected.endsAt}`}
