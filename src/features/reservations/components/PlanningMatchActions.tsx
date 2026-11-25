@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminAccessService } from "@/features/admin/access/adminAccessService";
 import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
+import { adminTournamentUnprogrammedService } from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { refereeingService } from "@/features/refereeing/services/refereeingService";
@@ -87,6 +88,25 @@ export function PlanningMatchActions({
       setBusy(false);
     }
   };
+  const unprogram = async () => {
+    if (!isAuthenticated || !clubId || adminClub !== clubId || !competition || busy) return;
+    if (!window.confirm("Déprogrammer cette partie de tournoi ?")) return;
+    setBusy(true);
+    setError("");
+    try {
+      await adminAccessService.getAccessForClub(clubId).then((access) => {
+        if (!access.permissions.includes(ADMIN_PERMISSIONS.tournaments)) throw new Error("Accès refusé.");
+      });
+      const current = await resolveCalendarCompetition(slot);
+      if (current?.kind !== "tournament" || current.matchId !== competition.matchId) throw new Error("La rencontre a changé.");
+      await adminTournamentUnprogrammedService.unprogram(current.matchId, "Déprogrammation administrateur depuis le planning");
+      onUpdated();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Déprogrammation impossible.");
+    } finally {
+      setBusy(false);
+    }
+  };
   if (loading) return <p role="status">Vérification des droits…</p>;
   return (
     <div className="reservation-slot-actions">
@@ -98,7 +118,8 @@ export function PlanningMatchActions({
         <div className="reservation-slot-actions reservation-slot-actions--admin">
           <h3>Actions administrateur</h3>
           <Link className="reservation-slot-actions__button" to={url(ROUTES.adminTournamentResults, competition.matchId)}>Gérer le résultat</Link>
-          <Link className="reservation-slot-actions__button" to={url(ROUTES.adminTournamentReschedules, competition.matchId)}>Gérer le report ou la déprogrammation</Link>
+          <Link className="reservation-slot-actions__button" to={url(ROUTES.adminTournamentReschedules, competition.matchId)}>Gérer le report</Link>
+          <button className="reservation-slot-actions__button" type="button" disabled={busy || Boolean(slot.resultDisplay)} onClick={() => void unprogram()}>Déprogrammer la partie</button>
         </div>
       )}
       {identity?.actions.submitResult && (
