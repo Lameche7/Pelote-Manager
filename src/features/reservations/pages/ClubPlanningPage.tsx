@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { PlanningMatchActions } from "../components/PlanningMatchActions";
 import { CalendarWeekGrid } from "../components/CalendarWeekGrid";
 import {
   addDays,
@@ -35,6 +36,7 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
   const [resourcesLoading, setResourcesLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const [inspected, setInspected] = useState<CalendarSlot | null>(null);
   const days = useMemo(() => buildWeekDays(anchor), [anchor]);
   const from = toDateInputValue(days[0]);
@@ -112,7 +114,7 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
     return () => {
       active = false;
     };
-  }, [resources, selection, from, to]);
+  }, [resources, selection, from, to, refreshVersion]);
 
   const labels = useMemo(
     () => new Map(resources.map((item) => [item.id, item.name])),
@@ -204,6 +206,12 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
           </p>
           {inspected.resultDisplay && <p>Résultat : {inspected.resultDisplay}</p>}
           {inspected.refereeName && <p>Arbitre : {inspected.refereeName}</p>}
+          <PlanningMatchActions
+            key={`${inspected.resourceId}-${inspected.startsAt}-${inspected.endsAt}`}
+            slot={inspected}
+            clubSlug={clubSlug}
+            onUpdated={() => setRefreshVersion((value) => value + 1)}
+          />
           <button type="button" onClick={() => setInspected(null)}>
             Fermer
           </button>
