@@ -106,6 +106,7 @@ export function PlanningMatchActions({
   const url = (path: string, matchId?: string) => {
     const params = new URLSearchParams();
     if (clubSlug) params.set("club", clubSlug);
+    if (clubId && path.startsWith("/admin")) params.set("adminClubId", clubId);
     if (matchId) params.set("match", matchId);
     return params.size ? path + "?" + params.toString() : path;
   };
