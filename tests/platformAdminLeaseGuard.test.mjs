@@ -26,6 +26,9 @@ test("lease expiry is checked before granting local access", () => {
   assert.ok(leaseService.includes("remainingMs <= 0"));
   assert.ok(leaseService.includes("remainingMs > 5 * 60 * 1000"));
   assert.ok(leaseService.includes("Number.isFinite(expiresAt)"));
+  assert.ok(leaseService.includes("expiresAt - serverNow"));
+  assert.ok(leaseService.includes("performance.now()"));
+  assert.ok(!leaseService.includes("expiresAt - Date.now()"));
 });
 
 test("explicit club routes remain blocked without validated rollout", () => {
