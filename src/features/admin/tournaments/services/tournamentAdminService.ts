@@ -564,6 +564,65 @@ export function createPlatformTournamentAdminService(clubId: string) {
         fail(error, "Impossible d’enregistrer la configuration du tournoi.");
     },
 
+    async getRefereeingEnabled(id: string): Promise<boolean> {
+      const { data, error } = await supabase.rpc(
+        "platform_admin_get_tournament_refereeing",
+        {
+          target_club_id: clubId,
+        target_id: id,
+        },
+      );
+      if (error) fail(error, "Impossible de charger le réglage d’arbitrage.");
+      return Boolean(data);
+    },
+
+    async setRefereeingEnabled(id: string, enabled: boolean): Promise<void> {
+      const { error } = await supabase.rpc("platform_admin_set_tournament_refereeing", {
+        target_club_id: clubId,
+        target_id: id,
+        target_enabled: enabled,
+      });
+      if (error) fail(error, "Impossible de modifier l’arbitrage du tournoi.");
+    },
+
+    async getSportingRules(id: string): Promise<TournamentSportingRules> {
+      const { data, error } = await supabase.rpc(
+        "platform_admin_get_tournament_sporting_rules",
+        { target_club_id: clubId, target_id: id },
+      );
+      if (error)
+        fail(error, "Impossible de charger les règles sportives du tournoi.");
+      return mapSportingRules(data);
+    },
+
+    async saveSportingRules(
+      id: string,
+      rules: TournamentSportingRules,
+    ): Promise<void> {
+      const { error } = await supabase.rpc(
+        "platform_admin_save_tournament_sporting_rules",
+        {
+          target_club_id: clubId,
+        target_id: id,
+          payload: {
+            match_format: rules.matchFormat,
+            single_game_points: rules.singleGamePoints,
+            main_set_points: rules.mainSetPoints,
+            deciding_set_points: rules.decidingSetPoints,
+            base_win_points: rules.baseWinPoints,
+            base_loss_points: rules.baseLossPoints,
+            offensive_bonus_points: rules.offensiveBonusPoints,
+            defensive_bonus_points: rules.defensiveBonusPoints,
+            offensive_bonus_margin: rules.offensiveBonusMargin,
+            defensive_bonus_margin: rules.defensiveBonusMargin,
+            ranking_mode: rules.rankingMode,
+            goal_average_mode: rules.goalAverageMode,
+          },
+        },
+      );
+      if (error) fail(error, "Impossible d’enregistrer les règles sportives.");
+    },
+
     async transition(id: string, status: TournamentStatus): Promise<void> {
       const { error } = await supabase.rpc(
         "platform_admin_transition_tournament",
