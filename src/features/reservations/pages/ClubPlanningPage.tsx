@@ -89,9 +89,8 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
         return entries.filter(
           (slot) =>
             slot.resourceId === resource.id &&
-            (slot.occupationType === "match" ||
-              slot.occupationType === "tournament_final_day_program") &&
-            (slot.status === "occupied" || slot.status === "locked"),
+            slot.occupationType === "match" &&
+            slot.status === "occupied",
         );
       }),
     )
@@ -210,6 +209,7 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
             key={`${inspected.resourceId}-${inspected.startsAt}-${inspected.endsAt}`}
             slot={inspected}
             clubSlug={clubSlug}
+            clubId={resources.find((resource) => resource.id === inspected.resourceId)?.clubId ?? null}
             onUpdated={() => setRefreshVersion((value) => value + 1)}
           />
           <button type="button" onClick={() => setInspected(null)}>
