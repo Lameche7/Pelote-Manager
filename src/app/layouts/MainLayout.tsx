@@ -13,7 +13,6 @@ import {
 } from "@/features/notifications/services/notificationService";
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
 import { usePublicCalendarMode } from "@/features/reservations/services/publicCalendarMode";
-import { ClubLogo } from "@/shared/components/ClubLogo";
 import { PlatformClubSwitcher } from "@/features/platform/components/PlatformClubSwitcher";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
@@ -239,7 +238,11 @@ export function MainLayout() {
 
       <footer className="app-footer">
         <div className="app-footer__brand">
-          <ClubLogo compact />
+          {branding.logoUrl && (
+            <span className="club-logo club-logo--compact">
+              <img src={branding.logoUrl} alt={branding.name} />
+            </span>
+          )}
           <div>
             <strong>{branding.name}</strong>
             <span>
