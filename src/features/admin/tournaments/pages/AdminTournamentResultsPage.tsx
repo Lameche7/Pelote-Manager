@@ -128,6 +128,7 @@ const sortMatches = (
 export function AdminTournamentResultsPage() {
   const [params] = useSearchParams();
   const requestedMatchId = params.get("match");
+  const requestedClubId = params.get("adminClubId")?.trim() || undefined;
   const [unprogrammed, setUnprogrammed] = useState<
     UnprogrammedTournamentMatch[]
   >([]);
@@ -155,8 +156,10 @@ export function AdminTournamentResultsPage() {
 
   const load = useCallback(async () => {
     const [loaded, waiting] = await Promise.all([
-      tournamentResultsAdminService.getWorkspace(),
-      adminTournamentUnprogrammedService.list(),
+      tournamentResultsAdminService.getWorkspace(requestedClubId),
+      requestedClubId
+        ? Promise.resolve([] as UnprogrammedTournamentMatch[])
+        : adminTournamentUnprogrammedService.list(),
     ]);
     setUnprogrammed(waiting);
     const rankingEntries = await Promise.all(
@@ -175,9 +178,15 @@ export function AdminTournamentResultsPage() {
         ? current
         : (loaded[0]?.id ?? ""),
     );
-  }, []);
+  }, [requestedClubId]);
 
   useEffect(() => {
+    setLoading(true);
+    setWorkspaces([]);
+    setUnprogrammed([]);
+    setSelectedId("");
+    setEditingMatchId(null);
+    setEditingUnprogrammedId(null);
     load()
       .catch((loadError: unknown) =>
         setError(
@@ -344,7 +353,7 @@ export function AdminTournamentResultsPage() {
     setError("");
     setMessage("");
     try {
-      await tournamentResultsAdminService.validate(matchId);
+      await tournamentResultsAdminService.validate(matchId, requestedClubId);
       await load();
       setMessage("Résultat validé.");
     } catch (validationError) {
@@ -363,7 +372,7 @@ export function AdminTournamentResultsPage() {
     setError("");
     setMessage("");
     try {
-      await tournamentResultsAdminService.save(matchId, score);
+      await tournamentResultsAdminService.save(matchId, score, requestedClubId);
       setEditingMatchId(null);
       setEditingUnprogrammedId(null);
       await load();
