@@ -26,12 +26,10 @@ export function PlanningMatchActions({
   onUpdated: () => void;
 }) {
   const { isAuthenticated } = useAuth();
-  const [identity, setIdentity] = useState<
-    Awaited<ReturnType<typeof resolveCalendarPlayerActions>>
-  >(null);
-  const [competition, setCompetition] = useState<
-    Awaited<ReturnType<typeof resolveCalendarCompetition>>
-  >(null);
+  const [identity, setIdentity] =
+    useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
+  const [competition, setCompetition] =
+    useState<Awaited<ReturnType<typeof resolveCalendarCompetition>>>(null);
   const [contacts, setContacts] = useState<MatchContact[] | null>(null);
   const [refereeAdminClub, setRefereeAdminClub] = useState<string | null>(null);
   const [contactClub, setContactClub] = useState<string | null>(null);
@@ -77,13 +75,18 @@ export function PlanningMatchActions({
     }
     void Promise.all([
       resolveCalendarCompetition(slot),
-      isAuthenticated ? resolveCalendarPlayerActions(slot) : Promise.resolve(null),
+      isAuthenticated
+        ? resolveCalendarPlayerActions(slot)
+        : Promise.resolve(null),
     ])
       .then(([match, actions]) => {
         if (!active) return;
         if (match?.kind === "tournament") {
           setCompetition(match);
-          if (actions?.kind === "tournament" && actions.matchId === match.matchId)
+          if (
+            actions?.kind === "tournament" &&
+            actions.matchId === match.matchId
+          )
             setIdentity(actions);
         }
       })
@@ -111,7 +114,9 @@ export function PlanningMatchActions({
       !isAuthenticated ||
       !identity ||
       busy ||
-      (withdraw ? !identity.isAssignedReferee : !identity.actions.volunteerReferee)
+      (withdraw
+        ? !identity.isAssignedReferee
+        : !identity.actions.volunteerReferee)
     )
       return;
     if (withdraw && !window.confirm("Te retirer de cet arbitrage ?")) return;
@@ -196,7 +201,11 @@ export function PlanningMatchActions({
       {competition && (
         <Link
           className="reservation-slot-actions__button"
-          to={url(ROUTES.tournaments + "/" + encodeURIComponent(competition.competitionId))}
+          to={url(
+            ROUTES.tournaments +
+              "/" +
+              encodeURIComponent(competition.competitionId),
+          )}
         >
           Voir la compétition
         </Link>
@@ -205,55 +214,72 @@ export function PlanningMatchActions({
         <div className="reservation-slot-actions reservation-slot-actions--admin">
           <h3>Actions administrateur</h3>
           <Link
-          className="reservation-slot-actions__button"
-          to={url(ROUTES.adminTournamentResults, competition.matchId)}
-        >
-          Gérer le résultat
-        </Link>
+            className="reservation-slot-actions__button"
+            to={url(ROUTES.adminTournamentResults, competition.matchId)}
+          >
+            Gérer le résultat
+          </Link>
           <Link
-          className="reservation-slot-actions__button"
-          to={url(ROUTES.adminTournamentReschedules, competition.matchId)}
-        >
-          Gérer le report
-        </Link>
+            className="reservation-slot-actions__button"
+            to={url(ROUTES.adminTournamentReschedules, competition.matchId)}
+          >
+            Gérer le report
+          </Link>
           <button
-          className="reservation-slot-actions__button"
-          type="button"
-          disabled={busy || Boolean(slot.resultDisplay)}
-          onClick={() => void unprogram()}
-        >
-          Déprogrammer la partie
-        </button>
+            className="reservation-slot-actions__button"
+            type="button"
+            disabled={busy || Boolean(slot.resultDisplay)}
+            onClick={() => void unprogram()}
+          >
+            Déprogrammer la partie
+          </button>
         </div>
       )}
       {isAuthenticated && clubId && contactClub === clubId && competition && (
         <div className="reservation-slot-actions">
           <button
-          className="reservation-slot-actions__button"
-          type="button"
-          disabled={busy}
-          onClick={() => void openContacts()}
-        >
-          Contacter les joueurs
-        </button>
+            className="reservation-slot-actions__button"
+            type="button"
+            disabled={busy}
+            onClick={() => void openContacts()}
+          >
+            Contacter les joueurs
+          </button>
           {contacts?.map((contact, index) => (
-            <p key={`${contact.team}-${index}`}>{contact.name} : {contact.phone ? <a href={`tel:${contact.phone.replace(/[^+0-9]/g, "")}`}>{contact.phone}</a> : "Numéro non renseigné"}</p>
+            <p key={`${contact.team}-${index}`}>
+              {contact.name} :{" "}
+              {contact.phone ? (
+                <a href={`tel:${contact.phone.replace(/[^+0-9]/g, "")}`}>
+                  {contact.phone}
+                </a>
+              ) : (
+                "Numéro non renseigné"
+              )}
+            </p>
           ))}
           {contacts?.length === 0 && <p>Aucun joueur identifié.</p>}
         </div>
       )}
-      {isAuthenticated && clubId && refereeAdminClub === clubId && competition && (
-        <Link
-          className="reservation-slot-actions__button"
-          to={url(ROUTES.adminRefereeing, competition.matchId)}
-        >
-          Gérer l’arbitrage
-        </Link>
-      )}
+      {isAuthenticated &&
+        clubId &&
+        refereeAdminClub === clubId &&
+        competition && (
+          <Link
+            className="reservation-slot-actions__button"
+            to={url(ROUTES.adminRefereeing, competition.matchId)}
+          >
+            Gérer l’arbitrage
+          </Link>
+        )}
       {identity?.actions.submitResult && (
         <Link
           className="reservation-slot-actions__button"
-          to={url(identity.isAssignedReferee && !identity.isParticipant ? ROUTES.myRefereeing : ROUTES.myTournaments, identity.matchId)}
+          to={url(
+            identity.isAssignedReferee && !identity.isParticipant
+              ? ROUTES.myRefereeing
+              : ROUTES.myTournaments,
+            identity.matchId,
+          )}
         >
           Saisir le résultat
         </Link>
