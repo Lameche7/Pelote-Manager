@@ -1,4 +1,5 @@
 import { PlatformClubModulesEditor } from "./PlatformClubModulesEditor";
+import { PlatformTournamentsPage } from "@/features/admin/tournaments/pages/AdminTournamentsPage";
 import { useEffect, useRef, useState } from "react";
 import { PlatformClubInformationEditor } from "@/features/admin/club/pages/PlatformClubInformationEditor";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
@@ -11,6 +12,7 @@ export function PlatformBusinessClubAccessPanel() {
   const [clubId, setClubId] = useState("");
   const [authorizedClubId, setAuthorizedClubId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showTournaments, setShowTournaments] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const mounted = useRef(true);
@@ -74,6 +76,7 @@ export function PlatformBusinessClubAccessPanel() {
     leaseRequest.current += 1;
     if (expiryTimer.current) clearTimeout(expiryTimer.current);
     setAuthorizedClubId("");
+    setShowTournaments(false);
     setBusy(true);
     try {
       await platformAdminLeaseService.revoke();
@@ -88,6 +91,7 @@ export function PlatformBusinessClubAccessPanel() {
     if (!clubs.some((club) => club.id === clubId)) return;
     const requestId = ++leaseRequest.current;
     selectedClubId.current = clubId;
+    setShowTournaments(false);
     setBusy(true);
     setAuthorizedClubId("");
     setError("");
@@ -178,6 +182,18 @@ export function PlatformBusinessClubAccessPanel() {
                 key={authorizedClubId}
                 clubId={authorizedClubId}
               />
+              <button
+                type="button"
+                onClick={() => setShowTournaments((open) => !open)}
+              >
+                {showTournaments ? "Masquer les tournois" : "Gérer les tournois"}
+              </button>
+              {showTournaments && (
+                <PlatformTournamentsPage
+                  key={authorizedClubId}
+                  clubId={authorizedClubId}
+                />
+              )}
             </>
           )}
         </>
