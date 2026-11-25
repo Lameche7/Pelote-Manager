@@ -48,10 +48,7 @@ test("une session absente ou un rôle révoqué efface la préférence", () => {
 });
 
 test("le changement de club ne donne aucun droit métier", () => {
-  assert.match(
-    source,
-    /Aperçu uniquement : aucune donnée ni permission modifiée/,
-  );
+  assert.match(source, /Le club sélectionné ne modifie pas vos habilitations/);
   assert.doesNotMatch(source, /service_role/);
 });
 
