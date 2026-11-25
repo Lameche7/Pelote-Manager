@@ -149,7 +149,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
       200,
       request.method === "DELETE"
         ? { revoked: true }
-        : { enabled: true, expiresAt: data },
+        : { enabled: true, expiresAt: data, serverNow: new Date().toISOString() },
     );
   } catch (error) {
     console.error("platform admin lease operation failed", error);
