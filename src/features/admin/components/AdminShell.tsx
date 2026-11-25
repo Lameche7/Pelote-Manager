@@ -147,15 +147,13 @@ function VerifiedLocalClub({
       <section className="simple-page" role="status">
         <h1>Administration inter-clubs en préparation</h1>
         <p>
-          Ce club ne correspond pas à votre habilitation métier locale.
-          Aucune donnée administrative ne sera chargée.
+          Ce club ne correspond pas à votre habilitation métier locale. Aucune
+          donnée administrative ne sera chargée.
         </p>
       </section>
     );
 
-  return (
-    <ClubAdminNavigation key={clubId} clubId={clubId} clubName={clubName} />
-  );
+  return <ClubAdminNavigation key={clubId} clubId={clubId} clubName={clubName} />;
 }
 
 function ClubAdminNavigation({
