@@ -224,3 +224,44 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
+
+  platform-tournament-sql:
+    name: Tournois super-admin (PostgreSQL éphémère)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer le moteur de tournoi et les clubs fictifs
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/network-user-admin-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-lease-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-short-lived-leases.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/club-module-profiles.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20260807160000_add_tournament_core.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-dependencies.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20260814114500_add_tournament_sporting_rules.sql
+      - name: Installer les fonctions expérimentales à club explicite
+        run: |
+          for file in tests/sql/platform-admin-tournament-options.draft.sql tests/sql/platform-admin-create-tournament.draft.sql tests/sql/platform-admin-tournament-edit.draft.sql tests/sql/platform-admin-tournament-configuration.draft.sql tests/sql/platform-admin-tournament-sporting-rules.draft.sql tests/sql/platform-admin-tournament-metadata.draft.sql; do
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f "$file" || exit 1
+          done
+      - name: Vérifier les refus des 13 fonctions pour quatre types de bail
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-denials.sql
+      - name: Vérifier le parcours autorisé sur des données fictives
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-authorized.sql

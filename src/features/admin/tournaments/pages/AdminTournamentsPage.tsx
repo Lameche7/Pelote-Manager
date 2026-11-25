@@ -3,6 +3,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 import { TournamentSportingRulesSection } from "@/features/admin/tournaments/components/TournamentSportingRulesSection";
 import {
   tournamentAdminService,
+  createPlatformTournamentAdminService,
   type TournamentDetail,
   type TournamentDraft,
   type TournamentOptions,
@@ -267,6 +268,19 @@ const formatDateTime = (value: string) =>
     : "—";
 
 export function AdminTournamentsPage() {
+  return <TournamentManagementPage key="local" />;
+}
+
+export function PlatformTournamentsPage({ clubId }: { clubId: string }) {
+  return <TournamentManagementPage key={clubId} clubId={clubId} />;
+}
+
+function TournamentManagementPage({ clubId }: { clubId?: string }) {
+  const platformService = useMemo(
+    () => (clubId ? createPlatformTournamentAdminService(clubId) : null),
+    [clubId],
+  );
+  const service = platformService ?? tournamentAdminService;
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [options, setOptions] = useState<TournamentOptions>(emptyOptions);
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
@@ -284,7 +298,7 @@ export function AdminTournamentsPage() {
   const [message, setMessage] = useState("");
 
   const loadList = async () => {
-    setTournaments(await tournamentAdminService.list());
+    setTournaments(await service.list());
   };
 
   const openTournament = async (id: string) => {
@@ -293,9 +307,9 @@ export function AdminTournamentsPage() {
     try {
       const [loaded, loadedSportingRules, loadedRefereeingEnabled] =
         await Promise.all([
-          tournamentAdminService.get(id),
-          tournamentAdminService.getSportingRules(id),
-          tournamentAdminService.getRefereeingEnabled(id),
+          service.get(id),
+          service.getSportingRules(id),
+          service.getRefereeingEnabled(id),
         ]);
       setDetail(loaded);
       setForm(detailToForm(loaded));
@@ -304,12 +318,16 @@ export function AdminTournamentsPage() {
       setPlayWindows(loaded.playWindows);
       setSportingRules(loadedSportingRules);
       setRefereeingEnabled(loadedRefereeingEnabled);
-      const { data: networkProfile } = await supabase
-        .from("network_tournament_profiles")
-        .select("specialty")
-        .eq("tournament_id", id)
-        .maybeSingle();
-      setNetworkSpecialty(networkProfile?.specialty ?? "");
+      if (platformService) {
+        setNetworkSpecialty(await platformService.getNetworkSpecialty(id));
+      } else {
+        const { data: networkProfile } = await supabase
+          .from("network_tournament_profiles")
+          .select("specialty")
+          .eq("tournament_id", id)
+          .maybeSingle();
+        setNetworkSpecialty(networkProfile?.specialty ?? "");
+      }
     } catch (openError) {
       setError(
         openError instanceof Error
@@ -322,10 +340,7 @@ export function AdminTournamentsPage() {
   };
 
   useEffect(() => {
-    Promise.all([
-      tournamentAdminService.list(),
-      tournamentAdminService.getOptions(),
-    ])
+    Promise.all([service.list(), service.getOptions()])
       .then(([items, loadedOptions]) => {
         setTournaments(items);
         setOptions(loadedOptions);
@@ -338,7 +353,7 @@ export function AdminTournamentsPage() {
         ),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [service]);
 
   const activeSeasonId = useMemo(
     () =>
@@ -409,7 +424,7 @@ export function AdminTournamentsPage() {
     try {
       const draft = toDraft(form);
       if (detail) {
-        await tournamentAdminService.update(detail.id, draft);
+        await service.update(detail.id, draft);
         await openTournament(detail.id);
         setMessage("Les paramètres du tournoi ont été enregistrés.");
       } else {
@@ -437,9 +452,9 @@ export function AdminTournamentsPage() {
         ) {
           throw new Error("Configurez au moins une plage horaire valide.");
         }
-        const id = await tournamentAdminService.create(draft);
-        await tournamentAdminService.saveSportingRules(id, sportingRules);
-        await tournamentAdminService.saveConfiguration(id, {
+        const id = await service.create(draft);
+        await service.saveSportingRules(id, sportingRules);
+        await service.saveConfiguration(id, {
           resourceIds,
           series,
           playWindows,
@@ -468,7 +483,7 @@ export function AdminTournamentsPage() {
     setError("");
     setMessage("");
     try {
-      await tournamentAdminService.saveConfiguration(detail.id, {
+      await service.saveConfiguration(detail.id, {
         resourceIds,
         series,
         playWindows,
@@ -493,10 +508,8 @@ export function AdminTournamentsPage() {
     setError("");
     setMessage("");
     try {
-      await tournamentAdminService.saveSportingRules(detail.id, sportingRules);
-      setSportingRules(
-        await tournamentAdminService.getSportingRules(detail.id),
-      );
+      await service.saveSportingRules(detail.id, sportingRules);
+      setSportingRules(await service.getSportingRules(detail.id));
       setMessage("Les règles sportives ont été enregistrées.");
     } catch (saveError) {
       setError(
@@ -515,7 +528,7 @@ export function AdminTournamentsPage() {
     setError("");
     setMessage("");
     try {
-      await tournamentAdminService.transition(detail.id, status);
+      await service.transition(detail.id, status);
       await openTournament(detail.id);
       await loadList();
       setMessage(success);
@@ -701,16 +714,23 @@ export function AdminTournamentsPage() {
                   onClick={async () => {
                     setSaving(true);
                     try {
-                      const { error: metadataError } = await supabase
-                        .from("network_tournament_profiles")
-                        .upsert(
-                          {
-                            tournament_id: detail.id,
-                            specialty: networkSpecialty || null,
-                          },
-                          { onConflict: "tournament_id" },
+                      if (platformService) {
+                        await platformService.setNetworkSpecialty(
+                          detail.id,
+                          networkSpecialty,
                         );
-                      if (metadataError) throw metadataError;
+                      } else {
+                        const { error: metadataError } = await supabase
+                          .from("network_tournament_profiles")
+                          .upsert(
+                            {
+                              tournament_id: detail.id,
+                              specialty: networkSpecialty || null,
+                            },
+                            { onConflict: "tournament_id" },
+                          );
+                        if (metadataError) throw metadataError;
+                      }
                       setMessage("Spécialité publiée sur Pilotoki Network.");
                     } catch (problem) {
                       setError(
@@ -1006,10 +1026,7 @@ export function AdminTournamentsPage() {
                       setError("");
                       setMessage("");
                       try {
-                        await tournamentAdminService.setRefereeingEnabled(
-                          detail.id,
-                          next,
-                        );
+                        await service.setRefereeingEnabled(detail.id, next);
                         setRefereeingEnabled(next);
                         setMessage(
                           next
