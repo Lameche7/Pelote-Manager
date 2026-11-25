@@ -48,10 +48,17 @@ test("chaque déploiement peut recevoir l’identité propre de son club", () =>
   }
 });
 
-test("les écrans principaux lisent la configuration de l’instance", () => {
-  for (const source of [clubLogo, mainLayout, homePage]) {
-    assert.match(source, /CLUB_CONFIG/);
+test("les écrans publics lisent l’identité du club sélectionné", () => {
+  assert.match(clubLogo, /CLUB_CONFIG/);
+  for (const source of [mainLayout, homePage]) {
+    assert.match(source, /clubBrandingService\.getPublicBranding/);
+    assert.match(source, /branding\.logoUrl/);
+    assert.match(source, /branding\.foundedYear/);
+    assert.match(source, /branding\.tagline/);
+    assert.doesNotMatch(source, /CLUB_CONFIG\.(foundedYear|tagline|description)/);
   }
+  assert.match(homePage, /branding\.presentationTitle/);
+  assert.match(homePage, /branding\.presentationText/);
   assert.match(profilePage, /club\.clubName/);
   assert.match(homePage, /heroImageUrl/);
   assert.match(homeStyles, /--club-hero-image/);
