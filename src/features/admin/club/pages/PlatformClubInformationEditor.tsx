@@ -53,6 +53,9 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
     { key: "socialLinks", label: "Réseaux sociaux" },
     { key: "address", label: "Adresse" },
     { key: "notes", label: "Informations diverses" },
+    { key: "foundedYear", label: "Année de création" },
+    { key: "tagline", label: "Slogan du club" },
+    { key: "presentationTitle", label: "Titre de présentation" },
     { key: "primaryColor", label: "Couleur principale" },
     { key: "secondaryColor", label: "Couleur secondaire" },
     { key: "accentColor", label: "Couleur d’accent" },
@@ -70,7 +73,7 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
       <header className="admin-page__header">
         <h1>Informations du club sélectionné</h1>
         <p className="admin-page__lead">
-          Modification temporaire et limitée aux coordonnées et aux couleurs.
+          Modification temporaire des coordonnées, textes et couleurs.
           Les logos, photos et autres paramètres restent protégés.
         </p>
       </header>
@@ -90,6 +93,7 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
             if (currentClubId.current !== clubId) return;
             setClub(refreshed);
             setSuccess("Informations enregistrées.");
+            window.dispatchEvent(new CustomEvent("club-branding-updated"));
           } catch {
             if (currentClubId.current !== clubId) return;
             setClub(null);
@@ -109,10 +113,19 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
               value={String(club[key])}
               disabled={saving}
               onChange={(event) => update(key, event.target.value)}
-              pattern={key.endsWith("Color") ? "#[0-9a-fA-F]{6}" : undefined}
+              pattern={key.endsWith("Color") ? "#[0-9a-fA-F]{6}" : key === "foundedYear" ? "[0-9]{4}" : undefined}
             />
           </label>
         ))}
+        <label className="club-form__wide">
+          Texte de présentation
+          <textarea
+            value={club.presentationText}
+            maxLength={3000}
+            disabled={saving}
+            onChange={(event) => update("presentationText", event.target.value)}
+          />
+        </label>
         <button type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer"}
         </button>
