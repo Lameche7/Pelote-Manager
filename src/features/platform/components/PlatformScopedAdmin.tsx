@@ -105,7 +105,9 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
     })();
     return () => {
       close();
-      listeners.forEach((listener) => listener?.data.subscription.unsubscribe());
+      listeners.forEach((listener) =>
+        listener?.data.subscription.unsubscribe(),
+      );
     };
   }, [slug]);
 
