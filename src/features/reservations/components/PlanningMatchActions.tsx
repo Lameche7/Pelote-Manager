@@ -362,6 +362,7 @@ export function PlanningMatchActions({
                 <AdminTournamentResultsPage
                   scopedClubId={clubId}
                   scopedMatchId={competition.matchId}
+                  onOpenReports={() => setAdminPanel("reports")}
                 />
               ) : (
                 <AdminTournamentReschedulePage
