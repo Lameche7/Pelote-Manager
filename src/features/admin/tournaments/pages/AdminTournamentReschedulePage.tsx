@@ -73,9 +73,15 @@ const staleReasonLabel = (reason: string | null) =>
       "La proposition n’est plus applicable dans le planning actuel.")
     : "La proposition n’est plus applicable dans le planning actuel.";
 
-export function AdminTournamentReschedulePage() {
+export function AdminTournamentReschedulePage({
+  scopedClubId,
+  scopedMatchId,
+}: {
+  scopedClubId?: string;
+  scopedMatchId?: string;
+} = {}) {
   const [params] = useSearchParams();
-  const clubId = params.get("adminClubId")?.trim() || undefined;
+  const clubId = scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const [requests, setRequests] = useState<AdminTournamentRescheduleRequest[]>(
     [],
   );
@@ -256,7 +262,11 @@ export function AdminTournamentReschedulePage() {
         conservé.
       </p>
 
-      <AdminTournamentUnprogrammedPanel key={clubId ?? "legacy"} />
+      <AdminTournamentUnprogrammedPanel
+        key={clubId ?? "legacy"}
+        {...(clubId ? { scopedClubId: clubId } : {})}
+        {...(scopedMatchId ? { scopedMatchId } : {})}
+      />
       <AdminTournamentManualRescheduleForm
         key={clubId ?? "legacy"}
         onCreated={load}
