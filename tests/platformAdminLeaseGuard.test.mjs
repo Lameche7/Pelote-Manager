@@ -29,7 +29,9 @@ test("lease expiry is checked before granting local access", () => {
 });
 
 test("explicit club routes remain blocked without validated rollout", () => {
-  assert.ok(shell.includes("if (visualClubSlug || requestedClubId) {"));
+  assert.ok(shell.includes("if (requestedClubId) {"));
+  assert.ok(shell.includes("if (visualClubSlug && !verified)"));
+  assert.ok(shell.includes("current.data !== clubId"));
   assert.ok(!shell.includes("platformAdminLeaseService.issue("));
 });
 
