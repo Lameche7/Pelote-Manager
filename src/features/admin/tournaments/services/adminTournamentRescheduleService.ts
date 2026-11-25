@@ -177,10 +177,16 @@ const fail = (error: unknown, fallback: string): never => {
 export const adminTournamentRescheduleService = {
   async list(
     tournamentId: string | null = null,
+    clubId?: string,
   ): Promise<AdminTournamentRescheduleRequest[]> {
     const { data, error } = await supabase.rpc(
-      "admin_list_tournament_reschedule_requests",
-      { target_tournament_id: tournamentId },
+      clubId
+        ? "admin_list_tournament_reschedule_requests_for_club"
+        : "admin_list_tournament_reschedule_requests",
+      {
+        target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) {
       fail(error, "Impossible de charger les demandes de report.");
@@ -189,7 +195,10 @@ export const adminTournamentRescheduleService = {
     // A notification subscription is not the same as a linked application account.
     // Keep the report usable if the optional read-only status RPC is unavailable.
     const { data: coverage, error: coverageError } = await supabase.rpc(
-      "admin_tournament_reschedule_push_status",
+      clubId
+        ? "admin_tournament_reschedule_push_status_for_club"
+        : "admin_tournament_reschedule_push_status",
+      clubId ? { target_club_id: clubId } : undefined,
     );
     if (!coverageError) {
       const byTeam = new Map(
@@ -214,10 +223,14 @@ export const adminTournamentRescheduleService = {
     teamId: string,
     decision: "approved" | "rejected",
     note: string,
+    clubId?: string,
   ): Promise<AdminTournamentRescheduleRequest["status"]> {
     const { data, error } = await supabase.rpc(
-      "admin_record_tournament_reschedule_offline_decision",
+      clubId
+        ? "admin_record_tournament_reschedule_offline_decision_for_club"
+        : "admin_record_tournament_reschedule_offline_decision",
       {
+        ...(clubId ? { target_club_id: clubId } : {}),
         target_request_id: requestId,
         target_team_id: teamId,
         target_decision: decision,
@@ -235,10 +248,16 @@ export const adminTournamentRescheduleService = {
 
   async apply(
     requestId: string,
+    clubId?: string,
   ): Promise<AdminTournamentRescheduleApplyResult> {
     const { data, error } = await supabase.rpc(
-      "admin_apply_tournament_reschedule_request",
-      { target_request_id: requestId },
+      clubId
+        ? "admin_apply_tournament_reschedule_request_for_club"
+        : "admin_apply_tournament_reschedule_request",
+      {
+        target_request_id: requestId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) {
       fail(error, "Impossible d’appliquer ce report.");
