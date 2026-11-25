@@ -175,9 +175,7 @@ export function AdminTournamentUnprogrammedPanel() {
 
   const load = useCallback(async () => {
     const [context, waiting] = await Promise.all([
-      clubId
-        ? Promise.resolve([] as AdminManualRescheduleTournament[])
-        : adminTournamentManualRescheduleService.getContext(),
+      adminTournamentManualRescheduleService.getContext(clubId),
       adminTournamentUnprogrammedService.list(clubId),
     ]);
     setTournaments(context);
@@ -205,9 +203,8 @@ export function AdminTournamentUnprogrammedPanel() {
     setExporting(true);
     setError("");
     try {
-      const contacts = clubId
-        ? []
-        : await adminTournamentUnprogrammedService.listContacts();
+      const contacts =
+        await adminTournamentUnprogrammedService.listContacts(clubId);
       printPendingMatches(pending, contacts, popup);
     } catch (cause) {
       popup.close();
@@ -309,13 +306,7 @@ export function AdminTournamentUnprogrammedPanel() {
         Pour une partie qui ne peut pas se jouer : son créneau redevient
         disponible, sans supprimer la rencontre ni ses équipes.
       </p>
-      {clubId && (
-        <p>Pour libérer un créneau, utilisez la carte du planning du club.</p>
-      )}
-      <div
-        className="admin-reschedules__unprogram-controls"
-        hidden={Boolean(clubId)}
-      >
+      <div className="admin-reschedules__unprogram-controls">
         <label>
           Partie programmée
           <select
