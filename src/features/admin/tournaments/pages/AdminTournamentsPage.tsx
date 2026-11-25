@@ -340,10 +340,7 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
   };
 
   useEffect(() => {
-    Promise.all([
-      service.list(),
-      service.getOptions(),
-    ])
+    Promise.all([service.list(), service.getOptions()])
       .then(([items, loadedOptions]) => {
         setTournaments(items);
         setOptions(loadedOptions);
@@ -512,9 +509,7 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
     setMessage("");
     try {
       await service.saveSportingRules(detail.id, sportingRules);
-      setSportingRules(
-        await service.getSportingRules(detail.id),
-      );
+      setSportingRules(await service.getSportingRules(detail.id));
       setMessage("Les règles sportives ont été enregistrées.");
     } catch (saveError) {
       setError(
@@ -1031,10 +1026,7 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
                       setError("");
                       setMessage("");
                       try {
-                        await service.setRefereeingEnabled(
-                          detail.id,
-                          next,
-                        );
+                        await service.setRefereeingEnabled(detail.id, next);
                         setRefereeingEnabled(next);
                         setMessage(
                           next
