@@ -92,7 +92,9 @@ const fail = (error: unknown, fallback: string): never => {
 };
 
 export const adminTournamentManualRescheduleService = {
-  async getContext(clubId?: string): Promise<AdminManualRescheduleTournament[]> {
+  async getContext(
+    clubId?: string,
+  ): Promise<AdminManualRescheduleTournament[]> {
     const { data, error } = await supabase.rpc(
       clubId
         ? "admin_get_tournament_manual_reschedule_context_for_club"
@@ -119,7 +121,10 @@ export const adminTournamentManualRescheduleService = {
       clubId
         ? "admin_get_tournament_manual_reschedule_slots_for_club"
         : "admin_get_tournament_manual_reschedule_slots",
-      { target_match_id: matchId, ...(clubId ? { target_club_id: clubId } : {}) },
+      {
+        target_match_id: matchId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) {
       fail(error, "Impossible de charger les créneaux disponibles.");
