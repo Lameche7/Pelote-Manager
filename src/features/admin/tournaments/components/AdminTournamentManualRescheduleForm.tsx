@@ -50,7 +50,8 @@ export function AdminTournamentManualRescheduleForm({
   const [success, setSuccess] = useState("");
 
   const loadContext = useCallback(async () => {
-    const items = await adminTournamentManualRescheduleService.getContext(clubId);
+    const items =
+      await adminTournamentManualRescheduleService.getContext(clubId);
     setTournaments(items);
     setTournamentId((current) => {
       if (current && items.some((item) => item.id === current)) return current;
