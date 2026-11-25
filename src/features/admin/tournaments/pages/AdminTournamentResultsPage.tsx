@@ -128,9 +128,11 @@ const sortMatches = (
 export function AdminTournamentResultsPage({
   scopedClubId,
   scopedMatchId,
+  onOpenReports,
 }: {
   scopedClubId?: string;
   scopedMatchId?: string;
+  onOpenReports?: () => void;
 } = {}) {
   const [params] = useSearchParams();
   const requestedMatchId = scopedMatchId ?? params.get("match");
@@ -552,9 +554,23 @@ export function AdminTournamentResultsPage({
               </table>
             </div>
             <p>
-              <Link to={ROUTES.adminTournamentReschedules}>
-                Gérer les parties à reprogrammer
-              </Link>
+              {onOpenReports ? (
+                <button type="button" onClick={onOpenReports}>
+                  Gérer les parties à reprogrammer
+                </button>
+              ) : (
+                <Link
+                  to={
+                    requestedClubId
+                      ? ROUTES.adminTournamentReschedules +
+                        "?adminClubId=" +
+                        encodeURIComponent(requestedClubId)
+                      : ROUTES.adminTournamentReschedules
+                  }
+                >
+                  Gérer les parties à reprogrammer
+                </Link>
+              )}
             </p>
           </section>
 
@@ -573,9 +589,23 @@ export function AdminTournamentResultsPage({
                   programmer.
                 </p>
               </div>
-              <Link to={ROUTES.adminTournamentReschedules}>
-                Gérer les programmations
-              </Link>
+              {onOpenReports ? (
+                <button type="button" onClick={onOpenReports}>
+                  Gérer les programmations
+                </button>
+              ) : (
+                <Link
+                  to={
+                    requestedClubId
+                      ? ROUTES.adminTournamentReschedules +
+                        "?adminClubId=" +
+                        encodeURIComponent(requestedClubId)
+                      : ROUTES.adminTournamentReschedules
+                  }
+                >
+                  Gérer les programmations
+                </Link>
+              )}
             </div>
             {unprogrammedForTournament.length > 0 && (
               <details>
