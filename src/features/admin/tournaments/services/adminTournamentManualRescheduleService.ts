@@ -92,9 +92,12 @@ const fail = (error: unknown, fallback: string): never => {
 };
 
 export const adminTournamentManualRescheduleService = {
-  async getContext(): Promise<AdminManualRescheduleTournament[]> {
+  async getContext(clubId?: string): Promise<AdminManualRescheduleTournament[]> {
     const { data, error } = await supabase.rpc(
-      "admin_get_tournament_manual_reschedule_context",
+      clubId
+        ? "admin_get_tournament_manual_reschedule_context_for_club"
+        : "admin_get_tournament_manual_reschedule_context",
+      clubId ? { target_club_id: clubId } : undefined,
     );
     if (error) {
       fail(error, "Impossible de charger les parties pouvant être reportées.");
@@ -108,10 +111,15 @@ export const adminTournamentManualRescheduleService = {
     }));
   },
 
-  async getSlots(matchId: string): Promise<AdminManualRescheduleSlot[]> {
+  async getSlots(
+    matchId: string,
+    clubId?: string,
+  ): Promise<AdminManualRescheduleSlot[]> {
     const { data, error } = await supabase.rpc(
-      "admin_get_tournament_manual_reschedule_slots",
-      { target_match_id: matchId },
+      clubId
+        ? "admin_get_tournament_manual_reschedule_slots_for_club"
+        : "admin_get_tournament_manual_reschedule_slots",
+      { target_match_id: matchId, ...(clubId ? { target_club_id: clubId } : {}) },
     );
     if (error) {
       fail(error, "Impossible de charger les créneaux disponibles.");
@@ -134,10 +142,14 @@ export const adminTournamentManualRescheduleService = {
     startsAt: string;
     endsAt: string;
     contactNote: string;
+    clubId?: string;
   }): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "admin_create_tournament_exceptional_reschedule_request",
+      input.clubId
+        ? "admin_create_tournament_exceptional_reschedule_request_for_club"
+        : "admin_create_tournament_exceptional_reschedule_request",
       {
+        ...(input.clubId ? { target_club_id: input.clubId } : {}),
         target_match_id: input.matchId,
         requester_team_id: input.requesterTeamId,
         target_resource_id: input.resourceId,
@@ -156,10 +168,14 @@ export const adminTournamentManualRescheduleService = {
     requesterTeamId: string;
     slot: AdminManualRescheduleSlot;
     contactNote: string;
+    clubId?: string;
   }): Promise<string> {
     const { data, error } = await supabase.rpc(
-      "admin_create_tournament_manual_reschedule_request",
+      input.clubId
+        ? "admin_create_tournament_manual_reschedule_request_for_club"
+        : "admin_create_tournament_manual_reschedule_request",
       {
+        ...(input.clubId ? { target_club_id: input.clubId } : {}),
         target_match_id: input.matchId,
         requester_team_id: input.requesterTeamId,
         target_resource_id: input.slot.resourceId,
