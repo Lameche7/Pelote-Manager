@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminAccessService } from "@/features/admin/access/adminAccessService";
 import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
+import { supabase } from "@/infrastructure/supabase/client";
+import { platformSupabase } from "@/infrastructure/platform/platformClient";
+import { platformAdminLeaseService } from "@/features/platform/services/platformAdminLeaseService";
 import {
   loadAdminCalendarMatchContacts,
   type MatchContact,
@@ -37,9 +40,14 @@ export function PlanningMatchActions({
   const [candidates, setCandidates] = useState<RefereeCandidate[] | null>(null);
   const [selectedReferee, setSelectedReferee] = useState("");
   const [adminClub, setAdminClub] = useState<string | null>(null);
+  const [memberAdminClub, setMemberAdminClub] = useState<string | null>(null);
+  const [platformAdmin, setPlatformAdmin] = useState(false);
+  const [leaseVersion, setLeaseVersion] = useState(0);
   useEffect(() => {
     let active = true;
     setAdminClub(null);
+    setMemberAdminClub(null);
+    setPlatformAdmin(false);
     setCandidates(null);
     setSelectedReferee("");
     setContacts(null);
@@ -49,16 +57,24 @@ export function PlanningMatchActions({
         .then((access) => {
           if (!active || access.clubId !== clubId) return;
           if (access.permissions.includes(ADMIN_PERMISSIONS.tournaments))
-            setAdminClub(clubId);
+            setMemberAdminClub(clubId);
         })
-        .catch(() => {
-          if (active) setAdminClub(null);
+        .catch(() => undefined);
+      void supabase.rpc("can_manage_tournament_planning_for_club", {
+        target_club_id: clubId,
+      }).then(({ data, error }) => {
+        if (active) setAdminClub(!error && data === true ? clubId : null);
+      });
+      if (platformSupabase) {
+        void platformSupabase.rpc("platform_is_admin").then(({ data, error }) => {
+          if (active) setPlatformAdmin(!error && data === true);
         });
+      }
     }
     return () => {
       active = false;
     };
-  }, [clubId, isAuthenticated]);
+  }, [clubId, isAuthenticated, leaseVersion]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -144,6 +160,19 @@ export function PlanningMatchActions({
       setBusy(false);
     }
   };
+  const activateAdmin = async () => {
+    if (!clubId || !platformAdmin || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await platformAdminLeaseService.issue(clubId);
+      setLeaseVersion((version) => version + 1);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Délégation indisponible.");
+    } finally {
+      setBusy(false);
+    }
+  };
   const openContacts = async () => {
     if (!isAuthenticated || !clubId || adminClub !== clubId || busy) return;
     setBusy(true);
@@ -204,10 +233,11 @@ export function PlanningMatchActions({
     setBusy(true);
     setError("");
     try {
-      await adminAccessService.getAccessForClub(clubId).then((access) => {
-        if (!access.permissions.includes(ADMIN_PERMISSIONS.tournaments))
-          throw new Error("Accès refusé.");
+      const permission = await supabase.rpc("can_manage_tournament_planning_for_club", {
+        target_club_id: clubId,
       });
+      if (permission.error || permission.data !== true)
+        throw new Error("Accès refusé.");
       const current = await resolveCalendarCompetition(slot);
       if (
         current?.kind !== "tournament" ||
@@ -244,10 +274,15 @@ export function PlanningMatchActions({
           Voir la compétition
         </Link>
       )}
+      {isAuthenticated && clubId && platformAdmin && adminClub !== clubId && competition && (
+        <button type="button" disabled={busy} onClick={() => void activateAdmin()}>
+          Activer la gestion temporaire du club
+        </button>
+      )}
       {isAuthenticated && clubId && adminClub === clubId && competition && (
         <div className="reservation-slot-actions reservation-slot-actions--admin">
           <h3>Actions administrateur</h3>
-          <Link
+          {memberAdminClub === clubId && <><Link
             className="reservation-slot-actions__button"
             to={url(ROUTES.adminTournamentResults, competition.matchId)}
           >
@@ -258,7 +293,7 @@ export function PlanningMatchActions({
             to={url(ROUTES.adminTournamentReschedules, competition.matchId)}
           >
             Gérer le report
-          </Link>
+          </Link></>}
           <button
             className="reservation-slot-actions__button"
             type="button"
