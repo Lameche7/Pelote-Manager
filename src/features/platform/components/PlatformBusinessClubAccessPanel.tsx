@@ -186,7 +186,9 @@ export function PlatformBusinessClubAccessPanel() {
                 type="button"
                 onClick={() => setShowTournaments((open) => !open)}
               >
-                {showTournaments ? "Masquer les tournois" : "Gérer les tournois"}
+                {showTournaments
+                  ? "Masquer les tournois"
+                  : "Gérer les tournois"}
               </button>
               {showTournaments && (
                 <PlatformTournamentsPage
