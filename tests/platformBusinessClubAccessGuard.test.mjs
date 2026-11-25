@@ -36,7 +36,7 @@ test("une autorisation tardive est révoquée après fermeture", () => {
 });
 
 test("la fiche se referme à l'expiration du bail serveur", () => {
-  assert.match(panel, /Date\.parse\(lease\.expiresAt/);
+  assert.match(panel, /lease\.remainingMs/);
   assert.match(panel, /remaining <= 0/);
   assert.match(panel, /expiryTimer\.current = setTimeout/);
   assert.match(panel, /setAuthorizedClubId\(""/);
