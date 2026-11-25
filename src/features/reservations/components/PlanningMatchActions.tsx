@@ -9,7 +9,10 @@ import {
 import { adminTournamentUnprogrammedService } from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { refereeingService } from "@/features/refereeing/services/refereeingService";
+import {
+  refereeingService,
+  type RefereeCandidate,
+} from "@/features/refereeing/services/refereeingService";
 import type { CalendarSlot } from "../domain/calendar";
 import { resolveCalendarPlayerActions } from "../services/calendarPlayerActionsService";
 import { resolveCalendarCompetition } from "../services/calendarCompetitionService";
@@ -31,14 +34,14 @@ export function PlanningMatchActions({
   const [competition, setCompetition] =
     useState<Awaited<ReturnType<typeof resolveCalendarCompetition>>>(null);
   const [contacts, setContacts] = useState<MatchContact[] | null>(null);
-  const [refereeAdminClub, setRefereeAdminClub] = useState<string | null>(null);
-  const [contactClub, setContactClub] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<RefereeCandidate[] | null>(null);
+  const [selectedReferee, setSelectedReferee] = useState("");
   const [adminClub, setAdminClub] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     setAdminClub(null);
-    setContactClub(null);
-    setRefereeAdminClub(null);
+    setCandidates(null);
+    setSelectedReferee("");
     setContacts(null);
     if (isAuthenticated && clubId) {
       void adminAccessService
@@ -47,10 +50,6 @@ export function PlanningMatchActions({
           if (!active || access.clubId !== clubId) return;
           if (access.permissions.includes(ADMIN_PERMISSIONS.tournaments))
             setAdminClub(clubId);
-          if (access.permissions.includes(ADMIN_PERMISSIONS.reservations))
-            setContactClub(clubId);
-          if (access.permissions.includes(ADMIN_PERMISSIONS.championships))
-            setRefereeAdminClub(clubId);
         })
         .catch(() => {
           if (active) setAdminClub(null);
@@ -146,15 +145,48 @@ export function PlanningMatchActions({
     }
   };
   const openContacts = async () => {
-    if (!isAuthenticated || !clubId || contactClub !== clubId || busy) return;
+    if (!isAuthenticated || !clubId || adminClub !== clubId || busy) return;
     setBusy(true);
     setError("");
     try {
-      setContacts(await loadAdminCalendarMatchContacts(slot));
+      setContacts(await loadAdminCalendarMatchContacts(slot, clubId));
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Contacts indisponibles.",
       );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const openReferees = async () => {
+    if (!clubId || adminClub !== clubId || !competition || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      setCandidates(await refereeingService.tournamentCandidates(clubId));
+      setSelectedReferee("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Arbitres indisponibles.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const assignReferee = async (profileId: string | null) => {
+    if (!clubId || adminClub !== clubId || !competition || busy) return;
+    if (!window.confirm(profileId ? "Affecter cet arbitre ?" : "Retirer l’arbitre ?"))
+      return;
+    setBusy(true);
+    setError("");
+    try {
+      const current = await resolveCalendarCompetition(slot);
+      if (current?.kind !== "tournament" || current.matchId !== competition.matchId)
+        throw new Error("La rencontre a changé.");
+      await refereeingService.assignTournamentReferee(clubId, current.matchId, profileId);
+      setCandidates(null);
+      setSelectedReferee("");
+      onUpdated();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Affectation impossible.");
     } finally {
       setBusy(false);
     }
@@ -237,7 +269,7 @@ export function PlanningMatchActions({
           </button>
         </div>
       )}
-      {isAuthenticated && clubId && contactClub === clubId && competition && (
+      {isAuthenticated && clubId && adminClub === clubId && competition && (
         <div className="reservation-slot-actions">
           <button
             className="reservation-slot-actions__button"
@@ -262,17 +294,43 @@ export function PlanningMatchActions({
           {contacts?.length === 0 && <p>Aucun joueur identifié.</p>}
         </div>
       )}
-      {isAuthenticated &&
-        clubId &&
-        refereeAdminClub === clubId &&
-        competition && (
-          <Link
+      {isAuthenticated && clubId && adminClub === clubId && competition && (
+        <div className="reservation-slot-actions">
+          <button
+            type="button"
             className="reservation-slot-actions__button"
-            to={url(ROUTES.adminRefereeing, competition.matchId)}
+            disabled={busy}
+            onClick={() => void openReferees()}
           >
             Gérer l’arbitrage
-          </Link>
-        )}
+          </button>
+          {candidates && (
+            <>
+              <label>
+                Arbitre
+                <select
+                  value={selectedReferee}
+                  onChange={(event) => setSelectedReferee(event.target.value)}
+                  disabled={busy}
+                >
+                  <option value="">Choisir un arbitre</option>
+                  {candidates.map((candidate) => (
+                    <option key={candidate.id} value={candidate.id}>
+                      {candidate.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" disabled={busy || !selectedReferee} onClick={() => void assignReferee(selectedReferee)}>
+                Affecter l’arbitre
+              </button>
+              <button type="button" disabled={busy} onClick={() => void assignReferee(null)}>
+                Retirer l’arbitre
+              </button>
+            </>
+          )}
+        </div>
+      )}
       {identity?.actions.submitResult && (
         <Link
           className="reservation-slot-actions__button"
