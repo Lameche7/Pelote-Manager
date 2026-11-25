@@ -22,8 +22,22 @@ const isEnabled = <T extends object>(item: T) =>
 
 export function AdminShell() {
   const location = useLocation();
-  const requestedClubId =
-    new URLSearchParams(location.search).get("adminClubId") ?? "";
+  const params = new URLSearchParams(location.search);
+  const requestedClubId = params.get("adminClubId") ?? "";
+  const visualClubSlug = params.get("club");
+  // Prevent all legacy implicit-club admin reads for a foreign context.
+  if (visualClubSlug || requestedClubId) {
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration inter-clubs en préparation</h1>
+        <p>
+          Les données du club sélectionné restent protégées tant que les
+          autorisations métier ne sont pas déployées. Aucune donnée
+          administrative ne sera chargée.
+        </p>
+      </section>
+    );
+  }
   return (
     <AdminAccessProvider key={requestedClubId}>
       <AdminShellContent />
@@ -38,10 +52,14 @@ function AdminShellContent() {
   const requestedClubId = new URLSearchParams(location.search).get(
     "adminClubId",
   );
-  const adminLink = (path: string) =>
-    requestedClubId
-      ? `${path}?adminClubId=${encodeURIComponent(requestedClubId)}`
-      : path;
+  const visualClubSlug = new URLSearchParams(location.search).get("club");
+  const adminLink = (path: string) => {
+    const params = new URLSearchParams();
+    if (visualClubSlug) params.set("club", visualClubSlug);
+    if (requestedClubId) params.set("adminClubId", requestedClubId);
+    const query = params.toString();
+    return query ? `${path}?${query}` : path;
+  };
 
   useEffect(() => {
     setMobileNavigationOpen(false);

@@ -6,3 +6,8 @@ verify_jwt = false
 
 [functions.championship-official-sync]
 verify_jwt = false
+
+# Platform-only function. Requires a verified platform JWT; the handler also
+# validates the independent business session before issuing any club lease.
+[functions.platform-business-admin-lease]
+verify_jwt = true

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity,
@@ -64,30 +64,37 @@ const activityPermission: Record<
 };
 
 export function AdminPage() {
-  const { hasPermission } = useAdminAccess();
+  const { hasPermission, access } = useAdminAccess();
+  const requestSequence = useRef(0);
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const loadDashboard = async () => {
+    const requestId = ++requestSequence.current;
+    setDashboard(null);
     setLoading(true);
     setError("");
     try {
-      setDashboard(await adminDashboardService.getDashboard());
+      const result = await adminDashboardService.getDashboard();
+      if (requestId !== requestSequence.current) return;
+      setDashboard(result);
     } catch (loadError) {
+      if (requestId !== requestSequence.current) return;
       setError(
         loadError instanceof Error
           ? loadError.message
           : "Chargement du tableau de bord impossible.",
       );
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence.current) setLoading(false);
     }
   };
 
   useEffect(() => {
     void loadDashboard();
-  }, []);
+    return () => { requestSequence.current += 1; };
+  }, [access?.clubId]);
 
   const metrics = dashboard
     ? [
@@ -268,7 +275,7 @@ export function AdminPage() {
                       <tr>
                         <th scope="col" style={{ textAlign: "left", padding: "0.5rem" }}>Mois</th>
                         {hasPermission(ADMIN_PERMISSIONS.tournaments) && <th scope="col" style={{ padding: "0.5rem" }}>Tournois</th>}
-                        {hasPermission(ADMIN_PERMISSIONS.championships) && <th scope="col" style={{ padding: "0.5rem" }}>Championnats · Robert Cathala</th>}
+                        {hasPermission(ADMIN_PERMISSIONS.championships) && <th scope="col" style={{ padding: "0.5rem" }}>Championnats · installations du club</th>}
                       </tr>
                     </thead>
                     <tbody>

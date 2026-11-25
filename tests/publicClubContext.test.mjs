@@ -43,7 +43,8 @@ const notifications = fs.readFileSync(
 );
 
 test("la home publique peut être scindée par slug de club", () => {
-  assert.match(home, /URLSearchParams\(window\.location\.search\)/);
+  assert.match(home, /useLocation\(\)/);
+  assert.match(home, /URLSearchParams\(location\.search\)/);
   assert.match(home, /get\("club"\)/);
   assert.match(home, /publicClubSlug/);
 });

@@ -1,4 +1,5 @@
 import { supabase } from "@/infrastructure/supabase/client";
+import { adminAccessService } from "@/features/admin/access/adminAccessService";
 
 export type Club = {
   id: string;
@@ -69,8 +70,94 @@ export const clubAdminService = {
     if (error) throw error;
     return mapClub(data as Record<string, unknown>);
   },
+  /** Explicit, membership-scoped read; platform visual previews grant no access. */
+  async getClubForAuthorizedMembership(clubId: string): Promise<Club> {
+    if (!clubId) throw new Error("Identifiant du club requis.");
+    await adminAccessService.getAccessForClub(clubId);
+    const { data, error } = await supabase
+      .from("clubs")
+      .select("*")
+      .eq("id", clubId)
+      .single();
+    if (error) throw error;
+    if (!data || data.id !== clubId) {
+      throw new Error("Informations du club sélectionné indisponibles.");
+    }
+    return mapClub(data as Record<string, unknown>);
+  },
+  /**
+   * Future inter-club read: only a server-authorized, explicitly scoped RPC
+   * may return the selected club. Do not substitute a public clubs query.
+   * The RPC is intentionally not wired to the UI until its RLS/lease
+   * contract has been deployed and verified.
+   */
+  async getClubForPlatformLease(clubId: string): Promise<Club> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        clubId,
+      )
+    ) {
+      throw new Error("Identifiant de club invalide.");
+    }
+    const { data, error } = await supabase.rpc(
+      "platform_admin_get_club_information",
+      { target_club_id: clubId },
+    );
+    if (error) throw error;
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new Error("Informations du club indisponibles.");
+    }
+    const row = data as Record<string, unknown>;
+    if (row.id !== clubId) {
+      throw new Error("Réponse inter-clubs non conforme.");
+    }
+    return mapClub(row);
+  },
+  /** Explicit server-scoped update; never reuse the legacy implicit write. */
+  async updateClubForPlatformLease(club: Club): Promise<void> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        club.id,
+      )
+    ) {
+      throw new Error("Identifiant de club invalide.");
+    }
+    const changes = {
+      name: club.name,
+      primary_color: club.primaryColor,
+      secondary_color: club.secondaryColor,
+      accent_color: club.accentColor,
+      neutral_color: club.neutralColor,
+      address: club.address || null,
+      phone: club.phone || null,
+      email: club.email || null,
+      website: club.website || null,
+      social_links: club.socialLinks || null,
+      affiliation_number: club.affiliationNumber || null,
+      notes: club.notes || null,
+    };
+    const { data, error } = await supabase.rpc(
+      "platform_admin_update_club_information",
+      { target_club_id: club.id, changes },
+    );
+    if (error) throw error;
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data) ||
+      data.id !== club.id
+    ) {
+      throw new Error("Modification inter-clubs non confirmée.");
+    }
+  },
   async updateClub(club: Club) {
-    const { error } = await supabase
+    // The information editor still uses the implicit business-club context.
+    // Never accept a foreign club ID from a stale form or visual preview.
+    const authorizedClubId = await currentClubId();
+    if (!authorizedClubId || club.id !== authorizedClubId) {
+      throw new Error("Modification interdite pour le club sélectionné.");
+    }
+    const { data, error } = await supabase
       .from("clubs")
       .update({
         name: club.name,
@@ -88,8 +175,12 @@ export const clubAdminService = {
         affiliation_number: club.affiliationNumber || null,
         notes: club.notes || null,
       })
-      .eq("id", club.id);
+      .eq("id", authorizedClubId)
+      .select("id");
     if (error) throw error;
+    if (!data || data.length !== 1 || data[0].id !== authorizedClubId) {
+      throw new Error("Enregistrement non autorisé ou non effectué.");
+    }
   },
   async listSeasons(): Promise<Season[]> {
     const clubId = await currentClubId();
