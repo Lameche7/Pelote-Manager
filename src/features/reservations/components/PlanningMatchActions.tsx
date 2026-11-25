@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { adminAccessService } from "@/features/admin/access/adminAccessService";
+import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { refereeingService } from "@/features/refereeing/services/refereeingService";
@@ -10,15 +12,28 @@ import { resolveCalendarCompetition } from "../services/calendarCompetitionServi
 export function PlanningMatchActions({
   slot,
   clubSlug,
+  clubId,
   onUpdated,
 }: {
   slot: CalendarSlot;
   clubSlug: string | null;
+  clubId: string | null;
   onUpdated: () => void;
 }) {
   const { isAuthenticated } = useAuth();
   const [identity, setIdentity] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [competition, setCompetition] = useState<Awaited<ReturnType<typeof resolveCalendarCompetition>>>(null);
+  const [adminClub, setAdminClub] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    setAdminClub(null);
+    if (isAuthenticated && clubId) {
+      void adminAccessService.getAccessForClub(clubId).then((access) => {
+        if (active && access.clubId === clubId && access.permissions.includes(ADMIN_PERMISSIONS.tournaments)) setAdminClub(clubId);
+      }).catch(() => { if (active) setAdminClub(null); });
+    }
+    return () => { active = false; };
+  }, [clubId, isAuthenticated]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -78,6 +93,13 @@ export function PlanningMatchActions({
       {error && <p role="alert">{error}</p>}
       {competition && (
         <Link className="reservation-slot-actions__button" to={url(ROUTES.tournaments + "/" + encodeURIComponent(competition.competitionId))}>Voir la compétition</Link>
+      )}
+      {isAuthenticated && clubId && adminClub === clubId && competition && (
+        <div className="reservation-slot-actions reservation-slot-actions--admin">
+          <h3>Actions administrateur</h3>
+          <Link className="reservation-slot-actions__button" to={url(ROUTES.adminTournamentResults, competition.matchId)}>Gérer le résultat</Link>
+          <Link className="reservation-slot-actions__button" to={url(ROUTES.adminTournamentReschedules, competition.matchId)}>Gérer le report ou la déprogrammation</Link>
+        </div>
       )}
       {identity?.actions.submitResult && (
         <Link className="reservation-slot-actions__button" to={url(identity.isAssignedReferee && !identity.isParticipant ? ROUTES.myRefereeing : ROUTES.myTournaments, identity.matchId)}>Saisir le résultat</Link>
