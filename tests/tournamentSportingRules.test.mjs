@@ -70,7 +70,7 @@ test("l'administration expose les deux formats, les bonus et le classement par p
   assert.match(page, /setSportingRules\(blankSportingRules\(\)\)/);
   assert.match(
     page,
-    /tournamentAdminService\.create\(draft\)[\s\S]*tournamentAdminService\.saveSportingRules\(id, sportingRules\)/,
+    /service\.create\(draft\)[\s\S]*service\.saveSportingRules\(id, sportingRules\)/,
   );
   assert.match(page, /showSaveButton=\{false\}/);
   assert.match(section, /showSaveButton = true/);
