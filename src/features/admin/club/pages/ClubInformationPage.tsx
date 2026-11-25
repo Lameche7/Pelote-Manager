@@ -200,6 +200,30 @@ export function ClubInformationPage() {
               </p>
             </div>
           </div>
+          <label>
+            Année de création
+            <input
+              inputMode="numeric"
+              pattern="[0-9]{4}"
+              maxLength={4}
+              value={club.foundedYear}
+              onChange={(event) =>
+                setClub({ ...club, foundedYear: event.target.value })
+              }
+            />
+          </label>
+          {field("tagline", "Slogan du club")}
+          {field("presentationTitle", "Titre de présentation")}
+          <label className="club-form__wide">
+            Texte de présentation
+            <textarea
+              maxLength={3000}
+              value={club.presentationText}
+              onChange={(event) =>
+                setClub({ ...club, presentationText: event.target.value })
+              }
+            />
+          </label>
           {(
             [
               ["logo", "Logo du club"],
