@@ -4,9 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 const shell = read("src/features/admin/components/AdminShell.tsx");
-const scoped = read(
-  "src/features/platform/components/PlatformScopedAdmin.tsx",
-);
+const scoped = read("src/features/platform/components/PlatformScopedAdmin.tsx");
 const layout = read("src/app/layouts/MainLayout.tsx");
 
 test("administration preserves the selected club", () => {
