@@ -40,7 +40,9 @@ export function PlanningMatchActions({
   const [candidates, setCandidates] = useState<RefereeCandidate[] | null>(null);
   const [selectedReferee, setSelectedReferee] = useState("");
   const [adminClub, setAdminClub] = useState<string | null>(null);
-  const [adminPanel, setAdminPanel] = useState<"results" | "reports" | null>(null);
+  const [adminPanel, setAdminPanel] = useState<"results" | "reports" | null>(
+    null,
+  );
   const [platformAdmin, setPlatformAdmin] = useState(false);
   const [leaseVersion, setLeaseVersion] = useState(0);
   useEffect(() => {
@@ -80,9 +82,11 @@ export function PlanningMatchActions({
       const onFocus = () => void checkPermission();
       window.addEventListener("focus", onFocus);
       if (platformSupabase) {
-        void platformSupabase.rpc("platform_is_admin").then(({ data, error }) => {
-          if (active) setPlatformAdmin(!error && data === true);
-        });
+        void platformSupabase
+          .rpc("platform_is_admin")
+          .then(({ data, error }) => {
+            if (active) setPlatformAdmin(!error && data === true);
+          });
       }
       return () => {
         active = false;
@@ -187,7 +191,9 @@ export function PlanningMatchActions({
       await platformAdminLeaseService.issue(clubId);
       setLeaseVersion((version) => version + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Délégation indisponible.");
+      setError(
+        cause instanceof Error ? cause.message : "Délégation indisponible.",
+      );
     } finally {
       setBusy(false);
     }
@@ -214,27 +220,42 @@ export function PlanningMatchActions({
       setCandidates(await refereeingService.tournamentCandidates(clubId));
       setSelectedReferee("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Arbitres indisponibles.");
+      setError(
+        cause instanceof Error ? cause.message : "Arbitres indisponibles.",
+      );
     } finally {
       setBusy(false);
     }
   };
   const assignReferee = async (profileId: string | null) => {
     if (!clubId || adminClub !== clubId || !competition || busy) return;
-    if (!window.confirm(profileId ? "Affecter cet arbitre ?" : "Retirer l’arbitre ?"))
+    if (
+      !window.confirm(
+        profileId ? "Affecter cet arbitre ?" : "Retirer l’arbitre ?",
+      )
+    )
       return;
     setBusy(true);
     setError("");
     try {
       const current = await resolveCalendarCompetition(slot);
-      if (current?.kind !== "tournament" || current.matchId !== competition.matchId)
+      if (
+        current?.kind !== "tournament" ||
+        current.matchId !== competition.matchId
+      )
         throw new Error("La rencontre a changé.");
-      await refereeingService.assignTournamentReferee(clubId, current.matchId, profileId);
+      await refereeingService.assignTournamentReferee(
+        clubId,
+        current.matchId,
+        profileId,
+      );
       setCandidates(null);
       setSelectedReferee("");
       onUpdated();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Affectation impossible.");
+      setError(
+        cause instanceof Error ? cause.message : "Affectation impossible.",
+      );
     } finally {
       setBusy(false);
     }
@@ -252,9 +273,12 @@ export function PlanningMatchActions({
     setBusy(true);
     setError("");
     try {
-      const permission = await supabase.rpc("can_manage_tournament_planning_for_club", {
-        target_club_id: clubId,
-      });
+      const permission = await supabase.rpc(
+        "can_manage_tournament_planning_for_club",
+        {
+          target_club_id: clubId,
+        },
+      );
       if (permission.error || permission.data !== true)
         throw new Error("Accès refusé.");
       const current = await resolveCalendarCompetition(slot);
@@ -293,11 +317,19 @@ export function PlanningMatchActions({
           Voir la compétition
         </Link>
       )}
-      {isAuthenticated && clubId && platformAdmin && adminClub !== clubId && competition && (
-        <button type="button" disabled={busy} onClick={() => void activateAdmin()}>
-          Activer la gestion temporaire du club
-        </button>
-      )}
+      {isAuthenticated &&
+        clubId &&
+        platformAdmin &&
+        adminClub !== clubId &&
+        competition && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void activateAdmin()}
+          >
+            Activer la gestion temporaire du club
+          </button>
+        )}
       {isAuthenticated && clubId && adminClub === clubId && competition && (
         <div className="reservation-slot-actions reservation-slot-actions--admin">
           <h3>Actions administrateur</h3>
@@ -317,7 +349,13 @@ export function PlanningMatchActions({
           </button>
           {adminPanel && (
             <section aria-label="Gestion de la rencontre">
-              <button type="button" onClick={() => { setAdminPanel(null); onUpdated(); }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminPanel(null);
+                  onUpdated();
+                }}
+              >
                 Fermer la gestion
               </button>
               {adminPanel === "results" ? (
@@ -395,10 +433,18 @@ export function PlanningMatchActions({
                   ))}
                 </select>
               </label>
-              <button type="button" disabled={busy || !selectedReferee} onClick={() => void assignReferee(selectedReferee)}>
+              <button
+                type="button"
+                disabled={busy || !selectedReferee}
+                onClick={() => void assignReferee(selectedReferee)}
+              >
                 Affecter l’arbitre
               </button>
-              <button type="button" disabled={busy} onClick={() => void assignReferee(null)}>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void assignReferee(null)}
+              >
                 Retirer l’arbitre
               </button>
             </>
