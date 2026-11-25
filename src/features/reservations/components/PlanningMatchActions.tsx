@@ -52,16 +52,43 @@ export function PlanningMatchActions({
     setSelectedReferee("");
     setContacts(null);
     if (isAuthenticated && clubId) {
-      void supabase.rpc("can_manage_tournament_planning_for_club", {
-        target_club_id: clubId,
-      }).then(({ data, error }) => {
-        if (active) setAdminClub(!error && data === true ? clubId : null);
-      });
+      const checkPermission = async () => {
+        try {
+          const { data, error } = await supabase.rpc(
+            "can_manage_tournament_planning_for_club",
+            { target_club_id: clubId },
+          );
+          if (!active) return;
+          if (!error && data === true) {
+            setAdminClub(clubId);
+          } else {
+            clearPermission();
+          }
+        } catch {
+          if (active) clearPermission();
+        }
+      };
+      const clearPermission = () => {
+        setAdminClub(null);
+        setAdminPanel(null);
+        setContacts(null);
+        setCandidates(null);
+        setSelectedReferee("");
+      };
+      void checkPermission();
+      const interval = window.setInterval(() => void checkPermission(), 5000);
+      const onFocus = () => void checkPermission();
+      window.addEventListener("focus", onFocus);
       if (platformSupabase) {
         void platformSupabase.rpc("platform_is_admin").then(({ data, error }) => {
           if (active) setPlatformAdmin(!error && data === true);
         });
       }
+      return () => {
+        active = false;
+        window.clearInterval(interval);
+        window.removeEventListener("focus", onFocus);
+      };
     }
     return () => {
       active = false;
