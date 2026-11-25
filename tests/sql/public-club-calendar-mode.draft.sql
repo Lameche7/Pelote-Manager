@@ -6,7 +6,7 @@ stable
 security definer
 set search_path = ''
 as $$
-  select case
+  select coalesce((select case
     when coalesce((p.modules->>'reservations')::boolean, true) then 'reservations'
     when coalesce((p.modules->>'tournaments')::boolean, true)
       and coalesce((p.modules->>'tournamentPlanning')::boolean, true) then 'planning'
@@ -17,7 +17,7 @@ as $$
   where nullif(btrim(target_slug), '') is null
     or c.slug = nullif(btrim(target_slug), '')
   order by c.created_at
-  limit 1
-$$;
+  limit 1), 'disabled')
+$;
 revoke all on function public.get_public_club_calendar_mode(text) from public, anon, authenticated;
 grant execute on function public.get_public_club_calendar_mode(text) to anon, authenticated;
