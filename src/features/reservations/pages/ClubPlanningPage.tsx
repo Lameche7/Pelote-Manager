@@ -85,6 +85,7 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
           resource.id,
           from,
           to,
+          true,
         );
         return entries.filter(
           (slot) =>
