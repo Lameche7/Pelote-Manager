@@ -33,9 +33,12 @@ export type UnprogrammedMatchContact = {
 };
 
 export const adminTournamentUnprogrammedService = {
-  async listContacts(): Promise<UnprogrammedMatchContact[]> {
+  async listContacts(clubId?: string): Promise<UnprogrammedMatchContact[]> {
     const { data, error } = await supabase.rpc(
-      "admin_unprogrammed_tournament_match_contacts",
+      clubId
+        ? "admin_unprogrammed_tournament_match_contacts_for_club"
+        : "admin_unprogrammed_tournament_match_contacts",
+      clubId ? { target_club_id: clubId } : undefined,
     );
     if (error)
       throw new Error(
