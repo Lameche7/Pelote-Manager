@@ -78,7 +78,8 @@ function ClubModulesEditor({ clubId }: { clubId: string }) {
     <section className="platform-card" aria-label="Fonctionnalités du club">
       <h3>Fonctionnalités du club</h3>
       <p>
-        Préparation des modules : les restrictions métier ne sont pas encore actives.
+        Les menus suivent les modules. Les restrictions métier restent à
+        valider.
       </p>
       {profile && (
         <>
