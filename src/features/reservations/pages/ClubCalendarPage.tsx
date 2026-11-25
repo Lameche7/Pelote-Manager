@@ -10,7 +10,8 @@ export function ClubCalendarPage() {
 
   if (error) return <p role="alert">Calendrier momentanément indisponible.</p>;
   if (!mode) return <p role="status">Chargement du calendrier…</p>;
-  if (mode === "disabled") return <p>Ce club ne propose pas de calendrier public.</p>;
+  if (mode === "disabled")
+    return <p>Ce club ne propose pas de calendrier public.</p>;
   if (mode === "planning") {
     return <ClubPlanningPage key={clubSlug ?? ""} clubSlug={clubSlug} />;
   }
