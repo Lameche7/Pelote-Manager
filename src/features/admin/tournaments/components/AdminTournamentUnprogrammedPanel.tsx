@@ -128,6 +128,7 @@ const printPendingMatches = (
 export function AdminTournamentUnprogrammedPanel() {
   const [params] = useSearchParams();
   const highlightedMatchId = params.get("match");
+  const clubId = params.get("adminClubId")?.trim() || undefined;
   const requestedResource = params.get("resource");
   const requestedStart = params.get("startsAt");
   const requestedEnd = params.get("endsAt");
@@ -174,14 +175,20 @@ export function AdminTournamentUnprogrammedPanel() {
 
   const load = useCallback(async () => {
     const [context, waiting] = await Promise.all([
-      adminTournamentManualRescheduleService.getContext(),
-      adminTournamentUnprogrammedService.list(),
+      clubId
+        ? Promise.resolve([] as AdminManualRescheduleTournament[])
+        : adminTournamentManualRescheduleService.getContext(),
+      adminTournamentUnprogrammedService.list(clubId),
     ]);
     setTournaments(context);
     setPending(waiting);
-  }, []);
+  }, [clubId]);
 
   useEffect(() => {
+    setTournaments([]);
+    setPending([]);
+    setEditing("");
+    setMatchId("");
     load().catch((cause: unknown) => {
       setError(
         cause instanceof Error ? cause.message : "Chargement impossible.",
@@ -198,7 +205,9 @@ export function AdminTournamentUnprogrammedPanel() {
     setExporting(true);
     setError("");
     try {
-      const contacts = await adminTournamentUnprogrammedService.listContacts();
+      const contacts = clubId
+        ? []
+        : await adminTournamentUnprogrammedService.listContacts();
       printPendingMatches(pending, contacts, popup);
     } catch (cause) {
       popup.close();
@@ -241,6 +250,7 @@ export function AdminTournamentUnprogrammedPanel() {
       await adminTournamentUnprogrammedService.unprogram(
         matchId,
         reason.trim(),
+        clubId,
       );
       setMatchId("");
       setReason("");
@@ -278,6 +288,7 @@ export function AdminTournamentUnprogrammedPanel() {
         date,
         start,
         end,
+        ...(clubId ? { clubId } : {}),
       });
       setEditing("");
       await load();
@@ -298,7 +309,13 @@ export function AdminTournamentUnprogrammedPanel() {
         Pour une partie qui ne peut pas se jouer : son créneau redevient
         disponible, sans supprimer la rencontre ni ses équipes.
       </p>
-      <div className="admin-reschedules__unprogram-controls">
+      {clubId && (
+        <p>Pour libérer un créneau, utilisez la carte du planning du club.</p>
+      )}
+      <div
+        className="admin-reschedules__unprogram-controls"
+        hidden={Boolean(clubId)}
+      >
         <label>
           Partie programmée
           <select
