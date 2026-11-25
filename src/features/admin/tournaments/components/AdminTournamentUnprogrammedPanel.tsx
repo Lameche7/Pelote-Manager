@@ -125,10 +125,16 @@ const printPendingMatches = (
   win.document.close();
 };
 
-export function AdminTournamentUnprogrammedPanel() {
+export function AdminTournamentUnprogrammedPanel({
+  scopedClubId,
+  scopedMatchId,
+}: {
+  scopedClubId?: string;
+  scopedMatchId?: string;
+} = {}) {
   const [params] = useSearchParams();
-  const highlightedMatchId = params.get("match");
-  const clubId = params.get("adminClubId")?.trim() || undefined;
+  const highlightedMatchId = scopedMatchId ?? params.get("match");
+  const clubId = scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const requestedResource = params.get("resource");
   const requestedStart = params.get("startsAt");
   const requestedEnd = params.get("endsAt");
