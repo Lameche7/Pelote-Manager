@@ -75,7 +75,6 @@ export function HomePage() {
     publicClubSlug
       ? path + (path.includes("?") ? "&" : "?") + "club=" + encodeURIComponent(publicClubSlug)
       : path;
-  const isDefaultClub = !publicClubSlug || publicClubSlug === "pelotaris-club-lourdais";
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
@@ -193,12 +192,12 @@ export function HomePage() {
             alt="PILOTOKI"
           />
           <p className="premium-home__signature">
-            {isDefaultClub && CLUB_CONFIG.foundedYear && (
+            {branding.foundedYear && (
               <>
-                Depuis <strong>{CLUB_CONFIG.foundedYear}</strong> –{" "}
+                Depuis <strong>{branding.foundedYear}</strong>{branding.tagline ? " – " : ""}
               </>
             )}
-            {isDefaultClub ? CLUB_CONFIG.tagline : ""}
+            {branding.tagline}
           </p>
           <div className="premium-home__actions">
             {(calendarMode === "planning" || calendarMode === "reservations") && (
@@ -337,8 +336,8 @@ export function HomePage() {
           />
           <div>
             <p className="section-kicker">{venueLabel}</p>
-            <h2>Le club, notre passion.</h2>
-            <p>{isDefaultClub ? CLUB_CONFIG.description : `Retrouvez la vie de ${branding.name} et ses tournois sur PILOTOKI.`}</p>
+            <h2>{branding.presentationTitle || branding.name}</h2>
+            {branding.presentationText && <p>{branding.presentationText}</p>}
             {(calendarMode === "planning" || calendarMode === "reservations") && (
               <Link className="text-link" to={clubLink(ROUTES.reservations)}>
                 {calendarMode === "planning" ? "Voir le planning des tournois →" : "Voir les créneaux disponibles →"}
