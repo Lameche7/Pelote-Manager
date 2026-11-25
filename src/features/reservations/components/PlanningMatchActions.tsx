@@ -26,18 +26,21 @@ export function PlanningMatchActions({
   const [identity, setIdentity] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [competition, setCompetition] = useState<Awaited<ReturnType<typeof resolveCalendarCompetition>>>(null);
   const [contacts, setContacts] = useState<MatchContact[] | null>(null);
+  const [refereeAdminClub, setRefereeAdminClub] = useState<string | null>(null);
   const [contactClub, setContactClub] = useState<string | null>(null);
   const [adminClub, setAdminClub] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     setAdminClub(null);
     setContactClub(null);
+    setRefereeAdminClub(null);
     setContacts(null);
     if (isAuthenticated && clubId) {
       void adminAccessService.getAccessForClub(clubId).then((access) => {
         if (!active || access.clubId !== clubId) return;
         if (access.permissions.includes(ADMIN_PERMISSIONS.tournaments)) setAdminClub(clubId);
         if (access.permissions.includes(ADMIN_PERMISSIONS.reservations)) setContactClub(clubId);
+        if (access.permissions.includes(ADMIN_PERMISSIONS.championships)) setRefereeAdminClub(clubId);
       }).catch(() => { if (active) setAdminClub(null); });
     }
     return () => { active = false; };
@@ -149,6 +152,9 @@ export function PlanningMatchActions({
           ))}
           {contacts?.length === 0 && <p>Aucun joueur identifié.</p>}
         </div>
+      )}
+      {isAuthenticated && clubId && refereeAdminClub === clubId && competition && (
+        <Link className="reservation-slot-actions__button" to={url(ROUTES.adminRefereeing, competition.matchId)}>Gérer l’arbitrage</Link>
       )}
       {identity?.actions.submitResult && (
         <Link className="reservation-slot-actions__button" to={url(identity.isAssignedReferee && !identity.isParticipant ? ROUTES.myRefereeing : ROUTES.myTournaments, identity.matchId)}>Saisir le résultat</Link>
