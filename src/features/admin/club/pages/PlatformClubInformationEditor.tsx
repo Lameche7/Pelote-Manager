@@ -113,7 +113,13 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
               value={String(club[key])}
               disabled={saving}
               onChange={(event) => update(key, event.target.value)}
-              pattern={key.endsWith("Color") ? "#[0-9a-fA-F]{6}" : key === "foundedYear" ? "[0-9]{4}" : undefined}
+              pattern={
+                key.endsWith("Color")
+                  ? "#[0-9a-fA-F]{6}"
+                  : key === "foundedYear"
+                    ? "[0-9]{4}"
+                    : undefined
+              }
             />
           </label>
         ))}
