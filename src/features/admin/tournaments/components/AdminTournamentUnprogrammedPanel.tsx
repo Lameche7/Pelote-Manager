@@ -134,7 +134,8 @@ export function AdminTournamentUnprogrammedPanel({
 } = {}) {
   const [params] = useSearchParams();
   const highlightedMatchId = scopedMatchId ?? params.get("match");
-  const clubId = scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
+  const clubId =
+    scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const requestedResource = params.get("resource");
   const requestedStart = params.get("startsAt");
   const requestedEnd = params.get("endsAt");
