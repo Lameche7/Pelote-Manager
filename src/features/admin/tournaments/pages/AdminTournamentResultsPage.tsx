@@ -125,10 +125,16 @@ const sortMatches = (
     return left.startsAt.localeCompare(right.startsAt);
   });
 
-export function AdminTournamentResultsPage() {
+export function AdminTournamentResultsPage({
+  scopedClubId,
+  scopedMatchId,
+}: {
+  scopedClubId?: string;
+  scopedMatchId?: string;
+} = {}) {
   const [params] = useSearchParams();
-  const requestedMatchId = params.get("match");
-  const requestedClubId = params.get("adminClubId")?.trim() || undefined;
+  const requestedMatchId = scopedMatchId ?? params.get("match");
+  const requestedClubId = scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const [unprogrammed, setUnprogrammed] = useState<
     UnprogrammedTournamentMatch[]
   >([]);
