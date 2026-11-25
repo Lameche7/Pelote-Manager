@@ -61,7 +61,12 @@ export const platformAdminLeaseService = {
     ) {
       throw new Error("Autorisation inter-clubs expirée ou invalide.");
     }
-    return { enabled: true, expiresAt: data.expiresAt, remainingMs, receivedAt };
+    return {
+      enabled: true,
+      expiresAt: data.expiresAt,
+      remainingMs,
+      receivedAt,
+    };
   },
 
   async revoke(): Promise<void> {
