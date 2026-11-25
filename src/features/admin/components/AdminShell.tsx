@@ -18,6 +18,7 @@ import {
   type ClubModules,
 } from "@/features/admin/config/clubModules";
 import { isAdminRouteEnabled } from "@/features/admin/config/clubModuleNavigation";
+import { PlatformScopedAdmin } from "@/features/platform/components/PlatformScopedAdmin";
 import "./AdminShell.css";
 import "./AdminMobileExperience.css";
 
@@ -142,15 +143,7 @@ function VerifiedLocalClub({
   if (visualClubSlug && verified === null)
     return <p role="status">Vérification du club sélectionné…</p>;
   if (visualClubSlug && !verified)
-    return (
-      <section className="simple-page" role="status">
-        <h1>Administration inter-clubs en préparation</h1>
-        <p>
-          Ce club ne correspond pas à votre habilitation métier locale. Aucune
-          donnée administrative ne sera chargée.
-        </p>
-      </section>
-    );
+    return <PlatformScopedAdmin key={visualClubSlug} slug={visualClubSlug} />;
 
   return (
     <ClubAdminNavigation key={clubId} clubId={clubId} clubName={clubName} />

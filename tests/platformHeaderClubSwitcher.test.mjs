@@ -35,7 +35,7 @@ test("le sélecteur n'annonce pas des droits d'administration inter-clubs", () =
   assert.match(switcher, /Aperçu visuel du club \(super-admin\)/);
   assert.match(
     switcher,
-    /Aperçu uniquement : aucune donnée ni permission modifiée/,
+    /Le club sélectionné ne modifie pas vos habilitations/,
   );
   assert.doesNotMatch(switcher, /Club par défaut \(Lourdes\)/);
   assert.match(switcher, /event === "SIGNED_IN"/);

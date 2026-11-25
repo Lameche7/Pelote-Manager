@@ -207,10 +207,10 @@ export function PlatformClubSwitcher() {
           </option>
         ))}
       </select>
-      <small>Aperçu uniquement : aucune donnée ni permission modifiée.</small>
+      <small>Le club sélectionné ne modifie pas vos habilitations.</small>
       <small>
         {identityLinked
-          ? "Identité vérifiée · administration inter-clubs non activée"
+          ? "Identité vérifiée · accès sécurisé depuis Administration"
           : "Liaison des deux sessions non vérifiée"}
       </small>
       {error && <small role="alert">{error}</small>}
