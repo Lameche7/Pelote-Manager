@@ -118,9 +118,14 @@ const toRpcScore = (score: TournamentScorePayload) => ({
 });
 
 export const tournamentResultsAdminService = {
-  async getWorkspace(): Promise<AdminTournamentResultsWorkspace[]> {
+  async getWorkspace(
+    clubId?: string,
+  ): Promise<AdminTournamentResultsWorkspace[]> {
     const { data, error } = await supabase.rpc(
-      "admin_get_tournament_results_workspace",
+      clubId
+        ? "admin_get_tournament_results_workspace_for_club"
+        : "admin_get_tournament_results_workspace",
+      clubId ? { target_club_id: clubId } : undefined,
     );
     if (error) {
       throw new Error(
@@ -130,10 +135,14 @@ export const tournamentResultsAdminService = {
     return rows(data).map(mapWorkspace);
   },
 
-  async validate(matchId: string): Promise<void> {
+  async validate(matchId: string, clubId?: string): Promise<void> {
     const { error } = await supabase.rpc(
-      "admin_validate_tournament_match_result",
-      { target_match_id: matchId },
+      clubId
+        ? "admin_validate_tournament_match_result_for_club"
+        : "admin_validate_tournament_match_result",
+      clubId
+        ? { target_match_id: matchId, target_club_id: clubId }
+        : { target_match_id: matchId },
     );
     if (error) {
       throw new Error(
@@ -142,11 +151,21 @@ export const tournamentResultsAdminService = {
     }
   },
 
-  async save(matchId: string, score: TournamentScorePayload): Promise<void> {
-    const { error } = await supabase.rpc("admin_save_tournament_match_result", {
-      target_match_id: matchId,
-      score_payload: toRpcScore(score),
-    });
+  async save(
+    matchId: string,
+    score: TournamentScorePayload,
+    clubId?: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      clubId
+        ? "admin_save_tournament_match_result_for_club"
+        : "admin_save_tournament_match_result",
+      {
+        target_match_id: matchId,
+        score_payload: toRpcScore(score),
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
+    );
     if (error) {
       throw new Error(
         getSupabaseErrorMessage(
