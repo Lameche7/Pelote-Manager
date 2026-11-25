@@ -81,7 +81,7 @@ import { MyStatisticsPage } from "@/features/user-space/statistics/pages/MyStati
 import { RefereeingPage } from "@/features/refereeing/pages/RefereeingPage";
 import { AdminRefereeingPage } from "@/features/admin/refereeing/pages/AdminRefereeingPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
-import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
+import { ClubCalendarPage } from "@/features/reservations/pages/ClubCalendarPage";
 import { ReservationSharePaymentPage } from "@/features/reservations/pages/ReservationSharePaymentPage";
 import { TournamentDetailPage } from "@/features/tournaments/pages/TournamentDetailPage";
 import { TournamentsPage } from "@/features/tournaments/pages/TournamentsPage";
@@ -141,7 +141,7 @@ export const routes = [
       { path: ROUTES.legalNotice, element: <LegalNoticePage /> },
       { path: ROUTES.privacy, element: <PrivacyPage /> },
       { path: ROUTES.terms, element: <TermsPage /> },
-      { path: ROUTES.reservations, element: <ReservationsPage /> },
+      { path: ROUTES.reservations, element: <ClubCalendarPage /> },
       {
         path: "/live/launch",
         element: (
