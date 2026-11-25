@@ -478,3 +478,102 @@ export const tournamentAdminService = {
     if (error) fail(error, "Impossible de changer l’état du tournoi.");
   },
 };
+
+/** Explicit club scope for the platform console; never fall back to local RPCs. */
+export function createPlatformTournamentAdminService(clubId: string) {
+  if (!clubId) throw new Error("Club requis.");
+
+  return {
+    async getOptions(): Promise<TournamentOptions> {
+      const { data, error } = await supabase.rpc(
+        "platform_admin_get_tournament_options",
+        { target_club_id: clubId },
+      );
+      if (error) fail(error, "Impossible de charger les saisons et terrains.");
+      return mapOptions(data);
+    },
+
+    async list(): Promise<TournamentSummary[]> {
+      const { data, error } = await supabase.rpc(
+        "platform_admin_list_tournaments",
+        { target_club_id: clubId },
+      );
+      if (error) fail(error, "Impossible de charger les tournois.");
+      return asRows(data).map(mapSummary);
+    },
+
+    async get(id: string): Promise<TournamentDetail> {
+      const { data, error } = await supabase.rpc(
+        "platform_admin_get_tournament",
+        { target_club_id: clubId, target_id: id },
+      );
+      if (error) fail(error, "Impossible de charger le tournoi.");
+      return mapDetail(data);
+    },
+
+    async create(draft: TournamentDraft): Promise<string> {
+      const { data, error } = await supabase.rpc(
+        "platform_admin_create_tournament",
+        { target_club_id: clubId, payload: draftPayload(draft) },
+      );
+      if (error) fail(error, "Impossible de créer le tournoi.");
+      return String(data);
+    },
+
+    async update(id: string, draft: TournamentDraft): Promise<void> {
+      const { error } = await supabase.rpc("platform_admin_update_tournament", {
+        target_club_id: clubId,
+        target_id: id,
+        payload: draftPayload(draft),
+      });
+      if (error) fail(error, "Impossible de modifier le tournoi.");
+    },
+
+    async saveConfiguration(
+      id: string,
+      value: {
+        resourceIds: string[];
+        series: TournamentSeries[];
+        playWindows: TournamentPlayWindow[];
+      },
+    ): Promise<void> {
+      const { error } = await supabase.rpc(
+        "platform_admin_save_tournament_configuration",
+        {
+          target_club_id: clubId,
+          target_id: id,
+          payload: {
+            resource_ids: value.resourceIds,
+            series: value.series.map((series, index) => ({
+              id: series.id ?? null,
+              name: series.name.trim(),
+              display_order: index,
+              capacity: series.capacity,
+              enabled: series.enabled,
+            })),
+            play_windows: value.playWindows.map((window, index) => ({
+              weekday: window.weekday,
+              opens_at: window.opensAt,
+              closes_at: window.closesAt,
+              display_order: index,
+            })),
+          },
+        },
+      );
+      if (error)
+        fail(error, "Impossible d’enregistrer la configuration du tournoi.");
+    },
+
+    async transition(id: string, status: TournamentStatus): Promise<void> {
+      const { error } = await supabase.rpc(
+        "platform_admin_transition_tournament",
+        {
+          target_club_id: clubId,
+          target_id: id,
+          target_status: status,
+        },
+      );
+      if (error) fail(error, "Impossible de changer l’état du tournoi.");
+    },
+  };
+}
