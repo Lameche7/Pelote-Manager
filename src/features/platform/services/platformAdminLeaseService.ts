@@ -5,6 +5,8 @@ import { verifyPlatformBusinessIdentity } from "./platformBusinessIdentityServic
 export type PlatformAdminLease = {
   enabled: boolean;
   expiresAt?: string;
+  remainingMs: number;
+  receivedAt: number;
 };
 
 /**
@@ -33,6 +35,7 @@ export const platformAdminLeaseService = {
     if (!platformToken || !businessToken) {
       throw new Error("Deux sessions authentifiées sont nécessaires.");
     }
+    const startedAt = performance.now();
     const { data, error } = await platform.functions.invoke(
       "platform-business-admin-lease",
       {
@@ -47,15 +50,18 @@ export const platformAdminLeaseService = {
       throw new Error("Autorisation inter-clubs refusée.");
     }
     const expiresAt = Date.parse(data.expiresAt);
-    const remainingMs = expiresAt - Date.now();
+    const serverNow = Date.parse(data.serverNow ?? "");
+    const receivedAt = performance.now();
+    const remainingMs = expiresAt - serverNow - (receivedAt - startedAt);
     if (
       !Number.isFinite(expiresAt) ||
+      !Number.isFinite(remainingMs) ||
       remainingMs <= 0 ||
       remainingMs > 5 * 60 * 1000
     ) {
       throw new Error("Autorisation inter-clubs expirée ou invalide.");
     }
-    return { enabled: true, expiresAt: data.expiresAt };
+    return { enabled: true, expiresAt: data.expiresAt, remainingMs, receivedAt };
   },
 
   async revoke(): Promise<void> {
