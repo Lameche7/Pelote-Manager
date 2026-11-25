@@ -569,7 +569,7 @@ export function createPlatformTournamentAdminService(clubId: string) {
         "platform_admin_get_tournament_refereeing",
         {
           target_club_id: clubId,
-        target_id: id,
+          target_id: id,
         },
       );
       if (error) fail(error, "Impossible de charger le réglage d’arbitrage.");
@@ -577,11 +577,14 @@ export function createPlatformTournamentAdminService(clubId: string) {
     },
 
     async setRefereeingEnabled(id: string, enabled: boolean): Promise<void> {
-      const { error } = await supabase.rpc("platform_admin_set_tournament_refereeing", {
-        target_club_id: clubId,
-        target_id: id,
-        target_enabled: enabled,
-      });
+      const { error } = await supabase.rpc(
+        "platform_admin_set_tournament_refereeing",
+        {
+          target_club_id: clubId,
+          target_id: id,
+          target_enabled: enabled,
+        },
+      );
       if (error) fail(error, "Impossible de modifier l’arbitrage du tournoi.");
     },
 
@@ -603,7 +606,7 @@ export function createPlatformTournamentAdminService(clubId: string) {
         "platform_admin_save_tournament_sporting_rules",
         {
           target_club_id: clubId,
-        target_id: id,
+          target_id: id,
           payload: {
             match_format: rules.matchFormat,
             single_game_points: rules.singleGamePoints,
@@ -621,6 +624,27 @@ export function createPlatformTournamentAdminService(clubId: string) {
         },
       );
       if (error) fail(error, "Impossible d’enregistrer les règles sportives.");
+    },
+
+    async getNetworkSpecialty(id: string): Promise<string> {
+      const { data, error } = await supabase.rpc(
+        "platform_admin_get_tournament_network_specialty",
+        { target_club_id: clubId, target_id: id },
+      );
+      if (error) fail(error, "Impossible de charger la spécialité.");
+      return String(data ?? "");
+    },
+
+    async setNetworkSpecialty(id: string, specialty: string): Promise<void> {
+      const { error } = await supabase.rpc(
+        "platform_admin_set_tournament_network_specialty",
+        {
+          target_club_id: clubId,
+          target_id: id,
+          target_specialty: specialty,
+        },
+      );
+      if (error) fail(error, "Impossible de modifier la spécialité.");
     },
 
     async transition(id: string, status: TournamentStatus): Promise<void> {
