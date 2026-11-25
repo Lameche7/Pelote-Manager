@@ -134,7 +134,8 @@ export function AdminTournamentResultsPage({
 } = {}) {
   const [params] = useSearchParams();
   const requestedMatchId = scopedMatchId ?? params.get("match");
-  const requestedClubId = scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
+  const requestedClubId =
+    scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const [unprogrammed, setUnprogrammed] = useState<
     UnprogrammedTournamentMatch[]
   >([]);
