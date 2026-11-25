@@ -127,10 +127,9 @@ function VerifiedLocalClub({
           .select("id,slug")
           .eq("id", clubId)
           .single();
-        if (active)
-          setVerified(
-            !error && data?.id === clubId && data.slug === visualClubSlug,
-          );
+        const matches =
+          !error && data?.id === clubId && data.slug === visualClubSlug;
+        if (active) setVerified(matches);
       } catch {
         if (active) setVerified(false);
       }
@@ -153,7 +152,9 @@ function VerifiedLocalClub({
       </section>
     );
 
-  return <ClubAdminNavigation key={clubId} clubId={clubId} clubName={clubName} />;
+  return (
+    <ClubAdminNavigation key={clubId} clubId={clubId} clubName={clubName} />
+  );
 }
 
 function ClubAdminNavigation({
