@@ -12,6 +12,7 @@ import {
   notificationService,
 } from "@/features/notifications/services/notificationService";
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
+import { usePublicCalendarMode } from "@/features/reservations/services/publicCalendarMode";
 import { ClubLogo } from "@/shared/components/ClubLogo";
 import { PlatformClubSwitcher } from "@/features/platform/components/PlatformClubSwitcher";
 import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
@@ -38,6 +39,7 @@ export function MainLayout() {
   );
   const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
   const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
+  const { mode: calendarMode } = usePublicCalendarMode(clubSlug);
   const withClubPreview = (path: string) =>
     clubSlug ? `${path}${path.includes("?") ? "&" : "?"}club=${encodeURIComponent(clubSlug)}` : path;
   const layoutStyle: ClubLayoutStyle = {
@@ -183,9 +185,11 @@ export function MainLayout() {
           <NavLink className={navClassName} to={withClubPreview(ROUTES.home)}>
             Accueil
           </NavLink>
-          <NavLink className={navClassName} to={withClubPreview(ROUTES.reservations)}>
-            Réservations
-          </NavLink>
+          {(calendarMode === "reservations" || calendarMode === "planning") && (
+            <NavLink className={navClassName} to={withClubPreview(ROUTES.reservations)}>
+              {calendarMode === "planning" ? "Planning" : "Réservations"}
+            </NavLink>
+          )}
           {!isLoading && isAuthenticated && (
             <NavLink className={navClassName} to={withClubPreview(ROUTES.userSpace)}>
               Mon espace
