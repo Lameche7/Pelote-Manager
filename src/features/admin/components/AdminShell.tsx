@@ -31,9 +31,8 @@ export function AdminShell() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const requestedClubId = params.get("adminClubId") ?? "";
-  const visualClubSlug = params.get("club");
-  // Prevent all legacy implicit-club admin reads for a foreign context.
-  if (visualClubSlug || requestedClubId) {
+  // Explicit business IDs still cannot mount legacy routes.
+  if (requestedClubId) {
     return (
       <section className="simple-page" role="status">
         <h1>Administration inter-clubs en préparation</h1>
@@ -47,7 +46,7 @@ export function AdminShell() {
   }
   return (
     <AdminAccessProvider key={requestedClubId}>
-      <AdminShellContent />
+      <AdminShellContent key={params.get("club") ?? ""} />
     </AdminAccessProvider>
   );
 }
@@ -94,11 +93,67 @@ function AdminShellContent() {
   }
 
   return (
-    <ClubAdminNavigation
+    <VerifiedLocalClub
       key={access.clubId}
       clubId={access.clubId}
       clubName={access.clubName}
     />
+  );
+}
+
+function VerifiedLocalClub({
+  clubId,
+  clubName,
+}: {
+  clubId: string;
+  clubName: string;
+}) {
+  const location = useLocation();
+  const visualClubSlug = new URLSearchParams(location.search).get("club");
+  const [verified, setVerified] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!visualClubSlug) return;
+    let active = true;
+    void (async () => {
+      try {
+        const current = await supabase.rpc("admin_current_club_id");
+        if (current.error || current.data !== clubId) {
+          if (active) setVerified(false);
+          return;
+        }
+        const { data, error } = await supabase
+          .from("clubs")
+          .select("id,slug")
+          .eq("id", clubId)
+          .single();
+        const matches =
+          !error && data?.id === clubId && data.slug === visualClubSlug;
+        if (active) setVerified(matches);
+      } catch {
+        if (active) setVerified(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [clubId, visualClubSlug]);
+
+  if (visualClubSlug && verified === null)
+    return <p role="status">Vérification du club sélectionné…</p>;
+  if (visualClubSlug && !verified)
+    return (
+      <section className="simple-page" role="status">
+        <h1>Administration inter-clubs en préparation</h1>
+        <p>
+          Ce club ne correspond pas à votre habilitation métier locale. Aucune
+          donnée administrative ne sera chargée.
+        </p>
+      </section>
+    );
+
+  return (
+    <ClubAdminNavigation key={clubId} clubId={clubId} clubName={clubName} />
   );
 }
 

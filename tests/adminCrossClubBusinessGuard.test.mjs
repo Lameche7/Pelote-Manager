@@ -12,10 +12,12 @@ const access = readFileSync(
 );
 
 test("cross-club access is guarded", () => {
-  assert.ok(shell.includes("if (visualClubSlug || requestedClubId) {"));
+  assert.ok(shell.includes("if (visualClubSlug && !verified)"));
   assert.ok(shell.includes("Administration inter-clubs en préparation"));
+  assert.ok(shell.includes("current.data !== clubId"));
+  assert.ok(shell.includes("data.slug === visualClubSlug"));
   assert.ok(
-    shell.indexOf("if (visualClubSlug || requestedClubId) {") <
+    shell.indexOf("if (visualClubSlug && !verified)") <
       shell.indexOf("<Outlet />"),
   );
   assert.ok(shell.includes('params.set("adminClubId", requestedClubId)'));
