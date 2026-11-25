@@ -55,7 +55,9 @@ export function AdminShell() {
 function AdminShellContent() {
   const { access, error, isLoading } = useAdminAccess();
   const location = useLocation();
-  const requestedClubId = new URLSearchParams(location.search).get("adminClubId");
+  const requestedClubId = new URLSearchParams(location.search).get(
+    "adminClubId",
+  );
 
   if (isLoading) return <p role="status">Chargement du Back Office…</p>;
   if (error)
@@ -109,7 +111,9 @@ function ClubAdminNavigation({
 }) {
   const { hasPermission } = useAdminAccess();
   const location = useLocation();
-  const requestedClubId = new URLSearchParams(location.search).get("adminClubId");
+  const requestedClubId = new URLSearchParams(location.search).get(
+    "adminClubId",
+  );
   const visualClubSlug = new URLSearchParams(location.search).get("club");
   const adminLink = (path: string) => {
     const params = new URLSearchParams();
@@ -129,7 +133,8 @@ function ClubAdminNavigation({
           target_club_id: clubId,
         });
         if (error) throw error;
-        const profile = data === null ? FULL_CLUB_MODULES : parseClubModules(data);
+        const profile =
+          data === null ? FULL_CLUB_MODULES : parseClubModules(data);
         if (!profile) throw new Error("Invalid module profile");
         if (active) setModules(profile);
       } catch {
@@ -144,9 +149,7 @@ function ClubAdminNavigation({
     setMobileNavigationOpen(false);
   }, [location.pathname]);
   if (failed)
-    return (
-      <p role="alert">Configuration des fonctionnalités indisponible.</p>
-    );
+    return <p role="alert">Configuration des fonctionnalités indisponible.</p>;
   if (!modules)
     return <p role="status">Chargement des fonctionnalités du club…</p>;
   const routeEnabled = (path: string) => isAdminRouteEnabled(path, modules);
