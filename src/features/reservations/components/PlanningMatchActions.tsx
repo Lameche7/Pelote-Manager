@@ -185,6 +185,7 @@ export function PlanningMatchActions({
       await adminTournamentUnprogrammedService.unprogram(
         current.matchId,
         "Déprogrammation administrateur depuis le planning",
+        clubId,
       );
       onUpdated();
     } catch (cause) {
