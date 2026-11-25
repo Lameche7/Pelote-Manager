@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { adminAccessService } from "@/features/admin/access/adminAccessService";
-import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
+import { AdminTournamentResultsPage } from "@/features/admin/tournaments/pages/AdminTournamentResultsPage";
+import { AdminTournamentReschedulePage } from "@/features/admin/tournaments/pages/AdminTournamentReschedulePage";
 import { supabase } from "@/infrastructure/supabase/client";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
 import { platformAdminLeaseService } from "@/features/platform/services/platformAdminLeaseService";
@@ -40,26 +40,18 @@ export function PlanningMatchActions({
   const [candidates, setCandidates] = useState<RefereeCandidate[] | null>(null);
   const [selectedReferee, setSelectedReferee] = useState("");
   const [adminClub, setAdminClub] = useState<string | null>(null);
-  const [memberAdminClub, setMemberAdminClub] = useState<string | null>(null);
+  const [adminPanel, setAdminPanel] = useState<"results" | "reports" | null>(null);
   const [platformAdmin, setPlatformAdmin] = useState(false);
   const [leaseVersion, setLeaseVersion] = useState(0);
   useEffect(() => {
     let active = true;
     setAdminClub(null);
-    setMemberAdminClub(null);
+    setAdminPanel(null);
     setPlatformAdmin(false);
     setCandidates(null);
     setSelectedReferee("");
     setContacts(null);
     if (isAuthenticated && clubId) {
-      void adminAccessService
-        .getAccessForClub(clubId)
-        .then((access) => {
-          if (!active || access.clubId !== clubId) return;
-          if (access.permissions.includes(ADMIN_PERMISSIONS.tournaments))
-            setMemberAdminClub(clubId);
-        })
-        .catch(() => undefined);
       void supabase.rpc("can_manage_tournament_planning_for_club", {
         target_club_id: clubId,
       }).then(({ data, error }) => {
@@ -282,18 +274,38 @@ export function PlanningMatchActions({
       {isAuthenticated && clubId && adminClub === clubId && competition && (
         <div className="reservation-slot-actions reservation-slot-actions--admin">
           <h3>Actions administrateur</h3>
-          {memberAdminClub === clubId && <><Link
+          <button
+            type="button"
             className="reservation-slot-actions__button"
-            to={url(ROUTES.adminTournamentResults, competition.matchId)}
+            onClick={() => setAdminPanel("results")}
           >
             Gérer le résultat
-          </Link>
-          <Link
+          </button>
+          <button
+            type="button"
             className="reservation-slot-actions__button"
-            to={url(ROUTES.adminTournamentReschedules, competition.matchId)}
+            onClick={() => setAdminPanel("reports")}
           >
             Gérer le report
-          </Link></>}
+          </button>
+          {adminPanel && (
+            <section aria-label="Gestion de la rencontre">
+              <button type="button" onClick={() => { setAdminPanel(null); onUpdated(); }}>
+                Fermer la gestion
+              </button>
+              {adminPanel === "results" ? (
+                <AdminTournamentResultsPage
+                  scopedClubId={clubId}
+                  scopedMatchId={competition.matchId}
+                />
+              ) : (
+                <AdminTournamentReschedulePage
+                  scopedClubId={clubId}
+                  scopedMatchId={competition.matchId}
+                />
+              )}
+            </section>
+          )}
           <button
             className="reservation-slot-actions__button"
             type="button"
