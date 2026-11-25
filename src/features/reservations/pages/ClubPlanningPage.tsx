@@ -209,7 +209,10 @@ export function ClubPlanningPage({ clubSlug }: { clubSlug: string | null }) {
             key={`${inspected.resourceId}-${inspected.startsAt}-${inspected.endsAt}`}
             slot={inspected}
             clubSlug={clubSlug}
-            clubId={resources.find((resource) => resource.id === inspected.resourceId)?.clubId ?? null}
+            clubId={
+              resources.find((resource) => resource.id === inspected.resourceId)
+                ?.clubId ?? null
+            }
             onUpdated={() => setRefreshVersion((value) => value + 1)}
           />
           <button type="button" onClick={() => setInspected(null)}>
