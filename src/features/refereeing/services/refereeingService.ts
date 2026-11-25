@@ -142,6 +142,35 @@ export const refereeingService = {
         getSupabaseErrorMessage(error, "Impossible d’affecter cet arbitre."),
       );
   },
+  async tournamentCandidates(clubId: string): Promise<RefereeCandidate[]> {
+    const { data, error } = await supabase.rpc(
+      "list_tournament_referee_candidates_for_club",
+      { target_club_id: clubId },
+    );
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible de charger les arbitres."),
+      );
+    return Array.isArray(data) ? (data as RefereeCandidate[]) : [];
+  },
+  async assignTournamentReferee(
+    clubId: string,
+    matchId: string,
+    profileId: string | null,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "admin_set_tournament_referee_for_club",
+      {
+        target_club_id: clubId,
+        target_match_id: matchId,
+        target_profile_id: profileId,
+      },
+    );
+    if (error)
+      throw new Error(
+        getSupabaseErrorMessage(error, "Impossible d’affecter cet arbitre."),
+      );
+  },
   async alertMembers(missingCount: number): Promise<void> {
     const body = `Attention : ${missingCount} partie${missingCount > 1 ? "s" : ""} à venir ${missingCount > 1 ? "sont" : "est"} encore sans arbitre. Consultez l’espace Arbitrage pour vous positionner.`;
     const { data: id, error: saveError } = await supabase.rpc(
