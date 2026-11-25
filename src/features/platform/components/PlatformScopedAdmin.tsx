@@ -15,6 +15,13 @@ import { ROUTES } from "@/shared/config";
 
 type Club = { id: string; name: string; slug: string };
 
+// One server lease per business identity: serialize lifecycle operations.
+let leaseQueue: Promise<void> = Promise.resolve();
+function queueLease(operation: () => Promise<void>) {
+  leaseQueue = leaseQueue.then(operation, operation).catch(() => undefined);
+  return leaseQueue;
+}
+
 export function PlatformScopedAdmin({ slug }: { slug: string }) {
   const location = useLocation();
   const [club, setClub] = useState<Club | null>(null);
@@ -25,7 +32,10 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
     let renewal: ReturnType<typeof setTimeout> | undefined;
     let expiry: ReturnType<typeof setTimeout> | undefined;
     let issued = false;
+    let closed = false;
     const close = () => {
+      if (closed) return;
+      closed = true;
       if (renewal) clearTimeout(renewal);
       if (expiry) clearTimeout(expiry);
       if (active) {
@@ -34,8 +44,9 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
         setError("Autorisation expirée ou accès inter-clubs refusé.");
       }
       active = false;
-      if (issued)
-        void platformAdminLeaseService.revoke().catch(() => undefined);
+      void queueLease(async () => {
+        if (issued) await platformAdminLeaseService.revoke();
+      });
     };
     const platform = platformSupabase;
     const listeners = [platform, supabase].map((client) =>
@@ -43,38 +54,37 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
         if (event === "SIGNED_OUT") close();
       }),
     );
-    const authorize = async (selected: Club) => {
-      try {
-        const lease = await platformAdminLeaseService.issue(selected.id);
-        issued = true;
-        if (!active) {
-          await platformAdminLeaseService.revoke().catch(() => undefined);
-          return;
-        }
-        const remaining =
-          lease.remainingMs - (performance.now() - lease.receivedAt);
-        if (!lease.enabled || remaining <= 0 || !Number.isFinite(remaining))
-          throw new Error("Invalid lease");
-        if (expiry) clearTimeout(expiry);
-        expiry = setTimeout(close, remaining);
-        const { data, error } = await supabase.rpc(
-          "platform_admin_get_club_modules",
-          { target_club_id: selected.id },
-        );
-        if (error) throw error;
-        const profile = parseClubModules(data ?? FULL_CLUB_MODULES);
-        if (!profile) throw new Error("Invalid modules");
+    const authorize = (selected: Club) =>
+      queueLease(async () => {
         if (!active) return;
-        setClub(selected);
-        setModules(profile);
-        renewal = setTimeout(
-          () => void authorize(selected),
-          Math.max(0, remaining - 60_000),
-        );
-      } catch {
-        close();
-      }
-    };
+        try {
+          const lease = await platformAdminLeaseService.issue(selected.id);
+          issued = true;
+          if (!active) return;
+          const remaining =
+            lease.remainingMs - (performance.now() - lease.receivedAt);
+          if (!lease.enabled || remaining <= 0 || !Number.isFinite(remaining))
+            throw new Error("Invalid lease");
+          if (expiry) clearTimeout(expiry);
+          expiry = setTimeout(close, remaining);
+          const { data, error } = await supabase.rpc(
+            "platform_admin_get_club_modules",
+            { target_club_id: selected.id },
+          );
+          if (error) throw error;
+          const profile = parseClubModules(data ?? FULL_CLUB_MODULES);
+          if (!profile) throw new Error("Invalid modules");
+          if (!active) return;
+          setClub(selected);
+          setModules(profile);
+          renewal = setTimeout(
+            () => void authorize(selected),
+            Math.max(1_000, remaining - 60_000),
+          );
+        } catch {
+          close();
+        }
+      });
     void (async () => {
       try {
         if (!platform) throw new Error("Platform unavailable");
@@ -95,9 +105,7 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
     })();
     return () => {
       close();
-      listeners.forEach((listener) =>
-        listener?.data.subscription.unsubscribe(),
-      );
+      listeners.forEach((listener) => listener?.data.subscription.unsubscribe());
     };
   }, [slug]);
 
