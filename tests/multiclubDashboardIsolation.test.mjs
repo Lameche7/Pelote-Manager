@@ -87,13 +87,13 @@ test("la navigation admin conserve le club visuel sans l’utiliser comme permis
 });
 
 test("un aperçu visuel étranger bloque les données administratives implicites", () => {
-  assert.match(shell, /if \(visualClubSlug \|\| requestedClubId\)/);
+  assert.match(shell, /if \(visualClubSlug && !verified\)/);
   assert.match(shell, /Administration inter-clubs en préparation/);
   assert.match(shell, /if \(requestedClubId\) \{/);
   assert.ok(
-    shell.indexOf("if (visualClubSlug || requestedClubId) {") <
-      shell.indexOf("<AdminAccessProvider"),
-    "Le blocage inter-clubs doit précéder le chargement des accès métier",
+    shell.indexOf("if (visualClubSlug && !verified)") <
+      shell.indexOf("<ClubAdminNavigation key={clubId}"),
+    "Le blocage inter-clubs doit précéder le montage des routes métier",
   );
 });
 
