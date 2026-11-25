@@ -107,7 +107,8 @@ export function PlatformBusinessClubAccessPanel() {
         await platformAdminLeaseService.revoke().catch(() => undefined);
         return;
       }
-      const remaining = Date.parse(lease.expiresAt ?? "") - Date.now();
+      const remaining =
+        lease.remainingMs - (performance.now() - lease.receivedAt);
       if (!Number.isFinite(remaining) || remaining <= 0) {
         throw new Error("Autorisation expirée.");
       }
