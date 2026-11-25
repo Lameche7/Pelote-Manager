@@ -13,7 +13,7 @@ import {
   type AdminTournamentResultMatch,
   type AdminTournamentResultsWorkspace,
 } from "@/features/admin/tournaments/services/tournamentResultsAdminService";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ROUTES } from "@/shared/config/routes";
 import {
   adminTournamentUnprogrammedService,
@@ -126,6 +126,8 @@ const sortMatches = (
   });
 
 export function AdminTournamentResultsPage() {
+  const [params] = useSearchParams();
+  const requestedMatchId = params.get("match");
   const [unprogrammed, setUnprogrammed] = useState<
     UnprogrammedTournamentMatch[]
   >([]);
@@ -186,6 +188,17 @@ export function AdminTournamentResultsPage() {
       )
       .finally(() => setLoading(false));
   }, [load]);
+
+  useEffect(() => {
+    if (!requestedMatchId) return;
+    const workspace = workspaces.find((item) =>
+      item.matches.some((match) => match.id === requestedMatchId),
+    );
+    if (!workspace) return;
+    setSelectedId(workspace.id);
+    setView("all");
+    setEditingMatchId(requestedMatchId);
+  }, [requestedMatchId, workspaces]);
 
   const selected = useMemo(
     () => workspaces.find((workspace) => workspace.id === selectedId) ?? null,
