@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminAccessService } from "@/features/admin/access/adminAccessService";
 import { ADMIN_PERMISSIONS } from "@/features/admin/config/adminPermissions";
+import { loadAdminCalendarMatchContacts, type MatchContact } from "../services/adminCalendarMatchContactsService";
 import { adminTournamentUnprogrammedService } from "@/features/admin/tournaments/services/adminTournamentUnprogrammedService";
 import { ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
@@ -24,13 +25,19 @@ export function PlanningMatchActions({
   const { isAuthenticated } = useAuth();
   const [identity, setIdentity] = useState<Awaited<ReturnType<typeof resolveCalendarPlayerActions>>>(null);
   const [competition, setCompetition] = useState<Awaited<ReturnType<typeof resolveCalendarCompetition>>>(null);
+  const [contacts, setContacts] = useState<MatchContact[] | null>(null);
+  const [contactClub, setContactClub] = useState<string | null>(null);
   const [adminClub, setAdminClub] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     setAdminClub(null);
+    setContactClub(null);
+    setContacts(null);
     if (isAuthenticated && clubId) {
       void adminAccessService.getAccessForClub(clubId).then((access) => {
-        if (active && access.clubId === clubId && access.permissions.includes(ADMIN_PERMISSIONS.tournaments)) setAdminClub(clubId);
+        if (!active || access.clubId !== clubId) return;
+        if (access.permissions.includes(ADMIN_PERMISSIONS.tournaments)) setAdminClub(clubId);
+        if (access.permissions.includes(ADMIN_PERMISSIONS.reservations)) setContactClub(clubId);
       }).catch(() => { if (active) setAdminClub(null); });
     }
     return () => { active = false; };
@@ -88,6 +95,18 @@ export function PlanningMatchActions({
       setBusy(false);
     }
   };
+  const openContacts = async () => {
+    if (!isAuthenticated || !clubId || contactClub !== clubId || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      setContacts(await loadAdminCalendarMatchContacts(slot));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Contacts indisponibles.");
+    } finally {
+      setBusy(false);
+    }
+  };
   const unprogram = async () => {
     if (!isAuthenticated || !clubId || adminClub !== clubId || !competition || busy) return;
     if (!window.confirm("Déprogrammer cette partie de tournoi ?")) return;
@@ -120,6 +139,15 @@ export function PlanningMatchActions({
           <Link className="reservation-slot-actions__button" to={url(ROUTES.adminTournamentResults, competition.matchId)}>Gérer le résultat</Link>
           <Link className="reservation-slot-actions__button" to={url(ROUTES.adminTournamentReschedules, competition.matchId)}>Gérer le report</Link>
           <button className="reservation-slot-actions__button" type="button" disabled={busy || Boolean(slot.resultDisplay)} onClick={() => void unprogram()}>Déprogrammer la partie</button>
+        </div>
+      )}
+      {isAuthenticated && clubId && contactClub === clubId && competition && (
+        <div className="reservation-slot-actions">
+          <button className="reservation-slot-actions__button" type="button" disabled={busy} onClick={() => void openContacts()}>Contacter les joueurs</button>
+          {contacts?.map((contact, index) => (
+            <p key={`${contact.team}-${index}`}>{contact.name} : {contact.phone ? <a href={`tel:${contact.phone.replace(/[^+0-9]/g, "")}`}>{contact.phone}</a> : "Numéro non renseigné"}</p>
+          ))}
+          {contacts?.length === 0 && <p>Aucun joueur identifié.</p>}
         </div>
       )}
       {identity?.actions.submitResult && (
