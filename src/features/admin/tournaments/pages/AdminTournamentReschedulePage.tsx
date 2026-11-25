@@ -81,7 +81,8 @@ export function AdminTournamentReschedulePage({
   scopedMatchId?: string;
 } = {}) {
   const [params] = useSearchParams();
-  const clubId = scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
+  const clubId =
+    scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const [requests, setRequests] = useState<AdminTournamentRescheduleRequest[]>(
     [],
   );
