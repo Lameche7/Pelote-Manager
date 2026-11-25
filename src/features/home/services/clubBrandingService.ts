@@ -9,6 +9,10 @@ export type ClubBranding = {
   secondaryColor: string;
   accentColor: string;
   neutralColor: string;
+  foundedYear: string;
+  tagline: string;
+  presentationTitle: string;
+  presentationText: string;
 };
 
 type ClubBrandingRow = {
@@ -19,6 +23,10 @@ type ClubBrandingRow = {
   secondary_color?: unknown;
   accent_color?: unknown;
   neutral_color?: unknown;
+  founded_year?: unknown;
+  tagline?: unknown;
+  presentation_title?: unknown;
+  presentation_text?: unknown;
 };
 
 const fallback: ClubBranding = {
@@ -29,6 +37,10 @@ const fallback: ClubBranding = {
   secondaryColor: "#1E5AA8",
   accentColor: "#B22525",
   neutralColor: "#6B7280",
+  foundedYear: "",
+  tagline: "",
+  presentationTitle: "",
+  presentationText: "",
 };
 
 const foreignFallback: ClubBranding = {
@@ -91,6 +103,10 @@ export const clubBrandingService = {
       secondaryColor: value(row.secondary_color, defaults.secondaryColor),
       accentColor: value(row.accent_color, defaults.accentColor),
       neutralColor: value(row.neutral_color, defaults.neutralColor),
+      foundedYear: value(row.founded_year, ""),
+      tagline: value(row.tagline, ""),
+      presentationTitle: value(row.presentation_title, ""),
+      presentationText: value(row.presentation_text, ""),
     };
   },
 };
