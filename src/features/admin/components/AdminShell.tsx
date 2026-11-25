@@ -133,8 +133,7 @@ function ClubAdminNavigation({
           target_club_id: clubId,
         });
         if (error) throw error;
-        const profile =
-          data === null ? FULL_CLUB_MODULES : parseClubModules(data);
+        const profile = parseClubModules(data ?? FULL_CLUB_MODULES);
         if (!profile) throw new Error("Invalid module profile");
         if (active) setModules(profile);
       } catch {
@@ -276,7 +275,9 @@ function ClubAdminNavigation({
         {routeEnabled(location.pathname) ? (
           <Outlet />
         ) : (
-          <p role="alert">Cette fonctionnalité n’est pas activée pour ce club.</p>
+          <p role="alert">
+            Cette fonctionnalité n’est pas activée pour ce club.
+          </p>
         )}
       </main>
     </div>
