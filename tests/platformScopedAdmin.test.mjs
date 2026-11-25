@@ -32,3 +32,8 @@ test("scoped admin renews only through the server and closes on sign out", () =>
   assert.match(scoped, /platformAdminLeaseService\.revoke\(\)/);
   assert.match(scoped, /leaseQueue\.then\(operation, operation\)/);
 });
+
+test("club module editing remains outside the club back office", () => {
+  assert.doesNotMatch(scoped, /PlatformClubModulesEditor/);
+  assert.doesNotMatch(scoped, /ROUTES\.adminSettings/);
+});

@@ -4,7 +4,6 @@ import { platformSupabase } from "@/infrastructure/platform/platformClient";
 import { supabase } from "@/infrastructure/supabase/client";
 import { PlatformTournamentsPage } from "@/features/admin/tournaments/pages/AdminTournamentsPage";
 import { PlatformClubInformationEditor } from "@/features/admin/club/pages/PlatformClubInformationEditor";
-import { PlatformClubModulesEditor } from "./PlatformClubModulesEditor";
 import { platformAdminLeaseService } from "../services/platformAdminLeaseService";
 import {
   FULL_CLUB_MODULES,
@@ -127,7 +126,6 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
   const links = [
     { to: ROUTES.admin, label: "Tableau de bord" },
     { to: ROUTES.adminClubInformation, label: "Informations du club" },
-    { to: ROUTES.adminSettings, label: "Fonctionnalités" },
     ...(modules.tournaments
       ? [{ to: ROUTES.adminTournaments, label: "Tournois" }]
       : []),
@@ -159,8 +157,6 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
           <PlatformTournamentsPage clubId={club.id} />
         ) : path === ROUTES.adminClubInformation ? (
           <PlatformClubInformationEditor clubId={club.id} />
-        ) : path === ROUTES.adminSettings ? (
-          <PlatformClubModulesEditor clubId={club.id} />
         ) : (
           <section className="simple-page">
             <h1>Administration de {club.name}</h1>
