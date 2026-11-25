@@ -157,9 +157,7 @@ export function AdminTournamentResultsPage() {
   const load = useCallback(async () => {
     const [loaded, waiting] = await Promise.all([
       tournamentResultsAdminService.getWorkspace(requestedClubId),
-      requestedClubId
-        ? Promise.resolve([] as UnprogrammedTournamentMatch[])
-        : adminTournamentUnprogrammedService.list(),
+      adminTournamentUnprogrammedService.list(requestedClubId),
     ]);
     setUnprogrammed(waiting);
     const rankingEntries = await Promise.all(
