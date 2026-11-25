@@ -14,7 +14,7 @@ import {
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
 import { usePublicCalendarMode } from "@/features/reservations/services/publicCalendarMode";
 import { PlatformClubSwitcher } from "@/features/platform/components/PlatformClubSwitcher";
-import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
+import { APP_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./MainLayout.css";
 
@@ -246,9 +246,7 @@ export function MainLayout() {
           <div>
             <strong>{branding.name}</strong>
             <span>
-              {clubSlug ? "" : CLUB_CONFIG.foundedYear
-                ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
-                : CLUB_CONFIG.tagline}
+              {[branding.foundedYear ? `Depuis ${branding.foundedYear}` : "", branding.tagline].filter(Boolean).join(" – ")}
             </span>
           </div>
         </div>
