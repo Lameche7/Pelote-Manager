@@ -171,14 +171,28 @@ const teamPayload = (draft: AdminTournamentTeamDraft) => ({
 });
 
 export const adminTournamentTeamService = {
-  async get(tournamentId: string): Promise<AdminTournamentTeamsPayload> {
+  async get(
+    tournamentId: string,
+    clubId?: string,
+  ): Promise<AdminTournamentTeamsPayload> {
     const [teamsResponse, availabilityResponse] = await Promise.all([
-      supabase.rpc("admin_list_tournament_teams_v3", {
-        target_tournament_id: tournamentId,
-      }),
       supabase.rpc(
-        "admin_get_tournament_dated_availability_with_finals_minimum",
-        { target_tournament_id: tournamentId },
+        clubId
+          ? "admin_list_tournament_teams_v3_for_club"
+          : "admin_list_tournament_teams_v3",
+        {
+          target_tournament_id: tournamentId,
+          ...(clubId ? { target_club_id: clubId } : {}),
+        },
+      ),
+      supabase.rpc(
+        clubId
+          ? "admin_get_tournament_dated_availability_with_finals_minimum_for_club"
+          : "admin_get_tournament_dated_availability_with_finals_minimum",
+        {
+          target_tournament_id: tournamentId,
+          ...(clubId ? { target_club_id: clubId } : {}),
+        },
       ),
     ]);
 
@@ -279,11 +293,15 @@ export const adminTournamentTeamService = {
     tournamentId: string,
     query: string,
     excludedTeamId: string | null,
+    clubId?: string,
   ): Promise<TournamentMemberSuggestion[]> {
     if (query.trim().length < 2) return [];
     const { data, error } = await supabase.rpc(
-      "admin_search_tournament_members",
+      clubId
+        ? "admin_search_tournament_members_for_club"
+        : "admin_search_tournament_members",
       {
+        ...(clubId ? { target_club_id: clubId } : {}),
         target_tournament_id: tournamentId,
         search_text: query,
         excluded_team_id: excludedTeamId,
@@ -295,10 +313,16 @@ export const adminTournamentTeamService = {
 
   async getDatedAvailability(
     teamId: string,
+    clubId?: string,
   ): Promise<TournamentAvailabilitySlot[]> {
     const { data, error } = await supabase.rpc(
-      "admin_get_tournament_team_dated_availability",
-      { target_team_id: teamId },
+      clubId
+        ? "admin_get_tournament_team_dated_availability_for_club"
+        : "admin_get_tournament_team_dated_availability",
+      {
+        target_team_id: teamId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) {
       fail(error, "Impossible de charger les créneaux de l’équipe.");
@@ -311,10 +335,14 @@ export const adminTournamentTeamService = {
     tournamentId: string,
     teamId: string | null,
     draft: AdminTournamentTeamDraft,
+    clubId?: string,
   ): Promise<TeamSaveResult> {
     const { data, error } = await supabase.rpc(
-      "admin_save_tournament_team_v5",
+      clubId
+        ? "admin_save_tournament_team_v5_for_club"
+        : "admin_save_tournament_team_v5",
       {
+        ...(clubId ? { target_club_id: clubId } : {}),
         target_tournament_id: tournamentId,
         target_team_id: teamId,
         payload: teamPayload(draft),
@@ -333,7 +361,11 @@ export const adminTournamentTeamService = {
     role: TournamentTeamPlayer["role"],
     player: TournamentTeamPlayer,
     reason: string,
+    clubId?: string,
   ): Promise<PlayerReplacementResult> {
+    if (clubId) {
+      throw new Error("Le remplacement inter-clubs est encore indisponible.");
+    }
     const { data, error } = await supabase.rpc(
       "admin_replace_tournament_player",
       {
@@ -361,10 +393,14 @@ export const adminTournamentTeamService = {
   async setStatus(
     teamId: string,
     status: TournamentTeamStatus,
+    clubId?: string,
   ): Promise<TeamMutationResult> {
     const { data, error } = await supabase.rpc(
-      "admin_set_tournament_team_status_v2",
+      clubId
+        ? "admin_set_tournament_team_status_v2_for_club"
+        : "admin_set_tournament_team_status_v2",
       {
+        ...(clubId ? { target_club_id: clubId } : {}),
         target_team_id: teamId,
         target_status: status,
       },
@@ -373,10 +409,19 @@ export const adminTournamentTeamService = {
     return mapMutationResult(data);
   },
 
-  async delete(teamId: string): Promise<TeamMutationResult> {
-    const { data, error } = await supabase.rpc("admin_delete_tournament_team", {
-      target_team_id: teamId,
-    });
+  async delete(
+    teamId: string,
+    clubId?: string,
+  ): Promise<TeamMutationResult> {
+    const { data, error } = await supabase.rpc(
+      clubId
+        ? "admin_delete_tournament_team_for_club"
+        : "admin_delete_tournament_team",
+      {
+        target_team_id: teamId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
+    );
     if (error) fail(error, "Impossible de supprimer l’équipe.");
     return mapMutationResult(data);
   },
