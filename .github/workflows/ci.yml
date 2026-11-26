@@ -271,3 +271,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save.draft.sql
       - name: Vérifier les permissions des fonctions de sauvegarde
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-denials.sql
+      - name: Installer le schéma historique des inscriptions
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-fixture.sql
+      - name: Vérifier les sauvegardes autorisées et le refus des licenciés étrangers au club
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-authorized.sql
