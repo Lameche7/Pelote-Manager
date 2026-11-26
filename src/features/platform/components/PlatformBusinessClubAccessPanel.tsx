@@ -47,15 +47,19 @@ export function PlatformBusinessClubAccessPanel() {
         }
         if (!active) return;
         const availableClubs: BusinessClub[] = data.clubs.filter(
-            (club: BusinessClub) =>
-              typeof club.id === "string" &&
-              /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(club.id) &&
-              typeof club.name === "string" &&
-              typeof club.slug === "string",
-          );
+          (club: BusinessClub) =>
+            typeof club.id === "string" &&
+            /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(club.id) &&
+            typeof club.name === "string" &&
+            typeof club.slug === "string",
+        );
         setClubs(availableClubs);
-        const requestedSlug = new URLSearchParams(window.location.search).get("club");
-        const requestedClub = availableClubs.find((club) => club.slug === requestedSlug);
+        const requestedSlug = new URLSearchParams(window.location.search).get(
+          "club",
+        );
+        const requestedClub = availableClubs.find(
+          (club) => club.slug === requestedSlug,
+        );
         if (requestedClub) {
           selectedClubId.current = requestedClub.id;
           setClubId(requestedClub.id);
