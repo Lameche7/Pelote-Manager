@@ -4,6 +4,8 @@ import { supabase } from "@/infrastructure/supabase/client";
 type PaymentSummary = {
   status: string;
   amount_cents: number;
+  received_cents: number;
+  remaining_cents: number;
   can_pay: boolean;
 };
 
@@ -40,6 +42,9 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
           typeof summary.status === "string" &&
           Number.isSafeInteger(summary.amount_cents) &&
           summary.amount_cents > 0 &&
+          Number.isSafeInteger(summary.received_cents) &&
+          Number.isSafeInteger(summary.remaining_cents) &&
+          summary.remaining_cents >= 0 &&
           typeof summary.can_pay === "boolean"
         )
           setPayment(summary);
@@ -77,16 +82,22 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
   };
 
   if (!payment) return null;
+  const euros = (cents: number) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    }).format(cents / 100);
   return (
     <section className="public-tournament-panel" aria-label="Règlement">
       <h3>Règlement de votre inscription</h3>
       <p>
-        {new Intl.NumberFormat("fr-FR", {
-          style: "currency",
-          currency: "EUR",
-        }).format(payment.amount_cents / 100)}
+        {euros(payment.amount_cents)}
         {" · "}
         {labels[payment.status] ?? "Vérification nécessaire"}
+      </p>
+      <p>
+        Déjà réglé : {euros(payment.received_cents)} · Reste à régler :{" "}
+        {euros(payment.remaining_cents)}
       </p>
       {error && <p role="alert">{error}</p>}
       {payment.can_pay && (
@@ -96,7 +107,9 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
           disabled={busy}
           onClick={() => void checkout()}
         >
-          {busy ? "Ouverture du paiement…" : "Régler mon inscription"}
+          {busy
+            ? "Ouverture du paiement…"
+            : `Régler ${euros(payment.remaining_cents)}`}
         </button>
       )}
       <button
