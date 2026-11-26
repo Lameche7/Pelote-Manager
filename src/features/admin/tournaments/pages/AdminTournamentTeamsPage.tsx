@@ -1,4 +1,7 @@
-import { AdminTournamentPaymentCell, type TeamPayment } from "@/features/admin/tournaments/components/AdminTournamentPaymentCell";
+import {
+  AdminTournamentPaymentCell,
+  type TeamPayment,
+} from "@/features/admin/tournaments/components/AdminTournamentPaymentCell";
 import { supabase } from "@/infrastructure/supabase/client";
 import { AdminTournamentFinancePanel } from "@/features/admin/tournaments/components/AdminTournamentFinancePanel";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -123,6 +126,7 @@ export function AdminTournamentTeamsPage({
   const [payments, setPayments] = useState<TeamPayment[]>([]);
   const [paymentRevision, setPaymentRevision] = useState(0);
   const [paymentError, setPaymentError] = useState("");
+  const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [data, setData] = useState<AdminTournamentTeamsPayload | null>(null);
   const [editingId, setEditingId] = useState<string | null | undefined>(
     undefined,
@@ -282,6 +286,7 @@ export function AdminTournamentTeamsPage({
 
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
+    setUnpaidOnly(false);
     setData(null);
     setPayments([]);
     setLoading(true);
@@ -836,6 +841,17 @@ export function AdminTournamentTeamsPage({
                 )}
               </header>
 
+              {scopedClubId && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={unpaidOnly}
+                    disabled={payments.length === 0 || Boolean(paymentError)}
+                    onChange={(event) => setUnpaidOnly(event.target.checked)}
+                  />{" "}
+                  Uniquement les équipes restant à régler
+                </label>
+              )}
               {paymentError && <p role="status">{paymentError}</p>}
               {data.teams.length === 0 ? (
                 <p>Aucune équipe inscrite pour ce tournoi.</p>
@@ -855,7 +871,13 @@ export function AdminTournamentTeamsPage({
                       </tr>
                     </thead>
                     {data.series.map((series) => {
-                      const seriesTeams = teamsBySeries.get(series.id) ?? [];
+                      const seriesTeams = (teamsBySeries.get(series.id) ?? []).filter(
+                        (team) =>
+                          !unpaidOnly ||
+                          ((team.status === "pending" ||
+                            team.status === "accepted") &&
+                            (paymentsByTeam.get(team.id)?.remaining_cents ?? 0) > 0),
+                      );
                       return (
                         <tbody
                           id={seriesAnchor(series.id)}
@@ -877,7 +899,9 @@ export function AdminTournamentTeamsPage({
                                 colSpan={scopedClubId ? 8 : 7}
                                 className="admin-tournament-team-table__empty"
                               >
-                                Aucune équipe dans cette série.
+                                {unpaidOnly
+                                  ? "Aucune équipe restant à régler."
+                                  : "Aucune équipe dans cette série."}
                               </td>
                             </tr>
                           ) : (
