@@ -16,6 +16,9 @@ declare
   profile_id_value uuid := '20000000-0000-0000-0000-000000000004';
   other_profile uuid := '20000000-0000-0000-0000-000000000003';
   result jsonb;
+  foreign_tournament uuid;
+  foreign_series uuid;
+  foreign_team uuid;
 begin
   t := public.platform_admin_create_tournament(c,jsonb_build_object(
     'season_id','70000000-0000-0000-0000-000000000002','name','CI accounts',
@@ -59,6 +62,35 @@ begin
   exception when invalid_parameter_value then null;
   end;
   update auth.users set email_confirmed_at=now() where id=profile_id_value;
+  -- Create a second participation in club A in the isolated fixture.
+  insert into public.tournaments(club_id,season_id,name,status,pool_starts_on,pool_ends_on,finals_starts_on,finals_ends_on,registration_opens_at,registration_closes_at)
+  values ('00000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000001','CI shared identity','preparation','2027-02-01','2027-02-28','2027-03-01','2027-03-07',now()+interval '1 day',now()+interval '2 days')
+  returning id into foreign_tournament;
+  insert into public.tournament_series(tournament_id,name,capacity,display_order,enabled)
+  values(foreign_tournament,'CI shared series',8,0,true) returning id into foreign_series;
+  insert into public.tournament_teams(tournament_id,series_id,status,contact_email)
+  values(foreign_tournament,foreign_series,'accepted','player-b@test.local') returning id into foreign_team;
+  insert into public.tournament_team_players(team_id,tournament_id,role,first_name,last_name,email,display_order,external_identity_id)
+  values(foreign_team,foreign_tournament,'front','Fixture','Participant','player-b@test.local',0,identity_id);
+  begin
+    perform public.admin_link_tournament_account_for_club(c,t,identity_id,profile_id_value);
+    raise exception 'Shared unresolved identity accepted' using errcode='XX000';
+  exception when insufficient_privilege then null;
+  end;
+  if exists(select 1 from public.tournament_external_player_identities where id=identity_id and profile_id is not null) then
+    raise exception 'Rejected shared identity link changed account';
+  end if;
+  begin
+    perform public.admin_list_tournament_account_audit_for_club(c,foreign_tournament);
+    raise exception 'Foreign tournament audit accepted' using errcode='XX000';
+  exception when no_data_found then null;
+  end;
+  begin
+    perform public.admin_search_tournament_account_candidates_for_club(c,foreign_tournament,identity_id,'Fixture');
+    raise exception 'Foreign tournament search accepted' using errcode='XX000';
+  exception when no_data_found then null;
+  end;
+  delete from public.tournament_team_players where team_id=foreign_team;
   result := public.admin_link_tournament_account_for_club(c,t,identity_id,profile_id_value);
   if result->>'linked' is distinct from 'true' then raise exception 'Link failed'; end if;
   result := public.admin_list_tournament_account_audit_for_club(c,t);
