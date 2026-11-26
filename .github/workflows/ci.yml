@@ -287,3 +287,5 @@ jobs:
           done
       - name: Vérifier les refus des fonctions de comptes joueurs
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-denials.sql
+      - name: Vérifier les rattachements de comptes autorisés et refusés
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-authorized.sql
