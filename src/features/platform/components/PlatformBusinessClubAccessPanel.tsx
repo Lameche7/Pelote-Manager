@@ -46,15 +46,20 @@ export function PlatformBusinessClubAccessPanel() {
           throw new Error("Catalogue métier indisponible.");
         }
         if (!active) return;
-        setClubs(
-          data.clubs.filter(
+        const availableClubs: BusinessClub[] = data.clubs.filter(
             (club: BusinessClub) =>
               typeof club.id === "string" &&
               /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(club.id) &&
               typeof club.name === "string" &&
               typeof club.slug === "string",
-          ),
-        );
+          );
+        setClubs(availableClubs);
+        const requestedSlug = new URLSearchParams(window.location.search).get("club");
+        const requestedClub = availableClubs.find((club) => club.slug === requestedSlug);
+        if (requestedClub) {
+          selectedClubId.current = requestedClub.id;
+          setClubId(requestedClub.id);
+        }
       } catch {
         if (active) setError("Impossible de vérifier les clubs métier.");
       } finally {
@@ -132,6 +137,7 @@ export function PlatformBusinessClubAccessPanel() {
 
   return (
     <section
+      id="business-club"
       className="platform-card"
       aria-label="Accès sécurisé aux clubs métier"
     >
