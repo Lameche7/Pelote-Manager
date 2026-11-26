@@ -358,3 +358,7 @@ jobs:
             if endpoint_count<>4 then raise exception 'Missing planning endpoints'; end if;
           end $check$;
           SQL
+      - name: Vérifier les préférences de paiement isolées par club
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-club-payment-policy.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-club-payment-policy-cases.sql
