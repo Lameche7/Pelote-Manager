@@ -23,8 +23,13 @@ type Row = {
 };
 
 export const clubPaymentPolicyService = {
-  async get(): Promise<ClubPaymentPolicy> {
-    const { data, error } = await supabase.rpc("admin_get_club_payment_policy");
+  async get(clubId?: string): Promise<ClubPaymentPolicy> {
+    const { data, error } = await supabase.rpc(
+      clubId
+        ? "admin_get_club_payment_policy_for_club"
+        : "admin_get_club_payment_policy",
+      clubId ? { target_club_id: clubId } : undefined,
+    );
     if (error) throw error;
     const row = (data as Row[] | null)?.[0];
     if (!row) throw new Error("Paramètres de paiement indisponibles.");
@@ -39,17 +44,23 @@ export const clubPaymentPolicyService = {
       tournamentHoldHours: row.tournament_hold_hours,
     };
   },
-  async save(value: ClubPaymentPolicy): Promise<void> {
-    const { error } = await supabase.rpc("admin_save_club_payment_policy", {
-      new_helloasso_enabled: value.helloassoEnabled,
-      new_cash_enabled: value.cashEnabled,
-      new_cheque_enabled: value.chequeEnabled,
-      new_bank_transfer_enabled: value.bankTransferEnabled,
-      new_licence_confirmation: value.licenceConfirmation,
-      new_tournament_confirmation: value.tournamentConfirmation,
-      new_tournament_hold_place: value.tournamentHoldPlace,
-      new_tournament_hold_hours: value.tournamentHoldHours,
-    });
+  async save(value: ClubPaymentPolicy, clubId?: string): Promise<void> {
+    const { error } = await supabase.rpc(
+      clubId
+        ? "admin_save_club_payment_policy_for_club"
+        : "admin_save_club_payment_policy",
+      {
+        ...(clubId ? { target_club_id: clubId } : {}),
+        new_helloasso_enabled: value.helloassoEnabled,
+        new_cash_enabled: value.cashEnabled,
+        new_cheque_enabled: value.chequeEnabled,
+        new_bank_transfer_enabled: value.bankTransferEnabled,
+        new_licence_confirmation: value.licenceConfirmation,
+        new_tournament_confirmation: value.tournamentConfirmation,
+        new_tournament_hold_place: value.tournamentHoldPlace,
+        new_tournament_hold_hours: value.tournamentHoldHours,
+      },
+    );
     if (error) throw error;
   },
 };
