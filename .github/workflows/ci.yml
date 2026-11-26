@@ -285,6 +285,8 @@ jobs:
           for file in tests/sql/scoped-tournament-account-audit.draft.sql tests/sql/scoped-tournament-account-search.draft.sql tests/sql/scoped-tournament-account-link.draft.sql; do
             psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f "$file" || exit 1
           done
+      - name: Activer les droits d’exécution contrôlés des comptes joueurs
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-grants.sql
       - name: Vérifier les refus des fonctions de comptes joueurs
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-denials.sql
       - name: Vérifier les rattachements de comptes autorisés et refusés
