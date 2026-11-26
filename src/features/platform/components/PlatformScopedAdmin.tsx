@@ -167,7 +167,8 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
             clubName={club.name}
             modules={modules}
           />
-        ) : path === ROUTES.adminTournamentReschedules && modules.tournaments ? (
+        ) : path === ROUTES.adminTournamentReschedules &&
+          modules.tournaments ? (
           <AdminTournamentReschedulePage key={club.id} scopedClubId={club.id} />
         ) : path === ROUTES.adminTournamentResults && modules.tournaments ? (
           <AdminTournamentResultsPage key={club.id} scopedClubId={club.id} />
