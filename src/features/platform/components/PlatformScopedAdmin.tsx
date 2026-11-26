@@ -161,7 +161,12 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
       </aside>
       <main className="admin-shell__content">
         {path === ROUTES.admin ? (
-          <PlatformScopedDashboard key={club.id} clubId={club.id} clubName={club.name} modules={modules} />
+          <PlatformScopedDashboard
+            key={club.id}
+            clubId={club.id}
+            clubName={club.name}
+            modules={modules}
+          />
         ) : path === ROUTES.adminTournamentReschedules && modules.tournaments ? (
           <AdminTournamentReschedulePage key={club.id} scopedClubId={club.id} />
         ) : path === ROUTES.adminTournamentResults && modules.tournaments ? (
