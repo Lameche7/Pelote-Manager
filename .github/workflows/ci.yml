@@ -279,3 +279,11 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-pools-fixture.sql
       - name: Vérifier les sauvegardes autorisées et le refus des licenciés étrangers au club
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-authorized.sql
+      - name: Installer les identités fictives et les fonctions de comptes joueurs
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-fixture.sql
+          for file in tests/sql/scoped-tournament-account-audit.draft.sql tests/sql/scoped-tournament-account-search.draft.sql tests/sql/scoped-tournament-account-link.draft.sql; do
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f "$file" || exit 1
+          done
+      - name: Vérifier les refus des fonctions de comptes joueurs
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-denials.sql
