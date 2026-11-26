@@ -38,14 +38,46 @@ export function PlatformScopedDashboard({
 
   const metrics = dashboard?.metrics;
   const cards = [
-    { label: "Parties de tournoi jouées", value: metrics?.tournamentMatches, enabled: modules.tournaments },
-    { label: "Réservations du jour", value: metrics?.reservationsToday, enabled: modules.reservations },
-    { label: "Réservations sur 7 jours", value: metrics?.reservationsNext7Days, enabled: modules.reservations },
-    { label: "Parties de championnat jouées", value: metrics?.championshipMatches, enabled: modules.championships },
-    { label: "Licenciés actifs", value: metrics?.activeMembers, enabled: modules.licences },
-    { label: "Comptes rattachés", value: metrics?.linkedAccounts, enabled: modules.licences },
-    { label: "Alertes de paiement des réservations", value: metrics?.paymentAlerts, enabled: modules.payments && modules.reservations },
-    { label: "Messages actifs", value: metrics?.activeCommunications, enabled: modules.communication },
+    {
+      label: "Parties de tournoi jouées",
+      value: metrics?.tournamentMatches,
+      enabled: modules.tournaments,
+    },
+    {
+      label: "Réservations du jour",
+      value: metrics?.reservationsToday,
+      enabled: modules.reservations,
+    },
+    {
+      label: "Réservations sur 7 jours",
+      value: metrics?.reservationsNext7Days,
+      enabled: modules.reservations,
+    },
+    {
+      label: "Parties de championnat jouées",
+      value: metrics?.championshipMatches,
+      enabled: modules.championships,
+    },
+    {
+      label: "Licenciés actifs",
+      value: metrics?.activeMembers,
+      enabled: modules.licences,
+    },
+    {
+      label: "Comptes rattachés",
+      value: metrics?.linkedAccounts,
+      enabled: modules.licences,
+    },
+    {
+      label: "Alertes de paiement des réservations",
+      value: metrics?.paymentAlerts,
+      enabled: modules.payments && modules.reservations,
+    },
+    {
+      label: "Messages actifs",
+      value: metrics?.activeCommunications,
+      enabled: modules.communication,
+    },
   ].filter((card) => card.enabled);
 
   return (
@@ -66,7 +98,10 @@ export function PlatformScopedDashboard({
       ) : (
         <div className="admin-dashboard__metrics">
           {cards.map((card) => (
-            <article className="admin-card admin-dashboard__metric" key={card.label}>
+            <article
+              className="admin-card admin-dashboard__metric"
+              key={card.label}
+            >
               <span>{card.label}</span>
               <strong>{card.value}</strong>
             </article>
