@@ -63,8 +63,8 @@ begin
   end;
   update auth.users set email_confirmed_at=now() where id=profile_id_value;
   -- Create a second participation in club A in the isolated fixture.
-  insert into public.tournaments(club_id,season_id,name,status,pool_starts_on,pool_ends_on,finals_starts_on,finals_ends_on,registration_opens_at,registration_closes_at)
-  values ('00000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000001','CI shared identity','preparation','2027-02-01','2027-02-28','2027-03-01','2027-03-07',now()+interval '1 day',now()+interval '2 days')
+  insert into public.tournaments(club_id,season_id,name,status,starts_on,ends_on,pool_starts_on,pool_ends_on,finals_starts_on,finals_ends_on,registration_opens_at,registration_closes_at)
+  values ('00000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000001','CI shared identity','preparation','2027-02-01','2027-03-07','2027-02-01','2027-02-28','2027-03-01','2027-03-07',now()+interval '1 day',now()+interval '2 days')
   returning id into foreign_tournament;
   insert into public.tournament_series(tournament_id,name,capacity,display_order,enabled)
   values(foreign_tournament,'CI shared series',8,0,true) returning id into foreign_series;
