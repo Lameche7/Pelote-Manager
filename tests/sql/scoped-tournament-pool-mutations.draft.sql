@@ -78,7 +78,7 @@ begin
       or target_display_order is null
       or target_display_order < 0
       or target_size is null
-      or target_size not in (4, 5, 6)
+      or target_size not in (3, 4, 5, 6)
       or jsonb_typeof(coalesce(pool_item->'teams', '[]'::jsonb)) <> 'array'
       or jsonb_array_length(coalesce(pool_item->'teams', '[]'::jsonb)) <> target_size then
       raise exception 'Tournament pool payload is invalid' using errcode = '22023';
