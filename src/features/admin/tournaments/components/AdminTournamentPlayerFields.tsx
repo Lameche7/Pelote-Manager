@@ -8,6 +8,7 @@ import "./AdminTournamentPlayerFields.css";
 
 type Props = {
   tournamentId: string;
+  scopedClubId?: string;
   teamId: string | null;
   player: TournamentTeamPlayer;
   excludedMemberId?: string | null;
@@ -22,6 +23,7 @@ const playerLabel = (player: TournamentTeamPlayer) =>
 
 export function AdminTournamentPlayerFields({
   tournamentId,
+  scopedClubId,
   teamId,
   player,
   excludedMemberId,
@@ -56,7 +58,7 @@ export function AdminTournamentPlayerFields({
     const timer = window.setTimeout(() => {
       setSearching(true);
       adminTournamentTeamService
-        .searchMembers(tournamentId, query, teamId)
+        .searchMembers(tournamentId, query, teamId, scopedClubId)
         .then((results) => {
           if (!active) return;
           setSuggestions(
@@ -82,7 +84,15 @@ export function AdminTournamentPlayerFields({
       active = false;
       window.clearTimeout(timer);
     };
-  }, [excludedMemberId, onError, player.memberId, query, teamId, tournamentId]);
+  }, [
+    excludedMemberId,
+    onError,
+    player.memberId,
+    query,
+    scopedClubId,
+    teamId,
+    tournamentId,
+  ]);
 
   const selectMember = (member: TournamentMemberSuggestion) => {
     onChange({
