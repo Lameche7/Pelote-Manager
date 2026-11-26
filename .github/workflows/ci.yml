@@ -366,6 +366,10 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-payments.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-payments-cases.sql
+      - name: Installer les tarifs individuels et les règlements manuels
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-price.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-manual-receipts.draft.sql
       - name: Vérifier la préparation sécurisée des paiements Stripe
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-checkout.draft.sql
@@ -378,3 +382,5 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-player-status.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-player-status-cases.sql
+      - name: Installer le suivi financier multi-club
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-admin-status.draft.sql
