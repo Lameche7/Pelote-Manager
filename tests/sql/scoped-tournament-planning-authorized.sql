@@ -24,6 +24,8 @@ declare
   w jsonb;
   shared_identity uuid;
   first_team uuid;
+  event_id_value uuid;
+  series_id_value uuid;
 begin
   insert into public.reservable_resources(id,club_id,name) values(r2,c,'CI second court');
   for j in 1..2 loop
@@ -61,6 +63,37 @@ begin
     join (select play_date,starts_at,ends_at,row_number() over(order by play_date,starts_at) n from public.tournament_generated_slots(t) where phase='pools') g on g.n=m.n;
     if j=1 then p1:=w; else p2:=w; end if;
   end loop;
+  select id into series_id_value from public.tournament_series where tournament_id=t1;
+  insert into public.events(club_id,color) values(c,'#2563EB') returning id into event_id_value;
+  insert into public.tournament_match_events(match_id,event_id)
+    values((p1->'planning'->0->>'match_id')::uuid,event_id_value);
+  perform public.admin_update_tournament_series_colors_for_club(c,t1,jsonb_build_array(jsonb_build_object('id',series_id_value,'color','#AABBCC')));
+  if (select color from public.tournament_series where id=series_id_value) is distinct from '#AABBCC'
+    or (select color from public.events where id=event_id_value) is distinct from '#AABBCC' then
+    raise exception 'Series color not synchronized';
+  end if;
+  begin
+    perform public.admin_update_tournament_series_colors_for_club(c,t2,jsonb_build_array(jsonb_build_object('id',series_id_value,'color','#112233')));
+    raise exception 'Foreign series color accepted' using errcode='XX000';
+  exception when invalid_parameter_value then null; end;
+  perform set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000004',true);
+  begin
+    perform public.admin_get_tournament_planning_workspace_for_club(c,t1);
+    raise exception 'Unauthorized planning read' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.admin_prepare_tournament_matches_for_club(c,t1);
+    raise exception 'Unauthorized preparation' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.admin_save_tournament_planning_for_club(c,t1,p1);
+    raise exception 'Unauthorized save' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.admin_update_tournament_series_colors_for_club(c,t1,'[]'::jsonb);
+    raise exception 'Unauthorized color update' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  perform set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
   perform public.admin_save_tournament_planning_for_club(c,t1,p1);
   begin
     perform public.admin_save_tournament_planning_for_club(c,t2,p2);
