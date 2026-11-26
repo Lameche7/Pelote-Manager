@@ -55,7 +55,10 @@ test("les écrans publics lisent l’identité du club sélectionné", () => {
     assert.match(source, /branding\.logoUrl/);
     assert.match(source, /branding\.foundedYear/);
     assert.match(source, /branding\.tagline/);
-    assert.doesNotMatch(source, /CLUB_CONFIG\.(foundedYear|tagline|description)/);
+    assert.doesNotMatch(
+      source,
+      /CLUB_CONFIG\.(foundedYear|tagline|description)/,
+    );
   }
   assert.match(homePage, /branding\.presentationTitle/);
   assert.match(homePage, /branding\.presentationText/);
