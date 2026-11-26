@@ -1,3 +1,4 @@
+import { TournamentStripePayment } from "@/features/tournaments/components/TournamentStripePayment";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TournamentRankings } from "@/features/tournaments/components/TournamentRankings";
@@ -388,6 +389,13 @@ export function TournamentDetailPage() {
                   Se connecter pour inscrire une équipe
                 </Link>
               </div>
+            )}
+
+            {isAuthenticated && registration && (
+              <TournamentStripePayment
+                key={registration.id}
+                teamId={registration.id}
+              />
             )}
 
             {canEditRegistration && (
