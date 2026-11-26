@@ -374,3 +374,7 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-webhook.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-webhook-cases.sql
+      - name: Vérifier la confidentialité du règlement joueur
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-player-status.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-player-status-cases.sql
