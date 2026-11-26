@@ -273,5 +273,7 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-denials.sql
       - name: Installer le schéma historique des inscriptions
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-fixture.sql
+      - name: Installer le moteur de génération des créneaux
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-slots-fixture.sql
       - name: Vérifier les sauvegardes autorisées et le refus des licenciés étrangers au club
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-authorized.sql
