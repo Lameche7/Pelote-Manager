@@ -129,6 +129,9 @@ begin
       using errcode = 'P0001';
   end if;
 
+  -- Serialize scoped planning saves for this club, including different tournaments.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('pilotoki:club-planning:' || target_club_id::text, 0));
+
   if jsonb_typeof(planning_values) <> 'array' then
     raise exception 'Tournament planning payload is invalid' using errcode = '22023';
   end if;
@@ -213,6 +216,47 @@ begin
         and availability.ends_at = target_ends_at
     ) then
       raise exception 'Tournament planning violates team availability'
+        using errcode = 'P0001';
+    end if;
+
+    -- Compare actual intervals, not only identical start times.
+    if exists (
+      select 1
+      from public.tournament_match_planning as other_plan
+      join public.tournaments as other_tournament on other_tournament.id = other_plan.tournament_id
+      join public.tournament_matches as other_match on other_match.id = other_plan.match_id
+        and other_match.tournament_id = other_tournament.id
+      where other_tournament.club_id = target_club_id
+        and other_tournament.id <> target_tournament.id
+        and other_tournament.status not in ('cancelled', 'archived')
+        and other_plan.play_date = target_play_date
+        and other_plan.starts_at < target_ends_at
+        and other_plan.ends_at > target_starts_at
+        and (
+          other_plan.resource_id = target_resource_id
+          or exists (
+            select 1
+            from public.tournament_team_players as current_player
+            join public.tournament_team_players as other_player
+              on other_player.tournament_id = other_tournament.id
+             and other_player.team_id in (other_match.team_a_id, other_match.team_b_id)
+            left join public.tournament_external_player_identities as current_identity
+              on current_identity.id = current_player.external_identity_id
+             and current_identity.status = 'verified'
+            left join public.tournament_external_player_identities as other_identity
+              on other_identity.id = other_player.external_identity_id
+             and other_identity.status = 'verified'
+            where current_player.tournament_id = target_tournament.id
+              and current_player.team_id in (target_match.team_a_id, target_match.team_b_id)
+              and (
+                current_player.member_id = other_player.member_id
+                or current_player.external_identity_id = other_player.external_identity_id
+                or current_identity.profile_id = other_identity.profile_id
+              )
+          )
+        )
+    ) then
+      raise exception 'Tournament planning conflicts with another tournament'
         using errcode = 'P0001';
     end if;
 
