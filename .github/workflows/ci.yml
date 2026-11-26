@@ -326,3 +326,8 @@ jobs:
           SQL
       - name: Vérifier les poules de trois équipes et les refus inter-clubs
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-authorized.sql
+      - name: Installer et vérifier les fonctions de programmation multi-club
+        run: |
+          for file in tests/sql/scoped-tournament-planning-fixture.sql tests/sql/scoped-tournament-planning-workspace.draft.sql tests/sql/scoped-tournament-planning-mutations.draft.sql tests/sql/scoped-tournament-planning-authorized.sql; do
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f "$file" || exit 1
+          done
