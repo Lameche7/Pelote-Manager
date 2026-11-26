@@ -13,6 +13,7 @@ import {
 import { ROUTES } from "@/shared/config";
 import { PlatformScopedDashboard } from "./PlatformScopedDashboard";
 import { AdminTournamentPoolsPage } from "@/features/admin/tournaments/pages/AdminTournamentPoolsPage";
+import { AdminTournamentPlanningPage } from "@/features/admin/tournaments/pages/AdminTournamentPlanningPage";
 import { AdminTournamentAccountsPage } from "@/features/admin/tournaments/pages/AdminTournamentAccountsPage";
 import { AdminTournamentTeamsPage } from "@/features/admin/tournaments/pages/AdminTournamentTeamsPage";
 import { AdminTournamentResultsPage } from "@/features/admin/tournaments/pages/AdminTournamentResultsPage";
@@ -138,6 +139,7 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
           { to: ROUTES.adminTournamentTeams, label: "Équipes & inscriptions" },
           { to: ROUTES.adminTournamentAccounts, label: "Comptes joueurs" },
           { to: ROUTES.adminTournamentPools, label: "Poules" },
+          { to: ROUTES.adminTournamentPlanning, label: "Programmation" },
           { to: ROUTES.adminTournamentReschedules, label: "Reports" },
           { to: ROUTES.adminTournamentResults, label: "Résultats" },
         ]
@@ -173,6 +175,8 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
             clubName={club.name}
             modules={modules}
           />
+        ) : path === ROUTES.adminTournamentPlanning && modules.tournaments ? (
+          <AdminTournamentPlanningPage key={club.id} scopedClubId={club.id} />
         ) : path === ROUTES.adminTournamentPools && modules.tournaments ? (
           <AdminTournamentPoolsPage key={club.id} scopedClubId={club.id} />
         ) : path === ROUTES.adminTournamentAccounts && modules.tournaments ? (
