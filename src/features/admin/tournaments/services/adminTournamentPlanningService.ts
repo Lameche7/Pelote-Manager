@@ -73,6 +73,8 @@ const knownErrors: Record<string, string> = {
     "Au moins une rencontre est placée hors des disponibilités communes des deux équipes.",
   "Tournament planning contains a conflict":
     "Le planning contient un conflit de terrain ou une équipe est prévue deux fois au même horaire.",
+  "Tournament planning conflicts with another tournament":
+    "Un terrain ou un joueur est déjà occupé par un autre tournoi. Actualisez le planning avant de réessayer.",
   "Tournament matches have not been prepared":
     "Les rencontres doivent être préparées avant d’enregistrer le planning.",
   "Every tournament match must be scheduled exactly once":
