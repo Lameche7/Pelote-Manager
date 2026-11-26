@@ -62,7 +62,7 @@ begin
   select coalesce((select sum(amount_cents) from public.tournament_manual_receipts where team_id=target_team_id),0)
     +coalesce((select sum(amount_cents) from public.tournament_stripe_payment_attempts
        where team_id=target_team_id and livemode and status='paid'),0) into total_received;
-  if total_received+received_cents>coalesce(tournament_row.registration_fee_cents,0)
+  if total_received+received_cents>team_row.registration_price_cents
     then raise exception 'Receipt exceeds outstanding registration fee' using errcode='22023'; end if;
   insert into public.tournament_manual_receipts(club_id,tournament_id,team_id,method,amount_cents,recorded_by,request_id)
     values(target_club_id,target_tournament_id,target_team_id,payment_method,received_cents,auth.uid(),operation_id)
