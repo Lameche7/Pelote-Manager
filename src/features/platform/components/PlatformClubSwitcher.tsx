@@ -214,7 +214,9 @@ export function PlatformClubSwitcher() {
           : "Liaison des deux sessions non vérifiée"}
       </small>
       {identityLinked && clubs.some((club) => club.slug === selectedSlug) && (
-        <Link to={`${ROUTES.platform}?club=${encodeURIComponent(selectedSlug)}#business-club`}>
+        <Link
+          to={`${ROUTES.platform}?club=${encodeURIComponent(selectedSlug)}#business-club`}
+        >
           Administrer le club sélectionné
         </Link>
       )}
