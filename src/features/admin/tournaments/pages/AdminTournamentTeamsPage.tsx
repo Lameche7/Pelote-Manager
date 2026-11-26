@@ -4,6 +4,7 @@ import { AdminErrebotAvailabilityImport } from "@/features/admin/tournaments/com
 import { adminTournamentTeamService } from "@/features/admin/tournaments/services/adminTournamentTeamService";
 import {
   tournamentAdminService,
+  createPlatformTournamentAdminService,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
 import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
@@ -109,7 +110,11 @@ const availabilitySummary = (
 
 const seriesAnchor = (seriesId: string) => `tournament-series-${seriesId}`;
 
-export function AdminTournamentTeamsPage() {
+export function AdminTournamentTeamsPage({
+  scopedClubId,
+}: {
+  scopedClubId?: string;
+} = {}) {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [data, setData] = useState<AdminTournamentTeamsPayload | null>(null);
@@ -131,19 +136,29 @@ export function AdminTournamentTeamsPage() {
   >(null);
   const [replacementReason, setReplacementReason] = useState("Blessure");
 
+  const tournamentService = useMemo(
+    () =>
+      scopedClubId
+        ? createPlatformTournamentAdminService(scopedClubId)
+        : tournamentAdminService,
+    [scopedClubId],
+  );
+
   const loadTeams = async (tournamentId: string) => {
     if (!tournamentId) {
       setData(null);
       return;
     }
-    setData(await adminTournamentTeamService.get(tournamentId));
+    setData(
+      await adminTournamentTeamService.get(tournamentId, scopedClubId),
+    );
   };
 
   const reloadSelected = async () => {
     if (!selectedId) return;
     const [items, payload] = await Promise.all([
-      tournamentAdminService.list(),
-      adminTournamentTeamService.get(selectedId),
+      tournamentService.list(),
+      adminTournamentTeamService.get(selectedId, scopedClubId),
     ]);
     setTournaments(items);
     setData(payload);
@@ -151,7 +166,7 @@ export function AdminTournamentTeamsPage() {
 
   useEffect(() => {
     let active = true;
-    tournamentAdminService
+    tournamentService
       .list()
       .then(async (items) => {
         if (!active) return;
@@ -169,7 +184,10 @@ export function AdminTournamentTeamsPage() {
           ) ?? items[0];
         if (preferred) {
           setSelectedId(preferred.id);
-          const payload = await adminTournamentTeamService.get(preferred.id);
+          const payload = await adminTournamentTeamService.get(
+            preferred.id,
+            scopedClubId,
+          );
           if (active) setData(payload);
         }
       })
@@ -188,7 +206,7 @@ export function AdminTournamentTeamsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [tournamentService, scopedClubId]);
 
   const editable = data
     ? adminEditableStatuses.has(data.tournament.status)
@@ -196,7 +214,7 @@ export function AdminTournamentTeamsPage() {
   const poolsAlreadyBuilt = data
     ? poolStatuses.has(data.tournament.status)
     : false;
-  const replacementAllowed = data
+  const replacementAllowed = !scopedClubId && data
     ? !["completed", "archived", "cancelled"].includes(data.tournament.status)
     : false;
 
@@ -264,7 +282,10 @@ export function AdminTournamentTeamsPage() {
     setMessage("");
     try {
       const availabilitySlots =
-        await adminTournamentTeamService.getDatedAvailability(team.id);
+        await adminTournamentTeamService.getDatedAvailability(
+          team.id,
+          scopedClubId,
+        );
       setEditingId(team.id);
       setDraft(teamToDraft(team, availabilitySlots));
       window.setTimeout(() => {
@@ -310,6 +331,7 @@ export function AdminTournamentTeamsPage() {
         selectedId,
         editingId ?? null,
         draft,
+        scopedClubId,
       );
       await reloadSelected();
       setDraft(null);
@@ -344,6 +366,7 @@ export function AdminTournamentTeamsPage() {
       const result = await adminTournamentTeamService.setStatus(
         team.id,
         status,
+        scopedClubId,
       );
       await reloadSelected();
       const baseMessage = `Équipe ${teamStatusLabels[status].toLowerCase()}.`;
@@ -381,7 +404,10 @@ export function AdminTournamentTeamsPage() {
     setError("");
     setMessage("");
     try {
-      const result = await adminTournamentTeamService.delete(team.id);
+      const result = await adminTournamentTeamService.delete(
+        team.id,
+        scopedClubId,
+      );
       await reloadSelected();
       if (editingId === team.id) {
         setDraft(null);
@@ -455,6 +481,7 @@ export function AdminTournamentTeamsPage() {
         replacementTarget.player.role,
         replacementPlayer,
         replacementReason,
+        scopedClubId,
       );
       await reloadSelected();
       setReplacementTarget(null);
@@ -569,7 +596,7 @@ export function AdminTournamentTeamsPage() {
             )}
           </div>
 
-          {data && (
+          {data && !scopedClubId && (
             <AdminErrebotAvailabilityImport
               tournamentId={selectedId}
               onImported={reloadSelected}
@@ -693,6 +720,7 @@ export function AdminTournamentTeamsPage() {
                   <AdminTournamentPlayerFields
                     key={player.role}
                     tournamentId={selectedId}
+                    scopedClubId={scopedClubId}
                     teamId={editingId ?? null}
                     player={player}
                     excludedMemberId={
