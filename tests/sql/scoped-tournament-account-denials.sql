@@ -11,8 +11,8 @@ begin
   loop
     n := n+1;
     if has_function_privilege('anon',f.oid,'EXECUTE')
-       or has_function_privilege('authenticated',f.oid,'EXECUTE') then
-      raise exception 'Unreviewed account RPC exposed: %',f.proname;
+       or not has_function_privilege('authenticated',f.oid,'EXECUTE') then
+      raise exception 'Unexpected account RPC privilege: %',f.proname;
     end if;
   end loop;
   if n<>3 then raise exception 'Expected three private account RPCs'; end if;
