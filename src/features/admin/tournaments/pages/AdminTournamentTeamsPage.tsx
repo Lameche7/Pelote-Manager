@@ -1,3 +1,5 @@
+import { AdminTournamentPaymentCell, type TeamPayment } from "@/features/admin/tournaments/components/AdminTournamentPaymentCell";
+import { supabase } from "@/infrastructure/supabase/client";
 import { AdminTournamentFinancePanel } from "@/features/admin/tournaments/components/AdminTournamentFinancePanel";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AdminTournamentPlayerFields } from "@/features/admin/tournaments/components/AdminTournamentPlayerFields";
@@ -118,6 +120,9 @@ export function AdminTournamentTeamsPage({
 } = {}) {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [payments, setPayments] = useState<TeamPayment[]>([]);
+  const [paymentRevision, setPaymentRevision] = useState(0);
+  const [paymentError, setPaymentError] = useState("");
   const [data, setData] = useState<AdminTournamentTeamsPayload | null>(null);
   const [editingId, setEditingId] = useState<string | null | undefined>(
     undefined,
@@ -207,6 +212,34 @@ export function AdminTournamentTeamsPage({
     };
   }, [tournamentService, scopedClubId]);
 
+  useEffect(() => {
+    let active = true;
+    setPayments([]);
+    setPaymentError("");
+    if (!scopedClubId || !selectedId || loading) return;
+    void supabase
+      .rpc("admin_list_tournament_stripe_payments_for_club", {
+        target_club_id: scopedClubId,
+        target_tournament_id: selectedId,
+      })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error || !Array.isArray(data)) {
+          setPaymentError("Règlements indisponibles.");
+          return;
+        }
+        setPayments(data as TeamPayment[]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [scopedClubId, selectedId, loading, data, paymentRevision]);
+
+  const paymentsByTeam = useMemo(
+    () => new Map(payments.map((payment) => [payment.team_id, payment])),
+    [payments],
+  );
+
   const editable = data
     ? adminEditableStatuses.has(data.tournament.status)
     : false;
@@ -249,6 +282,8 @@ export function AdminTournamentTeamsPage({
 
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
+    setData(null);
+    setPayments([]);
     setLoading(true);
     setError("");
     setMessage("");
@@ -566,7 +601,7 @@ export function AdminTournamentTeamsPage({
               Tournoi
               <select
                 value={selectedId}
-                disabled={saving || loadingDraft}
+                disabled={saving || loadingDraft || loading}
                 onChange={(event) => void chooseTournament(event.target.value)}
               >
                 {tournaments.map((tournament) => (
@@ -598,7 +633,7 @@ export function AdminTournamentTeamsPage({
 
           {data && scopedClubId && !loading && (
             <AdminTournamentFinancePanel
-              key={`${scopedClubId}:${selectedId}`}
+              key={`${scopedClubId}:${selectedId}:${paymentRevision}`}
               clubId={scopedClubId}
               tournamentId={selectedId}
               revision={data}
@@ -791,8 +826,17 @@ export function AdminTournamentTeamsPage({
                   <h2>Tableau des équipes</h2>
                 </div>
                 <small>{data.teams.length} équipe(s) au total</small>
+                {scopedClubId && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentRevision((value) => value + 1)}
+                  >
+                    Actualiser les règlements
+                  </button>
+                )}
               </header>
 
+              {paymentError && <p role="status">{paymentError}</p>}
               {data.teams.length === 0 ? (
                 <p>Aucune équipe inscrite pour ce tournoi.</p>
               ) : (
@@ -806,6 +850,7 @@ export function AdminTournamentTeamsPage({
                         <th scope="col">Disponibilités</th>
                         <th scope="col">Origine</th>
                         <th scope="col">Statut</th>
+                        {scopedClubId && <th scope="col">Règlement</th>}
                         <th scope="col">Actions</th>
                       </tr>
                     </thead>
@@ -818,7 +863,7 @@ export function AdminTournamentTeamsPage({
                           className="admin-tournament-team-table__series"
                         >
                           <tr className="admin-tournament-team-table__series-heading">
-                            <th colSpan={7} scope="rowgroup">
+                            <th colSpan={scopedClubId ? 8 : 7} scope="rowgroup">
                               <strong>{series.name}</strong>
                               <span>
                                 {series.acceptedCount}/{series.capacity}{" "}
@@ -829,7 +874,7 @@ export function AdminTournamentTeamsPage({
                           {seriesTeams.length === 0 ? (
                             <tr>
                               <td
-                                colSpan={7}
+                                colSpan={scopedClubId ? 8 : 7}
                                 className="admin-tournament-team-table__empty"
                               >
                                 Aucune équipe dans cette série.
@@ -902,6 +947,28 @@ export function AdminTournamentTeamsPage({
                                     {teamStatusLabels[team.status]}
                                   </span>
                                 </td>
+                                {scopedClubId && (
+                                  <td>
+                                    {paymentsByTeam.has(team.id) ? (
+                                      <AdminTournamentPaymentCell
+                                        key={`${selectedId}:${team.id}`}
+                                        clubId={scopedClubId}
+                                        tournamentId={selectedId}
+                                        payment={paymentsByTeam.get(team.id)!}
+                                        disabled={
+                                          saving || loadingDraft || loading
+                                        }
+                                        onRecorded={() =>
+                                          setPaymentRevision(
+                                            (value) => value + 1,
+                                          )
+                                        }
+                                      />
+                                    ) : (
+                                      <small>—</small>
+                                    )}
+                                  </td>
+                                )}
                                 <td>
                                   <div className="admin-tournament-team-table__actions">
                                     {editable &&
