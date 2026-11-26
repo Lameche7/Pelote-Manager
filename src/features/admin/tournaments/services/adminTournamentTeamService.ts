@@ -364,7 +364,9 @@ export const adminTournamentTeamService = {
     clubId?: string,
   ): Promise<PlayerReplacementResult> {
     if (clubId) {
-      throw new Error("Le remplacement inter-clubs est encore indisponible.");
+      throw new Error(
+        "Le remplacement inter-clubs est encore indisponible.",
+      );
     }
     const { data, error } = await supabase.rpc(
       "admin_replace_tournament_player",
@@ -409,10 +411,7 @@ export const adminTournamentTeamService = {
     return mapMutationResult(data);
   },
 
-  async delete(
-    teamId: string,
-    clubId?: string,
-  ): Promise<TeamMutationResult> {
+  async delete(teamId: string, clubId?: string): Promise<TeamMutationResult> {
     const { data, error } = await supabase.rpc(
       clubId
         ? "admin_delete_tournament_team_for_club"
