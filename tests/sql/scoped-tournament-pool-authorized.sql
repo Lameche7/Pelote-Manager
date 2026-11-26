@@ -40,6 +40,25 @@ begin
   insert into public.tournament_teams(tournament_id,series_id,status,contact_email)
   values(foreign_tournament,foreign_series,'accepted','player-b@test.local') returning id into foreign_team;
 
+  -- A signed-in user without the club permission or a lease must be denied.
+  perform set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000004',true);
+  begin
+    perform public.admin_get_tournament_pool_workspace_v2_for_club(c,t);
+    raise exception 'Unauthorized workspace read' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.admin_save_tournament_pools_for_club(c,t,'{}'::jsonb);
+    raise exception 'Unauthorized pool save' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.admin_validate_tournament_pools_for_club(c,t);
+    raise exception 'Unauthorized pool validation' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.admin_reopen_tournament_pools_for_club(c,t);
+    raise exception 'Unauthorized pool reopening' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  perform set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
   update public.tournaments set status='registrations_closed' where id=t;
   for i in 1..3 loop
     insert into public.tournament_teams(tournament_id,series_id,status,contact_email)
