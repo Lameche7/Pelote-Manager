@@ -24,7 +24,7 @@ begin
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'team_id',t.id,'status',coalesce(p.status,'unpaid'),
-      'amount_cents',coalesce(p.amount_cents,tournament_row.registration_fee_cents),
+      'amount_cents',t.registration_price_cents,
       'paid_at',p.paid_at
     ) order by t.id)
     from public.tournament_teams t
@@ -77,11 +77,12 @@ begin
     select s.id,s.name,
       case when s.enabled then s.capacity else 0 end as capacity,
       count(t.id) filter(where t.status in ('pending','accepted')) as registered,
-      count(t.id) filter(where t.status in ('pending','accepted') and coalesce(r.received,0)>=fee and fee>0) as paid_teams,
-      count(t.id) filter(where t.status in ('pending','accepted') and fee>coalesce(r.received,0)) as unpaid_teams,
+      count(t.id) filter(where t.status in ('pending','accepted') and coalesce(r.received,0)>=t.registration_price_cents and t.registration_price_cents>0) as paid_teams,
+      count(t.id) filter(where t.status in ('pending','accepted') and t.registration_price_cents>coalesce(r.received,0)) as unpaid_teams,
+      coalesce(sum(t.registration_price_cents) filter(where t.status in ('pending','accepted')),0)::bigint as expected,
       coalesce(sum(r.received),0)::bigint as received,
       coalesce(sum(r.received) filter(where t.status in ('pending','accepted')),0)::bigint as active_received,
-      coalesce(sum(greatest(fee-coalesce(r.received,0),0)) filter(where t.status in ('pending','accepted')),0)::bigint as outstanding
+      coalesce(sum(greatest(t.registration_price_cents-coalesce(r.received,0),0)) filter(where t.status in ('pending','accepted')),0)::bigint as outstanding
     from public.tournament_series s
     left join public.tournament_teams t on t.series_id=s.id and t.tournament_id=s.tournament_id
     left join receipts r on r.team_id=t.id
@@ -96,13 +97,13 @@ begin
     'unpaid_teams',coalesce(sum(unpaid_teams),0),
     'received_cents',coalesce(sum(received),0),
     'active_received_cents',coalesce(sum(active_received),0),
-    'expected_cents',coalesce(sum(registered),0)*fee,
-    'maximum_cents',coalesce(sum(capacity),0)*fee,
+    'expected_cents',coalesce(sum(expected),0),
+    'maximum_cents',coalesce(sum(expected+greatest(capacity-registered,0)*fee),0),
     'outstanding_cents',coalesce(sum(outstanding),0),
     'series',coalesce(jsonb_agg(jsonb_build_object(
       'id',id,'name',name,'registered_teams',registered,'capacity',capacity,
-      'received_cents',received,'expected_cents',registered*fee,
-      'maximum_cents',capacity::bigint*fee,'outstanding_cents',outstanding
+      'received_cents',received,'expected_cents',expected,
+      'maximum_cents',expected+greatest(capacity-registered,0)*fee,'outstanding_cents',outstanding
     ) order by name,id),'[]'::jsonb),
     'coverage','stripe_and_manual_confirmed'
   ) into result from series_totals;
