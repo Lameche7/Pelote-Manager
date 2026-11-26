@@ -43,3 +43,15 @@ alter table public.tournament_external_player_identities add column verified_by 
 alter table public.tournament_team_players add column external_identity_id uuid references public.tournament_external_player_identities(id) on delete set null;
 alter table public.tournament_external_player_identities enable row level security;
 revoke all on public.tournament_external_player_identities from public, anon, authenticated;
+
+-- Minimal auth/catalog dependencies for this isolated fixture; never install in production.
+create table auth.users (id uuid primary key references public.profiles(id), email_confirmed_at timestamptz);
+create or replace function public.normalize_member_identity(text)
+returns text language sql immutable as $$ select lower(btrim(coalesce($1,''))) $$;
+create or replace function public.profile_club_member_id(uuid,uuid)
+returns uuid language sql stable as $$
+ select m.id from public.club_members m join public.profiles p on p.id=$1
+ where m.club_id=$2 and m.is_active and (m.sport_player_id=p.sport_player_id or m.id=p.member_id)
+ limit 1
+$$;
+revoke all on function public.profile_club_member_id(uuid,uuid) from public, anon, authenticated;
