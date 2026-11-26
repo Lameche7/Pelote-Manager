@@ -5,6 +5,7 @@ import {
   type TournamentAccountCandidate,
 } from "@/features/admin/tournaments/services/adminTournamentAccountService";
 import {
+  createPlatformTournamentAdminService,
   tournamentAdminService,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
@@ -28,7 +29,8 @@ const statusLabel = (status: TournamentAccountAuditRow["status"]) => {
 };
 
 // prettier-ignore
-export function AdminTournamentAccountsPage() {
+export function AdminTournamentAccountsPage({ scopedClubId }: { scopedClubId?: string } = {}) {
+  const tournamentService = useMemo(() => scopedClubId ? createPlatformTournamentAdminService(scopedClubId) : tournamentAdminService, [scopedClubId]);
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [items, setItems] = useState<TournamentAccountAuditRow[]>([]);
@@ -49,7 +51,7 @@ export function AdminTournamentAccountsPage() {
     const requestId = ++auditRequestId.current;
     setLoading(true);
     try {
-      const audit = await adminTournamentAccountService.list(tournamentId);
+      const audit = await adminTournamentAccountService.list(tournamentId, scopedClubId);
       if (requestId !== auditRequestId.current) return false;
       setItems(audit);
       return true;
@@ -68,7 +70,7 @@ export function AdminTournamentAccountsPage() {
 
   useEffect(() => {
     let active = true;
-    tournamentAdminService
+    tournamentService
       .list()
       .then((list) => {
         if (!active) return;
@@ -97,10 +99,11 @@ export function AdminTournamentAccountsPage() {
       active = false;
       auditRequestId.current += 1;
     };
-  }, []);
+  }, [tournamentService]);
 
   const chooseTournament = async (tournamentId: string) => {
     setSelectedId(tournamentId);
+    setItems([]);
     setError("");
     setMessage("");
     setLinking(null);
@@ -140,6 +143,8 @@ export function AdminTournamentAccountsPage() {
       try {
         const result = await adminTournamentAccountService.searchCandidates(
           item.externalIdentityId,
+          "",
+          scopedClubId ? { clubId: scopedClubId, tournamentId: selectedId } : undefined,
         );
         setCandidates(result);
         setSelectedProfileId(result[0]?.id ?? "");
@@ -163,6 +168,7 @@ export function AdminTournamentAccountsPage() {
       const result = await adminTournamentAccountService.searchCandidates(
         linking.externalIdentityId,
         candidateSearch,
+        scopedClubId ? { clubId: scopedClubId, tournamentId: selectedId } : undefined,
       );
       setCandidates(result);
       setSelectedProfileId(result[0]?.id ?? "");
@@ -195,6 +201,7 @@ export function AdminTournamentAccountsPage() {
       await adminTournamentAccountService.link(
         linking.externalIdentityId,
         selectedProfileId,
+        scopedClubId ? { clubId: scopedClubId, tournamentId: selectedId } : undefined,
       );
       await loadAudit(selectedId);
       setMessage(
@@ -233,6 +240,7 @@ export function AdminTournamentAccountsPage() {
           Tournoi
           <select
             value={selectedId}
+            disabled={saving || searching || !!linking}
             onChange={(event) => void chooseTournament(event.target.value)}
           >
             {tournaments.map((tournament) => (
