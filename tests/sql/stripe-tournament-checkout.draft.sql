@@ -9,6 +9,7 @@ declare
   tournament_row public.tournaments%rowtype;
   connection_row public.club_stripe_connections%rowtype;
   attempt_row public.tournament_stripe_payment_attempts%rowtype;
+  remaining_cents integer;
 begin
   if target_actor_id is null or target_team_id is null or expected_livemode is null then
     raise exception 'Checkout parameters required' using errcode = '22023';
@@ -35,11 +36,20 @@ begin
     where team_id = team_row.id and livemode = expected_livemode
       and status in ('creating','open','processing','paid','disputed') for update;
   if not found then
+    remaining_cents := tournament_row.registration_fee_cents;
+    if expected_livemode then
+      select remaining_cents-coalesce(sum(amount_cents),0) into remaining_cents
+        from public.tournament_manual_receipts where team_id=team_row.id
+          and club_id=tournament_row.club_id and tournament_id=tournament_row.id;
+    end if;
+    if remaining_cents<=0 then
+      raise exception 'Registration already paid' using errcode='22023';
+    end if;
     insert into public.tournament_stripe_payment_attempts(
       club_id,tournament_id,team_id,stripe_account_id,livemode,amount_cents
     ) values (
       tournament_row.club_id,tournament_row.id,team_row.id,
-      connection_row.stripe_account_id,expected_livemode,tournament_row.registration_fee_cents
+      connection_row.stripe_account_id,expected_livemode,remaining_cents
     ) returning * into attempt_row;
   end if;
   return jsonb_build_object(
