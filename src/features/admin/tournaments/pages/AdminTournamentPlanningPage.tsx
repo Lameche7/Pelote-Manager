@@ -164,7 +164,10 @@ export function AdminTournamentPlanningPage({
 
   const loadWorkspace = async (tournamentId: string) => {
     await adminTournamentPlanningService.prepare(tournamentId, scopedClubId);
-    const loaded = await adminTournamentPlanningService.get(tournamentId, scopedClubId);
+    const loaded = await adminTournamentPlanningService.get(
+      tournamentId,
+      scopedClubId,
+    );
     hydrate(loaded);
   };
 
@@ -192,7 +195,10 @@ export function AdminTournamentPlanningPage({
           return;
         }
         setSelectedId(preferred.id);
-        await adminTournamentPlanningService.prepare(preferred.id, scopedClubId);
+        await adminTournamentPlanningService.prepare(
+          preferred.id,
+          scopedClubId,
+        );
         const loaded = await adminTournamentPlanningService.get(
           preferred.id,
           scopedClubId,
