@@ -1,3 +1,4 @@
+import { AdminTournamentFinancePanel } from "@/features/admin/tournaments/components/AdminTournamentFinancePanel";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AdminTournamentPlayerFields } from "@/features/admin/tournaments/components/AdminTournamentPlayerFields";
 import { AdminErrebotAvailabilityImport } from "@/features/admin/tournaments/components/AdminErrebotAvailabilityImport";
@@ -594,6 +595,15 @@ export function AdminTournamentTeamsPage({
               </div>
             )}
           </div>
+
+          {data && scopedClubId && !loading && (
+            <AdminTournamentFinancePanel
+              key={`${scopedClubId}:${selectedId}`}
+              clubId={scopedClubId}
+              tournamentId={selectedId}
+              revision={data}
+            />
+          )}
 
           {data && !scopedClubId && (
             <AdminErrebotAvailabilityImport
