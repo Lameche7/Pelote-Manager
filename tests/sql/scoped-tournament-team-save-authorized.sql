@@ -33,10 +33,9 @@ begin
   perform set_config('ci.team_series',series_id::text,true);
 end $check$;
 reset role;
--- This test exercises registration writes with no mandatory slots.
--- Generated slot and minimum enforcement require a separate scenario.
+-- Require two native pool slots and verify valid and invalid dated availability.
 update public.tournaments
-set minimum_availability_slots = 0, minimum_weekend_availability_slots = 0
+set minimum_availability_slots = 2, minimum_weekend_availability_slots = 0
 where id = current_setting('ci.team_tournament')::uuid;
 set local role authenticated;
 do $check$
@@ -50,7 +49,7 @@ declare
 begin
   p := jsonb_build_object('series_id',s,'status','accepted','comments','CI initial',
     'players','[{"role":"front","first_name":"Test","last_name":"Avant","club_name":"External A","email":"front@example.test","phone":"0600000001"},{"role":"back","first_name":"Test","last_name":"Arriere","club_name":"External B","email":"back@example.test","phone":"0600000002"}]'::jsonb,
-    'availability_slots','[]'::jsonb);
+    'availability_slots','[{"date":"2027-02-01","starts_at":"18:00","ends_at":"19:00"},{"date":"2027-02-01","starts_at":"19:00","ends_at":"20:00"}]'::jsonb);
   result := public.admin_save_tournament_team_v5_for_club(c,t,null,p);
   team_id := (result->>'team_id')::uuid;
   if team_id is null or result->>'pools_invalidated' is distinct from 'false' then
@@ -64,6 +63,24 @@ begin
     perform public.admin_save_tournament_team_v5_for_club(c,t,team_id,
       jsonb_set(p,'{players,0,member_id}','"40000000-0000-0000-0000-000000000003"'::jsonb));
     raise exception 'Foreign member accepted' using errcode='XX000';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform public.admin_save_tournament_team_v5_for_club(c,t,team_id,
+      p || '{"availability_slots":[]}'::jsonb);
+    raise exception 'Missing pool minimum accepted' using errcode='XX000';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform public.admin_save_tournament_team_v5_for_club(c,t,team_id,
+      jsonb_set(p,'{availability_slots,1}',p->'availability_slots'->0));
+    raise exception 'Duplicate slot accepted' using errcode='XX000';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform public.admin_save_tournament_team_v5_for_club(c,t,team_id,
+      jsonb_set(p,'{availability_slots,0,date}','"2027-02-02"'::jsonb));
+    raise exception 'Off-window slot accepted' using errcode='XX000';
   exception when invalid_parameter_value then null;
   end;
   perform set_config('ci.saved_team',team_id::text,true);
@@ -85,6 +102,9 @@ begin
   if not exists (select 1 from public.tournament_team_players where team_id=team_id_value
     and role='back' and club_name='External B' and email='back@example.test') then
     raise exception 'Player fields incorrect';
+  end if;
+  if (select count(*) from public.tournament_team_availability_slots where team_id=team_id_value) <> 2 then
+    raise exception 'Expected two preserved dated availability slots';
   end if;
   if (select count(*) from public.tournament_teams where tournament_id=t) <> 1 then
     raise exception 'Unexpected duplicate team';
