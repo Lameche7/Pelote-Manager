@@ -45,7 +45,7 @@ alter table public.tournament_external_player_identities enable row level securi
 revoke all on public.tournament_external_player_identities from public, anon, authenticated;
 
 -- Minimal auth/catalog dependencies for this isolated fixture; never install in production.
-create table auth.users (id uuid primary key references public.profiles(id), email_confirmed_at timestamptz);
+alter table auth.users add column if not exists email_confirmed_at timestamptz;
 create or replace function public.normalize_member_identity(text)
 returns text language sql immutable as $$ select lower(btrim(coalesce($1,''))) $$;
 create or replace function public.profile_club_member_id(uuid,uuid)
