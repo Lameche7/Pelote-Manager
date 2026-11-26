@@ -5,20 +5,34 @@ import {
 } from "@/features/admin/services/clubPaymentPolicyService";
 import "./AdminPaymentsPage.css";
 
-export function AdminPaymentSettingsPage() {
+export function AdminPaymentSettingsPage({
+  scopedClubId,
+}: {
+  scopedClubId?: string;
+} = {}) {
   const [policy, setPolicy] = useState<ClubPaymentPolicy | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    let active = true;
+    setPolicy(null);
+    setError("");
+    setMessage("");
     void clubPaymentPolicyService
-      .get()
-      .then(setPolicy)
-      .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : "Chargement impossible."),
-      );
-  }, []);
+      .get(scopedClubId)
+      .then((value) => {
+        if (active) setPolicy(value);
+      })
+      .catch((e: unknown) => {
+        if (active)
+          setError(e instanceof Error ? e.message : "Chargement impossible.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [scopedClubId]);
 
   function patch(value: Partial<ClubPaymentPolicy>) {
     setPolicy((current) => (current ? { ...current, ...value } : current));
@@ -32,7 +46,7 @@ export function AdminPaymentSettingsPage() {
     setError("");
     setMessage("");
     try {
-      await clubPaymentPolicyService.save(policy);
+      await clubPaymentPolicyService.save(policy, scopedClubId);
       setMessage(
         "Préférences enregistrées. Les flux de paiement existants restent inchangés tant que leur raccordement n'est pas activé.",
       );
@@ -79,7 +93,7 @@ export function AdminPaymentSettingsPage() {
         onSubmit={(event) => void submit(event)}
         style={{ display: "grid", gap: 20, maxWidth: 720 }}
       >
-        <fieldset>
+        <fieldset disabled={saving}>
           <legend>Moyens de paiement envisagés</legend>
           <label>
             <input
@@ -114,7 +128,7 @@ export function AdminPaymentSettingsPage() {
             Virement
           </label>
         </fieldset>
-        <fieldset>
+        <fieldset disabled={saving}>
           <legend>Licences</legend>
           <label>
             Validation de la demande
@@ -134,7 +148,7 @@ export function AdminPaymentSettingsPage() {
             </select>
           </label>
         </fieldset>
-        <fieldset>
+        <fieldset disabled={saving}>
           <legend>Inscriptions aux tournois</legend>
           <label>
             Confirmation de l'inscription
