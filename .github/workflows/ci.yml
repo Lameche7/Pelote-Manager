@@ -265,3 +265,9 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-denials.sql
       - name: Vérifier le parcours autorisé sur des données fictives
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-authorized.sql
+      - name: Installer le contrôle explicite du club et les fonctions de sauvegarde
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261112190000_can_administer_club_guard.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save.draft.sql
+      - name: Vérifier les permissions des fonctions de sauvegarde
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-denials.sql
