@@ -296,5 +296,33 @@ jobs:
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-fixture.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-workspace.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-mutations.draft.sql
+      - name: Vérifier les droits d’exécution des fonctions de poules
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-grants.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres <<'SQL'
+          do $check$
+          declare
+            endpoint record;
+            endpoint_count integer := 0;
+          begin
+            for endpoint in
+              select p.oid,p.proname from pg_proc p
+              join pg_namespace n on n.oid=p.pronamespace
+              where n.nspname='public' and p.proname in (
+                'admin_get_tournament_pool_workspace_v2_for_club',
+                'admin_save_tournament_pools_for_club',
+                'admin_validate_tournament_pools_for_club',
+                'admin_reopen_tournament_pools_for_club'
+              )
+            loop
+              endpoint_count := endpoint_count + 1;
+              if has_function_privilege('anon',endpoint.oid,'EXECUTE')
+                or not has_function_privilege('authenticated',endpoint.oid,'EXECUTE') then
+                raise exception 'Unexpected execution privilege: %',endpoint.proname;
+              end if;
+            end loop;
+            if endpoint_count<>4 then raise exception 'Missing pool endpoints'; end if;
+          end $check$;
+          SQL
       - name: Vérifier les poules de trois équipes et les refus inter-clubs
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-authorized.sql
