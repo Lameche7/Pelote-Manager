@@ -6,6 +6,7 @@ import {
   type TournamentPlanningWorkspace,
 } from "@/features/admin/tournaments/services/adminTournamentPlanningService";
 import {
+  createPlatformTournamentAdminService,
   tournamentAdminService,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
@@ -104,7 +105,18 @@ const eventStyle = (color: string): CSSProperties => ({
   color: contrastText(color),
 });
 
-export function AdminTournamentPlanningPage() {
+export function AdminTournamentPlanningPage({
+  scopedClubId,
+}: {
+  scopedClubId?: string;
+} = {}) {
+  const tournamentService = useMemo(
+    () =>
+      scopedClubId
+        ? createPlatformTournamentAdminService(scopedClubId)
+        : tournamentAdminService,
+    [scopedClubId],
+  );
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [printWorkspaces, setPrintWorkspaces] = useState<
     AdminTournamentResultsWorkspace[]
@@ -151,16 +163,16 @@ export function AdminTournamentPlanningPage() {
   };
 
   const loadWorkspace = async (tournamentId: string) => {
-    await adminTournamentPlanningService.prepare(tournamentId);
-    const loaded = await adminTournamentPlanningService.get(tournamentId);
+    await adminTournamentPlanningService.prepare(tournamentId, scopedClubId);
+    const loaded = await adminTournamentPlanningService.get(tournamentId, scopedClubId);
     hydrate(loaded);
   };
 
   useEffect(() => {
     let active = true;
     Promise.all([
-      tournamentAdminService.list(),
-      tournamentResultsAdminService.getWorkspace(),
+      tournamentService.list(),
+      tournamentResultsAdminService.getWorkspace(scopedClubId),
     ])
       .then(async ([items, printable]) => {
         if (!active) return;
@@ -180,8 +192,11 @@ export function AdminTournamentPlanningPage() {
           return;
         }
         setSelectedId(preferred.id);
-        await adminTournamentPlanningService.prepare(preferred.id);
-        const loaded = await adminTournamentPlanningService.get(preferred.id);
+        await adminTournamentPlanningService.prepare(preferred.id, scopedClubId);
+        const loaded = await adminTournamentPlanningService.get(
+          preferred.id,
+          scopedClubId,
+        );
         if (active) hydrate(loaded);
       })
       .catch((loadError: unknown) => {
@@ -199,7 +214,7 @@ export function AdminTournamentPlanningPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [tournamentService, scopedClubId]);
 
   const selectedPrintWorkspace = useMemo(
     () => printWorkspaces.find((item) => item.id === selectedId) ?? null,
@@ -360,6 +375,11 @@ export function AdminTournamentPlanningPage() {
   const chooseTournament = async (id: string) => {
     if (!id) return;
     setSelectedId(id);
+    setWorkspace(null);
+    setAssignments([]);
+    setSavedAssignments([]);
+    setSelectedMatchId(null);
+    setSeriesColors({});
     setError("");
     setMessage("");
     const engineTournament = tournaments.some((item) => item.id === id);
@@ -404,6 +424,7 @@ export function AdminTournamentPlanningPage() {
     try {
       const requests = await adminTournamentRescheduleService.list(
         printable.id,
+        scopedClubId,
       );
       const activeRequests = requests.filter(
         (request) =>
@@ -704,8 +725,9 @@ export function AdminTournamentPlanningPage() {
         assignments,
         workspace.slots,
         manualEdit ? "manual" : "generated",
+        scopedClubId,
       );
-      const items = await tournamentAdminService.list();
+      const items = await tournamentService.list();
       setTournaments(
         items.filter((item) => editablePlanningStatuses.has(item.status)),
       );
@@ -748,6 +770,7 @@ export function AdminTournamentPlanningPage() {
           id: series.id,
           color: seriesColor(series.id),
         })),
+        scopedClubId,
       );
       setWorkspace((current) =>
         current
@@ -841,7 +864,7 @@ export function AdminTournamentPlanningPage() {
         <label className="admin-tournament-planning__tournament-select">
           Tournoi
           <select
-            disabled={loading || saving}
+            disabled={loading || saving || savingColors || printing}
             value={selectedId}
             onChange={(event) => void chooseTournament(event.target.value)}
           >
