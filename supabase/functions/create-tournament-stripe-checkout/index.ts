@@ -10,8 +10,10 @@ const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: cors });
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response(null, { headers: cors });
-  if (request.method !== "POST") return json({ error: "Méthode interdite." }, 405);
+  if (request.method === "OPTIONS")
+    return new Response(null, { headers: cors });
+  if (request.method !== "POST")
+    return json({ error: "Méthode interdite." }, 405);
   try {
     // Explicit opt-in; production payments must never be enabled by default.
     const mode = Deno.env.get("TOURNAMENT_STRIPE_MODE");
@@ -60,7 +62,10 @@ Deno.serve(async (request) => {
       },
     );
     if (error || !attempt)
-      return json({ error: "Paiement indisponible pour cette inscription." }, 409);
+      return json(
+        { error: "Paiement indisponible pour cette inscription." },
+        409,
+      );
     if (["paid", "processing", "disputed"].includes(attempt.status))
       return json({ status: attempt.status });
     if (attempt.status !== "creating" && attempt.status !== "open")
@@ -77,7 +82,8 @@ Deno.serve(async (request) => {
       "payment_method_types[0]": "card",
       "line_items[0][price_data][currency]": attempt.currency,
       "line_items[0][price_data][unit_amount]": String(attempt.amount_cents),
-      "line_items[0][price_data][product_data][name]": "Inscription tournoi Pilotoki",
+      "line_items[0][price_data][product_data][name]":
+        "Inscription tournoi Pilotoki",
       "line_items[0][quantity]": "1",
       "metadata[attempt_id]": attempt.attempt_id,
       "payment_intent_data[metadata][attempt_id]": attempt.attempt_id,
