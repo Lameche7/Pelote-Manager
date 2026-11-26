@@ -107,6 +107,18 @@ begin
        and resource.club_id = target_club_id
       where selected.tournament_id = target_tournament.id
         and generated.phase = 'pools'
+        and not exists (
+          select 1
+          from public.tournament_match_planning as occupied
+          join public.tournaments as other_tournament on other_tournament.id = occupied.tournament_id
+          where other_tournament.club_id = target_club_id
+            and other_tournament.id <> target_tournament.id
+            and other_tournament.status not in ('cancelled', 'archived')
+            and occupied.resource_id = selected.resource_id
+            and occupied.play_date = generated.play_date
+            and occupied.starts_at < generated.ends_at
+            and occupied.ends_at > generated.starts_at
+        )
     ),
     'teams', (
       select coalesce(
@@ -163,6 +175,36 @@ begin
                and generated.phase = 'pools'
               where availability.tournament_id = target_tournament.id
                 and availability.team_id = team.id
+                and not exists (
+                  select 1
+                  from public.tournament_match_planning as occupied
+                  join public.tournaments as other_tournament on other_tournament.id = occupied.tournament_id
+                  join public.tournament_matches as other_match on other_match.id = occupied.match_id
+                    and other_match.tournament_id = other_tournament.id
+                  join public.tournament_team_players as other_player
+                    on other_player.tournament_id = other_tournament.id
+                   and other_player.team_id in (other_match.team_a_id, other_match.team_b_id)
+                  join public.tournament_team_players as current_player
+                    on current_player.tournament_id = target_tournament.id
+                   and current_player.team_id = team.id
+                  left join public.tournament_external_player_identities as current_identity
+                    on current_identity.id = current_player.external_identity_id
+                   and current_identity.status = 'verified'
+                  left join public.tournament_external_player_identities as other_identity
+                    on other_identity.id = other_player.external_identity_id
+                   and other_identity.status = 'verified'
+                  where other_tournament.club_id = target_club_id
+                    and other_tournament.id <> target_tournament.id
+                    and other_tournament.status not in ('cancelled', 'archived')
+                    and occupied.play_date = availability.play_date
+                    and occupied.starts_at < availability.ends_at
+                    and occupied.ends_at > availability.starts_at
+                    and (
+                      current_player.member_id = other_player.member_id
+                      or current_player.external_identity_id = other_player.external_identity_id
+                      or current_identity.profile_id = other_identity.profile_id
+                    )
+                )
             )
           )
           order by team.id
