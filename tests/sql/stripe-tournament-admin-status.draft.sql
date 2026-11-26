@@ -44,7 +44,7 @@ revoke all on function public.admin_list_tournament_stripe_payments_for_club(uui
 grant execute on function public.admin_list_tournament_stripe_payments_for_club(uuid,uuid) to authenticated;
 
 -- Financial totals are independent of whether Stripe is active.
--- Only verified live Stripe receipts are available at this stage.
+-- Include verified live Stripe receipts and confirmed manual receipts.
 create or replace function public.admin_get_tournament_financial_summary_for_club(
   target_club_id uuid, target_tournament_id uuid
 ) returns jsonb language plpgsql stable security definer set search_path = ''
@@ -63,12 +63,16 @@ begin
     where id=target_tournament_id and club_id=target_club_id;
   if not found then raise exception 'Tournament not found' using errcode='42501'; end if;
   fee := coalesce(tournament_row.registration_fee_cents,0);
-  with receipts as (
-    select p.team_id,sum(p.amount_cents)::bigint as received
+  with receipt_lines as (
+    select p.team_id,p.amount_cents
     from public.tournament_stripe_payment_attempts p
     where p.club_id=target_club_id and p.tournament_id=target_tournament_id
       and p.livemode and p.status='paid'
-    group by p.team_id
+    union all
+    select m.team_id,m.amount_cents from public.tournament_manual_receipts m
+    where m.club_id=target_club_id and m.tournament_id=target_tournament_id
+  ), receipts as (
+    select team_id,sum(amount_cents)::bigint as received from receipt_lines group by team_id
   ), series_totals as (
     select s.id,s.name,
       case when s.enabled then s.capacity else 0 end as capacity,
@@ -100,7 +104,7 @@ begin
       'received_cents',received,'expected_cents',registered*fee,
       'maximum_cents',capacity::bigint*fee,'outstanding_cents',outstanding
     ) order by name,id),'[]'::jsonb),
-    'coverage','stripe_confirmed_only'
+    'coverage','stripe_and_manual_confirmed'
   ) into result from series_totals;
   return result;
 end;
