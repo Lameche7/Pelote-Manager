@@ -60,7 +60,7 @@ const knownErrors: Record<string, string> = {
   "Every accepted team must belong to exactly one pool":
     "Chaque équipe inscrite doit apparaître une seule fois dans une poule.",
   "Tournament pools are incomplete":
-    "Les poules sont incomplètes ou ne comportent pas toutes entre 4 et 6 équipes.",
+    "Les poules sont incomplètes ou ne comportent pas toutes entre 3 et 6 équipes.",
   "Tournament pools cannot be validated at this stage":
     "Les poules ne peuvent pas être validées à cette étape.",
   "Tournament pools cannot be reopened at this stage":
@@ -122,7 +122,7 @@ const mapWorkspace = (value: unknown): TournamentPoolWorkspace => {
       key: String(pool.id),
       seriesId: String(pool.series_id),
       displayOrder: Number(pool.display_order ?? 0),
-      targetSize: Number(pool.target_size) as 4 | 5 | 6,
+      targetSize: Number(pool.target_size) as 3 | 4 | 5 | 6,
       teams: rows(pool.teams).map((team) => ({
         teamId: String(team.team_id),
       })),
