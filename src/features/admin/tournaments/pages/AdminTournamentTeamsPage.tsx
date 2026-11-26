@@ -149,9 +149,7 @@ export function AdminTournamentTeamsPage({
       setData(null);
       return;
     }
-    setData(
-      await adminTournamentTeamService.get(tournamentId, scopedClubId),
-    );
+    setData(await adminTournamentTeamService.get(tournamentId, scopedClubId));
   };
 
   const reloadSelected = async () => {
@@ -214,9 +212,10 @@ export function AdminTournamentTeamsPage({
   const poolsAlreadyBuilt = data
     ? poolStatuses.has(data.tournament.status)
     : false;
-  const replacementAllowed = !scopedClubId && data
-    ? !["completed", "archived", "cancelled"].includes(data.tournament.status)
-    : false;
+  const replacementAllowed =
+    !scopedClubId && data
+      ? !["completed", "archived", "cancelled"].includes(data.tournament.status)
+      : false;
 
   const counts = useMemo(() => {
     const result: Record<TournamentTeamStatus, number> = {
