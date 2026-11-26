@@ -11,6 +11,9 @@ import {
   type ClubModules,
 } from "@/features/admin/config/clubModules";
 import { ROUTES } from "@/shared/config";
+import { PlatformScopedDashboard } from "./PlatformScopedDashboard";
+import { AdminTournamentResultsPage } from "@/features/admin/tournaments/pages/AdminTournamentResultsPage";
+import { AdminTournamentReschedulePage } from "@/features/admin/tournaments/pages/AdminTournamentReschedulePage";
 
 type Club = { id: string; name: string; slug: string };
 
@@ -127,7 +130,11 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
     { to: ROUTES.admin, label: "Tableau de bord" },
     { to: ROUTES.adminClubInformation, label: "Informations du club" },
     ...(modules.tournaments
-      ? [{ to: ROUTES.adminTournaments, label: "Tournois" }]
+      ? [
+          { to: ROUTES.adminTournaments, label: "Tournois" },
+          { to: ROUTES.adminTournamentReschedules, label: "Reports" },
+          { to: ROUTES.adminTournamentResults, label: "Résultats" },
+        ]
       : []),
   ];
   const path = location.pathname;
@@ -153,7 +160,13 @@ export function PlatformScopedAdmin({ slug }: { slug: string }) {
         </nav>
       </aside>
       <main className="admin-shell__content">
-        {path === ROUTES.adminTournaments && modules.tournaments ? (
+        {path === ROUTES.admin ? (
+          <PlatformScopedDashboard key={club.id} clubId={club.id} clubName={club.name} modules={modules} />
+        ) : path === ROUTES.adminTournamentReschedules && modules.tournaments ? (
+          <AdminTournamentReschedulePage key={club.id} scopedClubId={club.id} />
+        ) : path === ROUTES.adminTournamentResults && modules.tournaments ? (
+          <AdminTournamentResultsPage key={club.id} scopedClubId={club.id} />
+        ) : path === ROUTES.adminTournaments && modules.tournaments ? (
           <PlatformTournamentsPage clubId={club.id} />
         ) : path === ROUTES.adminClubInformation ? (
           <PlatformClubInformationEditor clubId={club.id} />
