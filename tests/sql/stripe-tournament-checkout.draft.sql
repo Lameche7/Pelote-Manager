@@ -21,8 +21,8 @@ begin
   end if;
   select * into tournament_row from public.tournaments
     where id = team_row.tournament_id for share;
-  if not found or tournament_row.registration_fee_cents is null
-    or tournament_row.registration_fee_cents <= 0
+  if not found or team_row.registration_price_cents is null
+    or team_row.registration_price_cents <= 0
     or not coalesce(public.tournament_registration_is_open(tournament_row.id), false) then
     raise exception 'Checkout unavailable' using errcode = '22023';
   end if;
@@ -36,7 +36,7 @@ begin
     where team_id = team_row.id and livemode = expected_livemode
       and status in ('creating','open','processing','paid','disputed') for update;
   if not found then
-    remaining_cents := tournament_row.registration_fee_cents;
+    remaining_cents := team_row.registration_price_cents;
     if expected_livemode then
       select remaining_cents-coalesce(sum(amount_cents),0) into remaining_cents
         from public.tournament_manual_receipts where team_id=team_row.id
