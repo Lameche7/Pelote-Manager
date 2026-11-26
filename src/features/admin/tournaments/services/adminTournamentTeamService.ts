@@ -364,9 +364,7 @@ export const adminTournamentTeamService = {
     clubId?: string,
   ): Promise<PlayerReplacementResult> {
     if (clubId) {
-      throw new Error(
-        "Le remplacement inter-clubs est encore indisponible.",
-      );
+      throw new Error("Le remplacement inter-clubs est encore indisponible.");
     }
     const { data, error } = await supabase.rpc(
       "admin_replace_tournament_player",
