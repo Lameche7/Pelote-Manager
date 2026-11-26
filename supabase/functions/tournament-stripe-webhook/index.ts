@@ -44,7 +44,8 @@ async function verifiedBody(
 }
 
 Deno.serve(async (request) => {
-  if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (request.method !== "POST")
+    return json({ error: "Method not allowed" }, 405);
   const secret = Deno.env.get("TOURNAMENT_STRIPE_WEBHOOK_SECRET");
   const mode = Deno.env.get("TOURNAMENT_STRIPE_MODE");
   const url = Deno.env.get("SUPABASE_URL");
@@ -60,7 +61,8 @@ Deno.serve(async (request) => {
     const body = await verifiedBody(request, secret);
     if (body === null) return json({ error: "Invalid signature" }, 400);
     const event = JSON.parse(body);
-    if (event.livemode !== (mode === "live")) return json({ error: "Wrong mode" }, 400);
+    if (event.livemode !== (mode === "live"))
+      return json({ error: "Wrong mode" }, 400);
     if (
       ![
         "checkout.session.completed",
@@ -110,7 +112,9 @@ Deno.serve(async (request) => {
       attempt_id: attempt,
       session_id: session.id,
       intent_id:
-        typeof session.payment_intent === "string" ? session.payment_intent : null,
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : null,
       paid_amount: session.amount_total,
       paid_currency: session.currency,
       event_status: status,
