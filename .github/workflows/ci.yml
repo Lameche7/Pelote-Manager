@@ -370,3 +370,7 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-checkout.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-checkout-cases.sql
+      - name: Vérifier les confirmations Stripe et leur idempotence
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-webhook.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-webhook-cases.sql
