@@ -291,3 +291,10 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-denials.sql
       - name: Vérifier les rattachements de comptes autorisés et refusés
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-authorized.sql
+      - name: Installer les fonctions de poules à club explicite
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-workspace.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-mutations.draft.sql
+      - name: Vérifier les poules de trois équipes et les refus inter-clubs
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-authorized.sql
