@@ -384,3 +384,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-player-status-cases.sql
       - name: Installer le suivi financier multi-club
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-admin-status.draft.sql
+      - name: Vérifier les recettes et les paiements indépendants par tournoi
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-financial-cases.sql
