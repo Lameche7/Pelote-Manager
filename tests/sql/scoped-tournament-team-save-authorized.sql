@@ -84,6 +84,7 @@ begin
   exception when invalid_parameter_value then null;
   end;
   perform set_config('ci.saved_team',team_id::text,true);
+  perform set_config('ci.team_payload',p::text,true);
 end $check$;
 reset role;
 do $check$
@@ -109,5 +110,72 @@ begin
   if (select count(*) from public.tournament_teams where tournament_id=t) <> 1 then
     raise exception 'Unexpected duplicate team';
   end if;
+end $check$;
+-- Seed the pool state only in this isolated test transaction.
+insert into public.tournament_pools(tournament_id,series_id,display_order,target_size)
+values (current_setting('ci.team_tournament')::uuid,current_setting('ci.team_series')::uuid,0,4);
+insert into public.tournament_pool_teams(pool_id,team_id,display_order)
+select id,current_setting('ci.saved_team')::uuid,0
+from public.tournament_pools where tournament_id=current_setting('ci.team_tournament')::uuid;
+update public.tournaments set status='pools_generated'
+where id=current_setting('ci.team_tournament')::uuid;
+set local role authenticated;
+do $check$
+declare
+  c uuid := '00000000-0000-0000-0000-000000000002';
+  t uuid := current_setting('ci.team_tournament')::uuid;
+  team_id_value uuid := current_setting('ci.saved_team')::uuid;
+  p jsonb := current_setting('ci.team_payload')::jsonb;
+  result jsonb;
+begin
+  result := public.admin_save_tournament_team_v5_for_club(c,t,team_id_value,
+    jsonb_set(p,'{players,0,email}','"updated@example.test"'::jsonb));
+  if result->>'team_id' is distinct from team_id_value::text
+    or result->>'pools_invalidated' is distinct from 'false' then
+    raise exception 'Nonstructural update invalidated pools';
+  end if;
+end $check$;
+reset role;
+do $check$
+begin
+  if not exists (
+    select 1 from public.tournament_pools p
+    join public.tournament_pool_teams pt on pt.pool_id=p.id
+    join public.tournaments t on t.id=p.tournament_id
+    where t.id=current_setting('ci.team_tournament')::uuid
+      and t.status='pools_generated'
+      and pt.team_id=current_setting('ci.saved_team')::uuid
+  ) then raise exception 'Pool assignment or status not preserved'; end if;
+  if not exists (
+    select 1 from public.tournament_teams
+    where id=current_setting('ci.saved_team')::uuid and contact_email='updated@example.test'
+  ) then raise exception 'Contact update not persisted'; end if;
+end $check$;
+set local role authenticated;
+do $check$
+declare
+  result jsonb;
+begin
+  result := public.admin_save_tournament_team_v5_for_club(
+    '00000000-0000-0000-0000-000000000002',
+    current_setting('ci.team_tournament')::uuid,
+    current_setting('ci.saved_team')::uuid,
+    current_setting('ci.team_payload')::jsonb || '{"status":"pending"}'::jsonb);
+  if result->>'pools_invalidated' is distinct from 'true' then
+    raise exception 'Structural update did not invalidate pools';
+  end if;
+end $check$;
+reset role;
+do $check$
+begin
+  if exists (select 1 from public.tournament_pools
+    where tournament_id=current_setting('ci.team_tournament')::uuid)
+    or exists (select 1 from public.tournament_pool_teams
+    where team_id=current_setting('ci.saved_team')::uuid)
+    or not exists (select 1 from public.tournaments
+    where id=current_setting('ci.team_tournament')::uuid and status='registrations_closed')
+    or not exists (select 1 from public.tournament_teams
+    where id=current_setting('ci.saved_team')::uuid and status='pending')
+  then raise exception 'Structural update left inconsistent pool state'; end if;
 end $check$;
 rollback;
