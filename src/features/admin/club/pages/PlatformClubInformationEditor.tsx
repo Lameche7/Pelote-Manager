@@ -73,8 +73,8 @@ export function PlatformClubInformationEditor({ clubId }: { clubId: string }) {
       <header className="admin-page__header">
         <h1>Informations du club sélectionné</h1>
         <p className="admin-page__lead">
-          Modification temporaire des coordonnées, textes et couleurs.
-          Les logos, photos et autres paramètres restent protégés.
+          Modification temporaire des coordonnées, textes et couleurs. Les
+          logos, photos et autres paramètres restent protégés.
         </p>
       </header>
       <form
