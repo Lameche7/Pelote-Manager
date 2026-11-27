@@ -98,6 +98,44 @@ begin
     or (select amount_cents from public.tournament_manual_receipts where id=receipt)<>500 then
     raise exception 'Refund changed original registration or receipt';
   end if;
+  summary:=public.admin_get_tournament_financial_summary_for_club(b,t);
+  if summary->>'received_cents' is distinct from '1500'
+    or summary->>'refunded_cents' is distinct from '200'
+    or summary->>'refund_pending_cents' is distinct from '600'
+    or summary->>'net_received_cents' is distinct from '1300' then
+    raise exception 'Pending refund incorrectly affects net receipts: %',summary;
+  end if;
+  summary:=public.admin_list_tournament_refund_sources_for_club(b,t,team);
+  if jsonb_array_length(summary)<>2 or not exists(
+    select 1 from jsonb_array_elements(summary) item
+    where item->>'method'='stripe' and item->>'refundable_cents'='400'
+      and item->'pending_requests'->0->>'operation_id'=stripe_op::text
+  ) then raise exception 'Incorrect refundable sources: %',summary; end if;
+  begin
+    perform public.record_tournament_stripe_refund(stripe_refund,'acct_WrongCI','pi_financeCI','re_financeCI',600,'eur',true,'succeeded');
+    raise exception 'Wrong provider account accepted' using errcode='XX000';
+  exception when invalid_parameter_value then null; end;
+  perform public.record_tournament_stripe_refund(stripe_refund,'acct_FinanceCI','pi_financeCI','re_financeCI',600,'eur',true,'pending');
+  perform public.record_tournament_stripe_refund(stripe_refund,'acct_FinanceCI','pi_financeCI','re_financeCI',600,'eur',true,'succeeded');
+  perform public.record_tournament_stripe_refund(stripe_refund,'acct_FinanceCI','pi_financeCI','re_financeCI',600,'eur',true,'pending');
+  summary:=public.admin_get_tournament_financial_summary_for_club(b,t);
+  if summary->>'refunded_cents' is distinct from '800'
+    or summary->>'net_received_cents' is distinct from '700'
+    or summary->>'refund_pending_cents' is distinct from '0'
+    or summary->>'outstanding_cents' is distinct from '0' then
+    raise exception 'Incorrect confirmed refund totals: %',summary;
+  end if;
+  if public.get_my_tournament_stripe_payment(team)->>'can_pay' is distinct from 'false'
+    or public.get_my_tournament_stripe_payment(team)->>'status' is distinct from 'partially_refunded' then
+    raise exception 'Refunded player offered repayment';
+  end if;
+  begin
+    perform public.prepare_tournament_stripe_checkout(actor,team,true);
+    raise exception 'Refunded checkout accepted' using errcode='XX000';
+  exception when invalid_parameter_value then null; end;
+  if has_function_privilege('authenticated','public.record_tournament_stripe_refund(uuid,text,text,text,integer,text,boolean,text)','EXECUTE') then
+    raise exception 'Provider confirmation exposed to user';
+  end if;
   perform set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000004',true);
   begin
     perform public.admin_record_tournament_manual_refund_for_club(b,t,team,receipt,100,'CI unauthorized',gen_random_uuid());
