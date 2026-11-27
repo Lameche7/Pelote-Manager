@@ -3,6 +3,7 @@ import {
   clubPaymentPolicyService,
   type ClubPaymentPolicy,
 } from "@/features/admin/services/clubPaymentPolicyService";
+import { TournamentStripePolicyPanel } from "@/features/admin/components/TournamentStripePolicyPanel";
 import "./AdminPaymentsPage.css";
 
 export function AdminPaymentSettingsPage({
@@ -88,6 +89,9 @@ export function AdminPaymentSettingsPage({
         <p role="status" className="admin-payments__alert">
           {message}
         </p>
+      )}
+      {scopedClubId && (
+        <TournamentStripePolicyPanel key={scopedClubId} clubId={scopedClubId} />
       )}
       <form
         onSubmit={(event) => void submit(event)}
