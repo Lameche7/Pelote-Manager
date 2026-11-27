@@ -64,6 +64,10 @@ begin
     raise exception 'Test-mode payment exposed to player';
   end if;
   update public.club_stripe_connections set livemode=true where club_id=b;
+  if public.get_my_tournament_stripe_payment(team) is not null then
+    raise exception 'Live Stripe exposed before explicit authorization';
+  end if;
+  perform public.admin_set_tournament_stripe_policy_for_club(b,true);
   if public.get_my_tournament_stripe_payment(team)->>'status' is distinct from 'unpaid'
     or public.get_my_tournament_stripe_payment(team)->>'amount_cents' is distinct from '1500'
     or public.get_my_tournament_stripe_payment(team)->>'can_pay' is distinct from 'true' then
