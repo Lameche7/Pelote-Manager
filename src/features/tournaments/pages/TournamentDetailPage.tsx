@@ -204,8 +204,7 @@ export function TournamentDetailPage() {
   }
 
   const canEditRegistration = tournament.canRegister && isAuthenticated;
-  const registrationConfirmed =
-    registration?.status === "accepted";
+  const registrationConfirmed = registration?.status === "accepted";
 
   return (
     <section className="public-tournaments public-tournament-detail">
