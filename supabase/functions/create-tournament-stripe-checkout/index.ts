@@ -64,7 +64,10 @@ Deno.serve(async (request) => {
         teamId !== testTeam ||
         auth.user.id !== testActor
       )
-        return json({ error: "Paiement fictif réservé au scénario de test." }, 403);
+        return json(
+          { error: "Paiement fictif réservé au scénario de test." },
+          403,
+        );
     }
     const { data: attempt, error } = await admin.rpc(
       "prepare_tournament_stripe_checkout",
