@@ -50,3 +50,34 @@ revoke all on function public.begin_tournament_stripe_oauth(uuid,text,boolean) f
 revoke all on function public.consume_tournament_stripe_oauth(text,boolean) from public,anon,authenticated;
 grant execute on function public.begin_tournament_stripe_oauth(uuid,text,boolean) to authenticated;
 grant execute on function public.consume_tournament_stripe_oauth(text,boolean) to authenticated;
+
+-- Only the trusted callback can persist a verified account. Never replace
+-- a different account or switch modes on an existing financial relationship.
+alter table public.tournament_stripe_oauth_states add column completed_at timestamptz;
+create or replace function public.complete_tournament_stripe_oauth(
+  target_state_hash text,target_actor_id uuid,target_club_id uuid,
+  target_livemode boolean,target_account_id text,target_charges_enabled boolean
+) returns void language plpgsql security invoker set search_path=''
+as $$
+begin
+  if target_account_id is null or target_account_id !~ '^acct_[A-Za-z0-9]+$'
+    or target_charges_enabled is null then
+    raise exception 'Invalid account' using errcode='22023';
+  end if;
+  perform 1 from public.tournament_stripe_oauth_states s
+    where s.state_hash=target_state_hash and s.actor_id=target_actor_id
+      and s.club_id=target_club_id and s.livemode=target_livemode
+      and s.consumed_at is not null and s.completed_at is null and s.expires_at>now()
+    for update;
+  if not found then raise exception 'Invalid authorization' using errcode='42501'; end if;
+  insert into public.club_stripe_connections(club_id,stripe_account_id,livemode,charges_enabled,verified_at)
+    values(target_club_id,target_account_id,target_livemode,target_charges_enabled,now())
+  on conflict(club_id) do update set charges_enabled=excluded.charges_enabled,verified_at=excluded.verified_at
+    where club_stripe_connections.stripe_account_id=excluded.stripe_account_id
+      and club_stripe_connections.livemode=excluded.livemode;
+  if not found then raise exception 'Existing connection requires reconciliation' using errcode='22023'; end if;
+  update public.tournament_stripe_oauth_states set completed_at=now() where state_hash=target_state_hash;
+end;
+$$;
+revoke all on function public.complete_tournament_stripe_oauth(text,uuid,uuid,boolean,text,boolean) from public,anon,authenticated;
+grant execute on function public.complete_tournament_stripe_oauth(text,uuid,uuid,boolean,text,boolean) to service_role;
