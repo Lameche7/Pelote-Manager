@@ -36,6 +36,7 @@ begin
 end;
 $$;
 grant select on public.tournament_payment_refunds to service_role;
+grant select on public.tournament_manual_receipts to service_role;
 grant update(stripe_refund_id,status,confirmed_at) on public.tournament_payment_refunds to service_role;
 revoke all on function public.record_tournament_stripe_refund(uuid,text,text,text,integer,text,boolean,text) from public,anon,authenticated;
 grant execute on function public.record_tournament_stripe_refund(uuid,text,text,text,integer,text,boolean,text) to service_role;
