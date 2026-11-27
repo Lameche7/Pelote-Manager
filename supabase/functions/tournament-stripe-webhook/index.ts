@@ -64,6 +64,41 @@ Deno.serve(async (request) => {
     if (event.livemode !== (mode === "live"))
       return json({ error: "Wrong mode" }, 400);
     if (
+      ["refund.created", "refund.updated", "refund.failed"].includes(event.type)
+    ) {
+      const refund = event.data?.object;
+      const refundId = refund?.metadata?.pilotoki_refund_id;
+      if (!refundId) return json({ received: true });
+      if (
+        refund.object !== "refund" ||
+        event.livemode !== true ||
+        !/^acct_[A-Za-z0-9]+$/.test(event.account ?? "") ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          refundId,
+        ) ||
+        typeof refund.payment_intent !== "string" ||
+        !Number.isSafeInteger(refund.amount) ||
+        refund.amount <= 0 ||
+        refund.currency !== "eur"
+      )
+        return json({ error: "Invalid refund event" }, 400);
+      const admin = createClient(url, serviceKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { error } = await admin.rpc("record_tournament_stripe_refund", {
+        target_refund_id: refundId,
+        provider_account: event.account,
+        provider_intent: refund.payment_intent,
+        provider_refund_id: refund.id,
+        provider_amount: refund.amount,
+        provider_currency: refund.currency,
+        provider_livemode: event.livemode,
+        provider_status: refund.status,
+      });
+      if (error) return json({ error: "Refund not recorded" }, 500);
+      return json({ received: true });
+    }
+    if (
       ![
         "checkout.session.completed",
         "checkout.session.async_payment_succeeded",
