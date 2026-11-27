@@ -5,6 +5,8 @@ type PaymentSummary = {
   status: string;
   amount_cents: number;
   received_cents: number;
+  refunded_cents: number;
+  refund_pending_cents: number;
   remaining_cents: number;
   can_pay: boolean;
 };
@@ -18,6 +20,8 @@ const labels: Record<string, string> = {
   expired: "Session expirée",
   failed: "Paiement non abouti",
   refunded: "Remboursé",
+  partially_refunded: "Partiellement remboursé",
+  refund_pending: "Remboursement en cours",
   disputed: "Paiement en litige",
 };
 
@@ -43,6 +47,8 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
           Number.isSafeInteger(summary.amount_cents) &&
           summary.amount_cents > 0 &&
           Number.isSafeInteger(summary.received_cents) &&
+          Number.isSafeInteger(summary.refunded_cents) &&
+          Number.isSafeInteger(summary.refund_pending_cents) &&
           Number.isSafeInteger(summary.remaining_cents) &&
           summary.remaining_cents >= 0 &&
           typeof summary.can_pay === "boolean"
@@ -99,6 +105,12 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
         Déjà réglé : {euros(payment.received_cents)} · Reste à régler :{" "}
         {euros(payment.remaining_cents)}
       </p>
+      {payment.refunded_cents > 0 && (
+        <p>Remboursé : {euros(payment.refunded_cents)}</p>
+      )}
+      {payment.refund_pending_cents > 0 && (
+        <p>Remboursement en cours : {euros(payment.refund_pending_cents)}</p>
+      )}
       {error && <p role="alert">{error}</p>}
       {payment.can_pay && (
         <button
