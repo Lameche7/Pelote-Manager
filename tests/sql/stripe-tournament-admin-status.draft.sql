@@ -40,6 +40,9 @@ begin
         and coalesce(p.status,'unpaid') not in ('creating','open','processing','disputed')
         and coalesce(public.can_administer_club(target_club_id,'payments.manage')
           or pilotoki_private.has_active_platform_lease(auth.uid(),target_club_id),false),
+      'can_refund',balances.received>refunds.confirmed
+        and coalesce(public.can_administer_club(target_club_id,'payments.manage')
+          or pilotoki_private.has_active_platform_lease(auth.uid(),target_club_id),false),
       'manual_methods',to_jsonb(array_remove(array[
         case when policy.cash_enabled then 'cash' end,
         case when policy.cheque_enabled then 'cheque' end,
