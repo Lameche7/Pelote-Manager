@@ -2,7 +2,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Headers":
+    "authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const json = (body: unknown, status = 200) =>
@@ -22,7 +23,8 @@ Deno.serve(async (request) => {
   try {
     const mode = Deno.env.get("TOURNAMENT_STRIPE_MODE");
     const clientId = Deno.env.get("TOURNAMENT_STRIPE_CONNECT_CLIENT_ID") ?? "";
-    const redirect = Deno.env.get("TOURNAMENT_STRIPE_CONNECT_REDIRECT_URI") ?? "";
+    const redirect =
+      Deno.env.get("TOURNAMENT_STRIPE_CONNECT_REDIRECT_URI") ?? "";
     const url = Deno.env.get("SUPABASE_URL") ?? "";
     const anon = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const token = request.headers.get("Authorization") ?? "";
@@ -34,7 +36,8 @@ Deno.serve(async (request) => {
       !anon
     )
       return json({ error: "Stripe Connect indisponible" }, 503);
-    if (!token.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+    if (!token.startsWith("Bearer "))
+      return json({ error: "Unauthorized" }, 401);
     const caller = createClient(url, anon, {
       global: { headers: { Authorization: token } },
       auth: { persistSession: false },
@@ -47,7 +50,9 @@ Deno.serve(async (request) => {
     const { clubId } = await request.json();
     if (
       typeof clubId !== "string" ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clubId)
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        clubId,
+      )
     )
       return json({ error: "Invalid club" }, 400);
     const state = Array.from(
