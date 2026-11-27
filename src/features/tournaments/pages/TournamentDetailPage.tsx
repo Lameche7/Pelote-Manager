@@ -205,7 +205,7 @@ export function TournamentDetailPage() {
 
   const canEditRegistration = tournament.canRegister && isAuthenticated;
   const registrationConfirmed =
-    registration?.status === "accepted" || registration?.status === "pending";
+    registration?.status === "accepted";
 
   return (
     <section className="public-tournaments public-tournament-detail">
@@ -353,6 +353,13 @@ export function TournamentDetailPage() {
               )}
             </div>
 
+            {registration?.status === "pending" && (
+              <p role="status">
+                Votre demande est enregistrée, mais votre inscription n’est pas
+                encore validée. Consultez le règlement ci-dessous.
+              </p>
+            )}
+
             {registrationConfirmed && (
               <div className="public-tournaments__success" role="status">
                 <strong>✓ Votre équipe est bien inscrite au tournoi.</strong>{" "}
@@ -395,6 +402,7 @@ export function TournamentDetailPage() {
               <TournamentStripePayment
                 key={registration.id}
                 teamId={registration.id}
+                onPaymentConfirmed={load}
               />
             )}
 
