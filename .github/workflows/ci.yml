@@ -365,6 +365,7 @@ jobs:
       - name: Vérifier le stockage Stripe et les protections inter-clubs
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-payments.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-policy.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-payments-cases.sql
       - name: Installer les tarifs individuels et les règlements manuels
         run: |
