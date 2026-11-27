@@ -97,3 +97,6 @@ end;
 $$;
 revoke all on function public.record_tournament_stripe_diagnostic(text,text,boolean,uuid,text,text,integer,text,text) from public,anon,authenticated;
 grant execute on function public.record_tournament_stripe_diagnostic(text,text,boolean,uuid,text,text,integer,text,text) to service_role;
+
+-- Server-only access to the already restricted lease helper.
+grant usage on schema pilotoki_private to service_role;
