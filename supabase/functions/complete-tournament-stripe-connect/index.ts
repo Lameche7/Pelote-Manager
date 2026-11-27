@@ -35,7 +35,8 @@ Deno.serve(async (request) => {
       !service
     )
       return json({ error: "Stripe Connect indisponible" }, 503);
-    if (!token.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+    if (!token.startsWith("Bearer "))
+      return json({ error: "Unauthorized" }, 401);
     const caller = createClient(url, anon, {
       global: { headers: { Authorization: token } },
       auth: { persistSession: false },
@@ -55,7 +56,10 @@ Deno.serve(async (request) => {
       return json({ error: "Invalid authorization" }, 400);
     const { data: clubId, error: stateError } = await caller.rpc(
       "consume_tournament_stripe_oauth",
-      { target_state_hash: await hash(state), target_livemode: mode === "live" },
+      {
+        target_state_hash: await hash(state),
+        target_livemode: mode === "live",
+      },
     );
     if (stateError || typeof clubId !== "string")
       return json({ error: "Authorization expired or denied" }, 403);
