@@ -31,6 +31,10 @@ begin
       and tournament_id=tournament_row.id and status in ('requested','pending','succeeded')) then
     raise exception 'Refunded registration requires reconciliation' using errcode='22023';
   end if;
+  if expected_livemode and not exists(
+    select 1 from public.club_payment_policies where club_id=tournament_row.club_id
+      and stripe_tournament_enabled
+  ) then raise exception 'Stripe disabled for this club' using errcode='22023'; end if;
   select * into connection_row from public.club_stripe_connections
     where club_id = tournament_row.club_id and livemode = expected_livemode
       and charges_enabled and verified_at is not null for share;
