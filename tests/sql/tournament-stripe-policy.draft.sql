@@ -13,7 +13,9 @@ begin
   return jsonb_build_object(
     'enabled',coalesce((select stripe_tournament_enabled from public.club_payment_policies where club_id=target_club_id),false),
     'connected',exists(select 1 from public.club_stripe_connections c
-      where c.club_id=target_club_id and c.livemode and c.charges_enabled and c.verified_at is not null)
+      where c.club_id=target_club_id and c.livemode and c.charges_enabled and c.verified_at is not null),
+    'test_connected',exists(select 1 from public.club_stripe_connections c
+      where c.club_id=target_club_id and not c.livemode and c.charges_enabled and c.verified_at is not null)
   );
 end;
 $$;
