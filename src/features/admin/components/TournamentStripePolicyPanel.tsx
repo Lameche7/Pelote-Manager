@@ -59,7 +59,11 @@ export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
         throw new Error("Autorisation invalide");
       sessionStorage.setItem(
         "pilotoki-stripe-connect",
-        JSON.stringify({ state, clubId, returnPath: window.location.pathname }),
+        JSON.stringify({
+          state,
+          clubId,
+          returnPath: window.location.pathname + window.location.search,
+        }),
       );
       window.location.assign(destination.href);
     } catch {
