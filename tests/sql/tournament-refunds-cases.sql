@@ -98,6 +98,9 @@ begin
     or (select amount_cents from public.tournament_manual_receipts where id=receipt)<>500 then
     raise exception 'Refund changed original registration or receipt';
   end if;
+  if (select count(*) from public.tournament_refund_notification_events where refund_id in (refund,stripe_refund))<>1
+    or not exists(select 1 from public.tournament_refund_notification_events where refund_id=refund)
+    then raise exception 'Pending refund notified or manual refund not notified'; end if;
   summary:=public.admin_get_tournament_financial_summary_for_club(b,t);
   if summary->>'received_cents' is distinct from '1500'
     or summary->>'refunded_cents' is distinct from '200'
@@ -133,6 +136,16 @@ begin
     perform public.prepare_tournament_stripe_checkout(actor,team,true);
     raise exception 'Refunded checkout accepted' using errcode='XX000';
   exception when invalid_parameter_value then null; end;
+  if (select count(*) from public.tournament_refund_notification_events where refund_id in (refund,stripe_refund))<>2
+    or (select count(*) from public.communication_deliveries d
+      join public.tournament_refund_notification_events e on e.communication_id=d.communication_id
+      join public.club_communications m on m.id=d.communication_id
+      where e.refund_id in (refund,stripe_refund) and d.club_id=b
+        and d.profile_id_at_publication=actor and m.status='published' and not m.show_on_home)<>2
+    or (select count(*) from public.communication_deliveries d
+      join public.tournament_refund_notification_events e on e.communication_id=d.communication_id
+      where e.refund_id in (refund,stripe_refund))<>2
+    then raise exception 'Refund notification duplicated, missing or misdirected'; end if;
   if has_function_privilege('authenticated','public.record_tournament_stripe_refund(uuid,text,text,text,integer,text,boolean,text)','EXECUTE') then
     raise exception 'Provider confirmation exposed to user';
   end if;
