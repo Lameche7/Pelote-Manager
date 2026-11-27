@@ -113,12 +113,14 @@ export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
                 : "Compte Stripe non connecté ou non vérifié."}
           </p>
           <button type="button" onClick={() => void connect()}>
-            {policy.connected
+            {policy.connected || policy.test_connected
               ? "Reconnecter Stripe"
               : "Connecter mon compte Stripe"}
           </button>
           {policy.test_connected && !policy.connected && (
-            <p>Le compte de test ne permet pas d’activer les paiements réels.</p>
+            <p>
+              Le compte de test ne permet pas d’activer les paiements réels.
+            </p>
           )}
           <label>
             <input
@@ -127,7 +129,7 @@ export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
               disabled={!policy.connected && !policy.enabled}
               onChange={(event) => void change(event.target.checked)}
             />{" "}
-            Autoriser les paiements Stripe pour les tournois de ce club
+            Autoriser les paiements Stripe réels pour les tournois de ce club
           </label>
           <p>
             Ce réglage est enregistré séparément et ne modifie pas les modalités
