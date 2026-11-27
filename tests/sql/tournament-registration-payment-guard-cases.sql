@@ -17,6 +17,9 @@ declare
   second_attempt jsonb;
   attempt uuid;
   original_paid_at timestamptz;
+  mixed_team uuid;
+  cash_team uuid;
+  receipt uuid;
 begin
   t := public.platform_admin_create_tournament(b,jsonb_build_object(
     'season_id','70000000-0000-0000-0000-000000000002','name','CI Stripe',
@@ -64,5 +67,32 @@ begin
   if (select status::text from public.tournament_teams where id=team) is distinct from 'withdrawn' then
     raise exception 'Withdrawn registration resurrected';
   end if;
+
+  -- A club may explicitly allow cash, and a partial receipt cannot validate a team.
+  update public.club_payment_policies set cash_enabled=true where club_id=b;
+  insert into public.tournament_teams(tournament_id,series_id,status,contact_email,submitted_by)
+    values(t,s,'pending','mixed@example.test',actor) returning id into mixed_team;
+  receipt:=public.admin_record_tournament_manual_receipt_for_club(b,t,mixed_team,'cash',500,gen_random_uuid());
+  if (select status::text from public.tournament_teams where id=mixed_team) is distinct from 'pending' then
+    raise exception 'Partial receipt accepted registration';
+  end if;
+  attempt:=(public.prepare_tournament_stripe_checkout(actor,mixed_team,true)->>'attempt_id')::uuid;
+  if (select amount_cents from public.tournament_stripe_payment_attempts where id=attempt) is distinct from 1000 then
+    raise exception 'Card amount did not subtract manual receipt';
+  end if;
+  perform public.record_tournament_stripe_event('evt_guardmixed','acct_GuardCI',true,attempt,'cs_live_mixed','pi_guardmixed',1000,'eur','paid');
+  if (select status::text from public.tournament_teams where id=mixed_team) is distinct from 'accepted' then
+    raise exception 'Combined receipts did not confirm registration';
+  end if;
+  insert into public.tournament_teams(tournament_id,series_id,status,contact_email,submitted_by)
+    values(t,s,'pending','cash@example.test',actor) returning id into cash_team;
+  perform public.admin_record_tournament_manual_receipt_for_club(b,t,cash_team,'cash',1500,gen_random_uuid());
+  if (select status::text from public.tournament_teams where id=cash_team) is distinct from 'accepted' then
+    raise exception 'Full manual receipt did not confirm registration';
+  end if;
+  begin
+    perform public.prepare_tournament_stripe_checkout(actor,cash_team,true);
+    raise exception 'Already paid team offered another checkout' using errcode='XX000';
+  exception when invalid_parameter_value then null; end;
 end $check$;
 rollback;
