@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/infrastructure/supabase/client";
 
 type PaymentSummary = {
@@ -44,6 +44,8 @@ export function TournamentStripePayment({
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
   const [loading, setLoading] = useState(true);
+  const confirmationNotified = useRef(false);
+  const returnPolls = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -85,9 +87,32 @@ export function TournamentStripePayment({
   }, [teamId, refresh]);
 
   useEffect(() => {
-    if (payment?.status !== "paid") return;
-    void onPaymentConfirmed?.().catch(() => undefined);
+    if (payment?.status !== "paid" || confirmationNotified.current) return;
+    confirmationNotified.current = true;
+    void onPaymentConfirmed?.().catch(() => {
+      confirmationNotified.current = false;
+    });
   }, [payment?.status, onPaymentConfirmed]);
+
+  useEffect(() => {
+    const returnedTeam = new URLSearchParams(window.location.search).get(
+      "tournamentPayment",
+    );
+    if (
+      returnedTeam !== teamId ||
+      loading ||
+      error ||
+      !payment ||
+      payment.status === "paid" ||
+      returnPolls.current >= 10
+    )
+      return;
+    const timer = window.setTimeout(() => {
+      returnPolls.current += 1;
+      setRefresh((value) => value + 1);
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [teamId, loading, error, payment, refresh]);
 
   const checkout = async () => {
     if (!payment?.can_pay || busy) return;
