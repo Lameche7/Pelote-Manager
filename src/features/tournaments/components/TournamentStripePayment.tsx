@@ -9,6 +9,13 @@ type PaymentSummary = {
   refund_pending_cents: number;
   remaining_cents: number;
   can_pay: boolean;
+  manual_methods: string[];
+};
+
+const manualLabels: Record<string, string> = {
+  cash: "Espèces",
+  cheque: "Chèque",
+  bank_transfer: "Virement",
 };
 
 const labels: Record<string, string> = {
@@ -51,6 +58,7 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
           Number.isSafeInteger(summary.refund_pending_cents) &&
           Number.isSafeInteger(summary.remaining_cents) &&
           summary.remaining_cents >= 0 &&
+          Array.isArray(summary.manual_methods) &&
           typeof summary.can_pay === "boolean"
         )
           setPayment(summary);
@@ -112,6 +120,16 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
         <p>Remboursement en cours : {euros(payment.refund_pending_cents)}</p>
       )}
       {error && <p role="alert">{error}</p>}
+      {payment.remaining_cents > 0 && payment.manual_methods.length > 0 && (
+        <p>
+          Autres moyens de paiement autorisés par le club :{" "}
+          {payment.manual_methods
+            .filter((method) => method in manualLabels)
+            .map((method) => manualLabels[method])
+            .join(", ")}
+          . Contactez le club pour les modalités de règlement.
+        </p>
+      )}
       {payment.can_pay && (
         <button
           type="button"
