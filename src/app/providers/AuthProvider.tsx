@@ -43,19 +43,27 @@ export function AuthProvider({
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const synchronizationRevision = useRef(0);
+  const readyUserId = useRef<string | null>(null);
 
   const synchronize = useCallback(
     async (currentUser: AuthUser | null, requireProfile = false) => {
       const currentRevision = ++synchronizationRevision.current;
+      const sameReadyUser =
+        currentUser !== null && readyUserId.current === currentUser.id;
       setUser(currentUser);
 
       if (!currentUser) {
+        readyUserId.current = null;
         setProfile(null);
         setIsLoading(false);
         return;
       }
 
-      setIsLoading(true);
+      if (!sameReadyUser) {
+        readyUserId.current = null;
+        setProfile(null);
+        setIsLoading(true);
+      }
 
       try {
         const currentProfile = await finalizeAccountProfile(
@@ -77,6 +85,7 @@ export function AuthProvider({
         }
 
         if (currentRevision === synchronizationRevision.current) {
+          readyUserId.current = currentUser.id;
           setProfile(currentProfile);
           void pushNotificationService.syncExistingSubscription().catch(() => {
             // La session reste valide même si la synchronisation Push échoue.
@@ -84,6 +93,7 @@ export function AuthProvider({
         }
       } catch (error) {
         if (currentRevision === synchronizationRevision.current) {
+          readyUserId.current = null;
           setProfile(null);
         }
         if (requireProfile) throw error;
@@ -121,6 +131,7 @@ export function AuthProvider({
       })
       .catch(() => {
         if (isActive && initialAuthRevision === authRevision) {
+          readyUserId.current = null;
           setUser(null);
           setProfile(null);
           setIsLoading(false);
