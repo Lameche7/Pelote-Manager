@@ -53,6 +53,19 @@ Deno.serve(async (request) => {
       )
     )
       return json({ error: "Inscription invalide." }, 400);
+    // Sandbox checkout is restricted to one explicitly provisioned test team
+    // and its owner. Missing configuration denies all sandbox checkouts.
+    if (mode === "test") {
+      const testTeam = Deno.env.get("TOURNAMENT_STRIPE_TEST_TEAM_ID");
+      const testActor = Deno.env.get("TOURNAMENT_STRIPE_TEST_ACTOR_ID");
+      if (
+        !testTeam ||
+        !testActor ||
+        teamId !== testTeam ||
+        auth.user.id !== testActor
+      )
+        return json({ error: "Paiement fictif réservé au scénario de test." }, 403);
+    }
     const { data: attempt, error } = await admin.rpc(
       "prepare_tournament_stripe_checkout",
       {
