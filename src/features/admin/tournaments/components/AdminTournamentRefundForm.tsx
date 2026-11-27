@@ -48,7 +48,7 @@ export function AdminTournamentRefundForm({
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [operationId, setOperationId] = useState(() => crypto.randomUUID());
+  const [operationId, setOperationId] = useState<string>(() => crypto.randomUUID());
   const [retry, setRetry] = useState<PendingRefund | null>(null);
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
