@@ -1,3 +1,4 @@
+import { AdminTournamentRefundForm } from "@/features/admin/tournaments/components/AdminTournamentRefundForm";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/infrastructure/supabase/client";
 
@@ -6,6 +7,9 @@ export type TeamPayment = {
   status: string;
   amount_cents: number;
   received_cents: number;
+  refunded_cents: number;
+  refund_pending_cents: number;
+  can_refund: boolean;
   remaining_cents: number;
   can_record_manual: boolean;
   manual_methods: string[];
@@ -21,6 +25,8 @@ const labels: Record<string, string> = {
   expired: "Expiré",
   failed: "Non abouti",
   refunded: "Remboursé",
+  partially_refunded: "Partiellement remboursé",
+  refund_pending: "Remboursement en cours",
 };
 
 const methods: Record<string, string> = {
@@ -49,6 +55,7 @@ export function AdminTournamentPaymentCell({
   onRecorded: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [refunding, setRefunding] = useState(false);
   const [method, setMethod] = useState("");
   const [amount, setAmount] = useState("");
   const [operationId, setOperationId] = useState("");
@@ -115,7 +122,35 @@ export function AdminTournamentPaymentCell({
       <small>
         {euros(payment.received_cents)} / {euros(payment.amount_cents)}
       </small>
-      {canRecord && !editing && (
+      {payment.refunded_cents > 0 && (
+        <small>Remboursé : {euros(payment.refunded_cents)}</small>
+      )}
+      {payment.refund_pending_cents > 0 && (
+        <small>En attente : {euros(payment.refund_pending_cents)}</small>
+      )}
+      {payment.can_refund && !editing && !refunding && (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setRefunding(true)}
+        >
+          Rembourser
+        </button>
+      )}
+      {refunding && (
+        <AdminTournamentRefundForm
+          clubId={clubId}
+          tournamentId={tournamentId}
+          teamId={payment.team_id}
+          disabled={disabled}
+          onClose={() => setRefunding(false)}
+          onRecorded={() => {
+            setRefunding(false);
+            onRecorded();
+          }}
+        />
+      )}
+      {canRecord && !editing && !refunding && (
         <button type="button" disabled={disabled} onClick={open}>
           Enregistrer un règlement
         </button>
