@@ -67,7 +67,7 @@ begin
     'stripe_account_id',attempt_row.stripe_account_id,
     'livemode',attempt_row.livemode,'amount_cents',attempt_row.amount_cents,
     'currency',attempt_row.currency,'status',attempt_row.status,
-    'stripe_session_id',attempt_row.stripe_session_id
+    'stripe_session_id',attempt_row.stripe_session_id,'created_at',attempt_row.created_at
   );
 end;
 $$;
