@@ -123,7 +123,10 @@ export function TournamentStripePayment({
         {loading && <p role="status">Vérification du règlement…</p>}
         {error && <p role="alert">{error}</p>}
         {error && (
-          <button type="button" onClick={() => setRefresh((value) => value + 1)}>
+          <button
+            type="button"
+            onClick={() => setRefresh((value) => value + 1)}
+          >
             Réessayer
           </button>
         )}
