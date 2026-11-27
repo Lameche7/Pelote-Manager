@@ -10,9 +10,7 @@ const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: cors });
 const uuid = (value: unknown) =>
   typeof value === "string" &&
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    value,
-  );
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS")
@@ -76,11 +74,16 @@ Deno.serve(async (request) => {
       },
     );
     if (prepareError || !uuid(id))
-      return json({ error: "Remboursement non autorisé ou indisponible." }, 409);
+      return json(
+        { error: "Remboursement non autorisé ou indisponible." },
+        409,
+      );
 
     const { data: refund, error: readError } = await admin
       .from("tournament_payment_refunds")
-      .select("id,status,requested_at,amount_cents,stripe_refund_id,stripe_attempt_id")
+      .select(
+        "id,status,requested_at,amount_cents,stripe_refund_id,stripe_attempt_id",
+      )
       .eq("id", id)
       .eq("club_id", body.clubId)
       .eq("tournament_id", body.tournamentId)
@@ -107,7 +110,10 @@ Deno.serve(async (request) => {
     };
     // Never replay an unconfirmed POST after the provider's idempotency window.
     const age = Date.now() - Date.parse(refund.requested_at);
-    if (!refund.stripe_refund_id && (!Number.isFinite(age) || age > 20 * 3600000))
+    if (
+      !refund.stripe_refund_id &&
+      (!Number.isFinite(age) || age > 20 * 3600000)
+    )
       return json({ refundId: id, status: "verification_required" }, 409);
     const response = refund.stripe_refund_id
       ? await fetch(
@@ -155,6 +161,12 @@ Deno.serve(async (request) => {
       return json({ refundId: id, status: "verification_required" }, 502);
     return json({ refundId: id, status });
   } catch {
-    return json({ error: "Remboursement non confirmé. Ne pas renouveler avec une nouvelle demande." }, 500);
+    return json(
+      {
+        error:
+          "Remboursement non confirmé. Ne pas renouveler avec une nouvelle demande.",
+      },
+      500,
+    );
   }
 });
