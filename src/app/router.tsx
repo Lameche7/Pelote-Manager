@@ -29,6 +29,7 @@ import { MemberImportDetailPage } from "@/features/admin/members/pages/MemberImp
 import { MemberImportPage } from "@/features/admin/members/pages/MemberImportPage";
 import { MemberImportsPage } from "@/features/admin/members/pages/MemberImportsPage";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { TournamentStripeConnectReturnPage } from "@/features/admin/pages/TournamentStripeConnectReturnPage";
 import { AdminPaymentSettingsPage } from "@/features/admin/pages/AdminPaymentSettingsPage";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
@@ -108,6 +109,7 @@ const allAuthenticatedRoles = [
 ];
 
 export const routes = [
+  { path: "/stripe/connect/return", element: <TournamentStripeConnectReturnPage /> },
   { path: "/reseau", element: <NetworkDirectoryPage /> },
   { path: "/reseau/tournois", element: <NetworkDirectoryPage /> },
   { path: "/reseau/clubs", element: <NetworkDirectoryPage /> },
