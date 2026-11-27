@@ -426,3 +426,8 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-payment-guard.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-payment-guard-cases.sql
+
+      - name: Vérifier la libération sécurisée des places impayées
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-payment-hold-expiry.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-payment-hold-expiry-cases.sql
