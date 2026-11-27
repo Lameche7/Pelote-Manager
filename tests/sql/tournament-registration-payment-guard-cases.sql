@@ -84,6 +84,8 @@ begin
   if (select status::text from public.tournament_teams where id=mixed_team) is distinct from 'accepted' then
     raise exception 'Combined receipts did not confirm registration';
   end if;
+  -- Retire the preceding fixture registration before exercising a new one.
+  update public.tournament_teams set status='withdrawn' where id=mixed_team;
   insert into public.tournament_teams(tournament_id,series_id,status,contact_email,submitted_by)
     values(t,s,'pending','cash@example.test',actor) returning id into cash_team;
   perform public.admin_record_tournament_manual_receipt_for_club(b,t,cash_team,'cash',1500,gen_random_uuid());
