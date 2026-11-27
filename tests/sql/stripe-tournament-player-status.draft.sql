@@ -42,7 +42,9 @@ begin
     select 1 from public.club_stripe_connections c
       where c.club_id=tournament_row.club_id and c.livemode
         and c.charges_enabled and c.verified_at is not null
-  ) and team_row.registration_price_cents>0;
+  ) and team_row.registration_price_cents>0
+    and exists(select 1 from public.club_payment_policies p
+      where p.club_id=tournament_row.club_id and p.stripe_tournament_enabled);
   select array_remove(array[
     case when p.cash_enabled then 'cash' end,
     case when p.cheque_enabled then 'cheque' end,
