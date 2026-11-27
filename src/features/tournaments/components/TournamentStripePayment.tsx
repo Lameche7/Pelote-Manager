@@ -37,17 +37,27 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    setPayment(null);
+    setLoading(true);
     setError("");
     void supabase
       .rpc("get_my_tournament_stripe_payment", {
         target_team_id: teamId,
       })
       .then(({ data, error }) => {
-        if (!active || error || !data) return;
+        if (!active) return;
+        setLoading(false);
+        if (error) {
+          setError("Impossible de vérifier le règlement. Réessayez.");
+          return;
+        }
+        if (!data) {
+          setPayment(null);
+          return;
+        }
         const summary = data as PaymentSummary;
         if (
           typeof summary.status === "string" &&
@@ -95,7 +105,20 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
     }
   };
 
-  if (!payment) return null;
+  if (!payment) {
+    if (!loading && !error) return null;
+    return (
+      <section className="public-tournament-panel" aria-label="Règlement">
+        {loading && <p role="status">Vérification du règlement…</p>}
+        {error && <p role="alert">{error}</p>}
+        {error && (
+          <button type="button" onClick={() => setRefresh((value) => value + 1)}>
+            Réessayer
+          </button>
+        )}
+      </section>
+    );
+  }
   const euros = (cents: number) =>
     new Intl.NumberFormat("fr-FR", {
       style: "currency",
@@ -120,6 +143,9 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
         <p>Remboursement en cours : {euros(payment.refund_pending_cents)}</p>
       )}
       {error && <p role="alert">{error}</p>}
+      {payment.status === "processing" && (
+        <p role="status">Ne relancez pas le paiement avant sa confirmation.</p>
+      )}
       {payment.remaining_cents > 0 && payment.manual_methods.length > 0 && (
         <p>
           Autres moyens de paiement autorisés par le club :{" "}
@@ -134,7 +160,7 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
         <button
           type="button"
           className="button button--primary"
-          disabled={busy}
+          disabled={busy || loading}
           onClick={() => void checkout()}
         >
           {busy
@@ -145,7 +171,7 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
       <button
         type="button"
         className="button button--ghost"
-        disabled={busy}
+        disabled={busy || loading}
         onClick={() => setRefresh((value) => value + 1)}
       >
         Actualiser le règlement
