@@ -93,6 +93,9 @@ Deno.serve(async (request) => {
       "adaptive_pricing[enabled]": "false",
     });
     const sessionId = attempt.stripe_session_id;
+    const age = Date.now() - Date.parse(attempt.created_at);
+    if (!sessionId && (!Number.isFinite(age) || age < 0 || age > 20 * 3600000))
+      return json({ status: "verification_required" }, 409);
     // A recorded session is retrieved rather than replaced; only Stripe can
     // establish its terminal state. An uncertain request is never reset blindly.
     const stripeResponse = sessionId
