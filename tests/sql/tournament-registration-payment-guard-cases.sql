@@ -20,6 +20,9 @@ declare
   mixed_team uuid;
   cash_team uuid;
   receipt uuid;
+  second_tournament uuid;
+  second_series uuid;
+  second_team uuid;
 begin
   t := public.platform_admin_create_tournament(b,jsonb_build_object(
     'season_id','70000000-0000-0000-0000-000000000002','name','CI Stripe',
@@ -96,5 +99,33 @@ begin
     perform public.prepare_tournament_stripe_checkout(actor,cash_team,true);
     raise exception 'Already paid team offered another checkout' using errcode='XX000';
   exception when invalid_parameter_value then null; end;
+
+  -- The same submitter may enter another tournament at its own price.
+  second_tournament := public.platform_admin_create_tournament(b,jsonb_build_object(
+    'season_id','70000000-0000-0000-0000-000000000002','name','CI second tournament',
+    'pool_starts_on','2027-02-01','pool_ends_on','2027-02-28',
+    'finals_starts_on','2027-03-01','finals_ends_on','2027-03-07',
+    'registration_opens_at',now()+interval '1 day','registration_closes_at',now()+interval '2 days',
+    'registration_fee_cents',2200));
+  perform public.platform_admin_save_tournament_configuration(b,second_tournament,jsonb_build_object(
+    'resource_ids',jsonb_build_array('71000000-0000-0000-0000-000000000002'),
+    'series',jsonb_build_array(jsonb_build_object('name','CI second series','capacity',8,'enabled',true)),
+    'play_windows',jsonb_build_array(jsonb_build_object('weekday',2,'opens_at','18:00','closes_at','20:00'))));
+  second_series := (public.platform_admin_get_tournament(b,second_tournament)->'series'->0->>'id')::uuid;
+  update public.tournaments set status='registrations_open',registration_opens_at=now()-interval '1 day' where id=second_tournament;
+  insert into public.tournament_teams(tournament_id,series_id,status,contact_email,submitted_by)
+    values(second_tournament,second_series,'pending','cash@example.test',actor) returning id into second_team;
+  if (select status::text from public.tournament_teams where id=second_team) is distinct from 'pending' then
+    raise exception 'Payment from first tournament incorrectly confirmed second registration';
+  end if;
+  attempt:=(public.prepare_tournament_stripe_checkout(actor,second_team,true)->>'attempt_id')::uuid;
+  if (select amount_cents from public.tournament_stripe_payment_attempts where id=attempt) is distinct from 2200 then
+    raise exception 'Second tournament did not use independent price';
+  end if;
+  perform public.record_tournament_stripe_event('evt_guardsecond','acct_GuardCI',true,attempt,'cs_live_second','pi_guardsecond',2200,'eur','paid');
+  if (select status::text from public.tournament_teams where id=second_team) is distinct from 'accepted'
+    or (select status::text from public.tournament_teams where id=cash_team) is distinct from 'accepted' then
+    raise exception 'Independent tournament registrations were not preserved';
+  end if;
 end $check$;
 rollback;
