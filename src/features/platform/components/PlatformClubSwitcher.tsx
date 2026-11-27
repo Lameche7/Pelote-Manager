@@ -7,29 +7,19 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 
 type Club = { id: string; name: string; slug: string };
-const CLUB_PREFERENCE_KEY = "pilotoki-superadmin-selected-club";
 
 function SuperAdminClubSwitcher() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [selectedSlug, setSelectedSlug] = useState(() =>
-    typeof window === "undefined"
-      ? ""
-      : (new URLSearchParams(window.location.search).get("club") ??
-        window.sessionStorage.getItem(CLUB_PREFERENCE_KEY) ??
-        ""),
-  );
+  const selectedSlug = new URLSearchParams(location.search).get("club") || "";
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
   const [error, setError] = useState("");
   const [identityLinked, setIdentityLinked] = useState(false);
 
-
   useEffect(() => {
     const client = platformSupabase;
     if (!client) {
-      window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
-      setSelectedSlug("");
+
       return;
     }
     let active = true;
@@ -42,18 +32,16 @@ function SuperAdminClubSwitcher() {
         await client.auth.getUser();
       if (!active) return;
       if (identityError || !identity.user) {
-        window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
-        setSelectedSlug("");
-          return;
+
+        return;
       }
 
       const { data: allowed, error: roleError } =
         await client.rpc("platform_is_admin");
       if (!active) return;
       if (roleError || allowed !== true) {
-        window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
-        setSelectedSlug("");
-          return;
+
+        return;
       }
       setIsVerifiedAdmin(true);
       const proof = await verifyPlatformBusinessIdentity();
@@ -68,8 +56,7 @@ function SuperAdminClubSwitcher() {
       );
       if (!active) return;
       if (catalogueError || !Array.isArray(data?.clubs)) {
-        window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
-        setSelectedSlug("");
+
         setError("Catalogue des clubs indisponible.");
         return;
       }
@@ -101,48 +88,12 @@ function SuperAdminClubSwitcher() {
     };
   }, []);
 
-
-
   if (!isVerifiedAdmin) {
     return null;
   }
 
   return (
-    <label className="app-club-selection">
-      <span>Aperçu visuel du club (super-admin)</span>
-      <select
-        aria-label="Aperçu visuel du club"
-        value={
-          clubs.some((club) => club.slug === selectedSlug) ? selectedSlug : ""
-        }
-        disabled={!clubs.length}
-        onChange={(event) => {
-          const slug = event.target.value;
-          if (slug && !clubs.some((club) => club.slug === slug)) return;
-          if (slug) window.sessionStorage.setItem(CLUB_PREFERENCE_KEY, slug);
-          else window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
-          setSelectedSlug(slug);
-          const next = new URLSearchParams(location.search);
-          if (slug) next.set("club", slug);
-          else next.delete("club");
-          // An adminClubId belongs to a separate verified business context.
-          // Never carry it over when changing the visual club.
-          next.delete("adminClubId");
-          navigate({
-            pathname: location.pathname,
-            search: next.toString(),
-            hash: location.hash,
-          });
-        }}
-      >
-        <option value="">Club par défaut</option>
-        {clubs.map((club) => (
-          <option key={club.id} value={club.slug}>
-            {club.name}
-          </option>
-        ))}
-      </select>
-      <small>Le club sélectionné ne modifie pas vos habilitations.</small>
+    <div className="app-club-selection">
       <small>
         {identityLinked
           ? "Identité vérifiée · accès sécurisé depuis Administration"
@@ -156,7 +107,7 @@ function SuperAdminClubSwitcher() {
         </Link>
       )}
       {error && <small role="alert">{error}</small>}
-    </label>
+    </div>
   );
 }
 
@@ -169,9 +120,7 @@ export function PlatformClubSwitcher() {
   const [publicClubs, setPublicClubs] = useState<PublicClub[]>([]);
   const [defaultSlug, setDefaultSlug] = useState("");
   const activeSlug = new URLSearchParams(location.search).get("club") || "";
-  const preferenceKey = user
-    ? `pilotoki-selected-club:${user.id}`
-    : null;
+  const preferenceKey = user ? `pilotoki-selected-club:${user.id}` : null;
 
   useEffect(() => {
     let active = true;
@@ -201,16 +150,19 @@ export function PlatformClubSwitcher() {
       if (!active) return;
       const affiliations = Array.isArray(members.data) ? members.data : [];
       const grants = Array.isArray(admins.data) ? admins.data : [];
-      const primary = affiliations.find(
-        (member) => member.is_active && member.affiliation_type === "primary",
-      ) ?? affiliations.find((member) => member.is_active && member.is_default);
-      const name = primary?.club_name ??
-        (grants.length === 1 ? grants[0].club_name : null);
+      const primary =
+        affiliations.find(
+          (member) => member.is_active && member.affiliation_type === "primary",
+        ) ?? affiliations.find((member) => member.is_active && member.is_default);
+      const name =
+        primary?.club_name ?? (grants.length === 1 ? grants[0].club_name : null);
       const preferred = available.find((club) => club.name === name);
       setDefaultSlug(preferred?.slug || "");
     };
     void load();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [user, isAuthenticated, isLoading, preferenceKey]);
 
   useEffect(() => {
@@ -218,8 +170,22 @@ export function PlatformClubSwitcher() {
     const next = new URLSearchParams(location.search);
     next.set("club", defaultSlug);
     next.delete("adminClubId");
-    navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash }, { replace: true });
-  }, [activeSlug, defaultSlug, location.pathname, location.search, location.hash, navigate]);
+    navigate(
+      {
+        pathname: location.pathname,
+        search: next.toString(),
+        hash: location.hash,
+      },
+      { replace: true },
+    );
+  }, [
+    activeSlug,
+    defaultSlug,
+    location.pathname,
+    location.search,
+    location.hash,
+    navigate,
+  ]);
 
   return (
     <>
@@ -239,7 +205,9 @@ export function PlatformClubSwitcher() {
           >
             {!activeSlug && <option value="">Club par défaut</option>}
             {publicClubs.map((club) => (
-              <option key={club.slug} value={club.slug}>{club.name}</option>
+              <option key={club.slug} value={club.slug}>
+                {club.name}
+              </option>
             ))}
           </select>
         </label>
