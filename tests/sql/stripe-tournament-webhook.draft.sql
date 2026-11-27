@@ -16,6 +16,10 @@ begin
     or event_livemode is null then
     raise exception 'Invalid Stripe event' using errcode='22023';
   end if;
+  -- Match checkout/hold expiry lock ordering (team first, then attempt).
+  perform 1 from public.tournament_teams t
+    join public.tournament_stripe_payment_attempts a on a.team_id=t.id
+    where a.id=attempt_id for update of t;
   select * into payment from public.tournament_stripe_payment_attempts p
     where p.id=attempt_id for update;
   if not found or payment.stripe_account_id is distinct from account_id
