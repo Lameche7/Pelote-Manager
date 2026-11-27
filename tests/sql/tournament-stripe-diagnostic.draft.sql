@@ -61,3 +61,39 @@ end;
 $$;
 revoke all on function public.get_my_tournament_stripe_diagnostic(uuid) from public,anon,authenticated;
 grant execute on function public.get_my_tournament_stripe_diagnostic(uuid) to authenticated;
+
+-- Called only by the signature-verifying webhook, never by a browser.
+create or replace function public.record_tournament_stripe_diagnostic(
+  event_id text, account_id text, event_livemode boolean, attempt_id uuid,
+  session_id text, intent_id text, paid_amount integer, paid_currency text, event_status text
+) returns text language plpgsql security invoker set search_path='' as $$
+declare
+  a public.tournament_stripe_diagnostic_attempts%rowtype;
+begin
+  if event_livemode is distinct from false or event_id is null or event_id !~ '^evt_[A-Za-z0-9]+$'
+    or session_id is null or session_id !~ '^cs_test_[A-Za-z0-9_]+$'
+    or paid_amount is distinct from 100 or paid_currency is distinct from 'eur'
+    or event_status is null or event_status not in ('paid','processing','expired')
+    or (event_status='paid' and (intent_id is null or intent_id !~ '^pi_[A-Za-z0-9]+$')) then
+    raise exception 'Invalid diagnostic event' using errcode='22023';
+  end if;
+  select * into a from public.tournament_stripe_diagnostic_attempts where id=attempt_id for update;
+  if not found or a.stripe_account_id is distinct from account_id
+    or (a.stripe_session_id is not null and a.stripe_session_id is distinct from session_id)
+    or (a.stripe_payment_intent_id is not null and a.stripe_payment_intent_id is distinct from intent_id) then
+    raise exception 'Diagnostic scope mismatch' using errcode='22023';
+  end if;
+  insert into public.stripe_processed_events(stripe_event_id,stripe_account_id,livemode)
+    values(event_id,account_id,false) on conflict do nothing;
+  if not found then return 'duplicate'; end if;
+  if a.status='paid' or (a.status='expired' and event_status<>'paid') then return 'unchanged'; end if;
+  update public.tournament_stripe_diagnostic_attempts
+    set status=event_status,stripe_session_id=session_id,
+      stripe_payment_intent_id=coalesce(intent_id,a.stripe_payment_intent_id),
+      paid_at=case when event_status='paid' then now() else null end
+    where id=attempt_id;
+  return 'recorded';
+end;
+$$;
+revoke all on function public.record_tournament_stripe_diagnostic(text,text,boolean,uuid,text,text,integer,text,text) from public,anon,authenticated;
+grant execute on function public.record_tournament_stripe_diagnostic(text,text,boolean,uuid,text,text,integer,text,text) to service_role;
