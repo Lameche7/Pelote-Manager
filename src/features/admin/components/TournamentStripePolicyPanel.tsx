@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TournamentStripeDiagnostic } from "./TournamentStripeDiagnostic";
 import { supabase } from "@/infrastructure/supabase/client";
 
 type StripePolicy = {
@@ -121,6 +122,9 @@ export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
             <p>
               Le compte de test ne permet pas d’activer les paiements réels.
             </p>
+          )}
+          {policy.test_connected && !policy.connected && (
+            <TournamentStripeDiagnostic key={clubId} clubId={clubId} />
           )}
           <label>
             <input
