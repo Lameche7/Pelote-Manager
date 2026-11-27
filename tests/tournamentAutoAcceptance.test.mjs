@@ -23,10 +23,14 @@ test("les inscriptions en ligne sont acceptées automatiquement", async () => {
   );
 });
 
-test("le formulaire n'annonce plus de validation manuelle", async () => {
+test("le formulaire distingue enregistrement et confirmation", async () => {
   const form = await read(registrationFormPath);
 
-  assert.match(form, /Votre équipe est inscrite au tournoi/);
+  assert.match(form, /Votre demande est enregistrée/);
+  assert.doesNotMatch(form, /Votre équipe est inscrite au tournoi/);
+  const detail = await read("../src/features/tournaments/pages/TournamentDetailPage.tsx");
+  assert.match(detail, /registration\?\.status === "accepted"/);
+  assert.match(detail, /registrationConfirmed &&/);
   assert.match(form, /Votre inscription a été mise à jour/);
   assert.doesNotMatch(form, /attend la validation du club/);
   assert.doesNotMatch(form, /repasse en validation/);
