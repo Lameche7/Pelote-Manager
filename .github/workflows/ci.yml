@@ -69,6 +69,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Diagnostic des différences de formatage
+        run: |
+          for f in src/features/admin/components/TournamentStripePolicyPanel.tsx src/features/admin/pages/TournamentStripeConnectReturnPage.tsx supabase/functions/begin-tournament-stripe-connect/index.ts supabase/functions/complete-tournament-stripe-connect/index.ts; do
+            npx prettier "$f" > /tmp/pilotoki-formatted
+            diff -u "$f" /tmp/pilotoki-formatted || true
+          done
       - run: npm run format:check
 
   network-user-admin:
