@@ -53,9 +53,18 @@ begin
      or new_tournament_hold_place is null then
     raise exception 'Paramètres de paiement invalides' using errcode = '22023';
   end if;
-  if (new_licence_confirmation = 'payment_required' or new_tournament_confirmation = 'payment_required')
-      and not new_helloasso_enabled then
-    raise exception 'Un paiement en ligne actif est nécessaire pour imposer le paiement immédiat'
+  if new_licence_confirmation = 'payment_required' and not new_helloasso_enabled then
+    raise exception 'Un paiement en ligne actif est nécessaire pour imposer le paiement immédiat des licences'
+      using errcode = '22023';
+  end if;
+  if new_tournament_confirmation = 'payment_required' and not new_helloasso_enabled
+     and not exists (
+       select 1 from public.club_payment_policies p
+       join public.club_stripe_connections c on c.club_id=p.club_id
+       where p.club_id=target_club_id and p.stripe_tournament_enabled
+         and c.livemode and c.charges_enabled and c.verified_at is not null
+     ) then
+    raise exception 'Un paiement en ligne actif est nécessaire pour imposer le paiement immédiat des tournois'
       using errcode = '22023';
   end if;
   insert into public.club_payment_policies (
