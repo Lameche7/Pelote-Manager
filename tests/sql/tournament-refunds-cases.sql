@@ -55,6 +55,7 @@ begin
   end if;
   insert into public.club_stripe_connections(club_id,stripe_account_id,livemode,charges_enabled,verified_at)
     values(b,'acct_FinanceCI',true,true,now());
+  perform public.admin_set_tournament_stripe_policy_for_club(b,true);
   first_attempt:=public.prepare_tournament_stripe_checkout(actor,team,true);
   if first_attempt->>'amount_cents' is distinct from '1000' then raise exception 'Incorrect checkout balance'; end if;
   begin
