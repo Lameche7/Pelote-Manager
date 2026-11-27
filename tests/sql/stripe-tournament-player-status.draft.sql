@@ -9,6 +9,9 @@ declare
   available boolean;
   manual_received bigint;
   remaining_cents bigint;
+  gross_received bigint;
+  refunded bigint;
+  refund_pending bigint;
 begin
   if auth.uid() is null or target_team_id is null then
     raise exception 'Authentication required' using errcode='42501';
@@ -28,6 +31,12 @@ begin
       and club_id=tournament_row.club_id and tournament_id=tournament_row.id;
   remaining_cents := greatest(team_row.registration_price_cents-manual_received
     -case when payment.status='paid' then payment.amount_cents else 0 end,0);
+  gross_received := manual_received+case when payment.status='paid' then payment.amount_cents else 0 end;
+  select coalesce(sum(amount_cents) filter(where status='succeeded'),0),
+    coalesce(sum(amount_cents) filter(where status in ('requested','pending')),0)
+    into refunded,refund_pending from public.tournament_payment_refunds
+    where team_id=team_row.id and club_id=tournament_row.club_id and tournament_id=tournament_row.id;
+  if refunded+refund_pending>0 then remaining_cents:=0; end if;
   available := exists (
     select 1 from public.club_stripe_connections c
       where c.club_id=tournament_row.club_id and c.livemode
@@ -35,11 +44,18 @@ begin
   ) and team_row.registration_price_cents>0;
   if not available and payment.id is null and manual_received=0 then return null; end if;
   return jsonb_build_object(
-    'status',case when remaining_cents=0 and team_row.registration_price_cents>0 then 'paid' else coalesce(payment.status,'unpaid') end,
+    'status',case when payment.status='disputed' then 'disputed'
+      when refund_pending>0 then 'refund_pending'
+      when refunded>0 and refunded>=gross_received then 'refunded'
+      when refunded>0 then 'partially_refunded'
+      when remaining_cents=0 and team_row.registration_price_cents>0 then 'paid' else coalesce(payment.status,'unpaid') end,
     'amount_cents',team_row.registration_price_cents,
     'remaining_cents',remaining_cents,
-    'received_cents',team_row.registration_price_cents-remaining_cents,
-    'can_pay',available and remaining_cents>0 and team_row.status in ('pending','accepted')
+    'received_cents',gross_received,
+    'refunded_cents',refunded,
+    'refund_pending_cents',refund_pending,
+    'net_received_cents',gross_received-refunded,
+    'can_pay',available and refunded+refund_pending=0 and remaining_cents>0 and team_row.status in ('pending','accepted')
       and coalesce(public.tournament_registration_is_open(tournament_row.id),false)
       and coalesce(payment.status,'unpaid') in ('unpaid','creating','open','expired','failed'),
     'paid_at',payment.paid_at
