@@ -66,7 +66,7 @@ Deno.serve(async (request) => {
       "Stripe-Account": attempt.stripe_account_id,
       "Stripe-Version": "2025-02-24.acacia",
     };
-    const returnUrl = new URL("/", origin);
+    const returnUrl = new URL("/stripe/diagnostic/return", origin);
     returnUrl.searchParams.set("stripeDiagnostic", clubId);
     const form = new URLSearchParams({
       mode: "payment",
