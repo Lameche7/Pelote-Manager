@@ -18,8 +18,8 @@ export function TournamentStripeDiagnosticReturnPage() {
     <main>
       <h1>Retour du paiement fictif Stripe</h1>
       <p role="status">
-        Le retour de Stripe ne confirme pas à lui seul le paiement. Consultez
-        le résultat vérifié dans les paramètres du club.
+        Le retour de Stripe ne confirme pas à lui seul le paiement. Consultez le
+        résultat vérifié dans les paramètres du club.
       </p>
       <a href={returnPath}>Retour aux paramètres du club</a>
     </main>
