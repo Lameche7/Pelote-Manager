@@ -140,7 +140,13 @@ Deno.serve(async (request) => {
     const admin = createClient(url, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { error } = await admin.rpc("record_tournament_stripe_event", {
+    const diagnostic = session.metadata?.pilotoki_diagnostic === "1";
+    if (diagnostic && event.livemode !== false)
+      return json({ error: "Wrong diagnostic mode" }, 400);
+    const endpoint = diagnostic
+      ? "record_tournament_stripe_diagnostic"
+      : "record_tournament_stripe_event";
+    const { error } = await admin.rpc(endpoint, {
       event_id: event.id,
       account_id: event.account,
       event_livemode: event.livemode,
