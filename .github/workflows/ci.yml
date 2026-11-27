@@ -431,3 +431,8 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-payment-hold-expiry.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-payment-hold-expiry-cases.sql
+
+      - name: Vérifier le diagnostic Stripe privé
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-diagnostic.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-diagnostic-cases.sql
