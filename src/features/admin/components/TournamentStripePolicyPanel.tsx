@@ -4,6 +4,7 @@ import { supabase } from "@/infrastructure/supabase/client";
 type StripePolicy = {
   enabled: boolean;
   connected: boolean;
+  test_connected?: boolean;
 };
 
 export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
@@ -107,13 +108,18 @@ export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
           <p>
             {policy.connected
               ? "Compte Stripe vérifié."
-              : "Compte Stripe non connecté ou non vérifié."}
+              : policy.test_connected
+                ? "Compte Stripe de test vérifié — encaissements fictifs autorisés."
+                : "Compte Stripe non connecté ou non vérifié."}
           </p>
           <button type="button" onClick={() => void connect()}>
             {policy.connected
               ? "Reconnecter Stripe"
               : "Connecter mon compte Stripe"}
           </button>
+          {policy.test_connected && !policy.connected && (
+            <p>Le compte de test ne permet pas d’activer les paiements réels.</p>
+          )}
           <label>
             <input
               type="checkbox"
