@@ -19,6 +19,9 @@ begin
       'team_id',t.id,
       'status',case
         when p.status='disputed' then 'disputed'
+        when refunds.pending>0 then 'refund_pending'
+        when refunds.confirmed>0 and refunds.confirmed>=balances.received then 'refunded'
+        when refunds.confirmed>0 then 'partially_refunded'
         when t.registration_price_cents=0 then 'free'
         when balances.received>=t.registration_price_cents then 'paid'
         when p.status in ('creating','open','processing') then 'processing'
@@ -26,9 +29,13 @@ begin
         else coalesce(p.status,'unpaid') end,
       'amount_cents',t.registration_price_cents,
       'received_cents',balances.received,
-      'remaining_cents',greatest(t.registration_price_cents-balances.received,0),
+      'refunded_cents',refunds.confirmed,
+      'refund_pending_cents',refunds.pending,
+      'net_received_cents',balances.received-refunds.confirmed,
+      'remaining_cents',case when refunds.confirmed+refunds.pending>0 then 0 else greatest(t.registration_price_cents-balances.received,0) end,
       'paid_at',p.paid_at,
       'can_record_manual',t.status in ('pending','accepted')
+        and refunds.confirmed+refunds.pending=0
         and balances.received<t.registration_price_cents
         and coalesce(p.status,'unpaid') not in ('creating','open','processing','disputed')
         and coalesce(public.can_administer_club(target_club_id,'payments.manage')
@@ -56,6 +63,12 @@ begin
         where a.team_id=t.id and a.club_id=target_club_id and a.tournament_id=target_tournament_id
           and a.livemode and a.status='paid'),0) as received
     ) balances
+    cross join lateral (
+      select coalesce(sum(amount_cents) filter(where status='succeeded'),0) as confirmed,
+        coalesce(sum(amount_cents) filter(where status in ('requested','pending')),0) as pending
+      from public.tournament_payment_refunds f where f.club_id=target_club_id
+        and f.tournament_id=target_tournament_id and f.team_id=t.id
+    ) refunds
     where t.tournament_id=target_tournament_id
   ),'[]'::jsonb);
 end;
@@ -93,19 +106,29 @@ begin
     where m.club_id=target_club_id and m.tournament_id=target_tournament_id
   ), receipts as (
     select team_id,sum(amount_cents)::bigint as received from receipt_lines group by team_id
+  ), refunds as (
+    select team_id,
+      coalesce(sum(amount_cents) filter(where status='succeeded'),0) as confirmed,
+      coalesce(sum(amount_cents) filter(where status in ('requested','pending')),0) as pending
+    from public.tournament_payment_refunds
+    where club_id=target_club_id and tournament_id=target_tournament_id
+    group by team_id
   ), series_totals as (
     select s.id,s.name,
       case when s.enabled then s.capacity else 0 end as capacity,
       count(t.id) filter(where t.status in ('pending','accepted')) as registered,
       count(t.id) filter(where t.status in ('pending','accepted') and coalesce(r.received,0)>=t.registration_price_cents and t.registration_price_cents>0) as paid_teams,
-      count(t.id) filter(where t.status in ('pending','accepted') and t.registration_price_cents>coalesce(r.received,0)) as unpaid_teams,
+      count(t.id) filter(where t.status in ('pending','accepted') and coalesce(f.confirmed,0)+coalesce(f.pending,0)=0 and t.registration_price_cents>coalesce(r.received,0)) as unpaid_teams,
       coalesce(sum(t.registration_price_cents) filter(where t.status in ('pending','accepted')),0)::bigint as expected,
       coalesce(sum(r.received),0)::bigint as received,
+      coalesce(sum(f.confirmed),0)::bigint as refunded,
+      coalesce(sum(f.pending),0)::bigint as refund_pending,
       coalesce(sum(r.received) filter(where t.status in ('pending','accepted')),0)::bigint as active_received,
-      coalesce(sum(greatest(t.registration_price_cents-coalesce(r.received,0),0)) filter(where t.status in ('pending','accepted')),0)::bigint as outstanding
+      coalesce(sum(greatest(t.registration_price_cents-coalesce(r.received,0),0)) filter(where t.status in ('pending','accepted') and coalesce(f.confirmed,0)+coalesce(f.pending,0)=0),0)::bigint as outstanding
     from public.tournament_series s
     left join public.tournament_teams t on t.series_id=s.id and t.tournament_id=s.tournament_id
     left join receipts r on r.team_id=t.id
+    left join refunds f on f.team_id=t.id
     where s.tournament_id=target_tournament_id
     group by s.id,s.name,s.enabled,s.capacity
   )
@@ -116,6 +139,9 @@ begin
     'paid_teams',coalesce(sum(paid_teams),0),
     'unpaid_teams',coalesce(sum(unpaid_teams),0),
     'received_cents',coalesce(sum(received),0),
+    'refunded_cents',coalesce(sum(refunded),0),
+    'refund_pending_cents',coalesce(sum(refund_pending),0),
+    'net_received_cents',coalesce(sum(received-refunded),0),
     'active_received_cents',coalesce(sum(active_received),0),
     'expected_cents',coalesce(sum(expected),0),
     'maximum_cents',coalesce(sum(expected+greatest(capacity-registered,0)*fee),0),
@@ -123,6 +149,8 @@ begin
     'series',coalesce(jsonb_agg(jsonb_build_object(
       'id',id,'name',name,'registered_teams',registered,'capacity',capacity,
       'received_cents',received,'expected_cents',expected,
+      'refunded_cents',refunded,'refund_pending_cents',refund_pending,
+      'net_received_cents',received-refunded,
       'maximum_cents',expected+greatest(capacity-registered,0)*fee,'outstanding_cents',outstanding
     ) order by name,id),'[]'::jsonb),
     'coverage','stripe_and_manual_confirmed'
