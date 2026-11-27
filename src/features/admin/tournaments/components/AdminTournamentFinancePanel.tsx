@@ -7,6 +7,9 @@ type SeriesFinance = {
   registered_teams: number;
   capacity: number;
   received_cents: number;
+  refunded_cents: number;
+  refund_pending_cents: number;
+  net_received_cents: number;
   expected_cents: number;
   maximum_cents: number;
   outstanding_cents: number;
@@ -87,7 +90,10 @@ export function AdminTournamentFinancePanel({
       </header>
       <div className="admin-tournament-teams__series">
         {[
-          ["Encaissé", summary.received_cents],
+          ["Encaissements bruts", summary.received_cents],
+          ["Remboursements confirmés", summary.refunded_cents],
+          ["Recettes nettes hors frais", summary.net_received_cents],
+          ["Remboursements en attente", summary.refund_pending_cents],
           ["Attendu à ce jour", summary.expected_cents],
           ["Reste à encaisser", summary.outstanding_cents],
           ["Recette à tournoi complet", summary.maximum_cents],
@@ -129,6 +135,8 @@ export function AdminTournamentFinancePanel({
             <tr>
               <th scope="col">Série</th>
               <th scope="col">Encaissé</th>
+              <th scope="col">Remboursé</th>
+              <th scope="col">Net hors frais</th>
               <th scope="col">Attendu</th>
               <th scope="col">Reste dû</th>
               <th scope="col">Complet</th>
@@ -139,6 +147,8 @@ export function AdminTournamentFinancePanel({
               <tr key={series.id}>
                 <th scope="row">{series.name}</th>
                 <td>{euros(series.received_cents)}</td>
+                <td>{euros(series.refunded_cents)}</td>
+                <td>{euros(series.net_received_cents)}</td>
                 <td>{euros(series.expected_cents)}</td>
                 <td>{euros(series.outstanding_cents)}</td>
                 <td>{euros(series.maximum_cents)}</td>
@@ -148,8 +158,8 @@ export function AdminTournamentFinancePanel({
         </table>
       </div>
       <small>
-        Montants bruts des règlements confirmés Stripe et manuels enregistrés
-        dans Pilotoki. Hors frais et remboursements non intégrés.
+        Règlements Stripe et manuels enregistrés dans Pilotoki. Recettes nettes
+        après remboursements confirmés, hors frais bancaires.
       </small>
     </section>
   );
