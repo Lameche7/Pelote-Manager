@@ -3,7 +3,9 @@ import { supabase } from "@/infrastructure/supabase/client";
 
 export function TournamentStripeConnectReturnPage() {
   const started = useRef(false);
-  const [message, setMessage] = useState("Vérification de la connexion Stripe…");
+  const [message, setMessage] = useState(
+    "Vérification de la connexion Stripe…",
+  );
   const [returnPath, setReturnPath] = useState("/");
   useEffect(() => {
     if (started.current) return;
