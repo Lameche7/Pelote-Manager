@@ -48,7 +48,9 @@ export function AdminTournamentRefundForm({
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [operationId, setOperationId] = useState<string>(() => crypto.randomUUID());
+  const [operationId, setOperationId] = useState<string>(() =>
+    crypto.randomUUID(),
+  );
   const [retry, setRetry] = useState<PendingRefund | null>(null);
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
@@ -79,7 +81,9 @@ export function AdminTournamentRefundForm({
   const choose = (item: Source, pending: PendingRefund | null = null) => {
     setSourceId(item.id);
     setRetry(pending);
-    setAmount(((pending?.amount_cents ?? item.refundable_cents) / 100).toFixed(2));
+    setAmount(
+      ((pending?.amount_cents ?? item.refundable_cents) / 100).toFixed(2),
+    );
     setReason(pending?.reason ?? "");
     setOperationId(pending?.operation_id ?? crypto.randomUUID());
     setConfirmed(false);
@@ -120,7 +124,12 @@ export function AdminTournamentRefundForm({
             },
           },
         );
-        if (error || !["succeeded", "pending", "failed", "cancelled"].includes(data?.status))
+        if (
+          error ||
+          !["succeeded", "pending", "failed", "cancelled"].includes(
+            data?.status,
+          )
+        )
           throw new Error("Unconfirmed refund");
       } else {
         const { error } = await supabase.rpc(
@@ -140,7 +149,9 @@ export function AdminTournamentRefundForm({
       onRecorded();
     } catch {
       setUncertain(true);
-      setError("Remboursement non confirmé. Ne créez pas de nouvelle demande. Réessayez avec les mêmes informations.");
+      setError(
+        "Remboursement non confirmé. Ne créez pas de nouvelle demande. Réessayez avec les mêmes informations.",
+      );
     } finally {
       setBusy(false);
     }
@@ -157,12 +168,21 @@ export function AdminTournamentRefundForm({
             {euros(item.refundable_cents)} remboursables
           </small>
           {item.refundable_cents > 0 && (
-            <button type="button" disabled={busy || uncertain || disabled} onClick={() => choose(item)}>
+            <button
+              type="button"
+              disabled={busy || uncertain || disabled}
+              onClick={() => choose(item)}
+            >
               Choisir ce règlement
             </button>
           )}
           {item.pending_requests.map((pending) => (
-            <button key={pending.operation_id} type="button" disabled={busy || uncertain || disabled} onClick={() => choose(item, pending)}>
+            <button
+              key={pending.operation_id}
+              type="button"
+              disabled={busy || uncertain || disabled}
+              onClick={() => choose(item, pending)}
+            >
               Vérifier / reprendre {euros(pending.amount_cents)}
             </button>
           ))}
@@ -172,14 +192,31 @@ export function AdminTournamentRefundForm({
         <>
           <label>
             Montant à rembourser (€)
-            <input required inputMode="decimal" value={amount} disabled={busy || uncertain || !!retry} onChange={(event) => setAmount(event.target.value)} />
+            <input
+              required
+              inputMode="decimal"
+              value={amount}
+              disabled={busy || uncertain || !!retry}
+              onChange={(event) => setAmount(event.target.value)}
+            />
           </label>
           <label>
             Motif
-            <textarea required maxLength={500} value={reason} disabled={busy || uncertain || !!retry} onChange={(event) => setReason(event.target.value)} />
+            <textarea
+              required
+              maxLength={500}
+              value={reason}
+              disabled={busy || uncertain || !!retry}
+              onChange={(event) => setReason(event.target.value)}
+            />
           </label>
           <label>
-            <input type="checkbox" checked={confirmed} disabled={busy} onChange={(event) => setConfirmed(event.target.checked)} />
+            <input
+              type="checkbox"
+              checked={confirmed}
+              disabled={busy}
+              onChange={(event) => setConfirmed(event.target.checked)}
+            />
             {source.method === "stripe"
               ? "Je confirme la demande de remboursement Stripe."
               : "Je confirme avoir réellement remboursé cette somme hors Pilotoki."}
