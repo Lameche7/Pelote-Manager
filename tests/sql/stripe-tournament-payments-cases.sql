@@ -17,6 +17,38 @@ declare
   tab text;
   actor text;
 begin
+  insert into public.club_stripe_connections(club_id,stripe_account_id,livemode,charges_enabled,verified_at)
+    values(b,'acct_PolicyCI',false,true,now());
+  if (public.admin_get_tournament_stripe_policy_for_club(b)->>'test_connected')::boolean is distinct from true
+    or (public.admin_get_tournament_stripe_policy_for_club(b)->>'connected')::boolean is distinct from false then
+    raise exception 'Test account readiness incorrectly classified';
+  end if;
+  begin
+    perform public.admin_set_tournament_stripe_policy_for_club(b,true);
+    raise exception 'Test account activated live payments' using errcode='XX000';
+  exception when invalid_parameter_value then null; end;
+  begin
+    perform public.admin_save_club_payment_policy_for_club(b,false,false,false,false,'deferred','payment_required',true,24);
+    raise exception 'Test account accepted for mandatory real payment' using errcode='XX000';
+  exception when invalid_parameter_value then null; end;
+  update public.club_stripe_connections set livemode=true where club_id=b;
+  perform public.admin_set_tournament_stripe_policy_for_club(b,true);
+  perform public.admin_save_club_payment_policy_for_club(b,false,false,false,false,'deferred','payment_required',true,24);
+  if (select tournament_confirmation from public.club_payment_policies where club_id=b) is distinct from 'payment_required' then
+    raise exception 'Live Stripe tournament policy not saved';
+  end if;
+  begin
+    perform public.admin_save_club_payment_policy_for_club(b,false,false,false,false,'payment_required','payment_required',true,24);
+    raise exception 'Tournament Stripe incorrectly enabled licence payments' using errcode='XX000';
+  exception when invalid_parameter_value then null; end;
+  perform set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000004',true);
+  begin
+    perform public.admin_set_tournament_stripe_policy_for_club(b,false);
+    raise exception 'Unauthorized Stripe policy update' using errcode='XX000';
+  exception when insufficient_privilege then null; end;
+  perform set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
+  delete from public.club_payment_policies where club_id=b;
+  delete from public.club_stripe_connections where club_id=b;
   t := public.platform_admin_create_tournament(b,jsonb_build_object(
     'season_id','70000000-0000-0000-0000-000000000002','name','CI Stripe',
     'pool_starts_on','2027-02-01','pool_ends_on','2027-02-28',
