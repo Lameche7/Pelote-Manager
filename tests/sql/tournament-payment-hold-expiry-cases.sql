@@ -41,9 +41,12 @@ begin
     raise exception 'Uncertain checkout released';
   end if;
   perform public.record_tournament_stripe_event('evt_holdexpired','acct_HoldCI',true,attempt,'cs_live_hold',null,1500,'eur','expired');
-  if public.release_expired_tournament_payment_holds(100)<>1
-    or (select status::text from public.tournament_teams where id=team) is distinct from 'withdrawn' then
-    raise exception 'Expired checkout hold not released';
+  -- Execute the mutating function before reading the resulting row in a new statement.
+  if public.release_expired_tournament_payment_holds(100)<>1 then
+    raise exception 'Expired checkout hold release count incorrect';
+  end if;
+  if (select status::text from public.tournament_teams where id=team) is distinct from 'withdrawn' then
+    raise exception 'Expired checkout hold status not withdrawn';
   end if;
   if public.release_expired_tournament_payment_holds(100)<>0 then
     raise exception 'Release not idempotent';
