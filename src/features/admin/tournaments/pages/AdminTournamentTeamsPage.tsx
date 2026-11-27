@@ -871,12 +871,15 @@ export function AdminTournamentTeamsPage({
                       </tr>
                     </thead>
                     {data.series.map((series) => {
-                      const seriesTeams = (teamsBySeries.get(series.id) ?? []).filter(
+                      const seriesTeams = (
+                        teamsBySeries.get(series.id) ?? []
+                      ).filter(
                         (team) =>
                           !unpaidOnly ||
                           ((team.status === "pending" ||
                             team.status === "accepted") &&
-                            (paymentsByTeam.get(team.id)?.remaining_cents ?? 0) > 0),
+                            (paymentsByTeam.get(team.id)?.remaining_cents ??
+                              0) > 0),
                       );
                       return (
                         <tbody
