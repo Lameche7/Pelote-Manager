@@ -26,6 +26,14 @@ begin
       from public.tournament_stripe_payment_attempts a
       where a.team_id=new.id and a.tournament_id=new.tournament_id
         and a.club_id=target_club and a.livemode and a.status='paid';
+    -- Count only receipts actually recorded by an authorized club administrator.
+    select received + coalesce(sum(r.amount_cents),0) into received
+      from public.tournament_manual_receipts r
+      where r.team_id=new.id and r.tournament_id=new.tournament_id and r.club_id=target_club;
+    select received - coalesce(sum(r.amount_cents),0) into received
+      from public.tournament_payment_refunds r
+      where r.team_id=new.id and r.tournament_id=new.tournament_id and r.club_id=target_club
+        and r.status in ('requested','pending','succeeded');
     if received<new.registration_price_cents then
       if new.status='accepted' then
         raise exception 'Tournament registration requires confirmed payment' using errcode='23514';
@@ -60,7 +68,7 @@ begin
     update public.tournament_teams t set status='pending'
       where t.id=new.team_id and t.tournament_id=new.tournament_id
         and t.status='pending'
-        and t.registration_price_cents<=new.amount_cents
+        and t.registration_price_cents>0
         and exists(select 1 from public.tournaments tour
           join public.club_payment_policies p on p.club_id=tour.club_id
           where tour.id=t.tournament_id and tour.club_id=new.club_id
@@ -73,3 +81,22 @@ revoke all on function public.confirm_paid_tournament_registration() from public
 create trigger confirm_paid_tournament_registration
 after update of status on public.tournament_stripe_payment_attempts
 for each row execute function public.confirm_paid_tournament_registration();
+
+-- A fully received manual payment follows the same registration guard.
+create or replace function public.confirm_manual_tournament_registration()
+returns trigger language plpgsql security definer set search_path='' as $$
+begin
+  update public.tournament_teams t set status='pending'
+    where t.id=new.team_id and t.tournament_id=new.tournament_id
+      and t.status='pending' and t.registration_price_cents>0
+      and exists(select 1 from public.tournaments tour
+        join public.club_payment_policies p on p.club_id=tour.club_id
+        where tour.id=t.tournament_id and tour.club_id=new.club_id
+          and p.tournament_confirmation='payment_required');
+  return new;
+end;
+$$;
+revoke all on function public.confirm_manual_tournament_registration() from public,anon,authenticated;
+create trigger confirm_manual_tournament_registration
+after insert on public.tournament_manual_receipts
+for each row execute function public.confirm_manual_tournament_registration();
