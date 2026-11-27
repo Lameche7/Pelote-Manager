@@ -28,7 +28,9 @@ test("le formulaire distingue enregistrement et confirmation", async () => {
 
   assert.match(form, /Votre demande est enregistrée/);
   assert.doesNotMatch(form, /Votre équipe est inscrite au tournoi/);
-  const detail = await read("../src/features/tournaments/pages/TournamentDetailPage.tsx");
+  const detail = await read(
+    "../src/features/tournaments/pages/TournamentDetailPage.tsx",
+  );
   assert.match(detail, /registration\?\.status === "accepted"/);
   assert.match(detail, /registrationConfirmed &&/);
   assert.match(form, /Votre inscription a été mise à jour/);
