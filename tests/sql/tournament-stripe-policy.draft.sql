@@ -40,3 +40,5 @@ revoke all on function public.admin_get_tournament_stripe_policy_for_club(uuid) 
 revoke all on function public.admin_set_tournament_stripe_policy_for_club(uuid,boolean) from public,anon,authenticated;
 grant execute on function public.admin_get_tournament_stripe_policy_for_club(uuid) to authenticated;
 grant execute on function public.admin_set_tournament_stripe_policy_for_club(uuid,boolean) to authenticated;
+
+grant select on public.club_payment_policies to service_role;
