@@ -37,6 +37,38 @@ export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
     };
   }, [clubId, revision]);
 
+  const connect = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "begin-tournament-stripe-connect",
+        { body: { clubId } },
+      );
+      if (error || typeof data?.redirectUrl !== "string")
+        throw new Error("Stripe indisponible");
+      const destination = new URL(data.redirectUrl);
+      if (
+        destination.origin !== "https://connect.stripe.com" ||
+        destination.pathname !== "/oauth/authorize"
+      )
+        throw new Error("Destination invalide");
+      const state = destination.searchParams.get("state");
+      if (!state || !/^[0-9a-f]{64}$/.test(state))
+        throw new Error("Autorisation invalide");
+      sessionStorage.setItem(
+        "pilotoki-stripe-connect",
+        JSON.stringify({ state, clubId, returnPath: window.location.pathname }),
+      );
+      window.location.assign(destination.href);
+    } catch {
+      setError("Impossible de démarrer la connexion Stripe.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const change = async (enabled: boolean) => {
     if (!policy || saving || (enabled && !policy.connected)) return;
     if (
@@ -73,6 +105,9 @@ export function TournamentStripePolicyPanel({ clubId }: { clubId: string }) {
               ? "Compte Stripe vérifié."
               : "Compte Stripe non connecté ou non vérifié."}
           </p>
+          <button type="button" onClick={() => void connect()}>
+            {policy.connected ? "Reconnecter Stripe" : "Connecter mon compte Stripe"}
+          </button>
           <label>
             <input
               type="checkbox"
