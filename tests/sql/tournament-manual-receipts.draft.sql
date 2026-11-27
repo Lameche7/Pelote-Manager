@@ -46,6 +46,11 @@ begin
       then raise exception 'Receipt request mismatch' using errcode='22023'; end if;
     return existing.id;
   end if;
+  if exists(select 1 from public.tournament_payment_refunds
+    where team_id=target_team_id and club_id=target_club_id
+      and tournament_id=target_tournament_id and status in ('requested','pending','succeeded')) then
+    raise exception 'Refunded registration requires reconciliation' using errcode='22023';
+  end if;
   -- Require explicitly saved policy, and lock it while recording the receipt.
   select * into policy_row from public.club_payment_policies where club_id=target_club_id for share;
   if not found or not coalesce(case payment_method
