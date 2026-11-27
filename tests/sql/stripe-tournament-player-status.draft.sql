@@ -12,6 +12,7 @@ declare
   gross_received bigint;
   refunded bigint;
   refund_pending bigint;
+  manual_methods text[];
 begin
   if auth.uid() is null or target_team_id is null then
     raise exception 'Authentication required' using errcode='42501';
@@ -42,7 +43,14 @@ begin
       where c.club_id=tournament_row.club_id and c.livemode
         and c.charges_enabled and c.verified_at is not null
   ) and team_row.registration_price_cents>0;
-  if not available and payment.id is null and manual_received=0 then return null; end if;
+  select array_remove(array[
+    case when p.cash_enabled then 'cash' end,
+    case when p.cheque_enabled then 'cheque' end,
+    case when p.bank_transfer_enabled then 'bank_transfer' end
+  ]::text[],null) into manual_methods
+  from public.club_payment_policies p where p.club_id=tournament_row.club_id;
+  manual_methods:=coalesce(manual_methods,array[]::text[]);
+  if not available and payment.id is null and manual_received=0 and cardinality(manual_methods)=0 then return null; end if;
   return jsonb_build_object(
     'status',case when payment.status='disputed' then 'disputed'
       when refund_pending>0 then 'refund_pending'
@@ -58,6 +66,7 @@ begin
     'can_pay',available and refunded+refund_pending=0 and remaining_cents>0 and team_row.status in ('pending','accepted')
       and coalesce(public.tournament_registration_is_open(tournament_row.id),false)
       and coalesce(payment.status,'unpaid') in ('unpaid','creating','open','expired','failed'),
+    'manual_methods',to_jsonb(manual_methods),
     'paid_at',payment.paid_at
   );
 end;
