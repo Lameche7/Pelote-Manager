@@ -26,6 +26,11 @@ begin
     or not coalesce(public.tournament_registration_is_open(tournament_row.id), false) then
     raise exception 'Checkout unavailable' using errcode = '22023';
   end if;
+  if expected_livemode and exists(select 1 from public.tournament_payment_refunds
+    where team_id=team_row.id and club_id=tournament_row.club_id
+      and tournament_id=tournament_row.id and status in ('requested','pending','succeeded')) then
+    raise exception 'Refunded registration requires reconciliation' using errcode='22023';
+  end if;
   select * into connection_row from public.club_stripe_connections
     where club_id = tournament_row.club_id and livemode = expected_livemode
       and charges_enabled and verified_at is not null for share;
