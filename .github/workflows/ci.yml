@@ -392,4 +392,6 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-refund-prepare.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refund-sources.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refund-notifications-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refund-notifications.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refunds-cases.sql
