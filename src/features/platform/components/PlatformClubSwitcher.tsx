@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { platformSupabase } from "@/infrastructure/platform/platformClient";
 import { ROUTES } from "@/shared/config";
+import { supabase } from "@/infrastructure/supabase/client";
+import { useAuth } from "@/shared/hooks/useAuth";
 import { verifyPlatformBusinessIdentity } from "../services/platformBusinessIdentityService";
 
 type Club = { id: string; name: string; slug: string };
 const CLUB_PREFERENCE_KEY = "pilotoki-superadmin-selected-club";
 
-export function PlatformClubSwitcher() {
+function SuperAdminClubSwitcher() {
   const location = useLocation();
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -19,27 +21,21 @@ export function PlatformClubSwitcher() {
         ""),
   );
   const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
-  const [catalogueLoaded, setCatalogueLoaded] = useState(false);
   const [error, setError] = useState("");
   const [identityLinked, setIdentityLinked] = useState(false);
-  const [status, setStatus] = useState<
-    "checking" | "ready" | "session" | "role" | "configuration"
-  >("checking");
+
 
   useEffect(() => {
     const client = platformSupabase;
     if (!client) {
       window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
       setSelectedSlug("");
-      setStatus("configuration");
       return;
     }
     let active = true;
     const refresh = async () => {
-      setStatus("checking");
       setIsVerifiedAdmin(false);
       setClubs([]);
-      setCatalogueLoaded(false);
       setError("");
       setIdentityLinked(false);
       const { data: identity, error: identityError } =
@@ -48,8 +44,7 @@ export function PlatformClubSwitcher() {
       if (identityError || !identity.user) {
         window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
         setSelectedSlug("");
-        setStatus("session");
-        return;
+          return;
       }
 
       const { data: allowed, error: roleError } =
@@ -58,10 +53,8 @@ export function PlatformClubSwitcher() {
       if (roleError || allowed !== true) {
         window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
         setSelectedSlug("");
-        setStatus("role");
-        return;
+          return;
       }
-      setStatus("ready");
       setIsVerifiedAdmin(true);
       const proof = await verifyPlatformBusinessIdentity();
       if (!active) return;
@@ -88,7 +81,6 @@ export function PlatformClubSwitcher() {
             typeof club.slug === "string",
         ),
       );
-      setCatalogueLoaded(true);
     };
 
     void refresh();
@@ -109,67 +101,10 @@ export function PlatformClubSwitcher() {
     };
   }, []);
 
-  const params = new URLSearchParams(location.search);
-  const activeSlug = params.get("club") || "";
 
-  // A persisted preference is not an authorization: validate against server catalogue.
-  useEffect(() => {
-    if (!isVerifiedAdmin || status !== "ready" || !catalogueLoaded) return;
-    const valid = clubs.some((club) => club.slug === selectedSlug);
-    if (!valid && selectedSlug) {
-      window.sessionStorage.removeItem(CLUB_PREFERENCE_KEY);
-      setSelectedSlug("");
-    }
-    const desired = valid ? selectedSlug : "";
-    if (valid) window.sessionStorage.setItem(CLUB_PREFERENCE_KEY, selectedSlug);
-    const hasStaleAdminContext = new URLSearchParams(location.search).has(
-      "adminClubId",
-    );
-    if (activeSlug === desired && !hasStaleAdminContext) return;
-    const next = new URLSearchParams(location.search);
-    if (desired) next.set("club", desired);
-    else next.delete("club");
-    // Restoring a visual preference must not retain a previous business club.
-    next.delete("adminClubId");
-    navigate(
-      {
-        pathname: location.pathname,
-        search: next.toString(),
-        hash: location.hash,
-      },
-      { replace: true },
-    );
-  }, [
-    isVerifiedAdmin,
-    status,
-    catalogueLoaded,
-    clubs,
-    selectedSlug,
-    activeSlug,
-    location.pathname,
-    location.search,
-    location.hash,
-    navigate,
-  ]);
 
   if (!isVerifiedAdmin) {
-    if (status === "checking") return null;
-    const message =
-      status === "configuration"
-        ? "Sélection des clubs indisponible : configuration de la plateforme manquante."
-        : status === "session"
-          ? "Sélection des clubs indisponible : session de la plateforme centrale absente ou expirée."
-          : "Sélection des clubs indisponible : droits super-administrateur non confirmés sur la plateforme centrale.";
-    return (
-      <span className="app-club-selection" role="status">
-        <small>{message}</small>
-        {status === "session" && (
-          <Link to={ROUTES.platformLogin}>
-            Connexion à la plateforme centrale
-          </Link>
-        )}
-      </span>
-    );
+    return null;
   }
 
   return (
@@ -222,5 +157,94 @@ export function PlatformClubSwitcher() {
       )}
       {error && <small role="alert">{error}</small>}
     </label>
+  );
+}
+
+type PublicClub = { name: string; slug: string };
+
+export function PlatformClubSwitcher() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [publicClubs, setPublicClubs] = useState<PublicClub[]>([]);
+  const [defaultSlug, setDefaultSlug] = useState("");
+  const activeSlug = new URLSearchParams(location.search).get("club") || "";
+  const preferenceKey = user
+    ? `pilotoki-selected-club:${user.id}`
+    : null;
+
+  useEffect(() => {
+    let active = true;
+    setDefaultSlug("");
+    const load = async () => {
+      const catalogue = await supabase.rpc("list_network_clubs_v3");
+      if (!active || catalogue.error || !Array.isArray(catalogue.data)) return;
+      const available = catalogue.data.filter(
+        (club: PublicClub) =>
+          typeof club.name === "string" &&
+          typeof club.slug === "string" &&
+          /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(club.slug),
+      ) as PublicClub[];
+      setPublicClubs(available);
+      if (!user || !isAuthenticated || isLoading) return;
+      const remembered = preferenceKey
+        ? window.localStorage.getItem(preferenceKey)
+        : null;
+      if (available.some((club) => club.slug === remembered)) {
+        setDefaultSlug(remembered || "");
+        return;
+      }
+      const [members, admins] = await Promise.all([
+        supabase.rpc("list_my_member_clubs"),
+        supabase.rpc("get_my_club_access"),
+      ]);
+      if (!active) return;
+      const affiliations = Array.isArray(members.data) ? members.data : [];
+      const grants = Array.isArray(admins.data) ? admins.data : [];
+      const primary = affiliations.find(
+        (member) => member.is_active && member.affiliation_type === "primary",
+      ) ?? affiliations.find((member) => member.is_active && member.is_default);
+      const name = primary?.club_name ??
+        (grants.length === 1 ? grants[0].club_name : null);
+      const preferred = available.find((club) => club.name === name);
+      setDefaultSlug(preferred?.slug || "");
+    };
+    void load();
+    return () => { active = false; };
+  }, [user, isAuthenticated, isLoading, preferenceKey]);
+
+  useEffect(() => {
+    if (activeSlug || !defaultSlug || location.pathname !== ROUTES.home) return;
+    const next = new URLSearchParams(location.search);
+    next.set("club", defaultSlug);
+    next.delete("adminClubId");
+    navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash }, { replace: true });
+  }, [activeSlug, defaultSlug, location.pathname, location.search, location.hash, navigate]);
+
+  return (
+    <>
+      {publicClubs.length > 1 && (
+        <label className="app-club-selection">
+          <span>Club</span>
+          <select
+            aria-label="Choisir un club"
+            value={activeSlug}
+            onChange={(event) => {
+              const slug = event.target.value;
+              if (!publicClubs.some((club) => club.slug === slug)) return;
+              if (preferenceKey) window.localStorage.setItem(preferenceKey, slug);
+              setDefaultSlug(slug);
+              navigate(`${ROUTES.home}?club=${encodeURIComponent(slug)}`);
+            }}
+          >
+            {!activeSlug && <option value="">Club par défaut</option>}
+            {publicClubs.map((club) => (
+              <option key={club.slug} value={club.slug}>{club.name}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      <SuperAdminClubSwitcher />
+    </>
   );
 }
