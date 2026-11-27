@@ -75,8 +75,16 @@ Deno.serve(async (request) => {
       "Stripe-Account": attempt.stripe_account_id,
       "Stripe-Version": "2025-02-24.acacia",
     };
-    const returnUrl = new URL("/", origin);
+    if (
+      typeof attempt.tournament_id !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        attempt.tournament_id,
+      )
+    )
+      return json({ error: "Tournoi invalide." }, 502);
+    const returnUrl = new URL(`/tournois/${attempt.tournament_id}`, origin);
     returnUrl.searchParams.set("tournamentPayment", attempt.team_id);
+    returnUrl.hash = "inscription";
     const form = new URLSearchParams({
       mode: "payment",
       "payment_method_types[0]": "card",
