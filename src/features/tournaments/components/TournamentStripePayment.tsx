@@ -32,7 +32,13 @@ const labels: Record<string, string> = {
   disputed: "Paiement en litige",
 };
 
-export function TournamentStripePayment({ teamId }: { teamId: string }) {
+export function TournamentStripePayment({
+  teamId,
+  onPaymentConfirmed,
+}: {
+  teamId: string;
+  onPaymentConfirmed?: () => Promise<void>;
+}) {
   const [payment, setPayment] = useState<PaymentSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -77,6 +83,11 @@ export function TournamentStripePayment({ teamId }: { teamId: string }) {
       active = false;
     };
   }, [teamId, refresh]);
+
+  useEffect(() => {
+    if (payment?.status !== "paid") return;
+    void onPaymentConfirmed?.().catch(() => undefined);
+  }, [payment?.status, onPaymentConfirmed]);
 
   const checkout = async () => {
     if (!payment?.can_pay || busy) return;
