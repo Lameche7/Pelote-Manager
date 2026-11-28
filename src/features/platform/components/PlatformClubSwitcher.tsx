@@ -152,9 +152,10 @@ export function PlatformClubSwitcher() {
       const primaryAffiliation = affiliations.find(
         (member) => member.is_active && member.affiliation_type === "primary",
       );
-      const primary =
-        primaryAffiliation ??
-        affiliations.find((member) => member.is_active && member.is_default);
+      const defaultAffiliation = affiliations.find(
+        (member) => member.is_active && member.is_default,
+      );
+      const primary = primaryAffiliation ?? defaultAffiliation;
       const name =
         primary?.club_name ?? (grants.length === 1 ? grants[0].club_name : null);
       const preferred = available.find((club) => club.name === name);
@@ -208,7 +209,9 @@ export function PlatformClubSwitcher() {
             onChange={(event) => {
               const slug = event.target.value;
               if (!publicClubs.some((club) => club.slug === slug)) return;
-              if (preferenceKey) window.localStorage.setItem(preferenceKey, slug);
+              if (preferenceKey) {
+                window.localStorage.setItem(preferenceKey, slug);
+              }
               setDefaultSlug(slug);
               // Start a new public context; never carry adminClubId across clubs.
               navigate(`${ROUTES.home}?club=${encodeURIComponent(slug)}`);
