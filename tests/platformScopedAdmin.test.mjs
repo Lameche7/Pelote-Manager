@@ -21,7 +21,7 @@ test("foreign club administration never mounts legacy routes", () => {
   assert.doesNotMatch(scoped, /admin_current_club_id/);
   assert.match(scoped, /platformAdminLeaseService\.issue\(selected\.id\)/);
   assert.match(scoped, /target_club_id: selected\.id/);
-  assert.match(scoped, /if \(!club \|\| !modules\)/);
+  assert.match(scoped, /if \(!club \|\| club\.slug !== slug \|\| !modules\)/);
   assert.match(scoped, /<PlatformTournamentsPage clubId=\{club\.id\}/);
 });
 
@@ -36,4 +36,15 @@ test("scoped admin renews only through the server and closes on sign out", () =>
 test("club module editing remains outside the club back office", () => {
   assert.doesNotMatch(scoped, /PlatformClubModulesEditor/);
   assert.doesNotMatch(scoped, /ROUTES\.adminSettings/);
+});
+
+test("scoped teams route requires the tournament module and explicit club", () => {
+  assert.match(
+    scoped,
+    /path === ROUTES\.adminTournamentTeams && modules\.tournaments/,
+  );
+  assert.match(
+    scoped,
+    /<AdminTournamentTeamsPage key=\{club\.id\} scopedClubId=\{club\.id\}/,
+  );
 });

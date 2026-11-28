@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AdminTournamentUnprogrammedPanel } from "../components/AdminTournamentUnprogrammedPanel";
 import { AdminTournamentManualRescheduleForm } from "@/features/admin/tournaments/components/AdminTournamentManualRescheduleForm";
 import {
@@ -72,7 +73,16 @@ const staleReasonLabel = (reason: string | null) =>
       "La proposition n’est plus applicable dans le planning actuel.")
     : "La proposition n’est plus applicable dans le planning actuel.";
 
-export function AdminTournamentReschedulePage() {
+export function AdminTournamentReschedulePage({
+  scopedClubId,
+  scopedMatchId,
+}: {
+  scopedClubId?: string;
+  scopedMatchId?: string;
+} = {}) {
+  const [params] = useSearchParams();
+  const clubId =
+    scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const [requests, setRequests] = useState<AdminTournamentRescheduleRequest[]>(
     [],
   );
@@ -84,15 +94,16 @@ export function AdminTournamentReschedulePage() {
   const [offlineNotes, setOfflineNotes] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
-    const items = await adminTournamentRescheduleService.list();
+    const items = await adminTournamentRescheduleService.list(null, clubId);
     setRequests(items);
-  }, []);
+  }, [clubId]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setRequests([]);
     adminTournamentRescheduleService
-      .list()
+      .list(null, clubId)
       .then((items) => {
         if (active) setRequests(items);
       })
@@ -111,7 +122,7 @@ export function AdminTournamentReschedulePage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [clubId]);
 
   const active = useMemo(
     () =>
@@ -166,6 +177,7 @@ export function AdminTournamentReschedulePage() {
         teamId,
         decision,
         note,
+        clubId,
       );
       setOfflineNotes((current) => ({ ...current, [key]: "" }));
       setSuccess(
@@ -195,7 +207,10 @@ export function AdminTournamentReschedulePage() {
     setError("");
     setSuccess("");
     try {
-      const result = await adminTournamentRescheduleService.apply(request.id);
+      const result = await adminTournamentRescheduleService.apply(
+        request.id,
+        clubId,
+      );
       if (result.status === "stale") {
         setError(staleReasonLabel(result.reason));
       } else {
@@ -248,8 +263,16 @@ export function AdminTournamentReschedulePage() {
         conservé.
       </p>
 
-      <AdminTournamentUnprogrammedPanel />
-      <AdminTournamentManualRescheduleForm onCreated={load} />
+      <AdminTournamentUnprogrammedPanel
+        key={clubId ?? "legacy"}
+        {...(clubId ? { scopedClubId: clubId } : {})}
+        {...(scopedMatchId ? { scopedMatchId } : {})}
+      />
+      <AdminTournamentManualRescheduleForm
+        key={clubId ?? "legacy"}
+        onCreated={load}
+        clubId={clubId}
+      />
 
       <div className="admin-reschedules__toolbar">
         <button

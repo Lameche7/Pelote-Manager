@@ -356,10 +356,18 @@ export function TournamentRegistrationForm({
       }
       await tournamentService.saveMine(tournament.id, draft);
       await onReload();
+      if (!registration) {
+        window.requestAnimationFrame(() => {
+          document.getElementById("inscription")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      }
       onMessage(
         registration
           ? "Votre inscription a été mise à jour."
-          : "Votre équipe est inscrite au tournoi.",
+          : "Votre demande est enregistrée. Vérifiez le statut de votre inscription et le règlement éventuel ci-dessus.",
       );
     } catch (saveError) {
       onError(

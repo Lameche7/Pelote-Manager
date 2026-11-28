@@ -70,6 +70,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format:check
+      - name: Show exact formatting diff
+        if: failure()
+        run: |
+          npx prettier --write src/features/platform/components/PlatformClubSwitcher.tsx
+          git diff -- src/features/platform/components/PlatformClubSwitcher.tsx
 
   network-user-admin:
     runs-on: ubuntu-latest
@@ -265,3 +270,174 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-denials.sql
       - name: Vérifier le parcours autorisé sur des données fictives
         run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/platform-admin-tournament-authorized.sql
+      - name: Installer le contrôle explicite du club et les fonctions de sauvegarde
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f supabase/migrations/20261112190000_can_administer_club_guard.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save.draft.sql
+      - name: Vérifier les permissions des fonctions de sauvegarde
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-denials.sql
+      - name: Installer le schéma historique des inscriptions
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-fixture.sql
+      - name: Installer le moteur de génération des créneaux
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-slots-fixture.sql
+      - name: Installer le schéma historique des poules
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-pools-fixture.sql
+      - name: Vérifier les sauvegardes autorisées et le refus des licenciés étrangers au club
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-team-save-authorized.sql
+      - name: Installer les identités fictives et les fonctions de comptes joueurs
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-fixture.sql
+          for file in tests/sql/scoped-tournament-account-audit.draft.sql tests/sql/scoped-tournament-account-search.draft.sql tests/sql/scoped-tournament-account-link.draft.sql; do
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f "$file" || exit 1
+          done
+      - name: Activer les droits d’exécution contrôlés des comptes joueurs
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-grants.sql
+      - name: Vérifier les refus des fonctions de comptes joueurs
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-denials.sql
+      - name: Vérifier les rattachements de comptes autorisés et refusés
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-account-authorized.sql
+      - name: Installer les fonctions de poules à club explicite
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-workspace.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-mutations.draft.sql
+      - name: Vérifier les droits d’exécution des fonctions de poules
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-grants.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres <<'SQL'
+          do $check$
+          declare
+            endpoint record;
+            endpoint_count integer := 0;
+          begin
+            for endpoint in
+              select p.oid,p.proname from pg_proc p
+              join pg_namespace n on n.oid=p.pronamespace
+              where n.nspname='public' and p.proname in (
+                'admin_get_tournament_pool_workspace_v2_for_club',
+                'admin_save_tournament_pools_for_club',
+                'admin_validate_tournament_pools_for_club',
+                'admin_reopen_tournament_pools_for_club'
+              )
+            loop
+              endpoint_count := endpoint_count + 1;
+              if has_function_privilege('anon',endpoint.oid,'EXECUTE')
+                or not has_function_privilege('authenticated',endpoint.oid,'EXECUTE') then
+                raise exception 'Unexpected execution privilege: %',endpoint.proname;
+              end if;
+            end loop;
+            if endpoint_count<>4 then raise exception 'Missing pool endpoints'; end if;
+          end $check$;
+          SQL
+      - name: Vérifier les poules de trois équipes et les refus inter-clubs
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-tournament-pool-authorized.sql
+      - name: Installer et vérifier les fonctions de programmation multi-club
+        run: |
+          for file in tests/sql/scoped-tournament-planning-fixture.sql tests/sql/scoped-tournament-planning-workspace.draft.sql tests/sql/scoped-tournament-planning-mutations.draft.sql tests/sql/scoped-tournament-planning-grants.sql tests/sql/scoped-tournament-planning-authorized.sql; do
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f "$file" || exit 1
+          done
+      - name: Vérifier les droits d’exécution du moteur de programmation
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres <<'SQL'
+          do $check$
+          declare
+            endpoint record;
+            endpoint_count integer := 0;
+          begin
+            for endpoint in
+              select p.oid,p.proname from pg_proc p
+              join pg_namespace n on n.oid=p.pronamespace
+              where n.nspname='public' and p.proname in (
+                'admin_get_tournament_planning_workspace_for_club',
+                'admin_prepare_tournament_matches_for_club',
+                'admin_save_tournament_planning_for_club',
+                'admin_update_tournament_series_colors_for_club'
+              )
+            loop
+              endpoint_count := endpoint_count + 1;
+              if has_function_privilege('anon',endpoint.oid,'EXECUTE')
+                or not has_function_privilege('authenticated',endpoint.oid,'EXECUTE') then
+                raise exception 'Unexpected execution privilege: %',endpoint.proname;
+              end if;
+            end loop;
+            if endpoint_count<>4 then raise exception 'Missing planning endpoints'; end if;
+          end $check$;
+          SQL
+      - name: Vérifier les préférences de paiement isolées par club
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-club-payment-policy.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres <<'SQL'
+          -- Per-club payment preferences. This is configuration only: existing checkout
+          -- and licence/tournament flows are deliberately unchanged until explicitly migrated.
+          create table if not exists public.club_payment_policies (
+            club_id uuid primary key references public.clubs(id) on delete cascade,
+            helloasso_enabled boolean not null default false,
+            cash_enabled boolean not null default true,
+            cheque_enabled boolean not null default true,
+            bank_transfer_enabled boolean not null default true,
+            licence_confirmation text not null default 'deferred'
+              check (licence_confirmation in ('deferred', 'payment_required')),
+            tournament_confirmation text not null default 'deferred'
+              check (tournament_confirmation in ('deferred', 'payment_required')),
+            tournament_hold_place boolean not null default true,
+            tournament_hold_hours integer not null default 48
+              check (tournament_hold_hours between 1 and 720),
+            updated_at timestamptz not null default now(),
+            updated_by uuid references auth.users(id)
+          );
+          alter table public.club_payment_policies enable row level security;
+          revoke all on public.club_payment_policies from anon, authenticated;
+          grant select, insert, update, delete on public.club_payment_policies to service_role;
+          SQL
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-payments.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-policy.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/scoped-club-payment-policy-cases.sql
+      - name: Vérifier le stockage Stripe et les protections inter-clubs
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-oauth.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-oauth-cases.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-payments-cases.sql
+      - name: Installer les tarifs individuels et les règlements manuels
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-price.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-manual-receipts.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refunds.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-refund-confirm.draft.sql
+      - name: Vérifier la préparation sécurisée des paiements Stripe
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-checkout.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-checkout-cases.sql
+      - name: Vérifier les confirmations Stripe et leur idempotence
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-webhook.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-webhook-cases.sql
+      - name: Vérifier la confidentialité du règlement joueur
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-player-status.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-player-status-cases.sql
+      - name: Installer le suivi financier multi-club
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/stripe-tournament-admin-status.draft.sql
+      - name: Vérifier les recettes et les paiements indépendants par tournoi
+        run: psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-financial-cases.sql
+      - name: Vérifier les remboursements par inscription
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-refund-prepare.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refund-sources.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refund-notifications-fixture.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refund-notifications.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-refunds-cases.sql
+
+      - name: Vérifier la validation des inscriptions après paiement
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-payment-guard.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-payment-guard-cases.sql
+
+      - name: Vérifier la libération sécurisée des places impayées
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-payment-hold-expiry.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-payment-hold-expiry-cases.sql
+
+      - name: Vérifier le diagnostic Stripe privé
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-diagnostic.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-diagnostic-cases.sql

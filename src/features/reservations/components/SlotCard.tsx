@@ -47,6 +47,8 @@ export function SlotCard({
   onBook,
   onInspect,
   canInspectLocked,
+  resourceLabel,
+  readOnly = false,
 }: {
   slot: CalendarSlot;
   timezone: string;
@@ -54,6 +56,8 @@ export function SlotCard({
   onBook: (slot: CalendarSlot) => void;
   onInspect: (slot: CalendarSlot) => void;
   canInspectLocked: boolean;
+  resourceLabel?: string;
+  readOnly?: boolean;
 }) {
   const slotTime = formatTime(slot.startsAt, timezone);
   const isChampionship = slot.reservationAccess === "championship";
@@ -93,6 +97,7 @@ export function SlotCard({
         aria-label={`${slotTime} : occupé par ${bookedBy}`}
       >
         <strong>{slotTime}</strong>
+        {resourceLabel && <small>{resourceLabel}</small>}
         <span
           className={
             isColoredMatch ? "reservation-slot__match-badge" : undefined
@@ -142,10 +147,10 @@ export function SlotCard({
             ),
           } as CSSProperties)
         : undefined;
-    const LockedContainer = canInspectLocked ? "button" : "div";
+    const LockedContainer = canInspectLocked && !readOnly ? "button" : "div";
     return (
       <LockedContainer
-        {...(canInspectLocked
+        {...(canInspectLocked && !readOnly
           ? { type: "button" as const, onClick: () => onInspect(slot) }
           : {})}
         className={`reservation-slot reservation-slot--locked${isChampionship ? " reservation-slot--championship" : ""}${isFinalsHold ? " reservation-slot--finals-hold" : ""}${isFinalDayProgram ? " reservation-slot--tournament reservation-slot--final-day-program" : ""}`}
@@ -159,6 +164,7 @@ export function SlotCard({
         }
       >
         <strong>{slotTime}</strong>
+        {resourceLabel && <small>{resourceLabel}</small>}
         <span>
           {isFinalDayProgram ? (
             <>
@@ -178,6 +184,8 @@ export function SlotCard({
     );
   }
 
+  if (readOnly) return null;
+
   return (
     <button
       type="button"
@@ -190,6 +198,7 @@ export function SlotCard({
       onClick={() => onBook(slot)}
     >
       <strong>{slotTime}</strong>
+      {resourceLabel && <small>{resourceLabel}</small>}
       <span>
         {isChampionship
           ? championshipMatchSelected

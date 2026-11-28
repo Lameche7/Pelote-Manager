@@ -12,10 +12,11 @@ import {
   notificationService,
 } from "@/features/notifications/services/notificationService";
 import { clubBrandingService } from "@/features/home/services/clubBrandingService";
-import { ClubLogo } from "@/shared/components/ClubLogo";
+import { usePublicCalendarMode } from "@/features/reservations/services/publicCalendarMode";
 import { PlatformClubSwitcher } from "@/features/platform/components/PlatformClubSwitcher";
-import { APP_CONFIG, CLUB_CONFIG, ROUTES } from "@/shared/config";
+import { APP_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { supabase } from "@/infrastructure/supabase/client";
 import "./MainLayout.css";
 
 const navClassName = ({ isActive }: { isActive: boolean }) =>
@@ -36,10 +37,18 @@ export function MainLayout() {
       ? clubBrandingService.unavailableFallback
       : clubBrandingService.fallback,
   );
-  const [adminAccess, setAdminAccess] = useState<ClubAccess | null>(null);
-  const clubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
+  const [adminAccess, setAdminAccess] = useState<{
+    context: string;
+    actor: string;
+    access: ClubAccess;
+  } | null>(null);
+  const clubSlug =
+    new URLSearchParams(location.search).get("club")?.trim() || null;
+  const { mode: calendarMode } = usePublicCalendarMode(clubSlug);
   const withClubPreview = (path: string) =>
-    clubSlug ? `${path}${path.includes("?") ? "&" : "?"}club=${encodeURIComponent(clubSlug)}` : path;
+    clubSlug
+      ? `${path}${path.includes("?") ? "&" : "?"}club=${encodeURIComponent(clubSlug)}`
+      : path;
   const layoutStyle: ClubLayoutStyle = {
     "--club-primary": branding.primaryColor,
     "--club-secondary": branding.secondaryColor,
@@ -54,11 +63,14 @@ export function MainLayout() {
         ? clubBrandingService.unavailableFallback
         : clubBrandingService.fallback;
       setBranding(safeFallback);
-      void clubBrandingService.getPublicBranding(clubSlug).then((value) => {
-        if (active) setBranding(value);
-      }).catch(() => {
-        if (active) setBranding(safeFallback);
-      });
+      void clubBrandingService
+        .getPublicBranding(clubSlug)
+        .then((value) => {
+          if (active) setBranding(value);
+        })
+        .catch(() => {
+          if (active) setBranding(safeFallback);
+        });
     };
     reloadBranding();
     window.addEventListener("club-branding-updated", reloadBranding);
@@ -99,15 +111,33 @@ export function MainLayout() {
       ?.trim();
     adminAccessService
       .listAuthorizedClubs()
-      .then((accesses) => {
+      .then(async (accesses) => {
         if (!active) return;
-        setAdminAccess(
-          requestedClubId
-            ? accesses.find((access) => access.clubId === requestedClubId) ?? null
-            : accesses.length === 1
-              ? accesses[0]
-              : null,
+        const candidates = requestedClubId
+          ? accesses.filter((access) => access.clubId === requestedClubId)
+          : accesses;
+        if (candidates.length === 0) return;
+        const current = await supabase.rpc("admin_current_club_id");
+        if (!active || current.error || !current.data) return;
+        const selected = candidates.find(
+          (access) => access.clubId === current.data,
         );
+        if (!selected) return;
+        if (clubSlug) {
+          const { data, error } = await supabase
+            .from("clubs")
+            .select("id,slug")
+            .eq("id", selected.clubId)
+            .single();
+          if (!active || error || data?.slug !== clubSlug) return;
+        }
+        if (active) {
+          setAdminAccess({
+            context: location.search,
+            actor: user.id,
+            access: selected,
+          });
+        }
       })
       .catch(() => {
         if (active) {
@@ -121,7 +151,7 @@ export function MainLayout() {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, isLoading, user, location.search]);
+  }, [isAuthenticated, isLoading, user, location.search, clubSlug]);
 
   useEffect(() => {
     let active = true;
@@ -183,11 +213,19 @@ export function MainLayout() {
           <NavLink className={navClassName} to={withClubPreview(ROUTES.home)}>
             Accueil
           </NavLink>
-          <NavLink className={navClassName} to={withClubPreview(ROUTES.reservations)}>
-            Réservations
-          </NavLink>
+          {(calendarMode === "reservations" || calendarMode === "planning") && (
+            <NavLink
+              className={navClassName}
+              to={withClubPreview(ROUTES.reservations)}
+            >
+              {calendarMode === "planning" ? "Planning" : "Réservations"}
+            </NavLink>
+          )}
           {!isLoading && isAuthenticated && (
-            <NavLink className={navClassName} to={withClubPreview(ROUTES.userSpace)}>
+            <NavLink
+              className={navClassName}
+              to={withClubPreview(ROUTES.userSpace)}
+            >
               Mon espace
               {unreadNotifications > 0 && (
                 <span
@@ -201,7 +239,9 @@ export function MainLayout() {
           )}
           {!isLoading &&
             !isAdminAccessLoading &&
-            canAccessAdminDashboard(adminAccess) && (
+            adminAccess?.context === location.search &&
+            adminAccess?.actor === user?.id &&
+            canAccessAdminDashboard(adminAccess.access) && (
               <NavLink
                 className={navClassName}
                 to={withClubPreview(ROUTES.admin)}
@@ -235,13 +275,20 @@ export function MainLayout() {
 
       <footer className="app-footer">
         <div className="app-footer__brand">
-          <ClubLogo compact />
+          {branding.logoUrl && (
+            <span className="club-logo club-logo--compact">
+              <img src={branding.logoUrl} alt={branding.name} />
+            </span>
+          )}
           <div>
             <strong>{branding.name}</strong>
             <span>
-              {clubSlug ? "" : CLUB_CONFIG.foundedYear
-                ? `Depuis ${CLUB_CONFIG.foundedYear} – ${CLUB_CONFIG.tagline}`
-                : CLUB_CONFIG.tagline}
+              {[
+                branding.foundedYear ? `Depuis ${branding.foundedYear}` : "",
+                branding.tagline,
+              ]
+                .filter(Boolean)
+                .join(" – ")}
             </span>
           </div>
         </div>

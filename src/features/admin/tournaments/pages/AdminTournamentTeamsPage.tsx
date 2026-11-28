@@ -1,9 +1,16 @@
+import {
+  AdminTournamentPaymentCell,
+  type TeamPayment,
+} from "@/features/admin/tournaments/components/AdminTournamentPaymentCell";
+import { supabase } from "@/infrastructure/supabase/client";
+import { AdminTournamentFinancePanel } from "@/features/admin/tournaments/components/AdminTournamentFinancePanel";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AdminTournamentPlayerFields } from "@/features/admin/tournaments/components/AdminTournamentPlayerFields";
 import { AdminErrebotAvailabilityImport } from "@/features/admin/tournaments/components/AdminErrebotAvailabilityImport";
 import { adminTournamentTeamService } from "@/features/admin/tournaments/services/adminTournamentTeamService";
 import {
   tournamentAdminService,
+  createPlatformTournamentAdminService,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
 import { TournamentAvailabilityGrid } from "@/features/tournaments/components/TournamentAvailabilityGrid";
@@ -109,9 +116,17 @@ const availabilitySummary = (
 
 const seriesAnchor = (seriesId: string) => `tournament-series-${seriesId}`;
 
-export function AdminTournamentTeamsPage() {
+export function AdminTournamentTeamsPage({
+  scopedClubId,
+}: {
+  scopedClubId?: string;
+} = {}) {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [payments, setPayments] = useState<TeamPayment[]>([]);
+  const [paymentRevision, setPaymentRevision] = useState(0);
+  const [paymentError, setPaymentError] = useState("");
+  const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [data, setData] = useState<AdminTournamentTeamsPayload | null>(null);
   const [editingId, setEditingId] = useState<string | null | undefined>(
     undefined,
@@ -131,19 +146,27 @@ export function AdminTournamentTeamsPage() {
   >(null);
   const [replacementReason, setReplacementReason] = useState("Blessure");
 
+  const tournamentService = useMemo(
+    () =>
+      scopedClubId
+        ? createPlatformTournamentAdminService(scopedClubId)
+        : tournamentAdminService,
+    [scopedClubId],
+  );
+
   const loadTeams = async (tournamentId: string) => {
     if (!tournamentId) {
       setData(null);
       return;
     }
-    setData(await adminTournamentTeamService.get(tournamentId));
+    setData(await adminTournamentTeamService.get(tournamentId, scopedClubId));
   };
 
   const reloadSelected = async () => {
     if (!selectedId) return;
     const [items, payload] = await Promise.all([
-      tournamentAdminService.list(),
-      adminTournamentTeamService.get(selectedId),
+      tournamentService.list(),
+      adminTournamentTeamService.get(selectedId, scopedClubId),
     ]);
     setTournaments(items);
     setData(payload);
@@ -151,7 +174,7 @@ export function AdminTournamentTeamsPage() {
 
   useEffect(() => {
     let active = true;
-    tournamentAdminService
+    tournamentService
       .list()
       .then(async (items) => {
         if (!active) return;
@@ -169,7 +192,10 @@ export function AdminTournamentTeamsPage() {
           ) ?? items[0];
         if (preferred) {
           setSelectedId(preferred.id);
-          const payload = await adminTournamentTeamService.get(preferred.id);
+          const payload = await adminTournamentTeamService.get(
+            preferred.id,
+            scopedClubId,
+          );
           if (active) setData(payload);
         }
       })
@@ -188,7 +214,35 @@ export function AdminTournamentTeamsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [tournamentService, scopedClubId]);
+
+  useEffect(() => {
+    let active = true;
+    setPayments([]);
+    setPaymentError("");
+    if (!scopedClubId || !selectedId || loading) return;
+    void supabase
+      .rpc("admin_list_tournament_stripe_payments_for_club", {
+        target_club_id: scopedClubId,
+        target_tournament_id: selectedId,
+      })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error || !Array.isArray(data)) {
+          setPaymentError("Règlements indisponibles.");
+          return;
+        }
+        setPayments(data as TeamPayment[]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [scopedClubId, selectedId, loading, data, paymentRevision]);
+
+  const paymentsByTeam = useMemo(
+    () => new Map(payments.map((payment) => [payment.team_id, payment])),
+    [payments],
+  );
 
   const editable = data
     ? adminEditableStatuses.has(data.tournament.status)
@@ -196,9 +250,10 @@ export function AdminTournamentTeamsPage() {
   const poolsAlreadyBuilt = data
     ? poolStatuses.has(data.tournament.status)
     : false;
-  const replacementAllowed = data
-    ? !["completed", "archived", "cancelled"].includes(data.tournament.status)
-    : false;
+  const replacementAllowed =
+    !scopedClubId && data
+      ? !["completed", "archived", "cancelled"].includes(data.tournament.status)
+      : false;
 
   const counts = useMemo(() => {
     const result: Record<TournamentTeamStatus, number> = {
@@ -231,6 +286,9 @@ export function AdminTournamentTeamsPage() {
 
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
+    setUnpaidOnly(false);
+    setData(null);
+    setPayments([]);
     setLoading(true);
     setError("");
     setMessage("");
@@ -264,7 +322,10 @@ export function AdminTournamentTeamsPage() {
     setMessage("");
     try {
       const availabilitySlots =
-        await adminTournamentTeamService.getDatedAvailability(team.id);
+        await adminTournamentTeamService.getDatedAvailability(
+          team.id,
+          scopedClubId,
+        );
       setEditingId(team.id);
       setDraft(teamToDraft(team, availabilitySlots));
       window.setTimeout(() => {
@@ -310,6 +371,7 @@ export function AdminTournamentTeamsPage() {
         selectedId,
         editingId ?? null,
         draft,
+        scopedClubId,
       );
       await reloadSelected();
       setDraft(null);
@@ -344,6 +406,7 @@ export function AdminTournamentTeamsPage() {
       const result = await adminTournamentTeamService.setStatus(
         team.id,
         status,
+        scopedClubId,
       );
       await reloadSelected();
       const baseMessage = `Équipe ${teamStatusLabels[status].toLowerCase()}.`;
@@ -381,7 +444,10 @@ export function AdminTournamentTeamsPage() {
     setError("");
     setMessage("");
     try {
-      const result = await adminTournamentTeamService.delete(team.id);
+      const result = await adminTournamentTeamService.delete(
+        team.id,
+        scopedClubId,
+      );
       await reloadSelected();
       if (editingId === team.id) {
         setDraft(null);
@@ -455,6 +521,7 @@ export function AdminTournamentTeamsPage() {
         replacementTarget.player.role,
         replacementPlayer,
         replacementReason,
+        scopedClubId,
       );
       await reloadSelected();
       setReplacementTarget(null);
@@ -539,7 +606,7 @@ export function AdminTournamentTeamsPage() {
               Tournoi
               <select
                 value={selectedId}
-                disabled={saving || loadingDraft}
+                disabled={saving || loadingDraft || loading}
                 onChange={(event) => void chooseTournament(event.target.value)}
               >
                 {tournaments.map((tournament) => (
@@ -569,7 +636,16 @@ export function AdminTournamentTeamsPage() {
             )}
           </div>
 
-          {data && (
+          {data && scopedClubId && !loading && (
+            <AdminTournamentFinancePanel
+              key={`${scopedClubId}:${selectedId}:${paymentRevision}`}
+              clubId={scopedClubId}
+              tournamentId={selectedId}
+              revision={data}
+            />
+          )}
+
+          {data && !scopedClubId && (
             <AdminErrebotAvailabilityImport
               tournamentId={selectedId}
               onImported={reloadSelected}
@@ -693,6 +769,7 @@ export function AdminTournamentTeamsPage() {
                   <AdminTournamentPlayerFields
                     key={player.role}
                     tournamentId={selectedId}
+                    scopedClubId={scopedClubId}
                     teamId={editingId ?? null}
                     player={player}
                     excludedMemberId={
@@ -754,8 +831,28 @@ export function AdminTournamentTeamsPage() {
                   <h2>Tableau des équipes</h2>
                 </div>
                 <small>{data.teams.length} équipe(s) au total</small>
+                {scopedClubId && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentRevision((value) => value + 1)}
+                  >
+                    Actualiser les règlements
+                  </button>
+                )}
               </header>
 
+              {scopedClubId && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={unpaidOnly}
+                    disabled={payments.length === 0 || Boolean(paymentError)}
+                    onChange={(event) => setUnpaidOnly(event.target.checked)}
+                  />{" "}
+                  Uniquement les équipes restant à régler
+                </label>
+              )}
+              {paymentError && <p role="status">{paymentError}</p>}
               {data.teams.length === 0 ? (
                 <p>Aucune équipe inscrite pour ce tournoi.</p>
               ) : (
@@ -769,11 +866,21 @@ export function AdminTournamentTeamsPage() {
                         <th scope="col">Disponibilités</th>
                         <th scope="col">Origine</th>
                         <th scope="col">Statut</th>
+                        {scopedClubId && <th scope="col">Règlement</th>}
                         <th scope="col">Actions</th>
                       </tr>
                     </thead>
                     {data.series.map((series) => {
-                      const seriesTeams = teamsBySeries.get(series.id) ?? [];
+                      const seriesTeams = (
+                        teamsBySeries.get(series.id) ?? []
+                      ).filter(
+                        (team) =>
+                          !unpaidOnly ||
+                          ((team.status === "pending" ||
+                            team.status === "accepted") &&
+                            (paymentsByTeam.get(team.id)?.remaining_cents ??
+                              0) > 0),
+                      );
                       return (
                         <tbody
                           id={seriesAnchor(series.id)}
@@ -781,7 +888,7 @@ export function AdminTournamentTeamsPage() {
                           className="admin-tournament-team-table__series"
                         >
                           <tr className="admin-tournament-team-table__series-heading">
-                            <th colSpan={7} scope="rowgroup">
+                            <th colSpan={scopedClubId ? 8 : 7} scope="rowgroup">
                               <strong>{series.name}</strong>
                               <span>
                                 {series.acceptedCount}/{series.capacity}{" "}
@@ -792,10 +899,12 @@ export function AdminTournamentTeamsPage() {
                           {seriesTeams.length === 0 ? (
                             <tr>
                               <td
-                                colSpan={7}
+                                colSpan={scopedClubId ? 8 : 7}
                                 className="admin-tournament-team-table__empty"
                               >
-                                Aucune équipe dans cette série.
+                                {unpaidOnly
+                                  ? "Aucune équipe restant à régler."
+                                  : "Aucune équipe dans cette série."}
                               </td>
                             </tr>
                           ) : (
@@ -865,6 +974,28 @@ export function AdminTournamentTeamsPage() {
                                     {teamStatusLabels[team.status]}
                                   </span>
                                 </td>
+                                {scopedClubId && (
+                                  <td>
+                                    {paymentsByTeam.has(team.id) ? (
+                                      <AdminTournamentPaymentCell
+                                        key={`${selectedId}:${team.id}`}
+                                        clubId={scopedClubId}
+                                        tournamentId={selectedId}
+                                        payment={paymentsByTeam.get(team.id)!}
+                                        disabled={
+                                          saving || loadingDraft || loading
+                                        }
+                                        onRecorded={() =>
+                                          setPaymentRevision(
+                                            (value) => value + 1,
+                                          )
+                                        }
+                                      />
+                                    ) : (
+                                      <small>—</small>
+                                    )}
+                                  </td>
+                                )}
                                 <td>
                                   <div className="admin-tournament-team-table__actions">
                                     {editable &&

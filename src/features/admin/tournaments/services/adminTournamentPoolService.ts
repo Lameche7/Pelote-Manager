@@ -60,7 +60,7 @@ const knownErrors: Record<string, string> = {
   "Every accepted team must belong to exactly one pool":
     "Chaque équipe inscrite doit apparaître une seule fois dans une poule.",
   "Tournament pools are incomplete":
-    "Les poules sont incomplètes ou ne comportent pas toutes entre 4 et 6 équipes.",
+    "Les poules sont incomplètes ou ne comportent pas toutes entre 3 et 6 équipes.",
   "Tournament pools cannot be validated at this stage":
     "Les poules ne peuvent pas être validées à cette étape.",
   "Tournament pools cannot be reopened at this stage":
@@ -122,7 +122,7 @@ const mapWorkspace = (value: unknown): TournamentPoolWorkspace => {
       key: String(pool.id),
       seriesId: String(pool.series_id),
       displayOrder: Number(pool.display_order ?? 0),
-      targetSize: Number(pool.target_size) as 4 | 5 | 6,
+      targetSize: Number(pool.target_size) as 3 | 4 | 5 | 6,
       teams: rows(pool.teams).map((team) => ({
         teamId: String(team.team_id),
       })),
@@ -143,34 +143,64 @@ const poolPayload = (pools: PoolDraft[]) => ({
 });
 
 export const adminTournamentPoolService = {
-  async get(tournamentId: string): Promise<TournamentPoolWorkspace> {
+  async get(
+    tournamentId: string,
+    clubId?: string,
+  ): Promise<TournamentPoolWorkspace> {
     const { data, error } = await supabase.rpc(
-      "admin_get_tournament_pool_workspace_v2",
-      { target_tournament_id: tournamentId },
+      clubId
+        ? "admin_get_tournament_pool_workspace_v2_for_club"
+        : "admin_get_tournament_pool_workspace_v2",
+      {
+        target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) fail(error, "Impossible de charger le moteur de poules.");
     return mapWorkspace(data);
   },
 
-  async save(tournamentId: string, pools: PoolDraft[]): Promise<void> {
-    const { error } = await supabase.rpc("admin_save_tournament_pools", {
-      target_tournament_id: tournamentId,
-      payload: poolPayload(pools),
-    });
+  async save(
+    tournamentId: string,
+    pools: PoolDraft[],
+    clubId?: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      clubId
+        ? "admin_save_tournament_pools_for_club"
+        : "admin_save_tournament_pools",
+      {
+        target_tournament_id: tournamentId,
+        payload: poolPayload(pools),
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
+    );
     if (error) fail(error, "Impossible d’enregistrer les poules.");
   },
 
-  async validate(tournamentId: string): Promise<void> {
-    const { error } = await supabase.rpc("admin_validate_tournament_pools", {
-      target_tournament_id: tournamentId,
-    });
+  async validate(tournamentId: string, clubId?: string): Promise<void> {
+    const { error } = await supabase.rpc(
+      clubId
+        ? "admin_validate_tournament_pools_for_club"
+        : "admin_validate_tournament_pools",
+      {
+        target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
+    );
     if (error) fail(error, "Impossible de valider les poules.");
   },
 
-  async reopen(tournamentId: string): Promise<void> {
-    const { error } = await supabase.rpc("admin_reopen_tournament_pools", {
-      target_tournament_id: tournamentId,
-    });
+  async reopen(tournamentId: string, clubId?: string): Promise<void> {
+    const { error } = await supabase.rpc(
+      clubId
+        ? "admin_reopen_tournament_pools_for_club"
+        : "admin_reopen_tournament_pools",
+      {
+        target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
+    );
     if (error) fail(error, "Impossible de rouvrir les poules.");
   },
 };

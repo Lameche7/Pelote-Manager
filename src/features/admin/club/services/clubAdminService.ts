@@ -17,6 +17,10 @@ export type Club = {
   socialLinks: string;
   affiliationNumber: string;
   notes: string;
+  foundedYear: string;
+  tagline: string;
+  presentationTitle: string;
+  presentationText: string;
 };
 export type Season = {
   id: string;
@@ -51,6 +55,10 @@ const mapClub = (row: Record<string, unknown>): Club => ({
   socialLinks: String(row.social_links ?? ""),
   affiliationNumber: String(row.affiliation_number ?? ""),
   notes: String(row.notes ?? ""),
+  foundedYear: String(row.founded_year ?? ""),
+  tagline: String(row.tagline ?? ""),
+  presentationTitle: String(row.presentation_title ?? ""),
+  presentationText: String(row.presentation_text ?? ""),
 });
 
 async function currentClubId() {
@@ -135,6 +143,10 @@ export const clubAdminService = {
       social_links: club.socialLinks || null,
       affiliation_number: club.affiliationNumber || null,
       notes: club.notes || null,
+      founded_year: club.foundedYear.trim() || null,
+      tagline: club.tagline.trim() || null,
+      presentation_title: club.presentationTitle.trim() || null,
+      presentation_text: club.presentationText.trim() || null,
     };
     const { data, error } = await supabase.rpc(
       "platform_admin_update_club_information",
@@ -174,6 +186,10 @@ export const clubAdminService = {
         social_links: club.socialLinks || null,
         affiliation_number: club.affiliationNumber || null,
         notes: club.notes || null,
+        founded_year: club.foundedYear.trim() || null,
+        tagline: club.tagline.trim() || null,
+        presentation_title: club.presentationTitle.trim() || null,
+        presentation_text: club.presentationText.trim() || null,
       })
       .eq("id", authorizedClubId)
       .select("id");

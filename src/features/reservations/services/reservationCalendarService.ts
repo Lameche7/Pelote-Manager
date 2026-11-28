@@ -88,8 +88,9 @@ export const reservationCalendarService = {
     resourceId: string,
     fromDate: string,
     toDate: string,
+    tournamentPlanningOnly = false,
   ): Promise<CalendarSlot[]> {
-    const { data, error } = await supabase.rpc("list_available_slots_v4", {
+    const { data, error } = await supabase.rpc(tournamentPlanningOnly ? "list_public_tournament_planning_slots" : "list_available_slots_v4", {
       target_resource_id: resourceId,
       range_start: fromDate,
       range_end: toDate,

@@ -11,6 +11,7 @@ import {
   notificationService,
   type MemberHomeBanner,
 } from "@/features/notifications/services/notificationService";
+import { usePublicCalendarMode } from "@/features/reservations/services/publicCalendarMode";
 import { CLUB_CONFIG, ROUTES } from "@/shared/config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import "./HomeAnnouncements.css";
@@ -69,6 +70,11 @@ export function HomePage() {
   const octoberRoseVisible = showOctoberRose();
   const movemberVisible = showMovember();
   const publicClubSlug = new URLSearchParams(location.search).get("club")?.trim() || null;
+  const { mode: calendarMode } = usePublicCalendarMode(publicClubSlug);
+  const clubLink = (path: string) =>
+    publicClubSlug
+      ? path + (path.includes("?") ? "&" : "?") + "club=" + encodeURIComponent(publicClubSlug)
+      : path;
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsAvailable, setEventsAvailable] = useState(true);
@@ -186,18 +192,20 @@ export function HomePage() {
             alt="PILOTOKI"
           />
           <p className="premium-home__signature">
-            {CLUB_CONFIG.foundedYear && (
+            {branding.foundedYear && (
               <>
-                Depuis <strong>{CLUB_CONFIG.foundedYear}</strong> –{" "}
+                Depuis <strong>{branding.foundedYear}</strong>{branding.tagline ? " – " : ""}
               </>
             )}
-            {CLUB_CONFIG.tagline}
+            {branding.tagline}
           </p>
           <div className="premium-home__actions">
-            <Link className="button button--primary" to={ROUTES.reservations}>
-              ▦ Réserver un créneau
-            </Link>
-            <Link className="button button--secondary" to={ROUTES.login}>
+            {(calendarMode === "planning" || calendarMode === "reservations") && (
+              <Link className="button button--primary" to={clubLink(ROUTES.reservations)}>
+                {calendarMode === "planning" ? "▦ Voir le planning des tournois" : "▦ Réserver un créneau"}
+              </Link>
+            )}
+            <Link className="button button--secondary" to={clubLink(ROUTES.login)}>
               ♙ Accéder à mon compte
             </Link>
             <Link className="button button--secondary" to="/reseau/videos">
@@ -237,7 +245,7 @@ export function HomePage() {
         aria-label="Services PILOTOKI"
       >
         <div className="premium-home__benefit-grid">
-          {benefits.map((benefit) => (
+          {benefits.filter((_, index) => calendarMode === "reservations" || index > 1).map((benefit) => (
             <article className="premium-benefit" key={benefit.title}>
               <span className="premium-benefit__icon" aria-hidden="true">
                 {benefit.icon}
@@ -328,11 +336,13 @@ export function HomePage() {
           />
           <div>
             <p className="section-kicker">{venueLabel}</p>
-            <h2>Le club, notre passion.</h2>
-            <p>{CLUB_CONFIG.description}</p>
-            <Link className="text-link" to={ROUTES.reservations}>
-              Voir les créneaux disponibles →
-            </Link>
+            <h2>{branding.presentationTitle || branding.name}</h2>
+            {branding.presentationText && <p>{branding.presentationText}</p>}
+            {(calendarMode === "planning" || calendarMode === "reservations") && (
+              <Link className="text-link" to={clubLink(ROUTES.reservations)}>
+                {calendarMode === "planning" ? "Voir le planning des tournois →" : "Voir les créneaux disponibles →"}
+              </Link>
+            )}
           </div>
         </div>
       </section>

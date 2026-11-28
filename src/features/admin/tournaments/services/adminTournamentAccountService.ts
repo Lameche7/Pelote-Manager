@@ -66,10 +66,18 @@ const mapAuditRow = (row: Row): TournamentAccountAuditRow => ({
 });
 
 export const adminTournamentAccountService = {
-  async list(tournamentId: string): Promise<TournamentAccountAuditRow[]> {
+  async list(
+    tournamentId: string,
+    clubId?: string,
+  ): Promise<TournamentAccountAuditRow[]> {
     const { data, error } = await supabase.rpc(
-      "admin_list_tournament_account_audit",
-      { target_tournament_id: tournamentId },
+      clubId
+        ? "admin_list_tournament_account_audit_for_club"
+        : "admin_list_tournament_account_audit",
+      {
+        target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) {
       throw new Error(
@@ -85,12 +93,21 @@ export const adminTournamentAccountService = {
   async searchCandidates(
     externalIdentityId: string,
     searchTerm = "",
+    scope?: { clubId: string; tournamentId: string },
   ): Promise<TournamentAccountCandidate[]> {
     const { data, error } = await supabase.rpc(
-      "admin_search_tournament_account_candidates",
+      scope
+        ? "admin_search_tournament_account_candidates_for_club"
+        : "admin_search_tournament_account_candidates",
       {
         target_external_identity_id: externalIdentityId,
         search_term: searchTerm,
+        ...(scope
+          ? {
+              target_club_id: scope.clubId,
+              target_tournament_id: scope.tournamentId,
+            }
+          : {}),
       },
     );
     if (error) {
@@ -101,11 +118,26 @@ export const adminTournamentAccountService = {
     return rows(data).map(mapCandidate);
   },
 
-  async link(externalIdentityId: string, profileId: string): Promise<void> {
-    const { error } = await supabase.rpc("admin_link_tournament_account", {
-      target_external_identity_id: externalIdentityId,
-      target_profile_id: profileId,
-    });
+  async link(
+    externalIdentityId: string,
+    profileId: string,
+    scope?: { clubId: string; tournamentId: string },
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      scope
+        ? "admin_link_tournament_account_for_club"
+        : "admin_link_tournament_account",
+      {
+        target_external_identity_id: externalIdentityId,
+        target_profile_id: profileId,
+        ...(scope
+          ? {
+              target_club_id: scope.clubId,
+              target_tournament_id: scope.tournamentId,
+            }
+          : {}),
+      },
+    );
     if (error) {
       throw new Error(
         getSupabaseErrorMessage(error, "Impossible de rattacher ce compte."),

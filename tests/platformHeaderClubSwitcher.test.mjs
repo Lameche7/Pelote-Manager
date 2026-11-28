@@ -14,30 +14,28 @@ const layout = readFileSync(
   "utf8",
 );
 
-test("le sélecteur exige une identité et un rôle plateforme vérifiés", () => {
+test("la gestion centrale exige une identité et un rôle vérifiés", () => {
   assert.match(switcher, /client\.auth\.getUser\(\)/);
   assert.match(switcher, /platform_is_admin/);
   assert.match(switcher, /allowed !== true/);
   assert.match(switcher, /if \(!isVerifiedAdmin\)/);
-  assert.match(switcher, /status === "session"/);
-  assert.match(switcher, /setStatus\("role"\)/);
-  assert.match(switcher, /role="status"/);
-  assert.match(switcher, /droits super-administrateur non confirmés/);
+  assert.match(switcher, /identityLinked && clubs\.some/);
 });
 
-test("les clubs viennent du catalogue protégé et non du navigateur", () => {
+test("la navigation publique utilise le catalogue serveur", () => {
+  assert.match(switcher, /list_network_clubs_v3/);
+  assert.match(
+    switcher,
+    /publicClubs\.some\(\(club\) => club\.slug === slug\)/,
+  );
   assert.match(switcher, /platform-business-clubs/);
-  assert.match(switcher, /clubs\.some\(\(club\) => club\.slug === slug\)/);
   assert.match(layout, /<PlatformClubSwitcher \/>/);
 });
 
-test("le sélecteur n'annonce pas des droits d'administration inter-clubs", () => {
-  assert.match(switcher, /Aperçu visuel du club \(super-admin\)/);
-  assert.match(
-    switcher,
-    /Le club sélectionné ne modifie pas vos habilitations/,
-  );
-  assert.doesNotMatch(switcher, /Club par défaut \(Lourdes\)/);
+test("le sélecteur conserve une préférence distincte par compte", () => {
+  assert.match(switcher, /pilotoki-selected-club:/);
+  assert.match(switcher, /list_my_member_clubs/);
+  assert.match(switcher, /get_my_club_access/);
   assert.match(switcher, /event === "SIGNED_IN"/);
   assert.doesNotMatch(switcher, /event === "TOKEN_REFRESHED"/);
 });

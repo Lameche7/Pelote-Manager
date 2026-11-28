@@ -125,9 +125,17 @@ const printPendingMatches = (
   win.document.close();
 };
 
-export function AdminTournamentUnprogrammedPanel() {
+export function AdminTournamentUnprogrammedPanel({
+  scopedClubId,
+  scopedMatchId,
+}: {
+  scopedClubId?: string;
+  scopedMatchId?: string;
+} = {}) {
   const [params] = useSearchParams();
-  const highlightedMatchId = params.get("match");
+  const highlightedMatchId = scopedMatchId ?? params.get("match");
+  const clubId =
+    scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const requestedResource = params.get("resource");
   const requestedStart = params.get("startsAt");
   const requestedEnd = params.get("endsAt");
@@ -174,14 +182,18 @@ export function AdminTournamentUnprogrammedPanel() {
 
   const load = useCallback(async () => {
     const [context, waiting] = await Promise.all([
-      adminTournamentManualRescheduleService.getContext(),
-      adminTournamentUnprogrammedService.list(),
+      adminTournamentManualRescheduleService.getContext(clubId),
+      adminTournamentUnprogrammedService.list(clubId),
     ]);
     setTournaments(context);
     setPending(waiting);
-  }, []);
+  }, [clubId]);
 
   useEffect(() => {
+    setTournaments([]);
+    setPending([]);
+    setEditing("");
+    setMatchId("");
     load().catch((cause: unknown) => {
       setError(
         cause instanceof Error ? cause.message : "Chargement impossible.",
@@ -198,7 +210,8 @@ export function AdminTournamentUnprogrammedPanel() {
     setExporting(true);
     setError("");
     try {
-      const contacts = await adminTournamentUnprogrammedService.listContacts();
+      const contacts =
+        await adminTournamentUnprogrammedService.listContacts(clubId);
       printPendingMatches(pending, contacts, popup);
     } catch (cause) {
       popup.close();
@@ -241,6 +254,7 @@ export function AdminTournamentUnprogrammedPanel() {
       await adminTournamentUnprogrammedService.unprogram(
         matchId,
         reason.trim(),
+        clubId,
       );
       setMatchId("");
       setReason("");
@@ -278,6 +292,7 @@ export function AdminTournamentUnprogrammedPanel() {
         date,
         start,
         end,
+        ...(clubId ? { clubId } : {}),
       });
       setEditing("");
       await load();

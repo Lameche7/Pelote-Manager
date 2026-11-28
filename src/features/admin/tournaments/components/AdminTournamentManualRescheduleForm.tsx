@@ -24,8 +24,10 @@ const slotKey = (slot: AdminManualRescheduleSlot) =>
 
 export function AdminTournamentManualRescheduleForm({
   onCreated,
+  clubId,
 }: {
   onCreated: () => Promise<void>;
+  clubId?: string | undefined;
 }) {
   const [tournaments, setTournaments] = useState<
     AdminManualRescheduleTournament[]
@@ -48,7 +50,8 @@ export function AdminTournamentManualRescheduleForm({
   const [success, setSuccess] = useState("");
 
   const loadContext = useCallback(async () => {
-    const items = await adminTournamentManualRescheduleService.getContext();
+    const items =
+      await adminTournamentManualRescheduleService.getContext(clubId);
     setTournaments(items);
     setTournamentId((current) => {
       if (current && items.some((item) => item.id === current)) return current;
@@ -56,13 +59,13 @@ export function AdminTournamentManualRescheduleForm({
         items.find((item) => item.matches.length > 0)?.id ?? items[0]?.id ?? ""
       );
     });
-  }, []);
+  }, [clubId]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     adminTournamentManualRescheduleService
-      .getContext()
+      .getContext(clubId)
       .then((items) => {
         if (!active) return;
         setTournaments(items);
@@ -86,7 +89,7 @@ export function AdminTournamentManualRescheduleForm({
     return () => {
       active = false;
     };
-  }, []);
+  }, [clubId]);
 
   const tournament = useMemo(
     () => tournaments.find((item) => item.id === tournamentId) ?? null,
@@ -120,7 +123,7 @@ export function AdminTournamentManualRescheduleForm({
     setLoadingSlots(true);
     setError("");
     adminTournamentManualRescheduleService
-      .getSlots(matchId)
+      .getSlots(matchId, clubId)
       .then((items) => {
         if (active) setSlots(items);
       })
@@ -138,7 +141,7 @@ export function AdminTournamentManualRescheduleForm({
     return () => {
       active = false;
     };
-  }, [matchId]);
+  }, [matchId, clubId]);
 
   const create = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -180,6 +183,7 @@ export function AdminTournamentManualRescheduleForm({
           startsAt: exceptionalStart,
           endsAt: exceptionalEnd,
           contactNote,
+          ...(clubId ? { clubId } : {}),
         });
       } else
         await adminTournamentManualRescheduleService.create({
@@ -187,6 +191,7 @@ export function AdminTournamentManualRescheduleForm({
           requesterTeamId,
           slot: selectedSlot!,
           contactNote,
+          ...(clubId ? { clubId } : {}),
         });
       setSuccess(
         "Demande créée. L’accord de l’équipe demandeuse est enregistré hors application ; l’autre équipe peut maintenant répondre dans PILOTOKI ou être contactée par l’organisation.",

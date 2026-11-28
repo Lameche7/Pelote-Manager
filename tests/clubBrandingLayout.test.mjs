@@ -10,7 +10,7 @@ test("la palette du club pilote le bandeau, le pied de page et les boutons", asy
     read("../src/app/layouts/MainLayout.css"),
   ]);
 
-  assert.match(layout, /clubBrandingService\.getPublicBranding\(clubSlug\)/);
+  assert.match(layout, /clubBrandingService\s*\.getPublicBranding\(clubSlug\)/);
   assert.match(layout, /club-branding-updated/);
   assert.match(layout, /"--club-primary": branding\.primaryColor/);
   assert.match(layout, /"--club-secondary": branding\.secondaryColor/);

@@ -5,6 +5,7 @@ import {
   type TournamentPoolWorkspace,
 } from "@/features/admin/tournaments/services/adminTournamentPoolService";
 import {
+  createPlatformTournamentAdminService,
   tournamentAdminService,
   type TournamentSummary,
 } from "@/features/admin/tournaments/services/tournamentAdminService";
@@ -114,7 +115,18 @@ const clubMetricLabel = (
     ? "Clubs parfaitement répartis"
     : `Max ${maxTeamsPerClub} équipes d’un même club · ${duplicatePairCount} rapprochement${duplicatePairCount > 1 ? "s" : ""}`;
 
-export function AdminTournamentPoolsPage() {
+export function AdminTournamentPoolsPage({
+  scopedClubId,
+}: {
+  scopedClubId?: string;
+} = {}) {
+  const tournamentService = useMemo(
+    () =>
+      scopedClubId
+        ? createPlatformTournamentAdminService(scopedClubId)
+        : tournamentAdminService,
+    [scopedClubId],
+  );
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [workspace, setWorkspace] = useState<TournamentPoolWorkspace | null>(
@@ -162,8 +174,8 @@ export function AdminTournamentPoolsPage() {
 
   const refresh = async (tournamentId: string) => {
     const [items, loaded] = await Promise.all([
-      tournamentAdminService.list(),
-      adminTournamentPoolService.get(tournamentId),
+      tournamentService.list(),
+      adminTournamentPoolService.get(tournamentId, scopedClubId),
     ]);
     setTournaments(items);
     hydrate(loaded);
@@ -171,7 +183,7 @@ export function AdminTournamentPoolsPage() {
 
   useEffect(() => {
     let active = true;
-    tournamentAdminService
+    tournamentService
       .list()
       .then(async (items) => {
         if (!active) return;
@@ -186,7 +198,10 @@ export function AdminTournamentPoolsPage() {
           ) ?? items[0];
         if (!preferred) return;
         setSelectedId(preferred.id);
-        const loaded = await adminTournamentPoolService.get(preferred.id);
+        const loaded = await adminTournamentPoolService.get(
+          preferred.id,
+          scopedClubId,
+        );
         if (active) hydrate(loaded);
       })
       .catch((loadError: unknown) => {
@@ -204,7 +219,7 @@ export function AdminTournamentPoolsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [tournamentService, scopedClubId]);
 
   const teamById = useMemo(
     () => new Map((workspace?.teams ?? []).map((team) => [team.id, team])),
@@ -247,11 +262,17 @@ export function AdminTournamentPoolsPage() {
 
   const chooseTournament = async (id: string) => {
     setSelectedId(id);
+    setWorkspace(null);
+    setPools([]);
+    setPersistedPools([]);
+    setPoolCounts({});
+    setActiveSeriesId("");
+    setDraggedTeamId(null);
     setLoading(true);
     setError("");
     setMessage("");
     try {
-      const loaded = await adminTournamentPoolService.get(id);
+      const loaded = await adminTournamentPoolService.get(id, scopedClubId);
       hydrate(loaded);
     } catch (loadError) {
       setError(
@@ -386,7 +407,11 @@ export function AdminTournamentPoolsPage() {
     setError("");
     setMessage("");
     try {
-      await adminTournamentPoolService.save(workspace.tournament.id, pools);
+      await adminTournamentPoolService.save(
+        workspace.tournament.id,
+        pools,
+        scopedClubId,
+      );
       await refresh(workspace.tournament.id);
       setMessage("Composition des poules enregistrée.");
     } catch (saveError) {
@@ -420,7 +445,10 @@ export function AdminTournamentPoolsPage() {
     setError("");
     setMessage("");
     try {
-      await adminTournamentPoolService.validate(workspace.tournament.id);
+      await adminTournamentPoolService.validate(
+        workspace.tournament.id,
+        scopedClubId,
+      );
       await refresh(workspace.tournament.id);
       setMessage(
         "Poules validées. Elles restent réouvrables avant le planning.",
@@ -442,7 +470,10 @@ export function AdminTournamentPoolsPage() {
     setError("");
     setMessage("");
     try {
-      await adminTournamentPoolService.reopen(workspace.tournament.id);
+      await adminTournamentPoolService.reopen(
+        workspace.tournament.id,
+        scopedClubId,
+      );
       await refresh(workspace.tournament.id);
       setMessage(
         "Poules rouvertes : vous pouvez les modifier ou les régénérer.",
@@ -527,7 +558,7 @@ export function AdminTournamentPoolsPage() {
               Tournoi
               <select
                 value={selectedId}
-                disabled={saving}
+                disabled={saving || loading}
                 onChange={(event) => void chooseTournament(event.target.value)}
               >
                 {tournaments.map((tournament) => (

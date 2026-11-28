@@ -73,6 +73,8 @@ const knownErrors: Record<string, string> = {
     "Au moins une rencontre est placée hors des disponibilités communes des deux équipes.",
   "Tournament planning contains a conflict":
     "Le planning contient un conflit de terrain ou une équipe est prévue deux fois au même horaire.",
+  "Tournament planning conflicts with another tournament":
+    "Un terrain ou un joueur est déjà occupé par un autre tournoi. Actualisez le planning avant de réessayer.",
   "Tournament matches have not been prepared":
     "Les rencontres doivent être préparées avant d’enregistrer le planning.",
   "Every tournament match must be scheduled exactly once":
@@ -191,19 +193,32 @@ const planningPayload = (
 };
 
 export const adminTournamentPlanningService = {
-  async prepare(tournamentId: string): Promise<number> {
+  async prepare(tournamentId: string, clubId?: string): Promise<number> {
     const { data, error } = await supabase.rpc(
-      "admin_prepare_tournament_matches",
-      { target_tournament_id: tournamentId },
+      clubId
+        ? "admin_prepare_tournament_matches_for_club"
+        : "admin_prepare_tournament_matches",
+      {
+        target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) fail(error, "Impossible de préparer les rencontres du tournoi.");
     return Number(data ?? 0);
   },
 
-  async get(tournamentId: string): Promise<TournamentPlanningWorkspace> {
+  async get(
+    tournamentId: string,
+    clubId?: string,
+  ): Promise<TournamentPlanningWorkspace> {
     const { data, error } = await supabase.rpc(
-      "admin_get_tournament_planning_workspace",
-      { target_tournament_id: tournamentId },
+      clubId
+        ? "admin_get_tournament_planning_workspace_for_club"
+        : "admin_get_tournament_planning_workspace",
+      {
+        target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
     );
     if (error) fail(error, "Impossible de charger le planning du tournoi.");
     return mapWorkspace(data);
@@ -214,22 +229,33 @@ export const adminTournamentPlanningService = {
     assignments: PlanningAssignment[],
     slots: PlanningSlot[],
     source: "generated" | "manual" = "generated",
+    clubId?: string,
   ): Promise<void> {
-    const { error } = await supabase.rpc("admin_save_tournament_planning", {
-      target_tournament_id: tournamentId,
-      payload: planningPayload(assignments, slots, source),
-    });
+    const { error } = await supabase.rpc(
+      clubId
+        ? "admin_save_tournament_planning_for_club"
+        : "admin_save_tournament_planning",
+      {
+        target_tournament_id: tournamentId,
+        payload: planningPayload(assignments, slots, source),
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
+    );
     if (error) fail(error, "Impossible d’enregistrer le planning du tournoi.");
   },
 
   async saveSeriesColors(
     tournamentId: string,
     values: Array<{ id: string; color: string }>,
+    clubId?: string,
   ): Promise<void> {
     const { error } = await supabase.rpc(
-      "admin_update_tournament_series_colors",
+      clubId
+        ? "admin_update_tournament_series_colors_for_club"
+        : "admin_update_tournament_series_colors",
       {
         target_tournament_id: tournamentId,
+        ...(clubId ? { target_club_id: clubId } : {}),
         payload: values.map((value) => ({
           id: value.id,
           color: value.color.toUpperCase(),

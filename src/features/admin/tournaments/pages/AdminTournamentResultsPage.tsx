@@ -13,7 +13,7 @@ import {
   type AdminTournamentResultMatch,
   type AdminTournamentResultsWorkspace,
 } from "@/features/admin/tournaments/services/tournamentResultsAdminService";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ROUTES } from "@/shared/config/routes";
 import {
   adminTournamentUnprogrammedService,
@@ -125,7 +125,19 @@ const sortMatches = (
     return left.startsAt.localeCompare(right.startsAt);
   });
 
-export function AdminTournamentResultsPage() {
+export function AdminTournamentResultsPage({
+  scopedClubId,
+  scopedMatchId,
+  onOpenReports,
+}: {
+  scopedClubId?: string;
+  scopedMatchId?: string;
+  onOpenReports?: () => void;
+} = {}) {
+  const [params] = useSearchParams();
+  const requestedMatchId = scopedMatchId ?? params.get("match");
+  const requestedClubId =
+    scopedClubId ?? (params.get("adminClubId")?.trim() || undefined);
   const [unprogrammed, setUnprogrammed] = useState<
     UnprogrammedTournamentMatch[]
   >([]);
@@ -153,8 +165,8 @@ export function AdminTournamentResultsPage() {
 
   const load = useCallback(async () => {
     const [loaded, waiting] = await Promise.all([
-      tournamentResultsAdminService.getWorkspace(),
-      adminTournamentUnprogrammedService.list(),
+      tournamentResultsAdminService.getWorkspace(requestedClubId),
+      adminTournamentUnprogrammedService.list(requestedClubId),
     ]);
     setUnprogrammed(waiting);
     const rankingEntries = await Promise.all(
@@ -173,9 +185,15 @@ export function AdminTournamentResultsPage() {
         ? current
         : (loaded[0]?.id ?? ""),
     );
-  }, []);
+  }, [requestedClubId]);
 
   useEffect(() => {
+    setLoading(true);
+    setWorkspaces([]);
+    setUnprogrammed([]);
+    setSelectedId("");
+    setEditingMatchId(null);
+    setEditingUnprogrammedId(null);
     load()
       .catch((loadError: unknown) =>
         setError(
@@ -186,6 +204,17 @@ export function AdminTournamentResultsPage() {
       )
       .finally(() => setLoading(false));
   }, [load]);
+
+  useEffect(() => {
+    if (!requestedMatchId) return;
+    const workspace = workspaces.find((item) =>
+      item.matches.some((match) => match.id === requestedMatchId),
+    );
+    if (!workspace) return;
+    setSelectedId(workspace.id);
+    setView("all");
+    setEditingMatchId(requestedMatchId);
+  }, [requestedMatchId, workspaces]);
 
   const selected = useMemo(
     () => workspaces.find((workspace) => workspace.id === selectedId) ?? null,
@@ -331,7 +360,7 @@ export function AdminTournamentResultsPage() {
     setError("");
     setMessage("");
     try {
-      await tournamentResultsAdminService.validate(matchId);
+      await tournamentResultsAdminService.validate(matchId, requestedClubId);
       await load();
       setMessage("Résultat validé.");
     } catch (validationError) {
@@ -350,7 +379,7 @@ export function AdminTournamentResultsPage() {
     setError("");
     setMessage("");
     try {
-      await tournamentResultsAdminService.save(matchId, score);
+      await tournamentResultsAdminService.save(matchId, score, requestedClubId);
       setEditingMatchId(null);
       setEditingUnprogrammedId(null);
       await load();
@@ -525,9 +554,23 @@ export function AdminTournamentResultsPage() {
               </table>
             </div>
             <p>
-              <Link to={ROUTES.adminTournamentReschedules}>
-                Gérer les parties à reprogrammer
-              </Link>
+              {onOpenReports ? (
+                <button type="button" onClick={onOpenReports}>
+                  Gérer les parties à reprogrammer
+                </button>
+              ) : (
+                <Link
+                  to={
+                    requestedClubId
+                      ? ROUTES.adminTournamentReschedules +
+                        "?adminClubId=" +
+                        encodeURIComponent(requestedClubId)
+                      : ROUTES.adminTournamentReschedules
+                  }
+                >
+                  Gérer les parties à reprogrammer
+                </Link>
+              )}
             </p>
           </section>
 
@@ -546,9 +589,23 @@ export function AdminTournamentResultsPage() {
                   programmer.
                 </p>
               </div>
-              <Link to={ROUTES.adminTournamentReschedules}>
-                Gérer les programmations
-              </Link>
+              {onOpenReports ? (
+                <button type="button" onClick={onOpenReports}>
+                  Gérer les programmations
+                </button>
+              ) : (
+                <Link
+                  to={
+                    requestedClubId
+                      ? ROUTES.adminTournamentReschedules +
+                        "?adminClubId=" +
+                        encodeURIComponent(requestedClubId)
+                      : ROUTES.adminTournamentReschedules
+                  }
+                >
+                  Gérer les programmations
+                </Link>
+              )}
             </div>
             {unprogrammedForTournament.length > 0 && (
               <details>

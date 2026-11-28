@@ -29,6 +29,8 @@ import { MemberImportDetailPage } from "@/features/admin/members/pages/MemberImp
 import { MemberImportPage } from "@/features/admin/members/pages/MemberImportPage";
 import { MemberImportsPage } from "@/features/admin/members/pages/MemberImportsPage";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { TournamentStripeConnectReturnPage } from "@/features/admin/pages/TournamentStripeConnectReturnPage";
+import { TournamentStripeDiagnosticReturnPage } from "@/features/admin/pages/TournamentStripeDiagnosticReturnPage";
 import { AdminPaymentSettingsPage } from "@/features/admin/pages/AdminPaymentSettingsPage";
 import { AdminPaymentsPage } from "@/features/admin/pages/AdminPaymentsPage";
 import { AdminReservationOperationsPage } from "@/features/admin/pages/AdminReservationOperationsPage";
@@ -81,7 +83,7 @@ import { MyStatisticsPage } from "@/features/user-space/statistics/pages/MyStati
 import { RefereeingPage } from "@/features/refereeing/pages/RefereeingPage";
 import { AdminRefereeingPage } from "@/features/admin/refereeing/pages/AdminRefereeingPage";
 import { PaymentReturnPage } from "@/features/reservations/pages/PaymentReturnPage";
-import { ReservationsPage } from "@/features/reservations/pages/ReservationsPage";
+import { ClubCalendarPage } from "@/features/reservations/pages/ClubCalendarPage";
 import { ReservationSharePaymentPage } from "@/features/reservations/pages/ReservationSharePaymentPage";
 import { TournamentDetailPage } from "@/features/tournaments/pages/TournamentDetailPage";
 import { TournamentsPage } from "@/features/tournaments/pages/TournamentsPage";
@@ -108,6 +110,8 @@ const allAuthenticatedRoles = [
 ];
 
 export const routes = [
+  { path: "/stripe/diagnostic/return", element: <TournamentStripeDiagnosticReturnPage /> },
+  { path: "/stripe/connect/return", element: <TournamentStripeConnectReturnPage /> },
   { path: "/reseau", element: <NetworkDirectoryPage /> },
   { path: "/reseau/tournois", element: <NetworkDirectoryPage /> },
   { path: "/reseau/clubs", element: <NetworkDirectoryPage /> },
@@ -141,7 +145,7 @@ export const routes = [
       { path: ROUTES.legalNotice, element: <LegalNoticePage /> },
       { path: ROUTES.privacy, element: <PrivacyPage /> },
       { path: ROUTES.terms, element: <TermsPage /> },
-      { path: ROUTES.reservations, element: <ReservationsPage /> },
+      { path: ROUTES.reservations, element: <ClubCalendarPage /> },
       {
         path: "/live/launch",
         element: (

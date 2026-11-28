@@ -16,6 +16,9 @@ type CalendarWeekGridProps = {
   onBook: (slot: CalendarSlot) => void;
   onInspect: (slot: CalendarSlot) => void;
   canInspectLocked: boolean;
+  resourceLabels?: ReadonlyMap<string, string>;
+  resourceTimezones?: ReadonlyMap<string, string>;
+  readOnly?: boolean;
 };
 
 export function CalendarWeekGrid({
@@ -26,6 +29,9 @@ export function CalendarWeekGrid({
   onBook,
   onInspect,
   canInspectLocked,
+  resourceLabels,
+  resourceTimezones,
+  readOnly = false,
 }: CalendarWeekGridProps) {
   return (
     <div className="reservation-calendar__grid">
@@ -39,9 +45,13 @@ export function CalendarWeekGrid({
               <div className="reservation-calendar__slots">
                 {daySlots.map((slot) => (
                   <SlotCard
-                    key={`${slot.startsAt}-${slot.endsAt}`}
+                    key={`${slot.resourceId}-${slot.startsAt}-${slot.endsAt}`}
                     slot={slot}
-                    timezone={timezone}
+                    timezone={
+                      resourceTimezones?.get(slot.resourceId) ?? timezone
+                    }
+                    resourceLabel={resourceLabels?.get(slot.resourceId)}
+                    readOnly={readOnly}
                     championshipMatchSelected={championshipMatchSelected}
                     onBook={onBook}
                     onInspect={onInspect}
@@ -50,7 +60,9 @@ export function CalendarWeekGrid({
                 ))}
               </div>
             ) : (
-              <p className="reservation-calendar__closed">Fermé</p>
+              <p className="reservation-calendar__closed">
+                {readOnly ? "Aucune rencontre" : "Fermé"}
+              </p>
             )}
           </article>
         );

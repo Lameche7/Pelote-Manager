@@ -33,9 +33,12 @@ export type UnprogrammedMatchContact = {
 };
 
 export const adminTournamentUnprogrammedService = {
-  async listContacts(): Promise<UnprogrammedMatchContact[]> {
+  async listContacts(clubId?: string): Promise<UnprogrammedMatchContact[]> {
     const { data, error } = await supabase.rpc(
-      "admin_unprogrammed_tournament_match_contacts",
+      clubId
+        ? "admin_unprogrammed_tournament_match_contacts_for_club"
+        : "admin_unprogrammed_tournament_match_contacts",
+      clubId ? { target_club_id: clubId } : undefined,
     );
     if (error)
       throw new Error(
@@ -51,9 +54,12 @@ export const adminTournamentUnprogrammedService = {
       phone: row.phone ? String(row.phone) : null,
     }));
   },
-  async list(): Promise<UnprogrammedTournamentMatch[]> {
+  async list(clubId?: string): Promise<UnprogrammedTournamentMatch[]> {
     const { data, error } = await supabase.rpc(
-      "admin_list_unprogrammed_tournament_matches",
+      clubId
+        ? "admin_list_unprogrammed_tournament_matches_for_club"
+        : "admin_list_unprogrammed_tournament_matches",
+      clubId ? { target_club_id: clubId } : undefined,
     );
     if (error)
       throw new Error(
@@ -93,11 +99,21 @@ export const adminTournamentUnprogrammedService = {
       })),
     }));
   },
-  async unprogram(matchId: string, reason: string): Promise<void> {
-    const { error } = await supabase.rpc("admin_unprogram_tournament_match", {
-      target_match_id: matchId,
-      reason,
-    });
+  async unprogram(
+    matchId: string,
+    reason: string,
+    clubId?: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      clubId
+        ? "admin_unprogram_tournament_match_for_club"
+        : "admin_unprogram_tournament_match",
+      {
+        target_match_id: matchId,
+        reason,
+        ...(clubId ? { target_club_id: clubId } : {}),
+      },
+    );
     if (error)
       throw new Error(
         getSupabaseErrorMessage(error, "Impossible de libérer ce créneau."),
@@ -109,14 +125,21 @@ export const adminTournamentUnprogrammedService = {
     date: string;
     start: string;
     end: string;
+    clubId?: string;
   }): Promise<void> {
-    const { error } = await supabase.rpc("admin_reprogram_tournament_match", {
-      target_match_id: input.matchId,
-      target_resource_id: input.resourceId,
-      target_play_date: input.date,
-      target_starts_at: input.start,
-      target_ends_at: input.end,
-    });
+    const { error } = await supabase.rpc(
+      input.clubId
+        ? "admin_reprogram_tournament_match_for_club"
+        : "admin_reprogram_tournament_match",
+      {
+        target_match_id: input.matchId,
+        target_resource_id: input.resourceId,
+        target_play_date: input.date,
+        target_starts_at: input.start,
+        target_ends_at: input.end,
+        ...(input.clubId ? { target_club_id: input.clubId } : {}),
+      },
+    );
     if (error)
       throw new Error(
         getSupabaseErrorMessage(

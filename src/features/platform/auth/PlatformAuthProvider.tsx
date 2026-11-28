@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -20,24 +21,37 @@ export function PlatformAuthProvider({ children }: PropsWithChildren) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(isPlatformConfigured);
 
+  const readyUserId = useRef<string | null>(null);
+  const revision = useRef(0);
+
   const synchronize = useCallback(async (user: User | null) => {
+    const currentRevision = ++revision.current;
     if (!platformSupabase || !user) {
+      readyUserId.current = null;
       setEmail(null);
       setIsAdmin(false);
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    if (readyUserId.current !== user.id) {
+      readyUserId.current = null;
+      setEmail(null);
+      setIsAdmin(false);
+      setIsLoading(true);
+    }
     const { data, error } = await platformSupabase.rpc("platform_is_admin");
+    if (currentRevision !== revision.current) return;
 
     if (error || data !== true) {
+      readyUserId.current = null;
       setEmail(user.email ?? null);
       setIsAdmin(false);
       setIsLoading(false);
       return;
     }
 
+    readyUserId.current = user.id;
     setEmail(user.email ?? null);
     setIsAdmin(true);
     setIsLoading(false);
@@ -62,6 +76,7 @@ export function PlatformAuthProvider({ children }: PropsWithChildren) {
 
     return () => {
       active = false;
+      revision.current += 1;
       subscription.unsubscribe();
     };
   }, [synchronize]);
