@@ -24,7 +24,10 @@ test("la gestion centrale exige une identité et un rôle vérifiés", () => {
 
 test("la navigation publique utilise le catalogue serveur", () => {
   assert.match(switcher, /list_network_clubs_v3/);
-  assert.match(switcher, /publicClubs\.some\(\(club\) => club\.slug === slug\)/);
+  assert.match(
+    switcher,
+    /publicClubs\.some\(\(club\) => club\.slug === slug\)/,
+  );
   assert.match(switcher, /platform-business-clubs/);
   assert.match(layout, /<PlatformClubSwitcher \/>/);
 });
