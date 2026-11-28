@@ -156,8 +156,8 @@ export function PlatformClubSwitcher() {
         (member) => member.is_active && member.is_default,
       );
       const primary = primaryAffiliation ?? defaultAffiliation;
-      const name =
-        primary?.club_name ?? (grants.length === 1 ? grants[0].club_name : null);
+      const adminClubName = grants.length === 1 ? grants[0].club_name : null;
+      const name = primary?.club_name ?? adminClubName;
       const preferred = available.find((club) => club.name === name);
       setDefaultSlug(preferred?.slug || "");
     };
@@ -224,7 +224,9 @@ export function PlatformClubSwitcher() {
               </option>
             ))}
           </select>
-          <small>Le club sélectionné ne modifie pas vos habilitations.</small>
+          <small>
+            Le club sélectionné ne modifie pas vos habilitations.
+          </small>
         </label>
       )}
       <SuperAdminClubSwitcher />
