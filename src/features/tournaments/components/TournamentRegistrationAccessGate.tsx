@@ -28,7 +28,7 @@ export function TournamentRegistrationAccessGate({
         );
         if (problem || !data) throw new Error();
         if (active) {
-          setUnlocked(data.code_required === false);
+          setUnlocked(data.code_required === false || data.unlocked === true);
           setLoading(false);
         }
       } catch {
