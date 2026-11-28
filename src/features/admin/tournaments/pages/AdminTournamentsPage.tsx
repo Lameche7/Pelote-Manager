@@ -472,7 +472,9 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
           (creationAccessCode.trim().length < 8 ||
             new TextEncoder().encode(creationAccessCode.trim()).length > 72)
         ) {
-          throw new Error("Le code doit contenir au moins 8 caractères et au plus 72 octets.");
+          throw new Error(
+            "Le code doit contenir au moins 8 caractères et au plus 72 octets.",
+          );
         }
         if (
           publicAt &&
@@ -480,7 +482,9 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
             new Date(publicAt) <= new Date(draft.registrationOpensAt) ||
             new Date(publicAt) >= new Date(draft.registrationClosesAt))
         ) {
-          throw new Error("L’ouverture publique doit se situer pendant la période d’inscription et dans le futur.");
+          throw new Error(
+            "L’ouverture publique doit se situer pendant la période d’inscription et dans le futur.",
+          );
         }
         const id = createdDraftId ?? (await service.create(draft));
         setCreatedDraftId(id);
@@ -497,7 +501,9 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
           },
         );
         if (accessError) {
-          throw new Error("Le tournoi est enregistré en préparation, mais le réglage d’accès a échoué. Réessayez avant de poursuivre.");
+          throw new Error(
+            "Le tournoi est enregistré en préparation, mais le réglage d’accès a échoué. Réessayez avant de poursuivre.",
+          );
         }
         await service.saveSportingRules(id, sportingRules);
         await service.saveConfiguration(id, {
@@ -904,13 +910,16 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
                           disabled={saving}
                           onChange={(event) =>
                             setCreationAccessMode(
-                              event.target.value as "free" | "locked" | "temporary",
+                              event.target.value as
+                                "free" | "locked" | "temporary",
                             )
                           }
                         >
                           <option value="free">Inscriptions libres</option>
                           <option value="locked">Code obligatoire</option>
-                          <option value="temporary">Priorité temporaire sur code</option>
+                          <option value="temporary">
+                            Priorité temporaire sur code
+                          </option>
                         </select>
                       </label>
                       {creationAccessMode !== "free" && (
@@ -927,7 +936,9 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
                               setCreationAccessCode(event.target.value)
                             }
                           />
-                          <small>Conservez le code avant de créer le tournoi.</small>
+                          <small>
+                            Conservez le code avant de créer le tournoi.
+                          </small>
                         </label>
                       )}
                       {creationAccessMode === "temporary" && (
