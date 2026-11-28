@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { TournamentRegistrationAccessPanel } from "@/features/admin/tournaments/components/TournamentRegistrationAccessPanel";
 import { supabase } from "@/infrastructure/supabase/client";
 import { TournamentSportingRulesSection } from "@/features/admin/tournaments/components/TournamentSportingRulesSection";
 import {
@@ -1004,6 +1005,15 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
                 />
               )}
             </form>
+
+            {detail && editable && (
+              <TournamentRegistrationAccessPanel
+                key={detail.id}
+                tournamentId={detail.id}
+                toLocalInput={toLocalInput}
+                toStoredDateTime={toStoredDateTime}
+              />
+            )}
 
             {detail && (
               <section className="admin-card tournament-refereeing-setting">
