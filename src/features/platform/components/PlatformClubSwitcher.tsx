@@ -97,7 +97,7 @@ function SuperAdminClubSwitcher() {
       </small>
       {identityLinked && clubs.some((club) => club.slug === selectedSlug) && (
         <Link
-          to={`${ROUTES.platform}?club=${encodeURIComponent(selectedSlug)}#business-club`}
+          to={`${ROUTES.admin}?club=${encodeURIComponent(selectedSlug)}`}
         >
           Administrer le club sélectionné
         </Link>
