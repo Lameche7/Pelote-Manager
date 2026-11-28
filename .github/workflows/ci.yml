@@ -75,6 +75,8 @@ jobs:
         run: |
           npx prettier --write src/features/platform/components/PlatformClubSwitcher.tsx
           git diff -- src/features/platform/components/PlatformClubSwitcher.tsx
+          npx prettier --write src/features/admin/tournaments/components/TournamentRegistrationAccessPanel.tsx src/features/tournaments/components/TournamentRegistrationAccessGate.tsx src/features/tournaments/pages/TournamentDetailPage.tsx src/features/admin/tournaments/pages/AdminTournamentsPage.tsx
+          git diff -- src/features/admin/tournaments/components/TournamentRegistrationAccessPanel.tsx src/features/tournaments/components/TournamentRegistrationAccessGate.tsx src/features/tournaments/pages/TournamentDetailPage.tsx src/features/admin/tournaments/pages/AdminTournamentsPage.tsx
 
   network-user-admin:
     runs-on: ubuntu-latest
@@ -441,3 +443,9 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-diagnostic.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-stripe-diagnostic-cases.sql
+
+      - name: Vérifier les inscriptions prioritaires par code
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -c 'create schema if not exists extensions; create extension if not exists pgcrypto with schema extensions;'
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-access-code.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-access-code-cases.sql
