@@ -293,6 +293,12 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
     useState<TournamentSportingRules | null>(null);
   const [refereeingEnabled, setRefereeingEnabled] = useState(false);
   const [networkSpecialty, setNetworkSpecialty] = useState("");
+  const [creationAccessMode, setCreationAccessMode] = useState<
+    "free" | "locked" | "temporary"
+  >("free");
+  const [creationAccessCode, setCreationAccessCode] = useState("");
+  const [creationPublicAt, setCreationPublicAt] = useState("");
+  const [createdDraftId, setCreatedDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -392,6 +398,10 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
     : false;
 
   const beginCreate = () => {
+    setCreationAccessMode("free");
+    setCreationAccessCode("");
+    setCreationPublicAt("");
+    setCreatedDraftId(null);
     setDetail(null);
     setForm(blankForm(activeSeasonId));
     setResourceIds([]);
@@ -453,7 +463,42 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
         ) {
           throw new Error("Configurez au moins une plage horaire valide.");
         }
-        const id = await service.create(draft);
+        const publicAt =
+          creationAccessMode === "temporary"
+            ? toStoredDateTime(creationPublicAt)
+            : null;
+        if (
+          creationAccessMode !== "free" &&
+          (creationAccessCode.trim().length < 8 ||
+            new TextEncoder().encode(creationAccessCode.trim()).length > 72)
+        ) {
+          throw new Error("Le code doit contenir au moins 8 caractères et au plus 72 octets.");
+        }
+        if (
+          publicAt &&
+          (new Date(publicAt) <= new Date() ||
+            new Date(publicAt) <= new Date(draft.registrationOpensAt) ||
+            new Date(publicAt) >= new Date(draft.registrationClosesAt))
+        ) {
+          throw new Error("L’ouverture publique doit se situer pendant la période d’inscription et dans le futur.");
+        }
+        const id = createdDraftId ?? (await service.create(draft));
+        setCreatedDraftId(id);
+        if (createdDraftId) await service.update(id, draft);
+        // Persist access before the sporting configuration can make registration open.
+        const { error: accessError } = await supabase.rpc(
+          "admin_set_tournament_registration_access",
+          {
+            target_tournament_id: id,
+            access_mode: creationAccessMode,
+            access_code:
+              creationAccessMode === "free" ? null : creationAccessCode.trim(),
+            public_at: publicAt,
+          },
+        );
+        if (accessError) {
+          throw new Error("Le tournoi est enregistré en préparation, mais le réglage d’accès a échoué. Réessayez avant de poursuivre.");
+        }
         await service.saveSportingRules(id, sportingRules);
         await service.saveConfiguration(id, {
           resourceIds,
@@ -462,6 +507,8 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
         });
         await loadList();
         await openTournament(id);
+        setCreationAccessCode("");
+        setCreatedDraftId(null);
         setMessage(
           "Tournoi créé avec ses règles sportives, terrains, séries et horaires.",
         );
@@ -846,6 +893,60 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
                     />
                   </label>
                 </div>
+                {!detail && (
+                  <section>
+                    <h4>Accès aux inscriptions</h4>
+                    <div className="tournament-form__grid">
+                      <label>
+                        Mode d’inscription
+                        <select
+                          value={creationAccessMode}
+                          disabled={saving}
+                          onChange={(event) =>
+                            setCreationAccessMode(
+                              event.target.value as "free" | "locked" | "temporary",
+                            )
+                          }
+                        >
+                          <option value="free">Inscriptions libres</option>
+                          <option value="locked">Code obligatoire</option>
+                          <option value="temporary">Priorité temporaire sur code</option>
+                        </select>
+                      </label>
+                      {creationAccessMode !== "free" && (
+                        <label>
+                          Code d’accès
+                          <input
+                            required
+                            minLength={8}
+                            maxLength={72}
+                            autoComplete="off"
+                            disabled={saving}
+                            value={creationAccessCode}
+                            onChange={(event) =>
+                              setCreationAccessCode(event.target.value)
+                            }
+                          />
+                          <small>Conservez le code avant de créer le tournoi.</small>
+                        </label>
+                      )}
+                      {creationAccessMode === "temporary" && (
+                        <label>
+                          Ouverture à tous (heure de Paris)
+                          <input
+                            required
+                            type="datetime-local"
+                            disabled={saving}
+                            value={creationPublicAt}
+                            onChange={(event) =>
+                              setCreationPublicAt(event.target.value)
+                            }
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </section>
+                )}
                 <label>
                   Description
                   <textarea
