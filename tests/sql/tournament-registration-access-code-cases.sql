@@ -17,11 +17,11 @@ begin
   insert into public.club_role_permissions(role_id,permission_key)
   values ('10000000-0000-0000-0000-000000000002','tournaments.manage')
   on conflict do nothing;
-  insert into public.tournaments(club_id,season_id,name,status,registration_opens_at,registration_closes_at)
-  values(club_b,'70000000-0000-0000-0000-000000000002','Access code CI','registrations_open',now()-interval '1 hour',now()+interval '1 day')
+  insert into public.tournaments(club_id,season_id,name,status,starts_on,ends_on,registration_opens_at,registration_closes_at)
+  values(club_b,'70000000-0000-0000-0000-000000000002','Access code CI','registrations_open',current_date+2,current_date+8,now()-interval '1 hour',now()+interval '1 day')
   returning id into t;
-  insert into public.tournaments(club_id,season_id,name,status,registration_opens_at,registration_closes_at)
-  values(club_b,'70000000-0000-0000-0000-000000000002','Independent CI','registrations_open',now()-interval '1 hour',now()+interval '1 day')
+  insert into public.tournaments(club_id,season_id,name,status,starts_on,ends_on,registration_opens_at,registration_closes_at)
+  values(club_b,'70000000-0000-0000-0000-000000000002','Independent CI','registrations_open',current_date+2,current_date+8,now()-interval '1 hour',now()+interval '1 day')
   returning id into t2;
   perform public.admin_set_tournament_registration_access(t,'locked','Priority-CI-1',null);
   perform public.admin_set_tournament_registration_access(t2,'locked','Priority-CI-2',null);
