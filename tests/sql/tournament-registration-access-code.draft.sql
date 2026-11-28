@@ -45,18 +45,6 @@ end; $$;
 revoke all on function public.admin_set_tournament_registration_access(uuid,text,text,timestamptz) from public,anon;
 grant execute on function public.admin_set_tournament_registration_access(uuid,text,text,timestamptz) to authenticated;
 
-create or replace function public.get_tournament_registration_access(target_tournament_id uuid)
-returns jsonb language sql stable security definer set search_path = '' as $$
-  select jsonb_build_object(
-    'code_required', coalesce(a.tournament_id is not null and (a.opens_public_at is null or a.opens_public_at>now()),false),
-    'opens_public_at', a.opens_public_at
-  )
-  from public.tournaments t left join pilotoki_private.tournament_registration_access a on a.tournament_id=t.id
-  where t.id=target_tournament_id;
-$$;
-revoke all on function public.get_tournament_registration_access(uuid) from public,anon;
-grant execute on function public.get_tournament_registration_access(uuid) to authenticated;
-
 -- A successful code entry grants access only to this account and code revision.
 create table if not exists pilotoki_private.tournament_registration_access_attempts (
   tournament_id uuid not null references public.tournaments(id) on delete cascade,
@@ -68,6 +56,23 @@ create table if not exists pilotoki_private.tournament_registration_access_attem
 );
 alter table pilotoki_private.tournament_registration_access_attempts enable row level security;
 revoke all on pilotoki_private.tournament_registration_access_attempts from public,anon,authenticated;
+
+create or replace function public.get_tournament_registration_access(target_tournament_id uuid)
+returns jsonb language sql stable security definer set search_path = '' as $
+  select jsonb_build_object(
+    'code_required', coalesce(a.tournament_id is not null and (a.opens_public_at is null or a.opens_public_at>now()),false),
+    'opens_public_at', a.opens_public_at,
+    'unlocked', coalesce(exists (
+      select 1 from pilotoki_private.tournament_registration_access_attempts v
+      where v.tournament_id=t.id and v.actor_id=auth.uid()
+        and v.authorized_revision=a.code_revision
+    ),false)
+  )
+  from public.tournaments t left join pilotoki_private.tournament_registration_access a on a.tournament_id=t.id
+  where t.id=target_tournament_id and auth.uid() is not null;
+$;
+revoke all on function public.get_tournament_registration_access(uuid) from public,anon;
+grant execute on function public.get_tournament_registration_access(uuid) to authenticated;
 
 create or replace function public.unlock_tournament_registration(
   target_tournament_id uuid, access_code text
