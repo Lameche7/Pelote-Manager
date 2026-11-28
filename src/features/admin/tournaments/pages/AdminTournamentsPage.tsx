@@ -691,6 +691,15 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
               )}
 
             {detail && (
+              <TournamentRegistrationAccessPanel
+                key={detail.id}
+                tournamentId={detail.id}
+                toLocalInput={toLocalInput}
+                toStoredDateTime={toStoredDateTime}
+              />
+            )}
+
+            {detail && (
               <section className="admin-card" style={{ padding: 16 }}>
                 <h3>Visibilité dans Pilotoki Network</h3>
                 <label>
@@ -1005,15 +1014,6 @@ function TournamentManagementPage({ clubId }: { clubId?: string }) {
                 />
               )}
             </form>
-
-            {detail && editable && (
-              <TournamentRegistrationAccessPanel
-                key={detail.id}
-                tournamentId={detail.id}
-                toLocalInput={toLocalInput}
-                toStoredDateTime={toStoredDateTime}
-              />
-            )}
 
             {detail && (
               <section className="admin-card tournament-refereeing-setting">
