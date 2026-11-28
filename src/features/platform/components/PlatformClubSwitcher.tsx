@@ -96,9 +96,7 @@ function SuperAdminClubSwitcher() {
           : "Liaison des deux sessions non vérifiée"}
       </small>
       {identityLinked && clubs.some((club) => club.slug === selectedSlug) && (
-        <Link
-          to={`${ROUTES.admin}?club=${encodeURIComponent(selectedSlug)}`}
-        >
+        <Link to={`${ROUTES.admin}?club=${encodeURIComponent(selectedSlug)}`}>
           Administrer le club sélectionné
         </Link>
       )}
