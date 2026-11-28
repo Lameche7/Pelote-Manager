@@ -117,8 +117,8 @@ export function TournamentRegistrationAccessPanel({
                 placeholder={hasCode ? "Conserver le code actuel" : ""}
               />
               <small>
-                Minimum 8 caractères. Copiez le code avant de l’enregistrer :
-                il ne sera plus affiché.
+                Minimum 8 caractères. Copiez le code avant de l’enregistrer : il
+                ne sera plus affiché.
               </small>
             </label>
           )}
