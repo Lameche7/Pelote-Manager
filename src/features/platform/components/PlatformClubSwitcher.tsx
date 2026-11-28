@@ -224,9 +224,7 @@ export function PlatformClubSwitcher() {
               </option>
             ))}
           </select>
-          <small>
-            Le club sélectionné ne modifie pas vos habilitations.
-          </small>
+          <small>Le club sélectionné ne modifie pas vos habilitations.</small>
         </label>
       )}
       <SuperAdminClubSwitcher />
