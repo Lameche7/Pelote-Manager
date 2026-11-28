@@ -277,7 +277,7 @@ export function TournamentDetailPage() {
           </header>
 
           {tournament.rules && (
-            <section className="public-tournament-panel">
+            <section id="reglement-tournoi" className="public-tournament-panel">
               <h2>Règlement & informations</h2>
               <p className="public-tournament-preline">{tournament.rules}</p>
             </section>
