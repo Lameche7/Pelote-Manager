@@ -10,73 +10,46 @@ const source = readFileSync(
   "utf8",
 );
 
-test("la sélection visuelle est conservée en session et restaurée dans l'URL", () => {
-  assert.match(source, /CLUB_PREFERENCE_KEY/);
-  assert.match(source, /sessionStorage\.getItem\(CLUB_PREFERENCE_KEY\)/);
-  assert.match(source, /sessionStorage\.setItem\(CLUB_PREFERENCE_KEY, slug\)/);
-  assert.match(
-    source,
-    /navigate\([\s\S]*?pathname: location\.pathname,[\s\S]*?search: next\.toString\(\),[\s\S]*?hash: location\.hash,[\s\S]*?replace: true/,
-  );
+test("la préférence visuelle appartient au compte et non au navigateur seul", () => {
+  assert.match(source, /pilotoki-selected-club:\$\{user\.id\}/);
+  assert.match(source, /localStorage\.getItem\(preferenceKey\)/);
+  assert.match(source, /localStorage\.setItem\(preferenceKey, slug\)/);
+  assert.match(source, /!user \|\| !isAuthenticated \|\| isLoading/);
 });
 
-test("la sélection mémorisée est vérifiée par le catalogue serveur", () => {
+test("une préférence doit exister dans le catalogue serveur", () => {
+  assert.match(source, /supabase\.rpc\("list_network_clubs_v3"\)/);
   assert.match(
     source,
-    /clubs\.some\(\(club\) => club\.slug === selectedSlug\)/,
+    /available\.some\(\(club\) => club\.slug === remembered\)/,
   );
-  assert.match(
-    source,
-    /if \(!isVerifiedAdmin \|\| status !== "ready" \|\| !catalogueLoaded\) return/,
-  );
-  assert.match(source, /if \(!valid && selectedSlug\)/);
-  assert.match(source, /setCatalogueLoaded\(false\)/);
-  assert.match(source, /setCatalogueLoaded\(true\)/);
-  // Even an empty, successfully loaded catalogue must invalidate stale choices.
-  assert.doesNotMatch(source, /!clubs\.length\) return/);
+  assert.match(source, /localStorage\.removeItem\(preferenceKey\)/);
 });
 
-test("une session absente ou un rôle révoqué efface la préférence", () => {
-  assert.match(
-    source,
-    /if \(identityError \|\| !identity\.user\) \{\s*window\.sessionStorage\.removeItem/,
-  );
-  assert.match(
-    source,
-    /if \(roleError \|\| allowed !== true\) \{\s*window\.sessionStorage\.removeItem/,
-  );
+test("le club explicite est prioritaire sur la préférence", () => {
+  assert.match(source, /if \(activeSlug\) \{/);
+  assert.match(source, /next\.set\("club", defaultSlug\)/);
+  assert.match(source, /location\.pathname !== ROUTES\.home/);
 });
 
-test("le changement de club ne donne aucun droit métier", () => {
-  assert.match(source, /Le club sélectionné ne modifie pas vos habilitations/);
+test("la gestion centrale reste réservée au rôle vérifié", () => {
+  assert.match(source, /platform_is_admin/);
+  assert.match(source, /roleError \|\| allowed !== true/);
+  assert.match(source, /identityLinked && clubs\.some/);
   assert.doesNotMatch(source, /service_role/);
 });
 
-test("la plateforme et le catalogue indisponibles révoquent le choix local", () => {
-  assert.match(
-    source,
-    /if \(!client\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/,
-  );
-  assert.match(
-    source,
-    /if \(catalogueError \|\| !Array\.isArray\(data\?\.clubs\)\) \{\s*window\.sessionStorage\.removeItem\(CLUB_PREFERENCE_KEY\)/,
-  );
-  assert.match(source, /to=\{ROUTES\.platformLogin\}/);
-});
-
-test("la restauration du club efface aussi un ancien contexte admin", () => {
-  assert.match(
-    source,
-    /if \(activeSlug === desired && !hasStaleAdminContext\) return;[\s\S]*?next\.delete\("adminClubId"\);[\s\S]*?navigate\(/,
-  );
-});
-
-test("le contexte admin périmé est supprimé même sans changement de club", () => {
-  assert.match(source, /new URLSearchParams\(location\.search\)\.has\(/);
-  assert.match(source, /activeSlug === desired && !hasStaleAdminContext/);
-});
-
-test("changer le club visuel réinitialise tout contexte admin précédent", () => {
+test("la restauration publique efface le contexte admin précédent", () => {
+  assert.match(source, /next\.has\("adminClubId"\)/);
   assert.match(source, /next\.delete\("adminClubId"\)/);
-  assert.match(source, /if \(slug\) next\.set\("club", slug\)/);
+  assert.match(source, /replace: true/);
+});
+
+test("changer de club ouvre une nouvelle URL publique sans contexte admin", () => {
+  assert.match(
+    source,
+    /publicClubs\.some\(\(club\) => club\.slug === slug\)/,
+  );
+  assert.match(source, /navigate\(\x60\$\{ROUTES\.home\}\?club=/);
+  assert.match(source, /Le club sélectionné ne modifie pas vos habilitations/);
 });
