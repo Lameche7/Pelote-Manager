@@ -113,6 +113,9 @@ export function TournamentRegistrationForm({
   const [loadingIdentity, setLoadingIdentity] = useState(true);
   const [searchingPartner, setSearchingPartner] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [acceptedRules, setAcceptedRules] = useState<string | null>(null);
+  const requiresRules = Boolean(tournament.rules.trim());
+  const rulesAccepted = !requiresRules || acceptedRules === tournament.rules;
   const [busyDates, setBusyDates] = useState<string[]>([]);
   const [checkingBusyDates, setCheckingBusyDates] = useState(true);
   const [busyDatesError, setBusyDatesError] = useState(false);
@@ -306,6 +309,10 @@ export function TournamentRegistrationForm({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!draft) return;
+    if (!rulesAccepted) {
+      onError("Vous devez accepter le règlement du tournoi.");
+      return;
+    }
     if (!draft.submitterClubName.trim() || !draft.partnerClubName.trim()) {
       onError("Renseignez le club de chacun des deux joueurs.");
       return;
@@ -354,7 +361,10 @@ export function TournamentRegistrationForm({
           "Une partie vient d’être programmée dans un autre tournoi : les journées correspondantes ont été décochées. Vérifiez vos disponibilités.",
         );
       }
-      await tournamentService.saveMine(tournament.id, draft);
+      await tournamentService.saveMine(tournament.id, {
+        ...draft,
+        acceptedRules: requiresRules ? acceptedRules : null,
+      });
       await onReload();
       if (!registration) {
         window.requestAnimationFrame(() => {
@@ -706,6 +716,22 @@ export function TournamentRegistrationForm({
         />
       </label>
 
+      {requiresRules && (
+        <label>
+          <input
+            type="checkbox"
+            required
+            checked={rulesAccepted}
+            disabled={saving}
+            onChange={(event) =>
+              setAcceptedRules(event.target.checked ? tournament.rules : null)
+            }
+          />
+          J’ai lu et j’accepte le règlement du tournoi.{" "}
+          <a href="#reglement-tournoi">Consulter le règlement</a>
+        </label>
+      )}
+
       <div className="public-registration-form__actions">
         <button
           className="button button--primary"
@@ -714,7 +740,8 @@ export function TournamentRegistrationForm({
             saving ||
             checkingBusyDates ||
             busyDatesError ||
-            !availabilityMinimumReached
+            !availabilityMinimumReached ||
+            !rulesAccepted
           }
         >
           {registration ? "Mettre à jour mon équipe" : "Inscrire mon équipe"}
