@@ -51,7 +51,7 @@ test("chaque déploiement peut recevoir l’identité propre de son club", () =>
 test("les écrans publics lisent l’identité du club sélectionné", () => {
   assert.match(clubLogo, /CLUB_CONFIG/);
   for (const source of [mainLayout, homePage]) {
-    assert.match(source, /clubBrandingService\.getPublicBranding/);
+    assert.match(source, /clubBrandingService\s*\.getPublicBranding/);
     assert.match(source, /branding\.logoUrl/);
     assert.match(source, /branding\.foundedYear/);
     assert.match(source, /branding\.tagline/);
