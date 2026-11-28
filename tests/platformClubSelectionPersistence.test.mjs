@@ -19,7 +19,10 @@ test("la préférence visuelle appartient au compte et non au navigateur seul", 
 
 test("une préférence doit exister dans le catalogue serveur", () => {
   assert.match(source, /supabase\.rpc\("list_network_clubs_v3"\)/);
-  assert.match(source, /available\.some\(\(club\) => club\.slug === remembered\)/);
+  assert.match(
+    source,
+    /available\.some\(\(club\) => club\.slug === remembered\)/,
+  );
   assert.match(source, /localStorage\.removeItem\(preferenceKey\)/);
 });
 
@@ -44,6 +47,6 @@ test("la restauration publique efface le contexte admin précédent", () => {
 
 test("changer de club ouvre une nouvelle URL publique sans contexte admin", () => {
   assert.match(source, /publicClubs\.some\(\(club\) => club\.slug === slug\)/);
-  assert.match(source, /navigate\(\x60\$\{ROUTES\.home\}\?club=/);
+  assert.match(source, /navigate\(`\$\{ROUTES\.home\}\?club=/);
   assert.match(source, /Le club sélectionné ne modifie pas vos habilitations/);
 });
