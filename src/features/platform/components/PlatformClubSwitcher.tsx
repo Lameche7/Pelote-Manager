@@ -139,6 +139,9 @@ export function PlatformClubSwitcher() {
         setDefaultSlug(remembered || "");
         return;
       }
+      if (remembered && preferenceKey) {
+        window.localStorage.removeItem(preferenceKey);
+      }
       const [members, admins] = await Promise.all([
         supabase.rpc("list_my_member_clubs"),
         supabase.rpc("get_my_club_access"),
@@ -149,7 +152,8 @@ export function PlatformClubSwitcher() {
       const primary =
         affiliations.find(
           (member) => member.is_active && member.affiliation_type === "primary",
-        ) ?? affiliations.find((member) => member.is_active && member.is_default);
+        ) ??
+        affiliations.find((member) => member.is_active && member.is_default);
       const name =
         primary?.club_name ?? (grants.length === 1 ? grants[0].club_name : null);
       const preferred = available.find((club) => club.name === name);
@@ -162,9 +166,15 @@ export function PlatformClubSwitcher() {
   }, [user, isAuthenticated, isLoading, preferenceKey]);
 
   useEffect(() => {
-    if (activeSlug || !defaultSlug || location.pathname !== ROUTES.home) return;
+    if (!isAuthenticated || isLoading || location.pathname !== ROUTES.home)
+      return;
     const next = new URLSearchParams(location.search);
-    next.set("club", defaultSlug);
+    if (activeSlug) {
+      if (!next.has("adminClubId")) return;
+    } else {
+      if (!defaultSlug) return;
+      next.set("club", defaultSlug);
+    }
     next.delete("adminClubId");
     navigate(
       {
@@ -177,6 +187,8 @@ export function PlatformClubSwitcher() {
   }, [
     activeSlug,
     defaultSlug,
+    isAuthenticated,
+    isLoading,
     location.pathname,
     location.search,
     location.hash,
@@ -196,6 +208,7 @@ export function PlatformClubSwitcher() {
               if (!publicClubs.some((club) => club.slug === slug)) return;
               if (preferenceKey) window.localStorage.setItem(preferenceKey, slug);
               setDefaultSlug(slug);
+              // Start a new public context; never carry adminClubId across clubs.
               navigate(`${ROUTES.home}?club=${encodeURIComponent(slug)}`);
             }}
           >
@@ -206,6 +219,7 @@ export function PlatformClubSwitcher() {
               </option>
             ))}
           </select>
+          <small>Le club sélectionné ne modifie pas vos habilitations.</small>
         </label>
       )}
       <SuperAdminClubSwitcher />
