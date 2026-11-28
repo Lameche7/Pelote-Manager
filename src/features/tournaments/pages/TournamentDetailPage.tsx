@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TournamentRankings } from "@/features/tournaments/components/TournamentRankings";
 import { TournamentRegistrationForm } from "@/features/tournaments/components/TournamentRegistrationForm";
+import { TournamentRegistrationAccessGate } from "@/features/tournaments/components/TournamentRegistrationAccessGate";
 import { TournamentFinalsAvailabilityEditor } from "@/features/tournaments/components/TournamentFinalsAvailabilityEditor";
 import { TournamentResultsBoard } from "@/features/tournaments/components/TournamentResultsBoard";
 import {
@@ -52,7 +53,7 @@ const formatDateTime = (value: string) =>
 
 export function TournamentDetailPage() {
   const { tournamentId = "" } = useParams();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [tournament, setTournament] = useState<PublicTournamentDetail | null>(
     null,
   );
@@ -405,15 +406,29 @@ export function TournamentDetailPage() {
               />
             )}
 
-            {canEditRegistration && (
-              <TournamentRegistrationForm
-                tournament={tournament}
-                registration={registration}
-                onReload={load}
-                onMessage={setMessage}
-                onError={setError}
-              />
-            )}
+            {canEditRegistration &&
+              (registration && registration.status !== "withdrawn" ? (
+                <TournamentRegistrationForm
+                  tournament={tournament}
+                  registration={registration}
+                  onReload={load}
+                  onMessage={setMessage}
+                  onError={setError}
+                />
+              ) : (
+                <TournamentRegistrationAccessGate
+                  key={`${user?.id}:${tournament.id}`}
+                  tournamentId={tournament.id}
+                >
+                  <TournamentRegistrationForm
+                    tournament={tournament}
+                    registration={registration}
+                    onReload={load}
+                    onMessage={setMessage}
+                    onError={setError}
+                  />
+                </TournamentRegistrationAccessGate>
+              ))}
           </section>
         </>
       )}
