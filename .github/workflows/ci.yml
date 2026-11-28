@@ -449,3 +449,8 @@ jobs:
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -c 'create schema if not exists extensions; create extension if not exists pgcrypto with schema extensions;'
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-access-code.draft.sql
           psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-registration-access-code-cases.sql
+
+      - name: Vérifier l’acceptation obligatoire du règlement
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-rules-acceptance.draft.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d postgres -f tests/sql/tournament-rules-acceptance-cases.sql

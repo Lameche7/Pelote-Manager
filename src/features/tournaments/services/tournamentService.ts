@@ -152,6 +152,7 @@ const registrationPayload = (draft: MyTournamentRegistrationDraft) => ({
   contact_email: draft.contactEmail.trim(),
   contact_phone: draft.contactPhone.trim(),
   comments: draft.comments.trim(),
+  accepted_rules: draft.acceptedRules ?? null,
   availability_rules: [],
   availability_slots: draft.availabilitySlots.map((slot) => ({
     date: slot.date,

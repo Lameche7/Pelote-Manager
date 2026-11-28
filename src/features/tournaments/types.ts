@@ -133,6 +133,7 @@ export type MyTournamentFinalsAvailability = {
 };
 
 export type MyTournamentRegistrationDraft = {
+  acceptedRules?: string | null;
   seriesId: string;
   submitterRole: TournamentPlayerRole;
   submitterFirstName: string;
