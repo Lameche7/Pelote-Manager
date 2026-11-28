@@ -19,7 +19,6 @@ function SuperAdminClubSwitcher() {
   useEffect(() => {
     const client = platformSupabase;
     if (!client) {
-
       return;
     }
     let active = true;
@@ -32,7 +31,6 @@ function SuperAdminClubSwitcher() {
         await client.auth.getUser();
       if (!active) return;
       if (identityError || !identity.user) {
-
         return;
       }
 
@@ -40,7 +38,6 @@ function SuperAdminClubSwitcher() {
         await client.rpc("platform_is_admin");
       if (!active) return;
       if (roleError || allowed !== true) {
-
         return;
       }
       setIsVerifiedAdmin(true);
@@ -56,7 +53,6 @@ function SuperAdminClubSwitcher() {
       );
       if (!active) return;
       if (catalogueError || !Array.isArray(data?.clubs)) {
-
         setError("Catalogue des clubs indisponible.");
         return;
       }
