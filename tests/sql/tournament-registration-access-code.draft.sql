@@ -58,7 +58,7 @@ alter table pilotoki_private.tournament_registration_access_attempts enable row 
 revoke all on pilotoki_private.tournament_registration_access_attempts from public,anon,authenticated;
 
 create or replace function public.get_tournament_registration_access(target_tournament_id uuid)
-returns jsonb language sql stable security definer set search_path = '' as $
+returns jsonb language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
     'code_required', coalesce(a.tournament_id is not null and (a.opens_public_at is null or a.opens_public_at>now()),false),
     'opens_public_at', a.opens_public_at,
@@ -70,7 +70,7 @@ returns jsonb language sql stable security definer set search_path = '' as $
   )
   from public.tournaments t left join pilotoki_private.tournament_registration_access a on a.tournament_id=t.id
   where t.id=target_tournament_id and auth.uid() is not null;
-$;
+$$;
 revoke all on function public.get_tournament_registration_access(uuid) from public,anon;
 grant execute on function public.get_tournament_registration_access(uuid) to authenticated;
 
