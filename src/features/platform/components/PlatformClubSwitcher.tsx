@@ -149,10 +149,11 @@ export function PlatformClubSwitcher() {
       if (!active) return;
       const affiliations = Array.isArray(members.data) ? members.data : [];
       const grants = Array.isArray(admins.data) ? admins.data : [];
+      const primaryAffiliation = affiliations.find(
+        (member) => member.is_active && member.affiliation_type === "primary",
+      );
       const primary =
-        affiliations.find(
-          (member) => member.is_active && member.affiliation_type === "primary",
-        ) ??
+        primaryAffiliation ??
         affiliations.find((member) => member.is_active && member.is_default);
       const name =
         primary?.club_name ?? (grants.length === 1 ? grants[0].club_name : null);
@@ -166,8 +167,9 @@ export function PlatformClubSwitcher() {
   }, [user, isAuthenticated, isLoading, preferenceKey]);
 
   useEffect(() => {
-    if (!isAuthenticated || isLoading || location.pathname !== ROUTES.home)
+    if (!isAuthenticated || isLoading || location.pathname !== ROUTES.home) {
       return;
+    }
     const next = new URLSearchParams(location.search);
     if (activeSlug) {
       if (!next.has("adminClubId")) return;
